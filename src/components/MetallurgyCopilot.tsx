@@ -14,6 +14,11 @@ import {
   Layers,
 } from "lucide-react";
 import { ConsultMessage } from "../types";
+import {
+  ConsultationResponseError,
+  parseConsultationResponse,
+} from "../utils/calphadConsultation";
+import { CopilotRequestLifecycle, CopyFeedbackLifecycle } from "../utils/copilotConsultation";
 
 export const MetallurgyCopilot: React.FC = () => {
   const [messages, setMessages] = useState<ConsultMessage[]>([
@@ -36,12 +41,28 @@ How can I assist your engineering investigation or alloy formulation today?`,
 
   const [inputPrompt, setInputPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copyFeedback, setCopyFeedback] = useState<{ id: string; state: "copied" | "failed" } | null>(null);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
+  const requestLifecycle = useRef(new CopilotRequestLifecycle());
+  const copyLifecycle = useRef(new CopyFeedbackLifecycle());
+  const mounted = useRef(false);
+  const copyFeedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const prefersReducedMotion = typeof window !== "undefined"
+      && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
+    chatEndRef.current?.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth" });
   }, [messages, isLoading]);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      requestLifecycle.current.invalidate();
+      copyLifecycle.current.invalidate();
+      if (copyFeedbackTimer.current !== null) clearTimeout(copyFeedbackTimer.current);
+    };
+  }, []);
 
   const promptSuggestions = [
     {
@@ -73,6 +94,7 @@ How can I assist your engineering investigation or alloy formulation today?`,
 
   const handleSendMessage = async (userText: string) => {
     if (!userText.trim() || isLoading) return;
+    const request = requestLifecycle.current.begin();
 
     const userMessage: ConsultMessage = {
       id: `user-${Date.now()}`,
@@ -100,49 +122,83 @@ How can I assist your engineering investigation or alloy formulation today?`,
           prompt: userText,
           history: apiHistory.slice(0, -1), // prior history
         }),
+        signal: request.signal,
       });
 
       const rawText = await res.text();
-      let data: any = {};
+      let data: unknown;
       try {
         data = JSON.parse(rawText);
       } catch {
-        throw new Error(res.ok ? "Invalid server response format." : `Server error (${res.status}): ${rawText.substring(0, 100)}`);
+        throw new Error(res.ok ? "The consultation service returned invalid data." : `Consultation service unavailable (HTTP ${res.status}).`);
       }
 
       if (!res.ok) {
-        throw new Error(data.error || "Failed to get AI consultation.");
+        const detail = data && typeof data === "object" && "error" in data && typeof data.error === "string"
+          ? data.error.trim()
+          : "";
+        throw new Error(detail || `Consultation request failed (HTTP ${res.status}).`);
       }
+
+      const answer = parseConsultationResponse(data);
 
       const assistantMessage: ConsultMessage = {
         id: `assistant-${Date.now()}`,
         role: "assistant",
-        content: data.reply || data.text || "No response received.",
+        content: answer,
         timestamp: Date.now(),
       };
 
-      setMessages((prev) => [...prev, assistantMessage]);
-    } catch (err: any) {
-      console.error(err);
+      if (requestLifecycle.current.isCurrent(request)) {
+        setMessages((prev) => [...prev, assistantMessage]);
+      }
+    } catch (err: unknown) {
+      if (!requestLifecycle.current.isCurrent(request)) return;
       const errorMessage: ConsultMessage = {
         id: `error-${Date.now()}`,
         role: "assistant",
-        content: `⚠️ **Consultation Error**: ${err.message || "Failed to communicate with AI server."}`,
+        content: err instanceof ConsultationResponseError
+          ? "Consultation unavailable: the service returned no usable answer text."
+          : `Consultation error: ${err instanceof Error ? err.message : "Failed to communicate with the consultation service."}`,
         timestamp: Date.now(),
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
-      setIsLoading(false);
+      if (requestLifecycle.current.isCurrent(request)) setIsLoading(false);
     }
   };
 
-  const handleCopy = (id: string, text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
+  const handleCopy = async (id: string, text: string) => {
+    const generation = copyLifecycle.current.begin();
+    if (copyFeedbackTimer.current !== null) clearTimeout(copyFeedbackTimer.current);
+    setCopyFeedback(null);
+    try {
+      if (typeof navigator === "undefined" || !navigator.clipboard?.writeText) {
+        throw new Error("Clipboard access is unavailable.");
+      }
+      await navigator.clipboard.writeText(text);
+      if (!mounted.current || !copyLifecycle.current.isCurrent(generation)) return;
+      setCopyFeedback({ id, state: "copied" });
+      copyFeedbackTimer.current = setTimeout(() => {
+        if (mounted.current && copyLifecycle.current.isCurrent(generation)) {
+          setCopyFeedback(null);
+          copyFeedbackTimer.current = null;
+        }
+      }, 2000);
+    } catch {
+      if (mounted.current && copyLifecycle.current.isCurrent(generation)) setCopyFeedback({ id, state: "failed" });
+    }
   };
 
   const handleClearHistory = () => {
+    requestLifecycle.current.invalidate();
+    copyLifecycle.current.invalidate();
+    setIsLoading(false);
+    setCopyFeedback(null);
+    if (copyFeedbackTimer.current !== null) {
+      clearTimeout(copyFeedbackTimer.current);
+      copyFeedbackTimer.current = null;
+    }
     setMessages([
       {
         id: "welcome-reset",
@@ -171,7 +227,7 @@ How can I assist your engineering investigation or alloy formulation today?`,
 
         <button
           onClick={handleClearHistory}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#0c1322] hover:bg-white/5 text-slate-400 hover:text-white border border-[#162032] text-xs font-mono transition self-start md:self-auto"
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#0c1322] hover:bg-white/5 text-slate-400 hover:text-white border border-[#162032] text-xs font-mono transition motion-reduce:transition-none self-start md:self-auto"
         >
           <Trash2 className="w-3.5 h-3.5" />
           <span>Clear Chat</span>
@@ -189,7 +245,7 @@ How can I assist your engineering investigation or alloy formulation today?`,
             <button
               key={idx}
               onClick={() => handleSendMessage(item.prompt)}
-              className="px-2.5 py-1 bg-[#090e18] hover:bg-white/5 border border-[#162032] hover:border-sky-400/50 rounded text-xs text-slate-300 hover:text-sky-300 transition whitespace-nowrap shrink-0 font-mono"
+              className="px-2.5 py-1 bg-[#090e18] hover:bg-white/5 border border-[#162032] hover:border-sky-400/50 rounded text-xs text-slate-300 hover:text-sky-300 transition motion-reduce:transition-none whitespace-nowrap shrink-0 font-mono"
             >
               {item.label}
             </button>
@@ -219,6 +275,8 @@ How can I assist your engineering investigation or alloy formulation today?`,
 
               {/* Message Bubble */}
               <div
+                role={msg.id.startsWith("error-") ? "alert" : undefined}
+                aria-live={msg.id.startsWith("error-") ? "assertive" : undefined}
                 className={`max-w-[85%] rounded-lg p-3.5 text-xs leading-relaxed border relative group ${
                   isUser
                     ? "bg-sky-950/40 border-sky-800/60 text-sky-100 rounded-tr-none"
@@ -232,13 +290,18 @@ How can I assist your engineering investigation or alloy formulation today?`,
                   <span>{new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                   <button
                     onClick={() => handleCopy(msg.id, msg.content)}
-                    className="opacity-0 group-hover:opacity-100 transition text-slate-400 hover:text-white flex items-center gap-1"
+                    aria-label={copyFeedback?.id === msg.id
+                      ? copyFeedback.state === "copied" ? "Copied to clipboard" : "Clipboard unavailable"
+                      : "Copy message"}
+                    className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-400 transition motion-reduce:transition-none text-slate-400 hover:text-white flex items-center gap-1"
                   >
-                    {copiedId === msg.id ? (
+                    {copyFeedback?.id === msg.id && copyFeedback.state === "copied" ? (
                       <>
                         <Check className="w-3 h-3 text-emerald-400" />
-                        <span className="text-emerald-400">Copied</span>
+                        <span className="text-emerald-400" role="status" aria-live="polite">Copied</span>
                       </>
+                    ) : copyFeedback?.id === msg.id && copyFeedback.state === "failed" ? (
+                      <span className="text-amber-300" role="status" aria-live="polite">Copy unavailable</span>
                     ) : (
                       <>
                         <Copy className="w-3 h-3" />
@@ -253,13 +316,13 @@ How can I assist your engineering investigation or alloy formulation today?`,
         })}
 
         {isLoading && (
-          <div className="flex items-start gap-2.5">
+          <div role="status" aria-live="polite" aria-atomic="true" className="flex items-start gap-2.5">
             <div className="w-7 h-7 rounded bg-sky-500/20 border border-sky-400/40 flex items-center justify-center shrink-0 text-sky-400">
               <Bot className="w-3.5 h-3.5" />
             </div>
             <div className="bg-[#0c1322] border border-[#162032] rounded-lg rounded-tl-none p-3 text-xs text-slate-400 flex items-center gap-2 font-mono">
-              <div className="w-3.5 h-3.5 border-2 border-sky-400 border-t-transparent rounded-full animate-spin"></div>
-              <span>Computing thermodynamic state and physics equations...</span>
+              <div aria-hidden="true" className="w-3.5 h-3.5 border-2 border-sky-400 border-t-transparent rounded-full animate-spin motion-reduce:animate-none"></div>
+              <span>Waiting for an advisory response from the consultation service…</span>
             </div>
           </div>
         )}
@@ -289,7 +352,7 @@ How can I assist your engineering investigation or alloy formulation today?`,
         <button
           type="submit"
           disabled={isLoading || !inputPrompt.trim()}
-          className="px-4 py-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold rounded text-xs flex items-center gap-1.5 shadow-[0_0_12px_rgba(56,189,248,0.3)] transition disabled:opacity-40 font-mono active:scale-95"
+          className="px-4 py-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold rounded text-xs flex items-center gap-1.5 shadow-[0_0_12px_rgba(56,189,248,0.3)] transition motion-reduce:transition-none disabled:opacity-40 font-mono active:scale-95 motion-reduce:active:scale-100"
         >
           <span>Consult</span>
           <Send className="w-3.5 h-3.5" />

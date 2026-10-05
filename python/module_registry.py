@@ -41,6 +41,9 @@ from module_contracts_dataset_view import build_dataset_view_contract
 from module_contracts_eds import build_eds_contract
 from module_contracts_composition import build_composition_contract
 from module_contracts_elasticity import build_elasticity_contract
+from module_contracts_database import build_database_contract
+from module_contracts_calphad import build_calphad_contract
+from module_contracts_evidence import build_experimental_data_contract, build_traceability_contract
 
 PYTHON_DIR = Path(__file__).resolve().parent
 REPO_ROOT = PYTHON_DIR.parent
@@ -180,15 +183,7 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
     "experimental-validation": (
         _op("lpbf-source-measurements", "GET", "/api/lpbf/sources/:datasetId/measurements", _NODE),
     ),
-    "database": (
-        _local("catalog-lookup", "material records are read from the bundled src/data/materialsDatabase.ts in the browser."),
-    ),
     # The thermal-solver call came from the InverseAlloyStudio subtree (LaserMeltPoolThermalMap), deleted 2026-10-04.
-    "phase-diagram": (
-        _op("calphad-databases", "GET", "/api/python/calphad-databases", _py("calphad_solver", 15000, warm=True)),
-        _op("calphad-minimize", "POST", "/api/python/calphad-minimize", _py("calphad_solver", 40000, warm=True)),
-        _AI_CONSULT,
-    ),
     "electrochem-suite": (
         _op("pourbaix-diagram", "POST", "/api/python/pourbaix-diagram", _py("pourbaix_solver", _PHYSICS_TIMEOUT_MS, warm=True)),
         _op("tafel-corrosion-rate", "POST", "/api/python/tafel-corrosion-rate",
@@ -204,9 +199,7 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
         _op("research-registry-save", "PUT", "/api/research/registry", _NODE),
         _op("research-search", "GET", "/api/research/search", _NODE),
     ),
-    "experimental-data": (),
     "digital-twin": (_AI_CONSULT,),
-    "traceability": (),
     "copilot": (_op("metallurgy-consult", "POST", "/api/metallurgy/consult", _NODE),),
 }
 
@@ -984,6 +977,10 @@ def module_doc_path(module_id: str) -> str:
 
 
 CONTRACTED_BUILDERS = {
+    "database": build_database_contract,
+    "phase-diagram": build_calphad_contract,
+    "experimental-data": build_experimental_data_contract,
+    "traceability": build_traceability_contract,
     "alloy-builder": build_composition_contract,
     "materials-project": build_elasticity_contract,
     "eds-lab": build_eds_contract,
@@ -1274,6 +1271,7 @@ def render_ts(document: dict) -> str:
         "export interface ContractField {",
         "  readonly key: string; readonly label: string; readonly valueType: FieldValueType; readonly unit: string | null;",
         "  readonly displayUnits: readonly string[]; readonly quantityKind: string;",
+        "  readonly unitSelector: string | null; readonly unitOptions: Readonly<Record<string, string>>;",
         "  readonly min: number | null; readonly max: number | null; readonly step: number | null;",
         "  readonly default: number | string | boolean; readonly required: boolean; readonly enum: readonly string[];",
         "  readonly note: string | null;",
@@ -1290,6 +1288,7 @@ def render_ts(document: dict) -> str:
         "  readonly output: {",
         "    readonly fields: readonly string[]; readonly statusKey: string | null;",
         "    readonly transportValues: Readonly<Record<string, readonly string[]>>;",
+        "    readonly transportObjects: Readonly<Record<string, Readonly<Record<string, readonly string[]>>>>;",
         "  } | null;",
         "}",
         "export interface ContractValidityDomain {",
@@ -1382,6 +1381,11 @@ def render_module_doc(contract: ModuleContract) -> str:
         if op.undeclared_input:
             lines += ["", "Undeclared input keys (read by the authority, not describable by the Field schema): "
                       + ", ".join(f"`{k}`" for k in op.undeclared_input) + "."]
+        for field in op.input:
+            if field.unit_selector:
+                lines += ["", f"`{field.key}` is interpreted in the unit selected by `{field.unit_selector}`: "
+                          + ", ".join(f"`{choice}` → `{unit}`" for choice, unit in field.unit_options)
+                          + ". No fixed canonical-unit conversion is performed by this contract."]
         if op.output:
             status = (f"evidence status key `{op.output.status_key}`" if op.output.status_key
                       else "no status key, so the output carries no evidence status")
@@ -1389,6 +1393,10 @@ def render_module_doc(contract: ModuleContract) -> str:
             for key, values in op.output.transport_values:
                 lines += ["", f"`{key}` is a transport field, not an evidence status; values: "
                           + ", ".join(f"`{v}`" for v in values) + "."]
+            for key, members in op.output.transport_objects:
+                lines += ["", f"`{key}` is an object-valued transport inventory, not evidence or a full metadata schema:"]
+                for path, values in members:
+                    lines += [f"- `{path}`: " + ", ".join(f"`{v}`" for v in values) + "."]
     e = c.evidence
     oracle = (f"present, `{c.tests.oracle.ref}`" if c.tests.oracle.status == "present"
               else f"pending (ceiling capped at {PENDING_ORACLE_CEILING})")

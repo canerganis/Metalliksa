@@ -3,6 +3,47 @@ import test from 'node:test';
 import { useMaterialSpecimenStore, type ActiveSpecimenState } from '../src/store/useMaterialSpecimenStore';
 import { buildScientificContext } from '../src/utils/scientificContext';
 
+test('Alloy Builder context describes composition estimates independently of process settings', () => {
+  const specimen = useMaterialSpecimenStore.getInitialState().activeSpecimen;
+  const changedProcess: ActiveSpecimenState = {
+    ...specimen,
+    lpbf: { ...specimen.lpbf, laserPower_W: 501, scanSpeed_mms: 1701, hatch_um: 151,
+      layer_um: 61, preheatTemp_C: 301, thermalConductivity_k_WmK: 99, processSeed: 987 },
+  };
+  const context = buildScientificContext('alloy-builder', specimen);
+  assert.deepEqual(context, buildScientificContext('alloy-builder', changedProcess));
+  assert.deepEqual(Object.keys(context).sort(),
+    ['title', 'observation', 'mechanism', 'variables', 'interpretation', 'limitation'].sort());
+  assert.equal(context.title, 'Composition editor and estimate context');
+  const text = [context.observation, context.mechanism, ...context.variables,
+    context.interpretation, context.limitation].join(' ');
+  assert.match(text, /element percentages.*wt\.%.*at\.%/i);
+  assert.match(text, /normalize composition.*explicit/i);
+  assert.match(text, /do not automatically.*100%/i);
+  assert.match(text, /0.?100%.*finite/i);
+  assert.match(text, /g\/cm³.*°C.*MPa/);
+  assert.match(text, /current shared process settings.*retained/i);
+  assert.match(text, /no CALPHAD, DFT or LPBF simulation runs/i);
+  assert.match(text, /unvalidated.*fallback/i);
+  assert.doesNotMatch(text, /501 W|1701 mm\/s|151 µm|constitutive assumptions|predicted behavior/);
+  // This correction is scoped to the editor; existing process context stays dynamic.
+  assert.notDeepEqual(buildScientificContext('3d-distortion-lab', specimen),
+    buildScientificContext('3d-distortion-lab', changedProcess));
+  assert.notDeepEqual(buildScientificContext('database', specimen),
+    buildScientificContext('database', changedProcess));
+});
+
+test('Alloy Builder context does not promote retained atomic-percent properties to new estimates', () => {
+  const defaultSpecimen = useMaterialSpecimenStore.getInitialState().activeSpecimen;
+  const atomic: ActiveSpecimenState = { ...defaultSpecimen, unit: 'at_pct', composition: { Ni: 50, Cr: 50 } };
+  const context = buildScientificContext('alloy-builder', atomic);
+  assert.match(context.interpretation, /atomic-percent edits preserve their unit/i);
+  assert.match(context.interpretation, /do not recompute weight-percent property estimates/i);
+  assert.match(context.limitation, /retained values.*not.*newly computed.*atomic-percent/i);
+  assert.match(context.limitation, /not measurements.*phase-equilibrium.*qualified process/i);
+  assert.match(context.limitation, /hardness.*unavailable/i);
+});
+
 test('Elastic Constants context describes form inputs independently of the shared specimen', () => {
   const defaultSpecimen = useMaterialSpecimenStore.getInitialState().activeSpecimen;
   const specimen: ActiveSpecimenState = {

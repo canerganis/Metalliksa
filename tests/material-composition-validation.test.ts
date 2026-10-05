@@ -97,3 +97,42 @@ test("JSON import rejects exponent overflow before storing or deriving it", () =
     assert.deepEqual(useMaterialStore.getState().activeMaterialSpecimen.composition, originalComposition);
   });
 });
+
+test("specimen replacement rejects invalid or unknown composition maps atomically", () => {
+  for (const method of ["setActiveMaterialSpecimen", "setSpecimen"] as const) {
+    for (const badComposition of [
+      {Ni: 101},
+      {Ni: -1},
+      {Ni: Number.POSITIVE_INFINITY},
+      {Ni: Number.NaN},
+      {Ni: "101"},
+      [],
+      null,
+      {},
+    ]) {
+      withRestoredStore(() => {
+        const before = useMaterialStore.getState();
+        const snapshot = structuredClone(before.activeMaterialSpecimen);
+        useMaterialStore.getState()[method]({
+          name: "Invalid replacement",
+          composition: badComposition,
+        } as never);
+        const after = useMaterialStore.getState();
+        assert.strictEqual(after.activeMaterialSpecimen, before.activeMaterialSpecimen);
+        assert.strictEqual(after.activeSpecimen, before.activeSpecimen);
+        assert.deepEqual(after.activeMaterialSpecimen, snapshot);
+      });
+    }
+  }
+});
+
+test("setSpecimen accepts valid per-element bounds and a total above 100", () => {
+  withRestoredStore(() => {
+    const replacement = {Ni: 0, Cr: 100, Fe: 75};
+    useMaterialStore.getState().setSpecimen({composition: replacement});
+
+    const after = useMaterialStore.getState();
+    assert.deepEqual(after.activeMaterialSpecimen.composition, replacement);
+    assert.strictEqual(after.activeSpecimen, after.activeMaterialSpecimen);
+  });
+});

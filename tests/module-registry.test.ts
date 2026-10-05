@@ -13,7 +13,7 @@ const registry = JSON.parse(readFileSync(new URL('../src/generated/moduleRegistr
 // Ratchet: Phase 7 step 0 generated one legacy contract per listed module. Migration may only
 // lower this number. Raising it needs an explicit edit here and maintainer review.
 // Dataset comparison now has a source-bound read-only display contract.
-const LEGACY_CEILING = 13;
+const LEGACY_CEILING = 9;
 
 test('contracts cover exactly the modules listed in workspaces.ts and legacy never grows', () => {
   const legacy = registry.contracts.filter(contract => contract.migrationState === 'legacy');
@@ -54,7 +54,7 @@ test('legacy contracts keep the pending-oracle cap and forbid every claim key', 
 
 test('contracted modules (wave 1 pilots and wave 2) stay bounded: no emitted status, screening-only ceiling, every claim forbidden', () => {
   const contracted = registry.contracts.filter(contract => contract.migrationState === 'contracted');
-  assert.deepEqual(contracted.map(contract => contract.id), ['toolpath-studio', 'murakami-fatigue', 'adaptive-mitigation', 'keyhole-raytracing', 'lpbf-dataset-comparison', 'alloy-builder', 'ttt-cct-kinetics', 'micrograph', 'eds-lab', 'icme-motor', 'materials-project', 'uq-lab']);
+  assert.deepEqual(contracted.map(contract => contract.id), ['toolpath-studio', 'murakami-fatigue', 'adaptive-mitigation', 'keyhole-raytracing', 'lpbf-dataset-comparison', 'database', 'alloy-builder', 'phase-diagram', 'ttt-cct-kinetics', 'micrograph', 'eds-lab', 'icme-motor', 'materials-project', 'experimental-data', 'uq-lab', 'traceability']);
   for (const contract of contracted) {
     assert.deepEqual(contract.evidence.emits, [], contract.id);
     assert.equal(contract.evidence.ceiling, 'screening-only', contract.id);
@@ -67,7 +67,11 @@ test('contracted modules (wave 1 pilots and wave 2) stay bounded: no emitted sta
         assert.equal(operation.authority.timeoutMs, null, `${contract.id}: no invented local deadline`);
         assert.ok(operation.output && operation.output.fields.length > 0, `${contract.id}: declared local output inventory`);
       } else {
-        assert.ok(operation.input.length > 0 || operation.undeclaredInput.length > 0, contract.id);
+        if (operation.input.length === 0 && operation.undeclaredInput.length === 0) {
+          assert.equal(operation.method, 'GET', `${contract.id}: input-free remote operation must be a read`);
+          assert.ok(operation.route, `${contract.id}: input-free read still declares its endpoint`);
+          assert.ok(operation.output && operation.output.fields.length > 0, `${contract.id}: read output inventory`);
+        }
         assert.notEqual(operation.authority.timeoutMs, null, contract.id);
       }
     }

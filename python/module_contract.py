@@ -150,14 +150,16 @@ def _is_integer(value: Any) -> bool:
 
 @dataclass(frozen=True)
 class InputField:
-    """One request key of an operation, in the canonical unit the authority expects.
+    """One request key, with a fixed unit or an explicit selector-to-unit map.
 
     ``min``/``max`` are hard bounds (outside -> reject). A bound is None when no
     limit is established from the authority code or a source; it is never guessed.
+    Selected-unit values pass unchanged to the authority; bounds/steps cannot
+    silently apply across multiple scales. Operation validates the enum linkage.
     """
     key: str
     label: str
-    unit: Optional[str]  # canonical unit sent to the authority (number/integer only)
+    unit: Optional[str]  # fixed canonical unit, or None with a closed selected-unit map
     quantity_kind: str
     min: Optional[float]
     max: Optional[float]
@@ -169,6 +171,8 @@ class InputField:
     value_type: str = "number"
     # Recorded fact about how the authority treats this key (e.g. clamps instead of rejecting).
     note: Optional[str] = None
+    unit_selector: Optional[str] = None
+    unit_options: Tuple[Tuple[str, str], ...] = ()
 
     def __post_init__(self) -> None:
         _require(isinstance(self.key, str) and bool(_KEY.match(self.key)), f"invalid field key {self.key!r}")
@@ -180,8 +184,23 @@ class InputField:
         if self.note is not None:
             _text(self.note, f"{self.key}.note")
         numeric = self.value_type in ("number", "integer")
+        selected_unit = self.unit_selector is not None
+        if selected_unit:
+            _require(numeric, f"{self.key}: only numeric fields may select a unit")
+            _require(isinstance(self.unit_selector, str) and bool(_KEY.fullmatch(self.unit_selector)),
+                     f"{self.key}: unitSelector must name an input field")
+            _require(self.unit is None and self.min is None and self.max is None and self.step is None,
+                     f"{self.key}: selected units have no fixed unit or cross-scale bounds/step")
+            _require(len(self.unit_options) > 0, f"{self.key}: selected units need a closed map")
+            _unique(tuple(choice for choice, _ in self.unit_options), f"{self.key}.unitOptions keys")
+            for choice, unit in self.unit_options:
+                _text(choice, f"{self.key}.unitOptions key")
+                _text(unit, f"{self.key}.unitOptions unit")
+        else:
+            _require(not self.unit_options, f"{self.key}: unitOptions require a unitSelector")
         if numeric:
-            _text(self.unit, f"{self.key}.unit")
+            if not selected_unit:
+                _text(self.unit, f"{self.key}.unit")
             for bound in ("min", "max"):
                 if getattr(self, bound) is not None:
                     _finite(getattr(self, bound), f"{self.key}.{bound}")
@@ -229,6 +248,7 @@ class InputField:
             "displayUnits": list(self.display_units), "quantityKind": self.quantity_kind,
             "min": self.min, "max": self.max, "step": self.step, "default": self.default,
             "required": self.required, "enum": list(self.enum), "note": self.note,
+            "unitSelector": self.unit_selector, "unitOptions": dict(self.unit_options),
         }
 
 
@@ -286,6 +306,10 @@ class OutputSchema:
     # can put there (e.g. ("status", ("success",))). Explicit availability-only
     # outputs may use unavailable without emitting evidence; claims stay forbidden.
     transport_values: Tuple[Tuple[str, Tuple[str, ...]], ...] = ()
+    # Object-valued transport fields: explicit dot paths to status leaves, each
+    # with its own closed vocabulary. Other result metadata is not asserted to
+    # be validated by this inventory (e.g. reason text or numerical brackets).
+    transport_objects: Tuple[Tuple[str, Tuple[Tuple[str, Tuple[str, ...]], ...]], ...] = ()
 
     def __post_init__(self) -> None:
         _require(len(self.fields) > 0, "output.fields must not be empty")
@@ -294,6 +318,9 @@ class OutputSchema:
             _require(key not in FORBIDDEN_CLAIM_KEYS, f"output field {key!r} is a forbidden claim key")
         transport = dict(self.transport_values)
         _require(len(transport) == len(self.transport_values), "output.transportValues keys must be unique")
+        objects = dict(self.transport_objects)
+        _require(len(objects) == len(self.transport_objects), "output.transportObjects keys must be unique")
+        _require(not set(objects) & set(transport), "output transport scalar/object declarations cannot overlap")
         for key, values in transport.items():
             _require(key in self.fields, f"output.transportValues key {key!r} is not an output field")
             _require(key != self.status_key, f"output.transportValues cannot describe the status key {key!r}")
@@ -306,10 +333,33 @@ class OutputSchema:
                 availability_only = value == "unavailable" and self.status_key is None
                 _require((value not in EVIDENCE_STATUSES or availability_only) and value not in FORBIDDEN_CLAIM_KEYS,
                          f"output.transportValues[{key!r}] value {value!r} is an evidence status or claim")
+        for key, members in objects.items():
+            _require(key in self.fields, f"output.transportObjects key {key!r} is not an output field")
+            _require(key != self.status_key, f"output.transportObjects cannot describe the status key {key!r}")
+            _require(not key.replace("_", "").lower().startswith("evidence"),
+                     f"output.transportObjects cannot hide evidence field {key!r}")
+            _require(len(members) > 0, f"output.transportObjects[{key!r}] needs status paths")
+            _unique(tuple(path for path, _ in members), f"output.transportObjects[{key!r}] paths")
+            for path, values in members:
+                _text(path, "output.transportObjects path")
+                parts = path.split(".")
+                _require(len(parts) >= 2 and all(_KEY.fullmatch(part) for part in parts),
+                         f"output.transportObjects path {path!r} must name an explicit nested status leaf")
+                _require(looks_like_status_key(parts[-1]), f"transport object path {path!r} must end in a status leaf")
+                _require(all(part not in FORBIDDEN_CLAIM_KEYS and
+                             not part.replace("_", "").lower().startswith("evidence") for part in parts),
+                         f"transport object path {path!r} hides evidence or a claim")
+                _require(len(values) > 0, f"transport object path {path!r} needs values")
+                _unique(values, f"transport object path {path!r} values")
+                for value in values:
+                    _text(value, f"transport object path {path!r} value")
+                    availability_only = value == "unavailable" and self.status_key is None
+                    _require((value not in EVIDENCE_STATUSES or availability_only) and value not in FORBIDDEN_CLAIM_KEYS,
+                             f"transport object path {path!r} value {value!r} is an evidence status or claim")
         for key in self.fields:
             if key != self.status_key and looks_like_status_key(key):
                 # Without this, a contract with statusKey None could hide a real status field.
-                _require(key in transport, f"output field {key!r} looks like a status key; declare it as the "
+                _require(key in transport or key in objects, f"output field {key!r} looks like a status key; declare it as the "
                                            "statusKey or list its transport values")
         if self.status_key is None:
             return
@@ -322,7 +372,9 @@ class OutputSchema:
 
     def to_dict(self) -> dict:
         return {"fields": list(self.fields), "statusKey": self.status_key,
-                "transportValues": {key: list(values) for key, values in self.transport_values}}
+                "transportValues": {key: list(values) for key, values in self.transport_values},
+                "transportObjects": {key: {path: list(values) for path, values in members}
+                                     for key, members in self.transport_objects}}
 
 
 @dataclass(frozen=True)
@@ -354,6 +406,15 @@ class Operation:
             _require(isinstance(key, str) and bool(_KEY.match(key)), f"{self.id}: invalid undeclared key {key!r}")
         _require(not set(self.undeclared_input) & {f.key for f in self.input},
                  f"{self.id}: a key cannot be both declared and undeclared")
+        fields = {field.key: field for field in self.input}
+        for field in self.input:
+            if field.unit_selector is None:
+                continue
+            selector = fields.get(field.unit_selector)
+            _require(selector is not None and selector.value_type == "enum",
+                     f"{self.id}.{field.key}: unitSelector must reference a declared enum")
+            _require(set(dict(field.unit_options)) == set(selector.enum),
+                     f"{self.id}.{field.key}: unitOptions must cover exactly the selector enum")
 
     def to_dict(self) -> dict:
         return {
@@ -630,10 +691,33 @@ class ModuleContract:
 # --- Round trip (generated JSON -> contract) ----------------------------------
 
 def _field_from_dict(d: dict) -> InputField:
+    options = d.get("unitOptions", {})
+    _require(isinstance(options, dict), "input.unitOptions must be a JSON object")
     return InputField(key=d["key"], label=d["label"], unit=d["unit"], quantity_kind=d["quantityKind"],
                       min=d["min"], max=d["max"], default=d["default"], required=d["required"],
                       step=d["step"], display_units=tuple(d["displayUnits"]), enum=tuple(d["enum"]),
-                      value_type=d["valueType"], note=d["note"])
+                      value_type=d["valueType"], note=d["note"],
+                      unit_selector=d.get("unitSelector"), unit_options=tuple(options.items()))
+
+
+def _output_from_dict(out: dict) -> OutputSchema:
+    """Reject malformed JSON containers before converting immutable descriptors."""
+    _require(isinstance(out, dict), "output must be a JSON object")
+    _require(isinstance(out.get("fields"), list), "output.fields must be a JSON array")
+    scalar = out.get("transportValues")
+    objects = out.get("transportObjects", {})
+    _require(isinstance(scalar, dict), "output.transportValues must be a JSON object")
+    _require(isinstance(objects, dict), "output.transportObjects must be a JSON object")
+    for key, values in scalar.items():
+        _require(isinstance(values, list), f"output.transportValues[{key!r}] must be a JSON array")
+    for key, members in objects.items():
+        _require(isinstance(members, dict), f"output.transportObjects[{key!r}] must be a JSON object")
+        for path, values in members.items():
+            _require(isinstance(values, list), f"output.transportObjects[{key!r}][{path!r}] must be a JSON array")
+    return OutputSchema(fields=tuple(out["fields"]), status_key=out["statusKey"],
+                        transport_values=tuple((key, tuple(values)) for key, values in scalar.items()),
+                        transport_objects=tuple((key, tuple((path, tuple(values)) for path, values in members.items()))
+                                                for key, members in objects.items()))
 
 
 def _operation_from_dict(d: dict) -> Operation:
@@ -644,9 +728,7 @@ def _operation_from_dict(d: dict) -> Operation:
     return Operation(id=d["id"], route=d["route"], method=d["method"], authority=authority,
                      input=tuple(_field_from_dict(f) for f in d["input"]),
                      undeclared_input=tuple(d["undeclaredInput"]),
-                     output=OutputSchema(fields=tuple(out["fields"]), status_key=out["statusKey"],
-                                         transport_values=tuple((k, tuple(v)) for k, v in out["transportValues"].items()))
-                     if out else None)
+                     output=_output_from_dict(out) if out is not None else None)
 
 
 def contract_from_dict(d: dict) -> ModuleContract:

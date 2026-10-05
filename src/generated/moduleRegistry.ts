@@ -16,6 +16,7 @@ export type FieldValueType = "number" | "integer" | "boolean" | "enum";
 export interface ContractField {
   readonly key: string; readonly label: string; readonly valueType: FieldValueType; readonly unit: string | null;
   readonly displayUnits: readonly string[]; readonly quantityKind: string;
+  readonly unitSelector: string | null; readonly unitOptions: Readonly<Record<string, string>>;
   readonly min: number | null; readonly max: number | null; readonly step: number | null;
   readonly default: number | string | boolean; readonly required: boolean; readonly enum: readonly string[];
   readonly note: string | null;
@@ -32,6 +33,7 @@ export interface ContractOperation {
   readonly output: {
     readonly fields: readonly string[]; readonly statusKey: string | null;
     readonly transportValues: Readonly<Record<string, readonly string[]>>;
+    readonly transportObjects: Readonly<Record<string, Readonly<Record<string, readonly string[]>>>>;
   } | null;
 }
 export interface ContractValidityDomain {
@@ -619,7 +621,9 @@ export const MODULE_REGISTRY = {
                 "gcode",
                 "cli"
               ],
-              "note": "The authority lower-cases the value and parses anything other than 'cli' as G-code."
+              "note": "The authority lower-cases the value and parses anything other than 'cli' as G-code.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "defaultPower_W",
@@ -634,7 +638,9 @@ export const MODULE_REGISTRY = {
               "default": 250.0,
               "required": false,
               "enum": [],
-              "note": "Used for vectors without an explicit power word. Passed unconverted; no bound is enforced."
+              "note": "Used for vectors without an explicit power word. Passed unconverted; no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "defaultSpeed_mms",
@@ -649,7 +655,9 @@ export const MODULE_REGISTRY = {
               "default": 1000.0,
               "required": false,
               "enum": [],
-              "note": "Used for vectors without an explicit feed word. Passed unconverted; no bound is enforced."
+              "note": "Used for vectors without an explicit feed word. Passed unconverted; no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "skywritingEnabled",
@@ -664,7 +672,9 @@ export const MODULE_REGISTRY = {
               "default": false,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted to the scanner profile."
+              "note": "Passed unconverted to the scanner profile.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "accelMax_mms2",
@@ -679,7 +689,9 @@ export const MODULE_REGISTRY = {
               "default": 40000.0,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted; no bound is enforced."
+              "note": "Passed unconverted; no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "jumpSpeed_mms",
@@ -694,7 +706,9 @@ export const MODULE_REGISTRY = {
               "default": 3000.0,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted; no bound is enforced."
+              "note": "Passed unconverted; no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "laserOnDelay_us",
@@ -709,7 +723,9 @@ export const MODULE_REGISTRY = {
               "default": 100.0,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted; no bound is enforced."
+              "note": "Passed unconverted; no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "laserOffDelay_us",
@@ -724,7 +740,9 @@ export const MODULE_REGISTRY = {
               "default": 120.0,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted; stored in the scanner profile but not used by the kinematics engine."
+              "note": "Passed unconverted; stored in the scanner profile but not used by the kinematics engine.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "markDelay_us",
@@ -739,7 +757,9 @@ export const MODULE_REGISTRY = {
               "default": 200.0,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted; no bound is enforced."
+              "note": "Passed unconverted; no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "jumpDelay_us",
@@ -754,7 +774,9 @@ export const MODULE_REGISTRY = {
               "default": 350.0,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted; no bound is enforced."
+              "note": "Passed unconverted; no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [
@@ -774,7 +796,8 @@ export const MODULE_REGISTRY = {
               "skywriting_mitigation_active"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         }
       ],
@@ -880,7 +903,9 @@ export const MODULE_REGISTRY = {
                 "Inconel 718",
                 "AlSi10Mg"
               ],
-              "note": "The authority resolves the name through alloy_registry (fatigue_fracture domain) and rejects an unknown name with input_validation UNKNOWN_ALLOY (HTTP 422); the contract lists the four table names the view offers."
+              "note": "The authority resolves the name through alloy_registry (fatigue_fracture domain) and rejects an unknown name with input_validation UNKNOWN_ALLOY (HTTP 422); the contract lists the four table names the view offers.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "sqrtArea_um",
@@ -895,7 +920,9 @@ export const MODULE_REGISTRY = {
               "default": 45.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); the authority requires a finite value > 0 and rejects anything else with input_validation NON_POSITIVE (HTTP 422)."
+              "note": "Converted with float(); the authority requires a finite value > 0 and rejects anything else with input_validation NON_POSITIVE (HTTP 422).",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "location",
@@ -914,7 +941,9 @@ export const MODULE_REGISTRY = {
                 "sub-surface",
                 "internal"
               ],
-              "note": "The authority (murakami_constants.classify_location) accepts surface, sub-surface/subsurface and internal/interior, case-insensitive, and rejects any other text with OUT_OF_RANGE (HTTP 422); the contract accepts the view's three values."
+              "note": "The authority (murakami_constants.classify_location) accepts surface, sub-surface/subsurface and internal/interior, case-insensitive, and rejects any other text with OUT_OF_RANGE (HTTP 422); the contract accepts the view's three values.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "stressRatio_R",
@@ -929,7 +958,9 @@ export const MODULE_REGISTRY = {
               "default": -1.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); the authority requires a finite R < 1 and rejects R >= 1 with OUT_OF_RANGE (HTTP 422). The fatigue-limit correction still caps 0.99 < R < 1 at 0.99."
+              "note": "Converted with float(); the authority requires a finite R < 1 and rejects R >= 1 with OUT_OF_RANGE (HTTP 422). The fatigue-limit correction still caps 0.99 < R < 1 at 0.99.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "stressAmplitude_MPa",
@@ -944,7 +975,9 @@ export const MODULE_REGISTRY = {
               "default": 220.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); the authority requires a finite value > 0 (NON_POSITIVE, HTTP 422)."
+              "note": "Converted with float(); the authority requires a finite value > 0 (NON_POSITIVE, HTTP 422).",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [
@@ -957,7 +990,8 @@ export const MODULE_REGISTRY = {
               "paris_crack_growth"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         }
       ],
@@ -1064,7 +1098,9 @@ export const MODULE_REGISTRY = {
                 "gcode",
                 "cli"
               ],
-              "note": "The authority lower-cases the value and parses anything other than 'cli' as G-code."
+              "note": "The authority lower-cases the value and parses anything other than 'cli' as G-code.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "defaultPower_W",
@@ -1079,7 +1115,9 @@ export const MODULE_REGISTRY = {
               "default": 280.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); no bound is enforced."
+              "note": "Converted with float(); no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "defaultSpeed_mms",
@@ -1094,7 +1132,9 @@ export const MODULE_REGISTRY = {
               "default": 1000.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); no bound is enforced."
+              "note": "Converted with float(); no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "apply67DegRotation",
@@ -1109,7 +1149,9 @@ export const MODULE_REGISTRY = {
               "default": false,
               "required": false,
               "enum": [],
-              "note": "The authority coerces with bool(); the contract accepts only booleans."
+              "note": "The authority coerces with bool(); the contract accepts only booleans.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "layerIndex",
@@ -1124,7 +1166,9 @@ export const MODULE_REGISTRY = {
               "default": 1,
               "required": false,
               "enum": [],
-              "note": "Converted with int(); no bound is enforced. When apply67DegRotation is true the rotation angle is 67° x layerIndex; otherwise it is 0."
+              "note": "Converted with int(); no bound is enforced. When apply67DegRotation is true the rotation angle is 67° x layerIndex; otherwise it is 0.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "accelMax_mms2",
@@ -1139,7 +1183,9 @@ export const MODULE_REGISTRY = {
               "default": 40000.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); no bound is enforced."
+              "note": "Converted with float(); no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "jumpSpeed_mms",
@@ -1154,7 +1200,9 @@ export const MODULE_REGISTRY = {
               "default": 3000.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); no bound is enforced."
+              "note": "Converted with float(); no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [
@@ -1171,7 +1219,8 @@ export const MODULE_REGISTRY = {
               "sample_segments"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         }
       ],
@@ -1273,7 +1322,9 @@ export const MODULE_REGISTRY = {
               "default": 64,
               "required": false,
               "enum": [],
-              "note": "Not sent by the view; the authority default applies."
+              "note": "Not sent by the view; the authority default applies.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "ny",
@@ -1288,7 +1339,9 @@ export const MODULE_REGISTRY = {
               "default": 64,
               "required": false,
               "enum": [],
-              "note": "Not sent by the view; the authority default applies."
+              "note": "Not sent by the view; the authority default applies.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "dx",
@@ -1303,7 +1356,9 @@ export const MODULE_REGISTRY = {
               "default": 2e-06,
               "required": false,
               "enum": [],
-              "note": "Not sent by the view; the authority default applies."
+              "note": "Not sent by the view; the authority default applies.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "dy",
@@ -1318,7 +1373,9 @@ export const MODULE_REGISTRY = {
               "default": 2e-06,
               "required": false,
               "enum": [],
-              "note": "Not sent by the view; the authority default applies."
+              "note": "Not sent by the view; the authority default applies.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "power_W",
@@ -1333,7 +1390,9 @@ export const MODULE_REGISTRY = {
               "default": 250,
               "required": false,
               "enum": [],
-              "note": "The view sends the shared LPBF process laserPower_W."
+              "note": "The view sends the shared LPBF process laserPower_W.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "beam_radius_um",
@@ -1348,7 +1407,9 @@ export const MODULE_REGISTRY = {
               "default": 50,
               "required": false,
               "enum": [],
-              "note": "The view sends the shared beamDiameter_um / 2."
+              "note": "The view sends the shared beamDiameter_um / 2.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "base_absorption",
@@ -1363,7 +1424,9 @@ export const MODULE_REGISTRY = {
               "default": 0.3,
               "required": false,
               "enum": [],
-              "note": "Empirical angular law input, not complex-index Fresnel optics."
+              "note": "Empirical angular law input, not complex-index Fresnel optics.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "keyhole_depth_um",
@@ -1378,7 +1441,9 @@ export const MODULE_REGISTRY = {
               "default": 100,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "max_bounces",
@@ -1393,7 +1458,9 @@ export const MODULE_REGISTRY = {
               "default": 5,
               "required": false,
               "enum": [],
-              "note": "Power still in flight at the limit is reported as bounce-limited (truncated), not escaped."
+              "note": "Power still in flight at the limit is reported as bounce-limited (truncated), not escaped.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "num_rays",
@@ -1408,7 +1475,9 @@ export const MODULE_REGISTRY = {
               "default": 10000,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "seed",
@@ -1423,7 +1492,9 @@ export const MODULE_REGISTRY = {
               "default": 0,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "ui_ray_limit",
@@ -1438,7 +1509,9 @@ export const MODULE_REGISTRY = {
               "default": 1000,
               "required": false,
               "enum": [],
-              "note": "Display subset only; drawn from a separate generator and never changes the physics samples. The view sends 150."
+              "note": "Display subset only; drawn from a separate generator and never changes the physics samples. The view sends 150.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "device",
@@ -1456,7 +1529,9 @@ export const MODULE_REGISTRY = {
                 "cpu",
                 "cuda:0"
               ],
-              "note": "No silent backend substitution: any other value is rejected."
+              "note": "No silent backend substitution: any other value is rejected.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [],
@@ -1484,7 +1559,8 @@ export const MODULE_REGISTRY = {
               "status": [
                 "success"
               ]
-            }
+            },
+            "transportObjects": {}
           }
         }
       ],
@@ -1586,7 +1662,8 @@ export const MODULE_REGISTRY = {
               "honesty"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         }
       ],
@@ -1642,8 +1719,8 @@ export const MODULE_REGISTRY = {
     },
     {
       "id": "database",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
+      "version": "0.1.0",
+      "owner": "unassigned (needs maintainer)",
       "workspace": "materials",
       "label": "Materials Database",
       "description": "Handbook values and reviewed research references; source applicability requires review.",
@@ -1657,7 +1734,7 @@ export const MODULE_REGISTRY = {
       },
       "operations": [
         {
-          "id": "catalog-lookup",
+          "id": "search-catalog",
           "method": null,
           "route": null,
           "authority": {
@@ -1667,11 +1744,1191 @@ export const MODULE_REGISTRY = {
             "timeoutMs": null,
             "gpu": "none",
             "warm": false,
-            "exceptionReason": "Recorded debt (single-authority rule): material records are read from the bundled src/data/materialsDatabase.ts in the browser."
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "searchQuery"
+          ],
+          "output": {
+            "fields": [
+              "filteredMaterials",
+              "visibleCount"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "filter-by-category",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [
+            {
+              "key": "selectedCategory",
+              "label": "Catalog category filter",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "local-catalog-filter",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "All",
+              "required": false,
+              "enum": [
+                "All",
+                "Carbon Steel",
+                "Alloy Steel",
+                "Tool Steel",
+                "Stainless Steel",
+                "Aluminum Alloy",
+                "Copper Alloy",
+                "Titanium Alloy",
+                "Nickel Superalloy",
+                "Magnesium Alloy",
+                "Refractory & Specialty",
+                "Ceramic & Carbide"
+              ],
+              "note": "These are the exact category pills in MaterialsDatabaseView; the field filters local rows only.",
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "filteredMaterials",
+              "visibleCount"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "filter-by-min-yield-strength",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [
+            {
+              "key": "minYield",
+              "label": "Minimum yield-strength filter",
+              "valueType": "number",
+              "unit": "MPa",
+              "displayUnits": [],
+              "quantityKind": "local-catalog-filter",
+              "min": null,
+              "max": null,
+              "step": 50,
+              "default": 0,
+              "required": false,
+              "enum": [],
+              "note": "UI state default and slider step; slider attributes do not establish material validity bounds.",
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "filteredMaterials",
+              "visibleCount"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "filter-by-min-modulus",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [
+            {
+              "key": "minModulus",
+              "label": "Minimum Young's-modulus filter",
+              "valueType": "number",
+              "unit": "GPa",
+              "displayUnits": [],
+              "quantityKind": "local-catalog-filter",
+              "min": null,
+              "max": null,
+              "step": 10,
+              "default": 40,
+              "required": false,
+              "enum": [],
+              "note": "UI state default and slider step; slider attributes do not establish material validity bounds.",
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "filteredMaterials",
+              "visibleCount"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "filter-by-max-density",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [
+            {
+              "key": "maxDensity",
+              "label": "Maximum density filter",
+              "valueType": "number",
+              "unit": "g/cm^3",
+              "displayUnits": [],
+              "quantityKind": "local-catalog-filter",
+              "min": null,
+              "max": null,
+              "step": 0.2,
+              "default": 17.0,
+              "required": false,
+              "enum": [],
+              "note": "The visible density slider edits maxDensity (value=maxDensity, setter=setMaxDensity); its state default is 17.0 and step is 0.2. minDensity remains fixed at 1.5 here. Slider attributes do not establish material validity bounds.",
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "filteredMaterials",
+              "visibleCount"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "reset-property-range-filters",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
           },
           "input": [],
           "undeclaredInput": [],
-          "output": null
+          "output": {
+            "fields": [
+              "minYield",
+              "maxYield",
+              "minModulus",
+              "maxModulus",
+              "minDensity",
+              "maxDensity"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "toggle-property-filter-panel",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "showFilters"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "switch-view-mode",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [
+            {
+              "key": "activeTab",
+              "label": "Database view mode",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "local-view-mode",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "split",
+              "required": true,
+              "enum": [
+                "split",
+                "heatmap",
+                "catalog"
+              ],
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "activeView"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "sort-catalog",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [
+            {
+              "key": "sortBy",
+              "label": "Catalog sort key",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "local-sort-control",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "yield",
+              "required": true,
+              "enum": [
+                "yield",
+                "tensile",
+                "specific_strength",
+                "modulus",
+                "density",
+                "name"
+              ],
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
+            },
+            {
+              "key": "sortOrder",
+              "label": "Catalog sort direction",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "local-sort-control",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "desc",
+              "required": true,
+              "enum": [
+                "desc",
+                "asc"
+              ],
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "sortedMaterials"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "select-material-record",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "material"
+          ],
+          "output": {
+            "fields": [
+              "selectedMaterial"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "toggle-comparison-record",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "material"
+          ],
+          "output": {
+            "fields": [
+              "compareList"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "open-comparison-drawer",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "isCompareOpen"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "close-comparison-drawer",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "isCompareOpen"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "copy-selected-record",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "clipboardWriteAttempt",
+              "optimisticCopyFeedback"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "export-catalog-json",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "fullCatalogJsonDownload"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "open-transfer-picker",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "transferPickerOpen"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "dispatch-material-to-module",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [
+            {
+              "key": "targetId",
+              "label": "Transfer destination",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "module-navigation-target",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "alloy-builder",
+              "required": true,
+              "enum": [
+                "alloy-builder",
+                "icme-motor",
+                "3d-distortion-lab",
+                "phase-diagram"
+              ],
+              "note": "Exact destination IDs rendered by SendToModuleModal for this transfer flow.",
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "pipelineMaterialEvent",
+              "navigationTarget"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "render-heatmap",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "materials",
+            "selectedMaterial"
+          ],
+          "output": {
+            "fields": [
+              "displayedMaterials",
+              "svgPlot"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "set-heatmap-mode",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [
+            {
+              "key": "heatmapMode",
+              "label": "D3 plot mode",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "local-view-mode",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "alloy-elements",
+              "required": true,
+              "enum": [
+                "alloy-elements",
+                "element-property-binned",
+                "property-correlation"
+              ],
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "heatmapMode",
+              "svgPlot"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "set-heatmap-property",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [
+            {
+              "key": "selectedPropertyKey",
+              "label": "Heatmap property",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "catalog-property-key",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "yieldStrength",
+              "required": true,
+              "enum": [
+                "yieldStrength",
+                "tensileStrength",
+                "youngsModulus",
+                "density",
+                "specificStrength",
+                "elongation",
+                "thermalConductivity"
+              ],
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "selectedPropertyKey",
+              "svgPlot"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "set-heatmap-element",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [
+            {
+              "key": "selectedElement",
+              "label": "Focused alloying element",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "element-symbol",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "Cr",
+              "required": true,
+              "enum": [
+                "C",
+                "Cr",
+                "Ni",
+                "Mo",
+                "Ti",
+                "Al",
+                "Cu",
+                "V",
+                "Mn",
+                "Si",
+                "Mg",
+                "W",
+                "Co",
+                "Nb",
+                "Zr",
+                "Fe"
+              ],
+              "note": "The select options are the component's alloying-element list; plot-axis clicks choose from elements present in the current data.",
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "selectedElement",
+              "svgPlot"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "sort-heatmap-alloys",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [
+            {
+              "key": "sortBy",
+              "label": "Heatmap sort key",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "local-sort-control",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "property",
+              "required": true,
+              "enum": [
+                "property",
+                "element",
+                "category",
+                "name"
+              ],
+              "note": "This selector is rendered only in alloy-elements mode; sortAsc is initialized false but has no current UI setter.",
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "displayedMaterials",
+              "svgPlot"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "set-heatmap-palette",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [
+            {
+              "key": "colorPalette",
+              "label": "D3 color palette",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "local-plot-style",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "viridis",
+              "required": true,
+              "enum": [
+                "viridis",
+                "plasma",
+                "turbo",
+                "emerald",
+                "amber-flame"
+              ],
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "colorPalette",
+              "svgPlot"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "select-heatmap-element-from-axis",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "elem"
+          ],
+          "output": {
+            "fields": [
+              "selectedElement",
+              "svgPlot"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "select-heatmap-property-from-axis",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "prop"
+          ],
+          "output": {
+            "fields": [
+              "selectedPropertyKey",
+              "svgPlot"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "select-composition-cell",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "mat",
+            "elem"
+          ],
+          "output": {
+            "fields": [
+              "selectedMaterial",
+              "selectedElement"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "select-binned-bucket",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "b"
+          ],
+          "output": {
+            "fields": [
+              "selectedMaterial"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "select-correlation-cell",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "cell"
+          ],
+          "output": {
+            "fields": [
+              "selectedElement",
+              "selectedPropertyKey",
+              "svgPlot"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "select-scatter-point",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "mat"
+          ],
+          "output": {
+            "fields": [
+              "selectedMaterial"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "inspect-composition-cell",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "mat",
+            "elem",
+            "wt"
+          ],
+          "output": {
+            "fields": [
+              "hoveredCell",
+              "xLabel",
+              "yLabel",
+              "value",
+              "unit",
+              "material",
+              "extraInfo",
+              "xPos",
+              "yPos"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "inspect-binned-cell",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "b"
+          ],
+          "output": {
+            "fields": [
+              "hoveredCell",
+              "xLabel",
+              "yLabel",
+              "value",
+              "extraInfo",
+              "xPos",
+              "yPos"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "inspect-correlation-cell",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "cell"
+          ],
+          "output": {
+            "fields": [
+              "hoveredCell",
+              "xLabel",
+              "yLabel",
+              "value",
+              "extraInfo",
+              "xPos",
+              "yPos"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "clear-heatmap-tooltip",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "hoveredCell"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "export-heatmap-svg",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "source",
+              "blob",
+              "url",
+              "download"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
         }
       ],
       "validityDomain": null,
@@ -1686,22 +2943,74 @@ export const MODULE_REGISTRY = {
           "productionReady",
           "airworthy"
         ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
+        "note": "No numerical or provenance oracle is declared for this catalog view. Displayed handbook-style properties and downstream composition-based profiles remain screening material; browsing or transferring a record does not establish source applicability, calibration, or physical validation."
       },
-      "lifecycle": null,
+      "lifecycle": {
+        "backgroundWork": "none",
+        "resources": []
+      },
       "tests": {
-        "schema": null,
+        "schema": "python/test_module_contract_database.py",
         "oracle": {
           "status": "pending",
           "ref": null,
           "ciNote": null,
           "scope": null
         },
-        "docs": null
+        "docs": "docs/modules/database.md"
       },
-      "migrationState": "legacy",
-      "legacyNotes": [],
-      "sourceRefs": [],
+      "migrationState": "contracted",
+      "legacyNotes": [
+        "This module reads the statically imported MATERIALS_DATABASE array and performs filtering, sorting, selection, comparison, clipboard copy, JSON download, and transfer-payload preparation in the browser. Outputs name local view effects and transfer state; this is not an API request/response surface.",
+        "The trimmed, lowercased searchQuery checks material name, standard, category, microstructure, application text, and composition element symbols. Category filtering is exact. Yield strength and Young's modulus are filtered by both min and max state; density is also filtered by both min and max. Only minYield, minModulus, and maxDensity have visible sliders; maxYield, maxModulus, and minDensity remain at their initialized values unless the reset action writes them. Slider limits and steps are control settings, not a material validity domain.",
+        "MaterialSpec stores nominal scalar or min/max composition entries and property values, but has no per-property source citation, condition/temper, applicability, uncertainty, or confidence fields. The catalog header says 'Calibrated'; that UI label is not a record-level evidence link or validation proof.",
+        "Selection and comparison callbacks receive MaterialSpec records from local catalog rows. Since the SDK scalar schema cannot describe that nested record/map, these actions record the actual 'material' input as undeclared rather than inventing a record-ID endpoint or object schema.",
+        "createPipelinePayloadFromMaterialSpec preserves originalComposition and marks composition as nominal or range-midpoint, while normalizing composition and deriving kinetic, hardness, and XRD profiles. The downstream bridge states that source property values/confidence are not promoted and derived properties remain estimates. Missing Poisson ratio also receives a code fallback in the pipeline; that fallback is software behavior, not a database measurement.",
+        "The transfer picker presents Alloy Builder, ICME, LPBF wizard, and Phase Diagram as destinations. Dispatch stores the payload through the browser pipeline utility, then navigates after a 350 ms setTimeout. This is a local cross-module handoff, not provider/server execution or LPBF acceptance.",
+        "The comparison list initially contains catalog entries at indexes 0 and 5; clicking toggles membership and additions stop at four entries. The category and view-mode enums below describe the actual visible controls, not material-property validity classes.",
+        "The property-filter panel has a local showFilters toggle. The comparison drawer opens only when the compare list is nonempty and closes from its modal callback or either close button.",
+        "Copy calls navigator.clipboard.writeText without awaiting or catching its promise, then immediately sets copied=true and clears that optimistic feedback after 2000 ms. The UI feedback therefore records an attempted copy, not confirmed clipboard success; permission/API failure is not handled here.",
+        "Export serializes the full MATERIALS_DATABASE array, independent of active filters; it creates an object URL, clicks a download link, then revokes the URL in the same handler. Lifecycle has no timeout/object-URL resource kind; these are noted as short UI effects rather than invented lifecycle resources.",
+        "MaterialsPropertyHeatmapD3 is mounted only while activeTab is \"split\" or \"heatmap\"; catalog mode unmounts it. Its ResizeObserver disconnects on effect dependency change and unmount. The D3-render effect has no cleanup function: redraw removes prior SVG descendants, while normal unmount removes the child DOM. If displayedMaterials becomes empty, that effect returns before clearing the prior SVG, so a previous plot can remain visible until a later nonempty redraw or unmount.",
+        "The child props are materials: MaterialSpec[], selectedMaterial: MaterialSpec, onSelectMaterial(MaterialSpec), categories: string[], activeCategory: string, and optional onSelectCategory(string). The parent passes filteredMaterials and selectedMaterial; the two nested record props are recorded as undeclared on render-heatmap because the scalar SDK schema cannot represent them. Callback effects are captured by selection operations. categories, activeCategory, and onSelectCategory are passed but unused by this child. Child sortAsc is initialized false and searchAlloy empty, but neither has a current UI setter; do not report either as a user-editable control. Heatmap modes, property keys, element selector options, sort keys, and palette options are the source-defined control values only. Correlation mode omits thermalConductivity from its plotted target properties.",
+        "Heatmap cell/axis interactions update local selected material, element, or property state; no plot click submits a calculation. The selection/hover operation inputs use the actual closure values mat, elem, wt, b, prop, and cell where applicable; their nested D3 data shapes are not promoted into a fabricated stable schema. Composition cells show catalog wt-percent values, binned cells summarize current catalog records and select the first member, and correlation cells display a Pearson r computed from displayed records with sample count (fewer than three positive-property pairs are represented as r=0). These are descriptive visualizations of bundled records, not independent measurements, fitted validation, or a physical oracle.",
+        "The child SVG export serializes the current SVG into a Blob, creates an object URL, clicks a temporary download anchor named from heatmapMode and selectedPropertyKey, then revokes the URL synchronously. These output names describe transient browser transport effects, not a returned API object. ResizeObserver, timers, and object URLs have no matching lifecycle resource kind in the schema vocabulary and are documented here rather than mislabeled as raf/interval/three/fetch.",
+        "No fetch, worker, solver, scheduled job, or source download is initiated by this view or its D3 child. The nested comparison and transfer dialogs are UI children, not background work."
+      ],
+      "sourceRefs": [
+        "src/components/MaterialsDatabaseView.tsx:36-111#filteredMaterials",
+        "src/components/MaterialsDatabaseView.tsx:122-143#handleCopySpec",
+        "src/components/MaterialsDatabaseView.tsx:60-72#categories",
+        "src/components/MaterialsDatabaseView.tsx:236-338#Property Sliders",
+        "src/components/MaterialsDatabaseView.tsx:230-245#setShowFilters(!showFilters)",
+        "src/components/MaterialsDatabaseView.tsx:250-264#Sort:",
+        "src/components/MaterialsDatabaseView.tsx:336-346#Maximum Density (ρ)",
+        "src/components/MaterialsDatabaseView.tsx:150-150#Calibrated chemical compositions",
+        "src/components/MaterialsDatabaseView.tsx:56-56#compareList",
+        "src/components/MaterialsDatabaseView.tsx:113-118#compareList.length < 4",
+        "src/components/MaterialsDatabaseView.tsx:373-377#MaterialsPropertyHeatmapD3",
+        "src/components/MaterialsDatabaseView.tsx:402-402#setSelectedMaterial(mat)",
+        "src/components/MaterialsDatabaseView.tsx:483-483#createPipelinePayloadFromMaterialSpec",
+        "src/components/MaterialsDatabaseView.tsx:199-199#setIsCompareOpen(true)",
+        "src/components/MaterialsDatabaseView.tsx:674-695#setIsCompareOpen(false)",
+        "src/components/MaterialsPropertyHeatmapD3.tsx::MaterialsPropertyHeatmapD3",
+        "src/components/MaterialsPropertyHeatmapD3.tsx::HEATMAP_PROPERTIES",
+        "src/components/MaterialsPropertyHeatmapD3.tsx::ALLOYING_ELEMENTS",
+        "src/components/MaterialsPropertyHeatmapD3.tsx:320-345#observer.disconnect()",
+        "src/components/MaterialsPropertyHeatmapD3.tsx:348-348#useEffect(() => {",
+        "src/components/MaterialsPropertyHeatmapD3.tsx:858-868#URL.revokeObjectURL(url)",
+        "src/components/MaterialsPropertyHeatmapD3.tsx:1045-1062#hoveredCell",
+        "src/types.ts:32-63#MaterialSpec",
+        "src/data/materialsDatabase.ts:1-28#MATERIALS_DATABASE",
+        "src/utils/materialDataPipeline.ts:666-715#createPipelinePayloadFromMaterialSpec",
+        "src/utils/materialDataPipeline.ts:718-729#setActivePipelineMaterial",
+        "src/components/SendToModuleButton.tsx:6-12#SendToModuleButtonProps",
+        "src/components/SendToModuleModal.tsx:47-62#handleDispatch",
+        "src/components/SendToModuleModal.tsx:63-132#targets",
+        "src/utils/materialDataPipeline.ts:6-11#ModuleTargetId",
+        "src/services/materialContextBridge.ts:47-70#applyIdentity",
+        "src/services/materialContextBridge.ts:91-91#subscribeToPipelineMaterial"
+      ],
       "seedDerived": [
         "label",
         "description",
@@ -1747,7 +3056,8 @@ export const MODULE_REGISTRY = {
               "activeMaterialSpecimen"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -1772,7 +3082,8 @@ export const MODULE_REGISTRY = {
               "activeMaterialSpecimen"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -1797,7 +3108,8 @@ export const MODULE_REGISTRY = {
               "activeMaterialSpecimen"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -1822,7 +3134,8 @@ export const MODULE_REGISTRY = {
               "activeMaterialSpecimen"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -1847,7 +3160,8 @@ export const MODULE_REGISTRY = {
               "activeMaterialSpecimen"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -1877,7 +3191,9 @@ export const MODULE_REGISTRY = {
               "default": 0.0,
               "required": true,
               "enum": [],
-              "note": "The active input displays the current stored value; schema default 0.0 records the clear-input action, not an initial field value. Clearing the HTML number field maps to 0; setElement removes exactly zero. Finite values in 0..100 are store-enforced input bounds, not a physical applicability domain; percentages retain the active specimen's wt.% or at.% unit. The 0.1 step is a UI hint."
+              "note": "The active input displays the current stored value; schema default 0.0 records the clear-input action, not an initial field value. Clearing the HTML number field maps to 0; setElement removes exactly zero. Finite values in 0..100 are store-enforced input bounds, not a physical applicability domain; percentages retain the active specimen's wt.% or at.% unit. The 0.1 step is a UI hint.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [
@@ -1888,7 +3204,8 @@ export const MODULE_REGISTRY = {
               "activeMaterialSpecimen"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -1913,7 +3230,8 @@ export const MODULE_REGISTRY = {
               "activeMaterialSpecimen"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -1936,7 +3254,8 @@ export const MODULE_REGISTRY = {
               "activeMaterialSpecimen"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -1961,7 +3280,8 @@ export const MODULE_REGISTRY = {
               "activeMaterialSpecimen"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -1984,7 +3304,8 @@ export const MODULE_REGISTRY = {
               "activeMaterialSpecimen"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2007,7 +3328,8 @@ export const MODULE_REGISTRY = {
               "savedSpecimens"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         }
       ],
@@ -2075,8 +3397,8 @@ export const MODULE_REGISTRY = {
     },
     {
       "id": "phase-diagram",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
+      "version": "0.1.0",
+      "owner": "unassigned (needs maintainer)",
       "workspace": "materials",
       "label": "Phase Diagrams & CALPHAD",
       "description": "Reference binary diagrams and pycalphad equilibrium; CALPHAD needs pycalphad and an installed database covering every selected element, else unavailable.",
@@ -2104,7 +3426,24 @@ export const MODULE_REGISTRY = {
           },
           "input": [],
           "undeclaredInput": [],
-          "output": null
+          "output": {
+            "fields": [
+              "success",
+              "engine",
+              "pycalphadAvailable",
+              "pycalphadVersion",
+              "unavailableReason",
+              "databasesCount",
+              "usableDatabasesCount",
+              "databases",
+              "installedFiles",
+              "systemCoverage",
+              "modelCache"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
         },
         {
           "id": "calphad-minimize",
@@ -2119,9 +3458,430 @@ export const MODULE_REGISTRY = {
             "warm": true,
             "exceptionReason": null
           },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
+          "input": [
+            {
+              "key": "tMin",
+              "label": "Minimum temperature",
+              "valueType": "number",
+              "unit": "degC",
+              "displayUnits": [],
+              "quantityKind": "temperature",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 500.0,
+              "required": true,
+              "enum": [],
+              "note": "Direct solver default is 500 degC. The mounted UI always sends a base-element-selected window: Al 400–750 degC, Mg 350–700 degC, Ti 600–1750 degC, otherwise 500–1550 degC; the UI also sends its step (10 degC for Al/Mg, otherwise 25 degC). No solver hard bound is declared for these request values.",
+              "unitSelector": null,
+              "unitOptions": {}
+            },
+            {
+              "key": "tMax",
+              "label": "Maximum temperature",
+              "valueType": "number",
+              "unit": "degC",
+              "displayUnits": [],
+              "quantityKind": "temperature",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 1450.0,
+              "required": true,
+              "enum": [],
+              "note": "Direct solver default is 1450 degC. UI-selected windows are documented on tMin; they depend on the largest alloy element.",
+              "unitSelector": null,
+              "unitOptions": {}
+            },
+            {
+              "key": "tStep",
+              "label": "Temperature grid step",
+              "valueType": "number",
+              "unit": "degC",
+              "displayUnits": [],
+              "quantityKind": "temperature-step",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 20.0,
+              "required": true,
+              "enum": [],
+              "note": "Direct solver default is 20 degC. UI passes 10 or 25 degC from the selected base-element window. The Python solver caps the actual uniform grid at 80 points; these UI values are not backend bounds.",
+              "unitSelector": null,
+              "unitOptions": {}
+            },
+            {
+              "key": "unit",
+              "label": "Composition unit",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "selection",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "wt_pct",
+              "required": true,
+              "enum": [
+                "wt_pct",
+                "at_pct"
+              ],
+              "note": "UI sends wt_pct for the live specimen; the authority also accepts at_pct.",
+              "unitSelector": null,
+              "unitOptions": {}
+            },
+            {
+              "key": "adaptiveGrid",
+              "label": "Adaptive grid",
+              "valueType": "boolean",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "configuration",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": false,
+              "required": true,
+              "enum": [],
+              "note": "The UI sends false; the engine has a uniform grid, not an adaptive grid.",
+              "unitSelector": null,
+              "unitOptions": {}
+            },
+            {
+              "key": "boundaryRefinement",
+              "label": "Boundary refinement",
+              "valueType": "boolean",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "configuration",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": true,
+              "required": true,
+              "enum": [],
+              "note": "UI toggle; when enabled, repeated equilibrium calculations refine liquidus/solidus.",
+              "unitSelector": null,
+              "unitOptions": {}
+            },
+            {
+              "key": "minRefineStep",
+              "label": "Boundary tolerance",
+              "valueType": "number",
+              "unit": "degC",
+              "displayUnits": [],
+              "quantityKind": "temperature-tolerance",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 0.5,
+              "required": true,
+              "enum": [],
+              "note": "The UI selector offers the discrete values 0.2, 0.5, 1.0, and 2.0 degC. Direct Python requests are not restricted to those options; the solver uses max(0.05 degC, requested value) as its refinement tolerance and declares no upper bound.",
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
+          "undeclaredInput": [
+            "name",
+            "elements",
+            "databaseId",
+            "customTdbText",
+            "supersedeKey"
+          ],
+          "output": {
+            "fields": [
+              "success",
+              "status",
+              "unavailableKind",
+              "reason",
+              "reasons",
+              "engine",
+              "pycalphadAvailable",
+              "pycalphadVersion",
+              "alloyName",
+              "nominalComposition",
+              "atomicFractions",
+              "requestedElements",
+              "baseElement",
+              "databaseId",
+              "databaseUsed",
+              "databaseStatus",
+              "databaseSuitability",
+              "databasePath",
+              "missingElements",
+              "databasesConsidered",
+              "temperatureRangeC",
+              "temperatureStepC",
+              "thermodynamicModel",
+              "isEmpirical",
+              "equilibriumCalls",
+              "activeComponents",
+              "dependentComponent",
+              "unsupportedElements",
+              "compositionAdjustments",
+              "gridPoints",
+              "equilibriumProfile",
+              "criticalTemperatures",
+              "criticalTemperatureStatus",
+              "phacompAnalysis",
+              "solutePartitioning",
+              "multiElementScheil",
+              "multiElementScheilStatus",
+              "multiElementScheilNote",
+              "scheilSolidification",
+              "thermodynamicStabilityIndex",
+              "tcpEmbrittlementRisk",
+              "nonConvergedPoints",
+              "boundaryRefinement",
+              "phaseNameNotes",
+              "computeTimeMs",
+              "timingsMs",
+              "modelCache",
+              "provenance",
+              "isPythonEngine",
+              "pythonUnavailable",
+              "error",
+              "errorKind",
+              "field",
+              "extra",
+              "rawOutput",
+              "stderr",
+              "script"
+            ],
+            "statusKey": null,
+            "transportValues": {
+              "status": [
+                "unavailable"
+              ],
+              "databaseStatus": [
+                "assessment",
+                "test-fixture",
+                "user-supplied"
+              ],
+              "multiElementScheilStatus": [
+                "pycalphad-scheil-gulliver",
+                "incomplete",
+                "unavailable"
+              ]
+            },
+            "transportObjects": {
+              "criticalTemperatureStatus": {
+                "liquidusC.status": [
+                  "bisected",
+                  "bracketed-by-grid",
+                  "unavailable"
+                ],
+                "solidusC.status": [
+                  "bisected",
+                  "bracketed-by-grid",
+                  "unavailable"
+                ],
+                "freezingRangeC.status": [
+                  "computed",
+                  "unavailable"
+                ],
+                "gammaPrimeSolvusC.status": [
+                  "unavailable"
+                ],
+                "gammaDoublePrimeSolvusC.status": [
+                  "unavailable"
+                ],
+                "deltaSolvusC.status": [
+                  "unavailable"
+                ],
+                "carbidePrecipitationC.status": [
+                  "unavailable"
+                ],
+                "betaTransusC.status": [
+                  "heuristic-phase-name",
+                  "unavailable"
+                ],
+                "tcpSigmaRiskTemperatureC.status": [
+                  "heuristic-phase-name",
+                  "screening-constant",
+                  "unavailable"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": "client-screening",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "Explicit Python-engine-off mode calls the existing TypeScript screening solver; this is recorded single-authority debt."
+          },
+          "input": [
+            {
+              "key": "usePython",
+              "label": "Use Python engine",
+              "valueType": "boolean",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "configuration",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": false,
+              "required": true,
+              "enum": [],
+              "note": "This operation is selected only when the user explicitly turns the Python engine off; Python request failure does not enter this path.",
+              "unitSelector": null,
+              "unitOptions": {}
+            },
+            {
+              "key": "tMin",
+              "label": "Minimum temperature",
+              "valueType": "number",
+              "unit": "degC",
+              "displayUnits": [],
+              "quantityKind": "temperature",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 500.0,
+              "required": true,
+              "enum": [],
+              "note": "Passed from the same base-element window as the Python request; that selection is not a bound on the browser solver input.",
+              "unitSelector": null,
+              "unitOptions": {}
+            },
+            {
+              "key": "tMax",
+              "label": "Maximum temperature",
+              "valueType": "number",
+              "unit": "degC",
+              "displayUnits": [],
+              "quantityKind": "temperature",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 1550.0,
+              "required": true,
+              "enum": [],
+              "note": "Passed from the same base-element window as the Python request; that selection is not a bound on the browser solver input.",
+              "unitSelector": null,
+              "unitOptions": {}
+            },
+            {
+              "key": "tStep",
+              "label": "Temperature grid step",
+              "valueType": "number",
+              "unit": "degC",
+              "displayUnits": [],
+              "quantityKind": "temperature-step",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 25.0,
+              "required": true,
+              "enum": [],
+              "note": "Passed from the same base-element window as the Python request; that selection is not a bound on the browser solver input.",
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
+          "undeclaredInput": [
+            "alloy",
+            "selectedTdbIndex",
+            "activeTdbContent"
+          ],
+          "output": {
+            "fields": [
+              "engine",
+              "isPythonEngine",
+              "isEmpirical",
+              "thermodynamicModel",
+              "databaseUsed",
+              "iterations",
+              "equilibriumProfile",
+              "criticalTemperatures",
+              "solutePartitioning",
+              "multiElementScheil",
+              "temperatureRangeC",
+              "temperatureStepC",
+              "alloyName",
+              "nominalComposition",
+              "computeTimeMs",
+              "thermodynamicStabilityIndex",
+              "tcpEmbrittlementRisk"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "binary-browser-analysis",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "The rendered CALPHAD lab still evaluates its bundled binary Gibbs models in the browser; this is legacy single-authority debt."
+          },
+          "input": [
+            {
+              "key": "temperatureC",
+              "label": "Probe temperature",
+              "valueType": "number",
+              "unit": "degC",
+              "displayUnits": [],
+              "quantityKind": "temperature",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 850.0,
+              "required": true,
+              "enum": [],
+              "note": "Initial probe is 850 degC for Fe-C; changing system selects other UI presets. No physical applicability bound is established by the UI.",
+              "unitSelector": null,
+              "unitOptions": {}
+            },
+            {
+              "key": "compositionB",
+              "label": "Component B content",
+              "valueType": "number",
+              "unit": "%",
+              "displayUnits": [],
+              "quantityKind": "composition-percentage",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 0.45,
+              "required": true,
+              "enum": [],
+              "note": "Initial Fe-C probe is 0.45 wt%; other systems use at.% or wt.% as declared by the selected browser model. System-specific values are selected in the UI.",
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
+          "undeclaredInput": [
+            "selectedSystemId"
+          ],
+          "output": {
+            "fields": [
+              "gxChartData",
+              "equilibriumState",
+              "scheilResult",
+              "tdbText"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
         },
         {
           "id": "ai-consult",
@@ -2131,14 +3891,269 @@ export const MODULE_REGISTRY = {
             "kind": "node-provider",
             "script": null,
             "workerMethod": null,
-            "timeoutMs": null,
+            "timeoutMs": 60000,
             "gpu": "none",
             "warm": false,
             "exceptionReason": null
           },
           "input": [],
+          "undeclaredInput": [
+            "prompt"
+          ],
+          "output": {
+            "fields": [
+              "response",
+              "reply",
+              "text",
+              "answer",
+              "error"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "switch-phase-view",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "The root Fe-C explorer uses React state and hard-coded piecewise boundary/lever-rule expressions; no backend route, assessed TDB, or execution deadline exists for this branch."
+          },
+          "input": [
+            {
+              "key": "activeView",
+              "label": "Phase explorer view",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "selection",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "calphad_solver",
+              "required": true,
+              "enum": [
+                "calphad_solver",
+                "fe_c_diagram"
+              ],
+              "note": "Actual root buttons. Switching to Fe-C unmounts the CALPHAD lab; switching back remounts its mount-time requests. Fe-C is not a Python error fallback.",
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
           "undeclaredInput": [],
-          "output": null
+          "output": {
+            "fields": [
+              "activeView"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "fe-c-probe",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "The root Fe-C explorer uses React state and hard-coded piecewise boundary/lever-rule expressions; no backend route, assessed TDB, or execution deadline exists for this branch."
+          },
+          "input": [
+            {
+              "key": "compositionC",
+              "label": "Carbon content (wt% C)",
+              "valueType": "number",
+              "unit": "%",
+              "displayUnits": [],
+              "quantityKind": "carbon-mass-percentage",
+              "min": null,
+              "max": null,
+              "step": 0.01,
+              "default": 0.45,
+              "required": true,
+              "enum": [],
+              "note": "Carbon slider spans 0–6.67 wt_pct with 0.01 step. Pointer mapping clamps to that chart extent and rounds to two decimals. These are UI bounds, not a validated physical domain; this state is separate from the shared specimen.",
+              "unitSelector": null,
+              "unitOptions": {}
+            },
+            {
+              "key": "temperatureC",
+              "label": "Probe temperature",
+              "valueType": "number",
+              "unit": "degC",
+              "displayUnits": [],
+              "quantityKind": "temperature",
+              "min": null,
+              "max": null,
+              "step": 5,
+              "default": 850,
+              "required": true,
+              "enum": [],
+              "note": "Slider spans 400–1600 degC in steps of 5. Pointer mapping clamps to that chart extent and rounds to whole degC, so pointer values need not follow the slider step. No assessed thermodynamic applicability is declared.",
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "compositionC",
+              "temperatureC",
+              "regionName",
+              "stateCategory",
+              "phasesPresent",
+              "equilibriumDescription",
+              "liquidus",
+              "solidus"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "select-fe-c-preset",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "The root Fe-C explorer uses React state and hard-coded piecewise boundary/lever-rule expressions; no backend route, assessed TDB, or execution deadline exists for this branch."
+          },
+          "input": [
+            {
+              "key": "presetName",
+              "label": "Fe-C preset",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "selection",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "AISI 1045 Medium Carbon Machinery Steel",
+              "required": true,
+              "enum": [
+                "AISI 1008 Low Carbon / IF Steel",
+                "AISI 1018 Mild Structural Steel",
+                "AISI 1045 Medium Carbon Machinery Steel",
+                "AISI 1080 Eutectoid Rail & Wire Steel",
+                "AISI 1095 High Carbon Spring & Tool Steel",
+                "AISI 52100 High-Carbon Bearing Steel",
+                "Class 30 Gray Cast Iron (Hypoeutectic)",
+                "Eutectic White Cast Iron (Ledeburite)",
+                "Hypereutectic White Cast Iron"
+              ],
+              "note": "The handler sets selectedPreset and copies only carbon composition from the matching table row; temperature is unchanged. The dropdown exposes all rows and quick buttons expose the first four.",
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "selectedPreset",
+              "compositionC"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "drag-fe-c-probe",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "The root Fe-C explorer uses React state and hard-coded piecewise boundary/lever-rule expressions; no backend route, assessed TDB, or execution deadline exists for this branch."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "e"
+          ],
+          "output": {
+            "fields": [
+              "isDragging",
+              "compositionC",
+              "temperatureC"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "end-fe-c-drag",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "The root Fe-C explorer uses React state and hard-coded piecewise boundary/lever-rule expressions; no backend route, assessed TDB, or execution deadline exists for this branch."
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "isDragging"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "hover-fe-c-region",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "The root Fe-C explorer uses React state and hard-coded piecewise boundary/lever-rule expressions; no backend route, assessed TDB, or execution deadline exists for this branch."
+          },
+          "input": [],
+          "undeclaredInput": [
+            "hoveredRegion"
+          ],
+          "output": {
+            "fields": [
+              "hoveredRegion"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
         }
       ],
       "validityDomain": null,
@@ -2153,22 +4168,68 @@ export const MODULE_REGISTRY = {
           "productionReady",
           "airworthy"
         ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
+        "note": "No evidence status is emitted and no numerical oracle is declared. A successful pycalphad calculation is solver output, not independent numerical or experimental validation; browser screening and bundled binary calculations have no demonstrated applicability domain."
       },
-      "lifecycle": null,
+      "lifecycle": {
+        "backgroundWork": "none",
+        "resources": [
+          "fetch",
+          "interval"
+        ]
+      },
       "tests": {
-        "schema": null,
+        "schema": "python/test_module_contract_calphad.py",
         "oracle": {
           "status": "pending",
           "ref": null,
           "ciNote": null,
           "scope": null
         },
-        "docs": null
+        "docs": "docs/modules/phase-diagram.md"
       },
-      "migrationState": "legacy",
-      "legacyNotes": [],
-      "sourceRefs": [],
+      "migrationState": "contracted",
+      "legacyNotes": [
+        "The registered phase-diagram view is src/components/PhaseDiagramViewer.tsx; its default view renders CALPHADThermodynamicsLab, which mounts CALPHADMultiComponentStudio. On mount the studio requests /api/python/status as an infrastructure health check and /api/python/calphad-databases, then schedules a minimization after an 80 ms debounce; edits/supersession abort stale client requests, clear the timeout and guard result/error writes with isMounted. The initial status/inventory requests have no cleanup guard. The 250 ms interval has clearInterval cleanup and only updates elapsed-time display while solving. No scientific deadline/progress estimate is exposed by that timer.",
+        "The Python minimizer has no fallback calculation: missing pycalphad, missing/unassessed database coverage, missing elements, refused test-fixture TDBs, or equilibrium failure yields an unavailable envelope without equilibrium/critical-temperature numbers. HTTP 422 validation refusal is displayed without a client substitute. The visible client solver is reached only after the user explicitly turns the Python engine off; it is marked empirical/screening and is not the fallback for failure.",
+        "The minimization request's elements map, custom TDB text, and alloy name are dynamic values and are undeclared inputs. UI temperature window/step is derived from the largest element: Al 400–750/10 degC, Mg 350–700/10 degC, Ti 600–1750/25 degC, otherwise 500–1550/25 degC. Direct Python defaults are 500/1450/20 degC. The UI sends adaptiveGrid=false, boundaryRefinement=true by default and a selectable 0.2/0.5/1/2 degC tolerance; no blanket hard temperature applicability limits are asserted.",
+        "The legacy binary lab also computes G-x curves, a browser phase-equilibrium estimate, Scheil-style solidification and TDB export from bundled TypeScript tables/functions. The 'AI CALPHAD Diagnosis' button submits binary-system prompt text to /api/consult; service failure or empty/malformed response leaves the consultation unavailable instead of fabricating a scientific report. Input changes and unmount abort/invalidate the request. A provider response is not an independently validated CALPHAD result. Neither browser path is promoted as Python output.",
+        "The SDK output fields are conditional inventories. Database coverage entries can say covered or unavailable, but coverage is an element/base-assessment check, not experimental agreement. Solver 'status=unavailable' is transport state only; no evidence status is emitted. databaseStatus is database provenance classification (assessment/test-fixture/user-supplied), not validation; multiElementScheilStatus is computed-path/incomplete/unavailable transport state. criticalTemperatureStatus is a top-level per-temperature object map; transportObjects declares each member's nested status leaf and its closed computed-path/availability vocabulary. Reason text and numerical bracket/refinement metadata are not fully typed by this status inventory. Output numbers depend on the selected assessed database and conditions; no numerical oracle or physical domain is claimed.",
+        "The root Fe-C branch evaluates probeState on compositionC/temperatureC changes using hard-coded piecewise boundaries, approximate tie lines and lever-rule fractions, not an assessed TDB or a pycalphad call. probeState holds the declared Fe-C output fields; phasesPresent contains name, formula, fractionPct, compositionC and crystal. UI labels including 'CALPHAD Standard' and the unconditional 'Solver: Online' text are not authority or physical validation. The declared diagramMode Fe-C/Al-Cu/Ti-Al state has no reachable setter/control; no extra system operation is invented.",
+        "Fe-C pointer events e carry browser coordinates; the SVG bounding rectangle maps them to a 900x600 viewBox. Dragging begins on pointer down, updates only within the chart, and ends on pointer up on that SVG; no pointer capture, leave or cancel handler is registered. Hover sets a region label on mouse enter and null on mouse leave; the nullable hoveredRegion input is undeclared because InputField has no nullable string type. Hover is display-only. React owns these handlers/ref; this branch has no effect, fetch, interval or external listener to dispose. Root probe/preset state survives child view switches. Slider/pointer changes do not update selectedPreset, so the preset morphology card remains table text independent of the current probe, not recomputed microstructure evidence.",
+        "The studio computes a local clientSolveResult synchronously from parsed editable TDB and a fixed 500/1450/20 degC grid even when Python is on; showNumbers gates its display. With Python off, the debounced service path uses PRELOADED_MULTI_COMPONENT_TDB[0], not the editor selection, with the element-selected window, and replaces the initial local result. These two screening paths are not identical database/window authorities. Output inventory includes the service wrapper fields."
+      ],
+      "sourceRefs": [
+        "python/module_registry.py::build_registry",
+        "src/App.tsx:190-190#case 'phase-diagram': return <PhaseDiagramViewer />;",
+        "src/modules/views.ts:23-23#'phase-diagram': lazy(",
+        "src/components/PhaseDiagramViewer.tsx::PhaseDiagramViewer",
+        "src/components/PhaseDiagramViewer.tsx::FEC_ALLOY_PRESETS",
+        "src/components/PhaseDiagramViewer.tsx::handleSelectPreset",
+        "src/components/PhaseDiagramViewer.tsx::updateProbeFromEvent",
+        "src/components/CALPHADThermodynamicsLab.tsx::CALPHADThermodynamicsLab",
+        "src/utils/calphadConsultation.ts::parseConsultationResponse",
+        "src/components/CALPHADMultiComponentStudio.tsx::CALPHADMultiComponentStudio",
+        "src/services/pythonComputationService.ts::PythonComputationService.getCalphadDatabases",
+        "src/services/pythonComputationService.ts::PythonComputationService.solveCalphadEquilibrium",
+        "src/utils/calphadResultDisplay.ts::calphadTemperatureWindow",
+        "routes/physics.ts:58-63#physicsRouter.post([\"/api/python/calphad-minimize\"",
+        "routes/physics.ts:62-63#physicsRouter.get([\"/api/python/calphad-databases\"",
+        "routes/copilot.ts:23-52#copilotRouter.post([\"/api/metallurgy/consult\"",
+        "server/openaiService.ts::generateGpt6Response",
+        "python/calphad_solver.py::list_available_databases",
+        "python/calphad_solver.py::normalize_composition",
+        "python/calphad_solver.py::unavailable_result",
+        "python/calphad_solver.py::resolve_database",
+        "python/calphad_solver.py::solve_pycalphad_equilibrium",
+        "python/calphad_solver.py::derive_critical_temperatures",
+        "python/calphad_solver.py::_scheil_outputs",
+        "python/calphad_solver.py::compute_multi_component_equilibrium",
+        "python/calphad_solver.py::main",
+        "src/physics/calphadMultiComponentSolver.ts::solveMultiComponentEquilibrium",
+        "src/physics/calphadGibbsEngine.ts::calculatePhaseEquilibrium",
+        "src/physics/calphadGibbsEngine.ts::simulateScheilSolidification",
+        "python/test_module_contract_calphad.py"
+      ],
       "seedDerived": [
         "label",
         "description",
@@ -2226,7 +4287,9 @@ export const MODULE_REGISTRY = {
                 "Ti-6Al-4V",
                 "Al 7075"
               ],
-              "note": "The authority resolves the name through alloy_registry (kinetics domain) and rejects an unknown or ambiguous name with input_validation UNKNOWN_ALLOY (exit 2, HTTP 422); the contract lists the six kinetics table names the view offers."
+              "note": "The authority resolves the name through alloy_registry (kinetics domain) and rejects an unknown or ambiguous name with input_validation UNKNOWN_ALLOY (exit 2, HTTP 422); the contract lists the six kinetics table names the view offers.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "coolingRate_C_s",
@@ -2241,7 +4304,9 @@ export const MODULE_REGISTRY = {
               "default": 10.0,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted by the entry point. Sets only calphadVsKineticsGap.kineticRealityAtSelectedCooling; the CCT map uses a fixed list of rates. For AISI 4140 and AISI 4340 (Li model available) a value <= 0 is rejected with input_validation NON_POSITIVE (exit 2); for the other alloys a non-number is rejected with NON_FINITE (exit 2) and no bound is enforced."
+              "note": "Passed unconverted by the entry point. Sets only calphadVsKineticsGap.kineticRealityAtSelectedCooling; the CCT map uses a fixed list of rates. For AISI 4140 and AISI 4340 (Li model available) a value <= 0 is rejected with input_validation NON_POSITIVE (exit 2); for the other alloys a non-number is rejected with NON_FINITE (exit 2) and no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "grainSize_um",
@@ -2256,7 +4321,9 @@ export const MODULE_REGISTRY = {
               "default": 25.0,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted by the entry point. Only the Li (1998) model uses it (AISI 4140, AISI 4340), as the mean planar grain diameter converted to the ASTM E112 grain size number; there a value <= 0 is rejected with input_validation NON_POSITIVE (exit 2) and a value outside 1-1000 µm (an input sanity bound of the implementation, not a source range) with OUT_OF_RANGE (exit 2). For AISI D2 (outside the model range), Inconel 718, Ti-6Al-4V and Al 7075 it is ignored and only echoed in inputParameters, so a negative value returns exit 0."
+              "note": "Passed unconverted by the entry point. Only the Li (1998) model uses it (AISI 4140, AISI 4340), as the mean planar grain diameter converted to the ASTM E112 grain size number; there a value <= 0 is rejected with input_validation NON_POSITIVE (exit 2) and a value outside 1-1000 µm (an input sanity bound of the implementation, not a source range) with OUT_OF_RANGE (exit 2). For AISI D2 (outside the model range), Inconel 718, Ti-6Al-4V and Al 7075 it is ignored and only echoed in inputParameters, so a negative value returns exit 0.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "austTemp_C",
@@ -2271,7 +4338,9 @@ export const MODULE_REGISTRY = {
               "default": 860.0,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted by the entry point. For AISI 4140 and AISI 4340 a value outside 0-1600 degC (input sanity bound) is rejected with OUT_OF_RANGE (exit 2); otherwise no bound is enforced. At or below the Grange Ae3 the Li model's CCT starts and critical cooling rate are unavailable (fully austenitic start assumed)."
+              "note": "Passed unconverted by the entry point. For AISI 4140 and AISI 4340 a value outside 0-1600 degC (input sanity bound) is rejected with OUT_OF_RANGE (exit 2); otherwise no bound is enforced. At or below the Grange Ae3 the Li model's CCT starts and critical cooling rate are unavailable (fully austenitic start assumed).",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "agingTemp_C",
@@ -2286,7 +4355,9 @@ export const MODULE_REGISTRY = {
               "default": 720.0,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted by the entry point; no bound is enforced."
+              "note": "Passed unconverted by the entry point; no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "agingTime_h",
@@ -2301,7 +4372,9 @@ export const MODULE_REGISTRY = {
               "default": 8.0,
               "required": false,
               "enum": [],
-              "note": "Passed unconverted by the entry point. Echoed in inputParameters only; the LSW coarsening profile uses a fixed 0.1-100 h time grid."
+              "note": "Passed unconverted by the entry point. Echoed in inputParameters only; the LSW coarsening profile uses a fixed 0.1-100 h time grid.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [],
@@ -2323,7 +4396,8 @@ export const MODULE_REGISTRY = {
               "provenance"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         }
       ],
@@ -2432,7 +4506,9 @@ export const MODULE_REGISTRY = {
               "default": 0,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "cropBottomPx",
@@ -2447,7 +4523,9 @@ export const MODULE_REGISTRY = {
               "default": 0,
               "required": false,
               "enum": [],
-              "note": "The SEM data bar is excluded by the user here; nothing is excluded by default."
+              "note": "The SEM data bar is excluded by the user here; nothing is excluded by default.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "cropLeftPx",
@@ -2462,7 +4540,9 @@ export const MODULE_REGISTRY = {
               "default": 0,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "cropRightPx",
@@ -2477,7 +4557,9 @@ export const MODULE_REGISTRY = {
               "default": 0,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "umPerPx",
@@ -2492,7 +4574,9 @@ export const MODULE_REGISTRY = {
               "default": 0.0,
               "required": false,
               "enum": [],
-              "note": "0 (default) means not supplied. A positive value needs calibrationNote (its source) and cannot be combined with a scale bar."
+              "note": "0 (default) means not supplied. A positive value needs calibrationNote (its source) and cannot be combined with a scale bar.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "barLengthUm",
@@ -2507,7 +4591,9 @@ export const MODULE_REGISTRY = {
               "default": 0.0,
               "required": false,
               "enum": [],
-              "note": "0 (default) means not supplied; with barLengthPx (>= 2) the authority computes umPerPx."
+              "note": "0 (default) means not supplied; with barLengthPx (>= 2) the authority computes umPerPx.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "barLengthPx",
@@ -2522,7 +4608,9 @@ export const MODULE_REGISTRY = {
               "default": 0.0,
               "required": false,
               "enum": [],
-              "note": "Caliper length drawn by the user over the image scale bar; 0 (default) means not supplied."
+              "note": "Caliper length drawn by the user over the image scale bar; 0 (default) means not supplied.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "darkMaxGrey",
@@ -2537,7 +4625,9 @@ export const MODULE_REGISTRY = {
               "default": -1,
               "required": false,
               "enum": [],
-              "note": "-1 (default) is not a threshold: no grey level satisfies it, so the class is not measured. Must be below brightMinGrey when both classes are measured."
+              "note": "-1 (default) is not a threshold: no grey level satisfies it, so the class is not measured. Must be below brightMinGrey when both classes are measured.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "brightMinGrey",
@@ -2552,7 +4642,9 @@ export const MODULE_REGISTRY = {
               "default": 256,
               "required": false,
               "enum": [],
-              "note": "256 (default) is not a threshold: no grey level satisfies it, so the class is not measured."
+              "note": "256 (default) is not a threshold: no grey level satisfies it, so the class is not measured.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "boundaryMaxGrey",
@@ -2567,7 +4659,9 @@ export const MODULE_REGISTRY = {
               "default": -1,
               "required": false,
               "enum": [],
-              "note": "-1 (default) is not a threshold: no grey level satisfies it, so the class is not measured; automatic E112 counting assumes boundaries darker than grains."
+              "note": "-1 (default) is not a threshold: no grey level satisfies it, so the class is not measured; automatic E112 counting assumes boundaries darker than grains.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "tiles",
@@ -2582,7 +4676,9 @@ export const MODULE_REGISTRY = {
               "default": 4,
               "required": false,
               "enum": [],
-              "note": "Convention of this module (k x k tiles of one image), not a standard value."
+              "note": "Convention of this module (k x k tiles of one image), not a standard value.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "sensitivityDeltaGrey",
@@ -2597,7 +4693,9 @@ export const MODULE_REGISTRY = {
               "default": 10,
               "required": false,
               "enum": [],
-              "note": "The class fraction is also reported at threshold -/+ this many grey levels."
+              "note": "The class fraction is also reported at threshold -/+ this many grey levels.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "minAreaPx",
@@ -2612,7 +4710,9 @@ export const MODULE_REGISTRY = {
               "default": 4,
               "required": false,
               "enum": [],
-              "note": "Detection limit of the particle count (reported as an ECD when calibrated); a convention."
+              "note": "Detection limit of the particle count (reported as an ECD when calibrated); a convention.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "linesPerDirection",
@@ -2627,7 +4727,9 @@ export const MODULE_REGISTRY = {
               "default": 8,
               "required": false,
               "enum": [],
-              "note": "Horizontal rows and vertical columns at i/(m+1) of the region of interest."
+              "note": "Horizontal rows and vertical columns at i/(m+1) of the region of interest.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "returnMasks",
@@ -2642,7 +4744,9 @@ export const MODULE_REGISTRY = {
               "default": true,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [
@@ -2668,7 +4772,8 @@ export const MODULE_REGISTRY = {
               "limitations"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2703,7 +4808,9 @@ export const MODULE_REGISTRY = {
                 "image/webp",
                 "image/gif"
               ],
-              "note": "Used only when imageBase64 is not a data: URL (the data-URL type wins); other types are rejected with HTTP 415."
+              "note": "Used only when imageBase64 is not a data: URL (the data-URL type wins); other types are rejected with HTTP 415.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [
@@ -2715,7 +4822,8 @@ export const MODULE_REGISTRY = {
               "diagnosis"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         }
       ],
@@ -2820,7 +4928,8 @@ export const MODULE_REGISTRY = {
               "sourceRestoreState"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2844,7 +4953,8 @@ export const MODULE_REGISTRY = {
               "sourceRestoreState"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2874,7 +4984,9 @@ export const MODULE_REGISTRY = {
               "default": 130.0,
               "required": false,
               "enum": [],
-              "note": "Optional peak-search setting; the UI falls back to 130 eV when the value is out of range."
+              "note": "Optional peak-search setting; the UI falls back to 130 eV when the value is out of range.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [
@@ -2887,7 +4999,8 @@ export const MODULE_REGISTRY = {
               "parameters"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2914,7 +5027,8 @@ export const MODULE_REGISTRY = {
               "anchor"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2940,7 +5054,8 @@ export const MODULE_REGISTRY = {
               "anchor"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -2975,7 +5090,8 @@ export const MODULE_REGISTRY = {
               "accepted"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         },
         {
@@ -3003,7 +5119,8 @@ export const MODULE_REGISTRY = {
               "transfer"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         }
       ],
@@ -3222,7 +5339,9 @@ export const MODULE_REGISTRY = {
                 "Ti",
                 "Al"
               ],
-              "note": "Any other value is rejected with input_validation UNKNOWN_ELEMENT (exit 2, HTTP 422)."
+              "note": "Any other value is rejected with input_validation UNKNOWN_ELEMENT (exit 2, HTTP 422).",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "coolingRate_C_s",
@@ -3237,7 +5356,9 @@ export const MODULE_REGISTRY = {
               "default": 150000.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); no bound is enforced; values below 1 K/s are floored at 1 in the SDAS power law."
+              "note": "Converted with float(); no bound is enforced; values below 1 K/s are floored at 1 in the SDAS power law.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "agingTemp_C",
@@ -3252,7 +5373,9 @@ export const MODULE_REGISTRY = {
               "default": 720.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); no bound is enforced."
+              "note": "Converted with float(); no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "agingTime_h",
@@ -3267,7 +5390,9 @@ export const MODULE_REGISTRY = {
               "default": 8.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); no bound is enforced."
+              "note": "Converted with float(); no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "strainRate_s_inv",
@@ -3282,7 +5407,9 @@ export const MODULE_REGISTRY = {
               "default": 0.001,
               "required": false,
               "enum": [],
-              "note": "Converted with float(); written into the exported material cards only. No bound is enforced."
+              "note": "Converted with float(); written into the exported material cards only. No bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "serviceTemp_C",
@@ -3297,7 +5424,9 @@ export const MODULE_REGISTRY = {
               "default": 25.0,
               "required": false,
               "enum": [],
-              "note": "Converted with float() by the authority but not used in any computed value (the structuralVerdict text is the same at 1000 degC)."
+              "note": "Converted with float() by the authority but not used in any computed value (the structuralVerdict text is the same at 1000 degC).",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "componentType",
@@ -3316,7 +5445,9 @@ export const MODULE_REGISTRY = {
                 "pressure_bulkhead",
                 "lpbf_bracket"
               ],
-              "note": "The authority silently uses turbine_blade_root for any other value; the contract accepts only the three catalog keys."
+              "note": "The authority silently uses turbine_blade_root for any other value; the contract accepts only the three catalog keys.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [
@@ -3347,7 +5478,8 @@ export const MODULE_REGISTRY = {
               "modelStatus": [
                 "illustrative"
               ]
-            }
+            },
+            "transportObjects": {}
           }
         }
       ],
@@ -3455,7 +5587,9 @@ export const MODULE_REGISTRY = {
                 "custom",
                 "isotropic"
               ],
-              "note": "Initial UI selector only; always explicitly sent. Missing backend mode retains legacy library behavior, outside this P2 form contract."
+              "note": "Initial UI selector only; always explicitly sent. Missing backend mode retains legacy library behavior, outside this P2 form contract.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "crystal_system",
@@ -3477,7 +5611,9 @@ export const MODULE_REGISTRY = {
                 "orthorhombic",
                 "isotropic"
               ],
-              "note": "Initial custom selector only; isotropic mode always sends isotropic. Both selectors are explicit request keys, not filled from the specimen."
+              "note": "Initial custom selector only; isotropic mode always sends isotropic. Both selectors are explicit request keys, not filled from the specimen.",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [
@@ -3528,7 +5664,8 @@ export const MODULE_REGISTRY = {
               "referenceStatus": [
                 "supplied-by-caller"
               ]
-            }
+            },
+            "transportObjects": {}
           }
         }
       ],
@@ -3773,8 +5910,8 @@ export const MODULE_REGISTRY = {
     },
     {
       "id": "experimental-data",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
+      "version": "1.0.0",
+      "owner": "unassigned (needs maintainer)",
       "workspace": "evidence",
       "label": "Measured Findings",
       "description": "Registry findings labelled as measured, with method, source and uncertainty gaps; the label is user-declared, not verified.",
@@ -3786,7 +5923,139 @@ export const MODULE_REGISTRY = {
         "component": "src/components/EvidenceWorkspace.tsx",
         "export": "EvidenceWorkspace"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "set-material-scope",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "EvidenceWorkspace reads browser Zustand stores and performs browser download/navigation actions; it declares no server route or execution deadline."
+          },
+          "input": [
+            {
+              "key": "allMaterials",
+              "label": "Show all materials",
+              "valueType": "boolean",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "display-filter",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": false,
+              "required": true,
+              "enum": [],
+              "note": "This checkbox changes only the visible finding filter; it does not change the records included in the exported research snapshot.",
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "allMaterials",
+              "findings"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "navigate-to-measurement-entry",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "EvidenceWorkspace reads browser Zustand stores and performs browser download/navigation actions; it declares no server route or execution deadline."
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "activeTab",
+              "eventName",
+              "tabId"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "navigate-to-research-registry",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "EvidenceWorkspace reads browser Zustand stores and performs browser download/navigation actions; it declares no server route or execution deadline."
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "activeTab",
+              "eventName",
+              "tabId"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "export-evidence-package",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "EvidenceWorkspace reads browser Zustand stores and performs browser download/navigation actions; it declares no server route or execution deadline."
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "schemaVersion",
+              "exportedAt",
+              "scope",
+              "activeSpecimen",
+              "research",
+              "engineering",
+              "buildScreening",
+              "missingEvidence",
+              "blob",
+              "url",
+              "anchor",
+              "download",
+              "notice"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -3799,24 +6068,45 @@ export const MODULE_REGISTRY = {
           "productionReady",
           "airworthy"
         ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
+        "note": "No independent physical or validation oracle is attached to this workspace. User-entered measured labels and reviewed source links are not independent validation; package export is a transport action, not scientific evidence. No oracle promotes the ceiling beyond screening-only."
       },
-      "lifecycle": null,
+      "lifecycle": {
+        "backgroundWork": "none",
+        "resources": []
+      },
       "tests": {
-        "schema": null,
+        "schema": "python/test_module_contract_evidence.py",
         "oracle": {
           "status": "pending",
           "ref": null,
           "ciNote": null,
           "scope": null
         },
-        "docs": null
+        "docs": "docs/modules/experimental-data.md"
       },
-      "migrationState": "legacy",
+      "migrationState": "contracted",
       "legacyNotes": [
-        "EvidenceWorkspace only reads useLpbfBuildJobStore (lastKey, job) and useLpbfEngineeringStore; it dispatches no server request (build jobs are submitted from 3d-distortion-lab), so no operation is bound."
+        "Both entries render src/components/EvidenceWorkspace.tsx with a fixed mode prop. Findings visible in the list are filtered by allMaterials || finding.materialId === activeSpecimen.id; experimental mode additionally requires finding.evidenceType === 'measured'. The checkbox and mode filters affect display only.",
+        "The 'measured' evidenceType is a user-declared record classification. A measured label, reviewed source, review status, or integration link does not establish independent validation or externally certified data.",
+        "Export reads the current activeSpecimen, research.exportSnapshot(), engineering.job, engineering.submittedInput, build.job, and peekLpbfBuildJobKey() comparison. It does not use the visible findings list, so the research snapshot includes all briefs, sources, findings, integrations, and feedback regardless of mode or checkbox filter.",
+        "The downloaded JSON has schemaVersion, exportedAt, scope, activeSpecimen, research, engineering, buildScreening, and missingEvidence keys. engineering.job and submittedInput are null when absent; build.job is null before a build run. The active specimen is copied from its store; no specimen, job, measurement, or result is synthesized.",
+        "The export click handler returns void. Output fields distinguish keys in the downloaded package from the Blob, object URL, anchor download property, and notice used by the browser flow; they are not a returned API object. It revokes the object URL after a 1000 ms setTimeout; lifecycle vocabulary has no timeout resource, so no interval/background resource is declared.",
+        "EvidenceWorkspace has no effect, fetch, worker submission, or other background operation. Research data persist in browser-local storage through the research store; changing the active Research Hub tab is persisted there. This view does not save research data to a server.",
+        "An export exception is surfaced in the notice as an operational failure. It does not create an evidence status. Qualification and independent experimental validation remain unresolved.",
+        "Experimental mode renders ResearchIntegrationPanel for validation-dataset links and its button opens Research Hub registry. Its measurement-entry button sets activeTab to 'extract' and dispatches metallix-navigate-tab with tabId 'research-hub'."
       ],
-      "sourceRefs": [],
+      "sourceRefs": [
+        "python/module_registry_seed.json",
+        "src/App.tsx::App",
+        "src/components/EvidenceWorkspace.tsx::EvidenceWorkspace",
+        "src/components/ResearchIntegrationPanel.tsx::ResearchIntegrationPanel",
+        "src/types/research.ts",
+        "src/store/useResearchStore.ts",
+        "src/store/useMaterialSpecimenStore.ts::useMaterialSpecimenStore",
+        "src/store/useLpbfEngineeringStore.ts::useLpbfEngineeringStore",
+        "src/store/useLpbfBuildJobStore.ts::useLpbfBuildJobStore",
+        "src/store/useLpbfBuildJobStore.ts::peekLpbfBuildJobKey"
+      ],
       "seedDerived": [
         "label",
         "description",
@@ -3941,7 +6231,9 @@ export const MODULE_REGISTRY = {
                 "Ti",
                 "Al"
               ],
-              "note": "The authority maps any value other than Ni/Fe/Ti to the Al constants without an error; the contract accepts only the four tabulated keys."
+              "note": "The authority maps any value other than Ni/Fe/Ti to the Al constants without an error; the contract accepts only the four tabulated keys.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "coolingRate_nominal",
@@ -3956,7 +6248,9 @@ export const MODULE_REGISTRY = {
               "default": 150000.0,
               "required": false,
               "enum": [],
-              "note": "No bound is enforced; a value <= 0 fails in math.log (not expressible as an inclusive bound)."
+              "note": "No bound is enforced; a value <= 0 fails in math.log (not expressible as an inclusive bound).",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "coolingRate_cov",
@@ -3971,7 +6265,9 @@ export const MODULE_REGISTRY = {
               "default": 0.25,
               "required": false,
               "enum": [],
-              "note": "Fraction (0.25 = 25 %); no bound is enforced."
+              "note": "Fraction (0.25 = 25 %); no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "agingTemp_nominal",
@@ -3986,7 +6282,9 @@ export const MODULE_REGISTRY = {
               "default": 720.0,
               "required": false,
               "enum": [],
-              "note": "No bound is enforced; each draw is floored at 200 degC."
+              "note": "No bound is enforced; each draw is floored at 200 degC.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "agingTemp_stdDev",
@@ -4001,7 +6299,9 @@ export const MODULE_REGISTRY = {
               "default": 7.5,
               "required": false,
               "enum": [],
-              "note": "Temperature difference (no offset); no bound is enforced."
+              "note": "Temperature difference (no offset); no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "agingTime_nominal",
@@ -4016,7 +6316,9 @@ export const MODULE_REGISTRY = {
               "default": 8.0,
               "required": false,
               "enum": [],
-              "note": "No bound is enforced; each draw is floored at 0.2 h."
+              "note": "No bound is enforced; each draw is floored at 0.2 h.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "agingTime_stdDev",
@@ -4031,7 +6333,9 @@ export const MODULE_REGISTRY = {
               "default": 0.25,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "serviceStress_nominal",
@@ -4046,7 +6350,9 @@ export const MODULE_REGISTRY = {
               "default": 720.0,
               "required": false,
               "enum": [],
-              "note": "No bound is enforced; each draw is floored at 50 MPa."
+              "note": "No bound is enforced; each draw is floored at 50 MPa.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "serviceStress_cov",
@@ -4061,7 +6367,9 @@ export const MODULE_REGISTRY = {
               "default": 0.08,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "initialFlawSize_um_mean",
@@ -4076,7 +6384,9 @@ export const MODULE_REGISTRY = {
               "default": 45.0,
               "required": false,
               "enum": [],
-              "note": "No bound is enforced; each draw is floored at 5 µm."
+              "note": "No bound is enforced; each draw is floored at 5 µm.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "initialFlawSize_um_std",
@@ -4091,7 +6401,9 @@ export const MODULE_REGISTRY = {
               "default": 15.0,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "specMinYield_MPa",
@@ -4106,7 +6418,9 @@ export const MODULE_REGISTRY = {
               "default": 1100.0,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "specMinUTS_MPa",
@@ -4121,7 +6435,9 @@ export const MODULE_REGISTRY = {
               "default": 1350.0,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "specMinElongation_pct",
@@ -4136,7 +6452,9 @@ export const MODULE_REGISTRY = {
               "default": 12.0,
               "required": false,
               "enum": [],
-              "note": null
+              "note": null,
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "mcSamples",
@@ -4151,7 +6469,9 @@ export const MODULE_REGISTRY = {
               "default": 2500,
               "required": false,
               "enum": [],
-              "note": "The authority clamps values outside [500, 10000] instead of rejecting them; the contract declares [500, 10000] as its hard range."
+              "note": "The authority clamps values outside [500, 10000] instead of rejecting them; the contract declares [500, 10000] as its hard range.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "samplingMethod",
@@ -4168,7 +6488,9 @@ export const MODULE_REGISTRY = {
               "enum": [
                 "sobol_qmc"
               ],
-              "note": "The authority rejects 'pseudo_mc' with a ValueError; the view still offers it."
+              "note": "The authority rejects 'pseudo_mc' with a ValueError; the view still offers it.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "scramble",
@@ -4183,7 +6505,9 @@ export const MODULE_REGISTRY = {
               "default": true,
               "required": false,
               "enum": [],
-              "note": "The authority coerces with bool(); the contract accepts only booleans."
+              "note": "The authority coerces with bool(); the contract accepts only booleans.",
+              "unitSelector": null,
+              "unitOptions": {}
             },
             {
               "key": "seed",
@@ -4198,7 +6522,9 @@ export const MODULE_REGISTRY = {
               "default": 42,
               "required": false,
               "enum": [],
-              "note": "No bound is enforced (int() conversion)."
+              "note": "No bound is enforced (int() conversion).",
+              "unitSelector": null,
+              "unitOptions": {}
             }
           ],
           "undeclaredInput": [
@@ -4223,7 +6549,8 @@ export const MODULE_REGISTRY = {
               "provenance"
             ],
             "statusKey": null,
-            "transportValues": {}
+            "transportValues": {},
+            "transportObjects": {}
           }
         }
       ],
@@ -4292,8 +6619,8 @@ export const MODULE_REGISTRY = {
     },
     {
       "id": "traceability",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
+      "version": "1.0.0",
+      "owner": "unassigned (needs maintainer)",
       "workspace": "evidence",
       "label": "Export Review Package",
       "description": "Exports the active specimen, source provenance and linked evidence as a review package; meshes and worker artifacts are excluded.",
@@ -4305,7 +6632,113 @@ export const MODULE_REGISTRY = {
         "component": "src/components/EvidenceWorkspace.tsx",
         "export": "EvidenceWorkspace"
       },
-      "operations": [],
+      "operations": [
+        {
+          "id": "set-material-scope",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "EvidenceWorkspace reads browser Zustand stores and performs browser download/navigation actions; it declares no server route or execution deadline."
+          },
+          "input": [
+            {
+              "key": "allMaterials",
+              "label": "Show all materials",
+              "valueType": "boolean",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "display-filter",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": false,
+              "required": true,
+              "enum": [],
+              "note": "This checkbox changes only the visible finding filter; it does not change the records included in the exported research snapshot.",
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "allMaterials",
+              "findings"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "navigate-to-research-registry",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "EvidenceWorkspace reads browser Zustand stores and performs browser download/navigation actions; it declares no server route or execution deadline."
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "activeTab",
+              "eventName",
+              "tabId"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        },
+        {
+          "id": "export-evidence-package",
+          "method": null,
+          "route": null,
+          "authority": {
+            "kind": "browser-local",
+            "script": null,
+            "workerMethod": null,
+            "timeoutMs": null,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": "EvidenceWorkspace reads browser Zustand stores and performs browser download/navigation actions; it declares no server route or execution deadline."
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": {
+            "fields": [
+              "schemaVersion",
+              "exportedAt",
+              "scope",
+              "activeSpecimen",
+              "research",
+              "engineering",
+              "buildScreening",
+              "missingEvidence",
+              "blob",
+              "url",
+              "anchor",
+              "download",
+              "notice"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
+        }
+      ],
       "validityDomain": null,
       "evidence": {
         "emits": [],
@@ -4318,24 +6751,45 @@ export const MODULE_REGISTRY = {
           "productionReady",
           "airworthy"
         ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
+        "note": "No independent physical or validation oracle is attached to this workspace. User-entered measured labels and reviewed source links are not independent validation; package export is a transport action, not scientific evidence. No oracle promotes the ceiling beyond screening-only."
       },
-      "lifecycle": null,
+      "lifecycle": {
+        "backgroundWork": "none",
+        "resources": []
+      },
       "tests": {
-        "schema": null,
+        "schema": "python/test_module_contract_evidence.py",
         "oracle": {
           "status": "pending",
           "ref": null,
           "ciNote": null,
           "scope": null
         },
-        "docs": null
+        "docs": "docs/modules/traceability.md"
       },
-      "migrationState": "legacy",
+      "migrationState": "contracted",
       "legacyNotes": [
-        "EvidenceWorkspace only reads useLpbfBuildJobStore (lastKey, job) and useLpbfEngineeringStore; it dispatches no server request (build jobs are submitted from 3d-distortion-lab), so no operation is bound."
+        "Both entries render src/components/EvidenceWorkspace.tsx with a fixed mode prop. Findings visible in the list are filtered by allMaterials || finding.materialId === activeSpecimen.id; experimental mode additionally requires finding.evidenceType === 'measured'. The checkbox and mode filters affect display only.",
+        "The 'measured' evidenceType is a user-declared record classification. A measured label, reviewed source, review status, or integration link does not establish independent validation or externally certified data.",
+        "Export reads the current activeSpecimen, research.exportSnapshot(), engineering.job, engineering.submittedInput, build.job, and peekLpbfBuildJobKey() comparison. It does not use the visible findings list, so the research snapshot includes all briefs, sources, findings, integrations, and feedback regardless of mode or checkbox filter.",
+        "The downloaded JSON has schemaVersion, exportedAt, scope, activeSpecimen, research, engineering, buildScreening, and missingEvidence keys. engineering.job and submittedInput are null when absent; build.job is null before a build run. The active specimen is copied from its store; no specimen, job, measurement, or result is synthesized.",
+        "The export click handler returns void. Output fields distinguish keys in the downloaded package from the Blob, object URL, anchor download property, and notice used by the browser flow; they are not a returned API object. It revokes the object URL after a 1000 ms setTimeout; lifecycle vocabulary has no timeout resource, so no interval/background resource is declared.",
+        "EvidenceWorkspace has no effect, fetch, worker submission, or other background operation. Research data persist in browser-local storage through the research store; changing the active Research Hub tab is persisted there. This view does not save research data to a server.",
+        "An export exception is surfaced in the notice as an operational failure. It does not create an evidence status. Qualification and independent experimental validation remain unresolved.",
+        "Traceability mode shows provenance for all evidence types (subject to material scope). Its review button sets activeTab to 'registry' and dispatches metallix-navigate-tab with tabId 'research-hub'."
       ],
-      "sourceRefs": [],
+      "sourceRefs": [
+        "python/module_registry_seed.json",
+        "src/App.tsx::App",
+        "src/components/EvidenceWorkspace.tsx::EvidenceWorkspace",
+        "src/components/ResearchIntegrationPanel.tsx::ResearchIntegrationPanel",
+        "src/types/research.ts",
+        "src/store/useResearchStore.ts",
+        "src/store/useMaterialSpecimenStore.ts::useMaterialSpecimenStore",
+        "src/store/useLpbfEngineeringStore.ts::useLpbfEngineeringStore",
+        "src/store/useLpbfBuildJobStore.ts::useLpbfBuildJobStore",
+        "src/store/useLpbfBuildJobStore.ts::peekLpbfBuildJobKey"
+      ],
       "seedDerived": [
         "label",
         "description",

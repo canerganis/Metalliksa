@@ -449,7 +449,13 @@ test('no registry operation is bound to a canned-result handler', () => {
   const boundCanned = [...handlers, ...serverHandlers].filter(handler => handler.canned && operationRoutes.has(handler.key)).map(where);
   assert.deepEqual(boundCanned, [], `Canned handler(s) ${boundCanned.join(', ')} must not back a registry operation: record them as legacyNotes.`);
   const evidence = MODULE_CONTRACTS.filter(contract => ['experimental-data', 'traceability'].includes(contract.id));
-  assert.deepEqual(evidence.map(contract => contract.operations.length), [0, 0], 'EvidenceWorkspace dispatches no request; record store reads as legacyNotes');
+  assert.deepEqual(evidence.map(contract => contract.operations.length), [4, 3], 'EvidenceWorkspace inventories local filter, navigation and export actions');
+  for (const contract of evidence) for (const operation of contract.operations) {
+    assert.equal(operation.route, null, `${contract.id}: no fabricated request endpoint`);
+    assert.equal(operation.method, null, `${contract.id}: local actions have no HTTP method`);
+    assert.equal(operation.authority.kind, 'browser-local', `${contract.id}: local store/download authority`);
+    assert.equal(operation.authority.timeoutMs, null, `${contract.id}: no fabricated local deadline`);
+  }
 });
 
 test('canned-result handlers never grow beyond the ratcheted baseline', () => {

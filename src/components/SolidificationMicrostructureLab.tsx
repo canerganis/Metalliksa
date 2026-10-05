@@ -8,7 +8,7 @@
  * not in-situ front tracking, not validated.
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine, BarChart, Bar, Cell,
@@ -17,6 +17,7 @@ import {
 import { pythonComputationService } from '../services/pythonComputationService';
 import type { SolidificationMicrostructureAvailable } from '../services/pythonComputationService';
 import { solidificationOutcome } from '../utils/solidificationOutcome';
+import { createLatestRequestGate, settleLatestRequest } from '../utils/solidificationRequest';
 import {
   authorityAlloy, authorityThermalProvenance, solidificationMaterialInputs, type AuthorityAlloyId, type SolidificationMaterialInputs,
 } from '../data/lpbfMaterialAuthority';
@@ -120,10 +121,15 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
   const [unavailableReason, setUnavailableReason] = useState<string | null>(null);
   const [degenerate, setDegenerate] = useState(false);
   const [activeTab, setActiveTab] = useState<ChartTab>('gr-map');
+  const requestGate = useRef(createLatestRequestGate());
+
+  useEffect(() => () => requestGate.current.invalidate(), []);
 
   const alloyProps = solidificationPresetInputs(selectedAlloy);
   const alloyQuality = authorityThermalProvenance(SOLIDIFICATION_PRESETS[selectedAlloy as keyof typeof SOLIDIFICATION_PRESETS]).quality;
   const invalidateResult = () => {
+    requestGate.current.invalidate();
+    setIsLoading(false);
     setResult(null);
     setError(null);
     setUnavailableReason(null);
@@ -131,13 +137,14 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
   };
 
   const handleCompute = useCallback(async () => {
+    const generation = requestGate.current.begin();
     setIsLoading(true);
     setError(null);
     setUnavailableReason(null);
     setDegenerate(false);
     setResult(null);
-    try {
-      const res = await pythonComputationService.computeSolidificationMicrostructure(solidificationRequest(selectedAlloy, {
+    await settleLatestRequest(requestGate.current, generation, () =>
+      pythonComputationService.computeSolidificationMicrostructure(solidificationRequest(selectedAlloy, {
         power_W: laserPower,
         speed_mm_s: scanSpeed,
         hatch_um: hatch,
@@ -145,19 +152,19 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
         beamDiameter_um: beamDiameter,
         preheat_C: preheat,
         heatSource,
-      }));
-      const outcome = solidificationOutcome(res);
-      if ('error' in outcome) {
-        setUnavailableReason(outcome.error);
-        setDegenerate(outcome.degenerate === true);
-        return;
-      }
-      setResult(outcome.result);
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Computation failed. Check the service and try again.');
-    } finally {
-      setIsLoading(false);
-    }
+      })), {
+        onSuccess: res => {
+          const outcome = solidificationOutcome(res);
+          if ('error' in outcome) {
+            setUnavailableReason(outcome.error);
+            setDegenerate(outcome.degenerate === true);
+            return;
+          }
+          setResult(outcome.result);
+        },
+        onError: (e: unknown) => setError(e instanceof Error ? e.message : 'Computation failed. Check the service and try again.'),
+        onFinally: () => setIsLoading(false),
+      });
   }, [laserPower, scanSpeed, hatch, layerThickness, beamDiameter, preheat, heatSource, selectedAlloy]);
 
   const grPoint = result ? [{ R_ms: result.R_m_s, G_K_m: result.G_K_m }] : [];
@@ -258,7 +265,7 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
             <div className="mb-1 text-[10px] font-semibold uppercase tracking-[.17em] text-cyan-200/70">01 / Process definition</div>
             <h2 id="process-heading" className="text-lg font-semibold tracking-tight text-slate-100">Set the operating point</h2>
           </div>
-          <p className="max-w-md text-xs leading-5 text-slate-500">Changing a setting clears the previous result so the displayed analysis always matches these inputs.</p>
+          <p className="max-w-md text-xs leading-5 text-slate-500">Changing a setting clears the previous result and ignores any pending response for the old inputs.</p>
         </div>
 
         <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2 xl:grid-cols-6">
