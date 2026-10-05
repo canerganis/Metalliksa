@@ -419,8 +419,8 @@ def literature_block() -> Dict[str, Any]:
              "equationSource": "VDI Heat Atlas form reproduced as Eq. 7 in Particle-Resolved Computational Fluid Dynamics as the Basis for Thermal Process Intensification of Fixed-Bed Reactors on Multiple Scales (2021), https://www.mdpi.com/1996-1073/14/10/2913",
              "form": "gas-conduction-only stagnant bed of spheres; published VDI Heat Atlas form with "
                      "kappa = k_solid/k_gas, N = 1 - B/kappa and the logarithmic term denominator N^2; "
-                     "B = C ((1-porosity)/porosity)^(10/9), C = 1.25. The expression was independently "
-                     "re-derived from its published form and checked against an independent oracle and limits.",
+                     "B = C ((1-porosity)/porosity)^(10/9), C = 1.25. The expression is checked by a separate transcription of the same published formula "
+                     "and phase-fraction/equal-conductivity regression tests; this is not independent physical validation.",
              "computed": True},
             {"name": "Sih & Barlow", "citation": "Sih & Barlow (2004), Particulate Sci. Technol. 22(3), 427-440",
              "form": "ZS-type bed model extended with radiation and a particle emissivity model, up to high temperature",
