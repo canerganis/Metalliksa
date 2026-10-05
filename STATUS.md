@@ -1,3 +1,11 @@
+## Elastic Constants ürün paketi — 2026-10-05
+
+- Yerel merge `038d487`: kalıcı `materials-project` kimliği korunarak örnek katalog yerine boş kullanıcı formu ve Python Cij/K/G hesaplaması getirildi. Paylaşılan specimen/katalog değerleri forma otomatik aktarılmıyor; hesaplama yalnız Calculate ile başlıyor.
+- Son staging kontrolü: tsc PASS; 35 ilgili TypeScript testi PASS; build ve bundle baseline PASS; registry üretim kontrolü PASS; ceiling review 0. Backend paketi ebeveyn ve Sol kontrolünde 44 Python testi PASS. Donmuş solver ve fingerprint pin diff boş.
+- Gerçek tarayıcı: Ni formülü ve kullanıcı Cij değerleriyle hesaplama; boş density için akustik/Debye unavailable; mod değişiminde sonuç temizleme. Ayrı test harness'ında eski başarı/hata, A→B→A düzenlemesi ve unmount sonrası yanıtların atılması doğrulandı; harness sonuçları sentetik yazılım testidir.
+- İnceleme: Sol gerçek kaynak/test incelemesi; Opus sağlanan patch üzerinde koşullu onay. Tam tensor, tip kontrolü ve mounted stale-response koşulları tamamlandı. VRH/Born mekanik model çıktısı deneysel veya DFT doğrulaması değildir. Modül SDK kaydı hâlâ legacy; sözleşme göçü bekliyor.
+- Devam: Luna'nın Composition Editor SDK teslimini incele ve kalan sözleşmeleri tamamla; final ürün revizyonunda Docker ve bütünleşik tarayıcı kontrollerini yenile. Push yok.
+
 ## LPBF batch2 kapanışı — 2026-10-05
 
 - Yerel merge `f17af49`: `codex/batch2-ci@4686ec5` dahil; mevcut analiz paketinin son CI ve kanıt dili düzeltmeleri entegre. İki yeni unittest modülü Python CI listesinde.

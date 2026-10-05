@@ -1,3 +1,9 @@
+## 2026-10-05 — Elastic Constants girdi ve ürün davranışı (`038d487`)
+
+- Kullanıcı Cij veya K/G girdileri Python elasticity çekirdeğine gider; explicit input mode katalogdan sabit veya yoğunluk doldurmaz. Eksik yoğunluk/composition temelli sonuçlar unavailable kalır. Hesaplanan VRH/Born özellikleri continuum elasticity model çıktılarıdır; DFT ya da deneysel ölçüm değildir.
+- Yazılım kanıtı: backend 44 PASS; son staging tsc ve 35 ilgili TS testi PASS; build/bundle/registry kontrolleri PASS. Gerçek tarayıcıda explicit hesaplama ve density yokluğunda unavailable kontrol edildi. Deferred sentetik harness eski başarı/hata ve unmount yanıtlarını dışladığını gösterdi; fiziksel doğrulama değildir.
+- LPBF solver/pin değişmedi; residual, experimentalValidation ve opticalOperatorMatched sınırları bu ürün paketiyle yükseltilmedi. Final Docker doğrulaması sonraki bütünleşik revizyonda yapılacak.
+
 ## 2026-10-05 — LPBF düzeltilmiş-fizik güncellemesi: `edddf0dc…` → `11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359` (birleştirme `783c655`, altın yeniden kaydı `6e5f2e2`)
 
 ## 2026-10-05 — Yayınlanmış tek-iz ölçümleriyle LPBF screening karşılaştırması
