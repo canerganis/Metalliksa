@@ -24,6 +24,15 @@ export function buildScientificContext(moduleId: ModuleId, specimen: ActiveSpeci
     limitation: 'User inputs and computed elasticity are not a measurement or a validation claim. Shared specimen composition, density, and LPBF settings do not establish the inputs or evidence for this calculation.',
   };
 
+  if (moduleId === 'alloy-builder') return {
+    title: 'Composition editor and estimate context',
+    observation: 'This editor uses element percentages in the displayed wt.% or at.% unit. Normalize Composition is an explicit action; edits do not automatically make the total 100%.',
+    mechanism: 'For weight-percent compositions, browser rules estimate density and selected properties using composition and material-family assumptions. No CALPHAD, DFT or LPBF simulation runs here.',
+    variables: ['Element content: 0–100%, finite values', 'Displayed estimates: density g/cm³, temperatures °C, strength MPa', 'Composition-derived LPBF starting estimates: W and mm/s'],
+    interpretation: 'Composition-derived starting estimates are separate from the current shared process settings, which are retained. Atomic-percent edits preserve their unit and do not recompute weight-percent property estimates.',
+    limitation: 'These estimates are unvalidated and may include fallback values. Displayed or retained values are not measurements, phase-equilibrium results or qualified process settings. Retained values are not newly computed properties of an atomic-percent composition. Hardness can remain unavailable.',
+  };
+
   const { lpbf } = specimen;
   const ved = lpbf.laserPower_W / ((lpbf.scanSpeed_mms || 1) * (lpbf.hatch_um / 1000) * (lpbf.layer_um / 1000));
   const shared = `Active specimen ${specimen.name}; ${format(lpbf.laserPower_W)} W, ${format(lpbf.scanSpeed_mms)} mm/s, ${format(lpbf.hatch_um)} µm hatch, ${format(lpbf.layer_um)} µm layer.`;
