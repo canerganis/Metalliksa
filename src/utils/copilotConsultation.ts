@@ -27,3 +27,21 @@ export class CopilotRequestLifecycle {
     return !request.signal.aborted && this.requests.isCurrent(request.id);
   }
 }
+
+/** Prevents clipboard completions from restoring feedback after a newer action. */
+export class CopyFeedbackLifecycle {
+  private generation = 0;
+
+  begin(): number {
+    this.generation += 1;
+    return this.generation;
+  }
+
+  invalidate(): void {
+    this.generation += 1;
+  }
+
+  isCurrent(generation: number): boolean {
+    return generation === this.generation;
+  }
+}

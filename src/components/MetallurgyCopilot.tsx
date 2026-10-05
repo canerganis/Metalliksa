@@ -18,7 +18,7 @@ import {
   ConsultationResponseError,
   parseConsultationResponse,
 } from "../utils/calphadConsultation";
-import { CopilotRequestLifecycle } from "../utils/copilotConsultation";
+import { CopilotRequestLifecycle, CopyFeedbackLifecycle } from "../utils/copilotConsultation";
 
 export const MetallurgyCopilot: React.FC = () => {
   const [messages, setMessages] = useState<ConsultMessage[]>([
@@ -44,6 +44,7 @@ How can I assist your engineering investigation or alloy formulation today?`,
   const [copyFeedback, setCopyFeedback] = useState<{ id: string; state: "copied" | "failed" } | null>(null);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const requestLifecycle = useRef(new CopilotRequestLifecycle());
+  const copyLifecycle = useRef(new CopyFeedbackLifecycle());
   const mounted = useRef(false);
   const copyFeedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -58,6 +59,7 @@ How can I assist your engineering investigation or alloy formulation today?`,
     return () => {
       mounted.current = false;
       requestLifecycle.current.invalidate();
+      copyLifecycle.current.invalidate();
       if (copyFeedbackTimer.current !== null) clearTimeout(copyFeedbackTimer.current);
     };
   }, []);
@@ -167,6 +169,7 @@ How can I assist your engineering investigation or alloy formulation today?`,
   };
 
   const handleCopy = async (id: string, text: string) => {
+    const generation = copyLifecycle.current.begin();
     if (copyFeedbackTimer.current !== null) clearTimeout(copyFeedbackTimer.current);
     setCopyFeedback(null);
     try {
@@ -174,19 +177,22 @@ How can I assist your engineering investigation or alloy formulation today?`,
         throw new Error("Clipboard access is unavailable.");
       }
       await navigator.clipboard.writeText(text);
-      if (!mounted.current) return;
+      if (!mounted.current || !copyLifecycle.current.isCurrent(generation)) return;
       setCopyFeedback({ id, state: "copied" });
       copyFeedbackTimer.current = setTimeout(() => {
-        if (mounted.current) setCopyFeedback(null);
-        copyFeedbackTimer.current = null;
+        if (mounted.current && copyLifecycle.current.isCurrent(generation)) {
+          setCopyFeedback(null);
+          copyFeedbackTimer.current = null;
+        }
       }, 2000);
     } catch {
-      if (mounted.current) setCopyFeedback({ id, state: "failed" });
+      if (mounted.current && copyLifecycle.current.isCurrent(generation)) setCopyFeedback({ id, state: "failed" });
     }
   };
 
   const handleClearHistory = () => {
     requestLifecycle.current.invalidate();
+    copyLifecycle.current.invalidate();
     setIsLoading(false);
     setCopyFeedback(null);
     if (copyFeedbackTimer.current !== null) {
