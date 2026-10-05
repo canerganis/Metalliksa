@@ -154,6 +154,19 @@ class Overlay(unittest.TestCase):
             self.assertIn("width_um", r)
             self.assertIn("depth_um", r)
 
+    def test_overlay_provenance_is_exported(self):
+        d = tiny_doc()
+        self.assertEqual([p["id"] for p in d["overlayProvenance"]], [pd.HOFMANN_PROVENANCE["id"]])
+        source = d["overlayProvenance"][0]
+        for key in ("citation", "doi", "license", "url", "fileSha256", "source", "caveats"):
+            self.assertIn(key, source)
+        self.assertTrue(any("1/e^2" in c and "assumption" in c for c in source["caveats"]))
+        self.assertTrue(any("20 C is an assumption" in c for c in source["caveats"]))
+        md = pm.render_markdown(d)
+        self.assertIn("CC BY 4.0", md)
+        self.assertIn("10.5281/zenodo.16979848", md)
+        self.assertIn("raw SHA-256", md)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -189,6 +189,25 @@ def load_overlay(material: str, beam_um: float, tol_um: float) -> List[Dict[str,
     return overlay_rows(material, beam_um, tol_um, rows)
 
 
+def load_overlay_provenance(material: str, beam_um: float, tol_um: float) -> List[Dict[str, Any]]:
+    """Return source records for datasets contributing at least one selected overlay row."""
+    import lpbf_public_datasets as pd
+    loaded = [pd.load_hofmann_316l(), pd.load_totis_ti64()]
+    matched = {r["dataset"] for item in loaded
+               for r in item["rows"]
+               if r["material"] == material and abs(r["beamDiameter_um"] - beam_um) <= tol_um}
+    records = []
+    for item in loaded:
+        p = item["provenance"]
+        if p["id"] not in matched:
+            continue
+        records.append({"id": p["id"], "citation": p["citation"], "doi": p["doi"],
+                        "license": p["license"], "url": p["url"], "file": p["file"],
+                        "fileSha256": p["fileSha256"], "source": p["source"],
+                        "caveats": list(p["caveats"])})
+    return records
+
+
 def _round(o: Any) -> Any:
     if isinstance(o, float):
         return None if not math.isfinite(o) else round(o, 4)
@@ -284,6 +303,7 @@ def build_document(material: str, beam_um: float, layer_um: float, hatch_um: flo
                  "calls without a fallback warning used the ray tracer."),
     }
     ov = load_overlay(material, beam_um, overlay_beam_tol_um) if overlay else None
+    ov_provenance = load_overlay_provenance(material, beam_um, overlay_beam_tol_um) if overlay else []
     doc: Dict[str, Any] = {
         "schema": SCHEMA, "generatedAt": generated_at,
         "implementationHash": implementation_fingerprint(),
@@ -299,6 +319,7 @@ def build_document(material: str, beam_um: float, layer_um: float, hatch_um: flo
         "regimeBoundaries": regime_boundaries(cells, powers, speeds, kernels),
         "heuristicZones": zones,
         "overlay": ov if overlay else [],
+        "overlayProvenance": ov_provenance,
         "limits": build_limits(absorption, zones, ov),
     }
     return _round(doc)
@@ -377,6 +398,15 @@ def render_markdown(doc: Dict[str, Any]) -> str:
             nb = sum(1 for r in ov if r["balling"] == 1)
             L += ["", f"Rows flagged as balling in the dataset: {nb} (labelled `balling-flagged`, which the "
                   "grid cannot produce). Every row with its measured width/depth is in JSON `overlay[]`."]
+        for source in doc.get("overlayProvenance", []):
+            raw_hash = source.get("source", {}).get("raw_sha256") or source.get("source", {}).get("rawSha256")
+            hash_text = f"; raw SHA-256 `{raw_hash}`" if raw_hash else ""
+            L += ["", f"### Source: {source['id']}", "",
+                  f"{source['citation']} DOI: [{source['doi']}](https://doi.org/{source['doi']}); "
+                  f"licence: {source['license']}; source: [{source['url']}]({source['url']}); "
+                  f"loaded table `{source['file']}` SHA-256 `{source['fileSha256']}`{hash_text}.",
+                  "Caveats:"]
+            L.extend(f"- {caveat}" for caveat in source["caveats"])
         L += [""]
     ab = doc["absorption"]
     L += ["## Absorption path", "",

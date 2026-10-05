@@ -125,6 +125,20 @@ Regime labels of the overlay rows: balling-flagged 59, conduction 26, keyhole 55
 
 Rows flagged as balling in the dataset: 59 (labelled `balling-flagged`, which the grid cannot produce). Every row with its measured width/depth is in JSON `overlay[]`.
 
+### Source: hofmann-316l-2026
+
+Hofmann et al., melt-pool geometry data for 316L single tracks (Aconity Midi), Zenodo 10.5281/zenodo.16979848 (v1, 2025-08-28); associated paper Materials & Design 262 (2026) 115459, doi:10.1016/j.matdes.2026.115459. DOI: [10.5281/zenodo.16979848](https://doi.org/10.5281/zenodo.16979848); licence: CC BY 4.0; source: [https://zenodo.org/records/16979848](https://zenodo.org/records/16979848); loaded table `meltpool_geometry.csv` SHA-256 `d4bbc7a60b536118586f44b64beb0fa20f94133f6d1a8d0fdcf726003720c3d8`; raw SHA-256 `5dd0629b3add839997fd54c3e4d89f90c1f2e4e5e717bede2c72e0c58cefd417`.
+Caveats:
+- Measured cross-sections from micrographs; the uncertainty budget is not stated in the files read.
+- The d_laser column is the laser spot DIAMETER in mm; the diameter definition (1/e^2 or other) is not stated on the Zenodo record and was not confirmed from the paper: treated as 1/e^2 by assumption.
+- Absorptivity is not measured; the comparison uses the repo's estimated 316L absorptivity.
+- Build-plate temperature is not given: 20 C is an assumption.
+- t_powder = 0 rows are bare plate; t_powder 30/60 um are powder layers (the packing is not stated).
+- The CSV header calls the area column 'um' although the values are um^2 (width x depth scale confirms).
+- 677 rows contain repeated parameter sets (623 distinct) -- replicates are kept as separate rows.
+- Where the width/depth are taken along the track and whether the section is at steady state is not stated in the files read.
+- 316L thermophysical properties used by the models are estimated, not measured.
+
 ## Absorption path
 
 Path: **flat-plate** (pinned: True). sys.modules['powder_bed_raytracer'] = None is set in the main process and in every worker before lpbf_thermal_solver is imported, so the solver's `from powder_bed_raytracer import ...` raises ImportError and its except branch (flat-plate absorptivity) is taken; the solver is not edited. Absorptivity by material: 316L 0.42. Fallback warnings captured: 855 of 855 solver calls.

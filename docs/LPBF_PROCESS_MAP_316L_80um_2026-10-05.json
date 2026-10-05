@@ -44577,6 +44577,34 @@
    "width_um": 199.2
   }
  ],
+ "overlayProvenance": [
+  {
+   "caveats": [
+    "Measured cross-sections from micrographs; the uncertainty budget is not stated in the files read.",
+    "The d_laser column is the laser spot DIAMETER in mm; the diameter definition (1/e^2 or other) is not stated on the Zenodo record and was not confirmed from the paper: treated as 1/e^2 by assumption.",
+    "Absorptivity is not measured; the comparison uses the repo's estimated 316L absorptivity.",
+    "Build-plate temperature is not given: 20 C is an assumption.",
+    "t_powder = 0 rows are bare plate; t_powder 30/60 um are powder layers (the packing is not stated).",
+    "The CSV header calls the area column 'um' although the values are um^2 (width x depth scale confirms).",
+    "677 rows contain repeated parameter sets (623 distinct) -- replicates are kept as separate rows.",
+    "Where the width/depth are taken along the track and whether the section is at steady state is not stated in the files read.",
+    "316L thermophysical properties used by the models are estimated, not measured."
+   ],
+   "citation": "Hofmann et al., melt-pool geometry data for 316L single tracks (Aconity Midi), Zenodo 10.5281/zenodo.16979848 (v1, 2025-08-28); associated paper Materials & Design 262 (2026) 115459, doi:10.1016/j.matdes.2026.115459.",
+   "doi": "10.5281/zenodo.16979848",
+   "file": "meltpool_geometry.csv",
+   "fileSha256": "d4bbc7a60b536118586f44b64beb0fa20f94133f6d1a8d0fdcf726003720c3d8",
+   "id": "hofmann-316l-2026",
+   "license": "CC BY 4.0",
+   "source": {
+    "raw_bytes": 29660,
+    "raw_file": "MeltpoolGeometryData.csv",
+    "raw_md5": "2c107f3ac12cd38a0f1eb9f75a469000",
+    "raw_sha256": "5dd0629b3add839997fd54c3e4d89f90c1f2e4e5e717bede2c72e0c58cefd417"
+   },
+   "url": "https://zenodo.org/records/16979848"
+  }
+ ],
  "regimeBoundaries": {
   "eagar-tsai": [
    {
