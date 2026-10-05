@@ -1,5 +1,5 @@
 import { ResponsiveContainer } from './VisibleResponsiveContainer';
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   Atom,
   Flame,
@@ -56,6 +56,7 @@ import {
   PythonCalphadSolveResult,
   PythonEngineStatus,
   PythonCalphadDatabaseEntry,
+  isAbortError,
 } from "../services/pythonComputationService";
 import { useMaterialSpecimenStore } from "../store/useMaterialSpecimenStore";
 import { isPythonValidationError } from "../utils/pythonValidationError";
@@ -80,6 +81,8 @@ import {
   scheilSummaryLines,
   SCHEIL_COMPUTED,
   calphadTemperatureWindow,
+  clampProbeToRange,
+  withOrderingNote,
   type CalphadSystemCoverage,
 } from "../utils/calphadResultDisplay";
 
@@ -92,6 +95,8 @@ export interface CALPHADMultiComponentStudioProps {
   initialCoverage?: CalphadSystemCoverage[];
   /** Test seam: render the "calculating" state on first paint. */
   initialSolving?: boolean;
+  /** Test seam: start with the Python engine off (client screening model, explicitly chosen). */
+  initialUsePython?: boolean;
 }
 
 export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioProps> = ({
@@ -99,6 +104,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
   initialSubTab,
   initialCoverage,
   initialSolving,
+  initialUsePython,
 }) => {
   const activeSpecimen = useMaterialSpecimenStore((s) => s.activeSpecimen);
   const [isLiveSyncedWithUniversalSpecimen, setIsLiveSyncedWithUniversalSpecimen] = useState<boolean>(true);
@@ -137,7 +143,10 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
   }, [activeSpecimen.lastModified, isLiveSyncedWithUniversalSpecimen, activeSpecimen.name]);
 
   // Python Engine Integration State
-  const [usePythonEngine, setUsePythonEngine] = useState<boolean>(true);
+  const [usePythonEngine, setUsePythonEngine] = useState<boolean>(initialUsePython ?? true);
+  // Identifies this Studio's requests: the server drops a queued, not yet started request of this key
+  // when a newer one arrives (slider drags compute only the latest input).
+  const supersedeKey = useRef<string>(`studio-${Math.random().toString(36).slice(2)}-${Date.now().toString(36)}`);
   const [pythonStatus, setPythonStatus] = useState<PythonEngineStatus | null>(null);
   const [isSolving, setIsSolving] = useState<boolean>(initialSolving ?? false);
   // Wall time of the running request, measured here (no estimated progress percentage exists).
@@ -177,7 +186,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
     return () => clearInterval(id);
   }, [isSolving, solveStartedAt]);
 
-  // Solve multi-component equilibrium via Python HPC Proxy (with client fallback)
+  // Solve via the Python pycalphad service (Python ON) or the client screening model (Python OFF, explicit)
   useEffect(() => {
     let isMounted = true;
     setIsSolving(true);
@@ -185,6 +194,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
     setSolveElapsedMs(0);
 
     const win = calphadTemperatureWindow(customAlloy.elements);
+    const controller = new AbortController();
     const timer = setTimeout(() => {
       pythonComputationService
         .solveCalphadEquilibrium(
@@ -197,7 +207,8 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
           undefined,
           false, // no adaptive grid exists in the engine
           boundaryRefinement,
-          minRefineStep
+          minRefineStep,
+          { signal: controller.signal, supersedeKey: supersedeKey.current }
         )
         .then((res) => {
           if (isMounted) {
@@ -207,22 +218,16 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
           }
         })
         .catch((err) => {
+          if (isAbortError(err)) return; // superseded by newer input
           if (isPythonValidationError(err)) {
-            // Python refused the input (HTTP 422): say so, then show the client solver result.
-            if (isMounted) setPythonValidationMessage(err.message);
-            return pythonComputationService
-              .solveCalphadEquilibrium(customAlloy, 500, 1450, 25, false)
-              .then((clientRes) => {
-                if (isMounted) {
-                  setAsyncSolveResult(clientRes);
-                  setIsSolving(false);
-                }
-              });
+            // Python refused the input (HTTP 422): say so; no result is shown (no client substitute).
+            if (isMounted) {
+              setPythonValidationMessage(err.message);
+              setAsyncSolveResult(null);
+              setIsSolving(false);
+            }
+            return;
           }
-          console.warn("Async solve error:", err);
-          if (isMounted) setIsSolving(false);
-        })
-        .catch((err) => {
           console.warn("Async solve error:", err);
           if (isMounted) setIsSolving(false);
         });
@@ -231,6 +236,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
     return () => {
       isMounted = false;
       clearTimeout(timer);
+      controller.abort();
     };
   }, [customAlloy, usePythonEngine, selectedDatabaseId, boundaryRefinement, minRefineStep]);
 
@@ -291,12 +297,19 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
     thermodynamicModel: CLIENT_MODEL_LABEL,
   };
   const provenanceLabels = calphadProvenanceLabels(solveResult);
+  const tempWindowStep = (range: [number, number]) => (range[1] - range[0] > 600 ? 25 : 10);
   const tempWindow = calphadTemperatureWindow(customAlloy.elements);
   const criticalStatus = solveResult.criticalTemperatureStatus ?? {};
   // A Python "unavailable" answer is shown as such: no equilibrium numbers (the client screening model
   // is not substituted; it is shown only when the user switches the Python engine off).
   const pythonUnavailable = usePythonEngine ? solveResult.pythonUnavailable : undefined;
-  const showNumbers = !pythonUnavailable;
+  // With Python ON, nothing but a pycalphad answer is shown: before the first answer, after a refusal
+  // (422) or while only a client result from an earlier Python-OFF period exists, no numbers appear.
+  const pythonRefused = usePythonEngine && pythonValidationMessage != null;
+  const pythonPending = usePythonEngine && !pythonRefused && !pythonUnavailable &&
+    !(asyncSolveResult && asyncSolveResult.isPythonEngine);
+  const showNumbers = !pythonUnavailable && !pythonPending && !pythonRefused;
+  const phaseNotes = solveResult.phaseNameNotes ?? {};
   const timingText = formatTimings(solveResult.timingsMs);
   const scheilBlock = solveResult.scheilSolidification;
   const scheilComputed = provenanceLabels.isPycalphad && scheilBlock?.status !== undefined && scheilBlock.status !== "unavailable";
@@ -373,7 +386,18 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
   }, [solveResult]);
 
   // Probe at current temperature
+  const solvedRange = solveResult.temperatureRangeC;
+  useEffect(() => {
+    // The probe stays on the solved grid when the window changes (e.g. 950 C for an Al alloy solved 400-750 C).
+    setProbeTemperatureC((t) => clampProbeToRange(t, solvedRange[0], solvedRange[1], tempWindowStep(solvedRange)));
+  }, [solvedRange[0], solvedRange[1]]);
+
   const currentEquilibriumPoint = useMemo(() => {
+    if (solveResult.equilibriumProfile.length === 0) {
+      return { temperatureC: probeTemperatureC, phases: [], totalGibbsEnergy_kJ_mol: null,
+        thermodynamicActivities: undefined, chemicalPotentials_J_mol: undefined } as unknown as
+        PythonCalphadSolveResult["equilibriumProfile"][number];
+    }
     const closest = solveResult.equilibriumProfile.reduce((prev, curr) => {
       return Math.abs(curr.temperatureC - probeTemperatureC) < Math.abs(prev.temperatureC - probeTemperatureC)
         ? curr
@@ -475,7 +499,8 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
 
       {pythonValidationMessage && (
         <div role="alert" className="px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-200 text-xs">
-          Python solver refused the input: {pythonValidationMessage}. Client-side solver result shown.
+          Python solver refused the input: {pythonValidationMessage}. No result is shown; correct the input, or switch
+          Python HPC off to look at the client screening model.
         </div>
       )}
 
@@ -507,8 +532,8 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
         </div>
       )}
 
-      {provenanceLabels.isPycalphad && (
-        <div data-testid="calphad-provenance" className="px-4 py-1.5 rounded-xl bg-[#060a14] border border-[#1a273e] text-[11px] text-slate-300 space-y-0.5">
+      {showNumbers && provenanceLabels.isPycalphad && (
+        <div data-testid="calphad-provenance" className={`px-4 py-1.5 rounded-xl bg-[#060a14] border border-[#1a273e] text-[11px] text-slate-300 space-y-0.5 ${isSolving ? "opacity-60" : ""}`}>
           <div>
             Provenance: pycalphad {solveResult.pycalphadVersion ?? "(version not reported)"} equilibrium on {provenanceLabels.database}
             {solveResult.modelCache?.databaseSha256 ? ` (TDB SHA-256 ${solveResult.modelCache.databaseSha256.slice(0, 12)}…)` : ""}.
@@ -540,9 +565,13 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
       <div className="px-4 py-2.5 rounded-xl bg-[#060a14] border border-[#1a273e] flex flex-wrap items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2.5 flex-wrap">
           <span className="flex items-center gap-1.5 text-slate-300">
-            <span className={`w-2 h-2 rounded-full ${solveResult.isPythonEngine ? "bg-emerald-400 animate-ping" : "bg-amber-400"}`} />
+            <span className={`w-2 h-2 rounded-full ${showNumbers && solveResult.isPythonEngine ? "bg-emerald-400 animate-ping" : "bg-amber-400"}`} />
             <strong className="text-white">Active Engine:</strong>
-            <span className="text-sky-300 font-bold">{solveResult.engine || "pycalphad-open-tdb"}</span>
+            <span className="text-sky-300 font-bold">
+              {showNumbers ? solveResult.engine || "pycalphad-open-tdb"
+                : pythonUnavailable ? "pycalphad (unavailable for this input)"
+                : "pycalphad (no result for this input yet)"}
+            </span>
             {solveResult.pycalphadVersion && (
               <span className="text-[10px] px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">
                 v{solveResult.pycalphadVersion}
@@ -551,11 +580,11 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
           </span>
           <span className="text-slate-600">|</span>
           <span className="text-slate-400">
-            Database: <strong className="text-violet-300">{provenanceLabels.database}</strong>
+            Database: <strong className="text-violet-300">{showNumbers ? provenanceLabels.database : pythonUnavailable?.databaseUsed ?? "n/a"}</strong>
           </span>
           <span className="text-slate-600">|</span>
           <span className="text-slate-400">
-            Compute Time: <strong className="text-emerald-400">{formatComputeTime(solveResult.computeTimeMs)}</strong>
+            Compute Time: <strong className="text-emerald-400">{formatComputeTime(showNumbers ? solveResult.computeTimeMs : null)}</strong>
             {solveResult.proxyRoundtripMs ? ` (HTTP Proxy: ${solveResult.proxyRoundtripMs}ms)` : ""}
           </span>
         </div>
@@ -859,9 +888,18 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
                 </div>
               )}
               {solveResult.criticalTemperatures.betaTransusC && (
-                <div className="p-2 rounded-xl bg-[#050810] border border-[#162032]">
-                  <div className="text-[10px] text-slate-400">β-Transus:</div>
+                <div className="p-2 rounded-xl bg-[#050810] border border-[#162032]" title={criticalStatus.betaTransusC?.note ?? ""}
+                  data-testid="beta-transus-card">
+                  <div className="text-[10px] text-slate-400">β-Transus (phase-name heuristic, grid resolution):</div>
                   <div className="text-sm font-bold text-amber-300">{solveResult.criticalTemperatures.betaTransusC}°C</div>
+                  {criticalStatus.betaTransusC?.knownDeviation && (
+                    <div className="text-[10px] text-amber-200/90 mt-0.5">{criticalStatus.betaTransusC.knownDeviation}</div>
+                  )}
+                </div>
+              )}
+              {(criticalStatus.liquidusC?.knownDeviation || criticalStatus.solidusC?.knownDeviation) && (
+                <div className="col-span-2 text-[10px] text-amber-200/90" data-testid="melting-deviation">
+                  {criticalStatus.liquidusC?.knownDeviation ?? criticalStatus.solidusC?.knownDeviation}
                 </div>
               )}
             </div>
@@ -873,8 +911,15 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
         {!showNumbers ? (
           <div className="lg:col-span-8 p-6 rounded-2xl bg-[#090e18] border border-amber-500/30 text-xs text-amber-200 space-y-2" data-testid="calphad-no-result">
             <div className="font-bold text-sm">No equilibrium result</div>
-            <div>{pythonUnavailable ? calphadUnavailableHeadline(pythonUnavailable) : ""}. Phase fractions, Gibbs energies,
-              partition coefficients and the Scheil path are not shown because no CALPHAD calculation was made.</div>
+            <div>
+              {pythonUnavailable
+                ? `${calphadUnavailableHeadline(pythonUnavailable)}. Phase fractions, Gibbs energies, partition coefficients and the Scheil path are not shown because no CALPHAD calculation was made.`
+                : pythonRefused
+                ? "The Python solver refused this input (see the message above); nothing was calculated."
+                : isSolving
+                ? "Waiting for the first pycalphad result for this input. No numbers are shown until it arrives."
+                : "No pycalphad result for this input yet."}
+            </div>
           </div>
         ) : (
         <div className="lg:col-span-8 space-y-4">
@@ -1047,10 +1092,16 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
                 </ResponsiveContainer>
               </div>
 
+              {Object.keys(phaseNotes).length > 0 && (
+                <p className="text-[10px] text-amber-200/90" data-testid="phase-name-notes">
+                  {Object.keys(phaseNotes).join(", ")}: {Object.values(phaseNotes)[0]}.
+                </p>
+              )}
+
               {/* Probe Breakdown Bar */}
               <div className="pt-2 border-t border-[#162032] flex flex-wrap items-center justify-between gap-3 text-xs">
                 <div className="flex items-center gap-2">
-                  <span className="text-slate-400">At {probeTemperatureC}°C:</span>
+                  <span className="text-slate-400">At {currentEquilibriumPoint.temperatureC}°C (nearest grid point):</span>
                   {currentEquilibriumPoint.phases.map((p) => (
                     <span key={p.phaseId} className="px-2 py-0.5 rounded bg-violet-500/10 text-violet-300 font-bold border border-violet-500/20 text-[10px]">
                       {p.phaseName.split("(")[0]}: {(p.fraction * 100).toFixed(1)}%
@@ -1260,7 +1311,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
               <div className="pt-3 border-t border-[#162032] space-y-3">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-semibold text-slate-300">
-                    Component Thermodynamic Activities & Potentials at <strong className="text-amber-300">{probeTemperatureC}°C</strong>:
+                    Component Thermodynamic Activities & Potentials at <strong className="text-amber-300">{currentEquilibriumPoint.temperatureC}°C</strong> (nearest grid point):
                   </span>
                   <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold">
                     G_min = {formatNullable(currentEquilibriumPoint.totalGibbsEnergy_kJ_mol, "kJ/mol")}
@@ -1359,7 +1410,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
                         </td>
                         <td className="py-2.5 text-right text-slate-300">
                           {sp.primarySolidPhase
-                            ? `${sp.primarySolidPhase}${typeof sp.temperatureC === "number" ? ` at ${sp.temperatureC} °C` : ""}`
+                            ? `${withOrderingNote(sp.primarySolidPhase, phaseNotes, scheilBlock?.phaseNameNotes)}${typeof sp.temperatureC === "number" ? ` at ${sp.temperatureC} °C` : ""}`
                             : "n/a"}
                         </td>
                         <td className="py-2.5 text-right text-[11px] text-slate-400">
@@ -1466,11 +1517,10 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
                           data={equilibriumSolidCurve}
                           type="linear"
                           dataKey="temperatureC"
-                          name="Equilibrium (lever rule, grid points)"
-                          stroke="#38bdf8"
-                          strokeWidth={2}
-                          strokeDasharray="5 3"
-                          dot={{ r: 2 }}
+                          name="Equilibrium fraction solid (grid points and refined liquidus/solidus; markers only, not interpolated)"
+                          stroke="none"
+                          isAnimationActive={false}
+                          dot={{ r: 3, fill: "#38bdf8", stroke: "#38bdf8" }}
                         />
                       )}
                     </LineChart>

@@ -2,7 +2,7 @@ import React from "react";
 import { afterEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
-import { pythonComputationService } from "../src/services/pythonComputationService";
+import { isAbortError, pythonComputationService } from "../src/services/pythonComputationService";
 import {
   calphadProvenanceLabels,
   calphadUnavailableDetails,
@@ -19,6 +19,8 @@ import {
   formatPartitionK,
   formatTimings,
   calphadTemperatureWindow,
+  clampProbeToRange,
+  withOrderingNote,
 } from "../src/utils/calphadResultDisplay";
 import { CALPHADMultiComponentStudio } from "../src/components/CALPHADMultiComponentStudio";
 import type { PythonCalphadSolveResult } from "../src/services/pythonComputationService";
@@ -83,16 +85,18 @@ test("a client screening result is never labelled as pycalphad", () => {
   assert.equal(partitionSourceNote("tie-line"), null);
 });
 
-test("solveCalphadEquilibrium keeps the Python reason and labels the client numbers truthfully", async () => {
+test("solveCalphadEquilibrium keeps the Python reason and returns no numbers (no client substitute)", async () => {
   stubFetch(200, UNAVAILABLE);
   const res = await pythonComputationService.solveCalphadEquilibrium(ALLOY, 500, 1450, 50);
   assert.equal(res.isPythonEngine, false);
-  assert.equal(res.isEmpirical, true);
   assert.equal(res.pythonUnavailable?.reason, "pycalphad not installed");
   assert.equal(res.pythonUnavailable?.unavailableKind, "pycalphad-not-installed");
-  assert.match(res.thermodynamicModel ?? "", /not CALPHAD/);
-  assert.doesNotMatch(res.thermodynamicModel ?? "", /pycalphad CEF/);
-  assert.notEqual(res.engine, "pycalphad-open-tdb");
+  assert.equal(res.equilibriumProfile.length, 0);
+  assert.deepEqual(res.criticalTemperatures, { liquidusC: null, solidusC: null, freezingRangeC: null });
+  assert.equal(res.solutePartitioning.length, 0);
+  assert.equal(res.multiElementScheil.length, 0);
+  assert.equal(res.thermodynamicModel, undefined);
+  assert.equal(res.engine, "none (pycalphad unavailable)");
 });
 
 test("a Python success passes through with null solidus and gamma-prime untouched", async () => {
@@ -117,7 +121,15 @@ test("Studio first paint says the numbers are not CALPHAD and no longer claims a
   assert.doesNotMatch(text, /True CALPHAD/);
   assert.doesNotMatch(text, /Rigorous Thermodynamic Trust Guarantee/);
   assert.doesNotMatch(text, /Simplified Solvus Minimizer/);
-  assert.match(text, /not an assessment/);
+  // review S3 / Sol S4: Python ON, no answer yet -> no screening numbers, no client engine name
+  assert.match(text, /No pycalphad result for this input yet\./);
+  assert.match(text, /Active Engine: pycalphad \(no result for this input yet\)/);
+  assert.doesNotMatch(text, /Liquidus \(T_liq\):/);
+  assert.doesNotMatch(text, /MetalliX-Client/);
+  // Python explicitly OFF: the client screening model, labelled
+  const off = textOf(renderToStaticMarkup(<CALPHADMultiComponentStudio initialUsePython={false} />));
+  assert.match(off, /not an assessment/);
+  assert.match(off, /Liquidus \(T_liq\):/);
 });
 
 // ---- Studio rendering with a solved result (test seams initialResult / initialSubTab) ----
@@ -219,7 +231,8 @@ test("Scheil tab: a client screening curve with no temperature axis says why ins
   const client = { ...clientBase(), multiElementScheil: clientBase().multiElementScheil.map((pt) => ({ ...pt, temperatureC: null })) };
   client.criticalTemperatures = { liquidusC: 1689.5, solidusC: null, freezingRangeC: null };
   client.criticalTemperatureStatus = { solidusC: { status: "unavailable", reason: "no liquid appears inside the temperature grid" } };
-  const markup = renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={client} initialSubTab="multi_scheil" />);
+  const markup = renderToStaticMarkup(
+    <CALPHADMultiComponentStudio initialResult={client} initialSubTab="multi_scheil" initialUsePython={false} />);
   const text = textOf(markup);
   assert.ok(markup.includes('data-testid="scheil-unavailable"'));
   assert.match(text, /No temperature axis: the screening curve needs both the liquidus and the solidus\./);
@@ -397,4 +410,99 @@ test("the request temperature window follows the base element so the melting ran
   for (const w of [calphadTemperatureWindow({ Al: 1 }), calphadTemperatureWindow({ Ti: 1 }), calphadTemperatureWindow({ Ni: 1 })]) {
     assert.ok((w.tMax - w.tMin) / w.tStep + 1 <= 80);
   }
+});
+
+// ---- fix round 1 (reviews REVIEW-calphad-opus / -sol) ----
+
+test("Python ON never shows a client result left from a Python-OFF period (review S3)", () => {
+  const text = textOf(renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={clientBase()} />));
+  assert.doesNotMatch(text, /Liquidus \(T_liq\):/);
+  assert.match(text, /No pycalphad result for this input yet/);
+  const off = textOf(renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={clientBase()} initialUsePython={false} />));
+  assert.match(off, /Liquidus \(T_liq\):/);
+  assert.match(off, /MetalliX-Client-TS-Solver/);
+});
+
+test("the service sends the supersede key, and a superseded answer is an abort, not a result", async () => {
+  let sent: any = null;
+  globalThis.fetch = (async (_url: string, init: any) => {
+    sent = init;
+    return new Response(JSON.stringify({ success: false, status: "superseded", reason: "x" }),
+      { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as any;
+  const controller = new AbortController();
+  await assert.rejects(
+    pythonComputationService.solveCalphadEquilibrium(ALLOY, 500, 1450, 50, true, undefined, undefined, false, true, 0.5,
+      { signal: controller.signal, supersedeKey: "studio-abc" }),
+    (err: unknown) => isAbortError(err));
+  assert.equal(JSON.parse(sent.body).supersedeKey, "studio-abc");
+  assert.equal(sent.signal, controller.signal);
+});
+
+test("order/disorder model phase names carry 'ordering not checked' (review S4)", () => {
+  const result = pycalphadResult({
+    phaseNameNotes: { BCC_B2: "order/disorder model phase: ordering not checked" },
+    solutePartitioning: [
+      { element: "AL", partitionCoefficient_k: 1.0575, partitionCoefficientSource: "scheil-primary-phase-tie-line",
+        temperatureC: 1684.5, primarySolidPhase: "BCC_B2", role: "Enriched in the primary solid (k > 1): depleted in the last liquid" },
+    ],
+    scheilSolidification: {
+      status: "pycalphad-scheil-gulliver", terminationReason: "liquid-below-0.1-percent", startTemperatureC: 1686.5,
+      terminalTemperatureC: 1654.5, terminalBracketC: null, remainingLiquidFraction: 0.0009, stepC: 2, steps: 16,
+      phaseAmounts: { BCC_B2: 0.9991 }, primarySolidPhase: "BCC_B2",
+      phaseNameNotes: { BCC_B2: "order/disorder model phase: ordering not checked" }, evidence: "unvalidated",
+    },
+  });
+  const scheil = textOf(renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={result} initialSubTab="multi_scheil" />));
+  assert.match(scheil, /Solid formed \(mole fraction\): BCC_B2 \(ordering not checked\) 99\.9 %/);
+  assert.match(scheil, /Primary solid \(first to form\): BCC_B2 \(ordering not checked\)/);
+  const part = textOf(renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={result} initialSubTab="solute_partitioning" />));
+  assert.match(part, /BCC_B2 \(ordering not checked\) at 1684\.5 °C/);
+  const grid = textOf(renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={result} />));
+  assert.match(grid, /BCC_B2: order\/disorder model phase: ordering not checked\./);
+  assert.equal(withOrderingNote("FCC_A1", { BCC_B2: "x" }), "FCC_A1");
+});
+
+test("the beta transus is shown with its heuristic status and the database deviation next to it (review S5)", () => {
+  const result = pycalphadResult({
+    criticalTemperatures: { liquidusC: 1686.4, solidusC: 1681.1, freezingRangeC: 5.3, betaTransusC: 925 },
+    criticalTemperatureStatus: {
+      betaTransusC: { status: "heuristic-phase-name", note: "highest grid temperature with HCP_A3 > 1 %",
+        knownDeviation: "COST 507 places alpha (HCP_A3) up to about 925 degC, about 70 K below the 995 +/- 10 degC beta transus" },
+      liquidusC: { status: "bisected", knownDeviation: "COST 507 liquidus/solidus lie above the values usually quoted" },
+    },
+  });
+  const markup = renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={result} />);
+  const text = textOf(markup);
+  assert.match(text, /β-Transus \(phase-name heuristic, grid resolution\): 925°C COST 507 places alpha \(HCP_A3\) up to about 925 degC, about 70 K below/);
+  assert.match(text, /COST 507 liquidus\/solidus lie above the values usually quoted/);
+});
+
+test("the probe stays on the solved grid and names the grid temperature it shows (Sol S5)", () => {
+  assert.equal(clampProbeToRange(950, 400, 750, 10), 750);
+  assert.equal(clampProbeToRange(613, 400, 750, 10), 610);
+  assert.equal(clampProbeToRange(100, 600, 1750, 25), 600);
+  assert.equal(clampProbeToRange(Number.NaN, 400, 750, 10), 400);
+  const profile = [400, 500, 600, 700, 750].map((t) => ({
+    temperatureC: t, status: "converged", phases: [], totalGibbsEnergy_kJ_mol: -40, thermodynamicActivities: {}, chemicalPotentials_J_mol: {},
+  })) as any;
+  const result = pycalphadResult({ temperatureRangeC: [400, 750], equilibriumProfile: profile });
+  const text = textOf(renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={result} />));
+  assert.match(text, /At 750°C \(nearest grid point\):/);
+  assert.doesNotMatch(text, /At 950°C/);
+});
+
+test("an unavailable answer names no client engine and no compute time (review N1)", () => {
+  const res = {
+    alloyName: "IN718", nominalComposition: { Ni: 53 }, temperatureRangeC: [500, 1550] as [number, number], temperatureStepC: 25,
+    equilibriumProfile: [], criticalTemperatures: { liquidusC: null, solidusC: null, freezingRangeC: null },
+    solutePartitioning: [], multiElementScheil: [], thermodynamicStabilityIndex: null, tcpEmbrittlementRisk: null,
+    engine: "none (pycalphad unavailable)", computeTimeMs: null, isPythonEngine: false,
+    pythonUnavailable: { unavailableKind: "no-database-covers-elements", reason: "no usable thermodynamic database", reasons: ["x"] },
+  } as PythonCalphadSolveResult;
+  const text = textOf(renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={res} />));
+  assert.match(text, /Active Engine: pycalphad \(unavailable for this input\)/);
+  assert.match(text, /Compute Time: n\/a/);
+  assert.doesNotMatch(text, /MetalliX-Client/);
+  assert.match(text, /Unavailable: no thermodynamic database for this system/);
 });

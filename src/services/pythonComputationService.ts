@@ -104,6 +104,8 @@ export interface PythonCalphadSolveResult
   modelCache?: CalphadModelCacheInfo;
   /** pycalphad only: measured stage times of this request (ms). */
   timingsMs?: Record<string, number>;
+  /** pycalphad only: caveats for order/disorder model phase names (FCC_L12, BCC_B2): ordering not checked. */
+  phaseNameNotes?: Record<string, string>;
   engine: string;
   /** null when the engine did not report a time (never an invented one). */
   computeTimeMs: number | null;
@@ -590,6 +592,43 @@ export type SolidificationMicrostructureResult =
   | SolidificationMicrostructureDegenerate
   | SolidificationMicrostructureUnavailable;
 
+function abortError(message: string): Error {
+  const err = new Error(message);
+  err.name = "AbortError";
+  return err;
+}
+
+export function isAbortError(err: unknown): boolean {
+  return typeof err === "object" && err !== null && (err as { name?: string }).name === "AbortError";
+}
+
+/** A CALPHAD result that carries only the reason: no profile, no temperatures, no client numbers. */
+function calphadUnavailableResult(
+  alloy: MultiComponentAlloyComposition,
+  tMin: number,
+  tMax: number,
+  tStep: number,
+  pythonUnavailable: CalphadUnavailable,
+): PythonCalphadSolveResult {
+  return {
+    alloyName: alloy.name,
+    nominalComposition: { ...alloy.elements },
+    temperatureRangeC: [tMin, tMax],
+    temperatureStepC: tStep,
+    equilibriumProfile: [],
+    criticalTemperatures: { liquidusC: null, solidusC: null, freezingRangeC: null },
+    solutePartitioning: [],
+    multiElementScheil: [],
+    thermodynamicStabilityIndex: null,
+    tcpEmbrittlementRisk: null,
+    engine: "none (pycalphad unavailable)",
+    computeTimeMs: null,
+    isPythonEngine: false,
+    databaseUsed: pythonUnavailable.databaseUsed,
+    pythonUnavailable,
+  };
+}
+
 /** Unavailable envelope for a CALPHAD request the Python service did not answer (no equilibrium is shown). */
 function engineUnreachable(reason: string): CalphadUnavailable {
   return { unavailableKind: "engine-unreachable", reason, reasons: [reason] };
@@ -829,7 +868,10 @@ class PythonComputationService {
     customTdbText?: string,
     adaptiveGrid = true,
     boundaryRefinement = true,
-    minRefineStep = 0.5
+    minRefineStep = 0.5,
+    /** signal: aborts a superseded request; supersedeKey: lets the server drop this client's queued,
+     * not yet started request when a newer one arrives (slider drags). */
+    options: { signal?: AbortSignal; supersedeKey?: string } = {}
   ): Promise<PythonCalphadSolveResult> {
     let pythonUnavailable: CalphadUnavailable | null = null;
     if (usePython) {
@@ -838,7 +880,9 @@ class PythonComputationService {
         const res = await fetch("/api/python/calphad-minimize", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          signal: options.signal,
           body: JSON.stringify({
+            supersedeKey: options.supersedeKey,
             name: alloy.name,
             elements: alloy.elements,
             unit: alloy.unit || "wt_pct",
@@ -863,8 +907,12 @@ class PythonComputationService {
               computeTimeMs: typeof data.computeTimeMs === "number" ? data.computeTimeMs : null,
             };
           }
+          if (data && data.status === "superseded") {
+            // The server dropped it for a newer request of the same client: nothing to show.
+            throw abortError("superseded by a newer CALPHAD request");
+          }
           // The Python engine has no fallback model: it says "unavailable" and why.
-          pythonUnavailable = parseCalphadUnavailable(data);
+          pythonUnavailable = parseCalphadUnavailable(data) ?? engineUnreachable("the Python CALPHAD service gave no result");
         } else {
           validation = await validationErrorFromResponse(res, "CALPHAD");
           if (!validation) {
@@ -872,12 +920,15 @@ class PythonComputationService {
           }
         }
       } catch (err) {
+        if (isAbortError(err)) throw err; // superseded by newer input: the caller ignores it
         console.warn("Python CALPHAD proxy call failed:", err);
         pythonUnavailable = engineUnreachable("the Python CALPHAD service could not be reached");
       }
-      // Invalid input (e.g. an unknown element symbol): surface it; the caller decides
-      // whether to show the client solver instead. Network errors and 5xx still fall back.
+      // Invalid input (e.g. an unknown element symbol): surface it (HTTP 422 envelope message).
       if (validation) throw validation;
+      // Unavailable (no database, no pycalphad, failed equilibrium, 5xx, network): an explicit,
+      // number-free result. The client screening model is NOT run in its place.
+      return calphadUnavailableResult(alloy, tMin, tMax, tStep, pythonUnavailable);
     }
 
     // Client-side TypeScript Fallback
@@ -899,7 +950,6 @@ class PythonComputationService {
       thermodynamicModel: CLIENT_MODEL_LABEL,
       databaseUsed: CLIENT_DATABASE_LABEL,
       iterations: (tMax - tMin) / tStep,
-      ...(pythonUnavailable ? { pythonUnavailable } : {}),
     };
   }
 

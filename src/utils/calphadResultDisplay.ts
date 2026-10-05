@@ -129,6 +129,10 @@ export interface CalphadScheilBlock {
   fractionBasis?: string;
   validity?: string;
   evidence?: string;
+  /** The solid phase that forms first on the path (partition coefficients refer to it). */
+  primarySolidPhase?: string | null;
+  /** Caveats for order/disorder model phase names on the path (ordering not checked). */
+  phaseNameNotes?: Record<string, string>;
 }
 
 export const SCHEIL_COMPUTED = "pycalphad-scheil-gulliver";
@@ -147,10 +151,13 @@ export function scheilSummaryLines(b: CalphadScheilBlock | undefined | null): st
   }
   if (b.phaseAmounts && Object.keys(b.phaseAmounts).length) {
     const phases = Object.entries(b.phaseAmounts)
-      .map(([name, f]) => `${name} ${(f * 100).toFixed(1)} %`)
+      .map(([name, f]) => `${withOrderingNote(name, b.phaseNameNotes)} ${(f * 100).toFixed(1)} %`)
       .join(", ");
     lines.push(`Solid formed (${b.fractionBasis ?? "mole fraction"}): ${phases}`);
   }
+  if (b.primarySolidPhase) lines.push(`Primary solid (first to form): ${withOrderingNote(b.primarySolidPhase, b.phaseNameNotes)}`);
+  const notes = Object.entries(b.phaseNameNotes ?? {});
+  if (notes.length) lines.push(`${notes.map(([name]) => name).join(", ")}: ${notes[0][1]}.`);
   if (typeof b.stepC === "number") {
     const balance = typeof b.massBalanceMaxAbsError === "number"
       ? `; mass balance error ${b.massBalanceMaxAbsError.toExponential(1)}` : "";
@@ -181,4 +188,17 @@ export function calphadTemperatureWindow(elements: Record<string, number>): { tM
     default:
       return { tMin: 500, tMax: 1550, tStep: 25 };
   }
+}
+
+/** A phase name with "(ordering not checked)" when the engine flagged it as an order/disorder model phase. */
+export function withOrderingNote(name: string, ...noteMaps: (Record<string, string> | undefined | null)[]): string {
+  return noteMaps.some((m) => m && m[name]) ? `${name} (ordering not checked)` : name;
+}
+
+/** The probe temperature kept on the solved grid: clamped into [tMin, tMax] and snapped to the step. */
+export function clampProbeToRange(t: number, tMin: number, tMax: number, step: number): number {
+  if (!Number.isFinite(t) || !(tMax >= tMin)) return tMin;
+  const clamped = Math.min(tMax, Math.max(tMin, t));
+  if (!(step > 0)) return clamped;
+  return Math.min(tMax, tMin + Math.round((clamped - tMin) / step) * step);
 }

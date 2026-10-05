@@ -192,14 +192,16 @@ test("solveCalphadEquilibrium throws the envelope message on 422 instead of the 
   });
 });
 
-test("solveCalphadEquilibrium still falls back to the client solver for 5xx and network errors", async () => {
+test("solveCalphadEquilibrium answers 5xx and network errors as unavailable, with no client numbers", async () => {
   stubFetch(500, { error: "boom" });
   let res = await pythonComputationService.solveCalphadEquilibrium(NI_AL, 500, 1450, 50, true);
   assert.equal(res.isPythonEngine, false);
-  assert.equal(res.engine, "MetalliX-Client-TS-Solver");
+  assert.equal(res.pythonUnavailable?.unavailableKind, "engine-unreachable");
+  assert.equal(res.equilibriumProfile.length, 0);
   stubNetworkError();
   res = await pythonComputationService.solveCalphadEquilibrium(NI_AL, 500, 1450, 50, true);
-  assert.equal(res.isPythonEngine, false);
+  assert.equal(res.pythonUnavailable?.unavailableKind, "engine-unreachable");
+  assert.equal(res.criticalTemperatures.liquidusC, null);
 });
 
 test("deconvolveXRD never returns a made-up fit: failures throw, success passes through", async () => {

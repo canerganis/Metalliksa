@@ -11,6 +11,8 @@ export interface CalphadFieldStatus {
   status?: string;
   reason?: string;
   note?: string;
+  /** A deviation of the database from reported values for this field (shown next to the number). */
+  knownDeviation?: string;
 }
 
 /** The Python "unavailable" envelope fields the UI shows. */
