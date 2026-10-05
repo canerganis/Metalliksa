@@ -1167,7 +1167,7 @@
       "workspace": "lpbf",
       "label": "Keyhole Ray Tracing",
       "description": "Seeded Monte Carlo ray optics in a prescribed Gaussian cavity (NVIDIA Warp; CPU by default, CUDA optional); empirical absorption, not a solved keyhole.",
-      "next": "database",
+      "next": "lpbf-dataset-comparison",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -1469,6 +1469,59 @@
       ],
       "seedDerived": [
         "label",
+        "next",
+        "maturity"
+      ]
+    },
+    {
+      "id": "lpbf-dataset-comparison",
+      "version": "0.0.0",
+      "owner": "TODO(maintainer-review): unassigned",
+      "workspace": "lpbf",
+      "label": "Dataset Comparison (LPBF)",
+      "description": "Screening kernels (Rosenthal, Eagar–Tsai v2, Goldak v3) against published single-track measurements (Hofmann 316L 2026, Totis Ti-6Al-4V 2021); comparison, not validation; Python-generated record",
+      "next": "database",
+      "maturity": "Research",
+      "navigation": "listed",
+      "hiddenReason": null,
+      "view": {
+        "component": "src/components/LpbfDatasetComparisonLab.tsx",
+        "export": "LpbfDatasetComparisonLab"
+      },
+      "operations": [],
+      "validityDomain": null,
+      "evidence": {
+        "emits": [],
+        "ceiling": "screening-only",
+        "forbiddenClaims": [
+          "qualified",
+          "certified",
+          "validated",
+          "measured",
+          "productionReady",
+          "airworthy"
+        ],
+        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
+      },
+      "lifecycle": null,
+      "tests": {
+        "schema": null,
+        "oracle": {
+          "status": "pending",
+          "ref": null,
+          "ciNote": null,
+          "scope": null
+        },
+        "docs": null
+      },
+      "migrationState": "legacy",
+      "legacyNotes": [
+        "Read-only view of the committed Python-generated record docs/LPBF_DATASET_COMPARISON_2026-10-05.json (src/data/lpbfDatasetComparison.ts); it dispatches no request and computes nothing in the browser, so no operation is bound."
+      ],
+      "sourceRefs": [],
+      "seedDerived": [
+        "label",
+        "description",
         "next",
         "maturity"
       ]

@@ -243,7 +243,7 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "lpbf",
       "label": "Keyhole Ray Tracing",
       "description": "Seeded Monte Carlo ray optics in a prescribed Gaussian cavity (NVIDIA Warp; CPU by default, CUDA optional); empirical absorption, not a solved keyhole.",
-      "next": "database",
+      "next": "lpbf-dataset-comparison",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -260,6 +260,32 @@ export const MODULE_REGISTRY_CORE = {
           "status": "present",
           "ciNote": "Oracle not run in CI (requires Warp/GPU stack).",
           "scope": "It checks sampling and energy bookkeeping on a flat surface only."
+        }
+      }
+    },
+    {
+      "id": "lpbf-dataset-comparison",
+      "version": "0.0.0",
+      "workspace": "lpbf",
+      "label": "Dataset Comparison (LPBF)",
+      "description": "Screening kernels (Rosenthal, Eagar–Tsai v2, Goldak v3) against published single-track measurements (Hofmann 316L 2026, Totis Ti-6Al-4V 2021); comparison, not validation; Python-generated record",
+      "next": "database",
+      "maturity": "Research",
+      "navigation": "listed",
+      "hiddenReason": null,
+      "view": {
+        "component": "src/components/LpbfDatasetComparisonLab.tsx",
+        "export": "LpbfDatasetComparisonLab"
+      },
+      "migrationState": "legacy",
+      "evidence": {
+        "ceiling": "screening-only"
+      },
+      "tests": {
+        "oracle": {
+          "status": "pending",
+          "ciNote": null,
+          "scope": null
         }
       }
     },
