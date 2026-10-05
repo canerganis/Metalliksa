@@ -10,6 +10,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-typed-1f2937?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Python solvers](https://img.shields.io/badge/Python-3.11%20%7C%203.12-1f2937?logo=python&logoColor=white)](https://www.python.org)
 [![Local first](https://img.shields.io/badge/runs-local%20%26%20air--gap%20ready-1f2937)](#local-first-and-honest-by-design)
+[![License: MIT](https://img.shields.io/badge/license-MIT-1f2937)](LICENSE)
 [![Evidence first](https://img.shields.io/badge/evidence-first-1f2937)](#evidence-before-claims)
 
 </div>
@@ -103,4 +104,4 @@ Metalliksa is looking for collaborators, research partners and the right enginee
 
 ## License
 
-No open-source license has been granted yet; all rights are reserved by the author until one is added. Please get in touch before reusing the code.
+Released under the [MIT License](LICENSE). Note that solver outputs are research screening results, not qualified engineering data; see [Evidence before claims](#evidence-before-claims).
