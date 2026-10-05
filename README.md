@@ -63,6 +63,12 @@ SQLite run archives, source registry, evidence records
 - Cross-language parity checks keep the TypeScript ports of the physics aligned with the Python solvers.
 - Lazy-loaded modules and a command palette (Ctrl/Cmd+K); a porcelain light theme designed to feel calm for long working sessions.
 
+## GPU acceleration with NVIDIA
+
+Metalliksa's heavy LPBF kernels (3D transient thermal fields, keyhole and powder-bed ray tracing) have GPU implementations built on [NVIDIA Warp](https://github.com/NVIDIA/warp) and CUDA. They run on NVIDIA GPUs when Warp is installed, and fall back to CPU reference kernels otherwise, so everything still works on a laptop. GPU and CPU paths are checked against each other in the test suite, and results that depend on the GPU path are labelled as such rather than treated as more accurate.
+
+The optional micrograph machine-learning features use PyTorch on CUDA the same way. Metalliksa is an independent project and is not affiliated with or endorsed by NVIDIA; NVIDIA, CUDA and Warp are trademarks of NVIDIA Corporation.
+
 ## Local first and honest by design
 
 Everything runs on your machine. An air-gap mode blocks outbound calls, and the optional AI features (copilot, micrograph vision, dataset planner) only activate if you provide `OPENAI_API_KEY` on the server.
