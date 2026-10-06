@@ -42,3 +42,11 @@ test("weakest LPBF engines are at most Research maturity and state in one plain 
   assert.match(read("src/components/MurakamiFatigueLab.tsx"), /Steel-derived formula; surface roughness and R-ratio not modelled\./);
   assert.match(read("src/components/ICMEMultiScalePipelineStudio.tsx"), /Not a calibrated strength prediction: tabulated constants are not matched to your alloy/);
 });
+
+test("TTT/CCT module label and header say steel heat-treatment only, not for LPBF cooling rates or alloys", () => {
+  assert.equal(mod("ttt-cct-kinetics").label, "Steel-only TTT / CCT (not for LPBF alloys)");
+  assert.match(mod("ttt-cct-kinetics").description, /not applicable to LPBF cooling rates or the LPBF alloys/);
+  const studio = read("src/components/PhaseKineticsTTTCCTStudio.tsx");
+  assert.match(studio, /Steel-only TTT \/ CCT Kinetics \(Illustrative\)/);
+  assert.match(studio, /Steel heat-treatment kinetics only; not applicable to LPBF cooling rates or to the LPBF alloys\./);
+});

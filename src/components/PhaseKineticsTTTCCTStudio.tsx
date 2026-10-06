@@ -228,7 +228,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-bold text-white tracking-wide">
-                  Steel TTT / CCT Kinetics (Illustrative)
+                  Steel-only TTT / CCT Kinetics (Illustrative)
                 </h1>
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
                   Li 1998 / Additivity / LSW
@@ -237,6 +237,9 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                   PYTHON 3.12
                 </span>
               </div>
+              <p data-testid="ttt-steel-only-statement" className="text-xs font-semibold text-amber-300 mt-0.5">
+                Steel heat-treatment kinetics only; not applicable to LPBF cooling rates or to the LPBF alloys.
+              </p>
               <p className="text-xs text-slate-400 mt-0.5">
                 Bridging the R&D Gap: <span className="text-sky-300">Thermodynamic Equilibrium (CALPHAD)</span> vs. <span className="text-amber-300">Non-Equilibrium Kinetics (Cooling Rate dT/dt, Li 1998 Start Curves & LSW Coarsening)</span>
               </p>
