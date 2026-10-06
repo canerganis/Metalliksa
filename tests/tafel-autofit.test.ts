@@ -75,18 +75,45 @@ test('autoFitTafel rejects datasets with too few points', () => {
   assert.throws(() => mod().autoFitTafel(data), /insufficient points/);
 });
 
-// Todo until measured benchmark curves are added to TAFEL_BENCHMARK_DATASETS (it is empty since the PRNG-fabricated
-// curves were removed with the BUG 1 fix). The test asserts a non-empty list, so it cannot pass vacuously meanwhile.
-test('autoFitTafel fits every benchmark dataset without NaN or infinite outputs', { todo: 'waits for measured benchmark curves (TAFEL_BENCHMARK_DATASETS is empty)' }, () => {
-  const datasets = mod().TAFEL_BENCHMARK_DATASETS;
-  assert.ok(datasets.length > 0);
-  for (const dataset of datasets) {
-    const fit = mod().autoFitTafel(dataset);
+// Replaces the former todo "fits every benchmark dataset": no measured benchmark curves are bundled (the
+// benchmark list was removed), so the fitter is exercised on a deterministic family of SYNTHETIC test fixtures
+// generated in this file from the noise-free Butler-Volmer equation. They are not measurements and only check
+// that the fitter recovers the parameters it was given and never emits NaN or infinite outputs.
+const SYNTHETIC_BV_FAMILY = [
+  { id: 'synthetic-bv-a', eCorr: -0.3, iCorr: 2.0, betaA: 0.1, betaC: 0.12 },
+  { id: 'synthetic-bv-b', eCorr: -0.45, iCorr: 0.5, betaA: 0.06, betaC: 0.15 },
+  { id: 'synthetic-bv-c', eCorr: -0.2, iCorr: 15.0, betaA: 0.12, betaC: 0.08 },
+  { id: 'synthetic-bv-d', eCorr: -0.35, iCorr: 0.05, betaA: 0.09, betaC: 0.1 },
+] as const;
+
+function syntheticBvWith(p: (typeof SYNTHETIC_BV_FAMILY)[number]): TafelDataset {
+  const dataset = syntheticBv();
+  dataset.id = p.id;
+  dataset.name = `${p.id} (synthetic Butler-Volmer test fixture)`;
+  dataset.points = dataset.points.map((point, index) => {
+    const potential = p.eCorr - 0.3 + index * 0.005 + 0.0013;
+    const eta = potential - p.eCorr;
+    const signed = p.iCorr * (Math.pow(10, eta / p.betaA) - Math.pow(10, -eta / p.betaC));
+    const density = Math.max(1e-10, Math.abs(signed));
+    return { ...point, potential, currentRaw: signed * 1e-6, currentDensity_uA_cm2: density,
+      logCurrentDensity: Math.log10(density), signedCurrentDensity_uA_cm2: signed };
+  });
+  return dataset;
+}
+
+for (const p of SYNTHETIC_BV_FAMILY) {
+  test(`autoFitTafel recovers the parameters of synthetic fixture ${p.id} with finite outputs`, () => {
+    const fit = mod().autoFitTafel(syntheticBvWith(p));
     for (const key of ['eCorr', 'iCorr_uA_cm2', 'betaA_V_dec', 'betaC_V_dec', 'corrosionRateMmYr', 'rp_ohm_cm2', 'anodicR2', 'cathodicR2'] as const) {
-      assert.ok(Number.isFinite(fit[key]), `${dataset.id} ${key} = ${fit[key]}`);
+      assert.ok(Number.isFinite(fit[key]), `${p.id} ${key} = ${fit[key]}`);
     }
-  }
-});
+    assert.ok(Math.abs(fit.eCorr - p.eCorr) < 0.01, `${p.id} Ecorr ${fit.eCorr}`);
+    // Observed on this grid: icorr 2-6 percent low (same window bias as above), slopes within 2 percent.
+    assert.ok(within(fit.iCorr_uA_cm2, p.iCorr, 0.1), `${p.id} icorr ${fit.iCorr_uA_cm2}`);
+    assert.ok(within(fit.betaA_V_dec, p.betaA, 0.05), `${p.id} betaA ${fit.betaA_V_dec}`);
+    assert.ok(within(fit.betaC_V_dec, p.betaC, 0.05), `${p.id} betaC ${fit.betaC_V_dec}`);
+  });
+}
 
 test('autoFitTafel preserves an explicitly zero SHE reference offset', () => {
   const dataset = syntheticBv();

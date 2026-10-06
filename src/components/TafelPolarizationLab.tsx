@@ -47,7 +47,6 @@ import { TafelDataset, TafelFitResult, ReferenceElectrodeType } from "../types/t
 import {
   parseTafelFile,
   tryAutoFitTafel,
-  TAFEL_BENCHMARK_DATASETS,
   COMMON_ALLOYS,
   REFERENCE_ELECTRODES,
   exportTafelToCSV,
@@ -71,15 +70,23 @@ import {
 interface TafelPolarizationLabProps {
   onDatasetLoaded?: (dataset: TafelDataset) => void;
   className?: string;
+  /**
+   * A polarization dataset the caller has already parsed from a user file (also the test
+   * injection point). Read once as the initial value: later changes to this prop are ignored,
+   * so key the component on the dataset if it can change. Never pass a bundled or synthetic
+   * dataset here.
+   */
+  initialDataset?: TafelDataset;
 }
 
 /**
- * TAFEL_BENCHMARK_DATASETS is empty (the former PRNG-fabricated curves were removed), so
- * the lab starts without data: it shows an empty state with a file input and renders the
- * full lab only once a polarization file has been parsed.
+ * No benchmark polarization curves are bundled (the former PRNG-fabricated curves were
+ * removed together with the benchmark list), so unless the caller passes a dataset it has
+ * parsed from a user file, the lab starts without data: it shows an empty state with a file
+ * input and renders the full lab only once a polarization file has been parsed.
  */
 export function TafelPolarizationLab(props: TafelPolarizationLabProps) {
-  const [initialDataset, setInitialDataset] = useState<TafelDataset | null>(TAFEL_BENCHMARK_DATASETS[0] ?? null);
+  const [initialDataset, setInitialDataset] = useState<TafelDataset | null>(props.initialDataset ?? null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   if (initialDataset) {
@@ -104,7 +111,7 @@ export function TafelPolarizationLab(props: TafelPolarizationLabProps) {
 
   return (
     <div className={`rounded-2xl border border-[#162032] bg-[#050810] p-6 text-slate-300 font-mono text-xs space-y-3 ${props.className ?? ""}`}>
-      <p>No benchmark dataset available</p>
+      <p>No polarization data loaded. No benchmark curves are bundled; load a polarization data file.</p>
       <input
         aria-label="Load polarization data file"
         type="file"

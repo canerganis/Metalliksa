@@ -4,7 +4,6 @@ import { afterEach, test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { TafelDataset, TafelFitResult, TafelRawPoint } from "../src/types/tafel";
 import {
-  TAFEL_BENCHMARK_DATASETS,
   TafelFitUnavailableError,
   autoFitTafel,
   exportTafelToCSV,
@@ -260,7 +259,9 @@ test("client annual-rate fallback: a missing i_corr is unavailable, not 1.25 uA/
     assert.equal(res[key], null, key);
   }
   assert.deepEqual(res.timelineProjections, []);
-  assert.doesNotMatch(JSON.stringify(res), /1\.25|NaN/);
+  // timestamp and durationMs are wall-clock values (e.g. "15:50:11.259Z" contains "1.25"), so they are left out
+  const { timestamp: _timestamp, durationMs: _durationMs, ...computed } = res;
+  assert.doesNotMatch(JSON.stringify(computed), /1\.25|NaN/);
 });
 
 test("client annual-rate fallback: no substrate, no invented 316L preset", () => {
@@ -308,24 +309,19 @@ test("annual-rate module banner shows the Tafel fit as Unavailable with its reas
 });
 
 test("the lab shows Unavailable results and the reason for a cathodic-only scan (no invented slope, R2 or rate)", () => {
-  TAFEL_BENCHMARK_DATASETS.push(bvDataset(CATHODIC_ONLY));
-  try {
-    const html = renderToStaticMarkup(
-      <DigitalTwinProvider>
-        <TafelPolarizationLab />
-      </DigitalTwinProvider>
-    );
-    assert.match(html, /Tafel result: Unavailable/);
-    assert.match(html, /Anodic branch unavailable/);
-    assert.match(html, /Anodic Slope β_a: <strong[^>]*>Unavailable<\/strong>/);
-    assert.match(html, /R²: Unavailable/);
-    assert.doesNotMatch(html, /Fit R² = 0\.85|100 mV\/dec|>NaN<|>null<| null | NaN /);
-    // result cards
-    assert.match(html, /Polarization Res\. \(Rp\)[\s\S]{0,300}Unavailable/);
-    assert.match(html, /Corrosion Rate \(CR\)[\s\S]{0,300}Unavailable/);
-  } finally {
-    TAFEL_BENCHMARK_DATASETS.length = 0;
-  }
+  const html = renderToStaticMarkup(
+    <DigitalTwinProvider>
+      <TafelPolarizationLab initialDataset={bvDataset(CATHODIC_ONLY)} />
+    </DigitalTwinProvider>
+  );
+  assert.match(html, /Tafel result: Unavailable/);
+  assert.match(html, /Anodic branch unavailable/);
+  assert.match(html, /Anodic Slope β_a: <strong[^>]*>Unavailable<\/strong>/);
+  assert.match(html, /R²: Unavailable/);
+  assert.doesNotMatch(html, /Fit R² = 0\.85|100 mV\/dec|>NaN<|>null<| null | NaN /);
+  // result cards
+  assert.match(html, /Polarization Res\. \(Rp\)[\s\S]{0,300}Unavailable/);
+  assert.match(html, /Corrosion Rate \(CR\)[\s\S]{0,300}Unavailable/);
 });
 
 // ---- review fix round: Digital Twin payload, drawing anchors, exact constants, reported substitution ----------------

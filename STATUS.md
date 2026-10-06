@@ -1,3 +1,9 @@
+## Güncel devam noktası — 2026-10-06 / W1b test hijyeni (`fix/test-hygiene-tafel-calphad-golden`)
+
+- **Tafel:** `TAFEL_BENCHMARK_DATASETS`, `BenchmarkParams` ve `createBenchmarkDataset` kaldırıldı (açık lisanslı, sabitlenmiş ölçülmüş polarizasyon verisi benimsenmedi). "measured benchmark datasets" bekleyen todo, test dosyasında deterministik üretilen ve açıkça sentetik etiketli Butler-Volmer fikstürleri üzerinde fitter'ın bilinen Ecorr/icorr/eğimleri geri bulduğu testlerle değiştirildi. `npm run test:unit` todo sayısı artık **0**.
+- **Calphad golden:** `test_capture_from_base_blob_reproduces_committed_golden` hatası sürüklenme değildi: tüm `calphad_solver` goldenları pycalphad'sız yorumlayıcıda yakalanmıştı; pycalphad (0.11.2) kurulu ortamda `d33b6f5` blob'u pycalphad yoluna geçiyordu. Blob yeniden yakalamaları artık pycalphad'ı gizliyor (`GOLDEN_HIDDEN_MODULES`); hiçbir golden yeniden kutsanmadı.
+- **Geçmiş kayıt:** aşağıdaki `10e3005` kabul kaydındaki "19 todo / BUG 1" metni o revizyona bağlı tarihsel kayıttır ve değiştirilmedi.
+
 ## Güncel devam noktası — 2026-10-06 / Dalga 1: sıfır göz boyama + NIST mds2-2525 yerel main'de (`4fcfd72`)
 
 - **Plan:** sınıf atlatma çerçevesi onaylandı (W0 NIST, W1 sıfır göz boyama, W1b test hijyeni, W2 kalibrasyon/skor, W3 ürün, W4 Scheil/kit/liderlik). 25 modül denetimi: uydurma sonuç yok; sessiz alaşım fallback'i, yanlış veri seti, iddiası kodundan büyük etiketler, boş sekmeler vardı.

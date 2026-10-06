@@ -198,6 +198,48 @@ class GoldenBindingTest(unittest.TestCase):
             old = json.loads((HERE / "golden" / "phase6a" / solver / golden.SOURCE_TABLES_FILE).read_text(encoding="utf-8"))
             self.assertEqual(golden.canonical(fresh["values"]), golden.canonical(old["values"]), solver)
 
+    def test_calphad_goldens_record_the_no_pycalphad_branch_that_capture_reproduces(self):
+        # Root cause of the former failure of the base-blob re-capture on an interpreter with
+        # pycalphad installed: the d33b6f5 calphad_solver blob imports pycalphad when it can and
+        # then takes the "pycalphad-open-tdb" path, while every calphad golden was captured
+        # without pycalphad. capture() therefore hides GOLDEN_HIDDEN_MODULES in blob runs.
+        self.assertEqual(golden.GOLDEN_HIDDEN_MODULES, ("pycalphad",))
+        calphad_cases = []
+        for solver, case in golden.iter_golden_cases():
+            if solver != "calphad_solver":
+                continue
+            calphad_cases.append(case)
+            stdout = golden.load_golden(solver, case)["stdout"]
+            self.assertIn("pycalphadVersion", stdout, case)
+            self.assertEqual(stdout["pycalphadVersion"], "No module named 'pycalphad'", case)
+            self.assertEqual(stdout["engine"], "subregular-adaptive-minimizer", case)
+        self.assertTrue(calphad_cases, "no calphad_solver golden cases were found")
+
+    def test_hidden_modules_raise_the_not_installed_error_in_blob_runs_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            script = Path(tmp) / "pourbaix_solver.py"
+            script.write_text(
+                "import json, sys\n"
+                "out = {}\n"
+                "for name in ('pycalphad', 'pycalphad.variables', 'json'):\n"
+                "    try:\n"
+                "        __import__(name)\n"
+                "        out[name] = 'imported'\n"
+                "    except ModuleNotFoundError as exc:\n"
+                "        out[name] = [type(exc).__name__, str(exc), exc.name]\n"
+                "print(json.dumps(out))\n", encoding="utf-8")
+            hidden = golden.run_solver("pourbaix_solver", {}, script=script, hide_modules=("pycalphad",))
+            self.assertEqual(hidden["exitCode"], 0, hidden["stderr"])
+            self.assertEqual(hidden["stdout"], {
+                "pycalphad": ["ModuleNotFoundError", "No module named 'pycalphad'", "pycalphad"],
+                "pycalphad.variables": ["ModuleNotFoundError", "No module named 'pycalphad'", "pycalphad"],
+                "json": "imported"})
+            plain = golden.run_solver("pourbaix_solver", {}, script=script)
+            self.assertEqual(plain["exitCode"], 0, plain["stderr"])
+            self.assertEqual(plain["stdout"]["json"], "imported")
+        with self.assertRaises(ValueError):
+            golden.run_solver("pourbaix_solver", {}, hide_modules=("pycalphad",))
+
     def test_from_revision_other_than_base_is_refused(self):
         self._in_temp_golden_dir()
         with self.assertRaises(golden.CaptureRefused):
