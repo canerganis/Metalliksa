@@ -16,6 +16,8 @@ python/openfoam/bin/
 
 # Local benchmark payloads; commit small provenance manifests, not raw measurements.
 data/benchmark/**/raw/
+# Default download directory of python/tools/fetch_external_data.py (external-data-manifest.json).
+/external-data/
 .runtime/
 
 # Graft keeps durable markdown wiring cards in source control; these are

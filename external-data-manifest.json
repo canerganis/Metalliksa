@@ -108,6 +108,44 @@
      "note": "data.nist.gov returned HTTP 503 (maintenance) on 2026-10-05/06; size and sha256 unknown"
     }
    ]
+  },
+  {
+   "id": "nist-mds2-2716",
+   "title": "NIST AM Bench 2022 AMB2022-03 IN718 in-situ thermography and scan strategy (bare plate)",
+   "landing": "https://doi.org/10.18434/mds2-2716",
+   "licence": "NIST Open License (https://www.nist.gov/open/license), per the NERDm record",
+   "files": [
+    {
+     "name": "AMB2022-03-718-AMMT-StaringCamera_Signal.h5",
+     "url": "https://data.nist.gov/od/ds/ark:/88434/mds2-2716/Thermography/AMB2022-03-718-AMMT-StaringCamera_Signal.h5",
+     "sizeBytes": 549979044,
+     "sha256": "f6fe21ec911707f72e7efda2932c77eae2b75d84765848878fe5beb6b728cd43",
+     "status": "downloaded",
+     "retrieved": "2026-09-15",
+     "waybackTimestamp": "20241215233912",
+     "note": "Canonical local copy: data/benchmark/nist-amb2022-03/raw/ (git-ignored; acquired 2026-09-15). Size and sha256 equal the NIST NERDm record v1.3.1 (data/benchmark/nist-amb2022-03/official/nerdm-record-mds2-2716.json); Internet Archive copies (web.archive.org) re-verified byte-identical on 2026-10-06. Larger than the 200 MB single-file download limit, so it is flagged manualPlacementOnly: --fetch skips it before any network access; place a copy by hand and run --verify.",
+     "manualPlacementOnly": true
+    },
+    {
+     "name": "AMB2022-03-AMMT-718-Pad_XYPT.h5",
+     "url": "https://data.nist.gov/od/ds/ark:/88434/mds2-2716/ScanStrategy/AMB2022-03-AMMT-718-Pad_XYPT.h5",
+     "sizeBytes": 406992,
+     "sha256": "7b7004753e150bc26632e9ce356e0440429160fa92cbff8fc8559202fdce2103",
+     "status": "downloaded",
+     "retrieved": "2026-09-15",
+     "waybackTimestamp": "20241215233922",
+     "note": "Canonical local copy: data/benchmark/nist-amb2022-03/raw/ (git-ignored; acquired 2026-09-15). Size and sha256 equal the NIST NERDm record v1.3.1 (data/benchmark/nist-amb2022-03/official/nerdm-record-mds2-2716.json); Internet Archive copies (web.archive.org) re-verified byte-identical on 2026-10-06."
+    },
+    {
+     "name": "2716_README.txt",
+     "url": "https://data.nist.gov/od/ds/mds2-2716/2716_README.txt",
+     "sizeBytes": 12573,
+     "sha256": "ba44076ed51b69c0e4ca80ff0e2568eed2dc6459e85c9ad83b85860bee5760f2",
+     "status": "downloaded",
+     "retrieved": "2026-09-15",
+     "note": "Stored locally as data/benchmark/nist-amb2022-03/raw/README.txt; hash equals the NERDm record v1.3.1. The Internet Archive copy (2024-12-15) is an older 12,093-byte text with a different hash and is not used."
+    }
+   ]
   }
  ]
 }

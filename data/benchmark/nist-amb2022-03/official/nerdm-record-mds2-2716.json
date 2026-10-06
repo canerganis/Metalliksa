@@ -1,0 +1,459 @@
+{
+ "@context": [
+  "https://data.nist.gov/od/dm/nerdm-pub-context.jsonld",
+  {
+   "@base": "ark:/88434/mds2-2716"
+  }
+ ],
+ "@id": "ark:/88434/mds2-2716",
+ "@type": [
+  "nrdp:DataPublication",
+  "nrdp:PublicDataResource",
+  "dcat:Dataset"
+ ],
+ "_editStatus": "done",
+ "_extensionSchemas": [
+  "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/PublicDataResource"
+ ],
+ "_schema": "https://data.nist.gov/od/dm/nerdm-schema/v0.7#",
+ "accessLevel": "public",
+ "annotated": "2026-01-06T19:13:44.581646",
+ "authors": [
+  {
+   "@type": "foaf:Person",
+   "affiliation": [
+    {
+     "@id": "ror:05xpvk416",
+     "@type": "org:Organization",
+     "subunits": [
+      "Intelligent Systems Division"
+     ],
+     "title": "National Institute of Standards and Technology"
+    }
+   ],
+   "familyName": "Deisenroth",
+   "fn": "David  Deisenroth",
+   "givenName": "David",
+   "middleName": "",
+   "orcid": "0000-0002-6869-7970"
+  },
+  {
+   "@type": "foaf:Person",
+   "affiliation": [
+    {
+     "@id": "ror:05xpvk416",
+     "@type": "org:Organization",
+     "subunits": [
+      "Intelligent Systems Division"
+     ],
+     "title": "National Institute of Standards and Technology"
+    }
+   ],
+   "familyName": "Mekhontsev",
+   "fn": "Sergey  Mekhontsev",
+   "givenName": "Sergey",
+   "middleName": "",
+   "orcid": "0000-0001-7764-630X"
+  },
+  {
+   "@type": "foaf:Person",
+   "affiliation": [
+    {
+     "@id": "ror:05xpvk416",
+     "@type": "org:Organization",
+     "subunits": [
+      "Intelligent Systems Division"
+     ],
+     "title": "National Institute of Standards and Technology"
+    }
+   ],
+   "familyName": "Lane",
+   "fn": "Brandon  Lane",
+   "givenName": "Brandon",
+   "middleName": "",
+   "orcid": "0000-0001-5153-1678"
+  },
+  {
+   "@type": "foaf:Person",
+   "affiliation": [
+    {
+     "@id": "ror:05xpvk416",
+     "@type": "org:Organization",
+     "subunits": [
+      "Intelligent Systems Division"
+     ],
+     "title": "National Institute of Standards and Technology"
+    }
+   ],
+   "familyName": "Weaver",
+   "fn": "Jordan  Weaver",
+   "givenName": "Jordan",
+   "middleName": "",
+   "orcid": "0000-0003-4857-5164"
+  },
+  {
+   "@type": "foaf:Person",
+   "affiliation": [
+    {
+     "@id": "ror:05xpvk416",
+     "@type": "org:Organization",
+     "subunits": [
+      "Intelligent Systems Division"
+     ],
+     "title": "National Institute of Standards and Technology"
+    }
+   ],
+   "familyName": "Yeung",
+   "fn": "Ho  Yeung",
+   "givenName": "Ho",
+   "middleName": "",
+   "orcid": "0000-0002-6073-5709"
+  }
+ ],
+ "bureauCode": [
+  "006:55"
+ ],
+ "components": [
+  {
+   "@id": "cmps/Thermography",
+   "@type": [
+    "nrdp:Subcollection"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/Subcollection"
+   ],
+   "filepath": "Thermography"
+  },
+  {
+   "@id": "cmps/Thermography/AMB2022-03-718-AMMT-StaringCamera_Signal.h5",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "f6fe21ec911707f72e7efda2932c77eae2b75d84765848878fe5beb6b728cd43"
+   },
+   "downloadURL": "https://data.nist.gov/od/ds/ark:/88434/mds2-2716/Thermography/AMB2022-03-718-AMMT-StaringCamera_Signal.h5",
+   "filepath": "Thermography/AMB2022-03-718-AMMT-StaringCamera_Signal.h5",
+   "mediaType": "application/x-hdf",
+   "size": 549979044
+  },
+  {
+   "@id": "cmps/Thermography/AMB2022-03-718-AMMT-StaringCamera_Signal.h5.sha256",
+   "@type": [
+    "nrdp:ChecksumFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/ChecksumFile"
+   ],
+   "algorithm": {
+    "@type": "Thing",
+    "tag": "sha256"
+   },
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "1bc0d2613a1dd38291cdec1d70e40c5219ae63c46573889f6f334dc6e692bd89"
+   },
+   "describes": "cmps/Thermography/AMB2022-03-718-AMMT-StaringCamera_Signal.h5",
+   "description": "SHA-256 checksum value for AMB2022-03-718-AMMT-StaringCamera_Signal.h5",
+   "downloadURL": "https://data.nist.gov/od/ds/ark:/88434/mds2-2716/Thermography/AMB2022-03-718-AMMT-StaringCamera_Signal.h5.sha256",
+   "filepath": "Thermography/AMB2022-03-718-AMMT-StaringCamera_Signal.h5.sha256",
+   "mediaType": "text/plain",
+   "size": 64,
+   "valid": true
+  },
+  {
+   "@id": "cmps/SamplePhotos",
+   "@type": [
+    "nrdp:Subcollection"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/Subcollection"
+   ],
+   "filepath": "SamplePhotos"
+  },
+  {
+   "@id": "cmps/SamplePhotos/AMB2022-03-718-SH1-BP1_MicroscopySurface.tif",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "67cc397958e2700df31e3c04eacce2f906e9fa6ad7aceaca6d47a586b1d97910"
+   },
+   "downloadURL": "https://data.nist.gov/od/ds/mds2-2716/SamplePhotos%2FAMB2022-03-718-SH1-BP1_MicroscopySurface.tif",
+   "filepath": "SamplePhotos/AMB2022-03-718-SH1-BP1_MicroscopySurface.tif",
+   "mediaType": "image/tiff",
+   "size": 213072320,
+   "title": "SamplePhotos/AMB2022-03-718-SH1-BP1_MicroscopySurface"
+  },
+  {
+   "@id": "cmps/SamplePhotos/AMB2022-03-718-SH1-BP2_MicroscopySurface.tif",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "fc2d588a9ae5c60a99dc7e03b79738ecea8bb5cda695f2ea3119450912568c24"
+   },
+   "downloadURL": "https://data.nist.gov/od/ds/mds2-2716/SamplePhotos%2FAMB2022-03-718-SH1-BP2_MicroscopySurface.tif",
+   "filepath": "SamplePhotos/AMB2022-03-718-SH1-BP2_MicroscopySurface.tif",
+   "mediaType": "image/tiff",
+   "size": 195856180,
+   "title": "SamplePhotos/AMB2022-03-718-SH1-BP2_MicroscopySurface"
+  },
+  {
+   "@id": "cmps/SamplePhotos/AMB2022-03-718-SH1-BP3_MicroscopySurface.tif",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "6fe88fd0fad0f318fbb0dd4c67859e4bc81464d95f7f28ba639b061ec557642b"
+   },
+   "downloadURL": "https://data.nist.gov/od/ds/mds2-2716/SamplePhotos%2FAMB2022-03-718-SH1-BP3_MicroscopySurface.tif",
+   "filepath": "SamplePhotos/AMB2022-03-718-SH1-BP3_MicroscopySurface.tif",
+   "mediaType": "image/tiff",
+   "size": 200101176,
+   "title": "SamplePhotos/AMB2022-03-718-SH1-BP3_MicroscopySurface"
+  },
+  {
+   "@id": "cmps/ScanStrategy",
+   "@type": [
+    "nrdp:Subcollection"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/Subcollection"
+   ],
+   "filepath": "ScanStrategy"
+  },
+  {
+   "@id": "cmps/ScanStrategy/AMB2022-03-AMMT-718-Pad_XYPT.h5.sha256",
+   "@type": [
+    "nrdp:ChecksumFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/ChecksumFile"
+   ],
+   "algorithm": {
+    "@type": "Thing",
+    "tag": "sha256"
+   },
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "158930403a16417b332406e800a96f62883dc4d6ab77346c64f776749616d809"
+   },
+   "describes": "cmps/ScanStrategy/AMB2022-03-AMMT-718-Pad_XYPT.h5",
+   "description": "SHA-256 checksum value for AMB2022-03-AMMT-718-Pad_XYPT.h5",
+   "downloadURL": "https://data.nist.gov/od/ds/ark:/88434/mds2-2716/ScanStrategy/AMB2022-03-AMMT-718-Pad_XYPT.h5.sha256",
+   "filepath": "ScanStrategy/AMB2022-03-AMMT-718-Pad_XYPT.h5.sha256",
+   "mediaType": "text/plain",
+   "size": 64,
+   "valid": true
+  },
+  {
+   "@id": "cmps/ScanStrategy/AMB2022-03-AMMT-718-Pad_XYPT.h5",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "7b7004753e150bc26632e9ce356e0440429160fa92cbff8fc8559202fdce2103"
+   },
+   "downloadURL": "https://data.nist.gov/od/ds/ark:/88434/mds2-2716/ScanStrategy/AMB2022-03-AMMT-718-Pad_XYPT.h5",
+   "filepath": "ScanStrategy/AMB2022-03-AMMT-718-Pad_XYPT.h5",
+   "mediaType": "application/x-hdf",
+   "size": 406992
+  },
+  {
+   "@id": "cmps/2716_README.txt",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "ba44076ed51b69c0e4ca80ff0e2568eed2dc6459e85c9ad83b85860bee5760f2"
+   },
+   "downloadURL": "https://data.nist.gov/od/ds/mds2-2716/2716_README.txt",
+   "filepath": "2716_README.txt",
+   "mediaType": "text/plain",
+   "size": 12573,
+   "title": "2716_README"
+  }
+ ],
+ "contactPoint": {
+  "fn": "Brandon Lane",
+  "hasEmail": "mailto:brandon.lane@nist.gov"
+ },
+ "description": [
+  "The following data files include in-situ thermographic measurement results and various additional experiment design data associated with laser-scanned single tracks and multi-track pads on bare (no-powder) nickel superalloy In718 for the 2022 Additive Manufacturing Benchmark (AM-Bench) test series.  These data are associated with the AMB2022-03 series of modeling challenges described here: https://www.nist.gov/system/files/documents/2022/05/26/AMB2022-03%20Measurement%20and%20Challenge%20Descriptions_1.01.pdf.  However, these data may also be used in future AM-Bench challenges.  These laser-scanning tests and thermographic measurements were performed on the NIST Additive Manufacturing Metrology Testbed (AMMT, https://www.nist.gov/el/ammt-temps).",
+  "Information on the directory structure and file formats are provided in the README.txt file.  Note that this dataset will be periodically updated, and additional data will be added as it is made available.  Future publications will also provide more in-depth description of the data in this dataset, as will links to available analysis code and scripts.  Refer to the Version number below, and updates described in this Description and the README.txt file."
+ ],
+ "doi": "doi:10.18434/mds2-2716",
+ "ediid": "ark:/88434/mds2-2716",
+ "isPartOf": [
+  {
+   "@id": "ark:/88434/pdr0-0003",
+   "@type": [
+    "nrda:ScienceTheme",
+    "nrdp:PublicDataResource"
+   ],
+   "title": "Additive Manufacturing Data"
+  }
+ ],
+ "issued": null,
+ "keyword": [
+  "Additive manufacturing; benchmarks; thermography; tracks; pads; melt pool; laser powder bed fusion;"
+ ],
+ "landingPage": "https://data.nist.gov/od/id/mds2-2716",
+ "language": [
+  "en"
+ ],
+ "license": "https://www.nist.gov/open/license",
+ "modified": "2024-09-17",
+ "programCode": [
+  "006:052"
+ ],
+ "publisher": {
+  "@type": "org:Organization",
+  "name": "National Institute of Standards and Technology"
+ },
+ "releaseHistory": {
+  "@id": "ark:/88434/mds2-2716/pdr:v",
+  "@type": [
+   "nrdr:ReleaseHistory"
+  ],
+  "hasRelease": [
+   {
+    "@id": "ark:/88434/mds2-2716/pdr:v/1.1.0",
+    "description": "data update",
+    "issued": "2022-07-15 00:00:00",
+    "location": "https://data.nist.gov/od/id/ark:/88434/mds2-2716/pdr:v/1.1.0",
+    "version": "1.1.0"
+   },
+   {
+    "@id": "ark:/88434/mds2-2716/pdr:v/1.2.0",
+    "description": "data update",
+    "issued": "2022-07-15 00:00:00",
+    "location": "https://data.nist.gov/od/id/ark:/88434/mds2-2716/pdr:v/1.2.0",
+    "version": "1.2.0"
+   },
+   {
+    "@id": "ark:/88434/mds2-2716/pdr:v/1.3.0",
+    "description": "data update",
+    "issued": "2024-09-17",
+    "location": "https://data.nist.gov/od/id/ark:/88434/mds2-2716/pdr:v/1.3.0",
+    "version": "1.3.0"
+   },
+   {
+    "@id": "ark:/88434/mds2-2716/pdr:v/1.3.1",
+    "description": "added to additiveman collection",
+    "issued": "2026-01-06",
+    "location": "https://data.nist.gov/od/id/ark:/88434/mds2-2716/pdr:v/1.3.1",
+    "version": "1.3.1"
+   }
+  ]
+ },
+ "revised": "2024-09-17T18:32:54.276641",
+ "status": "available",
+ "theme": [
+  "Manufacturing: Additive manufacturing"
+ ],
+ "title": "AM Bench 2022 Measurement Results Data: In-situ Thermography and Scan Strategy for Laser-scanned Single Tracks and Pads on Bare In718 (AMB2022-03)",
+ "topic": [
+  {
+   "@type": "Concept",
+   "scheme": "https://data.nist.gov/od/dm/nist-themes/v1.1",
+   "tag": "Manufacturing: Additive manufacturing"
+  },
+  {
+   "@type": "Concept",
+   "scheme": "https://data.nist.gov/od/dm/nist-themes-additivemanufacturing/v1.0",
+   "tag": "Materials: Metals"
+  },
+  {
+   "@type": "Concept",
+   "scheme": "https://data.nist.gov/od/dm/nist-themes-additivemanufacturing/v1.0",
+   "tag": "Build Process: Powder bed fusion: Laser"
+  },
+  {
+   "@type": "Concept",
+   "scheme": "https://data.nist.gov/od/dm/nist-themes-additivemanufacturing/v1.0",
+   "tag": "Properties: Thermal / kinetic"
+  },
+  {
+   "@type": "Concept",
+   "scheme": "https://data.nist.gov/od/dm/nist-themes-additivemanufacturing/v1.0",
+   "tag": "Characterization Approach: In-situ: Build process"
+  },
+  {
+   "@type": "Concept",
+   "scheme": "https://data.nist.gov/od/dm/nist-themes-additivemanufacturing/v1.0",
+   "tag": "Characterization Approach: Thermography"
+  },
+  {
+   "@type": "Concept",
+   "scheme": "https://data.nist.gov/od/dm/nist-themes-additivemanufacturing/v1.0",
+   "tag": "Collaboration: AM-Bench"
+  }
+ ],
+ "version": "1.3.1"
+}
