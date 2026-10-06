@@ -453,3 +453,202 @@ export function in625BareplateScreeningCatalogEntry(root = path.resolve('data/be
         sourceContext: context });
     } };
 }
+
+/**
+ * NIST mds2-2525 time-resolved absorptance (Ti-6Al-4V spot/scan) and the
+ * aluminium A-AMB2022-01 challenge tables. Values are measured for NIST's
+ * experiment only; nothing here validates a model. `root` is the `official`
+ * directory; the locally derived summary lives in the sibling `derived`
+ * directory, so artifacts are addressed relative to their common parent.
+ */
+export function nistMds22525AbsorptanceCatalogEntry(root = path.resolve('data/benchmark/nist-mds2-2525-ti64-absorptance/official')): LpbfSourceCatalogEntry {
+  const datasetId = 'nist-mds2-2525-ti64-absorptance-v1';
+  const manifestSha256 = '6664470601b31f729458539d9243de397b59a6af614e84dbe955bd2f8ee00be0';
+  const doiUrl = 'https://doi.org/10.18434/mds2-2525';
+  const base = 'https://data.nist.gov/od/ds/ark:/88434/mds2-2525/';
+  const baseShort = 'https://data.nist.gov/od/ds/mds2-2525/';
+  const derivedPath = '../derived/ti64-spot-absorptance-summary-v1.json';
+  const derivedSha256 = 'da814016f93f1c54742d9bdd9828780c94ee883d21d35cc44387ad6ca9d4389b';
+  const derivedBytes = 13381;
+  const expectedFiles = [
+    { path: '2525_README_v200.txt', sourceUrl: `${base}2525_README_v200.txt`, bytes: 21907,
+      sha256: '936f4c166b448f4b5a27d1e2b2465f9c2db1be073a7bffd54d45eb4259120a65', wayback: '20241217170746', kind: 'readme' },
+    { path: 'Spot on Bare Metal_Calibrated Absorption Data.csv',
+      sourceUrl: `${baseShort}Spot%20on%20Bare%20Metal_Calibrated%20Absorption%20Data.csv`, bytes: 6497288,
+      sha256: '0e96b220852d762fde846e406cc44c6fc874cef22e7e41db7f4025dbcc9ca274', wayback: '20241217170645', kind: 'ti64-spot-absorptance-timeseries' },
+    { path: 'Al_Spot_TDA_Results.csv', sourceUrl: `${base}Al_Spot_TDA_Results.csv`, bytes: 2292050,
+      sha256: '3f0b6812f98535f5ffbb0e2fed31f084ad9a7f9cc393c04a43ed57f0bb14bf69', wayback: '20241217170821', kind: 'al-challenge-table' },
+    { path: 'Al_Scan_TDA_v2_Results.csv', sourceUrl: `${base}Al_Scan_TDA_v2_Results.csv`, bytes: 2493685,
+      sha256: '3af3478b463b867ed3c78ef6e60c75f9d613607b236933f3f9df08113884a6a8', wayback: '20241217170831', kind: 'al-challenge-table' },
+    { path: 'Al_Spot_TDW_Results.csv', sourceUrl: `${base}Al_Spot_TDW_Results.csv`, bytes: 2169,
+      sha256: '06b280222eab5f82eb9dcfb0689f20a5011c16e115548cd94ce120e5a97b4f5c', wayback: '20241217170826', kind: 'al-challenge-table' },
+    { path: 'Al_Spot_AA_ASR_Results.csv', sourceUrl: `${base}Al_Spot_AA_ASR_Results.csv`, bytes: 242,
+      sha256: '4429f08ff3f571ab871fdbaf072e0c67aaef346259a3f2ca8744927ad6419ffb', wayback: '20241217170715', kind: 'al-challenge-table' },
+    { path: 'Al_Scan_AA_MWD_ASR_Results.csv', sourceUrl: `${base}Al_Scan_AA_MWD_ASR_Results.csv`, bytes: 364,
+      sha256: 'd3732fcddaaee046105aa90eb82547ffd0fe61edb425fc1e8f019c6f73ed0b4d', wayback: '20241217170730', kind: 'al-challenge-table' },
+    { path: 'NIST SRM 654b Ti64 data sheet.pdf', sourceUrl: `${baseShort}NIST%20SRM%20654b%20Ti64%20data%20sheet.pdf`, bytes: 67521,
+      sha256: '57a8295d6db46e723cb3f0eb63844a98527dc8c61bedfa934dba549bffe13740', wayback: '20241217170629', kind: 'srm-datasheet' },
+    { path: 'nerdm-record-mds2-2525.json', sourceUrl: 'https://data.nist.gov/rmm/records?@id=ark:/88434/mds2-2525', bytes: 39359,
+      sha256: '8388c6a21a7e4432ee23bfca17a45d3cd160ddfaf194d9607e5961d2eff03695', wayback: null, kind: 'nerdm-record' },
+  ];
+  const expectedAbsent = [
+    { path: 'Scan on Bare Metal_Calibrated Absorption Data.csv', bytes: 6657476,
+      sha256: '1c64f24e84c274d9f9ae27fb09e79b86cda2fda5bee4b67da3567c8a59ca499d',
+      sourceUrl: `${baseShort}Scan%20on%20Bare%20Metal_Calibrated%20Absorption%20Data.csv` },
+    { path: 'Absorption_Uncertainty_Analysis.pdf', bytes: 388131,
+      sha256: '98ead678e3a8f6696650302dbf29660f2a886a62ba677453dd130c222755e28d',
+      sourceUrl: `${baseShort}Absorption_Uncertainty_Analysis.pdf` },
+  ];
+  /** Metadata-sized JSON only; the CSV artifacts are hashed separately without the 1 MiB guard. */
+  const readSmallPinned = (directory: string, relative: string, bytes: number | null, sha256: string, label: string) => {
+    const filename = path.join(artifactDirectory(directory), relative);
+    const stat = lstatSync(filename);
+    if (stat.isSymbolicLink() || !stat.isFile() || stat.size > 1024 * 1024 || (bytes !== null && stat.size !== bytes)) {
+      throw new Error(`Invalid NIST mds2-2525 ${label} file`);
+    }
+    const content = readFileSync(filename);
+    if (createHash('sha256').update(content).digest('hex') !== sha256) throw new Error(`NIST mds2-2525 ${label} SHA-256 mismatch`);
+    return content;
+  };
+  return { datasetId, title: 'NIST mds2-2525 · Ti-6Al-4V time-resolved absorptance (measured, NIST experiment only)',
+    sourceRoot: path.dirname(root),
+    loadDocument() {
+      const manifestBytes = readSmallPinned(root, 'manifest.json', null, manifestSha256, 'manifest');
+      const manifest = JSON.parse(manifestBytes.toString('utf8'));
+      const files = manifest.files;
+      if (manifest.schema_version !== 1 || manifest.dataset_id !== datasetId || manifest.version !== '1.3.2'
+        || manifest.readme_document_version !== '2.0.0' || manifest.material !== 'Ti-6Al-4V'
+        || manifest.process_scope !== 'bare-plate'
+        || manifest.artifact_kind !== 'publisher-calibrated-absorptance-and-challenge-tables'
+        || manifest.doi !== '10.18434/mds2-2525' || manifest.license !== 'https://www.nist.gov/open/license'
+        || typeof manifest.citation !== 'string' || !manifest.citation
+        || !Array.isArray(files) || files.length !== expectedFiles.length
+        || !Array.isArray(manifest.absent_files) || manifest.absent_files.length !== expectedAbsent.length
+        || !Array.isArray(manifest.derived_tables) || manifest.derived_tables.length !== 1
+        || !Array.isArray(manifest.not_archived_components?.components)
+        || manifest.not_archived_components.components.length === 0
+        || manifest.not_archived_components.components.some((item: any) => typeof item?.path !== 'string'
+          || !/^[0-9a-f]{64}$/.test(item?.sha256 ?? '') || !Number.isInteger(item?.bytes))) {
+        throw new Error('NIST mds2-2525 manifest identity mismatch');
+      }
+      for (const [index, expected] of expectedFiles.entries()) {
+        const file = files[index];
+        if (file?.path !== expected.path || file?.source_url !== expected.sourceUrl || file?.bytes !== expected.bytes
+          || file?.sha256 !== expected.sha256 || file?.wayback_timestamp !== expected.wayback || file?.kind !== expected.kind) {
+          throw new Error('NIST mds2-2525 artifact identity mismatch');
+        }
+        const filename = path.join(artifactDirectory(root), expected.path);
+        const stat = lstatSync(filename);
+        if (stat.isSymbolicLink() || !stat.isFile() || stat.size !== expected.bytes
+          || createHash('sha256').update(readFileSync(filename)).digest('hex') !== expected.sha256) {
+          throw new Error('NIST mds2-2525 artifact integrity mismatch');
+        }
+      }
+      for (const [index, expected] of expectedAbsent.entries()) {
+        const entry = manifest.absent_files[index];
+        if (entry?.path !== expected.path || entry?.bytes !== expected.bytes || entry?.sha256 !== expected.sha256
+          || entry?.source_url !== expected.sourceUrl || entry?.status !== 'unavailable' || typeof entry?.reason !== 'string') {
+          throw new Error('NIST mds2-2525 absent-file identity mismatch');
+        }
+      }
+      const derivedRef = manifest.derived_tables[0];
+      if (derivedRef?.path !== derivedPath || derivedRef?.bytes !== derivedBytes || derivedRef?.sha256 !== derivedSha256) {
+        throw new Error('NIST mds2-2525 derived summary identity mismatch');
+      }
+      const derived = JSON.parse(readSmallPinned(path.dirname(root), 'derived/ti64-spot-absorptance-summary-v1.json',
+        derivedBytes, derivedSha256, 'derived summary').toString('utf8'));
+      const spot = derived.ti64_spot;
+      const al = derived.aluminium_challenge;
+      if (derived.schemaVersion !== 1 || derived.datasetId !== datasetId || derived.evidence?.experimentalValidation !== false
+        || derived.evidence?.modelAcceptance !== false || !Number.isFinite(spot?.pre_keyhole_mean_pct)
+        || !Number.isFinite(spot?.keyhole_mean_pct) || !Array.isArray(al?.spot_average_absorption?.rows)
+        || !Array.isArray(al?.scan_average_absorption?.rows) || !Array.isArray(derived.unavailable)
+        || derived.unavailable.length !== expectedAbsent.length) {
+        throw new Error('NIST mds2-2525 derived summary content mismatch');
+      }
+      const aluminiumReason = 'Aluminium (NIST SRM 1241c) challenge result; the application has no aluminium material counterpart.';
+      const aluminium = (table: any, sourceFile: string, description: string, label: string, quantity: string, laserPower_W: number,
+        n: number) => {
+        const row = table.rows.find((item: any) => item.description === description);
+        if (!row) throw new Error('NIST mds2-2525 aluminium table row missing');
+        return { label, material: 'aluminium (NIST SRM 1241c)', quantity, laser_power_W: laserPower_W,
+          value: row.value, unit: row.unit, std_dev: row.std_dev, std_dev_unit: row.std_dev_unit,
+          n, n_source: 'NIST README v2.0.0 table description', derived_locally: false,
+          measured: true, comparable_to_app_models: false, comparable_reason: aluminiumReason, source_file: sourceFile };
+      };
+      const spotAa = 'Al_Spot_AA_ASR_Results.csv';
+      const scanAa = 'Al_Scan_AA_MWD_ASR_Results.csv';
+      const ti64Common = { material: 'Ti-6Al-4V (NIST SRM 654b)', laser_power_W_median: spot.input_power_median_W,
+        quantity: 'time-resolved relative absorptance, stationary beam', unit: '%', measured: true,
+        source_file: 'Spot on Bare Metal_Calibrated Absorption Data.csv', derived_locally: true,
+        comparable_to_app_models: false, window_definition: spot.window_definition };
+      const observations = [
+        { label: 'Ti-6Al-4V spot, pre-keyhole window (local analysis window, not NIST-published)', ...ti64Common,
+          value: spot.pre_keyhole_mean_pct, std_dev: spot.pre_keyhole_std_pct, n: spot.pre_keyhole_n,
+          window_ms: spot.pre_keyhole_window_ms,
+          comparable_reason: 'Only an offline screening comparison with the constant flat-plate absorptivity exists '
+            + '(docs/LPBF_NIST_2525_ABSORPTANCE_COMPARISON_2026-10-06.md); the thin coupon, 7 degree incidence and '
+            + 'temperature dependence are not represented, so it is not a model acceptance.' },
+        { label: 'Ti-6Al-4V spot, keyhole window (local analysis window, not NIST-published)', ...ti64Common,
+          value: spot.keyhole_mean_pct, std_dev: spot.keyhole_std_pct, n: spot.keyhole_n,
+          window_ms: spot.keyhole_window_ms,
+          comparable_reason: 'Stationary beam on a thin polished coupon; the application does not solve keyhole geometry.' },
+        aluminium(al.spot_average_absorption, spotAa, 'Average Absorption before keyhole',
+          'Aluminium spot, average absorptance before keyhole (NIST-published)', 'average absorptance, 3 runs', 501, 3),
+        aluminium(al.spot_average_absorption, spotAa, 'Average Absorption during keyhole',
+          'Aluminium spot, average absorptance during keyhole (NIST-published)', 'average absorptance, 3 runs', 501, 3),
+        aluminium(al.spot_average_absorption, spotAa, 'Solidification Rate',
+          'Aluminium spot, solidification rate (NIST-published)', 'solidification rate', 501, 2),
+        aluminium(al.scan_average_absorption, scanAa, 'Average Absorption before keyhole',
+          'Aluminium scan, average absorptance before keyhole (NIST-published)', 'average absorptance, 3 runs', 473, 3),
+        aluminium(al.scan_average_absorption, scanAa, 'Average Absorption during keyhole',
+          'Aluminium scan, average absorptance during keyhole (NIST-published)', 'average absorptance, 3 runs', 473, 3),
+        aluminium(al.scan_average_absorption, scanAa, 'Melt Pool Depth - Maximum',
+          'Aluminium scan, maximum melt-pool depth (NIST-published)', 'maximum melt-pool depth from X-ray imaging', 473, 3),
+        aluminium(al.scan_average_absorption, scanAa, 'Melt Pool Width - Maximum',
+          'Aluminium scan, maximum melt-pool width (NIST-published)', 'maximum melt-pool width from X-ray imaging', 473, 3),
+        aluminium(al.scan_average_absorption, scanAa, 'Solidification Rate',
+          'Aluminium scan, solidification rate (NIST-published)', 'solidification rate', 473, 3),
+      ];
+      const artifacts = [
+        ...files.map((file: any) => ({ relativePath: `official/${file.path}`, sha256: file.sha256,
+          byteSize: file.bytes, sourceUrl: file.source_url })),
+        { relativePath: 'derived/ti64-spot-absorptance-summary-v1.json', sha256: derivedSha256,
+          byteSize: derivedBytes, sourceUrl: doiUrl },
+      ];
+      return validateSourceDocument({ schemaVersion: 1, datasetId, materialId: 'ti6al4v', processScope: 'bare-plate',
+        source: { url: doiUrl, citation: manifest.citation, version: manifest.version,
+          terms: 'NIST Open License: https://www.nist.gov/open/license', termsMissingReason: null },
+        artifacts,
+        sourceContext: { schema_version: 1, dataset_id: datasetId, source_version: manifest.version,
+          publisher_artifact_kind: manifest.artifact_kind, checksum_authority: manifest.checksum_authority,
+          acquisition: manifest.acquisition,
+          locally_derived_artifacts: [{ path: 'derived/ti64-spot-absorptance-summary-v1.json', published_by_nist: false,
+            note: 'Locally derived from the publisher CSV files; the sourceUrl of this artifact is the DOI landing page, not a NIST download.' },
+          { path: 'official/nerdm-record-mds2-2525.json', published_by_nist: false,
+            note: 'Content is the NIST NERDm record, but these bytes are a local re-serialisation (sorted keys, indent 1); the bytes served at its sourceUrl will not match. Its SHA-256 is locally authoritative only.' }],
+          experiment: { process_scope: 'bare-plate', machine: 'APS 32-ID-B integrating-sphere and X-ray imaging apparatus',
+            laser: manifest.experiment.laser, spot_diameter_1_over_e2_um: manifest.experiment.spot_diameter_1_over_e2_um,
+            beam_waist_um: manifest.experiment.beam_waist_um, materials: manifest.experiment.materials,
+            atmosphere: manifest.experiment.atmosphere, pulse_duration_ms: manifest.experiment.pulse_duration_ms,
+            scan_case: manifest.experiment.scan_case, sample_thickness_um: 300, powder: false,
+            heat_treatment_missing_reason: 'Not established in the NIST README.' },
+          measurement: { quantity: 'time-resolved absolute laser absorptance (integrating sphere) and melt-pool width from X-ray imaging',
+            method: manifest.experiment.absorptance_method, xray_imaging: manifest.experiment.xray_imaging,
+            unit_source: 'W and %',
+            uncertainty: 'The AbsAbsorptionUncertainty column is the publisher absolute expanded uncertainty in W; the uncertainty analysis PDF is not acquired.',
+            beam_diameter_definition: '1/e^2 diameter 122.5 ± 3.0 µm at the sample surface, 2.8 mm below the beam waist (NIST README)',
+            temperature_conversion: null,
+            temperature_conversion_missing_reason: 'Not applicable: integrating-sphere power measurement, no camera or thermal signal.',
+            repeat_group_rule: 'Aluminium before/during-keyhole absorptance averages are 3 runs with 1 standard deviation; the aluminium spot solidification rate is the average of 2 measurements; the aluminium scan maximum melt-pool depth/width and solidification rate are averages of 3 measurements (NIST README). The Ti-6Al-4V spot file is a single trace.' },
+          observations, unavailable_files: derived.unavailable,
+          not_archived_components: manifest.not_archived_components, split: 'unassigned',
+          unresolved: [
+            'The Al_* tables are aluminium (NIST SRM 1241c) challenge results and have no application material counterpart.',
+            'The Ti-6Al-4V scan CSV and the absorption uncertainty PDF were not acquired (NIST download timed out; no Internet Archive copy with the official SHA-256); they are listed as unavailable with their official hashes.',
+            'Absorptance was measured on a ~300 um thin polished bare coupon, not on a powder bed.',
+            'The application does not solve keyhole geometry, so no model acceptance follows from these values; experimentalValidation stays false.',
+            'The pre-keyhole and keyhole windows for the Ti-6Al-4V trace are local analysis choices, not NIST-published phase boundaries.',
+          ] } });
+    } };
+}

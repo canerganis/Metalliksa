@@ -1,0 +1,8 @@
+﻿Description,Value,Unit,Std Dev,Unit
+Average Absorption before keyhole,23.8,%,0.08,%
+Average Absorption during keyhole,43.3,%,1.5,%
+Standard Deviation of Absorption during keyhole,7.12,%,1.14,%
+,,,,
+Melt Pool Depth - Maximum,88.8,micrometer,0.4,micrometer
+Melt Pool Width - Maximum,326,micrometer,16.08,micrometer
+Solidification Rate,0.191,m/s,0.019,m/s

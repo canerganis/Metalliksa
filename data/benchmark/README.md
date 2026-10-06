@@ -25,3 +25,9 @@ No candidate is marked accepted, independently validated, or part of the trainin
 ## CMU Ti-6Al-4V import available
 
 The [CMU v1 archive guide](cmu-ti64-meltpool-v1/README.md) documents the verified three-file manifest and offline importer. It imports 216 single-track and 410 multi-track measurements with source lines and explicit units. Single-track laser power is absent in the CSV and remains unresolved. No training/holdout split or solver validation is assigned automatically.
+
+## NIST mds2-2525 absorptance archive
+
+`nist-mds2-2525-ti64-absorptance/` holds the absorptance tables of the NIST time-resolved laser absorptance publication ([DOI 10.18434/mds2-2525](https://doi.org/10.18434/mds2-2525), record 1.3.2). The `Spot on Bare Metal` trace is Ti-6Al-4V (SRM 654b, ~300 um polished coupon, no powder); the `Al_*` challenge tables are aluminium (SRM 1241c) and have no application material counterpart. Values are measured for NIST's experiment only and do not validate the application.
+
+The files were acquired from Internet Archive snapshots of the NIST download URLs on 2026-10-06 (data.nist.gov timed out); each SHA-256 and byte count matches the NERDm record. The Ti-6Al-4V scan CSV and the uncertainty-analysis PDF are not acquired and are listed as `absent_files` in `official/manifest.json`; the X-ray images, movies, notebooks and other out-of-scope components of the record are listed under `not_archived_components` with their NIST hashes. `derived/` holds a locally derived summary produced by `python/lpbf_nist_mds2_2525_absorptance.py --write`; its analysis windows are local choices, not NIST phase boundaries.
