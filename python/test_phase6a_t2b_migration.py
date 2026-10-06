@@ -206,13 +206,25 @@ class FatigueTest(unittest.TestCase):
         for name, old in OLD_FF.ALLOY_FATIGUE_DATABASE.items():
             self.assertEqual(repr(vars(ff.ALLOY_FATIGUE_DATABASE[name])), repr(vars(old)), name)
 
-    def test_engine_outputs_equal_the_base_blob(self):
+    def test_engine_outputs_equal_the_base_blob_except_the_documented_ks2_ks3_fixes(self):
+        # Physics audit KS-2 / KS-3 changed the El-Haddad branch and the Paris integration on purpose.
+        # The Murakami branch is unchanged; the old a0 is the Y = 1 formula; the new outputs must pass
+        # the independent oracle (tools/fatigue_documented_changes, d33b6f5 table snapshot).
+        import fatigue_documented_changes as fdc  # noqa: E402 (python/tools module)
         for name in OLD_FF.ALLOY_FATIGUE_DATABASE:
             new, old = ff.MurakamiFatigueEngine(name), OLD_FF.MurakamiFatigueEngine(name)
-            for call in (lambda e: e.calculate_fatigue_limit(33.0, "surface", 0.1),
-                         lambda e: e.generate_kitagawa_takahashi_curve("internal", -1.0, 25),
-                         lambda e: e.simulate_paris_crack_growth(60.0, 250.0, 0.1)):
-                self.assertEqual(json.dumps(call(new)), json.dumps(call(old)), name)
+            for d, loc, r, amp in ((33.0, "surface", 0.1, 250.0), (60.0, "internal", -1.0, 250.0),
+                                   (80.0, "sub-surface", -0.5, 400.0)):
+                with self.subTest(alloy=name, location=loc, R=r):
+                    n, o = new.calculate_fatigue_limit(d, loc, r), old.calculate_fatigue_limit(d, loc, r)
+                    self.assertEqual(n["murakami_raw_MPa"], o["murakami_raw_MPa"])
+                    self.assertEqual(o["el_haddad_a0_um"], fdc.old_a0_um(vars(old.alloy)))
+                    doc = {"fatigue_limit": n,
+                           "kitagawa_takahashi_curve": new.generate_kitagawa_takahashi_curve(loc, r, n_points=30),
+                           "paris_crack_growth": new.simulate_paris_crack_growth(d, amp, r, location=loc)}
+                    payload = {"alloyName": name, "sqrtArea_um": d, "location": loc, "stressRatio_R": r,
+                               "stressAmplitude_MPa": amp}
+                    self.assertEqual(fdc.document_problems(doc, payload), [])
 
     def test_unknown_alloy_raises_instead_of_ti64(self):
         for name in ("X", "Unobtanium-X", "AISI 4140", None):

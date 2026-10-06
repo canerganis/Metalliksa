@@ -16,6 +16,7 @@ lpbf_fatigue_fracture has no __main__; it runs through MODULE_DRIVERS.
 
 from typing import Any, Dict
 
+import fatigue_documented_changes as _fatigue_fx  # tools/ module
 import kinetics_documented_changes as _kinetics_fx  # tools/ module
 
 _UQ_COMMON = {"mcSamples": 500, "seed": 42, "samplingMethod": "sobol_qmc", "scramble": True}
@@ -144,6 +145,11 @@ EXPECTED_DOCUMENTED_VALUE_CHANGES = {
             "reliability numbers derived from the sampled outputs; the critical-flaw rows are null + status "
             "(invented K_Ic law removed)",
     },
+    # Physics audit KS-2 / KS-3 (El-Haddad a0 with Murakami Y; Paris growth of sqrt(area) from the defect
+    # size, Y by location, dK = Kmax for R <= 0, closed-form life). Every row is accepted only if the whole
+    # re-blessed document matches tools/fatigue_documented_changes.document_problems (independent
+    # recomputation from the d33b6f5 table snapshot, numerical Paris quadrature), never by a bound.
+    "lpbf_fatigue_fracture": dict(_fatigue_fx.DESCRIPTIONS),
     # fx-icme (backlog lane 9, "Demote to illustrative"): every row below is checked exactly by
     # capture_phase6a_golden._icme_documented_violation (old value, new value and the relation
     # between them), never by tolerance.

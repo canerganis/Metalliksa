@@ -368,7 +368,9 @@ class StepBGoldenTest(unittest.TestCase):
         import pourbaix_golden_check as check
         table = golden.EXPECTED_DOCUMENTED_VALUE_CHANGES
         self.assertEqual(set(table), {"kinetics_ttt_cct_solver", "pourbaix_solver", "stochastic_uq_mmpds_solver",
-                                        "icme_multiscale_pipeline_solver"})
+                                        "icme_multiscale_pipeline_solver",
+                                        # physics audit KS-2 / KS-3 (tools/fatigue_documented_changes oracle)
+                                        "lpbf_fatigue_fracture"})
         self.assertEqual(set(table["pourbaix_solver"]), set(check.DOCUMENTED_VALUE_CHANGES))
         self.assertEqual(len(table["pourbaix_solver"]), len(check.DOCUMENTED_KEYS))
         # no catch-all: every pattern is one leaf-key path, anchored by fullmatch

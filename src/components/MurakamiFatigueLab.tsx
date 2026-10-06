@@ -81,7 +81,7 @@ export const MurakamiFatigueLab: React.FC = () => {
         <div>
           <h2 className="text-lg font-bold text-white">Defect Fatigue & Crack Growth</h2>
           <p className="text-sm text-gray-400">Phase 13: Kitagawa-Takahashi Diagram, El-Haddad Short Cracks & Paris Law Life</p>
-          <p data-testid="murakami-not-statement" className="text-xs text-amber-300">Steel-derived formula; surface roughness not modelled. R enters only through an empirical power-law factor on the fatigue limit and the peak stress used for the critical crack size; the Paris growth rate has no R (mean-stress) correction.</p>
+          <p data-testid="murakami-not-statement" className="text-xs text-amber-300">Steel-derived formula; surface roughness not modelled. R enters only through an empirical power-law factor on the fatigue limit, the peak stress used for the critical crack size and the ASTM E647 range convention (ΔK = K_max for R ≤ 0); the Paris growth rate has no further R (mean-stress) correction. ΔK uses Murakami's √area factor (Y = 0.65 surface/sub-surface, 0.5 internal) from the defect size.</p>
           <p data-testid="murakami-unsourced-constants" className="text-xs text-amber-300">Unsourced constants: per-alloy hardness, smooth fatigue limit, ΔK_th, K_IC and Paris C, m are internal table values (alloy_registry fatigue_fracture domain) with no literature citation.</p>
         </div>
         <button

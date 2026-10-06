@@ -1,0 +1,2751 @@
+{
+ "case": "alsi10mg_large_pore",
+ "driftVsBase": [
+  {
+   "abs": 137.51,
+   "key": "fatigue_limit.el_haddad_a0_um",
+   "kind": "numeric",
+   "new": 183.35,
+   "old": 45.84,
+   "rel": 2.9997818499127393
+  },
+  {
+   "key": "fatigue_limit.el_haddad_geometry_factor_Y",
+   "kind": "added",
+   "new": 0.5,
+   "old": null
+  },
+  {
+   "abs": 35.99999999999999,
+   "key": "fatigue_limit.fatigue_limit_R_minus_1_MPa",
+   "kind": "numeric",
+   "new": 84.1,
+   "old": 48.1,
+   "rel": 0.7484407484407483
+  },
+  {
+   "abs": 29.799999999999997,
+   "key": "fatigue_limit.fatigue_limit_corrected_MPa",
+   "kind": "numeric",
+   "new": 69.6,
+   "old": 39.8,
+   "rel": 0.7487437185929648
+  },
+  {
+   "abs": 0.09999999999999432,
+   "key": "kitagawa_takahashi_curve[0].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 124.1,
+   "old": 124.0,
+   "rel": 0.0008064516129031799
+  },
+  {
+   "abs": 2.299999999999997,
+   "key": "kitagawa_takahashi_curve[10].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 123.3,
+   "old": 121.0,
+   "rel": 0.019008264462809895
+  },
+  {
+   "abs": 3.0999999999999943,
+   "key": "kitagawa_takahashi_curve[11].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 123.0,
+   "old": 119.9,
+   "rel": 0.02585487906588819
+  },
+  {
+   "abs": 4.199999999999989,
+   "key": "kitagawa_takahashi_curve[12].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 122.6,
+   "old": 118.4,
+   "rel": 0.035472972972972874
+  },
+  {
+   "abs": 5.599999999999994,
+   "key": "kitagawa_takahashi_curve[13].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 122.0,
+   "old": 116.4,
+   "rel": 0.04810996563573878
+  },
+  {
+   "abs": 7.3999999999999915,
+   "key": "kitagawa_takahashi_curve[14].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 121.3,
+   "old": 113.9,
+   "rel": 0.06496927129060572
+  },
+  {
+   "abs": 9.599999999999994,
+   "key": "kitagawa_takahashi_curve[15].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 120.3,
+   "old": 110.7,
+   "rel": 0.08672086720867203
+  },
+  {
+   "abs": 12.299999999999997,
+   "key": "kitagawa_takahashi_curve[16].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 119.0,
+   "old": 106.7,
+   "rel": 0.11527647610121834
+  },
+  {
+   "abs": 15.299999999999997,
+   "key": "kitagawa_takahashi_curve[17].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 117.2,
+   "old": 101.9,
+   "rel": 0.1501472031403336
+  },
+  {
+   "abs": 18.700000000000003,
+   "key": "kitagawa_takahashi_curve[18].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 114.9,
+   "old": 96.2,
+   "rel": 0.1943866943866944
+  },
+  {
+   "abs": 22.200000000000003,
+   "key": "kitagawa_takahashi_curve[19].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 112.0,
+   "old": 89.8,
+   "rel": 0.24721603563474392
+  },
+  {
+   "abs": 0.09999999999999432,
+   "key": "kitagawa_takahashi_curve[1].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 124.0,
+   "old": 123.9,
+   "rel": 0.0008071025020177104
+  },
+  {
+   "abs": 25.599999999999994,
+   "key": "kitagawa_takahashi_curve[20].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 108.3,
+   "old": 82.7,
+   "rel": 0.30955259975816196
+  },
+  {
+   "abs": 28.599999999999994,
+   "key": "kitagawa_takahashi_curve[21].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 103.8,
+   "old": 75.2,
+   "rel": 0.38031914893617014
+  },
+  {
+   "abs": 30.700000000000003,
+   "key": "kitagawa_takahashi_curve[22].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 98.4,
+   "old": 67.7,
+   "rel": 0.4534711964549483
+  },
+  {
+   "abs": 32.0,
+   "key": "kitagawa_takahashi_curve[23].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 92.2,
+   "old": 60.2,
+   "rel": 0.5315614617940199
+  },
+  {
+   "abs": 32.199999999999996,
+   "key": "kitagawa_takahashi_curve[24].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 85.3,
+   "old": 53.1,
+   "rel": 0.6064030131826741
+  },
+  {
+   "abs": 31.5,
+   "key": "kitagawa_takahashi_curve[25].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 78.0,
+   "old": 46.5,
+   "rel": 0.6774193548387096
+  },
+  {
+   "abs": 30.000000000000007,
+   "key": "kitagawa_takahashi_curve[26].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 70.4,
+   "old": 40.4,
+   "rel": 0.7425742574257428
+  },
+  {
+   "abs": 27.9,
+   "key": "kitagawa_takahashi_curve[27].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 62.9,
+   "old": 35.0,
+   "rel": 0.7971428571428572
+  },
+  {
+   "abs": 25.500000000000004,
+   "key": "kitagawa_takahashi_curve[28].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 55.7,
+   "old": 30.2,
+   "rel": 0.8443708609271524
+  },
+  {
+   "abs": 22.799999999999997,
+   "key": "kitagawa_takahashi_curve[29].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 48.8,
+   "old": 26.0,
+   "rel": 0.8769230769230768
+  },
+  {
+   "abs": 0.20000000000000284,
+   "key": "kitagawa_takahashi_curve[2].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 124.0,
+   "old": 123.8,
+   "rel": 0.0016155088852988922
+  },
+  {
+   "abs": 0.29999999999999716,
+   "key": "kitagawa_takahashi_curve[3].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 124.0,
+   "old": 123.7,
+   "rel": 0.0024252223120452476
+  },
+  {
+   "abs": 0.4000000000000057,
+   "key": "kitagawa_takahashi_curve[4].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 124.0,
+   "old": 123.6,
+   "rel": 0.0032362459546926028
+  },
+  {
+   "abs": 0.5,
+   "key": "kitagawa_takahashi_curve[5].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 123.9,
+   "old": 123.4,
+   "rel": 0.004051863857374392
+  },
+  {
+   "abs": 0.7000000000000028,
+   "key": "kitagawa_takahashi_curve[6].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 123.9,
+   "old": 123.2,
+   "rel": 0.0056818181818182045
+  },
+  {
+   "abs": 0.8999999999999915,
+   "key": "kitagawa_takahashi_curve[7].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 123.8,
+   "old": 122.9,
+   "rel": 0.007323026851098384
+  },
+  {
+   "abs": 1.2999999999999972,
+   "key": "kitagawa_takahashi_curve[8].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 123.7,
+   "old": 122.4,
+   "rel": 0.010620915032679715
+  },
+  {
+   "abs": 1.7000000000000028,
+   "key": "kitagawa_takahashi_curve[9].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 123.5,
+   "old": 121.8,
+   "rel": 0.01395730706075536
+  },
+  {
+   "abs": 190.0,
+   "key": "paris_crack_growth.crack_growth_curve[0].crack_length_um",
+   "kind": "numeric",
+   "new": 400.0,
+   "old": 210.0,
+   "rel": 0.9047619047619048
+  },
+  {
+   "abs": -798,
+   "key": "paris_crack_growth.crack_growth_curve[0].cycles",
+   "kind": "numeric",
+   "new": 0,
+   "old": 798,
+   "rel": -1.0
+  },
+  {
+   "abs": 0.2599999999999998,
+   "key": "paris_crack_growth.crack_growth_curve[0].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 3.19,
+   "old": 2.93,
+   "rel": 0.08873720136518763
+  },
+  {
+   "abs": 639.8599999999999,
+   "key": "paris_crack_growth.crack_growth_curve[10].crack_length_um",
+   "kind": "numeric",
+   "new": 981.93,
+   "old": 342.07,
+   "rel": 1.8705528108281928
+  },
+  {
+   "abs": 7169,
+   "key": "paris_crack_growth.crack_growth_curve[10].cycles",
+   "kind": "numeric",
+   "new": 14281,
+   "old": 7112,
+   "rel": 1.0080146231721034
+  },
+  {
+   "abs": 1.2599999999999998,
+   "key": "paris_crack_growth.crack_growth_curve[10].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 5.0,
+   "old": 3.74,
+   "rel": 0.33689839572192504
+  },
+  {
+   "abs": 715.02,
+   "key": "paris_crack_growth.crack_growth_curve[11].crack_length_um",
+   "kind": "numeric",
+   "new": 1074.19,
+   "old": 359.17,
+   "rel": 1.9907564662972963
+  },
+  {
+   "abs": 7568,
+   "key": "paris_crack_growth.crack_growth_curve[11].cycles",
+   "kind": "numeric",
+   "new": 15172,
+   "old": 7604,
+   "rel": 0.9952656496580747
+  },
+  {
+   "abs": 1.3900000000000006,
+   "key": "paris_crack_growth.crack_growth_curve[11].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 5.23,
+   "old": 3.84,
+   "rel": 0.36197916666666685
+  },
+  {
+   "abs": 797.9899999999999,
+   "key": "paris_crack_growth.crack_growth_curve[12].crack_length_um",
+   "kind": "numeric",
+   "new": 1175.12,
+   "old": 377.13,
+   "rel": 2.1159547105772543
+  },
+  {
+   "abs": 7919,
+   "key": "paris_crack_growth.crack_growth_curve[12].cycles",
+   "kind": "numeric",
+   "new": 15994,
+   "old": 8075,
+   "rel": 0.9806811145510836
+  },
+  {
+   "abs": 1.5399999999999996,
+   "key": "paris_crack_growth.crack_growth_curve[12].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 5.47,
+   "old": 3.93,
+   "rel": 0.39185750636132305
+  },
+  {
+   "abs": 889.54,
+   "key": "paris_crack_growth.crack_growth_curve[13].crack_length_um",
+   "kind": "numeric",
+   "new": 1285.53,
+   "old": 395.99,
+   "rel": 2.2463698578246922
+  },
+  {
+   "abs": 8227,
+   "key": "paris_crack_growth.crack_growth_curve[13].cycles",
+   "kind": "numeric",
+   "new": 16753,
+   "old": 8526,
+   "rel": 0.9649307999061694
+  },
+  {
+   "abs": 1.6899999999999995,
+   "key": "paris_crack_growth.crack_growth_curve[13].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 5.72,
+   "old": 4.03,
+   "rel": 0.41935483870967727
+  },
+  {
+   "abs": 990.54,
+   "key": "paris_crack_growth.crack_growth_curve[14].crack_length_um",
+   "kind": "numeric",
+   "new": 1406.33,
+   "old": 415.79,
+   "rel": 2.3823083768248394
+  },
+  {
+   "abs": 8495,
+   "key": "paris_crack_growth.crack_growth_curve[14].cycles",
+   "kind": "numeric",
+   "new": 17452,
+   "old": 8957,
+   "rel": 0.9484202299877191
+  },
+  {
+   "abs": 1.8500000000000005,
+   "key": "paris_crack_growth.crack_growth_curve[14].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 5.98,
+   "old": 4.13,
+   "rel": 0.44794188861985484
+  },
+  {
+   "abs": 1101.89,
+   "key": "paris_crack_growth.crack_growth_curve[15].crack_length_um",
+   "kind": "numeric",
+   "new": 1538.46,
+   "old": 436.57,
+   "rel": 2.523970955402341
+  },
+  {
+   "abs": 8727,
+   "key": "paris_crack_growth.crack_growth_curve[15].cycles",
+   "kind": "numeric",
+   "new": 18097,
+   "old": 9370,
+   "rel": 0.931376734258271
+  },
+  {
+   "abs": 2.0299999999999994,
+   "key": "paris_crack_growth.crack_growth_curve[15].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 6.26,
+   "old": 4.23,
+   "rel": 0.47990543735224567
+  },
+  {
+   "abs": 1224.62,
+   "key": "paris_crack_growth.crack_growth_curve[16].crack_length_um",
+   "kind": "numeric",
+   "new": 1683.02,
+   "old": 458.4,
+   "rel": 2.6715095986038393
+  },
+  {
+   "abs": 8928,
+   "key": "paris_crack_growth.crack_growth_curve[16].cycles",
+   "kind": "numeric",
+   "new": 18693,
+   "old": 9765,
+   "rel": 0.9142857142857143
+  },
+  {
+   "abs": 2.21,
+   "key": "paris_crack_growth.crack_growth_curve[16].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 6.54,
+   "old": 4.33,
+   "rel": 0.5103926096997691
+  },
+  {
+   "abs": 1359.8400000000001,
+   "key": "paris_crack_growth.crack_growth_curve[17].crack_length_um",
+   "kind": "numeric",
+   "new": 1841.16,
+   "old": 481.32,
+   "rel": 2.8252306158065323
+  },
+  {
+   "abs": 9098,
+   "key": "paris_crack_growth.crack_growth_curve[17].cycles",
+   "kind": "numeric",
+   "new": 19241,
+   "old": 10143,
+   "rel": 0.8969732820664498
+  },
+  {
+   "abs": 2.3999999999999995,
+   "key": "paris_crack_growth.crack_growth_curve[17].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 6.84,
+   "old": 4.44,
+   "rel": 0.5405405405405403
+  },
+  {
+   "abs": 1508.77,
+   "key": "paris_crack_growth.crack_growth_curve[18].crack_length_um",
+   "kind": "numeric",
+   "new": 2014.16,
+   "old": 505.39,
+   "rel": 2.9853578424582996
+  },
+  {
+   "abs": 9243,
+   "key": "paris_crack_growth.crack_growth_curve[18].cycles",
+   "kind": "numeric",
+   "new": 19748,
+   "old": 10505,
+   "rel": 0.8798667301285102
+  },
+  {
+   "abs": 2.6100000000000003,
+   "key": "paris_crack_growth.crack_growth_curve[18].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 7.16,
+   "old": 4.55,
+   "rel": 0.5736263736263737
+  },
+  {
+   "abs": 1672.75,
+   "key": "paris_crack_growth.crack_growth_curve[19].crack_length_um",
+   "kind": "numeric",
+   "new": 2203.41,
+   "old": 530.66,
+   "rel": 3.1522066860136437
+  },
+  {
+   "abs": 9364,
+   "key": "paris_crack_growth.crack_growth_curve[19].cycles",
+   "kind": "numeric",
+   "new": 20215,
+   "old": 10851,
+   "rel": 0.862961938991798
+  },
+  {
+   "abs": 2.83,
+   "key": "paris_crack_growth.crack_growth_curve[19].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 7.49,
+   "old": 4.66,
+   "rel": 0.6072961373390557
+  },
+  {
+   "abs": 217.07999999999998,
+   "key": "paris_crack_growth.crack_growth_curve[1].crack_length_um",
+   "kind": "numeric",
+   "new": 437.58,
+   "old": 220.5,
+   "rel": 0.9844897959183673
+  },
+  {
+   "abs": 439,
+   "key": "paris_crack_growth.crack_growth_curve[1].cycles",
+   "kind": "numeric",
+   "new": 2000,
+   "old": 1561,
+   "rel": 0.2812299807815503
+  },
+  {
+   "abs": 0.33000000000000007,
+   "key": "paris_crack_growth.crack_growth_curve[1].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 3.34,
+   "old": 3.01,
+   "rel": 0.10963455149501665
+  },
+  {
+   "abs": 1853.25,
+   "key": "paris_crack_growth.crack_growth_curve[20].crack_length_um",
+   "kind": "numeric",
+   "new": 2410.44,
+   "old": 557.19,
+   "rel": 3.326064717600818
+  },
+  {
+   "abs": 9463,
+   "key": "paris_crack_growth.crack_growth_curve[20].cycles",
+   "kind": "numeric",
+   "new": 20645,
+   "old": 11182,
+   "rel": 0.8462707923448399
+  },
+  {
+   "abs": 3.05,
+   "key": "paris_crack_growth.crack_growth_curve[20].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 7.83,
+   "old": 4.78,
+   "rel": 0.6380753138075314
+  },
+  {
+   "abs": 2051.88,
+   "key": "paris_crack_growth.crack_growth_curve[21].crack_length_um",
+   "kind": "numeric",
+   "new": 2636.93,
+   "old": 585.05,
+   "rel": 3.5071874198786435
+  },
+  {
+   "abs": 9543,
+   "key": "paris_crack_growth.crack_growth_curve[21].cycles",
+   "kind": "numeric",
+   "new": 21042,
+   "old": 11499,
+   "rel": 0.8298982520219149
+  },
+  {
+   "abs": 3.289999999999999,
+   "key": "paris_crack_growth.crack_growth_curve[21].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 8.19,
+   "old": 4.9,
+   "rel": 0.6714285714285712
+  },
+  {
+   "abs": 2270.3999999999996,
+   "key": "paris_crack_growth.crack_growth_curve[22].crack_length_um",
+   "kind": "numeric",
+   "new": 2884.7,
+   "old": 614.3,
+   "rel": 3.6959140485104993
+  },
+  {
+   "abs": 9607,
+   "key": "paris_crack_growth.crack_growth_curve[22].cycles",
+   "kind": "numeric",
+   "new": 21409,
+   "old": 11802,
+   "rel": 0.8140145738010507
+  },
+  {
+   "abs": 3.5500000000000007,
+   "key": "paris_crack_growth.crack_growth_curve[22].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 8.57,
+   "old": 5.02,
+   "rel": 0.707171314741036
+  },
+  {
+   "abs": 2510.73,
+   "key": "paris_crack_growth.crack_growth_curve[23].crack_length_um",
+   "kind": "numeric",
+   "new": 3155.75,
+   "old": 645.02,
+   "rel": 3.892483953985923
+  },
+  {
+   "abs": 9655,
+   "key": "paris_crack_growth.crack_growth_curve[23].cycles",
+   "kind": "numeric",
+   "new": 21747,
+   "old": 12092,
+   "rel": 0.7984617929209394
+  },
+  {
+   "abs": 3.820000000000001,
+   "key": "paris_crack_growth.crack_growth_curve[23].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 8.96,
+   "old": 5.14,
+   "rel": 0.7431906614785995
+  },
+  {
+   "abs": 2774.9900000000002,
+   "key": "paris_crack_growth.crack_growth_curve[24].crack_length_um",
+   "kind": "numeric",
+   "new": 3452.26,
+   "old": 677.27,
+   "rel": 4.097317170404714
+  },
+  {
+   "abs": 9689,
+   "key": "paris_crack_growth.crack_growth_curve[24].cycles",
+   "kind": "numeric",
+   "new": 22059,
+   "old": 12370,
+   "rel": 0.7832659660468876
+  },
+  {
+   "abs": 4.1,
+   "key": "paris_crack_growth.crack_growth_curve[24].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 9.37,
+   "old": 5.27,
+   "rel": 0.777988614800759
+  },
+  {
+   "abs": 3065.5099999999998,
+   "key": "paris_crack_growth.crack_growth_curve[25].crack_length_um",
+   "kind": "numeric",
+   "new": 3776.64,
+   "old": 711.13,
+   "rel": 4.310758932965843
+  },
+  {
+   "abs": 9710,
+   "key": "paris_crack_growth.crack_growth_curve[25].cycles",
+   "kind": "numeric",
+   "new": 22346,
+   "old": 12636,
+   "rel": 0.7684393795504907
+  },
+  {
+   "abs": 4.4,
+   "key": "paris_crack_growth.crack_growth_curve[25].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 9.8,
+   "old": 5.4,
+   "rel": 0.8148148148148149
+  },
+  {
+   "abs": 3384.81,
+   "key": "paris_crack_growth.crack_growth_curve[26].crack_length_um",
+   "kind": "numeric",
+   "new": 4131.5,
+   "old": 746.69,
+   "rel": 4.5330860196333145
+  },
+  {
+   "abs": 9721,
+   "key": "paris_crack_growth.crack_growth_curve[26].cycles",
+   "kind": "numeric",
+   "new": 22611,
+   "old": 12890,
+   "rel": 0.7541505042668736
+  },
+  {
+   "abs": 4.72,
+   "key": "paris_crack_growth.crack_growth_curve[26].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 10.25,
+   "old": 5.53,
+   "rel": 0.8535262206148281
+  },
+  {
+   "abs": 3735.67,
+   "key": "paris_crack_growth.crack_growth_curve[27].crack_length_um",
+   "kind": "numeric",
+   "new": 4519.7,
+   "old": 784.03,
+   "rel": 4.764702881267299
+  },
+  {
+   "abs": 9723,
+   "key": "paris_crack_growth.crack_growth_curve[27].cycles",
+   "kind": "numeric",
+   "new": 22856,
+   "old": 13133,
+   "rel": 0.7403487398157313
+  },
+  {
+   "abs": 5.050000000000001,
+   "key": "paris_crack_growth.crack_growth_curve[27].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 10.72,
+   "old": 5.67,
+   "rel": 0.8906525573192241
+  },
+  {
+   "abs": 4121.15,
+   "key": "paris_crack_growth.crack_growth_curve[28].crack_length_um",
+   "kind": "numeric",
+   "new": 4944.38,
+   "old": 823.23,
+   "rel": 5.006073636772226
+  },
+  {
+   "abs": 9715,
+   "key": "paris_crack_growth.crack_growth_curve[28].cycles",
+   "kind": "numeric",
+   "new": 23081,
+   "old": 13366,
+   "rel": 0.7268442316325003
+  },
+  {
+   "abs": 5.410000000000001,
+   "key": "paris_crack_growth.crack_growth_curve[28].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 11.22,
+   "old": 5.81,
+   "rel": 0.9311531841652326
+  },
+  {
+   "abs": 4544.5599999999995,
+   "key": "paris_crack_growth.crack_growth_curve[29].crack_length_um",
+   "kind": "numeric",
+   "new": 5408.95,
+   "old": 864.39,
+   "rel": 5.257534214879857
+  },
+  {
+   "abs": 9701,
+   "key": "paris_crack_growth.crack_growth_curve[29].cycles",
+   "kind": "numeric",
+   "new": 23290,
+   "old": 13589,
+   "rel": 0.7138862315107808
+  },
+  {
+   "abs": 5.78,
+   "key": "paris_crack_growth.crack_growth_curve[29].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 11.73,
+   "old": 5.95,
+   "rel": 0.9714285714285714
+  },
+  {
+   "abs": 247.17,
+   "key": "paris_crack_growth.crack_growth_curve[2].crack_length_um",
+   "kind": "numeric",
+   "new": 478.7,
+   "old": 231.53,
+   "rel": 1.0675506413855655
+  },
+  {
+   "abs": 1553,
+   "key": "paris_crack_growth.crack_growth_curve[2].cycles",
+   "kind": "numeric",
+   "new": 3845,
+   "old": 2292,
+   "rel": 0.6775741710296684
+  },
+  {
+   "abs": 0.41000000000000014,
+   "key": "paris_crack_growth.crack_growth_curve[2].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 3.49,
+   "old": 3.08,
+   "rel": 0.13311688311688316
+  },
+  {
+   "abs": 5009.58,
+   "key": "paris_crack_growth.crack_growth_curve[30].crack_length_um",
+   "kind": "numeric",
+   "new": 5917.19,
+   "old": 907.61,
+   "rel": 5.519529313251287
+  },
+  {
+   "abs": 9679,
+   "key": "paris_crack_growth.crack_growth_curve[30].cycles",
+   "kind": "numeric",
+   "new": 23481,
+   "old": 13802,
+   "rel": 0.7012751775105057
+  },
+  {
+   "abs": 6.17,
+   "key": "paris_crack_growth.crack_growth_curve[30].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 12.27,
+   "old": 6.1,
+   "rel": 1.0114754098360657
+  },
+  {
+   "abs": 5520.18,
+   "key": "paris_crack_growth.crack_growth_curve[31].crack_length_um",
+   "kind": "numeric",
+   "new": 6473.17,
+   "old": 952.99,
+   "rel": 5.792484706030494
+  },
+  {
+   "abs": 9652,
+   "key": "paris_crack_growth.crack_growth_curve[31].cycles",
+   "kind": "numeric",
+   "new": 23658,
+   "old": 14006,
+   "rel": 0.6891332286163073
+  },
+  {
+   "abs": 6.58,
+   "key": "paris_crack_growth.crack_growth_curve[31].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 12.83,
+   "old": 6.25,
+   "rel": 1.0528
+  },
+  {
+   "abs": 6080.759999999999,
+   "key": "paris_crack_growth.crack_growth_curve[32].crack_length_um",
+   "kind": "numeric",
+   "new": 7081.4,
+   "old": 1000.64,
+   "rel": 6.0768708026862805
+  },
+  {
+   "abs": 9621,
+   "key": "paris_crack_growth.crack_growth_curve[32].cycles",
+   "kind": "numeric",
+   "new": 23822,
+   "old": 14201,
+   "rel": 0.6774875008802197
+  },
+  {
+   "abs": 7.02,
+   "key": "paris_crack_growth.crack_growth_curve[32].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 13.42,
+   "old": 6.4,
+   "rel": 1.0968749999999998
+  },
+  {
+   "abs": 6696.1,
+   "key": "paris_crack_growth.crack_growth_curve[33].crack_length_um",
+   "kind": "numeric",
+   "new": 7746.77,
+   "old": 1050.67,
+   "rel": 6.373171404913055
+  },
+  {
+   "abs": 9584,
+   "key": "paris_crack_growth.crack_growth_curve[33].cycles",
+   "kind": "numeric",
+   "new": 23972,
+   "old": 14388,
+   "rel": 0.6661106477620239
+  },
+  {
+   "abs": 7.4799999999999995,
+   "key": "paris_crack_growth.crack_growth_curve[33].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 14.04,
+   "old": 6.56,
+   "rel": 1.1402439024390243
+  },
+  {
+   "abs": 7371.46,
+   "key": "paris_crack_growth.crack_growth_curve[34].crack_length_um",
+   "kind": "numeric",
+   "new": 8474.66,
+   "old": 1103.2,
+   "rel": 6.681889050036258
+  },
+  {
+   "abs": 9544,
+   "key": "paris_crack_growth.crack_growth_curve[34].cycles",
+   "kind": "numeric",
+   "new": 24111,
+   "old": 14567,
+   "rel": 0.6551795153428983
+  },
+  {
+   "abs": 7.97,
+   "key": "paris_crack_growth.crack_growth_curve[34].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 14.69,
+   "old": 6.72,
+   "rel": 1.1860119047619049
+  },
+  {
+   "abs": 8112.590000000001,
+   "key": "paris_crack_growth.crack_growth_curve[35].crack_length_um",
+   "kind": "numeric",
+   "new": 9270.95,
+   "old": 1158.36,
+   "rel": 7.003513588176389
+  },
+  {
+   "abs": 9501,
+   "key": "paris_crack_growth.crack_growth_curve[35].cycles",
+   "kind": "numeric",
+   "new": 24239,
+   "old": 14738,
+   "rel": 0.6446600624236667
+  },
+  {
+   "abs": 8.469999999999999,
+   "key": "paris_crack_growth.crack_growth_curve[35].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 15.36,
+   "old": 6.89,
+   "rel": 1.2293178519593613
+  },
+  {
+   "abs": 8925.779999999999,
+   "key": "paris_crack_growth.crack_growth_curve[36].crack_length_um",
+   "kind": "numeric",
+   "new": 10142.06,
+   "old": 1216.28,
+   "rel": 7.338589798401683
+  },
+  {
+   "abs": 9456,
+   "key": "paris_crack_growth.crack_growth_curve[36].cycles",
+   "kind": "numeric",
+   "new": 24358,
+   "old": 14902,
+   "rel": 0.6345456985639512
+  },
+  {
+   "abs": 9.0,
+   "key": "paris_crack_growth.crack_growth_curve[36].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 16.06,
+   "old": 7.06,
+   "rel": 1.274787535410765
+  },
+  {
+   "abs": 9817.92,
+   "key": "paris_crack_growth.crack_growth_curve[37].crack_length_um",
+   "kind": "numeric",
+   "new": 11095.02,
+   "old": 1277.1,
+   "rel": 7.687667371388303
+  },
+  {
+   "abs": 9408,
+   "key": "paris_crack_growth.crack_growth_curve[37].cycles",
+   "kind": "numeric",
+   "new": 24467,
+   "old": 15059,
+   "rel": 0.6247426787967328
+  },
+  {
+   "abs": 9.57,
+   "key": "paris_crack_growth.crack_growth_curve[37].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 16.8,
+   "old": 7.23,
+   "rel": 1.3236514522821576
+  },
+  {
+   "abs": 10796.57,
+   "key": "paris_crack_growth.crack_growth_curve[38].crack_length_um",
+   "kind": "numeric",
+   "new": 12137.52,
+   "old": 1340.95,
+   "rel": 8.051433685074015
+  },
+  {
+   "abs": 9358,
+   "key": "paris_crack_growth.crack_growth_curve[38].cycles",
+   "kind": "numeric",
+   "new": 24567,
+   "old": 15209,
+   "rel": 0.6152935761720034
+  },
+  {
+   "abs": 10.16,
+   "key": "paris_crack_growth.crack_growth_curve[38].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 17.57,
+   "old": 7.41,
+   "rel": 1.3711201079622133
+  },
+  {
+   "abs": 11869.97,
+   "key": "paris_crack_growth.crack_growth_curve[39].crack_length_um",
+   "kind": "numeric",
+   "new": 13277.97,
+   "old": 1408.0,
+   "rel": 8.430376420454545
+  },
+  {
+   "abs": 9307,
+   "key": "paris_crack_growth.crack_growth_curve[39].cycles",
+   "kind": "numeric",
+   "new": 24660,
+   "old": 15353,
+   "rel": 0.6062007425258907
+  },
+  {
+   "abs": 10.79,
+   "key": "paris_crack_growth.crack_growth_curve[39].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 18.38,
+   "old": 7.59,
+   "rel": 1.4216073781291172
+  },
+  {
+   "abs": 280.5799999999999,
+   "key": "paris_crack_growth.crack_growth_curve[3].crack_length_um",
+   "kind": "numeric",
+   "new": 523.68,
+   "old": 243.1,
+   "rel": 1.1541752365281774
+  },
+  {
+   "abs": 2555,
+   "key": "paris_crack_growth.crack_growth_curve[3].cycles",
+   "kind": "numeric",
+   "new": 5546,
+   "old": 2991,
+   "rel": 0.8542293547308593
+  },
+  {
+   "abs": 0.48999999999999977,
+   "key": "paris_crack_growth.crack_growth_curve[3].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 3.65,
+   "old": 3.16,
+   "rel": 0.15506329113924042
+  },
+  {
+   "abs": 13047.18,
+   "key": "paris_crack_growth.crack_growth_curve[40].crack_length_um",
+   "kind": "numeric",
+   "new": 14525.58,
+   "old": 1478.4,
+   "rel": 8.825202922077922
+  },
+  {
+   "abs": 9255,
+   "key": "paris_crack_growth.crack_growth_curve[40].cycles",
+   "kind": "numeric",
+   "new": 24745,
+   "old": 15490,
+   "rel": 0.5974822466107166
+  },
+  {
+   "abs": 11.45,
+   "key": "paris_crack_growth.crack_growth_curve[40].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 19.23,
+   "old": 7.78,
+   "rel": 1.4717223650385602
+  },
+  {
+   "abs": 14338.1,
+   "key": "paris_crack_growth.crack_growth_curve[41].crack_length_um",
+   "kind": "numeric",
+   "new": 15890.42,
+   "old": 1552.32,
+   "rel": 9.23656204906205
+  },
+  {
+   "abs": 9203,
+   "key": "paris_crack_growth.crack_growth_curve[41].cycles",
+   "kind": "numeric",
+   "new": 24824,
+   "old": 15621,
+   "rel": 0.5891428205620639
+  },
+  {
+   "abs": 12.14,
+   "key": "paris_crack_growth.crack_growth_curve[41].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 20.11,
+   "old": 7.97,
+   "rel": 1.5232120451693854
+  },
+  {
+   "abs": 15753.57,
+   "key": "paris_crack_growth.crack_growth_curve[42].crack_length_um",
+   "kind": "numeric",
+   "new": 17383.5,
+   "old": 1629.93,
+   "rel": 9.665181940328726
+  },
+  {
+   "abs": 9150,
+   "key": "paris_crack_growth.crack_growth_curve[42].cycles",
+   "kind": "numeric",
+   "new": 24897,
+   "old": 15747,
+   "rel": 0.5810630596304058
+  },
+  {
+   "abs": 12.860000000000001,
+   "key": "paris_crack_growth.crack_growth_curve[42].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 21.03,
+   "old": 8.17,
+   "rel": 1.5740514075887395
+  },
+  {
+   "abs": 17305.44,
+   "key": "paris_crack_growth.crack_growth_curve[43].crack_length_um",
+   "kind": "numeric",
+   "new": 19016.87,
+   "old": 1711.43,
+   "rel": 10.111684380897845
+  },
+  {
+   "abs": 9097,
+   "key": "paris_crack_growth.crack_growth_curve[43].cycles",
+   "kind": "numeric",
+   "new": 24964,
+   "old": 15867,
+   "rel": 0.5733282914224491
+  },
+  {
+   "abs": 13.63,
+   "key": "paris_crack_growth.crack_growth_curve[43].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 22.0,
+   "old": 8.37,
+   "rel": 1.628434886499403
+  },
+  {
+   "abs": 19006.71,
+   "key": "paris_crack_growth.crack_growth_curve[44].crack_length_um",
+   "kind": "numeric",
+   "new": 20803.71,
+   "old": 1797.0,
+   "rel": 10.576911519198664
+  },
+  {
+   "abs": 9044,
+   "key": "paris_crack_growth.crack_growth_curve[44].cycles",
+   "kind": "numeric",
+   "new": 25026,
+   "old": 15982,
+   "rel": 0.5658866224502566
+  },
+  {
+   "abs": 14.430000000000001,
+   "key": "paris_crack_growth.crack_growth_curve[44].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 23.01,
+   "old": 8.58,
+   "rel": 1.6818181818181819
+  },
+  {
+   "abs": 20871.600000000002,
+   "key": "paris_crack_growth.crack_growth_curve[45].crack_length_um",
+   "kind": "numeric",
+   "new": 22758.45,
+   "old": 1886.85,
+   "rel": 11.061610620876065
+  },
+  {
+   "abs": 8991,
+   "key": "paris_crack_growth.crack_growth_curve[45].cycles",
+   "kind": "numeric",
+   "new": 25083,
+   "old": 16092,
+   "rel": 0.5587248322147651
+  },
+  {
+   "abs": 15.280000000000001,
+   "key": "paris_crack_growth.crack_growth_curve[45].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 24.07,
+   "old": 8.79,
+   "rel": 1.7383390216154724
+  },
+  {
+   "abs": 22915.670000000002,
+   "key": "paris_crack_growth.crack_growth_curve[46].crack_length_um",
+   "kind": "numeric",
+   "new": 24896.86,
+   "old": 1981.19,
+   "rel": 11.566619052185809
+  },
+  {
+   "abs": 8939,
+   "key": "paris_crack_growth.crack_growth_curve[46].cycles",
+   "kind": "numeric",
+   "new": 25136,
+   "old": 16197,
+   "rel": 0.5518923257393344
+  },
+  {
+   "abs": 16.160000000000004,
+   "key": "paris_crack_growth.crack_growth_curve[46].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 25.17,
+   "old": 9.01,
+   "rel": 1.7935627081021093
+  },
+  {
+   "abs": 25155.94,
+   "key": "paris_crack_growth.crack_growth_curve[47].crack_length_um",
+   "kind": "numeric",
+   "new": 27236.19,
+   "old": 2080.25,
+   "rel": 12.092748467732243
+  },
+  {
+   "abs": 8886,
+   "key": "paris_crack_growth.crack_growth_curve[47].cycles",
+   "kind": "numeric",
+   "new": 25184,
+   "old": 16298,
+   "rel": 0.5452202724260645
+  },
+  {
+   "abs": 17.099999999999998,
+   "key": "paris_crack_growth.crack_growth_curve[47].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 26.33,
+   "old": 9.23,
+   "rel": 1.8526543878656552
+  },
+  {
+   "abs": 27611.06,
+   "key": "paris_crack_growth.crack_growth_curve[48].crack_length_um",
+   "kind": "numeric",
+   "new": 29795.33,
+   "old": 2184.27,
+   "rel": 12.640863995751442
+  },
+  {
+   "abs": 8835,
+   "key": "paris_crack_growth.crack_growth_curve[48].cycles",
+   "kind": "numeric",
+   "new": 25229,
+   "old": 16394,
+   "rel": 0.5389166768329877
+  },
+  {
+   "abs": 18.08,
+   "key": "paris_crack_growth.crack_growth_curve[48].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 27.54,
+   "old": 9.46,
+   "rel": 1.9112050739957713
+  },
+  {
+   "abs": 30301.45,
+   "key": "paris_crack_growth.crack_growth_curve[49].crack_length_um",
+   "kind": "numeric",
+   "new": 32594.93,
+   "old": 2293.48,
+   "rel": 13.211996616495457
+  },
+  {
+   "abs": 8784,
+   "key": "paris_crack_growth.crack_growth_curve[49].cycles",
+   "kind": "numeric",
+   "new": 25270,
+   "old": 16486,
+   "rel": 0.5328157224311537
+  },
+  {
+   "abs": 19.11,
+   "key": "paris_crack_growth.crack_growth_curve[49].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 28.8,
+   "old": 9.69,
+   "rel": 1.9721362229102168
+  },
+  {
+   "abs": 317.62,
+   "key": "paris_crack_growth.crack_growth_curve[4].crack_length_um",
+   "kind": "numeric",
+   "new": 572.88,
+   "old": 255.26,
+   "rel": 1.2442999294836639
+  },
+  {
+   "abs": 3456,
+   "key": "paris_crack_growth.crack_growth_curve[4].cycles",
+   "kind": "numeric",
+   "new": 7116,
+   "old": 3660,
+   "rel": 0.9442622950819672
+  },
+  {
+   "abs": 0.5899999999999999,
+   "key": "paris_crack_growth.crack_growth_curve[4].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 3.82,
+   "old": 3.23,
+   "rel": 0.18266253869969035
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[50].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 2408.15
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[50].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 16574
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[50].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 9.93
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[51].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 2528.56
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[51].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 16659
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[51].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 10.18
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[52].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 2654.99
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[52].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 16740
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[52].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 10.43
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[53].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 2787.74
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[53].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 16817
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[53].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 10.69
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[54].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 2927.13
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[54].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 16891
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[54].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 10.95
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[55].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 3073.48
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[55].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 16962
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[55].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 11.22
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[56].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 3227.16
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[56].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 17030
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[56].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 11.5
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[57].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 3388.51
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[57].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 17095
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[57].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 11.78
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[58].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 3557.94
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[58].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 17157
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[58].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 12.07
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[59].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 3735.84
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[59].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 17216
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[59].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 12.37
+  },
+  {
+   "abs": 358.69000000000005,
+   "key": "paris_crack_growth.crack_growth_curve[5].crack_length_um",
+   "kind": "numeric",
+   "new": 626.71,
+   "old": 268.02,
+   "rel": 1.33829564957839
+  },
+  {
+   "abs": 4264,
+   "key": "paris_crack_growth.crack_growth_curve[5].cycles",
+   "kind": "numeric",
+   "new": 8564,
+   "old": 4300,
+   "rel": 0.9916279069767442
+  },
+  {
+   "abs": 0.6800000000000002,
+   "key": "paris_crack_growth.crack_growth_curve[5].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 3.99,
+   "old": 3.31,
+   "rel": 0.20543806646525684
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[60].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 3922.63
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[60].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 17273
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[60].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 12.68
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[61].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 4118.76
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[61].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 17327
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[61].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 12.99
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[62].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 4324.7
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[62].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 17379
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[62].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 13.31
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[63].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 4540.93
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[63].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 17429
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[63].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 13.64
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[64].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 4767.98
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[64].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 17477
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[64].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 13.97
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[65].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 5006.38
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[65].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 17522
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[65].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 14.32
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[66].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 5256.7
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[66].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 17566
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[66].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 14.67
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[67].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 5519.53
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[67].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 17608
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[67].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 15.04
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[68].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 5795.51
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[68].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 17648
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[68].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 15.41
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[69].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 6085.29
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[69].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 17686
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[69].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 15.79
+  },
+  {
+   "abs": 404.18,
+   "key": "paris_crack_growth.crack_growth_curve[6].crack_length_um",
+   "kind": "numeric",
+   "new": 685.6,
+   "old": 281.42,
+   "rel": 1.4362163314618719
+  },
+  {
+   "abs": 4986,
+   "key": "paris_crack_growth.crack_growth_curve[6].cycles",
+   "kind": "numeric",
+   "new": 9899,
+   "old": 4913,
+   "rel": 1.0148585385711377
+  },
+  {
+   "abs": 0.7799999999999998,
+   "key": "paris_crack_growth.crack_growth_curve[6].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 4.18,
+   "old": 3.4,
+   "rel": 0.22941176470588232
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[70].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 6389.55
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[70].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 17722
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[70].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 16.18
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[71].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 6709.03
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[71].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 17757
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[71].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 16.58
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[72].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 7044.48
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[72].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 17790
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[72].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 16.99
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[73].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 7396.7
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[73].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 17822
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[73].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 17.41
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[74].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 7766.54
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[74].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 17852
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[74].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 17.84
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[75].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 8154.86
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[75].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 17881
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[75].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 18.28
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[76].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 8562.61
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[76].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 17909
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[76].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 18.73
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[77].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 8990.74
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[77].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 17936
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[77].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 19.19
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[78].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 9440.27
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[78].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 17961
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[78].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 19.66
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[79].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 9912.29
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[79].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 17985
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[79].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 20.15
+  },
+  {
+   "abs": 454.53,
+   "key": "paris_crack_growth.crack_growth_curve[7].crack_length_um",
+   "kind": "numeric",
+   "new": 750.02,
+   "old": 295.49,
+   "rel": 1.538224643811973
+  },
+  {
+   "abs": 5631,
+   "key": "paris_crack_growth.crack_growth_curve[7].cycles",
+   "kind": "numeric",
+   "new": 11131,
+   "old": 5500,
+   "rel": 1.0238181818181817
+  },
+  {
+   "abs": 0.8900000000000001,
+   "key": "paris_crack_growth.crack_growth_curve[7].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 4.37,
+   "old": 3.48,
+   "rel": 0.25574712643678166
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[80].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 10407.9
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[80].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 18008
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[80].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 20.65
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[81].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 10928.3
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[81].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 18030
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[81].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 21.16
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[82].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 11474.71
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[82].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 18051
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[82].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 21.68
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[83].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 12048.45
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[83].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 18071
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[83].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 22.21
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[84].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 12650.87
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[84].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 18090
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[84].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 22.76
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[85].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 13283.41
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[85].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 18109
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[85].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 23.32
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[86].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 13947.58
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[86].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 18127
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[86].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 23.9
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[87].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 14644.96
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[87].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 18144
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[87].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 24.49
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[88].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 15377.21
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[88].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 18160
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[88].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 25.1
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[89].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 16146.07
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[89].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 18176
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[89].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 25.72
+  },
+  {
+   "abs": 510.22,
+   "key": "paris_crack_growth.crack_growth_curve[8].crack_length_um",
+   "kind": "numeric",
+   "new": 820.49,
+   "old": 310.27,
+   "rel": 1.64443871466787
+  },
+  {
+   "abs": 6206,
+   "key": "paris_crack_growth.crack_growth_curve[8].cycles",
+   "kind": "numeric",
+   "new": 12267,
+   "old": 6061,
+   "rel": 1.0239234449760766
+  },
+  {
+   "abs": 1.0100000000000002,
+   "key": "paris_crack_growth.crack_growth_curve[8].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 4.57,
+   "old": 3.56,
+   "rel": 0.2837078651685394
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[90].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 16953.38
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[90].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 18191
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[90].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 26.35
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[91].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 17801.05
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[91].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 18205
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[91].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 27.0
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[92].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 18691.1
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[92].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 18219
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[92].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 27.67
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[93].crack_length_um",
+   "kind": "removed",
+   "new": null,
+   "old": 19625.65
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[93].cycles",
+   "kind": "removed",
+   "new": null,
+   "old": 18232
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[93].delta_K_MPa_m",
+   "kind": "removed",
+   "new": null,
+   "old": 28.35
+  },
+  {
+   "abs": 571.8100000000001,
+   "key": "paris_crack_growth.crack_growth_curve[9].crack_length_um",
+   "kind": "numeric",
+   "new": 897.59,
+   "old": 325.78,
+   "rel": 1.7552028976609986
+  },
+  {
+   "abs": 6716,
+   "key": "paris_crack_growth.crack_growth_curve[9].cycles",
+   "kind": "numeric",
+   "new": 13314,
+   "old": 6598,
+   "rel": 1.0178842073355563
+  },
+  {
+   "abs": 1.1300000000000003,
+   "key": "paris_crack_growth.crack_growth_curve[9].delta_K_MPa_m",
+   "kind": "numeric",
+   "new": 4.78,
+   "old": 3.65,
+   "rel": 0.3095890410958905
+  },
+  {
+   "key": "paris_crack_growth.critical_sqrt_area_um",
+   "kind": "added",
+   "new": 32594.93,
+   "old": null
+  },
+  {
+   "abs": 7038,
+   "key": "paris_crack_growth.cycles_to_failure",
+   "kind": "numeric",
+   "new": 25270,
+   "old": 18232,
+   "rel": 0.38602457218078107
+  },
+  {
+   "key": "paris_crack_growth.delta_K_convention",
+   "kind": "added",
+   "new": "ASTM E647: Delta_K = K_max for R <= 0, K_max - K_min for R > 0",
+   "old": null
+  },
+  {
+   "key": "paris_crack_growth.delta_K_initial_MPa_m",
+   "kind": "added",
+   "new": 3.19,
+   "old": null
+  },
+  {
+   "key": "paris_crack_growth.delta_sigma_eff_MPa",
+   "kind": "added",
+   "new": 180.0,
+   "old": null
+  },
+  {
+   "abs": 13307.990000000002,
+   "key": "paris_crack_growth.final_crack_size_um",
+   "kind": "numeric",
+   "new": 32594.93,
+   "old": 19286.94,
+   "rel": 0.6900000725879794
+  },
+  {
+   "key": "paris_crack_growth.geometry_factor_Y",
+   "kind": "added",
+   "new": 0.5,
+   "old": null
+  },
+  {
+   "key": "paris_crack_growth.integration",
+   "kind": "added",
+   "new": "closed-form Paris integral in x = sqrt(area) (constant Murakami Y)",
+   "old": null
+  },
+  {
+   "key": "paris_crack_growth.location",
+   "kind": "added",
+   "new": "internal",
+   "old": null
+  }
+ ],
+ "exitCode": 0,
+ "gitHead": "b0d77480750d9f68679f343d3c6a54d0a500db8c",
+ "input": {
+  "alloyName": "AlSi10Mg",
+  "location": "internal",
+  "sqrtArea_um": 400,
+  "stressAmplitude_MPa": 90,
+  "stressRatio_R": 0.1
+ },
+ "invocation": "python -B lpbf_fatigue_fracture.py < input (cwd python/)",
+ "label": "phase6a-step-b",
+ "provenance": null,
+ "schema": "phase6a-step-b-golden-1",
+ "solver": "lpbf_fatigue_fracture",
+ "solverFile": "python/lpbf_fatigue_fracture.py",
+ "solverSha256": "d1131d8c6ff534911ce0a09287705ce71cf5ec5148b043528987b8c8c3ac9ad9",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "worktree",
+ "stdout": {
+  "fatigue_limit": {
+   "el_haddad_a0_um": 183.35,
+   "el_haddad_geometry_factor_Y": 0.5,
+   "fatigue_limit_R_minus_1_MPa": 84.1,
+   "fatigue_limit_corrected_MPa": 69.6,
+   "hardness_HV": 115.0,
+   "location": "internal",
+   "murakami_raw_MPa": 135.1,
+   "sqrt_area_um": 400.0,
+   "stress_ratio_R": 0.1
+  },
+  "kitagawa_takahashi_curve": [
+   {
+    "defect_sqrt_area_um": 0.1,
+    "fatigue_limit_MPa": 124.1
+   },
+   {
+    "defect_sqrt_area_um": 0.14,
+    "fatigue_limit_MPa": 124.0
+   },
+   {
+    "defect_sqrt_area_um": 0.19,
+    "fatigue_limit_MPa": 124.0
+   },
+   {
+    "defect_sqrt_area_um": 0.26,
+    "fatigue_limit_MPa": 124.0
+   },
+   {
+    "defect_sqrt_area_um": 0.36,
+    "fatigue_limit_MPa": 124.0
+   },
+   {
+    "defect_sqrt_area_um": 0.49,
+    "fatigue_limit_MPa": 123.9
+   },
+   {
+    "defect_sqrt_area_um": 0.67,
+    "fatigue_limit_MPa": 123.9
+   },
+   {
+    "defect_sqrt_area_um": 0.92,
+    "fatigue_limit_MPa": 123.8
+   },
+   {
+    "defect_sqrt_area_um": 1.27,
+    "fatigue_limit_MPa": 123.7
+   },
+   {
+    "defect_sqrt_area_um": 1.74,
+    "fatigue_limit_MPa": 123.5
+   },
+   {
+    "defect_sqrt_area_um": 2.4,
+    "fatigue_limit_MPa": 123.3
+   },
+   {
+    "defect_sqrt_area_um": 3.29,
+    "fatigue_limit_MPa": 123.0
+   },
+   {
+    "defect_sqrt_area_um": 4.52,
+    "fatigue_limit_MPa": 122.6
+   },
+   {
+    "defect_sqrt_area_um": 6.21,
+    "fatigue_limit_MPa": 122.0
+   },
+   {
+    "defect_sqrt_area_um": 8.53,
+    "fatigue_limit_MPa": 121.3
+   },
+   {
+    "defect_sqrt_area_um": 11.72,
+    "fatigue_limit_MPa": 120.3
+   },
+   {
+    "defect_sqrt_area_um": 16.1,
+    "fatigue_limit_MPa": 119.0
+   },
+   {
+    "defect_sqrt_area_um": 22.12,
+    "fatigue_limit_MPa": 117.2
+   },
+   {
+    "defect_sqrt_area_um": 30.39,
+    "fatigue_limit_MPa": 114.9
+   },
+   {
+    "defect_sqrt_area_um": 41.75,
+    "fatigue_limit_MPa": 112.0
+   },
+   {
+    "defect_sqrt_area_um": 57.36,
+    "fatigue_limit_MPa": 108.3
+   },
+   {
+    "defect_sqrt_area_um": 78.8,
+    "fatigue_limit_MPa": 103.8
+   },
+   {
+    "defect_sqrt_area_um": 108.26,
+    "fatigue_limit_MPa": 98.4
+   },
+   {
+    "defect_sqrt_area_um": 148.74,
+    "fatigue_limit_MPa": 92.2
+   },
+   {
+    "defect_sqrt_area_um": 204.34,
+    "fatigue_limit_MPa": 85.3
+   },
+   {
+    "defect_sqrt_area_um": 280.72,
+    "fatigue_limit_MPa": 78.0
+   },
+   {
+    "defect_sqrt_area_um": 385.66,
+    "fatigue_limit_MPa": 70.4
+   },
+   {
+    "defect_sqrt_area_um": 529.83,
+    "fatigue_limit_MPa": 62.9
+   },
+   {
+    "defect_sqrt_area_um": 727.9,
+    "fatigue_limit_MPa": 55.7
+   },
+   {
+    "defect_sqrt_area_um": 1000.0,
+    "fatigue_limit_MPa": 48.8
+   }
+  ],
+  "paris_crack_growth": {
+   "crack_growth_curve": [
+    {
+     "crack_length_um": 400.0,
+     "cycles": 0,
+     "delta_K_MPa_m": 3.19
+    },
+    {
+     "crack_length_um": 437.58,
+     "cycles": 2000,
+     "delta_K_MPa_m": 3.34
+    },
+    {
+     "crack_length_um": 478.7,
+     "cycles": 3845,
+     "delta_K_MPa_m": 3.49
+    },
+    {
+     "crack_length_um": 523.68,
+     "cycles": 5546,
+     "delta_K_MPa_m": 3.65
+    },
+    {
+     "crack_length_um": 572.88,
+     "cycles": 7116,
+     "delta_K_MPa_m": 3.82
+    },
+    {
+     "crack_length_um": 626.71,
+     "cycles": 8564,
+     "delta_K_MPa_m": 3.99
+    },
+    {
+     "crack_length_um": 685.6,
+     "cycles": 9899,
+     "delta_K_MPa_m": 4.18
+    },
+    {
+     "crack_length_um": 750.02,
+     "cycles": 11131,
+     "delta_K_MPa_m": 4.37
+    },
+    {
+     "crack_length_um": 820.49,
+     "cycles": 12267,
+     "delta_K_MPa_m": 4.57
+    },
+    {
+     "crack_length_um": 897.59,
+     "cycles": 13314,
+     "delta_K_MPa_m": 4.78
+    },
+    {
+     "crack_length_um": 981.93,
+     "cycles": 14281,
+     "delta_K_MPa_m": 5.0
+    },
+    {
+     "crack_length_um": 1074.19,
+     "cycles": 15172,
+     "delta_K_MPa_m": 5.23
+    },
+    {
+     "crack_length_um": 1175.12,
+     "cycles": 15994,
+     "delta_K_MPa_m": 5.47
+    },
+    {
+     "crack_length_um": 1285.53,
+     "cycles": 16753,
+     "delta_K_MPa_m": 5.72
+    },
+    {
+     "crack_length_um": 1406.33,
+     "cycles": 17452,
+     "delta_K_MPa_m": 5.98
+    },
+    {
+     "crack_length_um": 1538.46,
+     "cycles": 18097,
+     "delta_K_MPa_m": 6.26
+    },
+    {
+     "crack_length_um": 1683.02,
+     "cycles": 18693,
+     "delta_K_MPa_m": 6.54
+    },
+    {
+     "crack_length_um": 1841.16,
+     "cycles": 19241,
+     "delta_K_MPa_m": 6.84
+    },
+    {
+     "crack_length_um": 2014.16,
+     "cycles": 19748,
+     "delta_K_MPa_m": 7.16
+    },
+    {
+     "crack_length_um": 2203.41,
+     "cycles": 20215,
+     "delta_K_MPa_m": 7.49
+    },
+    {
+     "crack_length_um": 2410.44,
+     "cycles": 20645,
+     "delta_K_MPa_m": 7.83
+    },
+    {
+     "crack_length_um": 2636.93,
+     "cycles": 21042,
+     "delta_K_MPa_m": 8.19
+    },
+    {
+     "crack_length_um": 2884.7,
+     "cycles": 21409,
+     "delta_K_MPa_m": 8.57
+    },
+    {
+     "crack_length_um": 3155.75,
+     "cycles": 21747,
+     "delta_K_MPa_m": 8.96
+    },
+    {
+     "crack_length_um": 3452.26,
+     "cycles": 22059,
+     "delta_K_MPa_m": 9.37
+    },
+    {
+     "crack_length_um": 3776.64,
+     "cycles": 22346,
+     "delta_K_MPa_m": 9.8
+    },
+    {
+     "crack_length_um": 4131.5,
+     "cycles": 22611,
+     "delta_K_MPa_m": 10.25
+    },
+    {
+     "crack_length_um": 4519.7,
+     "cycles": 22856,
+     "delta_K_MPa_m": 10.72
+    },
+    {
+     "crack_length_um": 4944.38,
+     "cycles": 23081,
+     "delta_K_MPa_m": 11.22
+    },
+    {
+     "crack_length_um": 5408.95,
+     "cycles": 23290,
+     "delta_K_MPa_m": 11.73
+    },
+    {
+     "crack_length_um": 5917.19,
+     "cycles": 23481,
+     "delta_K_MPa_m": 12.27
+    },
+    {
+     "crack_length_um": 6473.17,
+     "cycles": 23658,
+     "delta_K_MPa_m": 12.83
+    },
+    {
+     "crack_length_um": 7081.4,
+     "cycles": 23822,
+     "delta_K_MPa_m": 13.42
+    },
+    {
+     "crack_length_um": 7746.77,
+     "cycles": 23972,
+     "delta_K_MPa_m": 14.04
+    },
+    {
+     "crack_length_um": 8474.66,
+     "cycles": 24111,
+     "delta_K_MPa_m": 14.69
+    },
+    {
+     "crack_length_um": 9270.95,
+     "cycles": 24239,
+     "delta_K_MPa_m": 15.36
+    },
+    {
+     "crack_length_um": 10142.06,
+     "cycles": 24358,
+     "delta_K_MPa_m": 16.06
+    },
+    {
+     "crack_length_um": 11095.02,
+     "cycles": 24467,
+     "delta_K_MPa_m": 16.8
+    },
+    {
+     "crack_length_um": 12137.52,
+     "cycles": 24567,
+     "delta_K_MPa_m": 17.57
+    },
+    {
+     "crack_length_um": 13277.97,
+     "cycles": 24660,
+     "delta_K_MPa_m": 18.38
+    },
+    {
+     "crack_length_um": 14525.58,
+     "cycles": 24745,
+     "delta_K_MPa_m": 19.23
+    },
+    {
+     "crack_length_um": 15890.42,
+     "cycles": 24824,
+     "delta_K_MPa_m": 20.11
+    },
+    {
+     "crack_length_um": 17383.5,
+     "cycles": 24897,
+     "delta_K_MPa_m": 21.03
+    },
+    {
+     "crack_length_um": 19016.87,
+     "cycles": 24964,
+     "delta_K_MPa_m": 22.0
+    },
+    {
+     "crack_length_um": 20803.71,
+     "cycles": 25026,
+     "delta_K_MPa_m": 23.01
+    },
+    {
+     "crack_length_um": 22758.45,
+     "cycles": 25083,
+     "delta_K_MPa_m": 24.07
+    },
+    {
+     "crack_length_um": 24896.86,
+     "cycles": 25136,
+     "delta_K_MPa_m": 25.17
+    },
+    {
+     "crack_length_um": 27236.19,
+     "cycles": 25184,
+     "delta_K_MPa_m": 26.33
+    },
+    {
+     "crack_length_um": 29795.33,
+     "cycles": 25229,
+     "delta_K_MPa_m": 27.54
+    },
+    {
+     "crack_length_um": 32594.93,
+     "cycles": 25270,
+     "delta_K_MPa_m": 28.8
+    }
+   ],
+   "critical_sqrt_area_um": 32594.93,
+   "cycles_to_failure": 25270,
+   "delta_K_convention": "ASTM E647: Delta_K = K_max for R <= 0, K_max - K_min for R > 0",
+   "delta_K_initial_MPa_m": 3.19,
+   "delta_sigma_eff_MPa": 180.0,
+   "final_crack_size_um": 32594.93,
+   "geometry_factor_Y": 0.5,
+   "initial_crack_size_um": 400.0,
+   "integration": "closed-form Paris integral in x = sqrt(area) (constant Murakami Y)",
+   "location": "internal",
+   "status": "fractured"
+  }
+ },
+ "supersedes": "alsi10mg_large_pore.json (d33b6f5)",
+ "volatileKeysStripped": [
+  "computeTimeMs",
+  "durationMs",
+  "pythonDurationMs",
+  "pythonVersion",
+  "timestamp"
+ ]
+}
