@@ -652,3 +652,119 @@ export function nistMds22525AbsorptanceCatalogEntry(root = path.resolve('data/be
           ] } });
     } };
 }
+
+/**
+ * Locally derived signal-unit metrics from NIST mds2-2716 (AMB2022-03 IN718 staring-camera
+ * thermography and pad scan strategy). The 550 MB raw HDF5 file is never committed; this entry
+ * archives only the small derived table and the publisher NERDm record, while the derived manifest
+ * pins the raw inputs by size and SHA-256. Values are raw camera signal in digital levels for NIST's
+ * experiment only: no temperature conversion is executed and nothing here validates a model.
+ * `root` is the `derived` directory; artifacts are addressed relative to its parent dataset folder.
+ */
+export function nistIn718ThermographyDerivedCatalogEntry(root = path.resolve('data/benchmark/nist-amb2022-03/derived')): LpbfSourceCatalogEntry {
+  const datasetId = 'nist-mds2-2716-thermography-signal-v1';
+  const doiUrl = 'https://doi.org/10.18434/mds2-2716';
+  const nerdmUrl = 'https://data.nist.gov/rmm/records?@id=ark:/88434/mds2-2716';
+  const manifestSha256 = 'ad2cc0a7d3481feddfd4757b7121cd0657c99196f077dbee1e0c27855c55975e';
+  const derivedName = 'thermography-signal-metrics-v1.json';
+  const derivedSha256 = '8698d71ea615ff17d4123982adde657ec1f47cfe46edf28465194f5e469f8819';
+  const derivedBytes = 160242;
+  const nerdmSha256 = '9e53e0f906763192087de331ad5eebaa29f98d9ee11ac4b1fa709ac0d9fa24c8';
+  const nerdmBytes = 14033;
+  const base = 'https://data.nist.gov/od/ds/ark:/88434/mds2-2716/';
+  const expectedInputs = [
+    { name: 'AMB2022-03-718-AMMT-StaringCamera_Signal.h5', bytes: 549979044,
+      sha256: 'f6fe21ec911707f72e7efda2932c77eae2b75d84765848878fe5beb6b728cd43',
+      sourceUrl: `${base}Thermography/AMB2022-03-718-AMMT-StaringCamera_Signal.h5` },
+    { name: 'AMB2022-03-AMMT-718-Pad_XYPT.h5', bytes: 406992,
+      sha256: '7b7004753e150bc26632e9ce356e0440429160fa92cbff8fc8559202fdce2103',
+      sourceUrl: `${base}ScanStrategy/AMB2022-03-AMMT-718-Pad_XYPT.h5` },
+    { name: 'README.txt', bytes: 12573,
+      sha256: 'ba44076ed51b69c0e4ca80ff0e2568eed2dc6459e85c9ad83b85860bee5760f2',
+      sourceUrl: 'https://data.nist.gov/od/ds/mds2-2716/2716_README.txt' },
+  ];
+  const datasetRoot = path.dirname(root);
+  const readPinned = (relative: string, bytes: number | null, sha256: string, label: string) => {
+    const filename = path.join(artifactDirectory(datasetRoot), relative);
+    const stat = lstatSync(filename);
+    if (stat.isSymbolicLink() || !stat.isFile() || stat.size > 1024 * 1024 || (bytes !== null && stat.size !== bytes)) {
+      throw new Error(`Invalid NIST mds2-2716 ${label} file`);
+    }
+    const content = readFileSync(filename);
+    if (createHash('sha256').update(content).digest('hex') !== sha256) throw new Error(`NIST mds2-2716 ${label} SHA-256 mismatch`);
+    return content;
+  };
+  return { datasetId, title: 'NIST mds2-2716 · IN718 staring-camera signal metrics (raw DL, derived locally, no temperature)',
+    sourceRoot: datasetRoot,
+    loadDocument() {
+      const derivedDir = path.basename(root);
+      const manifest = JSON.parse(readPinned(`${derivedDir}/manifest.json`, null, manifestSha256, 'derived manifest').toString('utf8'));
+      if (manifest.schemaVersion !== 1 || manifest.datasetId !== datasetId || manifest.sourceDatasetId !== 'nist-mds2-2716'
+        || manifest.derived?.path !== derivedName || manifest.derived?.bytes !== derivedBytes || manifest.derived?.sha256 !== derivedSha256
+        || manifest.sourceRecord?.path !== '../official/nerdm-record-mds2-2716.json' || manifest.sourceRecord?.bytes !== nerdmBytes
+        || manifest.sourceRecord?.sha256 !== nerdmSha256 || manifest.evidence?.experimentalValidation !== false
+        || manifest.evidence?.opticalOperatorMatched !== false || manifest.evidence?.temperatureConversion !== null
+        || !Array.isArray(manifest.inputs) || manifest.inputs.length !== expectedInputs.length) {
+        throw new Error('NIST mds2-2716 derived manifest identity mismatch');
+      }
+      const sourceManifest = readJson(datasetRoot, 'manifest.json');
+      if (sourceManifest.dataset_id !== 'nist-mds2-2716' || !Array.isArray(sourceManifest.files)) {
+        throw new Error('NIST mds2-2716 source manifest identity mismatch');
+      }
+      for (const [index, expected] of expectedInputs.entries()) {
+        const input = manifest.inputs[index];
+        const archived = sourceManifest.files.filter((file: any) => path.posix.basename(String(file?.path ?? '')) === expected.name);
+        if (input?.name !== expected.name || input?.bytes !== expected.bytes || input?.sha256 !== expected.sha256
+          || input?.source_url !== expected.sourceUrl || archived.length !== 1
+          || archived[0].bytes !== expected.bytes || archived[0].sha256 !== expected.sha256) {
+          throw new Error('NIST mds2-2716 input pin mismatch');
+        }
+      }
+      const derived = JSON.parse(readPinned(`${derivedDir}/${derivedName}`, derivedBytes, derivedSha256, 'derived table').toString('utf8'));
+      readPinned('official/nerdm-record-mds2-2716.json', nerdmBytes, nerdmSha256, 'NERDm record');
+      if (derived.schemaVersion !== 1 || derived.datasetId !== datasetId || derived.evidence?.experimentalValidation !== false
+        || derived.evidence?.opticalOperatorMatched !== false || derived.evidence?.modelAcceptance !== false
+        || derived.evidence?.temperatureConversion !== null || !Array.isArray(derived.lines) || derived.lines.length !== 21
+        || !Array.isArray(derived.cases) || derived.cases.length !== 7 || !Array.isArray(derived.unavailable)
+        || derived.unavailable.some((item: any) => item?.status !== 'unavailable' || typeof item?.reason !== 'string' || !item.reason)) {
+        throw new Error('NIST mds2-2716 derived table content mismatch');
+      }
+      return validateSourceDocument({ schemaVersion: 1, datasetId, materialId: 'in718', processScope: 'bare-plate',
+        source: { url: doiUrl, citation: derived.source.citation, version: derived.source.nerdmVersion,
+          terms: 'NIST Open License: https://www.nist.gov/open/license', termsMissingReason: null },
+        artifacts: [
+          { relativePath: `${derivedDir}/${derivedName}`, sha256: derivedSha256, byteSize: derivedBytes, sourceUrl: doiUrl },
+          { relativePath: 'official/nerdm-record-mds2-2716.json', sha256: nerdmSha256, byteSize: nerdmBytes, sourceUrl: nerdmUrl },
+        ],
+        sourceContext: { schema_version: 1, dataset_id: datasetId, source_version: derived.source.nerdmVersion,
+          publisher_artifact_kind: 'locally-derived-signal-metrics-from-raw-thermography',
+          headline: derived.headline,
+          raw_inputs: manifest.inputs.map((input: any) => ({ ...input, committed: false })),
+          raw_storage: manifest.rawStorage,
+          locally_derived_artifacts: [{ path: `${derivedDir}/${derivedName}`, published_by_nist: false,
+            tool: manifest.tool, runtime: manifest.runtime,
+            note: 'Derived locally from the hash-pinned NIST HDF5 files; the sourceUrl of this artifact is the DOI landing page, not a NIST download.' },
+          { path: 'official/nerdm-record-mds2-2716.json', published_by_nist: false,
+            note: 'Content is the NIST NERDm record (ResultData[0] of the RMM query), re-serialised locally (sorted keys, indent 1); the bytes served at its sourceUrl will not match. Its SHA-256 is locally authoritative only.' }],
+          experiment: { material: 'IN718', process_scope: 'bare-plate', powder_present: false,
+            machine: 'NIST Additive Manufacturing Metrology Testbed (AMMT)',
+            heat_treatment: null, heat_treatment_missing_reason: 'Not recorded in the thermography files.' },
+          measurement: { quantity: 'Raw staring-camera signal (FASTCAM Mini AX200, 30000 frames/s) reduced to time above signal thresholds, signal-decay times, saturated-region length and inferred pixel pitch',
+            unit_source: 'digital levels (DL); frames of 1/30000 s', unit_missing_reason: null,
+            temperature_conversion: null,
+            temperature_conversion_missing_reason: derived.evidence.temperatureConversionMissingReason,
+            beam_diameter_definition: 'D4s (literal HDF5 spot_size_measure)', beam_diameter_missing_reason: null,
+            censoring: 'Signals at 4095 DL are saturated (upper-censored); values below 100 DL were stored as 0 by NIST (lower-censored, not zero temperature).',
+            repeat_group_rule: 'Line_0_Z is the baseline case; Line_X_Y_Z is case X.Y; Z = 1..3 are repeats, aggregated together and never split.' },
+          checks: derived.checks, unavailable_quantities: derived.unavailable,
+          split: 'unassigned', thermal_validation_ready: false,
+          unresolved: [
+            'Pixel pitch (about 21.3 µm) and the camera-axis to scan-direction mapping are inferred from hot-spot speed against the commanded speed (README ±2.5 % k=1), not from a published spatial calibration.',
+            'Emissivity is not published and the stored ThermalCal Model string is malformed; no temperature, cooling rate or time above melting is derived.',
+            'The Celsius/Kelvin convention of the calibration regression cannot be determined from the file.',
+            'The melt-pool region saturates at 4095 DL in every laser-on frame, so peak signal is censored.',
+            'The camera trigger offset for single lines is not recorded; laser-on is defined as the first frame with a saturated pixel.',
+            'Pad camera videos (re-heating, revisit intervals) are not analysed in v1; only the commanded XYPT track table is derived.',
+          ] } });
+    } };
+}

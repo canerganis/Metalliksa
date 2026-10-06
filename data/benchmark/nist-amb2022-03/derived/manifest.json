@@ -1,0 +1,59 @@
+{
+ "datasetId": "nist-mds2-2716-thermography-signal-v1",
+ "derived": {
+  "bytes": 160242,
+  "path": "thermography-signal-metrics-v1.json",
+  "sha256": "8698d71ea615ff17d4123982adde657ec1f47cfe46edf28465194f5e469f8819"
+ },
+ "evidence": {
+  "evidenceKindMeasuredFor": "NIST experiment only (raw camera signal, DL)",
+  "experimentalValidation": false,
+  "modelAcceptance": false,
+  "opticalOperatorMatched": false,
+  "statusVocabulary": [
+   "measured-signal",
+   "derived-commanded",
+   "derived-inferred",
+   "sensitivity-only",
+   "unavailable"
+  ],
+  "temperatureConversion": null,
+  "temperatureConversionMissingReason": "No temperature conversion executed: the stored /Calibration/ThermalCal Model string has unbalanced parentheses and an unspecified emissivity e, its Celsius/Kelvin convention is not determinable from the file, and the melt-pool region is saturated at 4095 DL. A reviewed equation, a cited emissivity and the valid calibration range are required."
+ },
+ "inputs": [
+  {
+   "bytes": 549979044,
+   "name": "AMB2022-03-718-AMMT-StaringCamera_Signal.h5",
+   "sha256": "f6fe21ec911707f72e7efda2932c77eae2b75d84765848878fe5beb6b728cd43",
+   "source_url": "https://data.nist.gov/od/ds/ark:/88434/mds2-2716/Thermography/AMB2022-03-718-AMMT-StaringCamera_Signal.h5"
+  },
+  {
+   "bytes": 406992,
+   "name": "AMB2022-03-AMMT-718-Pad_XYPT.h5",
+   "sha256": "7b7004753e150bc26632e9ce356e0440429160fa92cbff8fc8559202fdce2103",
+   "source_url": "https://data.nist.gov/od/ds/ark:/88434/mds2-2716/ScanStrategy/AMB2022-03-AMMT-718-Pad_XYPT.h5"
+  },
+  {
+   "bytes": 12573,
+   "name": "README.txt",
+   "sha256": "ba44076ed51b69c0e4ca80ff0e2568eed2dc6459e85c9ad83b85860bee5760f2",
+   "source_url": "https://data.nist.gov/od/ds/mds2-2716/2716_README.txt"
+  }
+ ],
+ "rawStorage": "Raw HDF5 files are not committed. Canonical local copy: data/benchmark/nist-amb2022-03/raw/ (git-ignored), or $METALLIKSA_EXTERNAL_DATA/nist-mds2-2716/ per external-data-manifest.json.",
+ "runtime": {
+  "h5py": "3.16.0",
+  "numpy": "2.5.3",
+  "python": "3.12.10"
+ },
+ "schemaVersion": 1,
+ "sourceDatasetId": "nist-mds2-2716",
+ "sourceRecord": {
+  "bytes": 14033,
+  "note": "ResultData[0] of the NIST RMM query, re-serialised locally (sorted keys, indent 1, UTF-8); the bytes served at source_url will not match, the SHA-256 is locally authoritative only.",
+  "path": "../official/nerdm-record-mds2-2716.json",
+  "sha256": "9e53e0f906763192087de331ad5eebaa29f98d9ee11ac4b1fa709ac0d9fa24c8",
+  "source_url": "https://data.nist.gov/rmm/records?@id=ark:/88434/mds2-2716"
+ },
+ "tool": "python/lpbf_nist_mds2_2716_thermography.py"
+}
