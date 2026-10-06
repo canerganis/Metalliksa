@@ -18,7 +18,7 @@ from lpbf_source_identity import (CANONICAL_SCHEMA, RAW_SCHEMA, fingerprint_sour
 from lpbf_core_physics import property_at, enthalpy_table
 from lpbf_core_physics import calculate_mesh_domain, scan_segments, thermal_si_inputs, SOURCE_INTEGRATION
 from lpbf_core_contract import build_core_contract
-from lpbf_verification import compare, convergence
+from lpbf_verification import CELIK_MIN_REFINEMENT_RATIO, compare, convergence
 from lpbf_heat_source import (MINIMUM_SOURCE_CAPTURE_FRACTION, require_source_capture,
                               source_limited_step, conduction_diagonal)
 from lpbf_layered_conduction import conduction_heat_rate
@@ -806,6 +806,21 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
                 aspectRatio=best["depth_um"]/best["width_um"] if width else None,
                 trackOverlapRatio=overlap_metrics["trackOverlapRatio"] if overlap_metrics else None,
                 remeltingRatio=overlap_metrics["globalRemeltRatio"] if overlap_metrics else None)
+    # LT-3: G, R and cooling rate come from one mesh. Report how many cells span the pool; the
+    # gradient at a liquidus crossing averages the two adjacent face differences (a 2-cell stencil,
+    # active_gradient_components), so a pool fewer than 2 cells deep or wide puts the whole stencil
+    # across the pool boundary. No literature cell-count threshold is claimed.
+    cells_w = round(best["width_um"]*1e-6/dx, 6) if best.get("width_um") else 0.0
+    cells_d = round(best["depth_um"]*1e-6/dx, 6) if best.get("depth_um") else 0.0
+    solidification_resolution = dict(
+        methodId="melt-pool-cell-count-v1", mesh_um=dx*1e6,
+        cellsAcrossWidth=cells_w, cellsAcrossDepth=cells_d, gradientStencilCells=2,
+        meshVerified=False,
+        status=("not-available" if G is None else
+                "stencil-spans-melt-pool" if min(cells_w, cells_d) < 2 else "single-mesh-unverified"),
+        note=("thermalGradient_K_m, solidificationRate_m_s and coolingRate_K_s are single-mesh values; "
+              "discretisation error is unbounded until a three-grid study (Celik et al. 2008, "
+              "J. Fluids Eng. 130:078001) converges for them."))
     bare_plate_section_observations = (rectangular_corridor_section_observations(
         axis_y, z, corridor_peak_planes, corridor_section_samples, dx, m["liquidus_K"])
         if rectangular_corridor else None)
@@ -856,7 +871,7 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
                    if rectangular_corridor else {}),
                 **({"barePlateSectionFieldArtifact": section_field_artifact}
                    if section_field_artifact is not None else {}),
-                numericalDiagnostics=dict(**peak_diagnostics, overlapExtraction=OVERLAP_MODEL_ID if overlap_metrics else None, sourceIntegration=SOURCE_INTEGRATION, solidificationExtraction="linear-liquidus-crossing-v1",
+                numericalDiagnostics=dict(**peak_diagnostics, solidificationResolution=solidification_resolution, overlapExtraction=OVERLAP_MODEL_ID if overlap_metrics else None, sourceIntegration=SOURCE_INTEGRATION, solidificationExtraction="linear-liquidus-crossing-v1",
                     stabilityLimit="local-conductance-row-sum", minimumCapturedSourceFraction=minimum_capture,
                     maximumSourceRenormalization=1/minimum_capture, maximumSurfaceOffset_um=surface_offset,
                     maximumTimestep_s=max_dt, maximumEnthalpyIncrement_K=max_increment,
@@ -879,20 +894,34 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
                     (np.clip((T-m["solidus_K"])/(m["liquidus_K"]-m["solidus_K"]),0,1)*active).ravel()))
 
 
-def _layer_aligned_mesh_levels(p):
-    """Return three distinct cells-per-layer levels bracketing the request."""
+def _layer_aligned_mesh_levels(p, min_ratio=CELIK_MIN_REFINEMENT_RATIO):
+    """Three layer-aligned cells-per-layer levels containing the request, adjacent ratios >= min_ratio.
+
+    Celik et al. 2008 Step 2 asks for r = h_coarse/h_fine > 1.3 per refinement; consecutive counts
+    (n-1, n, n+1) give r -> 1 + 1/n and fall below that for n >= 4, so the counts are spread instead.
+    The request is the medium level when both neighbours fit, otherwise the coarse or fine level.
+    """
     layer_um = p["layer_um"]
-    base_cells = max(1, int(math.ceil(layer_um / p["mesh_um"] - 1e-12)))
+    n = max(1, int(math.ceil(layer_um / p["mesh_um"] - 1e-12)))
     max_cells = int(math.floor(layer_um / BOUNDS["mesh_um"][0] + 1e-12))
-    if max_cells < 3:
+
+    def finer(c):
+        return int(math.ceil(c * min_ratio - 1e-12))
+
+    def coarser(c):
+        return int(math.floor(c / min_ratio + 1e-12))
+
+    candidates = []
+    if coarser(n) >= 1 and finer(n) <= max_cells:
+        candidates.append((coarser(n), n, finer(n)))
+    if finer(finer(n)) <= max_cells:
+        candidates.append((n, finer(n), finer(finer(n))))
+    if coarser(coarser(n)) >= 1:
+        candidates.append((coarser(coarser(n)), coarser(n), n))
+    if not candidates:
         return None
-    if base_cells <= 1:
-        cells = (1, 2, 3)
-    elif base_cells >= max_cells:
-        cells = (max_cells - 2, max_cells - 1, max_cells)
-    else:
-        cells = (base_cells - 1, base_cells, base_cells + 1)
-    return tuple((n, layer_um / n) for n in cells)
+    cells = candidates[0]
+    return tuple((c, layer_um / c) for c in cells)
 
 
 @track_cpu_run_boundary
@@ -1029,7 +1058,7 @@ def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
                 requested_spacing = p["mesh_um"]
                 if not plan:
                     level_errors.append(dict(level="mesh-plan", requested=requested_spacing,
-                        reason="Three distinct layer-aligned meshes require at least three cells per layer at the 5 um minimum spacing."))
+                        reason="Three layer-aligned meshes with refinement ratio >= 1.3 do not fit between one cell per layer and the 5 um minimum spacing."))
                 # The requested solve is one member of the sorted three-grid
                 # sequence; run the other two with identical model/material.
                 ordered_results = [None, None, None]
@@ -1056,8 +1085,25 @@ def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
                                     reason=str(exc)[:500] or type(exc).__name__))
                             completed_solves += 1
                 trials = ordered_results
+            elif key == "maxDt_s":
+                # The explicit step is dt = min(maxDt, 0.12 dx^2/alpha, r_beam/(4 v), events, row-sum
+                # bound); coarsening maxDt above those caps changes nothing. Refine BELOW the realised
+                # mean step instead: the requested run is the coarse level, the medium and fine levels
+                # cap dt at meanDt/sqrt(2) and meanDt/2 (ratio sqrt(2) >= 1.3, Celik et al. 2008).
+                trials.append(result)
+                base_dt = result["discretization"]["meanDt_s"]
+                for index, scale in enumerate((math.sqrt(2.), 2.)):
+                    q = copy.deepcopy(p); q[key] = max(BOUNDS["maxDt_s"][0], base_dt / scale)
+                    try:
+                        trial = thermal_solver(q, m, lambda f, msg, i=index: report((i+1+f)/3, msg))
+                    except Exception as exc:
+                        trials.append(None)
+                        level_errors.append(dict(level=("medium", "fine")[index],
+                                                 requested=q[key], reason=str(exc)[:500] or type(exc).__name__))
+                        continue
+                    trials.append(trial)
             else:
-                # Retain the legacy timestep and explicitly selected non-reference protocols.
+                # Explicitly selected non-reference mesh protocols keep the legacy coarsening levels.
                 for index, scale in enumerate((2., math.sqrt(2.))):
                     q = copy.deepcopy(p); q[key] *= scale
                     try:
@@ -1072,7 +1118,9 @@ def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
             resolution_key = "mesh_m" if key == "mesh_um" else "meanDt_s"
             actual = [v["discretization"][resolution_key] if v is not None else None for v in trials]
             metric_key = "midTrackCrossSection" if bare else "metrics"
-            metric_names = ("width_um", "depth_um") if bare else ("width_um", "depth_um", "volume_um3")
+            metric_names = (("width_um", "depth_um") if bare else
+                            ("width_um", "depth_um", "volume_um3", "thermalGradient_K_m",
+                             "solidificationRate_m_s", "coolingRate_K_s"))
             checks = ({k: dict(status="failed", reason="Invalid study levels: " + "; ".join(
                             f"{v['level']}: {v['reason']}" for v in level_errors)) for k in metric_names}
                       if level_errors else
@@ -1084,7 +1132,7 @@ def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
                 failedLevels=level_errors)
             if layer_mesh_study:
                 result["convergenceStudy"].update(
-                    protocol="layer-aligned-three-grid-cpu-reference-v1",
+                    protocol="layer-aligned-three-grid-cpu-reference-v2-celik-ratio",
                     gridPolicy="layer-conforming",
                     requestedBackend=requested_backend,
                     executionBackend="reference",

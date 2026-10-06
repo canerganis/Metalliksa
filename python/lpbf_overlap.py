@@ -102,6 +102,15 @@ class FieldOverlapTracker:
         gap_volume_um3_total = 0.0
         has_any_gap = False
         min_midpoint_penetration_um = float("inf")
+        layer_melt_masks = {}
+        for (track_layer, _track), mask in self.track_melt.items():
+            if track_layer in layer_melt_masks:
+                layer_melt_masks[track_layer] = layer_melt_masks[track_layer] | mask
+            else:
+                layer_melt_masks[track_layer] = mask.copy()
+        empty_mask = np.zeros(len(self.xyz), dtype=bool)
+        for layer in range(self.layers):
+            layer_melt_masks.setdefault(layer, empty_mask)
 
         for layer in range(self.layers):
             theta = math.radians(
@@ -158,12 +167,14 @@ class FieldOverlapTracker:
                     has_any_gap = True
                     gap_volume_um3_total += unmelted_count * cell_vol_um3
 
-                # Midpoint penetration depth check
+                # Midpoint penetration depth check: only cells melted while this layer's own tracks
+                # were active count (a later layer's deeper pool must not stand in for this layer).
                 half_band = max(self.dx * 0.6, 0.1 * self.hatch_m)
+                layer_melt = layer_melt_masks[layer]
                 mid_cells = (
                     (np.abs(v_coords - v_mid) <= half_band) &
                     (u_coords >= u_min) & (u_coords <= u_max) &
-                    self.ever_melted
+                    layer_melt
                 )
                 if np.any(mid_cells):
                     deepest_mid_z = float(z[mid_cells].min())
@@ -190,7 +201,9 @@ class FieldOverlapTracker:
             if sub_count > 0 else 0.0
         )
 
-        lof_screened = has_any_gap or (min_midpoint_penetration_um < float(self.p.get("layer_um", 40.0)))
+        # 1e-6 um tolerance: a melt bottom on the previous layer surface (cell-centre + dx/2) must not
+        # read as 39.999999 < 40 from float round-off.
+        lof_screened = has_any_gap or (min_midpoint_penetration_um < float(self.p.get("layer_um", 40.0)) - 1e-6)
 
         metrics = {
             "modelId": OVERLAP_MODEL_ID,
