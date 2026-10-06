@@ -4,9 +4,9 @@
  "group": "G3",
  "description": "Two-track meander and unidirectional powder runs",
  "slow": false,
- "recordedImplementationHash": "11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359",
+ "recordedImplementationHash": "e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "783c655bfb4fb9781c9e4e8a81a660d43a70fa7d",
+ "recordedGitHead": "a4ef4c2a6b6876fc365538ef5a923c15a2f4e2b2",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,8 +68,8 @@
   }
  },
  "recordedRuns_s": [
-  5.1,
-  5.1
+  7.8,
+  8.1
  ],
  "recordedTwice": true,
  "observations": {

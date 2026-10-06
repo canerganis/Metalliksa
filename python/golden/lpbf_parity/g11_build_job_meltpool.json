@@ -4,9 +4,9 @@
  "group": "G11",
  "description": "lpbf_thermal_solver.calculate_meltpool_physics for three fixed payloads",
  "slow": false,
- "recordedImplementationHash": "11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359",
+ "recordedImplementationHash": "e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "783c655bfb4fb9781c9e4e8a81a660d43a70fa7d",
+ "recordedGitHead": "a4ef4c2a6b6876fc365538ef5a923c15a2f4e2b2",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -69,48 +69,48 @@
  },
  "recordedRuns_s": [
   0.8,
-  0.9
+  0.8
  ],
  "recordedTwice": true,
  "observations": {
-  "meltpool.0.typedSha256": "fe93b2707f9c70c7ac8093f8bc92f9014e1f620501c8874dcbe25537ec29f2eb",
-  "meltpool.0.canonicalSha256": "c6a6013c3c98c9314b90209622dfc3d98b1d78e2fa8bfef4bd78862aae935f94",
-  "meltpool.0.geometry_um": "c6ef3e4fb135f2d5582341240b9a8cd27cfb2efc603f06f3522d28b659ad6ead",
-  "meltpool.0.peakTemperature_C": "a9e27258b9e252e7aa28fbda07565b5b72693666ee46a172a59f63a0e5bb1dc8",
-  "meltpool.1.typedSha256": "9a7a16cd688063e51ceba2d4232faf4fe16845bdc6435b9e32b3943d09c258cf",
-  "meltpool.1.canonicalSha256": "bc97b57dbbe1ef06bfaec2fcc65941092106b5fa27ab3d6664cb47ccefb88daa",
-  "meltpool.1.geometry_um": "5f3eddcaba081639a573844c8c982beae4d0d70a808d9dc34e3fc78954192184",
-  "meltpool.1.peakTemperature_C": "a72db60d805fcc76ad4b4aa582c455eae4af1b0a67ba268c4b68c433e4e0a7ea",
-  "meltpool.2.typedSha256": "159a4431ddb2779e410891e59b9e296334a077d2973b665e390103811fa0d81f",
-  "meltpool.2.canonicalSha256": "78420b31374538bb0eda25a37cda12aea068ac7d0b6bc800ef1385453617c5ad",
-  "meltpool.2.geometry_um": "9310163d850b1473f85693ed2a16ab6483bdee8cefdf0e9af77f62c4643240c8",
-  "meltpool.2.peakTemperature_C": "4811a080aed033e0b1631950cc518662d9a456f97da7c97fc85c8902052a0638",
+  "meltpool.0.typedSha256": "f26ac215fa71727efd74182bf45a00e1d1d5c83ff0c5648f36ef4c8b0a75e8d2",
+  "meltpool.0.canonicalSha256": "b4eabe3dc1b30f0564738fe0a9f254495e938f8fc638ebbb369280cfb17ff39c",
+  "meltpool.0.geometry_um": "d853defb6c6d8a8a24d7723291055ac06f740aac054be23322492748df807969",
+  "meltpool.0.peakTemperature_C": "4ee880238e87b44a8b792203461cba7eed22e5a9298748b59617b667c416acb7",
+  "meltpool.1.typedSha256": "2d5c22330719c3e58446c3b9d00c335ccdad3e9135ebdff184821b4a5e227862",
+  "meltpool.1.canonicalSha256": "c20063db871ea188eeb1bea44b847006ad3100b68d09424013f0f79bc47f83e4",
+  "meltpool.1.geometry_um": "f771ae585a0d3de14dec81566510bcf75302a0526fb6c0cfe14630c0358762be",
+  "meltpool.1.peakTemperature_C": "a15a1931dea14c57cb1c901a0ef451765195bb68abcf4ef14d68fdbd48a013ce",
+  "meltpool.2.typedSha256": "26029c899c993de0fb9127cc67e96e85c60b6cb0394ce7322e72c557722afd33",
+  "meltpool.2.canonicalSha256": "49bc02782cd5f60048e598e221e5e47ee305aa480bde4626c69ce9a1faa81d18",
+  "meltpool.2.geometry_um": "59962489ab31b5916eb9539df83e3886c170e98c6520f4d763414e7f2fa4d3cf",
+  "meltpool.2.peakTemperature_C": "84720552300613c9d8f5604fa96a880f23a459bf302679f753c5dae1a45dba37",
   "thermalSolver.THERMOPHYSICAL_DB": "cb66808200e16f120b8da692a885cb18a061f9c92354057c7237ad7e6fbb340c",
   "thermalSolver.THERMOPHYSICAL_DB.in625.latent_heat_fusion_J_kg": "0af842ac641617fbd4054d29e6f5459eda14ee6e8573c0798f547945146feb85",
   "thermalSolver.classify_enthalpy_regime": "cd5ef3c4b600fdcde92381596c489baff6cf68eecc1463c3d30e08ac70287298"
  },
  "rawValues": {
   "meltpool.0.geometry_um": [
-   144.3,
-   101.9,
+   144.7,
+   104.2,
    755.3,
-   32.5
+   33.2
   ],
-  "meltpool.0.peakTemperature_C": 2500.2,
+  "meltpool.0.peakTemperature_C": 8731.5,
   "meltpool.1.geometry_um": [
-   126.7,
+   126.5,
    124.5,
    641.9,
-   68.3
+   67.9
   ],
-  "meltpool.1.peakTemperature_C": 28776.6,
+  "meltpool.1.peakTemperature_C": 31514.7,
   "meltpool.2.geometry_um": [
-   168.9,
+   169.0,
    251.6,
    681.8,
-   169.5
+   168.6
   ],
-  "meltpool.2.peakTemperature_C": 19247.4,
+  "meltpool.2.peakTemperature_C": 25360.9,
   "thermalSolver.THERMOPHYSICAL_DB.in625.latent_heat_fusion_J_kg": 290000.0,
   "thermalSolver.classify_enthalpy_regime": [
    "Conduction Mode (Stable)",

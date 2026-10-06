@@ -4,9 +4,9 @@
  "group": "G9",
  "description": "Material snapshots, four-alloy tables, IN625 and SS304, typed and key-ordered",
  "slow": false,
- "recordedImplementationHash": "11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359",
+ "recordedImplementationHash": "e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "783c655bfb4fb9781c9e4e8a81a660d43a70fa7d",
+ "recordedGitHead": "a4ef4c2a6b6876fc365538ef5a923c15a2f4e2b2",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -193,7 +193,7 @@
   "fam.SLICER_NAME": "804a1ea7493a044ba3e686ea2e578247fe22e26d27ecdfb6ebc84d542ebed5dc",
   "fam.ALLOY_MATERIALS": "fa86180b7c693f0ebfbe3395f95b2230e5f3ba2eec6262376fb7dd365f56470c",
   "fam.LITERATURE_PV_WINDOWS": "9d59d2b348dc549a9fddcd332c7cb0508d883dfaef78285d28f4c397692215ca",
-  "fam.LITERATURE_MELT_POOL_CASES": "89549fe2e7fa91a559fc73c6404b99b9508b13ee598a85c75e4ec6a6c06ef41b",
+  "fam.LITERATURE_MELT_POOL_CASES": "f48462690b9073f249a0b15441ea401cae883747a0e5ab24683218af9ac4a5f0",
   "fam.FOUR_ALLOY_U95_BUDGET": "d7f665219771bd6b6e252a9ec91714fa055c4932d7824fd82973fb21fd943de6",
   "fam.four_alloy_thermophysical_db": "55e67ec17ee9c6d0e5c1a5470ba28cdbffde01e56ffa2756f97786ee9f869241",
   "fam.four_alloy_thermophysical_db.json": "1d4f36bd8a7404751514dd10b73a5a17de1e1657c3b5c4beaf334e549c97fe43",
@@ -2979,12 +2979,13 @@
     "publishedRegime": "Transition",
     "source": "Rosenthal 3D moving source high-speed asymptotic (PROOF 003)",
     "doi": "10.1063/1.1712881",
+    "widthDepthBasis": "analytical-asymptotic-not-measured",
     "check": "wd"
    },
    {
     "id": "ss316l-king-window",
     "alloy_id": "ss316l",
-    "label": "316L King-style P-v window",
+    "label": "316L typical LPBF track (typical values, not published)",
     "laserPower_W": 200,
     "scanSpeed_mm_s": 800,
     "beamDiameter_um": 70,
@@ -2994,14 +2995,15 @@
     "publishedWidth_um": 140.0,
     "publishedDepth_um": 70.0,
     "publishedRegime": "Transition",
-    "source": "King et al., J. Mater. Process. Technol. (2014) \u2014 normalized-enthalpy map",
-    "doi": "10.1016/j.jmatprotec.2014.04.021",
+    "source": "Typical 316L single-track W/D (not a published measurement; not from King et al. 2014, which measured 316L at other parameters); regime class per the King et al. 2014 normalized-enthalpy threshold",
+    "doi": "10.1016/j.jmatprotec.2014.06.005",
+    "widthDepthBasis": "typical-not-published",
     "check": "wd"
    },
    {
     "id": "in718-eos-like",
     "alloy_id": "in718",
-    "label": "IN718 typical LPBF track",
+    "label": "IN718 typical LPBF track (typical values, not published)",
     "laserPower_W": 285,
     "scanSpeed_mm_s": 960,
     "beamDiameter_um": 80,
@@ -3011,8 +3013,9 @@
     "publishedWidth_um": 160.0,
     "publishedDepth_um": 90.0,
     "publishedRegime": "Keyhole",
-    "source": "Typical IN718 single-track window near King \u0394H/hs \u2248 30 onset",
-    "doi": "10.1016/j.jmatprotec.2014.04.021",
+    "source": "Typical IN718 single-track W/D near the King \u0394H/hs \u2248 30 onset (not a published measurement; King et al. 2014 did not study IN718 and is cited only for the regime threshold)",
+    "doi": "10.1016/j.jmatprotec.2014.06.005",
+    "widthDepthBasis": "typical-not-published",
     "check": "wd"
    },
    {
@@ -3030,6 +3033,7 @@
     "publishedRegime": "Conduction",
     "source": "Read et al., Mater. Des. (2015) process window \u2014 class only (no published W/D)",
     "doi": "10.1016/j.matdes.2014.09.044",
+    "widthDepthBasis": null,
     "check": "class"
    }
   ],
