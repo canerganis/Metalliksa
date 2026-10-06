@@ -141,7 +141,7 @@ export const AirgapBanner: React.FC = () => {
               Air-gap mode (AIRGAPPED=1)
             </span>
             <span className="text-[10px] font-mono text-amber-200/90">
-              Cloud AI / external DFT / pricing APIs disabled · local LPBF open
+              Cloud AI / pricing APIs disabled · local LPBF open
             </span>
             <button
               type="button"

@@ -236,6 +236,7 @@ export function ICMEMultiScalePipelineStudio() {
             <p className="text-xs md:text-sm text-slate-400 max-w-3xl">
               Closed-form chain on tabulated constants (no DFT, CALPHAD or FEA is run): <span className="text-sky-300 font-medium">Elastic constants table (Cᵢⱼ)</span> → <span className="text-indigo-300 font-medium">Solute strengthening table</span> → <span className="text-emerald-300 font-medium">LSW/Orowan Microstructure</span> → <span className="text-amber-300 font-medium">Schematic σ-ε Curve</span> → <span className="text-rose-300 font-medium">Yield-only Component Check</span>.
             </p>
+            <p data-testid="icme-not-statement" className="text-[11px] text-amber-300/90 max-w-3xl">Not a calibrated strength prediction: tabulated constants are not matched to your alloy, and no atomistic, CALPHAD or finite-element step is run.</p>
             <p role="note" className="text-[11px] text-amber-300/90 max-w-3xl">
               <span className="font-semibold">Model status: {pipelineResult?.modelStatus ?? "illustrative"}.</span>{" "}
               {pipelineResult?.modelStatusNote ?? "Illustrative closed-form estimate on tabulated constants; not calibrated or validated. Ultimate tensile strength and fracture toughness are unavailable."}

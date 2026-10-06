@@ -26,7 +26,7 @@ export function EvidenceWorkspace({ mode }: { mode: 'experimental' | 'traceabili
         engineering: { job: engineering.job ?? null, submittedInput: engineering.submittedInput ?? null,
           scope: 'Job results describe submitted inputs. Compare these with the active specimen before reuse. No experimental validation is implied.' },
         buildScreening: { alignedWithCurrentInputs: build.lastKey === peekLpbfBuildJobKey(), job: build.job,
-          scope: 'Analytical screening; verdict is from the Python build-job solver.' },
+          scope: 'Analytical screening; the verdict is a screening indication (not validated against build outcomes) from the Python build-job solver.' },
         missingEvidence: ['Independent experimental validation and applicable acceptance criteria must be reviewed.', 'Source classifications and findings are user-reviewed records, not externally certified data.', 'Full worker case artifacts and uploaded meshes are stored separately and are not embedded in this JSON.'],
       };
       const url = URL.createObjectURL(new Blob([JSON.stringify(packageData, null, 2)], { type: 'application/json' }));

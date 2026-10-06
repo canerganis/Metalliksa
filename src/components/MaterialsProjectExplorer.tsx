@@ -116,6 +116,7 @@ export function MaterialsProjectExplorer({ onSelectToCrystal }: MaterialsProject
           <Table2 className="w-6 h-6" />
         </div>
         <div>
+          <p data-testid="elastic-calculator-label" className="text-[10px] font-mono uppercase tracking-wide text-sky-300">Elastic-constants calculator (user-supplied constants)</p>
           <h2 className="text-lg font-extrabold text-white font-mono tracking-wide uppercase flex items-center gap-2">
             Continuum Elasticity Homogenization
             <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 text-[10px] border border-amber-500/20 font-normal">

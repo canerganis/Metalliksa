@@ -41,6 +41,7 @@ export const MurakamiFatigueLab: React.FC = () => {
         <div>
           <h2 className="text-lg font-bold text-white">Defect Fatigue & Crack Growth</h2>
           <p className="text-sm text-gray-400">Phase 13: Kitagawa-Takahashi Diagram, El-Haddad Short Cracks & Paris Law Life</p>
+          <p data-testid="murakami-not-statement" className="text-xs text-amber-300">Steel-derived formula; surface roughness and R-ratio not modelled.</p>
         </div>
         <button
           onClick={handleCompute}

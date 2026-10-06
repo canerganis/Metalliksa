@@ -25,7 +25,7 @@ const BANNED = [/ab-initio/i, /Authentic/, /DFT HPC/, /Python DFT/, /Python 6x6/
 test("Explorer starts with blank user inputs and identifies continuum elasticity, not DFT", () => {
   const raw = renderToStaticMarkup(<MaterialsProjectExplorer />);
   const markup = text(raw);
-  assert.ok(markup.includes("Elastic Constants"), "module label");
+  assert.ok(markup.includes("Elastic-constants calculator (user-supplied constants)"), "module label");
   assert.ok(markup.includes("Continuum Elasticity Homogenization"), "model label");
   assert.ok(markup.includes("Not a DFT Calculation"), "claim boundary");
   assert.ok(markup.includes("Calculate Elasticity"));

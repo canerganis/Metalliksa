@@ -44,7 +44,7 @@
     "workspace": "lpbf",
     "label": "Defect Fatigue & Crack Growth",
     "scope": "Research",
-    "description": "Murakami √area fatigue limit, Kitagawa–Takahashi / El-Haddad diagram and Paris-law crack growth from an entered defect size; screening estimates.",
+    "description": "Murakami √area fatigue limit, Kitagawa–Takahashi / El-Haddad diagram and Paris-law crack growth from an entered defect size; screening estimates from a steel-derived formula; surface roughness and R-ratio are not modelled.",
     "next": "adaptive-mitigation"
   },
   {
@@ -60,7 +60,7 @@
     "workspace": "lpbf",
     "label": "Keyhole Ray Tracing",
     "scope": "Research",
-    "description": "Seeded Monte Carlo ray optics in a prescribed Gaussian cavity (NVIDIA Warp; CPU by default, CUDA optional); empirical absorption, not a solved keyhole.",
+    "description": "Seeded Monte Carlo ray optics in a prescribed Gaussian cavity (NVIDIA Warp; CPU by default, CUDA optional); prescribed cavity, not a solved free surface; empirical absorption law is not calibrated.",
     "next": "lpbf-dataset-comparison"
   },
   {
@@ -98,9 +98,9 @@
   {
     "id": "ttt-cct-kinetics",
     "workspace": "materials",
-    "label": "Steel TTT / CCT (Illustrative)",
+    "label": "Steel-only TTT / CCT (not for LPBF alloys)",
     "scope": "Research",
-    "description": "Illustrative steel-only transformation kinetics (AISI 4140, 4340, D2); other alloy classes are unavailable.",
+    "description": "Illustrative steel heat-treatment kinetics (AISI 4140, 4340, D2); not applicable to LPBF cooling rates or the LPBF alloys; other alloy classes are unavailable.",
     "next": "micrograph"
   },
   {
@@ -132,13 +132,13 @@
     "workspace": "materials",
     "label": "Yield Strength Breakdown (Illustrative)",
     "scope": "Research",
-    "description": "Illustrative sum of friction, solid-solution, Hall–Petch, dislocation and precipitate terms on tabulated constants; no DFT, CALPHAD or FEA; UTS and K_Ic unavailable.",
+    "description": "Illustrative sum of friction, solid-solution, Hall–Petch, dislocation and precipitate terms on tabulated constants; no DFT, CALPHAD or FEA; UTS and K_Ic unavailable; not a calibrated strength prediction for any alloy.",
     "next": "materials-project"
   },
   {
     "id": "materials-project",
     "workspace": "materials",
-    "label": "Elastic Constants",
+    "label": "Elastic-constants calculator (user-supplied constants)",
     "scope": "Research",
     "description": "User-supplied elastic constants or isotropic moduli; continuum calculations via Python.",
     "next": "calculators"
@@ -180,7 +180,7 @@
     "workspace": "evidence",
     "label": "Coupon Statistics & UQ Sampling",
     "scope": "Research",
-    "description": "Coupon summary statistics and one-sided tolerance bounds, plus illustrative solver sampling and sensitivity analysis; simulated scatter is not test evidence.",
+    "description": "Coupon summary statistics and one-sided tolerance bounds, plus illustrative solver sampling and sensitivity analysis; simulated scatter is not test evidence; solver tolerance output is an illustrative tolerance estimate (uncalibrated response law), not an MMPDS allowable.",
     "next": "traceability"
   },
   {

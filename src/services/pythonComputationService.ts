@@ -1120,7 +1120,7 @@ class PythonComputationService {
   }
 
   /**
-   * Dispatch Stochastic Uncertainty Quantification (UQ) & Aerospace MMPDS Allowables Solver to Python
+   * Dispatch Stochastic Uncertainty Quantification (UQ) solver to Python: illustrative tolerance estimate (uncalibrated response law), not an MMPDS allowable
    */
   async calculateStochasticUQMMPDS(payload: {
     alloyName?: string;

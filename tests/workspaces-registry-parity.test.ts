@@ -26,7 +26,7 @@ test('approved functional names retain module identities and conservative condit
     'digital-twin': 'Specimen Records',
     'eds-lab': 'EDS Spectrum Viewer',
     'uq-lab': 'Coupon Statistics & UQ Sampling',
-    'materials-project': 'Elastic Constants',
+    'materials-project': 'Elastic-constants calculator (user-supplied constants)',
   } as const;
   for (const [id, label] of Object.entries(expected)) {
     assert.equal(labels.get(id as typeof MODULES[number]['id']), label, id);
