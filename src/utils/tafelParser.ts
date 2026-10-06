@@ -377,6 +377,14 @@ export function linearRegression(xArr: number[], yArr: number[]): { m: number; b
 /** Fewest data points a Tafel branch window must hold for a fit (same rule as python/tafel_corrosion_rate_solver.py). */
 export const MIN_TAFEL_BRANCH_POINTS = 3;
 
+/**
+ * Largest accepted distance (V) between the Evans intersection and the measured current valley; farther away the
+ * valley is used as E_corr (reported). Must equal INTERSECTION_MAX_OFFSET_V in python/tafel_corrosion_rate_solver.py
+ * (EUQ-13: Python used 0.25 V, so the two engines disagreed for intersections 0.15-0.25 V from the valley).
+ * A heuristic, not an ASTM G102/G59 value.
+ */
+export const TAFEL_INTERSECTION_MAX_OFFSET_V = 0.15;
+
 /** Why a Tafel branch cannot be fitted, or null when it can. Mirrors the Python engine's reasons. */
 export function tafelBranchUnavailableReason(
   branch: "Anodic" | "Cathodic",
@@ -538,7 +546,7 @@ export function tryAutoFitTafel(
   // m_c * E + b_c = m_a * E + b_a => E_intersect = (b_c - b_a) / (m_a - m_c)
   let extrapolatedEcorr: number | null = null;
   let extrapolatedLogIcorr: number | null = null;
-  // An unusable intersection (parallel branches, or more than 0.15 V from the measured valley) falls back to the
+  // An unusable intersection (parallel branches, or more than TAFEL_INTERSECTION_MAX_OFFSET_V from the measured valley) falls back to the
   // measured valley as E_corr; that substitution is reported (intersectionStatus / intersectionNote), never silent.
   let intersectionNote: string | null = null;
 
@@ -548,12 +556,12 @@ export function tryAutoFitTafel(
     if (Math.abs(denom) > 1e-6) {
       const eInter = (cathFit.b - anodFit.b) / denom;
       // Keep within reasonable range of the raw minimum
-      if (Math.abs(eInter - rawEcorr) <= 0.15) {
+      if (Math.abs(eInter - rawEcorr) <= TAFEL_INTERSECTION_MAX_OFFSET_V) {
         extrapolatedEcorr = eInter;
       } else {
         intersectionNote =
           `the Evans intersection of the fitted branches is at ${eInter.toFixed(3)} V, ` +
-          `${Math.abs(eInter - rawEcorr).toFixed(3)} V from the measured current valley (limit 0.15 V); the measured ` +
+          `${Math.abs(eInter - rawEcorr).toFixed(3)} V from the measured current valley (limit ${TAFEL_INTERSECTION_MAX_OFFSET_V.toFixed(2)} V); the measured ` +
           `valley ${rawEcorr.toFixed(4)} V is used as E_corr and i_corr is read from the anodic line there`;
       }
     } else {

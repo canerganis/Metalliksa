@@ -86,6 +86,30 @@
    "rel": 0.034646083676870346
   },
   {
+   "key": "severity.scaleSource",
+   "kind": "added",
+   "new": "Fontana, Corrosion Engineering, 3rd ed., relative corrosion resistance scale (mm/y equivalents): Outstanding < 0.02, Excellent 0.02-0.1, Good 0.1-0.5, Fair 0.5-1, Poor 1-5, Unacceptable > 5 mm/y",
+   "old": null
+  },
+  {
+   "key": "severity.textBasis",
+   "kind": "added",
+   "new": "In-house engineering guidance: the description and recommendation texts are not taken from Fontana or from any standard",
+   "old": null
+  },
+  {
+   "key": "standards[2]",
+   "kind": "removed",
+   "new": null,
+   "old": "NACE SP0169"
+  },
+  {
+   "key": "standards[3]",
+   "kind": "removed",
+   "new": null,
+   "old": "ISO 8044"
+  },
+  {
    "abs": -0.00019999999999999966,
    "key": "temperatureSensitivity[0].corrosionRateMmYr",
    "kind": "numeric",
@@ -539,7 +563,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "67c8afbd7f6e5f3050c3e6fd73423010bb3c686d",
+ "gitHead": "b0d77480750d9f68679f343d3c6a54d0a500db8c",
  "input": {
   "allowableLossMm": 1.5,
   "alloyId": "steel-316l",
@@ -566,7 +590,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "tafel_corrosion_rate_solver",
  "solverFile": "python/tafel_corrosion_rate_solver.py",
- "solverSha256": "0e89a02445cac643aae3ef865787e6cb0c7c281d2fa6439d94c1b7c974a1546c",
+ "solverSha256": "192906263eb9c45044d62c1df2ad1a789fab0f18b056bbdb94ddec20f25f2b15",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {
@@ -596,14 +620,14 @@
    "color": "emerald",
    "description": "Negligible corrosion degradation. Suitable for long-life aerospace, biomedical, and precision critical parts without corrosion allowance.",
    "level": "Outstanding",
-   "recommendation": "Standard surface passivating inspection; corrosion allowance can be 0.00 mm."
+   "recommendation": "Standard surface passivating inspection; corrosion allowance can be 0.00 mm.",
+   "scaleSource": "Fontana, Corrosion Engineering, 3rd ed., relative corrosion resistance scale (mm/y equivalents): Outstanding < 0.02, Excellent 0.02-0.1, Good 0.1-0.5, Fair 0.5-1, Poor 1-5, Unacceptable > 5 mm/y",
+   "textBasis": "In-house engineering guidance: the description and recommendation texts are not taken from Fontana or from any standard"
   },
   "specimenAreaCm2": 1.0,
   "standards": [
    "ASTM G102-89(2015)",
-   "ASTM G59-97(2020)",
-   "NACE SP0169",
-   "ISO 8044"
+   "ASTM G59-97(2020)"
   ],
   "sternGearyB_V": 0.02369,
   "success": true,

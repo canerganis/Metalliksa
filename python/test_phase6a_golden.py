@@ -943,9 +943,12 @@ class StepBGoldenTest(unittest.TestCase):
         # derived from the real d33b6f5 golden vs a fresh run, then mutated one at a time.
         solver, case = "icme_multiscale_pipeline_solver", "default_payload_in718"
         base = golden.load_golden(solver, case)["stdout"]
-        fresh = golden.run_solver(solver, golden.CASES[solver][case])["stdout"]
+        payload = golden.CASES[solver][case]
+        fresh = golden.run_solver(solver, payload)["stdout"]
         rows = drift_report.diff(base, fresh)
-        self.assertEqual(golden.step_b_violations(solver, rows, fresh), [])
+        # physics audit EUQ-9/EUQ-10: the rows the documented ICME patch changes need the payload (oracle run)
+        self.assertEqual(golden.step_b_violations(solver, rows, fresh, payload), [])
+        self.assertTrue(golden.step_b_violations(solver, rows, fresh))  # no payload: the audit rows are not verifiable
         self.assertTrue(golden.step_b_violations(solver, rows))  # no re-blessed document: not verifiable
 
         def mutated(key, **changes):
@@ -984,7 +987,7 @@ class StepBGoldenTest(unittest.TestCase):
         ]
         for i, variant in enumerate(bad):
             with self.subTest(mutation=i):
-                self.assertTrue(golden.step_b_violations(solver, variant, fresh))
+                self.assertTrue(golden.step_b_violations(solver, variant, fresh, payload))
         # review S1: every documented rule must occur and the unavailable values must be null.
         # Mutant: UTS and K_Ic put back to the old value (== yield) -> no UTS/K_Ic drift rows.
         import copy
@@ -995,22 +998,22 @@ class StepBGoldenTest(unittest.TestCase):
         mech.pop("ultimateTensileStrength_UTS_status")
         rows_reverted = drift_report.diff(base, reverted)
         self.assertNotIn(uts, [r["key"] for r in rows_reverted])
-        self.assertTrue(golden.step_b_violations(solver, rows_reverted, reverted))
+        self.assertTrue(golden.step_b_violations(solver, rows_reverted, reverted, payload))
         # a documented row dropped from an otherwise valid table, with the value still null in the document
         for dropped in (uts, verdict, "modelStatus", "caeExportCards.lsDyna", "modelParts[2]"):
             with self.subTest(dropped=dropped):
                 partial = [r for r in rows if r["key"] != dropped]
-                self.assertTrue(golden.step_b_violations(solver, partial, fresh))
+                self.assertTrue(golden.step_b_violations(solver, partial, fresh, payload))
         # a unavailable value that is not null in the re-blessed document
         not_null = copy.deepcopy(fresh)
         not_null["scale3_continuumPlasticity"]["mechanicalProperties"]["fractureToughness_K1c_MPa_sqrt_m"] = 100.0
-        self.assertTrue(golden.step_b_violations(solver, rows, not_null))
+        self.assertTrue(golden.step_b_violations(solver, rows, not_null, payload))
         # the exception is per solver: the same row under another solver is structural
         self.assertTrue(golden.step_b_violations("tafel_corrosion_rate_solver", [rows[0]], fresh))
         # an undocumented non-numeric row of the same solver still fails
         extra = {"key": "scale3_continuumPlasticity.mechanicalProperties.hollomon_n", "kind": "changed",
                  "old": "a", "new": "b"}
-        self.assertTrue(golden.step_b_violations(solver, rows + [extra], fresh))
+        self.assertTrue(golden.step_b_violations(solver, rows + [extra], fresh, payload))
 
     def test_recorded_solver_sha256_is_the_current_solver(self):
         # A solver edit after a re-bless must come with a new re-bless (and drift table).

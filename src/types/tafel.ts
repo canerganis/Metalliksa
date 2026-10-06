@@ -219,9 +219,13 @@ export interface TafelPythonCorrosionRateResult {
   severity: {
     level: string;
     code: string;
-    color: "emerald" | "sky" | "amber" | "orange" | "rose";
+    color: "emerald" | "sky" | "amber" | "orange" | "red" | "rose";
     description: string;
     recommendation: string;
+    /** Source of the bands (Fontana's relative corrosion resistance scale). */
+    scaleSource?: string;
+    /** The description / recommendation texts are in-house guidance. */
+    textBasis?: string;
   } | null;
 
   // Timeline Projections & Temperature Variations

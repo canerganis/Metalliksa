@@ -182,45 +182,90 @@ def compute_mmpds_k_factors(n: int):
 
     return round(k_a, 3), round(k_b, 3)
 
+# Limit state of the reliability block: g = Rp0.2 - YIELD_DESIGN_FACTOR * max(50 MPa, service stress).
+# Pf = P(g < 0) is therefore the probability that the model yield strength falls below 1.5x the service
+# stress (an exceedance probability at a design factor), not the probability of yielding at the service stress.
+YIELD_DESIGN_FACTOR = 1.5
+# Generalized reliability index (Ditlevsen 1979): beta_G = Phi^-1(1 - Pf), from the sampled failure count.
+# It is NOT the Hasofer-Lind index (Hasofer & Lind 1974: minimum distance from the origin to the limit-state
+# surface in standard-normal space, a FORM design-point search), which this solver does not compute; the two
+# agree only for a limit state linear in standard-normal variables, and this one is not (EUQ-11).
+RELIABILITY_INDEX_METHOD = (
+    "Generalized reliability index beta_G = Phi^-1(1 - Pf) (Ditlevsen 1979) from the sampled failure count; "
+    "not the Hasofer-Lind / FORM index (no design-point search is run)"
+)
+LIMIT_STATE_TEXT = "g = Rp0.2 - 1.5 * max(50 MPa, service stress); Pf = P(g < 0) at design factor 1.5"
+CENSORED_BOUND_METHOD = (
+    "No sampled point (or every point) failed, so Pf and beta_G are censored: the bound uses the rule of three "
+    "(95 %, Pf < 3/N or Pf > 1 - 3/N), which assumes independent samples; the QMC points are not independent, so "
+    "the bound is approximate"
+)
+
+
+def generalized_reliability_index(failures: int, n: int) -> dict:
+    """beta_G and Pf from ``failures`` of ``n`` samples; censored (null + one-sided bound) at 0 or n failures.
+
+    The former output clamped Pf to [1e-6, 1 - 1e-6] and reported +/-4.75 as if it were an estimate.
+    """
+    pf = failures / n
+    if 0 < failures < n:
+        return {"pf": pf, "beta": norm_ppf(1.0 - pf), "status": "estimated", "bound": None}
+    p3 = min(1.0, 3.0 / n)
+    if failures == 0:
+        bound = {"type": "lower", "beta": norm_ppf(1.0 - p3) if p3 < 1.0 else None, "pfUpper": p3}
+        return {"pf": 0.0, "beta": None, "status": "censored_no_failures", "bound": bound}
+    bound = {"type": "upper", "beta": norm_ppf(p3) if p3 < 1.0 else None, "pfLower": 1.0 - p3}
+    return {"pf": 1.0, "beta": None, "status": "censored_all_failures", "bound": bound}
+
+
 class SobolSequenceGenerator:
     """
     Antonov-Saleev Gray code Quasi-Monte Carlo Sobol Sequence Generator (up to 32 dimensions).
-    Uses a local direction-number table and optional random digital shift.
-    This implementation skips the origin; balanced-net guarantees are not claimed.
+    Direction numbers: Joe & Kuo, SIAM J. Sci. Comput. 30 (2008) 2635, file new-joe-kuo-6.21201
+    (dimension 1 is the van der Corput sequence, dimensions 2-32 are its rows d = 2..32), with an
+    optional random digital shift. This implementation skips the origin; balanced-net guarantees are
+    not claimed for arbitrary sample counts.
+
+    EUQ-4: the former local table was not a Joe-Kuo set: its dimension 20 used (s=6, a=28),
+    x^6+x^5+x^4+x^3+1, which is not primitive over GF(2) (the order of x is 15, not 63), dimensions
+    21-32 were shifted one row, and the initial m values from dimension 13 on were not Joe-Kuo's.
+    That gave degenerate 2-D projections (1024 unscrambled points of dimensions 22/28 covered 65 of
+    1024 grid cells, corr(dim 21, dim 23) = 0.75) and correlated Saltelli A/B columns.
+    Rows are (s, a, [m_1..m_s]); bit k of a (from the top, k = 1..s-1) is the polynomial coefficient a_k.
     """
     POLY = [
-        (1, 0, [1]),                       # dim 1
-        (1, 0, [1]),                       # dim 2
-        (2, 1, [1, 3]),                    # dim 3
-        (3, 1, [1, 3, 1]),                 # dim 4
-        (3, 2, [1, 1, 1]),                 # dim 5
-        (4, 1, [1, 1, 3, 3]),              # dim 6
-        (4, 4, [1, 3, 5, 13]),             # dim 7
-        (5, 2, [1, 1, 5, 5, 17]),          # dim 8
-        (5, 4, [1, 1, 5, 5, 5]),           # dim 9
-        (5, 7, [1, 1, 7, 11, 19]),         # dim 10
-        (5, 11, [1, 1, 5, 1, 1]),          # dim 11
-        (5, 13, [1, 1, 1, 3, 11]),         # dim 12
-        (5, 14, [1, 3, 5, 5, 9]),          # dim 13
-        (6, 1, [1, 1, 1, 1, 1, 1]),        # dim 14
-        (6, 13, [1, 1, 3, 3, 5, 5]),       # dim 15
-        (6, 16, [1, 3, 1, 5, 1, 3]),       # dim 16
-        (6, 19, [1, 1, 5, 3, 7, 11]),      # dim 17
-        (6, 22, [1, 1, 3, 1, 3, 7]),       # dim 18
-        (6, 25, [1, 3, 3, 9, 7, 3]),       # dim 19
-        (6, 28, [1, 1, 7, 3, 9, 13]),      # dim 20
-        (7, 1, [1, 1, 1, 1, 1, 1, 1]),     # dim 21
-        (7, 4, [1, 3, 5, 11, 7, 13, 29]),  # dim 22
-        (7, 7, [1, 1, 3, 7, 15, 31, 63]),  # dim 23
-        (7, 8, [1, 3, 1, 7, 5, 13, 27]),   # dim 24
-        (7, 14, [1, 1, 5, 11, 13, 17, 33]),# dim 25
-        (7, 19, [1, 3, 3, 9, 11, 23, 47]), # dim 26
-        (7, 21, [1, 1, 7, 5, 15, 29, 59]), # dim 27
-        (7, 28, [1, 3, 5, 1, 7, 15, 31]),  # dim 28
-        (7, 31, [1, 1, 1, 3, 9, 27, 53]),  # dim 29
-        (7, 32, [1, 3, 7, 15, 31, 63, 127]),# dim 30
-        (7, 37, [1, 1, 5, 3, 11, 25, 49]), # dim 31
-        (7, 41, [1, 3, 3, 7, 13, 21, 43])  # dim 32
+        (1, 0, [1]),                            # dim 1 (van der Corput; m_i = 1 for all i)
+        (1, 0, [1]),                            # dim 2
+        (2, 1, [1, 3]),                         # dim 3
+        (3, 1, [1, 3, 1]),                      # dim 4
+        (3, 2, [1, 1, 1]),                      # dim 5
+        (4, 1, [1, 1, 3, 3]),                   # dim 6
+        (4, 4, [1, 3, 5, 13]),                  # dim 7
+        (5, 2, [1, 1, 5, 5, 17]),               # dim 8
+        (5, 4, [1, 1, 5, 5, 5]),                # dim 9
+        (5, 7, [1, 1, 7, 11, 19]),              # dim 10
+        (5, 11, [1, 1, 5, 1, 1]),               # dim 11
+        (5, 13, [1, 1, 1, 3, 11]),              # dim 12
+        (5, 14, [1, 3, 5, 5, 31]),              # dim 13
+        (6, 1, [1, 3, 3, 9, 7, 49]),            # dim 14
+        (6, 13, [1, 1, 1, 15, 21, 21]),         # dim 15
+        (6, 16, [1, 3, 1, 13, 27, 49]),         # dim 16
+        (6, 19, [1, 1, 1, 15, 7, 5]),           # dim 17
+        (6, 22, [1, 3, 1, 15, 13, 25]),         # dim 18
+        (6, 25, [1, 1, 5, 5, 19, 61]),          # dim 19
+        (7, 1, [1, 3, 7, 11, 23, 15, 103]),     # dim 20
+        (7, 4, [1, 3, 7, 13, 13, 15, 69]),      # dim 21
+        (7, 7, [1, 1, 3, 13, 7, 35, 63]),       # dim 22
+        (7, 8, [1, 3, 5, 9, 1, 25, 53]),        # dim 23
+        (7, 14, [1, 3, 1, 13, 9, 35, 107]),     # dim 24
+        (7, 19, [1, 3, 1, 5, 27, 61, 31]),      # dim 25
+        (7, 21, [1, 1, 5, 11, 19, 41, 61]),     # dim 26
+        (7, 28, [1, 3, 5, 3, 3, 13, 69]),       # dim 27
+        (7, 31, [1, 1, 7, 13, 1, 19, 1]),       # dim 28
+        (7, 32, [1, 3, 7, 5, 13, 19, 59]),      # dim 29
+        (7, 37, [1, 1, 3, 9, 25, 29, 41]),      # dim 30
+        (7, 41, [1, 3, 5, 13, 23, 1, 55]),      # dim 31
+        (7, 42, [1, 3, 7, 3, 13, 59, 17]),      # dim 32
     ]
 
     def __init__(self, dimension: int, scramble: bool = True, seed: int = 42):
@@ -405,7 +450,7 @@ def solve_single_realization(
 
     # Limit state margin (yield only)
     applied_stress = max(50.0, service_stress_MPa)
-    margin_yield_MPa = sigma_yield_MPa - applied_stress * 1.5
+    margin_yield_MPa = sigma_yield_MPa - applied_stress * YIELD_DESIGN_FACTOR
 
     return {
         "yield_MPa": sigma_yield_MPa,
@@ -488,7 +533,7 @@ def solve_realizations_vec(
     elongation_pct = _pmax(3.0, _pmin(50.0, 3200.0 / (sigma_yield_MPa ** 0.82) * (1.0 + 1.5 * n_work_hardening)))
 
     applied_stress = _pmax(50.0, service_stress_MPa)
-    margin_yield_MPa = sigma_yield_MPa - applied_stress * 1.5
+    margin_yield_MPa = sigma_yield_MPa - applied_stress * YIELD_DESIGN_FACTOR
 
     _require_finite(sigma_yield_MPa, elongation_pct, margin_yield_MPa, delta_sigma_ss, delta_sigma_hp,
                     delta_sigma_ppt, d_grain_um, applied_stress)
@@ -722,8 +767,8 @@ def solve_stochastic_uq(params: dict) -> dict:
 
     # 4. Reliability & Failure Probability
     failures_yield = int(np.count_nonzero(margin_yield_list < 0))
-    pf_yield = failures_yield / N_samples
-    beta_reliability_yield = norm_ppf(1.0 - max(1e-6, min(1.0 - 1e-6, pf_yield)))
+    reliability = generalized_reliability_index(failures_yield, N_samples)
+    pf_yield = reliability["pf"]
 
     # Sensitivity uses the same supplied chemistry and process distributions.
     # Service stress and flaw size do not enter the model yield-strength output.
@@ -803,7 +848,7 @@ def solve_stochastic_uq(params: dict) -> dict:
             "discrepancyReductionPct": discrepancy_reduction_pct,
             "varianceReductionRatio": None,
             "theoreticalConvergenceRate": "Not estimated for this run",
-            "samplingDescription": "Local Sobol sequence with optional random digital shift." if sampling_method == "sobol_qmc" else "Seeded pseudo-random Monte Carlo sampling.",
+            "samplingDescription": "Local Sobol sequence (Joe & Kuo 2008 new-joe-kuo-6.21201 direction numbers) with optional random digital shift." if sampling_method == "sobol_qmc" else "Seeded pseudo-random Monte Carlo sampling.",
             "discrepancySampleSize": min(150, N_samples),
             "diagnosticsLimitations": "Centered L2 discrepancy compares the first 150 points with one seeded pseudo-random set; it is not an estimator error, variance reduction, effective sample size or measured speedup. The local Sobol implementation skips the origin and allows arbitrary sample counts; balanced-net guarantees are not claimed."
 
@@ -839,7 +884,8 @@ def solve_stochastic_uq(params: dict) -> dict:
         },
         "sobolSensitivityAnalysis": sensitivity_indices,
         "sensitivityMetadata": {
-            "method": "Centered Saltelli first-order / Jansen total-order; seeded pseudo-MC pick-freeze",
+            "method": "Centered Saltelli first-order / Jansen total-order pick-freeze on a digitally shifted "
+                      "Joe-Kuo Sobol design (A and B from one 2k-dimensional sequence)",
             "output": "yieldStrength_Rp02",
             "baseSampleSize": M_saltelli,
             "evaluationCount": M_saltelli * (k_factors + 2),
@@ -850,8 +896,16 @@ def solve_stochastic_uq(params: dict) -> dict:
         },
         "aerospaceReliability": {
             "qualificationStatus": qualification_status,
-            "yieldFailureProbability_Pf": pf_yield,
-            "hasoferLindBetaIndex": round(beta_reliability_yield, 2),
+            "limitState": LIMIT_STATE_TEXT,
+            "designFactor": YIELD_DESIGN_FACTOR,
+            "failureCount": failures_yield,
+            "probabilityYieldBelowDesignStress_Pf": pf_yield,
+            "generalizedReliabilityIndex": None if reliability["beta"] is None else round(reliability["beta"], 2),
+            "generalizedReliabilityIndexStatus": reliability["status"],
+            "generalizedReliabilityIndexBound": None if reliability["bound"] is None else {
+                k: (round(v, 2) if k == "beta" and v is not None else v) for k, v in reliability["bound"].items()},
+            "generalizedReliabilityIndexBoundMethod": None if reliability["bound"] is None else CENSORED_BOUND_METHOD,
+            "reliabilityIndexMethod": RELIABILITY_INDEX_METHOD,
             "aBasisConforming": a_basis_pass,
             "bBasisConforming": b_basis_pass,
             "cpkConforming": cpk_pass,

@@ -358,6 +358,12 @@ def _load_documented_value_changes() -> None:
         {k: dict(v) for k, v in getattr(cases, "EXPECTED_DOCUMENTED_VALUE_CHANGES", {}).items()})
     import pourbaix_golden_check  # noqa: E402 (python/tools module)
     EXPECTED_DOCUMENTED_VALUE_CHANGES["pourbaix_solver"] = dict(pourbaix_golden_check.DOCUMENTED_VALUE_CHANGES)
+    # Physics audit lane tafel-uq-icme (tools/physics_audit_changes.py): EUQ-4 Joe-Kuo Sobol table and EUQ-11
+    # generalized reliability index; verified by the same whole-document oracle as the norm_ppf fix.
+    import physics_audit_changes as audit  # noqa: E402 (python/tools module)
+    uq = EXPECTED_DOCUMENTED_VALUE_CHANGES.setdefault("stochastic_uq_mmpds_solver", {})
+    for pattern in audit.UQ_AUDIT_ROW_PATTERNS:
+        uq[pattern] = "EUQ-4 Joe-Kuo direction numbers / EUQ-11 generalized reliability index (physics audit)"
 
 
 def _documented_change_patterns(solver: str) -> Dict[str, str]:
@@ -367,6 +373,9 @@ def _documented_change_patterns(solver: str) -> Dict[str, str]:
 
 
 def _is_documented_change_row(solver: str, key: str, kind: Optional[str] = None) -> bool:
+    if solver == "tafel_corrosion_rate_solver":
+        import physics_audit_changes as audit  # noqa: E402 (python/tools module)
+        return audit.is_tafel_audit_row(key)
     if not any(re.fullmatch(p, key) for p in _documented_change_patterns(solver)):
         return False
     if solver == "kinetics_ttt_cct_solver" and not _KINETICS_HV_ROW.fullmatch(key):
@@ -452,12 +461,17 @@ def _uq_scipy_oracle_stdout(payload: Dict[str, Any]) -> Dict[str, Any]:
                 return 8.0
             return float(ndtri(p))
 
+        import physics_audit_changes as audit  # noqa: E402 (python/tools module)
         original = module.norm_ppf
+        original_poly = module.SobolSequenceGenerator.POLY
         module.norm_ppf = oracle
+        # EUQ-4: Joe & Kuo new-joe-kuo-6.21201 direction numbers from scipy's copy of the table.
+        module.SobolSequenceGenerator.POLY = audit.joe_kuo_poly()
         try:
             result = module.solve_stochastic_uq(copy.deepcopy(payload))
         finally:
             module.norm_ppf = original
+            module.SobolSequenceGenerator.POLY = original_poly
         _UQ_ORACLE_CACHE[cache_key] = strip_volatile(json.loads(json.dumps(result)))
     return _UQ_ORACLE_CACHE[cache_key]
 
@@ -478,9 +492,11 @@ _UQ_REMOVED_ROW = re.compile(r"stochasticProperties\.(ultimateTensileStrength_UT
 
 
 def _uq_without_unsupported_outputs(doc: Dict[str, Any]) -> Dict[str, Any]:
-    """The oracle document with the three invented-law outputs replaced by null + status."""
+    """The oracle document with the three invented-law outputs replaced by null + status, and the
+    physics-audit EUQ-11 reliability block / EUQ-4 description strings (tools/physics_audit_changes.py)."""
     import copy
-    out = copy.deepcopy(doc)
+    import physics_audit_changes as audit  # noqa: E402 (python/tools module)
+    out = audit.uq_reliability_and_text_changes(copy.deepcopy(doc))
     props = out["stochasticProperties"]
     props["ultimateTensileStrength_UTS"] = None
     props["ultimateTensileStrength_UTS_status"] = _UQ_UTS_STATUS
@@ -502,8 +518,11 @@ def _uq_sampler_violation(row: Dict[str, Any], new_stdout: Optional[Dict[str, An
     key = row["key"]
     if new_stdout is None or payload is None:
         return f"{key}: documented change needs the re-blessed document and the case payload to be verified"
+    import physics_audit_changes as audit  # noqa: E402 (python/tools module)
     removal_row = bool(_UQ_REMOVED_ROW.fullmatch(key))
-    if row["kind"] not in ("numeric", "changed") and not (removal_row and row["kind"] in ("added", "removed")):
+    audit_row = any(re.fullmatch(p, key) for p in audit.UQ_AUDIT_ROW_PATTERNS)
+    if row["kind"] not in ("numeric", "changed") and not ((removal_row or audit_row)
+                                                          and row["kind"] in ("added", "removed")):
         return f"{key}: {row['kind']} row is not a value change of the sampler fix"
     try:
         expected = _uq_without_unsupported_outputs(_uq_scipy_oracle_stdout(payload))
@@ -511,7 +530,17 @@ def _uq_sampler_violation(row: Dict[str, Any], new_stdout: Optional[Dict[str, An
         return f"{key}: UQ oracle unavailable ({exc})"
     if canonical(new_stdout) != canonical(expected):
         return (f"{key}: re-blessed document differs from the pinned {UQ_ORACLE_REVISION} solver run with "
-                "scipy.special.ndtri as inverse normal and the invented-law outputs replaced by null + status")
+                "scipy.special.ndtri as inverse normal, the Joe-Kuo direction numbers, the invented-law outputs "
+                "replaced by null + status and the EUQ-11 reliability block")
+    # The row itself must be the document's leaf (a forged row next to a valid document is refused).
+    try:
+        value = audit.leaf(new_stdout, key)
+    except KeyError:
+        return None if row["kind"] == "removed" else f"{key}: row is not in the re-blessed document"
+    if row["kind"] == "removed":
+        return f"{key}: removed row still present in the re-blessed document"
+    if value != row["new"] or type(value) is not type(row["new"]):
+        return f"{key}: row new value {row['new']!r} is not the document's {value!r}"
     return None
 
 
@@ -739,6 +768,9 @@ def documented_change_violation(solver: str, row: Dict[str, Any],
     key = row["key"]
     if solver == "pourbaix_solver":
         return pourbaix_documented_change_violation(row, old_stdout, new_stdout, pourbaix_context)
+    if solver == "tafel_corrosion_rate_solver":
+        import physics_audit_changes as audit  # noqa: E402 (python/tools module)
+        return audit.tafel_row_problem(row, new_stdout)
     if solver == "kinetics_ttt_cct_solver" and not _KINETICS_HV_ROW.fullmatch(key):
         # Engine-fix lane fx-kinetics changes (steel-only model, placeholders, TTT floor, LSW units).
         if new_stdout is None:
@@ -815,9 +847,15 @@ def step_b_violations(solver: str, rows: List[Dict[str, Any]],
     bound = step_b_max_rel(solver, rows)
     out = []
     pourbaix_context = None
+    icme_audit_keys = physics_audit_row_keys(solver, payload)
     for r in rows:
         leaf = r["key"].rsplit(".", 1)[-1].split("[", 1)[0]
-        if _is_documented_change_row(solver, r["key"], r["kind"]):
+        if r["key"] in icme_audit_keys:
+            import physics_audit_changes as audit  # noqa: E402 (python/tools module)
+            problem = audit.icme_row_problem(r, new_stdout, payload)
+            if problem:
+                out.append(problem)
+        elif _is_documented_change_row(solver, r["key"], r["kind"]):
             if (solver == "pourbaix_solver" and pourbaix_context is None
                     and old_stdout is not None and new_stdout is not None):
                 import pourbaix_golden_check  # noqa: E402 (python/tools module)
@@ -838,6 +876,18 @@ def step_b_violations(solver: str, rows: List[Dict[str, Any]],
     if solver == "icme_multiscale_pipeline_solver":
         out += _icme_missing_rule_violations(rows, new_stdout)
     return out
+
+
+def physics_audit_row_keys(solver: str, payload: Optional[Dict[str, Any]]) -> set:
+    """ICME drift keys changed by the physics-audit EUQ-9/EUQ-10 patch for ``payload`` (empty for other
+    solvers, or without a payload: then those rows keep the default guard and fail it)."""
+    if solver != "icme_multiscale_pipeline_solver" or payload is None:
+        return set()
+    import physics_audit_changes as audit  # noqa: E402 (python/tools module)
+    try:
+        return audit.icme_audit_keys(payload)
+    except (RuntimeError, OSError, subprocess.CalledProcessError):
+        return set()
 
 
 def step_b_document_violations(solver: str, new_stdout: Optional[Dict[str, Any]]) -> List[str]:

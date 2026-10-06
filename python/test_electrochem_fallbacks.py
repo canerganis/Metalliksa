@@ -417,7 +417,8 @@ class TafelIntersectionSubstitutionReportedTest(unittest.TestCase):
                                      "points": self.far_intersection_points()})
         self.assertEqual(out["eCorr"], -0.3)  # the measured valley, as before
         self.assertEqual(out["intersectionStatus"], "substituted-measured-valley")
-        self.assertIn("from the measured current valley (limit 0.25 V)", out["intersectionNote"])
+        # EUQ-13: one limit for both engines (0.15 V, was 0.25 V here and 0.15 V in TypeScript)
+        self.assertIn("from the measured current valley (limit 0.15 V)", out["intersectionNote"])
         self.assertIn("-0.3000 V is used as E_corr", out["intersectionNote"])
         self.assertNotIn("fitStatus", out)  # both branches were fitted: the numbers exist, the note qualifies them
 

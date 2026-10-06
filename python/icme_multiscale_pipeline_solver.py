@@ -308,12 +308,19 @@ def solve_multiscale_pipeline(params: dict) -> dict:
     r_nm = mean_precip_radius_nm
     lambda_spacing_nm = max(2.0, r_nm * math.sqrt((2.0 * math.pi) / (3.0 * max(0.005, volume_frac_precip))) - 2.0 * r_nm)
 
-    # Dislocation Shearing vs. Orowan Looping (Classic Brown-Ham / Ardell calibration)
+    # Dislocation Shearing vs. Orowan Looping
     gamma_apb_J_m2 = 0.175
-    # Shear stress: delta_sigma_cut = M * (gamma_apb / (2*b)) * sqrt( (8 * gamma_apb * r * f) / (pi * G * b^2) )
+    # Weak pair-coupling cutting (Brown & Ham 1971, as given by Ardell, Metall. Trans. A 16 (1985) 2131):
+    #   delta_tau = (gamma_apb / (2*b)) * [ sqrt( 8 * gamma_apb * f * r / (pi * T) ) - f ],  T = G*b^2/2
+    #   delta_sigma_cut = M * delta_tau
+    # EUQ-10: the '- f' term was missing (default IN718: 223 MPa instead of 64 MPa) and the comment said
+    # pi*G*b^2 where the code (correctly) used pi*T. r is the mean particle radius; Ardell's form uses the
+    # mean planar radius r_s = (pi/4)*r, which this illustrative model does not apply. The bracket is floored
+    # at 0 (the weak-coupling expression is not meaningful below the radius where it vanishes).
     line_tension_T = 0.5 * G_Pa * (b_meters**2)
     ratio_term = (8.0 * gamma_apb_J_m2 * (r_nm * 1e-9) * volume_frac_precip) / (math.pi * line_tension_T)
-    delta_sigma_cutting_MPa = (taylor_M * (gamma_apb_J_m2 / (2.0 * b_meters)) * math.sqrt(max(1e-6, ratio_term))) / 1e6
+    brown_ham_bracket = max(0.0, math.sqrt(ratio_term) - volume_frac_precip)
+    delta_sigma_cutting_MPa = (taylor_M * (gamma_apb_J_m2 / (2.0 * b_meters)) * brown_ham_bracket) / 1e6
     delta_sigma_cutting_MPa = min(850.0, delta_sigma_cutting_MPa)
 
     # Orowan looping for overaged / coarse precipitates:
@@ -321,7 +328,7 @@ def solve_multiscale_pipeline(params: dict) -> dict:
     delta_sigma_orowan_MPa = min(900.0, delta_sigma_orowan_MPa)
 
     if delta_sigma_cutting_MPa < delta_sigma_orowan_MPa:
-        precip_mechanism = "Dislocation Particle Shearing (Friedel-Gere Cutting)"
+        precip_mechanism = "Dislocation Particle Shearing (Brown-Ham weak pair-coupling cutting)"
         delta_sigma_precip_MPa = delta_sigma_cutting_MPa
     else:
         precip_mechanism = "Orowan Dislocation Bypass Looping (Overaged / Peak-Aged)"
@@ -424,11 +431,15 @@ def solve_multiscale_pipeline(params: dict) -> dict:
     # =========================================================================
     # CAE MATERIAL CARD GENERATORS (Abaqus, ANSYS, LS-DYNA, Nastran)
     # =========================================================================
+    # Abaqus has no built-in units (Analysis User's Guide, "Units"): with E and stresses in MPa and lengths in
+    # mm the consistent mass unit is the tonne, so the density is in t/mm^3 (EUQ-9: it was written in kg/m^3,
+    # 8190 for IN718, 1e12 too large for any dynamic/explicit/frequency analysis).
     abaqus_card = f"""*HEADING
 ** MetalliX Multi-Scale ICME ILLUSTRATIVE Card (uncalibrated, not validated) for {alloy_name}
+** Units: mm, N, s, tonne, MPa (density in tonne/mm^3)
 *MATERIAL, NAME={alloy_name.replace(' ', '_').upper()}
 *DENSITY
-{density_g_cm3 * 1000.0:.2f}
+{density_g_cm3 * 1e-9:.4e}
 *ELASTIC, TYPE=ISOTROPIC
 {youngs_modulus_E_GPa * 1e3:.2f}, {poisson_ratio:.4f}
 *PLASTIC

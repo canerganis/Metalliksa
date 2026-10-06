@@ -15,12 +15,17 @@ compare against and is never imported by production code. Guards:
 """
 import json
 import math
+import sys
 import types
 import unittest
+from pathlib import Path
 
 import numpy as np
 
 import stochastic_uq_mmpds_solver as solver
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / "tools"))
+import physics_audit_changes as audit  # noqa: E402 (python/tools module)
 
 _LEGACY_SOURCE = r'''#!/usr/bin/env python3
 """
@@ -785,6 +790,41 @@ def _load_legacy():
 
 LEGACY = _load_legacy()
 
+
+def _joe_kuo_poly(dims=32):
+    """new-joe-kuo-6.21201 rows from scipy's copy of the Joe & Kuo table (tools/physics_audit_changes.py),
+    independent of the solver source."""
+    return audit.joe_kuo_poly(dims)
+
+
+def _load_legacy_joe_kuo():
+    """The scalar reference with the Joe-Kuo direction numbers (EUQ-4); otherwise the verbatim legacy code."""
+    module = _load_legacy()
+    module.SobolSequenceGenerator.POLY = _joe_kuo_poly()
+    return module
+
+
+# EUQ-4: the reference the vectorised solver is compared with since the Sobol table fix.
+LEGACY_JK = _load_legacy_joe_kuo()
+
+def _with_audit_changes(doc):
+    """The legacy document with the EUQ-11 reliability block and the EUQ-4 description strings (texts pinned in
+    tools/physics_audit_changes.py, not imported from the solver)."""
+    return audit.uq_reliability_and_text_changes(doc)
+
+
+def _x_order(s, a):
+    """Multiplicative order of x modulo the degree-s GF(2) polynomial of a Joe-Kuo row (s, a)."""
+    poly = (1 << s) | (a << 1) | 1
+    value = 1
+    for k in range(1, (1 << s) + 1):
+        value <<= 1  # times x
+        if value >> s & 1:
+            value ^= poly
+        if value == 1:
+            return k
+    return None
+
 CASES = {
     "s42_n500_default": {"mcSamples": 500},
     "s1_n500": {"mcSamples": 500, "seed": 1},
@@ -812,7 +852,9 @@ CASES = {
 
 # yield mean, stdDev, A-basis, B-basis, Pf, top sensitivity parameter and index, discrepancy:
 # recorded from the scalar code before vectorisation (independent of the embedded reference).
-GOLDEN = {
+# EUQ-4 changed the Sobol direction numbers: GOLDEN_PRE_EUQ4 is that old record (the legacy table);
+# GOLDEN below was re-recorded once from LEGACY_JK, the verbatim scalar code with scipy's Joe-Kuo table.
+GOLDEN_PRE_EUQ4 = {
     "s42_n500_default": (3467.8, 41.37, 3365.4, 3410.5, 0.0, "dT/dt (Cooling Rate)", 0.581, 0.212048),
     "s1_n500": (3468.2, 41.17, 3366.3, 3411.1, 0.0, "dT/dt (Cooling Rate)", 0.566, 0.214096),
     "s7_n2500_noscramble": (3467.9, 40.93, 3370.0, 3413.6, 0.0, "dT/dt (Cooling Rate)", 0.598, 0.212335),
@@ -822,6 +864,18 @@ GOLDEN = {
     "s3_n600_Al": (554.6, 13.65, 521.0, 535.8, 1.0, "Mg (Composition)", 0.558, 0.054621),
     "s8_n900_extreme": (2785.2, 36.33, 2696.7, 2735.9, 0.0, "dT/dt (Cooling Rate)", 0.478, 0.216249),
     "s11_n300_unknown_base": (1229.9, 12.57, 1198.8, 1212.5, 0.046, "Nb (Composition)", 0.37, 0.216645),
+    "empty_composition": (1399.4, 35.15, 1312.4, 1350.7, 0.0, "dT/dt (Cooling Rate)", 1.005, 0.029812),
+}
+GOLDEN = {
+    "s42_n500_default": (3467.8, 41.37, 3365.4, 3410.5, 0.0, "dT/dt (Cooling Rate)", 0.679, 0.203914),
+    "s1_n500": (3468.2, 41.17, 3366.3, 3411.1, 0.0, "dT/dt (Cooling Rate)", 0.551, 0.207195),
+    "s7_n2500_noscramble": (3467.9, 40.93, 3370.0, 3413.6, 0.0, "dT/dt (Cooling Rate)", 0.636, 0.203312),
+    "s12345_n10000": (3467.9, 41.24, 3370.6, 3414.1, 0.0, "dT/dt (Cooling Rate)", 0.591, 0.205135),
+    "s99_n777_Fe": (1327.8, 28.36, 1258.5, 1289.1, 0.003861003861003861, "dT/dt (Cooling Rate)", 1.024, 0.116108),
+    "s5_n1234_Ti": (2855.7, 44.98, 2746.9, 2795.1, 0.0, "dT/dt (Cooling Rate)", 0.671, 0.072795),
+    "s3_n600_Al": (554.6, 13.65, 521.0, 535.8, 1.0, "Mg (Composition)", 0.558, 0.054621),
+    "s8_n900_extreme": (2785.2, 36.33, 2696.7, 2735.9, 0.0, "dT/dt (Cooling Rate)", 0.486, 0.207325),
+    "s11_n300_unknown_base": (1229.9, 12.57, 1198.8, 1212.5, 0.046, "dT/dt (Cooling Rate)", 0.378, 0.208463),
     "empty_composition": (1399.4, 35.15, 1312.4, 1350.7, 0.0, "dT/dt (Cooling Rate)", 1.005, 0.029812),
 }
 
@@ -862,7 +916,7 @@ _ROUNDING = {
     "aBasisAllowable": 1, "bBasisAllowable": 1, "cpk": 2, "conformancePct": 2,
     "binCenter": 1, "binStart": 1, "binEnd": 1, "empiricalPdf": 6, "fittedNormalPdf": 6, "cumulativePct": 1,
     "sobolFirstOrderIndex": 3, "sobolTotalOrderIndex": 3, "interactionIndex": 3, "varianceContributionPct": 1,
-    "hasoferLindBetaIndex": 2, "centeredL2Discrepancy": 6, "criticalFlawMedian_mm": 1, "criticalFlaw_P10_mm": 1,
+    "hasoferLindBetaIndex": 2, "generalizedReliabilityIndex": 2, "beta": 2, "centeredL2Discrepancy": 6, "criticalFlawMedian_mm": 1, "criticalFlaw_P10_mm": 1,
 }
 
 
@@ -897,7 +951,7 @@ class SobolParityTests(unittest.TestCase):
             for scramble in (True, False):
                 for seed in (0, 42, 987654321):
                     new = solver.SobolSequenceGenerator(dim, scramble=scramble, seed=seed)
-                    old = LEGACY.SobolSequenceGenerator(dim, scramble=scramble, seed=seed)
+                    old = LEGACY_JK.SobolSequenceGenerator(dim, scramble=scramble, seed=seed)
                     for chunk in (1, 2, 3, 500, 1021):  # continues the Gray-code state across calls
                         self.assertEqual(new.generate(chunk), old.generate(chunk), (dim, scramble, seed, chunk))
                     self.assertEqual(new.X, old.X)
@@ -911,6 +965,31 @@ class SobolParityTests(unittest.TestCase):
         self.assertEqual(gen.generate(0), [])
         self.assertEqual(LEGACY.SobolSequenceGenerator(5, scramble=True, seed=7).generate(0), [])
 
+    def test_direction_numbers_are_joe_kuo_and_primitive(self):
+        # EUQ-4: the old table's dim 20 (s=6, a=28) is x^6+x^5+x^4+x^3+1, whose x has order 15, not 63.
+        self.assertEqual(LEGACY.SobolSequenceGenerator.POLY[19][:2], (6, 28))
+        self.assertEqual(_x_order(6, 28), 15)
+        self.assertEqual(solver.SobolSequenceGenerator.POLY, _joe_kuo_poly())
+        for d, (s, a, m) in enumerate(solver.SobolSequenceGenerator.POLY[1:], start=2):
+            with self.subTest(dim=d):
+                self.assertEqual(_x_order(s, a), (1 << s) - 1)
+                self.assertEqual(len(m), s)
+                self.assertTrue(all(v % 2 == 1 and v < (1 << (i + 1)) for i, v in enumerate(m)))
+
+    def test_two_dimensional_projections_are_spread(self):
+        # 1024 unscrambled points on a 32 x 32 grid: the old table put dims 22/28 into 65 cells and gave
+        # corr(dim 21, dim 23) = 0.75; every Joe-Kuo pair of the first 32 dims covers >= 256 cells.
+        def cells(points, i, j):
+            return len(set(zip((points[:, i] * 32).astype(int).tolist(), (points[:, j] * 32).astype(int).tolist())))
+        old = np.asarray(LEGACY.SobolSequenceGenerator(32, scramble=False).generate(1024))
+        self.assertEqual(cells(old, 21, 27), 65)
+        self.assertAlmostEqual(float(np.corrcoef(old[:, 20], old[:, 22])[0, 1]), 0.75, places=2)
+        new = solver.SobolSequenceGenerator(32, scramble=False).generate_array(1024)
+        worst = min(cells(new, i, j) for i in range(32) for j in range(i + 1, 32))
+        self.assertGreaterEqual(worst, 256)
+        corr = np.corrcoef(new.T)
+        self.assertLess(float(np.max(np.abs(corr - np.eye(32)))), 0.05)
+
     def test_dimension_limit_unchanged(self):
         with self.assertRaises(ValueError):
             solver.SobolSequenceGenerator(33)
@@ -919,7 +998,7 @@ class SobolParityTests(unittest.TestCase):
 
     def test_centered_l2_discrepancy_equal(self):
         for dim, n in ((1, 1), (3, 7), (8, 150), (13, 500), (32, 200)):
-            pts = LEGACY.SobolSequenceGenerator(dim, scramble=True, seed=3).generate(n)
+            pts = LEGACY_JK.SobolSequenceGenerator(dim, scramble=True, seed=3).generate(n)
             self.assertEqual(solver.compute_centered_l2_discrepancy(pts, 150),
                              LEGACY.compute_centered_l2_discrepancy(pts, 150), (dim, n))
         self.assertEqual(solver.compute_centered_l2_discrepancy([]), 0.0)
@@ -976,7 +1055,7 @@ class NonFinitePopulationTests(unittest.TestCase):
                         {"mcSamples": 500, "serviceStress_nominal": float("nan")}):
             with self.subTest(payload=payload):
                 new = _strip(solver.solve_stochastic_uq(dict(payload)))
-                old = _without_unsupported(_strip(LEGACY.solve_stochastic_uq(dict(payload))))
+                old = _with_audit_changes(_without_unsupported(_strip(LEGACY_JK.solve_stochastic_uq(dict(payload)))))
                 self.assertEqual(json.dumps(new, sort_keys=True), json.dumps(old, sort_keys=True))
 
 
@@ -1035,7 +1114,7 @@ class ResultParityTests(unittest.TestCase):
         for name, payload in CASES.items():
             with self.subTest(case=name):
                 new = _strip(solver.solve_stochastic_uq(dict(payload)))
-                old = _without_unsupported(_strip(LEGACY.solve_stochastic_uq(dict(payload))))
+                old = _with_audit_changes(_without_unsupported(_strip(LEGACY_JK.solve_stochastic_uq(dict(payload)))))
                 self.assertEqual(_diffs(new, old), [])
 
     def test_recorded_scalar_baselines_hold(self):
@@ -1045,9 +1124,32 @@ class ResultParityTests(unittest.TestCase):
                 stats = result["stochasticProperties"]["yieldStrength_Rp02"]
                 top = result["sobolSensitivityAnalysis"][0]
                 got = (stats["mean"], stats["stdDev"], stats["aBasisAllowable"], stats["bBasisAllowable"],
-                       result["aerospaceReliability"]["yieldFailureProbability_Pf"], top["parameter"],
+                       result["aerospaceReliability"]["probabilityYieldBelowDesignStress_Pf"], top["parameter"],
                        top["sobolFirstOrderIndex"], result["samplingMetadata"]["centeredL2Discrepancy"])
                 self.assertEqual(got, expected)
+
+    def test_old_direction_numbers_reproduce_the_pre_euq4_record(self):
+        # The yield statistics (13 Sobol dims for IN718) did not move; the Saltelli indices and the discrepancy did.
+        for name in ("s42_n500_default", "s99_n777_Fe"):
+            with self.subTest(case=name):
+                r = LEGACY.solve_stochastic_uq(dict(CASES[name]))
+                stats = r["stochasticProperties"]["yieldStrength_Rp02"]
+                top = r["sobolSensitivityAnalysis"][0]
+                got = (stats["mean"], stats["stdDev"], stats["aBasisAllowable"], stats["bBasisAllowable"],
+                       r["aerospaceReliability"]["yieldFailureProbability_Pf"], top["parameter"],
+                       top["sobolFirstOrderIndex"], r["samplingMetadata"]["centeredL2Discrepancy"])
+                self.assertEqual(got, GOLDEN_PRE_EUQ4[name])
+                self.assertEqual(GOLDEN[name][:5], GOLDEN_PRE_EUQ4[name][:5])
+
+    def test_default_al_index_no_longer_exceeds_its_total_index(self):
+        # EUQ-4 reproduction: mcSamples 2100 (M = 350), seed 42. The old table gave S1(Al) = 0.102 > ST(Al) = 0.054
+        # (reference about 0.055); the Joe-Kuo design gives S1 = 0.067, ST = 0.054, C 0.011 -> 0.004.
+        def al_c(module):
+            rows = {r["parameter"]: r for r in module.solve_stochastic_uq({"mcSamples": 2100})["sobolSensitivityAnalysis"]}
+            return (rows["Al (Composition)"]["sobolFirstOrderIndex"], rows["Al (Composition)"]["sobolTotalOrderIndex"],
+                    rows["C (Composition)"]["sobolFirstOrderIndex"])
+        self.assertEqual(al_c(LEGACY), (0.102, 0.054, 0.011))
+        self.assertEqual(al_c(solver), (0.067, 0.054, 0.004))
 
     def test_in718_seed42_n500_baseline(self):
         stats = solver.solve_stochastic_uq({"mcSamples": 500})["stochasticProperties"]["yieldStrength_Rp02"]

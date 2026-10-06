@@ -192,6 +192,8 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
         return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20";
       case "fair":
         return "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20";
+      case "poor":
+        return "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20";
       default:
         return "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20";
     }
@@ -603,6 +605,9 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
                   </h4>
                   <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300">
                     <p className="font-medium">{result?.severity?.recommendation ?? UNAVAILABLE_TEXT}</p>
+                    {result?.severity?.textBasis && (
+                      <p className="mt-1 text-[11px] opacity-80">{result.severity.textBasis}</p>
+                    )}
                   </div>
                   <div className="space-y-1 text-slate-600 dark:text-slate-400">
                     <div>• Uniform Remaining Useful Life: <strong className="text-slate-900 dark:text-slate-100 font-mono">{result ? fmtTafelNumber(result.rulUniformYears) : UNAVAILABLE_TEXT} years</strong></div>
