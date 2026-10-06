@@ -104,9 +104,9 @@ _UNAVAILABLE_NO_CFD_REASON = (
 )
 
 _MICROSTRUCTURE_DOI = {
-    "pdas": "10.1016/S1359-6454(96)00096-5",     # Hunt-Lu 1996
-    "sdas": "10.1007/BF02649565",                 # Kirkwood 1985
-    "morphology": "10.1016/0001-6160(84)90147-8", # Hunt 1984
+    "pdas": "10.1007/BF02648950",                 # Hunt & Lu 1996, Metall. Mater. Trans. A 27, 611
+    "sdas": "10.1016/0025-5416(85)90319-2",       # Kirkwood 1985, Mater. Sci. Eng. 73, L1
+    "morphology": "10.1016/0025-5416(84)90201-5", # Hunt 1984, Mater. Sci. Eng. 65, 75
 }
 
 _FALLBACK_REASON = (

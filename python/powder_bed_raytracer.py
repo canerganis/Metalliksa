@@ -55,7 +55,12 @@ def laser_powder_raytrace(
     num_rays: int,
     beam_radius_um: float,
     base_absorptivity: float,
+    bed_top_z: float,
+    max_bounces: int,
+    min_power: float,
     absorbed_energy: wp.array(dtype=float),
+    escaped_energy: wp.array(dtype=float),
+    truncated_energy: wp.array(dtype=float),
     penetration_depth: wp.array(dtype=float),
     bounce_counts: wp.array(dtype=int)
 ):
@@ -68,7 +73,9 @@ def laser_powder_raytrace(
     u2 = wp.cos(float(tid) * 78.233) * 43758.5453
     u2 = u2 - wp.floor(u2)
 
-    r = beam_radius_um * wp.sqrt(u1)
+    # Gaussian TEM00 beam, I ~ exp(-2 r^2 / w^2) with w = beam_radius_um (1/e^2 radius):
+    # inverse CDF r = w sqrt(-ln(1 - u) / 2) (same sampler as lpbf_keyhole_raytracing.py).
+    r = beam_radius_um * wp.sqrt(-0.5 * wp.log(wp.max(1.0 - u1, 1.0e-7)))
     theta = 2.0 * 3.1415926535 * u2
     x = r * wp.cos(theta)
     y = r * wp.sin(theta)
@@ -84,11 +91,18 @@ def laser_powder_raytrace(
     curr_orig = ray_orig
     curr_dir = ray_dir
 
-    for b in range(5):
-        if remaining_power > 0.01:
+    escaped = float(0.0)
+    in_flight = int(1)
+    for b in range(max_bounces):
+        if in_flight == 1 and remaining_power > min_power:
             query = wp.mesh_query_ray(mesh_id, curr_orig, curr_dir, 1000.0)
 
-            if query.result:
+            if not query.result:
+                # No further intersection: the remaining power leaves the bed.
+                escaped = remaining_power
+                remaining_power = float(0.0)
+                in_flight = 0
+            else:
                 bounces += 1
                 hit_pos = curr_orig + curr_dir * query.t
                 hit_normal = wp.normalize(query.normal)
@@ -114,7 +128,11 @@ def laser_powder_raytrace(
                 curr_dir = reflect_dir
 
     absorbed_energy[tid] = total_absorbed
-    penetration_depth[tid] = z - deepest_z
+    escaped_energy[tid] = escaped
+    # Power still bouncing at the bounce cap or below min_power: neither absorbed nor escaped.
+    truncated_energy[tid] = remaining_power
+    # Depth below the bed top (sphere tops at z = 2 r), not below the launch plane.
+    penetration_depth[tid] = wp.max(0.0, bed_top_z - deepest_z)
     bounce_counts[tid] = bounces
 
 _cached_mesh = None
@@ -129,7 +147,14 @@ def get_or_create_mesh():
         )
     return _cached_mesh
 
-def calculate_powder_bed_absorptivity(beam_radius_um: float, base_absorptivity: float, num_rays: int = 100000) -> dict:
+MAX_BOUNCES = 50          # converged: 50 and 200 bounces agree (Wave B KS-4 check)
+MIN_REMAINING_POWER = 1.0e-6
+PARTICLE_RADIUS_UM = 15.0  # create_powder_bed_mesh default; bed top at z = 2 r
+
+
+def calculate_powder_bed_absorptivity(beam_radius_um: float, base_absorptivity: float, num_rays: int = 100000,
+                                      max_bounces: int = MAX_BOUNCES,
+                                      min_remaining_power: float = MIN_REMAINING_POWER) -> dict:
     global _wp_initialized
     if not _wp_initialized:
         wp.init()
@@ -138,13 +163,17 @@ def calculate_powder_bed_absorptivity(beam_radius_um: float, base_absorptivity: 
     mesh = get_or_create_mesh()
 
     absorbed_energy = wp.zeros(shape=num_rays, dtype=float, device="cuda:0")
+    escaped_energy = wp.zeros(shape=num_rays, dtype=float, device="cuda:0")
+    truncated_energy = wp.zeros(shape=num_rays, dtype=float, device="cuda:0")
     penetration_depth = wp.zeros(shape=num_rays, dtype=float, device="cuda:0")
     bounce_counts = wp.zeros(shape=num_rays, dtype=int, device="cuda:0")
 
     wp.launch(
         kernel=laser_powder_raytrace,
         dim=num_rays,
-        inputs=[mesh.id, num_rays, beam_radius_um, base_absorptivity, absorbed_energy, penetration_depth, bounce_counts],
+        inputs=[mesh.id, num_rays, float(beam_radius_um), float(base_absorptivity), 2.0 * PARTICLE_RADIUS_UM,
+                int(max_bounces), float(min_remaining_power), absorbed_energy, escaped_energy, truncated_energy,
+                penetration_depth, bounce_counts],
         device="cuda:0"
     )
     wp.synchronize()
@@ -154,6 +183,12 @@ def calculate_powder_bed_absorptivity(beam_radius_um: float, base_absorptivity: 
     depth_np = penetration_depth.numpy()
 
     avg_absorption = np.mean(abs_np)
+    esc_np = escaped_energy.numpy()
+    # A ray with no hit at all fell outside the finite bed (geometry artefact, as in
+    # lpbf_keyhole_raytracing.py): reported as missed, not as reflected (escaped) power.
+    missed_fraction = float(np.sum(esc_np[bounces_np == 0]) / num_rays)
+    escaped_fraction = float(np.sum(esc_np[bounces_np > 0]) / num_rays)
+    truncated_fraction = float(np.mean(truncated_energy.numpy()))
     avg_bounces = np.mean(bounces_np)
     multi_reflection_rays = np.sum(bounces_np > 1) / num_rays
     avg_depth = np.mean(depth_np[bounces_np > 0])
@@ -162,5 +197,12 @@ def calculate_powder_bed_absorptivity(beam_radius_um: float, base_absorptivity: 
         "effective_absorptivity": float(avg_absorption),
         "average_bounces": float(avg_bounces),
         "multi_reflection_fraction": float(multi_reflection_rays),
-        "average_penetration_depth_um": float(avg_depth)
+        "average_penetration_depth_um": float(avg_depth),
+        "penetration_depth_reference": "bed top (z = 2 * particle radius)",
+        "escaped_fraction": escaped_fraction,
+        "missed_fraction": missed_fraction,
+        "truncated_fraction": truncated_fraction,
+        "energy_closure_residual": float(abs(1.0 - float(avg_absorption) - escaped_fraction - missed_fraction - truncated_fraction)),
+        "max_bounces": int(max_bounces),
+        "beam_profile": "gaussian-1/e2",
     }
