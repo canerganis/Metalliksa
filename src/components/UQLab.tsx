@@ -1,5 +1,5 @@
 import { createUqRunSession } from '../utils/uqRunSession';
-import { CouponSummary, CouponWorksheet, formatUqNumber, UqModelStatusNote } from './UqCouponReport';
+import { CouponSummary, CouponWorksheet, formatUqNumber, UqEmptyCouponState, UqModelStatusNote, UqRunSettings, UqSensitivityNotRun, UQ_ILLUSTRATIVE_MODEL_NOTE, UQ_NO_COUPONS_MESSAGE } from './UqCouponReport';
 import { ResponsiveContainer } from './VisibleResponsiveContainer';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
@@ -9,7 +9,6 @@ import {
   Zap,
   TrendingUp,
   Sliders,
-  Sparkles,
   Info,
   CheckCircle2,
   AlertTriangle,
@@ -72,9 +71,6 @@ import {
 } from "./uqLabData";
 import { ENGINEERING_ESTIMATE_DISCLAIMER, EngineeringEstimateBanner, SYNTHETIC_COUPON_MMPDS_NOTICE } from "../utils/engineeringDisclaimer";
 
-export const UQ_ILLUSTRATIVE_MODEL_NOTE =
-  "Illustrative model, not measured or calibrated: the strength model behind this run is a toy superposition (it predicts about 3.5 GPa yield for the Inconel 718 default). Only relative sensitivity indices are shown; the model's strength, UTS, fracture-toughness and critical-flaw outputs are not displayed because they are not supported. Preset chemistry, tolerance and thermal inputs are placeholders, not sourced process data.";
-
 export function UQLab() {
   // Active Dataset
   const [datasets, setDatasets] = useState<MaterialDataset[]>(AEROSPACE_MATERIAL_DATASETS);
@@ -88,7 +84,9 @@ export function UQLab() {
   // Sobol QMC is the only sampling engine the solver accepts (pseudo-random MC was removed upstream in f9ae3e4).
   const samplingMethod = "sobol_qmc" as const;
   const [scramble, setScramble] = useState<boolean>(true);
-  const [mcSamples, setMcSamples] = useState<number>(2500);
+  // Fixed forward-population size. It no longer has a selector: the displayed Saltelli estimate uses
+  // min(350, max(150, N/6)) base samples, so the old 1,000-10,000 choices only changed an unshown population.
+  const mcSamples = 2500;
   // Fixed seed: the run is reproducible and the seed is shown with the result.
   const seed = 42;
 
@@ -110,7 +108,10 @@ export function UQLab() {
   const requestKey = JSON.stringify({ id: activeDataset.id, chemistry: activeDataset.nominalChemistry, tolerances: activeDataset.chemicalTolerances, thermal: activeDataset.nominalThermal, minima: [activeDataset.specMinYieldMPa, activeDataset.specMinUTSMPa, activeDataset.specMinElongationPct], mcSamples, samplingMethod, scramble, seed });
   const uqResult = resultRecord?.key === requestKey ? resultRecord.result : null;
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  // Solver errors are keyed to the inputs that produced them (cleared on any input change);
+  // CSV upload / clipboard messages are kept apart so an input change never hides them.
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Copy Feedback
   const [copiedNotification, setCopiedNotification] = useState<string | null>(null);
@@ -179,7 +180,7 @@ export function UQLab() {
 
   // The illustrative model runs only on an explicit click; changing inputs discards a stale result.
   useEffect(() => () => requestSession.current.invalidate(), []);
-  useEffect(() => { requestSession.current.invalidate(); setIsLoading(false); }, [requestKey]);
+  useEffect(() => { requestSession.current.invalidate(); setIsLoading(false); setErrorMsg(null); }, [requestKey]);
 
   // --------------------------------------------------------------------------
   // DATASET MODIFICATION HANDLERS
@@ -189,8 +190,8 @@ export function UQLab() {
     if (!file) return;
 
     const datasetId = activeDataset.id;
-    if (file.size > 5 * 1024 * 1024) { setErrorMsg('Coupon CSV exceeds the 5 MB limit. Existing coupons were preserved.'); e.target.value = ''; return; }
-    setErrorMsg(null);
+    if (file.size > 5 * 1024 * 1024) { setUploadError('Coupon CSV exceeds the 5 MB limit. Existing coupons were preserved.'); e.target.value = ''; return; }
+    setUploadError(null);
     const reader = new FileReader();
     reader.onload = evt => {
       try {
@@ -198,9 +199,9 @@ export function UQLab() {
         if (!parsedCoupons.length) throw new Error('CSV contains no coupon records.');
         setDatasets(prev => prev.map(d => d.id === datasetId ? { ...d, coupons: parsedCoupons, couponSource: parsedCoupons.some(c => c.evidenceOrigin === 'synthetic') ? 'synthetic' : 'uploaded' } : d));
         setCouponPage(1);
-      } catch (error) { setErrorMsg(`${error instanceof Error ? error.message : 'Unable to read coupon CSV.'} Existing coupons were preserved.`); }
+      } catch (error) { setUploadError(`${error instanceof Error ? error.message : 'Unable to read coupon CSV.'} Existing coupons were preserved.`); }
     };
-    reader.onerror = () => setErrorMsg('Unable to read coupon CSV. Existing coupons were preserved.');
+    reader.onerror = () => setUploadError('Unable to read coupon CSV. Existing coupons were preserved.');
     reader.readAsText(file);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -228,7 +229,7 @@ export function UQLab() {
 
   const copyToClipboard = async (text: string, label: string) => {
     try { await navigator.clipboard.writeText(text); setCopiedNotification(label); setTimeout(() => setCopiedNotification(null), 2500); }
-    catch { setErrorMsg("Clipboard unavailable. No copy was confirmed."); }
+    catch { setUploadError("Clipboard unavailable. No copy was confirmed."); }
   };
 
   // Property Metadata Helper
@@ -303,6 +304,7 @@ export function UQLab() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {errorMsg && <p role="alert" className="rounded-xl border border-rose-700 bg-rose-950/30 p-3 text-sm text-rose-200">{errorMsg}</p>}
+      {uploadError && <p role="alert" className="rounded-xl border border-rose-700 bg-rose-950/30 p-3 text-sm text-rose-200">{uploadError}</p>}
       <p className="text-xs text-slate-400">Coupon edits and uploads are session-only. Export CSV before reloading. Missing measurements and provenance are never inferred from the selected material preset.</p>
       {/* ==================================================================== */}
       {/* 1. HERO HEADER BANNER & QMC BADGES */}
@@ -320,12 +322,12 @@ export function UQLab() {
               </span>
 
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1.5 shadow-sm">
-                <Zap className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                <Zap className="w-3.5 h-3.5 text-amber-400" />
                 Illustrative Sobol model · on demand
               </span>
 
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                Coupons: {activeDataset.coupons.length} | Heats: {empiricalStats.lotCount}
+                Coupons: {activeDataset.coupons.length} | Heats: {empiricalStats.lotCount ?? 'not reported'}
               </span>
             </div>
 
@@ -370,8 +372,9 @@ export function UQLab() {
 
             <button
               onClick={handleExportCSV}
-              className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition flex items-center gap-1.5 cursor-pointer"
-              title="Export the loaded coupon records as CSV"
+              disabled={activeDataset.coupons.length === 0}
+              className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              title={activeDataset.coupons.length === 0 ? "No coupon records to export" : "Export the loaded coupon records as CSV"}
             >
               <Download className="w-3.5 h-3.5 text-emerald-400" />
               Export
@@ -406,11 +409,11 @@ export function UQLab() {
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2.5 text-[11px]">
               <div className="p-2 rounded-xl bg-slate-900/70 border border-slate-800">
-                <div className="text-[9px] text-slate-400">PROPAGATED SAMPLES</div>
+                <div className="text-[9px] text-slate-400">FORWARD POPULATION (STATS NOT SHOWN)</div>
                 <div className="font-bold text-amber-300 mt-0.5">
                   {uqResult.sampleSizeN.toLocaleString()}
                   <span className="text-[9px] text-slate-400 font-normal ml-1">
-                    (actual N; effective N not estimated)
+                    (N points propagated; effective N not estimated)
                   </span>
                 </div>
               </div>
@@ -498,20 +501,6 @@ export function UQLab() {
               <span>Digital shift</span>
             </label>
 
-            {/* Samples */}
-            <div className="flex items-center gap-1.5 text-slate-400">
-              <span>Runs:</span>
-              <select aria-label="Runs"
-                value={mcSamples}
-                onChange={(e) => setMcSamples(parseInt(e.target.value))}
-                className="bg-slate-800 border border-slate-700 text-sky-300 rounded-lg px-2 py-1 text-xs"
-              >
-                <option value="1000">1,000 runs</option>
-                <option value="2500">2,500 runs</option>
-                <option value="5000">5,000 runs</option>
-                <option value="10000">10,000 runs</option>
-              </select>
-            </div>
           </div>
         </div>
 
@@ -555,11 +544,7 @@ export function UQLab() {
       {/* 3. EXECUTIVE ALLOWABLE COMPARISON KPI CARDS */}
       {/* ==================================================================== */}
       {activeDataset.coupons.length === 0 && (
-        <div role="status" className="rounded-2xl border border-sky-500/40 bg-sky-950/30 p-4 text-sm text-sky-100 space-y-2">
-          <p className="font-semibold">No coupon data loaded for {activeDataset.name.split("(")[0].trim()}.</p>
-          <p className="text-xs text-sky-200">This preset only supplies specification context. Statistics and tolerance limits need your measured tensile coupons: use Upload coupon CSV (at least 3 rows for a tolerance estimate; heat/lot IDs are needed for lot grouping). Nothing is generated or assumed in their place.</p>
-          <button onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 rounded-xl bg-sky-500 text-slate-950 text-xs font-bold cursor-pointer">Upload coupon CSV</button>
-        </div>
+        <UqEmptyCouponState materialName={activeDataset.name.split("(")[0].trim()} onUpload={() => fileInputRef.current?.click()} />
       )}
       <CouponSummary stats={empiricalStats} unit={propertyMeta.unit} synthetic={isSyntheticCoupons} />
 
@@ -667,9 +652,11 @@ export function UQLab() {
                 Coupon histogram & normal-model expected counts
               </h3>
               <p className="text-xs text-slate-400 mt-0.5">
-                {showMmpdsAllowables
-                  ? "Uploaded coupons: A/B cutoffs are screening estimates, not handbook allowables."
-                  : isSyntheticCoupons ? SYNTHETIC_COUPON_MMPDS_NOTICE : "Uploaded records have insufficient data for tolerance estimates; existing values remain unverified."}
+                {activeDataset.coupons.length === 0
+                  ? UQ_NO_COUPONS_MESSAGE
+                  : showMmpdsAllowables
+                    ? "Uploaded coupons: A/B cutoffs are screening estimates, not handbook allowables."
+                    : isSyntheticCoupons ? SYNTHETIC_COUPON_MMPDS_NOTICE : "Uploaded records have insufficient data for tolerance estimates; existing values remain unverified."}
               </p>
             </div>
 
@@ -686,7 +673,7 @@ export function UQLab() {
                   </span>
                 </>
               ) : (
-                <span className="text-amber-200">Tolerance estimates withheld (synthetic or insufficient data)</span>
+                <span className="text-amber-200">{activeDataset.coupons.length === 0 ? "Tolerance estimates unavailable (no coupon data)" : "Tolerance estimates withheld (synthetic or insufficient data)"}</span>
               )}
               <span className="flex items-center gap-1 text-rose-400">
                 <span className="w-2.5 h-2.5 rounded-full bg-rose-400" />
@@ -871,13 +858,7 @@ export function UQLab() {
       {/* ==================================================================== */}
       {/* TAB 2: SALTELLI-SOBOL GLOBAL SENSITIVITY DECOMPOSITION */}
       {/* ==================================================================== */}
-      {activeViewTab === "sensitivity" && !uqResult && (
-        <div className="p-5 rounded-2xl bg-slate-900/90 border border-amber-500/30 space-y-2">
-          <h3 className="text-sm font-bold text-amber-300">Illustrative Sobol sensitivity (not run)</h3>
-          <p className="text-xs text-slate-300">{isLoading ? "Running the illustrative model..." : "Press Run illustrative sensitivity to rank the supplied composition and process scatter by their effect on the model's yield output."}</p>
-          <p className="text-xs text-slate-400">{UQ_ILLUSTRATIVE_MODEL_NOTE}</p>
-        </div>
-      )}
+      {activeViewTab === "sensitivity" && !uqResult && <UqSensitivityNotRun isLoading={isLoading} />}
       {activeViewTab === "sensitivity" && uqResult && (
         <div className="p-5 rounded-2xl bg-slate-900/90 border border-amber-500/30 space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -887,17 +868,17 @@ export function UQLab() {
                 Saltelli-Sobol Variance Sensitivity Decomposition
               </h3>
               <p className="text-xs text-slate-400 mt-0.5">
-                Quantifies the direct first-order effect (S_i) and total-order effect (S_Ti, including non-linear multi-scale interactions) of each uncertain parameter on Yield Strength scatter.
+                First-order (S_i) and total-order (S_Ti, including interactions) effect of each sampled input on the illustrative model's yield output.
               </p>
             </div>
             <span className="text-xs font-mono px-2.5 py-1 rounded bg-amber-950/60 text-amber-300 border border-amber-800/60 flex items-center gap-1.5 self-start sm:self-auto">
               <Zap className="w-3.5 h-3.5 text-amber-400" />
-              Seeded Monte Carlo pick-freeze sampling
+              {uqResult.sensitivityMetadata?.method ?? "Saltelli pick-freeze (method not reported)"}
             </span>
           </div>
 
           <p className="text-xs text-amber-200">{UQ_ILLUSTRATIVE_MODEL_NOTE}</p>
-          <p className="text-xs text-slate-400">Run settings: Sobol QMC, {uqResult.sampleSizeN.toLocaleString()} samples, fixed seed {seed}.</p>
+          <UqRunSettings sensitivityMetadata={uqResult.sensitivityMetadata} thermal={activeDataset.nominalThermal} seed={seed} />
           <p className="text-xs text-amber-200">{uqResult.sensitivityMetadata?.limitations}</p>
           <UqModelStatusNote modelStatus={uqResult.provenance?.modelStatus} />
           {/* Bar Chart */}
@@ -961,8 +942,8 @@ export function UQLab() {
           {/* Actionable Engineering Recommendation */}
           <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-1.5">
             <div className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              Alloy Tolerance Optimization Strategy:
+              <Info className="w-3.5 h-3.5 text-slate-400" />
+              Interpreting these indices
             </div>
             <p className="text-xs text-slate-300 leading-relaxed font-mono">
               Finite-sample sensitivity estimates can be negative or exceed one. They are not normalized shares or experimental causal evidence. Review the estimator limitations before changing material tolerances.
@@ -1005,7 +986,8 @@ export function UQLab() {
 
               <button
                 onClick={handleExportCSV}
-                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 flex items-center gap-1 cursor-pointer"
+                disabled={activeDataset.coupons.length === 0}
+                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Download className="w-3 h-3 text-emerald-400" />
                 CSV

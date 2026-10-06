@@ -316,7 +316,7 @@ export const AEROSPACE_MATERIAL_DATASETS: MaterialDataset[] = [
       agingTime_h: 4,
       serviceStress_MPa: 620
     },
-    description: "Structural primary fuselage bulkhead and wing lug forging batches. High fracture toughness and fatigue resistance for high-load primary structure.",
+    description: "Ti-6Al-4V airframe billet preset: specification context only, no batch data bundled. Upload a coupon CSV.",
     coupons: [],
     couponSource: "none"
   },
@@ -343,7 +343,7 @@ export const AEROSPACE_MATERIAL_DATASETS: MaterialDataset[] = [
       agingTime_h: 24,
       serviceStress_MPa: 340
     },
-    description: "High-strength zinc-magnesium precipitation-hardened aluminum wing spar upper skins and bulkhead ribs. High compressive yield strength.",
+    description: "Al 7075-T651 plate preset: specification context only, no lot data bundled. Upload a coupon CSV.",
     coupons: [],
     couponSource: "none"
   },
@@ -370,7 +370,7 @@ export const AEROSPACE_MATERIAL_DATASETS: MaterialDataset[] = [
       agingTime_h: 2,
       serviceStress_MPa: 950
     },
-    description: "Aircraft main landing gear outer cylinders, trunnions, and structural arrestor hooks subjected to high impact shock loads and cyclic fatigue.",
+    description: "AISI 4340 VAR bar preset: specification context only, no heat data bundled. Upload a coupon CSV.",
     coupons: [],
     couponSource: "none"
   },
@@ -397,7 +397,7 @@ export const AEROSPACE_MATERIAL_DATASETS: MaterialDataset[] = [
       agingTime_h: 6,
       serviceStress_MPa: 180
     },
-    description: "Additively manufactured satellite heat-exchangers and optical mounts printed on EOS M290 across vertical and horizontal build orientations.",
+    description: "AlSi10Mg LPBF preset: specification context only, no build data bundled. Upload a coupon CSV.",
     coupons: [],
     couponSource: "none"
   },
@@ -424,7 +424,7 @@ export const AEROSPACE_MATERIAL_DATASETS: MaterialDataset[] = [
       agingTime_h: 4,
       serviceStress_MPa: 240
     },
-    description: "Solid-solution strengthened nickel-chromium-iron-molybdenum superalloy sheet for jet engine combustion liners, tailpipes, and afterburners.",
+    description: "Hastelloy X sheet preset: specification context only, no lot data bundled. Upload a coupon CSV.",
     coupons: [],
     couponSource: "none"
   }

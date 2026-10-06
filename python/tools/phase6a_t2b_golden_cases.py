@@ -135,12 +135,14 @@ EXPECTED_DOCUMENTED_VALUE_CHANGES = {
     # solver edit cannot match its own oracle (capture_phase6a_golden.documented_change_violation).
     "stochastic_uq_mmpds_solver": {
         r"stochasticProperties\..+":
-            "statistics of the sampled model outputs (normal inputs drawn with the corrected norm_ppf)",
+            "statistics of the sampled model outputs (normal inputs drawn with the corrected norm_ppf); the "
+            "UTS, K_Ic and critical-flaw entries are null + status (invented laws removed)",
         r"sobolSensitivityAnalysis\[\d+\]\..+":
             "Sobol-Saltelli rows (values, and the parameter order that follows from the sort)",
         r"aerospaceReliability\.(yieldFailureProbability_Pf|hasoferLindBetaIndex|aBasisConforming|"
-        r"bBasisConforming|cpkConforming|criticalFlawMedian_mm|criticalFlaw_P10_mm)":
-            "reliability numbers derived from the sampled outputs",
+        r"bBasisConforming|cpkConforming|criticalFlawMedian_mm|criticalFlaw_P10_mm|criticalFlaw_status)":
+            "reliability numbers derived from the sampled outputs; the critical-flaw rows are null + status "
+            "(invented K_Ic law removed)",
     },
     # fx-icme (backlog lane 9, "Demote to illustrative"): every row below is checked exactly by
     # capture_phase6a_golden._icme_documented_violation (old value, new value and the relation

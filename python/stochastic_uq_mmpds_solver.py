@@ -29,6 +29,12 @@ ZERO_C_K = physical_constants.ZERO_CELSIUS_K.value
 
 _STD_NORMAL = NormalDist()
 
+# Outputs that depended on invented laws are reported as unavailable (same shape as the ICME solver's
+# ultimateTensileStrength_UTS_status / fractureToughness_K1c_status).
+UTS_UNAVAILABLE_STATUS = "unavailable: no sourced UTS / work-hardening law (the former UTS = YS*(1+2.15n) was invented); see the ICME solver"
+K1C_UNAVAILABLE_STATUS = "unavailable: no sourced fracture-toughness law (the former K_Ic clamp of 18-160 MPa*sqrt(m) was invented); see the ICME solver"
+CRITICAL_FLAW_UNAVAILABLE_STATUS = "unavailable: critical flaw size needs a sourced K_Ic; the former estimate was dimensionally unsupported"
+
 def norm_cdf(x: float) -> float:
     """Standard normal cumulative distribution function."""
     return 0.5 * (1.0 + math.erf(x / math.sqrt(2.0)))
@@ -326,10 +332,14 @@ def solve_single_realization(
     cooling_rate: float,
     aging_temp_C: float,
     aging_time_h: float,
-    service_stress_MPa: float,
-    flaw_size_um: float
+    service_stress_MPa: float
 ) -> dict:
-    """Evaluates multi-scale physics for one stochastic state draw."""
+    """Evaluates the illustrative strength model for one stochastic state draw.
+
+    Only yield strength and elongation are returned. UTS, fracture toughness and critical flaw size
+    were removed: their laws (UTS = YS*(1 + 2.15 n), K_Ic clamped to 18-160, a_c from that K_Ic) were
+    invented, not sourced (the ICME solver reports the same quantities as unavailable).
+    """
     # 1. Base Metal Lattice & Elasticity (alloy_data_kinetics_uq_fatigue; same values,
     # same legacy fallback: a base metal other than Ni/Fe/Ti uses the Al constants)
     lattice = _uq_data.uq_lattice_constants(base_metal)
@@ -339,15 +349,11 @@ def solve_single_realization(
     taylor_M = lattice["taylor_M"]
     sigma_0 = lattice["sigma_0"]
     k_hp = lattice["k_hp"]  # MPa*sqrt(um)
-    nu = lattice["nu"]
-    G_c_kJ_m2 = lattice["G_c_kJ_m2"]  # fracture energy
 
-    # VRH Elastic Moduli
-    bulk_B = (C11 + 2.0 * C12) / 3.0
+    # VRH shear modulus
     G_Voigt = (C11 - C12 + 3.0 * C44) / 5.0
     G_Reuss = 5.0 * (C11 - C12) * C44 / max(1.0, (4.0 * C44 + 3.0 * (C11 - C12)))
     G_GPa = (G_Voigt + G_Reuss) / 2.0
-    E_GPa = (9.0 * bulk_B * G_GPa) / max(1.0, (3.0 * bulk_B + G_GPa))
 
     # 2. Solid Solution Strengthening (Labusch)
     delta_sigma_ss = 0.0
@@ -393,38 +399,18 @@ def solve_single_realization(
     coupled_term = (delta_sigma_disloc ** q_pow + delta_sigma_ppt ** q_pow) ** (1.0 / q_pow)
     sigma_yield_MPa = sigma_0 + delta_sigma_ss + delta_sigma_hp + coupled_term
 
-    # 7. Tensile UTS, Hollomon Strain Hardening, Ductility
+    # 7. Strain-hardening exponent and elongation (illustrative; feeds elongation only)
     n_work_hardening = max(0.05, min(0.35, 0.42 - 0.00022 * sigma_yield_MPa))
-    # UTS = Yield * (1 + 2.1 * n)
-    sigma_uts_MPa = sigma_yield_MPa * (1.0 + 2.15 * n_work_hardening)
-    
-    # Elongation A%
     elongation_pct = max(3.0, min(50.0, 3200.0 / (sigma_yield_MPa ** 0.82) * (1.0 + 1.5 * n_work_hardening)))
 
-    # 8. Fracture Toughness K_1c & Critical Flaw Size a_c
-    # K_1c ~ sqrt(E * G_c / (1 - nu^2)) modified by ductility/yield
-    k1c_base = math.sqrt((E_GPa * G_c_kJ_m2) / max(0.1, (1.0 - nu**2)))
-    k1c_MPa_sqrt_m = max(18.0, min(160.0, k1c_base * (1.0 + 0.025 * elongation_pct) * (900.0 / max(300.0, sigma_yield_MPa)) ** 0.35))
-
-    # Critical Flaw Size (LEFM ASTM E1820)
-    # a_c = (1/pi) * (K_1c / (1.12 * sigma_service))^2 (meters -> mm)
+    # Limit state margin (yield only)
     applied_stress = max(50.0, service_stress_MPa)
-    flaw_ac_mm = (1.0 / math.pi) * ((k1c_MPa_sqrt_m / (1.12 * applied_stress)) ** 2) * 1000.0
-    flaw_ac_mm = max(0.05, min(250.0, flaw_ac_mm))
-
-    # Limit State Margins
-    # M_yield = Yield - Applied_Stress * 1.5
     margin_yield_MPa = sigma_yield_MPa - applied_stress * 1.5
-    margin_flaw_mm = flaw_ac_mm - (flaw_size_um / 1000.0)
 
     return {
         "yield_MPa": sigma_yield_MPa,
-        "uts_MPa": sigma_uts_MPa,
         "elongation_pct": elongation_pct,
-        "k1c_MPa_m": k1c_MPa_sqrt_m,
-        "critical_flaw_ac_mm": flaw_ac_mm,
         "margin_yield_MPa": margin_yield_MPa,
-        "margin_flaw_mm": margin_flaw_mm,
         "delta_sigma_ss": delta_sigma_ss,
         "delta_sigma_hp": delta_sigma_hp,
         "delta_sigma_ppt": delta_sigma_ppt,
@@ -438,8 +424,7 @@ def solve_realizations_vec(
     cooling_rate,
     aging_temp_C,
     aging_time_h,
-    service_stress_MPa,
-    flaw_size_um
+    service_stress_MPa
 ) -> dict:
     """Vectorised solve_single_realization: same physics, same operation order, arrays in/out.
 
@@ -454,15 +439,11 @@ def solve_realizations_vec(
     taylor_M = lattice["taylor_M"]
     sigma_0 = lattice["sigma_0"]
     k_hp = lattice["k_hp"]  # MPa*sqrt(um)
-    nu = lattice["nu"]
-    G_c_kJ_m2 = lattice["G_c_kJ_m2"]  # fracture energy
 
-    # VRH Elastic Moduli (scalars)
-    bulk_B = (C11 + 2.0 * C12) / 3.0
+    # VRH shear modulus (scalar)
     G_Voigt = (C11 - C12 + 3.0 * C44) / 5.0
     G_Reuss = 5.0 * (C11 - C12) * C44 / max(1.0, (4.0 * C44 + 3.0 * (C11 - C12)))
     G_GPa = (G_Voigt + G_Reuss) / 2.0
-    E_GPa = (9.0 * bulk_B * G_GPa) / max(1.0, (3.0 * bulk_B + G_GPa))
 
     # Solid solution strengthening (Labusch), element order as in comp
     delta_sigma_ss = 0.0
@@ -502,33 +483,19 @@ def solve_realizations_vec(
     coupled_term = (delta_sigma_disloc ** q_pow + delta_sigma_ppt ** q_pow) ** (1.0 / q_pow)
     sigma_yield_MPa = sigma_0 + delta_sigma_ss + delta_sigma_hp + coupled_term
 
-    # Tensile UTS, Hollomon strain hardening, ductility
+    # Strain-hardening exponent and elongation (illustrative; feeds elongation only)
     n_work_hardening = _pmax(0.05, _pmin(0.35, 0.42 - 0.00022 * sigma_yield_MPa))
-    sigma_uts_MPa = sigma_yield_MPa * (1.0 + 2.15 * n_work_hardening)
     elongation_pct = _pmax(3.0, _pmin(50.0, 3200.0 / (sigma_yield_MPa ** 0.82) * (1.0 + 1.5 * n_work_hardening)))
 
-    # Fracture toughness and critical flaw size
-    k1c_base = math.sqrt((E_GPa * G_c_kJ_m2) / max(0.1, (1.0 - nu**2)))
-    k1c_MPa_sqrt_m = _pmax(18.0, _pmin(160.0, k1c_base * (1.0 + 0.025 * elongation_pct) * (900.0 / _pmax(300.0, sigma_yield_MPa)) ** 0.35))
-
     applied_stress = _pmax(50.0, service_stress_MPa)
-    flaw_ac_mm = (1.0 / math.pi) * ((k1c_MPa_sqrt_m / (1.12 * applied_stress)) ** 2) * 1000.0
-    flaw_ac_mm = _pmax(0.05, _pmin(250.0, flaw_ac_mm))
-
     margin_yield_MPa = sigma_yield_MPa - applied_stress * 1.5
-    margin_flaw_mm = flaw_ac_mm - (flaw_size_um / 1000.0)
 
-    _require_finite(sigma_yield_MPa, sigma_uts_MPa, elongation_pct, k1c_MPa_sqrt_m, flaw_ac_mm,
-                    margin_yield_MPa, margin_flaw_mm, delta_sigma_ss, delta_sigma_hp, delta_sigma_ppt,
-                    d_grain_um, applied_stress)
+    _require_finite(sigma_yield_MPa, elongation_pct, margin_yield_MPa, delta_sigma_ss, delta_sigma_hp,
+                    delta_sigma_ppt, d_grain_um, applied_stress)
     return {
         "yield_MPa": sigma_yield_MPa,
-        "uts_MPa": sigma_uts_MPa,
         "elongation_pct": elongation_pct,
-        "k1c_MPa_m": k1c_MPa_sqrt_m,
-        "critical_flaw_ac_mm": flaw_ac_mm,
         "margin_yield_MPa": margin_yield_MPa,
-        "margin_flaw_mm": margin_flaw_mm,
         "delta_sigma_ss": delta_sigma_ss,
         "delta_sigma_hp": delta_sigma_hp,
         "delta_sigma_ppt": delta_sigma_ppt,
@@ -565,11 +532,8 @@ def solve_stochastic_uq(params: dict) -> dict:
     service_stress_nominal = float(params.get("serviceStress_nominal", 720.0))
     service_stress_cov = float(params.get("serviceStress_cov", 0.08))  # 8% flight load fluctuation
 
-    flaw_size_mean_um = float(params.get("initialFlawSize_um_mean", 45.0))
-    flaw_size_std_um = float(params.get("initialFlawSize_um_std", 15.0))
-
     spec_min_yield = float(params.get("specMinYield_MPa", 1100.0))
-    spec_min_uts = float(params.get("specMinUTS_MPa", 1350.0))
+    spec_min_uts = float(params.get("specMinUTS_MPa", 1350.0))  # echoed in alloyMetadata only; no UTS is computed
     spec_min_elongation = float(params.get("specMinElongation_pct", 12.0))
 
     N_samples = int(min(10000, max(500, params.get("mcSamples", 2500))))
@@ -579,7 +543,9 @@ def solve_stochastic_uq(params: dict) -> dict:
 
     elements = list(nominal_comp.keys())
     E_dim = len(elements)
-    # Total uncertain dimensions: Elements + CoolingRate + AgingTemp + AgingTime + ServiceStress + FlawSize
+    # Total Sobol dimensions: Elements + CoolingRate + AgingTemp + AgingTime + ServiceStress + one reserved
+    # column (the former flaw-size dimension). It is kept so the sampled points, and with them every
+    # yield statistic, stay bit-identical after the flaw-size outputs were removed.
     total_dims = E_dim + 5
 
     # Log-normal parameters for cooling rate
@@ -619,10 +585,9 @@ def solve_stochastic_uq(params: dict) -> dict:
         return comp_draw, cr, t_age, time_age
 
     comp_s, cr_s, t_age_s, time_age_s = draw_factors(qmc_points)
-    # Service stress (normal) and flaw size (normal) are sampled only in the main population.
+    # Service stress (normal) is sampled only in the main population.
     service_stress_s = _pmax(50.0, service_stress_nominal + norm_ppf_array(qmc_points[:, E_dim + 3]) * (service_stress_nominal * service_stress_cov))
-    flaw_size_s = _pmax(5.0, flaw_size_mean_um + norm_ppf_array(qmc_points[:, E_dim + 4]) * flaw_size_std_um)
-    _require_finite(service_stress_s, flaw_size_s)
+    _require_finite(service_stress_s)
 
     res = solve_realizations_vec(
         base_metal=base_metal,
@@ -630,14 +595,10 @@ def solve_stochastic_uq(params: dict) -> dict:
         cooling_rate=cr_s,
         aging_temp_C=t_age_s,
         aging_time_h=time_age_s,
-        service_stress_MPa=service_stress_s,
-        flaw_size_um=flaw_size_s
+        service_stress_MPa=service_stress_s
     )
     yield_list = res["yield_MPa"]
-    uts_list = res["uts_MPa"]
     elong_list = res["elongation_pct"]
-    k1c_list = res["k1c_MPa_m"]
-    flaw_ac_list = res["critical_flaw_ac_mm"]
     margin_yield_list = res["margin_yield_MPa"]
 
     # Descriptive model statistics; uncertainty of a single QMC run is not estimated.
@@ -757,10 +718,7 @@ def solve_stochastic_uq(params: dict) -> dict:
         }
 
     yield_stats = calc_stats(yield_list, spec_min_yield)
-    uts_stats = calc_stats(uts_list, spec_min_uts)
     elong_stats = calc_stats(elong_list, spec_min_elongation)
-    k1c_stats = calc_stats(k1c_list, 60.0)
-    flaw_ac_stats = calc_stats(flaw_ac_list, 1.0)
 
     # 4. Reliability & Failure Probability
     failures_yield = int(np.count_nonzero(margin_yield_list < 0))
@@ -787,7 +745,7 @@ def solve_stochastic_uq(params: dict) -> dict:
         c_draw, cr_draw, t_age_draw, time_age_draw = draw_factors(V)
         return solve_realizations_vec(
             base_metal, c_draw, cr_draw, t_age_draw, time_age_draw,
-            service_stress_nominal, flaw_size_mean_um
+            service_stress_nominal
         )["yield_MPa"]
 
     A_pts = saltelli_pts[:, :k_factors]
@@ -871,10 +829,13 @@ def solve_stochastic_uq(params: dict) -> dict:
         },
         "stochasticProperties": {
             "yieldStrength_Rp02": yield_stats,
-            "ultimateTensileStrength_UTS": uts_stats,
+            "ultimateTensileStrength_UTS": None,
+            "ultimateTensileStrength_UTS_status": UTS_UNAVAILABLE_STATUS,
             "elongationPct": elong_stats,
-            "fractureToughness_K1c": k1c_stats,
-            "criticalFlawSize_ac": flaw_ac_stats
+            "fractureToughness_K1c": None,
+            "fractureToughness_K1c_status": K1C_UNAVAILABLE_STATUS,
+            "criticalFlawSize_ac": None,
+            "criticalFlawSize_ac_status": CRITICAL_FLAW_UNAVAILABLE_STATUS
         },
         "sobolSensitivityAnalysis": sensitivity_indices,
         "sensitivityMetadata": {
@@ -894,8 +855,9 @@ def solve_stochastic_uq(params: dict) -> dict:
             "aBasisConforming": a_basis_pass,
             "bBasisConforming": b_basis_pass,
             "cpkConforming": cpk_pass,
-            "criticalFlawMedian_mm": flaw_ac_stats["median_P50"],
-            "criticalFlaw_P10_mm": flaw_ac_stats["P10"]
+            "criticalFlawMedian_mm": None,
+            "criticalFlaw_P10_mm": None,
+            "criticalFlaw_status": CRITICAL_FLAW_UNAVAILABLE_STATUS
         }
     }
 

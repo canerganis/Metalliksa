@@ -238,8 +238,13 @@ class StochasticTest(unittest.TestCase):
         comp = {"Nb": 5.0, "Ti": 0.9, "Al": 0.5, "Zr": 0.3, "Mg": 0.1}
         for base in ("Ni", "Fe", "Ti", "Al", "Zz", None, ["Ni"]):
             args = (base, comp, 1.5e5, 720.0, 8.0, 700.0, 40.0)
-            self.assertEqual(repr(uq.solve_single_realization(*args)),
-                             repr(OLD_UQ.solve_single_realization(*args)), repr(base))
+            # The invented-law outputs (UTS, K_Ic, critical flaw, flaw margin) and the flaw-size argument
+            # were removed; every value still returned equals the base blob.
+            new = uq.solve_single_realization(*args[:-1])
+            old = {k: v for k, v in OLD_UQ.solve_single_realization(*args).items() if k in new}
+            self.assertEqual(repr(new), repr(old), repr(base))
+            self.assertEqual(set(new), {"yield_MPa", "elongation_pct", "margin_yield_MPa", "delta_sigma_ss",
+                                        "delta_sigma_hp", "delta_sigma_ppt", "grain_size_um", "applied_stress"})
 
     def test_request_defaults_equal_the_base_blob_with_the_legacy_norm_ppf(self):
         # The norm_ppf sign fix (audit D1) is the only change to the sampled output: with the
@@ -252,7 +257,17 @@ class StochasticTest(unittest.TestCase):
         with mock.patch.object(uq, "norm_ppf", OLD_UQ.norm_ppf),                 mock.patch.object(uq, "norm_ppf_array", legacy_ppf_array):
             new = _strip(uq.solve_stochastic_uq({"mcSamples": 500}))
         old = _strip(OLD_UQ.solve_stochastic_uq({"mcSamples": 500}))
-        self.assertEqual(json.dumps(new), json.dumps(old))
+        # Documented difference: UTS, K_Ic and critical flaw size are null + status (invented laws removed).
+        props = old["stochasticProperties"]
+        for key, status in (("ultimateTensileStrength_UTS", uq.UTS_UNAVAILABLE_STATUS),
+                            ("fractureToughness_K1c", uq.K1C_UNAVAILABLE_STATUS),
+                            ("criticalFlawSize_ac", uq.CRITICAL_FLAW_UNAVAILABLE_STATUS)):
+            props[key] = None
+            props[key + "_status"] = status
+        rel = old["aerospaceReliability"]
+        rel["criticalFlawMedian_mm"] = rel["criticalFlaw_P10_mm"] = None
+        rel["criticalFlaw_status"] = uq.CRITICAL_FLAW_UNAVAILABLE_STATUS
+        self.assertEqual(json.dumps(new, sort_keys=True), json.dumps(old, sort_keys=True))
 
     def test_norm_ppf_fix_changes_only_sampled_statistics(self):
         new = _strip(uq.solve_stochastic_uq({"mcSamples": 500}))

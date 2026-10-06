@@ -817,11 +817,18 @@ class StepBGoldenTest(unittest.TestCase):
         import copy
         solver, case = "stochastic_uq_mmpds_solver", "seed42_n500_defaults_ni"
         payload = golden.CASES[solver][case]
-        oracle = golden._uq_scipy_oracle_stdout(payload)
+        # the oracle run with the three invented-law outputs (UTS, K_Ic, critical flaw) replaced by null + status
+        raw_oracle = golden._uq_scipy_oracle_stdout(payload)
+        oracle = golden._uq_without_unsupported_outputs(raw_oracle)
         base = golden.load_golden(solver, case)["stdout"]
         rows = drift_report.diff(base, oracle)
         self.assertTrue(rows)
         self.assertEqual(golden.step_b_violations(solver, rows, oracle, payload), [])
+        # a document that still carries numeric UTS / K_Ic / critical-flaw values is refused
+        self.assertTrue(golden.step_b_violations(solver, drift_report.diff(base, raw_oracle), raw_oracle, payload))
+        revived = copy.deepcopy(oracle)
+        revived["stochasticProperties"]["ultimateTensileStrength_UTS"] = raw_oracle["stochasticProperties"]["ultimateTensileStrength_UTS"]
+        self.assertTrue(golden.step_b_violations(solver, drift_report.diff(base, revived), revived, payload))
         # not the oracle: a perturbed document, the pre-fix (sigma 0.776) document itself
         perturbed = copy.deepcopy(oracle)
         perturbed["stochasticProperties"]["yieldStrength_Rp02"]["stdDev"] += 0.01
@@ -858,7 +865,7 @@ class StepBGoldenTest(unittest.TestCase):
         import copy
         solver, case = "stochastic_uq_mmpds_solver", "preset_steel4340_ams6414"   # baseMetal Fe
         payload = golden.CASES[solver][case]
-        oracle = golden._uq_scipy_oracle_stdout(payload)
+        oracle = golden._uq_without_unsupported_outputs(golden._uq_scipy_oracle_stdout(payload))
         base = golden.load_golden(solver, case)["stdout"]
         self.assertEqual(golden.step_b_violations(solver, drift_report.diff(base, oracle), oracle, payload), [])
 
