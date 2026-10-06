@@ -395,7 +395,7 @@ class CalphadElementTest(unittest.TestCase):
                     self.assertEqual(ctx.exception.field, field)
                     self.assertEqual(ctx.exception.detail["reason"], "no-standard-atomic-weight")
 
-    def test_ui_specimen_compositions_normalise_except_the_re_label(self):
+    def test_ui_specimen_compositions_all_normalise(self):
         compositions = _ui_specimen_compositions()
         self.assertEqual(len(compositions), 33)
         refused = []
@@ -411,9 +411,12 @@ class CalphadElementTest(unittest.TestCase):
                     # a pre-existing reading of the rare-earth label, see the handoff).
                     self.assertEqual(len(wt), len([v for v in comp.values() if v > 0]))
                     self.assertAlmostEqual(sum(at.values()), 1.0, places=12)
-        # Fix round: the wc-co specimen is written as W/C/Co (WC decomposed) and normalises;
-        # the WE43 "RE" (rare earths) label is refused instead of being read as rhenium.
-        self.assertEqual(refused, [({"Mg": 92.5, "Y": 4.0, "RE": 3.3, "Zr": 0.45}, "elements.RE")] * 2)
+        # Fix round: the wc-co specimen is written as W/C/Co (WC decomposed) and normalises.
+        # Physics audit MD-8: the WE43 entry no longer carries the "RE" (rare earths) label,
+        # which the solver refused; it lists Nd explicitly, so every specimen normalises.
+        self.assertEqual(refused, [])
+        self.assertIn({"Mg": 93.3, "Y": 4.0, "Nd": 2.25, "Zr": 0.45}, compositions)
+        self.assertNotIn({"Mg": 92.5, "Y": 4.0, "RE": 3.3, "Zr": 0.45}, compositions)
         self.assertIn({"W": 88.235, "C": 5.765, "Co": 6.0}, compositions)
 
     def test_re_label_is_refused_but_rhenium_is_accepted(self):
