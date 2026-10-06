@@ -1,12 +1,76 @@
 """Graded (stretched) 1D/3D mesh generation for sub-5um laser focus resolution in LPBF.
 
 Refines the laser track interaction zone below 5 um while coarsening distant
-boundaries to prevent memory/cell count explosion. Uses finite-volume conservative
-metrics: cell widths, face areas, cell volumes, and harmonic interface distances.
+boundaries to prevent memory/cell count explosion. Returns finite-volume metrics:
+cell centers, cell widths and face coordinates. (Interface distances are not
+computed here; a consumer derives them from the centers.)
+
+Stretching rule (standard stretched-grid practice, Ferziger & Peric,
+"Computational Methods for Fluid Dynamics", non-uniform grid section): adjacent
+cell widths never jump by more than the stated growth ratio, and the graded
+outer cells are never narrower than the fine-zone cell. The fine zone uses
+n = round(fine_len / dx_fine) cells, so its width can differ from dx_fine by up
+to half a cell spread over n; the uniform fallback (outer span too short to
+grade) rounds its count down, so its cells are never narrower than dx_fine.
+The outer graded zone is built from an integer
+number of cells whose geometric ratio r <= growth_ratio is solved so the cells
+fill the outer span exactly; the last cell is never truncated to a sliver.
 """
 
-import math
 import numpy as np
+
+
+def _fit_graded_widths(dx_start_m, outer_len_m, dx_max_m, growth_ratio):
+    """Widths w_k = min(dx_start * r**k, dx_max), k = 1..n, summing exactly to outer_len.
+
+    n is the smallest cell count that can reach outer_len at r = growth_ratio, and
+    r in [1, growth_ratio] is found by bisection (the sum is monotone in r). Returns
+    None when no such r exists, i.e. the outer span is too short to grade without
+    a cell narrower than dx_start; the caller then meshes that zone uniformly.
+    """
+    if outer_len_m <= 0.0:
+        return []
+
+    def widths_for(r, n):
+        k = np.arange(1, n + 1, dtype=float)
+        return np.minimum(dx_start_m * r ** k, dx_max_m)
+
+    n = 0
+    total = 0.0
+    while total < outer_len_m * (1.0 - 1e-12):
+        n += 1
+        total = float(widths_for(growth_ratio, n).sum())
+        if n > 100000:  # pragma: no cover - guarded by the spacing checks
+            raise ValueError("Graded mesh did not converge")
+    if float(widths_for(1.0, n).sum()) > outer_len_m * (1.0 + 1e-12):
+        return None
+    lo, hi = 1.0, float(growth_ratio)
+    for _ in range(200):
+        mid = 0.5 * (lo + hi)
+        if float(widths_for(mid, n).sum()) < outer_len_m:
+            lo = mid
+        else:
+            hi = mid
+    w = widths_for(hi, n)
+    # Close the span exactly; the correction is at round-off level.
+    w[-1] = outer_len_m - float(w[:-1].sum())
+    return [float(v) for v in w]
+
+
+def _graded_half_widths(fine_len_m, total_len_m, dx_fine_m, dx_coarse_m, growth_ratio):
+    """Widths from 0 to total_len: uniform fine zone, then a geometric outer zone."""
+    n_fine = max(1, int(round(fine_len_m / dx_fine_m)))
+    dx_fine_actual = fine_len_m / n_fine
+    outer = _fit_graded_widths(
+        dx_fine_actual, total_len_m - fine_len_m, dx_coarse_m, growth_ratio
+    )
+    if outer is None:
+        # Outer span too short to grade: mesh the whole half uniformly. Round the
+        # count down so no cell is narrower than dx_fine (rounding up gave cells
+        # down to ~0.9*dx_fine, e.g. 2.256 um at span 22.56 um, dx_fine 2.5 um).
+        n = max(1, int(total_len_m // dx_fine_m))
+        return [total_len_m / n] * n
+    return [dx_fine_actual] * n_fine + outer
 
 
 def generate_graded_axis(span_m, fine_span_m, dx_fine_m, dx_coarse_m, growth_ratio=1.15):
@@ -37,24 +101,10 @@ def generate_graded_axis(span_m, fine_span_m, dx_fine_m, dx_coarse_m, growth_rat
         widths = np.diff(faces)
         return centers, widths, faces
 
-    # Fine center cells
-    half_fine = fine_span_m / 2.0
-    n_fine_half = max(1, int(round(half_fine / dx_fine_m)))
-    dx_fine_actual = half_fine / n_fine_half
-
-    # Half positive side: fine part
-    pos_widths = [dx_fine_actual] * n_fine_half
-    cur_x = half_fine
-    cur_dx = dx_fine_actual
-    
-    # Outer growing part
     half_span = span_m / 2.0
-    while cur_x < half_span - 1e-12:
-        cur_dx = min(cur_dx * growth_ratio, dx_coarse_m)
-        if cur_x + cur_dx > half_span:
-            cur_dx = half_span - cur_x
-        pos_widths.append(cur_dx)
-        cur_x += cur_dx
+    pos_widths = _graded_half_widths(
+        fine_span_m / 2.0, half_span, dx_fine_m, dx_coarse_m, growth_ratio
+    )
 
     # Full symmetric widths
     widths = np.array(list(reversed(pos_widths)) + pos_widths, dtype=float)
@@ -84,18 +134,8 @@ def generate_graded_mesh_3d(span_x_m, span_y_m, depth_z_m,
     
     # Z axis: surface at 0, goes down to -depth_z_m
     # Fine cells near top (0 .. -fine_spot_radius_m * 2), coarsening downward
-    half_fine_z = 2.0 * fine_spot_radius_m
-    n_fine_z = max(1, int(round(half_fine_z / dx_fine_m)))
-    dz_fine = half_fine_z / n_fine_z
-    z_widths = [dz_fine] * n_fine_z
-    cur_z = half_fine_z
-    cur_dz = dz_fine
-    while cur_z < depth_z_m - 1e-12:
-        cur_dz = min(cur_dz * 1.15, dx_coarse_m)
-        if cur_z + cur_dz > depth_z_m:
-            cur_dz = depth_z_m - cur_z
-        z_widths.append(cur_dz)
-        cur_z += cur_dz
+    half_fine_z = min(2.0 * fine_spot_radius_m, depth_z_m)
+    z_widths = _graded_half_widths(half_fine_z, depth_z_m, dx_fine_m, dx_coarse_m, 1.15)
 
     z_widths = np.array(z_widths, dtype=float)
     # Faces: 0 down to -depth_z_m
