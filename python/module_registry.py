@@ -366,8 +366,8 @@ def _keyhole_contract(row: Dict[str, str]) -> ModuleContract:
                   # Rewritten from the contract: the seed said "GPU-accelerated ... via NVIDIA Warp BVH",
                   # but the authority defaults to CPU and CUDA is optional.
                   reviewed={"description": "Seeded Monte Carlo ray optics in a prescribed Gaussian cavity "
-                                           "(NVIDIA Warp; CPU by default, CUDA optional); empirical absorption, "
-                                           "not a solved keyhole."},
+                                           "(NVIDIA Warp; CPU by default, CUDA optional); prescribed cavity, not a "
+                                           "solved free surface; empirical absorption law is not calibrated."},
                   evidence=Evidence(emits=(), ceiling="screening-only", forbidden_claims=_PILOT_FORBIDDEN,
                                     note=_KEYHOLE_EVIDENCE_NOTE),
                   oracle=Oracle(status="present", ci_note=_KEYHOLE_ORACLE_CI_NOTE,

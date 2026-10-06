@@ -30,3 +30,15 @@ test("build-job printable / risky / do-not-print verdict is labelled a screening
     assert.match(html, new RegExp(`Headline ${verdict}`), "headline (underlying value) unchanged");
   }
 });
+
+test("weakest LPBF engines are at most Research maturity and state in one plain sentence what they are not", () => {
+  for (const id of ["keyhole-raytracing", "murakami-fatigue", "icme-motor"]) {
+    assert.ok(["Research", "Preview"].includes(mod(id).scope), `${id} must not exceed Research`);
+  }
+  assert.match(mod("keyhole-raytracing").description, /prescribed cavity, not a solved free surface; empirical absorption law is not calibrated/);
+  assert.match(mod("murakami-fatigue").description, /steel-derived formula; surface roughness and R-ratio are not modelled/);
+  assert.match(mod("icme-motor").description, /not a calibrated strength prediction for any alloy/);
+  assert.match(read("src/components/KeyholeRaytracingLab.tsx"), /Prescribed cavity, not a solved free surface; the absorption law is empirical and not calibrated\./);
+  assert.match(read("src/components/MurakamiFatigueLab.tsx"), /Steel-derived formula; surface roughness and R-ratio not modelled\./);
+  assert.match(read("src/components/ICMEMultiScalePipelineStudio.tsx"), /Not a calibrated strength prediction: tabulated constants are not matched to your alloy/);
+});
