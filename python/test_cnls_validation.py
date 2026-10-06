@@ -249,5 +249,234 @@ class CpeCapacitanceTests(unittest.TestCase):
         self.assertNotIn("c_hirschorn", source)
 
 
+def de_levie_open(r_ion, r_ct, q_d, alpha, omega):
+    """Bisquert / de Levie transmission line with a blocking end: Z = sqrt(R_ion zeta) coth(sqrt(R_ion / zeta)),
+    zeta = (1/R_ct + Q (j w)^alpha)^-1 (independent oracle)."""
+    zeta = 1.0 / (1.0 / r_ct + q_d * (1j * omega) ** alpha)
+    return np.sqrt(r_ion * zeta) / np.tanh(np.sqrt(r_ion / zeta))
+
+
+def series(*elements):
+    return {"connection": "series", "elements": list(elements)}
+
+
+def parallel(*elements):
+    return {"connection": "parallel", "elements": list(elements)}
+
+
+class CustomElementSecondaryParameterTests(unittest.TestCase):
+    """EUQ-1: Rct/Qd (TLM) and alpha/beta (Cole-Cole / HN) of a custom element reach the impedance."""
+
+    def tlm(self, rct, kind="TLM_open"):
+        return {"branches": [series({"id": "T", "name": "T", "type": kind, "value": 50.0, "exponent": 0.9,
+                                     "secondaryValue": rct})]}
+
+    def test_tlm_rct_changes_the_impedance(self):
+        w = 2.0 * math.pi * 0.01
+        z200 = solver.evaluate_topology_impedance(self.tlm(200.0), w)
+        z5000 = solver.evaluate_topology_impedance(self.tlm(5000.0), w)
+        # before: both were 216.343-0.328j (the evaluator default Rct = 200 was always used)
+        self.assertAlmostEqual(abs(z200 - (216.3429 - 0.32764j)), 0.0, delta=1e-3)
+        self.assertAlmostEqual(abs(z5000 - (4976.2589 - 201.6480j)), 0.0, delta=1e-3)
+        self.assertAlmostEqual(abs(z5000 / de_levie_open(50.0, 5000.0, 1e-4, 0.9, w) - 1.0), 0.0, delta=1e-12)
+
+    def test_fitted_rct_and_qd_keys_are_read_and_have_sensitivity(self):
+        topology = self.tlm(200.0)
+        z = solver.evaluate_circuit_impedance(topology, {"T_value": 50.0, "T_exponent": 0.9, "T_rct": 800.0,
+                                                         "T_qd": 3e-5}, OMEGA)
+        np.testing.assert_allclose(z, de_levie_open(50.0, 800.0, 3e-5, 0.9, OMEGA), rtol=1e-10)
+        names = {p["field"] for p in solver.extract_topology_parameters(topology)}
+        self.assertTrue({"value", "rct", "qd", "exponent"} <= names)
+
+    def test_tlm_rct_is_recovered_by_a_fit(self):
+        topology = {"branches": [series({"id": "rs", "name": "Rs", "type": "R", "value": 2.0},
+                                        {"id": "T", "name": "T", "type": "TLM_open", "value": 65.0,
+                                         "exponent": 0.9, "secondaryValue": 400.0})]}
+        omega = 2.0 * np.pi * np.logspace(5, -2, 57)
+        z = 2.0 + de_levie_open(65.0, 250.0, 1.5e-4, 0.9, omega)
+        points = [{"frequency": float(w / (2 * np.pi)), "zReal": float(v.real), "minusZImag": float(-v.imag)}
+                  for w, v in zip(omega, z)]
+        params = solver.extract_topology_parameters(topology)
+        report = solver.run_cnls_fit(topology, points, params, "modulus", 200)
+        fitted = {p["field"]: p["fittedValue"] for p in report["parameters"] if p["elementId"] == "T"}
+        self.assertAlmostEqual(fitted["rct"] / 250.0, 1.0, delta=1e-6)  # was stuck at its 400 initial value
+        self.assertAlmostEqual(fitted["qd"] / 1.5e-4, 1.0, delta=1e-6)
+
+    def test_havriliak_negami_alpha_and_beta_are_used_and_exposed(self):
+        el = {"id": "h", "name": "H", "type": "HN", "value": 1000.0, "exponent": 1e-4}
+        topology = {"branches": [series(el)]}
+        z = solver.evaluate_circuit_impedance(topology, {"h_value": 1000.0, "h_exponent": 1e-4, "h_alpha": 0.6,
+                                                         "h_beta": 0.4}, OMEGA)
+        np.testing.assert_allclose(z, 1000.0 / (1.0 + (1j * OMEGA * 1e-4) ** 0.6) ** 0.4, rtol=1e-10)
+        fields = [p["field"] for p in solver.extract_topology_parameters(topology)]
+        self.assertEqual(fields, ["value", "exponent", "alpha", "beta"])
+
+
+class ParallelBranchAdmittanceTests(unittest.TestCase):
+    """EUQ-7: a parallel branch is an admittance sum whatever its element types."""
+
+    def test_two_resistors_and_a_capacitor_are_all_in_parallel(self):
+        topology = {"branches": [parallel({"id": "a", "name": "R1", "type": "R", "value": 100.0},
+                                          {"id": "b", "name": "R2", "type": "R", "value": 100.0},
+                                          {"id": "c", "name": "C1", "type": "C", "value": 1e-6})]}
+        z = solver.evaluate_topology_impedance(topology, 1e-6)
+        self.assertAlmostEqual(z.real, 50.0, places=6)  # was 200 Ohm: (R1 + R2) || C
+        np.testing.assert_allclose(solver.evaluate_topology_impedance(topology, OMEGA),
+                                   1.0 / (2.0 / 100.0 + 1j * OMEGA * 1e-6), rtol=1e-10)
+
+    def test_randles_with_warburg_is_a_series_sub_branch(self):
+        rct, sigma, cdl, rs = 120.0, 30.0, 2e-5, 8.0
+        topology = {"branches": [
+            series({"id": "rs", "name": "Rs", "type": "R", "value": rs}),
+            parallel({"id": "cdl", "name": "Cdl", "type": "C", "value": cdl},
+                     series({"id": "rct", "name": "Rct", "type": "R", "value": rct},
+                            {"id": "w", "name": "W", "type": "W", "value": sigma}))]}
+        z_w = solver.evaluate_element_impedance("W", {"value": sigma}, OMEGA)
+        expected = rs + 1.0 / (1j * OMEGA * cdl + 1.0 / (rct + z_w))
+        np.testing.assert_allclose(solver.evaluate_topology_impedance(topology, OMEGA), expected, rtol=1e-10)
+        ids = [p["elementId"] for p in solver.extract_topology_parameters(topology)]
+        self.assertEqual(ids, ["rs", "cdl", "rct", "w"])
+
+
+class TlmShortSmallArgumentTests(unittest.TestCase):
+    """EUQ-8: tanh(g) ~ g, so sqrt(R_ion zeta) tanh(sqrt(R_ion / zeta)) -> R_ion, not zeta."""
+
+    def test_limit_is_r_ion_on_both_sides_of_the_threshold(self):
+        for rct in (1e9, 1e11, 1e13):  # 1e11 and 1e13 take the |gamma| < 1e-8 branch
+            with self.subTest(rct=rct):
+                params = {"rion": 1e-6, "rct": rct, "qd": 1e-15, "exponent": 0.9}
+                z = solver.evaluate_element_impedance("TLM_short", params, 1e-6)
+                z_arr = solver.evaluate_element_impedance("TLM_short", params, np.array([1e-6, 1e-3]))
+                self.assertAlmostEqual(abs(z - 1e-6), 0.0, delta=1e-12)  # was ~rct (1e11, 1e13 Ohm)
+                np.testing.assert_allclose(z_arr.real, 1e-6, rtol=1e-6)
+
+
+class CpeCapacitanceFittedResistanceTests(unittest.TestCase):
+    """EUQ-2: Brug / Hsu-Mansfeld use the FITTED Rs and Rct (Brug et al. 1984; Hsu & Mansfeld 2001)."""
+
+    RS, RCT, Q, N = 20.0, 5000.0, 2e-5, 0.85
+    FREQS = np.logspace(5, -2, 50)
+
+    def brug(self):
+        return self.Q ** (1 / self.N) * (self.RS * self.RCT / (self.RS + self.RCT)) ** ((1 - self.N) / self.N)
+
+    def hsu_mansfeld(self):
+        return self.Q ** (1 / self.N) * self.RCT ** ((1 - self.N) / self.N)
+
+    def points(self, topology, values):
+        z = solver.evaluate_circuit_impedance(topology, values, 2 * np.pi * self.FREQS)
+        return [{"frequency": float(f), "zReal": float(v.real), "minusZImag": float(-v.imag)}
+                for f, v in zip(self.FREQS, z)]
+
+    def assert_row(self, row, area=None):
+        self.assertAlmostEqual(row["cBrug_F"] / self.brug(), 1.0, delta=1e-7)  # was 2.958 uF (-41 %)
+        self.assertAlmostEqual(row["cHsuMansfeld_F"] / self.hsu_mansfeld(), 1.0, delta=1e-7)  # was 6.679 uF (-50 %)
+        self.assertEqual((row["associatedRs"], row["associatedRct"]), (self.RS, self.RCT))  # were 1 and 100
+        self.assertAlmostEqual(row["tauEffectiveMs"], self.RCT * self.brug() * 1e3, delta=2e-3)
+        if area is None:
+            self.assertIsNone(row["cEffectiveArea_uFcm2"])
+            self.assertIsNone(row["physicsNote"])
+            self.assertIn("cEffectiveArea", row["unavailable"])
+        else:
+            self.assertEqual(row["cEffectiveArea_uFcm2"], round(self.brug() * 1e6 / area, 3))
+            self.assertTrue(row["physicsNote"].startswith("Ideal double-layer"))
+
+    def test_custom_topology_uses_fitted_resistances(self):
+        topology = {"branches": [
+            series({"id": "r1", "name": "Rs", "type": "R", "value": 1.0}),
+            parallel({"id": "r2", "name": "Rct", "type": "R", "value": 100.0},
+                     {"id": "q1", "name": "Q1", "type": "CPE", "value": 1e-5, "exponent": 0.8})]}
+        truth = {"r1_value": self.RS, "r2_value": self.RCT, "q1_value": self.Q, "q1_exponent": self.N}
+        report = solver.run_cnls_fit(topology, self.points(topology, truth),
+                                     solver.extract_topology_parameters(topology), "modulus", 200)
+        self.assertTrue(report["converged"])
+        rows = report["physicalValidation"]["cpeCapacitances"]
+        self.assertEqual(len(rows), 1)
+        self.assert_row(rows[0])
+
+    def test_preset_topology_reports_capacitances_with_the_area(self):
+        values = {"Rs": self.RS, "Rct": self.RCT, "Qdl": self.Q, "ndl": self.N}
+        report = solver.run_cnls_fit("randles_cpe", self.points("randles_cpe", values),
+                                     solver.extract_topology_parameters("randles_cpe"), "modulus", 200,
+                                     electrode_area_cm2=1.0)
+        rows = report["physicalValidation"]["cpeCapacitances"]  # was [] for every preset
+        self.assertEqual(len(rows), 1)
+        self.assert_row(rows[0], area=1.0)
+
+    def test_blocking_cpe_has_no_hsu_mansfeld_value(self):
+        topology = {"branches": [series({"id": "rs", "name": "Rs", "type": "R", "value": self.RS}),
+                                 parallel({"id": "q", "name": "Q", "type": "CPE", "value": self.Q,
+                                           "exponent": self.N})]}
+        row = solver.calculate_cpe_effective_capacitances([], topology, 2.0)[0]
+        self.assertAlmostEqual(row["cBrug_F"] / (self.Q ** (1 / self.N) * self.RS ** ((1 - self.N) / self.N)), 1.0,
+                               delta=1e-12)
+        self.assertIsNone(row["cHsuMansfeld_F"])
+        self.assertIsNone(row["associatedRct"])  # was an invented 100 Ohm
+        self.assertIn("cHsuMansfeld", row["unavailable"])
+
+    def test_cpe_directly_in_series_is_a_blocking_electrode(self):
+        # review: Rs + CPE in one series branch returned [] (no row, no reason); at b0d77480 it had a row
+        topology = {"branches": [series({"id": "rs", "name": "Rs", "type": "R", "value": self.RS},
+                                        {"id": "q", "name": "Q", "type": "CPE", "value": self.Q,
+                                         "exponent": self.N})]}
+        rows = solver.calculate_cpe_effective_capacitances([], topology)
+        self.assertEqual(len(rows), 1)
+        row = rows[0]
+        blocking = self.Q ** (1 / self.N) * self.RS ** ((1 - self.N) / self.N)  # Brug 1984, 5.028 uF
+        self.assertAlmostEqual(row["cBrug_F"] / blocking, 1.0, delta=1e-12)
+        self.assertAlmostEqual(row["cBrug_uF"], 5.0278, delta=1e-3)
+        self.assertEqual(row["associatedRs"], self.RS)
+        self.assertIsNone(row["associatedRct"])
+        self.assertIsNone(row["cHsuMansfeld_F"])
+        self.assertIn("cHsuMansfeld", row["unavailable"])
+
+    def test_nested_ladder_is_unavailable_not_a_number(self):
+        # Rs + (Qcoat || (Rpore + (Qdl || Rct))): the coating CPE used to get Rpore+Rct = 5300 Ohm and
+        # the inner CPE Rs only; neither is the single-loop Brug/Hsu-Mansfeld quantity.
+        topology = {"branches": [
+            series({"id": "rs", "name": "Rs", "type": "R", "value": self.RS}),
+            parallel({"id": "qc", "name": "Qcoat", "type": "CPE", "value": 1e-6, "exponent": 0.9},
+                     series({"id": "rp", "name": "Rpore", "type": "R", "value": 300.0},
+                            parallel({"id": "qdl", "name": "Qdl", "type": "CPE", "value": self.Q,
+                                      "exponent": self.N},
+                                     {"id": "rct", "name": "Rct", "type": "R", "value": self.RCT})))]}
+        rows = {r["cpeElementId"]: r for r in solver.calculate_cpe_effective_capacitances([], topology)}
+        self.assertEqual(set(rows), {"qc", "qdl"})
+        for row in rows.values():
+            self.assertIsNone(row["cBrug_F"])
+            self.assertIsNone(row["cHsuMansfeld_F"])
+            self.assertIsNone(row["associatedRct"])  # qc was 5300
+            self.assertIn("ladder", row["unavailable"]["cBrug"])
+            self.assertIn("ladder", row["unavailable"]["cHsuMansfeld"])
+
+    def test_series_sub_branch_without_a_loop_still_counts_its_dc_resistance(self):
+        topology = {"branches": [
+            series({"id": "rs", "name": "Rs", "type": "R", "value": self.RS}),
+            parallel({"id": "q", "name": "Q", "type": "CPE", "value": self.Q, "exponent": self.N},
+                     series({"id": "ra", "name": "Ra", "type": "R", "value": 3000.0},
+                            {"id": "rb", "name": "Rb", "type": "R", "value": 2000.0}))]}
+        row = solver.calculate_cpe_effective_capacitances([], topology)[0]
+        self.assertEqual(row["associatedRct"], self.RCT)
+        self.assertAlmostEqual(row["cHsuMansfeld_F"] / self.hsu_mansfeld(), 1.0, delta=1e-12)
+        self.assertNotIn("topologyNote", row)
+
+    def test_voigt_chain_rows_carry_a_note(self):
+        values = {"Rs": self.RS, "Rpore": 300.0, "Qcoat": 1e-6, "ncoat": 0.9,
+                  "Rct": self.RCT, "Qdl": self.Q, "ndl": self.N}
+        params = [{"paramName": k, "value": v} for k, v in values.items()]
+        rows = solver.calculate_cpe_effective_capacitances(params, "two_time_constants")
+        self.assertEqual(len(rows), 2)
+        for row in rows:
+            self.assertIn("Voigt chain", row["topologyNote"])
+            self.assertEqual(row["associatedRs"], self.RS)
+        single = solver.calculate_cpe_effective_capacitances(params, "randles_cpe")
+        self.assertNotIn("topologyNote", single[0])
+
+    def test_invalid_area_is_refused(self):
+        for area in (0.0, -1.0, float("nan"), True):
+            with self.subTest(area=area), self.assertRaises(ValueError):
+                solver.calculate_cpe_effective_capacitances([], CpeCapacitanceTests.TOPOLOGY, area)
+
+
 if __name__ == "__main__":
     unittest.main()

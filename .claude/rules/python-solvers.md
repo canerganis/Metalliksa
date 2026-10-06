@@ -13,3 +13,4 @@ paths:
 - Use only the CPU baseline in `python/requirements-lpbf.in` for tests. `python/requirements.txt` pulls torch/CUDA; do not install it for CI-style runs.
 - Tests that call `git show <old sha>` need full git history (CI uses `fetch-depth: 0`); with `CI` set they fail instead of skipping when a revision is missing.
 - Physics change checklist: run `npm run test:meltpool`, `npm run test:lpbf` and the frozen benchmarks relevant to the module; record verified scientific claims in `PROOF.md`.
+- `python/golden/phase6b/cnls_fitting_solver/*.json` (bound to blob faa6684) still hold the pre-EUQ-2 `cpeCapacitances` rows (initial-guess Rs/Rct). They are superseded: `python/test_phase6b_vector_parity.py` excludes that subtree and checks it against an independent Brug/Hsu-Mansfeld oracle. Re-pin those rows the next time the phase6b goldens are regenerated.

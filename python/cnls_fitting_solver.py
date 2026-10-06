@@ -243,12 +243,15 @@ def evaluate_element_impedance(el_type, params, omega):
             gamma_l = np.sqrt(r_ion / zeta)
             z_char = np.sqrt(r_ion * zeta)
             tanh_g = np.tanh(gamma_l)
-            return np.where(np.abs(gamma_l) < 1e-8, zeta, z_char * tanh_g)
+            # Small-argument limit: tanh(g) ~ g, so sqrt(R_ion*zeta)*sqrt(R_ion/zeta) = R_ion
+            # (EUQ-8; this branch returned zeta, up to ~1e16 x R_ion too large).
+            z_lim = np.full_like(zeta, complex(r_ion, 0.0), dtype=np.complex128)
+            return np.where(np.abs(gamma_l) < 1e-8, z_lim, z_char * tanh_g)
         else:
             gamma_l = cmath.sqrt(complex(r_ion, 0.0) / zeta)
             z_char = cmath.sqrt(complex(r_ion, 0.0) * zeta)
             if abs(gamma_l) < 1e-8:
-                return zeta
+                return complex(r_ion, 0.0)  # tanh(g) ~ g limit is R_ion, not zeta (EUQ-8)
             return z_char * cmath.tanh(gamma_l)
     
     elif el_type in ["L", "Inductor"]:
@@ -257,10 +260,82 @@ def evaluate_element_impedance(el_type, params, omega):
     
     raise _unknown_element_error(el_type)
 
+# Secondary element fields a custom element carries besides value/exponent, keyed by the
+# `field` extract_topology_parameters gives them (EUQ-1): TLM_open/TLM_short read rct and qd,
+# ColeCole/HN read alpha, HN reads beta. Each is looked up as "<id>_<field>" (then
+# "<name>_<field>", then the element's own field) and passed to evaluate_element_impedance;
+# before, only value/exponent were passed and these elements always used the evaluator's
+# hard-coded defaults (rct 200, qd 1e-4, alpha 0.85, beta 0.75) whatever was fitted.
+_SECONDARY_FIELDS = ("rct", "qd", "alpha", "beta")
+_SECONDARY_ELEMENT_KEYS = {"rct": ("rct", "secondaryValue"), "qd": ("qd",), "alpha": ("alpha",), "beta": ("beta",)}
+
+
+def _is_sub_branch(item):
+    """A nested branch inside a branch's element list ({"connection": ..., "elements": [...]})."""
+    return isinstance(item, dict) and isinstance(item.get("elements"), list) and "type" not in item
+
+
+def _leaf_elements(branch):
+    """Every circuit element of a branch, descending into nested sub-branches (EUQ-7)."""
+    for item in branch.get("elements", []):
+        if _is_sub_branch(item):
+            yield from _leaf_elements(item)
+        else:
+            yield item
+
+
+def _custom_element_params(el, params_dict, default_value):
+    el_id = el.get("id", "")
+    el_name = el.get("name", "")
+    p_val = params_dict.get(f"{el_id}_value", params_dict.get(f"{el_name}_value", params_dict.get(el_name, el.get("value", default_value))))
+    p_exp = params_dict.get(f"{el_id}_exponent", params_dict.get(f"{el_name}_exponent", params_dict.get(f"n_{el_name}", el.get("exponent", 0.9))))
+    el_params = {"value": float(p_val), "exponent": float(p_exp)}
+    for field in _SECONDARY_FIELDS:
+        value = params_dict.get(f"{el_id}_{field}") if el_id else None
+        if value is None and el_name:
+            value = params_dict.get(f"{el_name}_{field}")
+        if value is None:
+            value = next((el[key] for key in _SECONDARY_ELEMENT_KEYS[field] if el.get(key) is not None), None)
+        if value is not None:
+            el_params[field] = float(value)
+    return el_params
+
+
+def _evaluate_custom_branch(branch, params_dict, omega, is_arr):
+    """Impedance of one branch: a series branch sums its items' impedances, a parallel branch sums
+    their admittances (1/Z = sum 1/Z_i). An item is an element or a nested sub-branch."""
+    conn = branch.get("connection", "series")
+    zeros = (lambda: np.zeros_like(omega, dtype=np.complex128)) if is_arr else (lambda: complex(0.0, 0.0))
+    z_items = []
+    for item in branch.get("elements", []):
+        if _is_sub_branch(item):
+            if not item.get("elements"):
+                continue
+            z_items.append(_evaluate_custom_branch(item, params_dict, omega, is_arr))
+        else:
+            default_value = 1.0 if conn == "series" else (1e-6 if item.get("type") in ("C", "Capacitor") else 1.0)
+            z_items.append(evaluate_element_impedance(item.get("type", "R"),
+                                                      _custom_element_params(item, params_dict, default_value), omega))
+    if conn == "series":
+        z_branch = zeros()
+        for z_el in z_items:
+            z_branch = z_branch + z_el
+        return z_branch
+    y_loop = zeros()
+    for z_el in z_items:
+        y_loop = y_loop + (1.0 / (z_el + 1e-30))
+    return 1.0 / (y_loop + 1e-30)
+
+
 def evaluate_custom_topology_impedance(branches, params_dict, omega):
     """
     Evaluates complex impedance for an arbitrary user-constructed circuit topology.
-    Handles series and parallel branches with arbitrary combinations of elements.
+    The top-level branches are in series. A "series" branch sums the impedances of its items, a
+    "parallel" branch sums their admittances (1/Z = sum 1/Z_i) whatever the element types. An item
+    may itself be a sub-branch ({"connection": ..., "elements": [...]}), so a Randles cell with
+    diffusion, (Rct + W) || Cdl, is drawn as a parallel branch holding Cdl and a series sub-branch
+    [Rct, W] (EUQ-7: a parallel branch with a C/CPE used to put all its other elements in SERIES
+    with each other, so {R1, R2, C} evaluated as (R1+R2)||C instead of R1||R2||C).
     Supports both scalar frequency omega and vectorized NumPy 1D frequency array omega.
     """
     is_arr = _is_array(omega)
@@ -272,70 +347,9 @@ def evaluate_custom_topology_impedance(branches, params_dict, omega):
     z_total = np.zeros_like(omega, dtype=np.complex128) if is_arr else complex(0.0, 0.0)
     
     for branch in branches:
-        conn = branch.get("connection", "series")
-        elements = branch.get("elements", [])
-        if not elements:
+        if not branch.get("elements", []):
             continue
-            
-        if conn == "series":
-            z_branch = np.zeros_like(omega, dtype=np.complex128) if is_arr else complex(0.0, 0.0)
-            for el in elements:
-                el_id = el.get("id", "")
-                el_name = el.get("name", "")
-                el_type = el.get("type", "R")
-                
-                # Retrieve parameters from params_dict
-                p_val = params_dict.get(f"{el_id}_value", params_dict.get(f"{el_name}_value", params_dict.get(el_name, el.get("value", 1.0))))
-                p_exp = params_dict.get(f"{el_id}_exponent", params_dict.get(f"{el_name}_exponent", params_dict.get(f"n_{el_name}", el.get("exponent", 0.9))))
-                
-                el_params = {"value": float(p_val), "exponent": float(p_exp)}
-                z_el = evaluate_element_impedance(el_type, el_params, omega)
-                z_branch = z_branch + z_el
-            z_total = z_total + z_branch
-            
-        else: # parallel loop
-            cap_elements = [e for e in elements if e.get("type") in ["C", "Capacitor", "CPE", "ConstantPhaseElement", "Q"]]
-            res_diff_elements = [e for e in elements if e.get("type") not in ["C", "Capacitor", "CPE", "ConstantPhaseElement", "Q"]]
-            
-            if cap_elements and res_diff_elements:
-                # Randles-like structure: Y_cap + 1/(Z_faradaic)
-                y_cap = np.zeros_like(omega, dtype=np.complex128) if is_arr else complex(0.0, 0.0)
-                for el in cap_elements:
-                    el_id = el.get("id", "")
-                    el_name = el.get("name", "")
-                    el_type = el.get("type", "C")
-                    p_val = params_dict.get(f"{el_id}_value", params_dict.get(f"{el_name}_value", params_dict.get(el_name, el.get("value", 1e-6))))
-                    p_exp = params_dict.get(f"{el_id}_exponent", params_dict.get(f"{el_name}_exponent", params_dict.get(f"n_{el_name}", el.get("exponent", 0.9))))
-                    z_el = evaluate_element_impedance(el_type, {"value": float(p_val), "exponent": float(p_exp)}, omega)
-                    y_cap = y_cap + (1.0 / (z_el + 1e-30))
-                
-                z_faradaic = np.zeros_like(omega, dtype=np.complex128) if is_arr else complex(0.0, 0.0)
-                for el in res_diff_elements:
-                    el_id = el.get("id", "")
-                    el_name = el.get("name", "")
-                    el_type = el.get("type", "R")
-                    p_val = params_dict.get(f"{el_id}_value", params_dict.get(f"{el_name}_value", params_dict.get(el_name, el.get("value", 100.0))))
-                    p_exp = params_dict.get(f"{el_id}_exponent", params_dict.get(f"{el_name}_exponent", params_dict.get(f"n_{el_name}", el.get("exponent", 0.9))))
-                    z_el = evaluate_element_impedance(el_type, {"value": float(p_val), "exponent": float(p_exp)}, omega)
-                    z_faradaic = z_faradaic + z_el
-                
-                y_faradaic = 1.0 / (z_faradaic + 1e-30)
-                y_loop = y_cap + y_faradaic
-                z_loop = 1.0 / (y_loop + 1e-30)
-                z_total = z_total + z_loop
-            else:
-                # Generic parallel sum: 1/Z = 1/Z1 + 1/Z2 + ...
-                y_loop = np.zeros_like(omega, dtype=np.complex128) if is_arr else complex(0.0, 0.0)
-                for el in elements:
-                    el_id = el.get("id", "")
-                    el_name = el.get("name", "")
-                    el_type = el.get("type", "R")
-                    p_val = params_dict.get(f"{el_id}_value", params_dict.get(f"{el_name}_value", params_dict.get(el_name, el.get("value", 1.0))))
-                    p_exp = params_dict.get(f"{el_id}_exponent", params_dict.get(f"{el_name}_exponent", params_dict.get(f"n_{el_name}", el.get("exponent", 0.9))))
-                    z_el = evaluate_element_impedance(el_type, {"value": float(p_val), "exponent": float(p_exp)}, omega)
-                    y_loop = y_loop + (1.0 / (z_el + 1e-30))
-                z_loop = 1.0 / (y_loop + 1e-30)
-                z_total = z_total + z_loop
+        z_total = z_total + _evaluate_custom_branch(branch, params_dict, omega, is_arr)
                 
     return z_total
 
@@ -537,13 +551,13 @@ def extract_topology_parameters(topology_data):
     params = []
     if isinstance(topology_data, dict) and "branches" in topology_data and topology_data["branches"]:
         for branch in topology_data.get("branches", []):
-            for el in branch.get("elements", []):
+            for el in _leaf_elements(branch):  # nested sub-branches included (EUQ-7)
                 el_id = el.get("id", "")
                 el_name = el.get("name", "")
                 el_type = el.get("type", "R")
                 val = float(el.get("value", 1.0))
                 exp = float(el.get("exponent", 0.85))
-                sec = float(el.get("secondaryValue", 200.0))
+                sec = float(el.get("rct", el.get("secondaryValue", 200.0)))
                 is_fixed = bool(el.get("isFixed", False))
 
                 if el_type in ["R", "Resistor"]:
@@ -701,7 +715,7 @@ def extract_topology_parameters(topology_data):
                         "paramName": f"Qd_{el_name}",
                         "elementId": el_id,
                         "field": "qd",
-                        "value": 1e-4,
+                        "value": float(el.get("qd", 1e-4)),
                         "unit": "S·s^n",
                         "paramType": "ConstantPhaseElement",
                         "min": 1e-14,
@@ -746,7 +760,7 @@ def extract_topology_parameters(topology_data):
                         "paramName": f"Qd_{el_name}",
                         "elementId": el_id,
                         "field": "qd",
-                        "value": 1e-4,
+                        "value": float(el.get("qd", 1e-4)),
                         "unit": "S·s^n",
                         "paramType": "ConstantPhaseElement",
                         "min": 1e-14,
@@ -791,13 +805,26 @@ def extract_topology_parameters(topology_data):
                         "paramName": f"α_{el_name}",
                         "elementId": el_id,
                         "field": "alpha",
-                        "value": 0.85,
+                        "value": float(el.get("alpha", 0.85)),
                         "unit": "",
                         "paramType": "Exponent",
                         "min": 0.10,
                         "max": 1.00,
                         "isFixed": is_fixed,
                     })
+                    if el_type in ["HN", "HavriliakNegami"]:
+                        # HN asymmetry exponent: evaluated by the element but never exposed before (EUQ-1)
+                        params.append({
+                            "paramName": f"β_{el_name}",
+                            "elementId": el_id,
+                            "field": "beta",
+                            "value": float(el.get("beta", 0.75)),
+                            "unit": "",
+                            "paramType": "Exponent",
+                            "min": 0.01,
+                            "max": 1.00,
+                            "isFixed": is_fixed,
+                        })
                 elif el_type in ["L", "Inductor"]:
                     params.append({
                         "paramName": el_name,
@@ -1079,9 +1106,12 @@ def run_global_auto_fit(topology_data, points, initial_params=None, weighting="m
     total_evals = n_pop
     raise NotImplementedError("Global Auto-Fit via Differential Evolution (random mutation) is disabled. Enforcing deterministic solvers.")
 
-def run_cnls_fit(topology_id, points, initial_params, weighting="modulus", max_iter=100, damping=1e-3):
+def run_cnls_fit(topology_id, points, initial_params, weighting="modulus", max_iter=100, damping=1e-3,
+                 electrode_area_cm2=None):
     """
     Levenberg-Marquardt optimizer for complex impedance spectra.
+    electrode_area_cm2 (optional) only normalises the reported CPE effective capacitance per cm²;
+    without it that value is null (no 1 cm² is assumed).
     """
     start_time = time.perf_counter()
     if not points or not initial_params:
@@ -1390,7 +1420,8 @@ def run_cnls_fit(topology_id, points, initial_params, weighting="modulus", max_i
     }
 
     # Physical Validation Suite
-    cpe_capacitances = calculate_cpe_effective_capacitances(out_params, topology_id)
+    # Fitted R, Q and n (EUQ-2), the caller's electrode area or none
+    cpe_capacitances = calculate_cpe_effective_capacitances(out_params, topology_id, electrode_area_cm2)
     lin_kk_report = perform_lin_kk_stationarity_test(points)
     inductance_report = analyze_and_deembed_high_freq_inductance(points)
     
@@ -1432,7 +1463,103 @@ def run_cnls_fit(topology_id, points, initial_params, weighting="modulus", max_i
 # PART 1: PHYSICAL VALIDATION & ADVANCED EIS DATA QUALITY SUITE
 # =========================================================================
 
-def calculate_cpe_effective_capacitances(params, topology_data, electrode_area=1.0):
+# CPE roles of the presets that hold a Randles-type CPE: (Q name, n name, parallel R name, series R name).
+# Same parameter names the preset evaluators read (EUQ-2: presets used to get no capacitances at all).
+# The coating loop of the two-time-constant preset is reported with Rs as its series resistance.
+_PRESET_CPE_ROLES = {}
+for _ids, _roles in (
+        (("randles_cpe", "cpe_randles", "rs_rcpe"), (("Qdl", "ndl", "Rct", "Rs"),)),
+        (("randles_warburg", "warburg"), (("Qdl", "ndl", "Rct", "Rs"),)),
+        (("two_time_constants", "oxide_coating", "coated_metal"),
+         (("Qcoat", "ncoat", "Rpore", "Rs"), ("Qdl", "ndl", "Rct", "Rs"))),
+        (("finite_reflective_warburg", "intercalation_warburg", "wo_reflective", "ws_reflective"),
+         (("Qdl", "ndl", "Rct", "Rs"),))):
+    for _id in _ids:
+        _PRESET_CPE_ROLES[_id] = _roles
+
+_CPE_TYPES = ("CPE", "ConstantPhaseElement", "Q")
+_RESISTOR_TYPES = ("R", "Resistor")
+
+
+def _param_value(p):
+    return float(p["fittedValue"] if p.get("fittedValue") is not None else p.get("value"))
+
+
+_LADDER_REASON = ("ladder (nested) topology: Brug and Hsu-Mansfeld assume a single (R || CPE) loop in series "
+                  "with Rs; which resistances they would take here is not defined, so no value is given")
+_VOIGT_CHAIN_NOTE = ("Voigt chain (several (R || CPE) loops in series): Rs is the series resistance of the circuit "
+                     "for every loop; the formulas are applied loop by loop as if each loop were alone")
+
+
+def _cpe_capacitance_row(cpe_id, cpe_name, q_val, n_val, r_solution, r_parallel, area,
+                         ladder_reason=None, topology_note=None):
+    """Brug and Hsu-Mansfeld effective capacitances of one CPE from the given (fitted) R values.
+
+    ladder_reason: when set, neither formula applies; both values are null with that reason.
+    topology_note: an informational note on how the resistances were assigned.
+
+    Brug et al., J. Electroanal. Chem. 176 (1984) 275: C = Q^(1/n) (Rs Rct / (Rs + Rct))^((1-n)/n);
+    blocking electrode (no parallel R): C = Q^(1/n) Rs^((1-n)/n).
+    Hsu & Mansfeld, Corrosion 57 (2001) 747: C = Q^(1/n) R^((1-n)/n) with R the parallel resistance.
+    A missing input makes the value that needs it null with a reason; nothing is defaulted."""
+    unavailable = {}
+    c_brug = c_hsu = tau_ms = None
+    if ladder_reason is not None:
+        r_solution = r_parallel = None
+        unavailable["cBrug"] = ladder_reason
+        unavailable["cHsuMansfeld"] = ladder_reason
+    elif r_solution is None:
+        unavailable["cBrug"] = "no series (solution) resistance in the circuit; the Brug formula needs Rs"
+    elif r_parallel is None:
+        c_brug = (q_val ** (1.0 / n_val)) * (r_solution ** ((1.0 - n_val) / n_val))
+    else:
+        r_comb = (r_solution * r_parallel) / max(1e-12, (r_solution + r_parallel))
+        c_brug = (q_val ** (1.0 / n_val)) * (r_comb ** ((1.0 - n_val) / n_val))
+    if ladder_reason is not None:
+        pass
+    elif r_parallel is None:
+        unavailable["cHsuMansfeld"] = "no resistance in parallel with the CPE (blocking); Hsu-Mansfeld needs it"
+    else:
+        c_hsu = (q_val * (r_parallel ** (1.0 - n_val))) ** (1.0 / n_val)
+        if c_brug is not None:
+            tau_ms = r_parallel * c_brug * 1000.0
+    c_brug_uFcm2 = physics_note = None
+    if area is None:
+        unavailable["cEffectiveArea"] = "electrodeAreaCm2 was not supplied; no area is assumed"
+    elif c_brug is not None:
+        c_brug_uFcm2 = c_brug * 1e6 / area
+        if c_brug_uFcm2 < 5.0:
+            physics_note = "Very low specific capacitance (typical for dense passive barrier film or thick organic coating, 1-5 µF/cm²)."
+        elif c_brug_uFcm2 <= 60.0:
+            physics_note = "Ideal double-layer capacitance range (typical for smooth metallic electrode in aqueous electrolyte, 10-40 µF/cm²)."
+        elif c_brug_uFcm2 <= 200.0:
+            physics_note = "Elevated double-layer capacitance (indicative of moderate surface roughness factor RF = 2-5 or porous oxide)."
+        else:
+            physics_note = "High capacitance (indicates highly porous 3D carbon matrix, pseudocapacitance, or large geometric surface area)."
+    row = {
+        "cpeElementId": cpe_id,
+        "cpeName": cpe_name,
+        "qValue": q_val,
+        "nExponent": n_val,
+        "cBrug_F": c_brug,
+        "cBrug_uF": None if c_brug is None else round(c_brug * 1e6, 4),
+        "cEffectiveArea_uFcm2": None if c_brug_uFcm2 is None else round(c_brug_uFcm2, 3),
+        "cHsuMansfeld_F": c_hsu,
+        "cHsuMansfeld_uF": None if c_hsu is None else round(c_hsu * 1e6, 4),
+        "tauEffectiveMs": None if tau_ms is None else round(tau_ms, 3),
+        "associatedRs": None if r_solution is None else round(r_solution, 3),
+        "associatedRct": None if r_parallel is None else round(r_parallel, 3),
+        "modelApplied": "Brug (2D Surface Distribution)",
+        "physicsNote": physics_note,
+    }
+    if topology_note is not None:
+        row["topologyNote"] = topology_note
+    if unavailable:
+        row["unavailable"] = unavailable
+    return row
+
+
+def calculate_cpe_effective_capacitances(params, topology_data, electrode_area=None):
     """
     Computes true effective double-layer and film capacitances (C_eff) from Constant Phase Elements (CPE, Q, n)
     using the Brug (2D surface distribution) and Hsu-Mansfeld (peak-frequency) models.
@@ -1443,114 +1570,140 @@ def calculate_cpe_effective_capacitances(params, topology_data, electrode_area=1
     time-constant distribution (surface or normal), is not otherwise implemented here: no
     separate normal-distribution formula is computed, and which inputs it would need
     was not verified.
+
+    Every R, Q and n is the FITTED value of the parameter list (fittedValue, else value), matched by
+    element id and field (custom topology) or by parameter name (preset); a custom element absent from
+    the list falls back to its topology value. EUQ-2: Rs and Rct used to come from the topology's
+    initial-guess values while Q and n were fitted, and presets returned no rows.
+    Custom topology: Rs is the sum of the resistors of the top-level series branches; the parallel
+    resistance of a CPE is the parallel combination of the resistors in its parallel branch (a series
+    sub-branch contributes the DC resistance of that sub-branch, the sum of its resistors). A CPE placed
+    directly in a top-level series branch is a blocking element (Brug blocking formula, Hsu-Mansfeld null).
+    A CPE in a ladder (its parallel branch nested inside another branch, or holding a sub-branch that
+    itself contains a parallel loop) gets a row with both values null and the reason: the single-loop
+    formulas do not say which resistances to use there. Several top-level loops in series (Voigt chain)
+    are evaluated loop by loop with the circuit Rs and carry a topologyNote. electrode_area (cm²) is required for the
+    area-normalised value and the physics note; when it is None they are null with a reason.
     """
     cpe_results = []
-    area = max(1e-6, float(electrode_area or 1.0))
-    
-    # 1. Collect all resistances and CPE parameters
-    res_dict = {}
-    cpe_dict = {}
-    
-    # Extract from parameter list
-    for p in params:
-        p_name = p.get("paramName", "")
-        el_id = p.get("elementId", "")
-        p_type = p.get("paramType", "")
-        val = float(p.get("fittedValue", p.get("value", 1.0)))
-        field = p.get("field", "value")
-        
-        if p_type in ["R", "Resistor"] or p_name.startswith("R"):
-            res_dict[el_id or p_name] = val
-            res_dict[p_name] = val
-        elif p_type in ["CPE", "ConstantPhaseElement", "Q"] or p_name.startswith("Q") or p_name.startswith("n"):
-            if el_id not in cpe_dict:
-                cpe_dict[el_id] = {"id": el_id, "name": p_name, "q": 1e-5, "n": 0.85}
-            if field == "value" or p_name.startswith("Q") or not p_name.startswith("n"):
-                cpe_dict[el_id]["q"] = max(1e-15, val)
-                cpe_dict[el_id]["name"] = p_name
-            elif field == "exponent" or p_name.startswith("n"):
-                cpe_dict[el_id]["n"] = max(0.1, min(1.0, val))
+    area = None
+    if electrode_area is not None:
+        if isinstance(electrode_area, bool):
+            raise ValueError("electrodeAreaCm2 must be a number")
+        area = float(electrode_area)
+        if not math.isfinite(area) or area <= 0:
+            raise ValueError("electrodeAreaCm2 must be finite and positive")
 
-    # Also scan topology if provided
-    if isinstance(topology_data, dict) and "branches" in topology_data:
-        r_solution = 1.0
-        r_ct = 100.0
-        
-        # Check first series branch for Rs
+    by_field = {}
+    by_name = {}
+    for p in params or []:
+        try:
+            val = _param_value(p)
+        except (TypeError, ValueError):
+            continue
+        by_field[(p.get("elementId", ""), p.get("field", "value"))] = val
+        if p.get("paramName"):
+            by_name[p["paramName"]] = val
+
+    if isinstance(topology_data, dict) and topology_data.get("branches"):
+        def value_of(el, field):
+            key = (el.get("id", ""), field)
+            if key in by_field:
+                return by_field[key]
+            raw = el.get(field)
+            return float(raw) if raw is not None else None
+
         branches = topology_data.get("branches", [])
-        if branches and branches[0].get("connection") == "series":
-            for el in branches[0].get("elements", []):
-                if el.get("type") in ["R", "Resistor"]:
-                    r_solution = float(el.get("value", 1.0))
-                    
-        for b_idx, branch in enumerate(branches):
-            b_elements = branch.get("elements", [])
-            branch_r = []
-            branch_cpe = []
-            for el in b_elements:
-                if el.get("type") in ["R", "Resistor"]:
-                    branch_r.append(float(el.get("value", 100.0)))
-                elif el.get("type") in ["CPE", "ConstantPhaseElement", "Q"]:
-                    branch_cpe.append({
-                        "id": el.get("id"),
-                        "name": el.get("name"),
-                        "q": float(el.get("value", 1e-5)),
-                        "n": float(el.get("exponent", 0.85))
-                    })
-            
-            for cpe in branch_cpe:
-                cpe_id = cpe["id"]
-                q_val = cpe_dict.get(cpe_id, {}).get("q", cpe["q"])
-                n_val = cpe_dict.get(cpe_id, {}).get("n", cpe["n"])
-                
-                # Associated parallel resistance
-                r_parallel = branch_r[0] if branch_r else r_ct
-                
-                # 1. Brug Formula (2D Surface Distribution / Roughness):
-                # C_eff = Q^(1/n) * ( (Rs * Rct) / (Rs + Rct) )^((1-n)/n)
-                # For blocking: C_eff = Q^(1/n) * Rs^((1-n)/n)
-                if r_parallel > 1e7: # blocking
-                    c_brug = (q_val ** (1.0 / n_val)) * (r_solution ** ((1.0 - n_val) / n_val))
-                else:
-                    r_comb = (r_solution * r_parallel) / max(1e-12, (r_solution + r_parallel))
-                    c_brug = (q_val ** (1.0 / n_val)) * (r_comb ** ((1.0 - n_val) / n_val))
-                
-                
-                # 2. Hsu-Mansfeld Formula (Characteristic frequency apex):
-                # C_eff = Q * (omega_max)^(n-1) = (Q * R_ct^(1-n))^(1/n) = Q^(1/n) * R^((1-n)/n)
-                c_hsu = (q_val * (r_parallel ** (1.0 - n_val))) ** (1.0 / n_val)
-                
-                tau_brug_ms = r_parallel * c_brug * 1000.0
-                c_brug_uF = c_brug * 1e6
-                c_brug_uFcm2 = c_brug_uF / area
-                
-                # Physical diagnosis
-                if c_brug_uFcm2 < 5.0:
-                    physics_note = "Very low specific capacitance (typical for dense passive barrier film or thick organic coating, 1-5 µF/cm²)."
-                elif c_brug_uFcm2 <= 60.0:
-                    physics_note = "Ideal double-layer capacitance range (typical for smooth metallic electrode in aqueous electrolyte, 10-40 µF/cm²)."
-                elif c_brug_uFcm2 <= 200.0:
-                    physics_note = "Elevated double-layer capacitance (indicative of moderate surface roughness factor RF = 2-5 or porous oxide)."
-                else:
-                    physics_note = "High capacitance (indicates highly porous 3D carbon matrix, pseudocapacitance, or large geometric surface area)."
-                    
-                cpe_results.append({
-                    "cpeElementId": cpe_id,
-                    "cpeName": cpe["name"],
-                    "qValue": q_val,
-                    "nExponent": n_val,
-                    "cBrug_F": c_brug,
-                    "cBrug_uF": round(c_brug_uF, 4),
-                    "cEffectiveArea_uFcm2": round(c_brug_uFcm2, 3),
-                    "cHsuMansfeld_F": c_hsu,
-                    "cHsuMansfeld_uF": round(c_hsu * 1e6, 4),
-                    "tauEffectiveMs": round(tau_brug_ms, 3),
-                    "associatedRs": round(r_solution, 3),
-                    "associatedRct": round(r_parallel, 3),
-                    "modelApplied": "Brug (2D Surface Distribution)",
-                    "physicsNote": physics_note
-                })
-                
+        series_r = [value_of(el, "value") for b in branches if b.get("connection", "series") == "series"
+                    for el in b.get("elements", []) if not _is_sub_branch(el) and el.get("type") in _RESISTOR_TYPES]
+        series_r = [r for r in series_r if r is not None]
+        r_solution = sum(series_r) if series_r else None
+
+        def contains_parallel(branch):
+            for item in branch.get("elements", []):
+                if _is_sub_branch(item) and (item.get("connection", "series") == "parallel"
+                                             or contains_parallel(item)):
+                    return True
+            return False
+
+        def parallel_branches(branch, nested):
+            # yields (parallel branch, True when it sits inside another parallel loop)
+            if branch.get("connection", "series") == "parallel":
+                yield branch, nested
+                nested = True
+            for item in branch.get("elements", []):
+                if _is_sub_branch(item):
+                    yield from parallel_branches(item, nested)
+
+        loops = [(b, nested) for top in branches for b, nested in parallel_branches(top, False)]
+        voigt_note = _VOIGT_CHAIN_NOTE if sum(1 for _, nested in loops if not nested) > 1 else None
+
+        def cpe_inputs(el):
+            q_val = value_of(el, "value")
+            n_val = value_of(el, "exponent")
+            if q_val is None or n_val is None:
+                return None
+            return max(1e-15, q_val), max(0.1, min(1.0, n_val))
+
+        # A CPE directly in a top-level series branch: blocking electrode (Rs + CPE).
+        for top in branches:
+            if top.get("connection", "series") != "series":
+                continue
+            for el in top.get("elements", []):
+                if _is_sub_branch(el) or el.get("type") not in _CPE_TYPES:
+                    continue
+                qn = cpe_inputs(el)
+                if qn is None:
+                    continue
+                cpe_results.append(_cpe_capacitance_row(
+                    el.get("id"), el.get("name"), qn[0], qn[1], r_solution, None, area))
+
+        for branch, nested in loops:
+            ladder = nested or any(_is_sub_branch(item) and contains_parallel(item)
+                                   for item in branch.get("elements", []))
+            r_parallel = None
+            if not ladder:
+                conductance = 0.0
+                for item in branch.get("elements", []):
+                    if _is_sub_branch(item):
+                        if item.get("connection", "series") != "series":
+                            continue
+                        # no parallel loop below this sub-branch (else ladder): its DC resistance
+                        rs_sub = [value_of(el, "value") for el in _leaf_elements(item)
+                                  if el.get("type") in _RESISTOR_TYPES]
+                        rs_sub = [r for r in rs_sub if r is not None]
+                        if rs_sub and sum(rs_sub) > 0:
+                            conductance += 1.0 / sum(rs_sub)
+                    elif item.get("type") in _RESISTOR_TYPES:
+                        r = value_of(item, "value")
+                        if r is not None and r > 0:
+                            conductance += 1.0 / r
+                r_parallel = 1.0 / conductance if conductance > 0 else None
+            for el in branch.get("elements", []):
+                if _is_sub_branch(el) or el.get("type") not in _CPE_TYPES:
+                    continue
+                qn = cpe_inputs(el)
+                if qn is None:
+                    continue
+                cpe_results.append(_cpe_capacitance_row(
+                    el.get("id"), el.get("name"), qn[0], qn[1], r_solution, r_parallel, area,
+                    ladder_reason=_LADDER_REASON if ladder else None,
+                    topology_note=None if ladder else voigt_note))
+        return cpe_results
+
+    topology_id = topology_data if isinstance(topology_data, str) else (
+        topology_data.get("id") if isinstance(topology_data, dict) else None)
+    preset_roles = _PRESET_CPE_ROLES.get(topology_id, ())
+    preset_note = _VOIGT_CHAIN_NOTE if len(preset_roles) > 1 else None
+    for q_name, n_name, rp_name, rs_name in preset_roles:
+        if q_name not in by_name or n_name not in by_name:
+            continue  # the CPE itself was not supplied: no row is invented
+        r_parallel = by_name.get(rp_name)
+        r_solution = by_name.get(rs_name)
+        cpe_results.append(_cpe_capacitance_row(
+            q_name, q_name, max(1e-15, by_name[q_name]), max(0.1, min(1.0, by_name[n_name])),
+            r_solution, r_parallel if r_parallel is not None and r_parallel > 0 else None, area,
+            topology_note=preset_note))
     return cpe_results
 
 
@@ -1983,7 +2136,7 @@ if __name__ == "__main__":
             print(json.dumps(result))
         elif action == "validate_dataset":
             points = data.get("points", [])
-            area = float(data.get("electrodeAreaCm2", 1.0))
+            area = data.get("electrodeAreaCm2")
             lin_kk = perform_lin_kk_stationarity_test(points)
             inductance = analyze_and_deembed_high_freq_inductance(points)
             initial_params = data.get("parameters", [])
@@ -2005,7 +2158,7 @@ if __name__ == "__main__":
             }))
         elif action == "cpe_capacitance":
             initial_params = data.get("parameters", [])
-            area = float(data.get("electrodeAreaCm2", 1.0))
+            area = data.get("electrodeAreaCm2")
             cpe_caps = calculate_cpe_effective_capacitances(initial_params, topology_data, area)
             print(json.dumps({
                 "success": True,
@@ -2247,7 +2400,8 @@ if __name__ == "__main__":
             initial_params = data.get("parameters", [])
             weighting = data.get("weighting", "modulus")
             max_iterations = int(data.get("maxIterations", 80))
-            result = run_cnls_fit(topology_data, points, initial_params, weighting, max_iterations)
+            result = run_cnls_fit(topology_data, points, initial_params, weighting, max_iterations,
+                                  electrode_area_cm2=data.get("electrodeAreaCm2"))
             print(json.dumps(result))
     except Exception as e:
         validation = sys.modules.get("input_validation")

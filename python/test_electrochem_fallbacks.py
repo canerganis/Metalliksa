@@ -433,15 +433,19 @@ class TafelIntersectionSubstitutionReportedTest(unittest.TestCase):
 
 
 class CorrosionKineticsRequiredInputsTest(unittest.TestCase):
-    """Review S5: no invented defaults for metalId, betaA, betaC, i0Corr_uA, ePit, e0."""
+    """Review S5: no invented defaults for metalId, betaA, betaC, i0Corr_uA, ePit, eCorr and their references."""
 
-    ALL = dict(metal_id="az31b", beta_a=0.12, beta_c=0.10, i0_corr_ua_cm2=6.5, e_pit_v=-1.42, e0_v=-2.37)
+    # Self-contained fixture: an illustrative E_pit / E_corr pair on one scale (not a measured AZ31B value).
+    ALL = dict(metal_id="az31b", beta_a=0.12, beta_c=0.10, i0_corr_ua_cm2=6.5, e_pit_v=-1.42, e_corr_v=-1.55,
+               e_pit_reference="SCE", e_corr_reference="SCE")
+    PITTING_INPUTS = {"ePit", "eCorr", "ePitReference", "eCorrReference"}
 
     def run_kinetics(self, **over):
         args = dict(self.ALL)
         args.update(over)
         return battery.simulate_corrosion_eis_and_kinetics(
-            args["metal_id"], args["beta_a"], args["beta_c"], args["i0_corr_ua_cm2"], args["e_pit_v"], args["e0_v"])
+            args["metal_id"], args["beta_a"], args["beta_c"], args["i0_corr_ua_cm2"], args["e_pit_v"], args["e_corr_v"],
+            args["e_pit_reference"], args["e_corr_reference"])
 
     def test_complete_input_has_no_status(self):
         out = self.run_kinetics()
@@ -453,7 +457,7 @@ class CorrosionKineticsRequiredInputsTest(unittest.TestCase):
     def test_nothing_supplied_is_unavailable_with_every_reason(self):
         out = battery.simulate_corrosion_eis_and_kinetics(None, None, None, None, None, None)
         self.assertEqual(out["status"], "unavailable")
-        self.assertEqual(set(out["unavailable"]), {"metalId", "betaA", "betaC", "i0Corr_uA", "ePit", "e0"})
+        self.assertEqual(set(out["unavailable"]), {"metalId", "betaA", "betaC", "i0Corr_uA"} | self.PITTING_INPUTS)
         for key in ("sternGeary_B_V", "polarizationResistance_Rp_Ohm_cm2", "corrosionRate_mm_yr", "corrosionRate_mpy",
                     "deltaE_pit_V", "pittingAssessment", "alloyId", "equivalentWeight_g_eq", "density_g_cm3"):
             self.assertIsNone(out[key], key)
@@ -485,16 +489,58 @@ class CorrosionKineticsRequiredInputsTest(unittest.TestCase):
 
     def test_invalid_values_are_unavailable_not_defaulted(self):
         for over in ({"beta_c": 0}, {"beta_c": -0.1}, {"i0_corr_ua_cm2": 0}, {"i0_corr_ua_cm2": "x"},
-                     {"e0_v": float("nan")}, {"e_pit_v": True}):
+                     {"e_corr_v": float("nan")}, {"e_pit_v": True}, {"e_pit_reference": ""},
+                     {"e_corr_reference": 3}):
             with self.subTest(over=over):
                 out = self.run_kinetics(**over)
                 self.assertIn(out["status"], ("partial", "unavailable"))
                 self.assertEqual(len(out["unavailable"]), 1)
 
     def test_a_potential_of_zero_volts_is_a_valid_input(self):
-        out = self.run_kinetics(e0_v=0.0)
+        out = self.run_kinetics(e_corr_v=0.0)
         self.assertNotIn("status", out)
         self.assertEqual(out["deltaE_pit_V"], round(-1.42, 3))
+
+    def test_margin_is_e_pit_minus_e_corr_not_a_standard_potential(self):
+        """EUQ-12 regression. ASTM G61 judges pitting from E_pit relative to E_corr on one reference electrode.
+        The former input was a substrate "E0" (the UI preset for AZ31B was Mg2+/Mg -2.37 V vs SHE), so
+        E_pit -1.42 gave dE = 0.95 V "Wide passivity margin" for a magnesium alloy."""
+        out = self.run_kinetics(e_corr_v=-2.37)  # the old preset E0, now taken for what the field is: E_corr
+        self.assertEqual(out["deltaE_pit_V"], 0.95)
+        out = self.run_kinetics()  # E_pit -1.42, E_corr -1.55, both vs SCE
+        self.assertEqual(out["deltaE_pit_V"], 0.13)
+        self.assertEqual(out["pittingAssessment"], "Moderate Passivity / Pitting Risk")
+        self.assertEqual(out["pittingReferenceElectrode"], "SCE")
+        self.assertIn("E_pit - E_corr", out["deltaE_pit_definition"])
+        out = self.run_kinetics(e_corr_v=-1.45)
+        self.assertEqual(out["pittingAssessment"], "Severe Chloride Pitting Susceptibility")
+
+    def test_reference_electrodes_must_be_supplied_and_agree(self):
+        for over, key in (({"e_pit_reference": None}, "ePitReference"), ({"e_corr_reference": None}, "eCorrReference"),
+                          ({"e_corr_reference": "SHE"}, "referenceElectrode")):
+            with self.subTest(over=over):
+                out = self.run_kinetics(**over)
+                self.assertEqual(out["status"], "partial")
+                self.assertEqual(set(out["unavailable"]), {key})
+                self.assertIsNone(out["deltaE_pit_V"])
+                self.assertIsNone(out["pittingAssessment"])
+                self.assertIsNone(out["pittingReferenceElectrode"])
+                self.assertIsNotNone(out["corrosionRate_mm_yr"])
+        out = self.run_kinetics(e_pit_reference=" sce ", e_corr_reference="SCE")  # names compared normalised
+        self.assertNotIn("status", out)
+        self.assertEqual(out["deltaE_pit_V"], 0.13)
+
+    def test_cli_does_not_read_a_standard_potential(self):
+        payload = {"action": "corrosion_kinetics", "metalId": "az31b", "betaA": 0.12, "betaC": 0.10, "i0Corr_uA": 6.5,
+                   "ePit": -1.42, "e0": -2.37, "ePitReference": "SCE"}
+        code, out = run_script("battery_corrosion_eis_solver.py", payload)
+        self.assertEqual(code, 0)
+        self.assertIsNone(out["deltaE_pit_V"])
+        self.assertEqual(set(out["unavailable"]), {"eCorr", "eCorrReference"})
+        self.assertIn("e0", out["ignoredInputs"])
+        payload.update({"eCorr": -1.55, "eCorrReference": "SCE"})
+        code, out = run_script("battery_corrosion_eis_solver.py", payload)
+        self.assertEqual((code, out["deltaE_pit_V"]), (0, 0.13))
 
     def test_stern_geary_uses_ln10_and_mpy_the_exact_mil(self):
         out = self.run_kinetics()
@@ -518,7 +564,7 @@ class CorrosionKineticsRequiredInputsTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertTrue(out["success"])
         self.assertEqual(out["status"], "unavailable")  # nothing but the substrate was sent
-        self.assertEqual(set(out["unavailable"]), {"betaA", "betaC", "i0Corr_uA", "ePit", "e0"})
+        self.assertEqual(set(out["unavailable"]), {"betaA", "betaC", "i0Corr_uA"} | self.PITTING_INPUTS)
         code, out = run_script("battery_corrosion_eis_solver.py", {"action": "corrosion_kinetics"})
         self.assertEqual(code, 0)
         self.assertEqual(out["status"], "unavailable")

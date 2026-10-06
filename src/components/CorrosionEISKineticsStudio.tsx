@@ -14,8 +14,11 @@ export function CorrosionEISKineticsStudio() {
   const [betaA, setBetaA] = useState<number>(0.12);
   const [betaC, setBetaC] = useState<number>(0.10);
   const [i0Corr, setI0Corr] = useState<number>(0.15); // uA/cm2
-  const [ePit, setEPit] = useState<number>(0.45); // V
-  const [e0, setE0] = useState<number>(0.08); // V
+  // Pitting margin inputs (EUQ-12): measured E_pit and E_corr on one reference electrode. No preset: the former
+  // per-substrate "E0" presets were pure-metal SHE standard potentials, not a pitting reference.
+  const [ePit, setEPit] = useState<number | null>(null); // V vs referenceElectrode
+  const [eCorr, setECorr] = useState<number | null>(null); // V vs referenceElectrode
+  const [referenceElectrode, setReferenceElectrode] = useState<string>("SCE");
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [simResult, setSimResult] = useState<any>(null);
@@ -36,7 +39,9 @@ export function CorrosionEISKineticsStudio() {
           betaC,
           i0Corr_uA: i0Corr,
           ePit,
-          e0,
+          eCorr,
+          ePitReference: referenceElectrode,
+          eCorrReference: referenceElectrode,
         }),
       });
 
@@ -66,7 +71,7 @@ export function CorrosionEISKineticsStudio() {
   };
 
   // Debounced, visibility-gated and abortable. The signature only contains request inputs.
-  const corrosionInputSignature = JSON.stringify([metalId, betaA, betaC, i0Corr, ePit, e0]);
+  const corrosionInputSignature = JSON.stringify([metalId, betaA, betaC, i0Corr, ePit, eCorr, referenceElectrode]);
   useEffect(() => {
     setSimResult(null);
   }, [corrosionInputSignature]);
@@ -132,11 +137,11 @@ export function CorrosionEISKineticsStudio() {
                 onChange={(e) => {
                   const m = e.target.value;
                   setMetalId(m);
-                  if (m === "steel-316l") { setEPit(0.45); setE0(0.08); setI0Corr(0.12); }
-                  else if (m === "al-7075") { setEPit(-0.68); setE0(-1.66); setI0Corr(1.85); }
-                  else if (m === "az31b") { setEPit(-1.42); setE0(-2.37); setI0Corr(6.5); }
-                  else if (m === "ti-6al-4v") { setEPit(1.80); setE0(0.20); setI0Corr(0.01); }
-                  else if (m === "steel-1018") { setEPit(-0.15); setE0(-0.44); setI0Corr(4.2); }
+                  if (m === "steel-316l") { setI0Corr(0.12); }
+                  else if (m === "al-7075") { setI0Corr(1.85); }
+                  else if (m === "az31b") { setI0Corr(6.5); }
+                  else if (m === "ti-6al-4v") { setI0Corr(0.01); }
+                  else if (m === "steel-1018") { setI0Corr(4.2); }
                 }}
                 className="w-full bg-[#050810] border border-[#1e2d46] rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amber-500"
               >
@@ -187,6 +192,44 @@ export function CorrosionEISKineticsStudio() {
                 onChange={(e) => setI0Corr(parseFloat(e.target.value))}
                 className="w-full accent-amber-500 h-1.5 bg-[#162032] rounded-lg cursor-pointer"
               />
+            </div>
+
+            {/* Pitting margin: measured potentials on one reference electrode (ASTM G61 compares E_pit with E_corr) */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] text-slate-400 block mb-1">Measured E_pit (V)</label>
+                <input aria-label="Measured pitting potential E_pit (V)"
+                  type="number"
+                  step="0.01"
+                  value={ePit ?? ""}
+                  placeholder="not supplied"
+                  onChange={(e) => setEPit(Number.isFinite(parseFloat(e.target.value)) ? parseFloat(e.target.value) : null)}
+                  className="w-full bg-[#050810] border border-[#1e2d46] rounded-xl px-2.5 py-1.5 text-xs text-slate-200 font-mono"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-400 block mb-1">Measured E_corr (V)</label>
+                <input aria-label="Measured corrosion potential E_corr (V)"
+                  type="number"
+                  step="0.01"
+                  value={eCorr ?? ""}
+                  placeholder="not supplied"
+                  onChange={(e) => setECorr(Number.isFinite(parseFloat(e.target.value)) ? parseFloat(e.target.value) : null)}
+                  className="w-full bg-[#050810] border border-[#1e2d46] rounded-xl px-2.5 py-1.5 text-xs text-slate-200 font-mono"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-[10px] text-slate-400 block mb-1">Reference electrode (both potentials)</label>
+              <select aria-label="Reference electrode for E_pit and E_corr"
+                value={referenceElectrode}
+                onChange={(e) => setReferenceElectrode(e.target.value)}
+                className="w-full bg-[#050810] border border-[#1e2d46] rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amber-500"
+              >
+                <option value="SCE">SCE (saturated calomel)</option>
+                <option value="Ag/AgCl (sat. KCl)">Ag/AgCl (sat. KCl)</option>
+                <option value="SHE">SHE</option>
+              </select>
             </div>
           </div>
 
@@ -263,7 +306,7 @@ export function CorrosionEISKineticsStudio() {
           <div className="text-[11px] text-slate-400 font-mono space-y-1.5 leading-relaxed">
             <p>R_p = B / i_corr with the Stern-Geary constant B = (β_a·β_c) / (ln 10·(β_a + β_c)).</p>
             <p>Penetration rate (ASTM G102): CR = K1·i_corr·EW / ρ, with EW and ρ resolved from the substrate alloy composition.</p>
-            <p>Pitting margin: ΔE_pit = E_pit − E0 using the in-app preset E_pit and E0 of the selected substrate (not measured values; E_pit = {ePit} V, E0 = {e0} V); the qualitative label uses fixed in-house thresholds (not a standard).</p>
+            <p>Pitting margin: ΔE_pit = E_pit − E_corr, both entered by you against the same reference electrode ({referenceElectrode}; E_pit = {ePit ?? "not supplied"} V, E_corr = {eCorr ?? "not supplied"} V), as ASTM G61 compares E_pit with E_corr. No potential is preset. The qualitative label uses fixed in-house thresholds (not a standard).</p>
             <p>Coating degradation (water uptake, pore resistance, coating EIS spectra) is not modelled here.</p>
             {simResult?.sternGeary_B_V != null && <p>Stern-Geary B = {simResult.sternGeary_B_V} V</p>}
           </div>
