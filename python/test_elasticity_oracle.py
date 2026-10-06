@@ -512,5 +512,64 @@ class RenderFixtureTest(unittest.TestCase):
                 self.assertEqual(fresh, item["result"])
 
 
+class UnstableTensorAveragesTest(unittest.TestCase):
+    """Physics audit TK-3: for an unstable or singular C_ij the Reuss/Hill moduli, E, nu, Pugh ratio, ductility
+    verdict, A^U and Zener ratio were reported under status 'available' from clamped values (G_R 1.5e8 GPa,
+    K_R 1e7 GPa, Pugh 141612 'Ductile', |C11 - C12| Zener, K_R 50 GPa from the 1/C_ii diagonal fallback).
+    Hill (1952) and Mouhat & Coudert (2014): the averages exist only for a positive-definite tensor."""
+
+    AVERAGED = ("bulkModulus_K_Reuss_GPa", "bulkModulus_K_VRH_GPa", "shearModulus_G_Reuss_GPa",
+                "shearModulus_G_VRH_GPa", "youngsModulus_E_VRH_GPa", "poissonsRatio_nu", "pWaveModulus_GPa")
+    INDICES = ("pughRatio_B_over_G", "ductilityVerdict", "universalAnisotropyIndex_AU", "zenerAnisotropyFactor_AZ",
+               "isIsotropic")
+
+    def custom(self, c11, c12, c44):
+        return run({"formula": "X", "input_mode": "custom", "crystal_system": "Cubic", "density": 7.0,
+                    "custom_c_ij": {"c11": c11, "c12": c12, "c44": c44}})
+
+    def assert_withheld(self, out, reason_part):
+        self.assertEqual(out["status"], "available")  # the tensor and its Born analysis are still reported
+        vrh, idx = out["voigtReussHillModuli"], out["mechanicalIntegrityIndices"]
+        for block in (vrh, idx):
+            self.assertEqual(block["status"], "unavailable")
+            self.assertIn(reason_part, block["reason"])
+        for key in self.AVERAGED:
+            self.assertIsNone(vrh[key], key)
+        for key in self.INDICES:
+            self.assertIsNone(idx[key], key)
+
+    def test_negative_c_prime_has_no_reuss_or_hill_numbers(self):
+        out = self.custom(100.0, 150.0, 50.0)  # C11 - C12 = -50: former G_R 1.5e8 GPa, nu -1.0, Zener +2.0
+        self.assertFalse(out["bornStability"]["isMechanicallyStable"])
+        self.assert_withheld(out, "not mechanically stable")
+        # the formal Voigt averages of the tensor itself stay: K_V = (C11 + 2 C12) / 3, G_V = (C11 - C12 + 3 C44) / 5
+        self.assertAlmostEqual(out["voigtReussHillModuli"]["bulkModulus_K_Voigt_GPa"], 400.0 / 3.0, places=2)
+        self.assertAlmostEqual(out["voigtReussHillModuli"]["shearModulus_G_Voigt_GPa"], 20.0, places=2)
+        self.assertIsNotNone(out["elasticComplianceMatrix_Sij_1_over_GPa"])  # invertible, just not stable
+
+    def test_negative_bulk_has_no_pugh_or_ductility_verdict(self):
+        out = self.custom(50.0, -40.0, 30.0)  # K_V = -10 GPa: former K_R 1e7 GPa, Pugh 141612 'Ductile'
+        self.assert_withheld(out, "not mechanically stable")
+        self.assertAlmostEqual(out["voigtReussHillModuli"]["bulkModulus_K_Voigt_GPa"], -10.0, places=2)
+
+    def test_singular_tensor_has_no_compliance_and_no_fallback_reuss(self):
+        out = self.custom(150.0, 150.0, 50.0)  # former K_R 50 GPa from 1/C_ii (exact (C11 + 2 C12)/3 = 150)
+        self.assert_withheld(out, "singular")
+        self.assertIsNone(out["elasticComplianceMatrix_Sij_1_over_GPa"])
+
+    def test_stable_tensor_is_unclamped_and_matches_the_closed_forms(self):
+        c11, c12, c44 = REFERENCE["Cu"][0]
+        out = self.custom(c11, c12, c44)
+        oracle = cubic_oracle(c11, c12, c44)
+        vrh, idx = out["voigtReussHillModuli"], out["mechanicalIntegrityIndices"]
+        self.assertEqual((vrh["status"], idx["status"]), ("available", "available"))
+        self.assertAlmostEqual(vrh["shearModulus_G_Reuss_GPa"], oracle["G_R"], delta=0.006)
+        self.assertAlmostEqual(idx["zenerAnisotropyFactor_AZ"], 2 * c44 / (c11 - c12), delta=6e-4)
+        self.assertAlmostEqual(idx["universalAnisotropyIndex_AU"], 5 * oracle["G_V"] / oracle["G_R"] - 5, delta=6e-5)
+        iso = self.custom(200.0, 100.0, 50.0)["mechanicalIntegrityIndices"]  # isotropic: A^U = 0, Zener 1
+        self.assertEqual((iso["universalAnisotropyIndex_AU"], iso["zenerAnisotropyFactor_AZ"], iso["isIsotropic"]),
+                         (0.0, 1.0, True))
+
+
 if __name__ == "__main__":
     unittest.main()

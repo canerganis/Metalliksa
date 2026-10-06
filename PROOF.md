@@ -1,3 +1,12 @@
+## 2026-10-06 — CALPHAD ve elasticity fizik denetimi düzeltmeleri (TK-1…TK-7)
+
+- TK-1 aktiviteler: `a_i = exp((mu_i - G_i_ref(T))/RT)`; referans, veritabanı ELEMENT kaydındaki SER fazında saf element, aynı T ve 1 atm (Lukas, Fries & Sundman 2007). Ni-5 at% Al, `alni_dupin_2001`, 700 °C: a_Ni 0,00459 → 0,938 (saf FCC Ni GM = -43041 J/mol, pycalphad örneklemesiyle bağımsız kontrol), a_Al 1,35e-11 → 1,96e-9. Referans fazı yoksa aktivite `null` ve nedeni `activityReferenceStates` içinde.
+- TK-2/TK-4 PHACOMP: Md değerleri Morinaga ve ark., Superalloys 1984, Tablo 1 (s. 526; PDF okundu): Cr 1,142, Mn 0,957, Fe 0,858, V 1,543, Cu 0,615, Re 1,267. Risk sınıfı yalnız Md ile ve kaynaktaki kritik değerlerle (0,900 eV @1073 K, 0,925 eV @1477 K; s. 527). Nv: Sims, Superalloys 1968 (s. 55: Ni 0,61; s. 51: Nv = 10,66 - GN → Si 6,66). Toplu bileşim değeri olarak etiketli; 850/820 °C sigma sıcaklıkları ve kararlılık indeksi kaldırıldı. IN718 Md 1,0224 "High" → 0,9249 "Moderate"; IN625 1,0009 "High" → 0,9090 "Moderate".
+- TK-3 elasticity: kararsız veya tekil C_ij için Reuss/Hill, E, nu, P-dalga, Pugh, süneklik kararı, A^U, Zener `null` + neden; kıskaçlar kaldırıldı; tekil tensörde 1/C_ii köşegen yedeği artık uyum matrisi olarak raporlanmıyor (Hill 1952; Mouhat & Coudert 2014).
+- TK-5 Scheil: ilk katı görülmeden tüm sıvı tek adımda katılaşırsa adım yarıya bölünür (en az 0,01 °C). Ni-5 at% Al (donma aralığı 0,2 °C): birincil faz `null` → FCC_L12, k(Al) `null` → 0,959.
+- TK-6 ızgara: `effectiveTemperatureRangeC`, `effectiveTemperatureStepC`, `gridAdjustments` (ör. 25–1500 °C / 5 °C → 80 nokta, 18,67 °C). TK-7: boş/sıfır bileşim `OUT_OF_RANGE elements` ile reddedilir (Ni-10Al-10Cr varsayılanı kaldırıldı).
+- Kanıt düzeyi değişmedi (screening/unvalidated); deneysel doğrulama değildir. Donmuş LPBF dosyaları ve parmak izi değişmedi.
+
 ## 2026-10-06 — NIST mds2-2525 Ti-6Al-4V sabit spot absorptansı ile screening karşılaştırması (`4fcfd72`)
 
 - Kapsam: `docs/LPBF_NIST_2525_ABSORPTANCE_COMPARISON_2026-10-06.{json,md}`; veri `data/benchmark/nist-mds2-2525-ti64-absorptance/` (8 dosya, NIST NERDm SHA-256 ile bayt eşleşmesi; Wayback edinim yolu kayıtlı; 2 dosya ve 18 arşivlenmemiş bileşen hash'leriyle `unavailable`). Ti64 yalnız `Spot on Bare Metal_*`; `Al_*` tabloları alüminyum (SRM 1241c) ve uygulama malzemesi olmadığından karşılaştırılmadı.

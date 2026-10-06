@@ -12,6 +12,13 @@ export function formatOrUnavailable(value: number | null | undefined, unit: stri
   return typeof value === "number" && Number.isFinite(value) ? `${value} ${unit}` : UNAVAILABLE_TEXT;
 }
 
+/** value.toFixed(digits) (+ unit) for a finite number, "Unavailable" otherwise (e.g. an unstable C_ij). */
+export function fixedOrUnavailable(value: number | null | undefined, digits: number, unit = ""): string {
+  return typeof value === "number" && Number.isFinite(value)
+    ? `${value.toFixed(digits)}${unit ? ` ${unit}` : ""}`
+    : UNAVAILABLE_TEXT;
+}
+
 export function formatZener(value: number | null | undefined): string {
   return typeof value === "number" && Number.isFinite(value) ? String(value) : "n/a (cubic crystals only)";
 }

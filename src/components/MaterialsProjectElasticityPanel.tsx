@@ -5,6 +5,7 @@ import {
   UNAVAILABLE_TEXT,
   computeTimeText,
   directionLabel,
+  fixedOrUnavailable,
   formatOrUnavailable,
   formatZener,
   provenanceLine,
@@ -99,22 +100,27 @@ export function ElasticityResultPanel({ outcome, computing }: { outcome: PythonD
                 <Layers className="w-3.5 h-3.5 text-sky-400" />
                 <span>Voigt-Reuss-Hill (VRH) Moduli</span>
               </div>
+              {dftResult.voigtReussHillModuli.status === "unavailable" && dftResult.voigtReussHillModuli.reason && (
+                <p className="text-[10px] text-amber-300 leading-relaxed" data-testid="elasticity-vrh-unavailable">
+                  {dftResult.voigtReussHillModuli.reason}
+                </p>
+              )}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="p-3 bg-[#090e18] rounded-lg border border-[#1e2d46]">
                   <span className="text-[10px] text-slate-400 block uppercase">Bulk Modulus K</span>
-                  <span className="text-sm font-bold text-sky-400">{dftResult.voigtReussHillModuli.bulkModulus_K_VRH_GPa.toFixed(1)} GPa</span>
+                  <span className="text-sm font-bold text-sky-400">{fixedOrUnavailable(dftResult.voigtReussHillModuli.bulkModulus_K_VRH_GPa, 1, "GPa")}</span>
                 </div>
                 <div className="p-3 bg-[#090e18] rounded-lg border border-[#1e2d46]">
                   <span className="text-[10px] text-slate-400 block uppercase">Shear Modulus G</span>
-                  <span className="text-sm font-bold text-emerald-400">{dftResult.voigtReussHillModuli.shearModulus_G_VRH_GPa.toFixed(1)} GPa</span>
+                  <span className="text-sm font-bold text-emerald-400">{fixedOrUnavailable(dftResult.voigtReussHillModuli.shearModulus_G_VRH_GPa, 1, "GPa")}</span>
                 </div>
                 <div className="p-3 bg-[#090e18] rounded-lg border border-[#1e2d46]">
                   <span className="text-[10px] text-slate-400 block uppercase">Young's Modulus E</span>
-                  <span className="text-sm font-bold text-amber-400">{dftResult.voigtReussHillModuli.youngsModulus_E_VRH_GPa.toFixed(1)} GPa</span>
+                  <span className="text-sm font-bold text-amber-400">{fixedOrUnavailable(dftResult.voigtReussHillModuli.youngsModulus_E_VRH_GPa, 1, "GPa")}</span>
                 </div>
                 <div className="p-3 bg-[#090e18] rounded-lg border border-[#1e2d46]">
                   <span className="text-[10px] text-slate-400 block uppercase">Poisson's Ratio ν</span>
-                  <span className="text-sm font-bold text-white">{dftResult.voigtReussHillModuli.poissonsRatio_nu.toFixed(3)}</span>
+                  <span className="text-sm font-bold text-white">{fixedOrUnavailable(dftResult.voigtReussHillModuli.poissonsRatio_nu, 3)}</span>
                 </div>
               </div>
 
@@ -122,13 +128,15 @@ export function ElasticityResultPanel({ outcome, computing }: { outcome: PythonD
                 <div className="flex items-center justify-between p-2 bg-[#090e18] rounded border border-[#1e2d46]">
                   <span className="text-[10px] text-slate-400 flex items-center gap-1.5"><Activity className="w-3 h-3 text-purple-400"/> Pugh's Ratio (B/G)</span>
                   <div className="text-right">
-                    <span className="text-xs font-bold text-white">{dftResult.mechanicalIntegrityIndices.pughRatio_B_over_G.toFixed(2)}</span>
-                    <span className="text-[9px] text-slate-500 block">{dftResult.mechanicalIntegrityIndices.ductilityVerdict} (Qualitative)</span>
+                    <span className="text-xs font-bold text-white">{fixedOrUnavailable(dftResult.mechanicalIntegrityIndices.pughRatio_B_over_G, 2)}</span>
+                    <span className="text-[9px] text-slate-500 block">{dftResult.mechanicalIntegrityIndices.ductilityVerdict === null
+                      ? UNAVAILABLE_TEXT
+                      : `${dftResult.mechanicalIntegrityIndices.ductilityVerdict} (Qualitative)`}</span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between p-2 bg-[#090e18] rounded border border-[#1e2d46]">
                   <span className="text-[10px] text-slate-400">Universal Anisotropy (A^U)</span>
-                  <span className="text-xs font-bold text-white">{dftResult.mechanicalIntegrityIndices.universalAnisotropyIndex_AU.toFixed(3)}</span>
+                  <span className="text-xs font-bold text-white">{fixedOrUnavailable(dftResult.mechanicalIntegrityIndices.universalAnisotropyIndex_AU, 3)}</span>
                 </div>
               </div>
             </div>

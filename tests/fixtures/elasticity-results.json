@@ -164,6 +164,8 @@
     ]
    },
    "voigtReussHillModuli": {
+    "status": "available",
+    "reason": null,
     "bulkModulus_K_Voigt_GPa": 173.83,
     "bulkModulus_K_Reuss_GPa": 173.83,
     "bulkModulus_K_VRH_GPa": 173.83,
@@ -175,6 +177,8 @@
     "pWaveModulus_GPa": 277.71
    },
    "mechanicalIntegrityIndices": {
+    "status": "available",
+    "reason": null,
     "pughRatio_B_over_G": 2.231,
     "cauchyPressure_C12_minus_C44_GPa": 22.8,
     "ductilityVerdict": "Ductile (Metallic dislocation slip favored; high shear compliance)",
@@ -458,6 +462,8 @@
     ]
    },
    "voigtReussHillModuli": {
+    "status": "available",
+    "reason": null,
     "bulkModulus_K_Voigt_GPa": 107.22,
     "bulkModulus_K_Reuss_GPa": 107.21,
     "bulkModulus_K_VRH_GPa": 107.22,
@@ -469,6 +475,8 @@
     "pWaveModulus_GPa": 164.9
    },
    "mechanicalIntegrityIndices": {
+    "status": "available",
+    "reason": null,
     "pughRatio_B_over_G": 2.478,
     "cauchyPressure_C12_minus_C44_GPa": 45.3,
     "ductilityVerdict": "Ductile (Metallic dislocation slip favored; high shear compliance)",
@@ -648,56 +656,7 @@
      60.0
     ]
    ],
-   "elasticComplianceMatrix_Sij_1_over_GPa": [
-    [
-     0.006667,
-     0.0,
-     0.0,
-     0.0,
-     0.0,
-     0.0
-    ],
-    [
-     0.0,
-     0.006667,
-     0.0,
-     0.0,
-     0.0,
-     0.0
-    ],
-    [
-     0.0,
-     0.0,
-     0.006667,
-     0.0,
-     0.0,
-     0.0
-    ],
-    [
-     0.0,
-     0.0,
-     0.0,
-     0.016667,
-     0.0,
-     0.0
-    ],
-    [
-     0.0,
-     0.0,
-     0.0,
-     0.0,
-     0.016667,
-     0.0
-    ],
-    [
-     0.0,
-     0.0,
-     0.0,
-     0.0,
-     0.0,
-     0.016667
-    ]
-   ],
+   "elasticComplianceMatrix_Sij_1_over_GPa": null,
    "bornStability": {
     "isMechanicallyStable": false,
     "minimumEigenvalueGPa": -0.0,
@@ -735,23 +694,27 @@
     ]
    },
    "voigtReussHillModuli": {
+    "status": "unavailable",
+    "reason": "the stiffness tensor is singular or nearly singular (a pivot below 1e-12): the compliance tensor S_ij does not exist, so the Reuss and Hill averages, E, nu, the Pugh ratio and the anisotropy indices are not defined",
     "bulkModulus_K_Voigt_GPa": 150.0,
-    "bulkModulus_K_Reuss_GPa": 50.0,
-    "bulkModulus_K_VRH_GPa": 100.0,
+    "bulkModulus_K_Reuss_GPa": null,
+    "bulkModulus_K_VRH_GPa": null,
     "shearModulus_G_Voigt_GPa": 36.0,
-    "shearModulus_G_Reuss_GPa": 65.22,
-    "shearModulus_G_VRH_GPa": 50.61,
-    "youngsModulus_E_VRH_GPa": 129.91,
-    "poissonsRatio_nu": 0.283,
-    "pWaveModulus_GPa": 167.48
+    "shearModulus_G_Reuss_GPa": null,
+    "shearModulus_G_VRH_GPa": null,
+    "youngsModulus_E_VRH_GPa": null,
+    "poissonsRatio_nu": null,
+    "pWaveModulus_GPa": null
    },
    "mechanicalIntegrityIndices": {
-    "pughRatio_B_over_G": 1.976,
+    "status": "unavailable",
+    "reason": "the stiffness tensor is singular or nearly singular (a pivot below 1e-12): the compliance tensor S_ij does not exist, so the Reuss and Hill averages, E, nu, the Pugh ratio and the anisotropy indices are not defined",
+    "pughRatio_B_over_G": null,
     "cauchyPressure_C12_minus_C44_GPa": 90.0,
-    "ductilityVerdict": "Ductile (Metallic dislocation slip favored; high shear compliance)",
-    "universalAnisotropyIndex_AU": 0.0,
-    "zenerAnisotropyFactor_AZ": 1200000.0,
-    "isIsotropic": true
+    "ductilityVerdict": null,
+    "universalAnisotropyIndex_AU": null,
+    "zenerAnisotropyFactor_AZ": null,
+    "isIsotropic": null
    },
    "acousticAndThermalProperties": {
     "status": "unavailable",

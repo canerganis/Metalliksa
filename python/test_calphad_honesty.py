@@ -571,9 +571,9 @@ class TestPhacompScope(unittest.TestCase):
         p = self.phacomp({"Ni": 80.0, "Cr": 20.0})
         self.assertEqual(p["status"], "screening-tabulated-values")
         self.assertIn(p["tcpEmbrittlementRisk"], ("Low", "Moderate", "High"))
-        p = self.phacomp({"Ni": 90.0, "Cu": 10.0})  # Cu has no tabulated Nv/Md: no default of 1.0
+        p = self.phacomp({"Ni": 90.0, "Ag": 10.0})  # Ag has no tabulated Md: no default of 1.0
         self.assertEqual(p["status"], "unavailable")
-        self.assertIn("Cu", p["reason"])
+        self.assertIn("Ag", p["reason"])
 
 
 @unittest.skipUnless(cs.PYCALPHAD_AVAILABLE,
@@ -666,6 +666,223 @@ class TestRealPath(unittest.TestCase):
         self.assertEqual(out["nonConvergedPoints"], out["gridPoints"])
         json.dumps(out, allow_nan=False)  # raises on NaN / Infinity
 
+
+def _morinaga_md_bar(at):
+    """Bulk Md from Morinaga et al., Superalloys 1984, Table 1 (p. 526), typed in here independently."""
+    table = {"Ti": 2.271, "V": 1.543, "Cr": 1.142, "Mn": 0.957, "Fe": 0.858, "Co": 0.777, "Ni": 0.717,
+             "Cu": 0.615, "Zr": 2.944, "Nb": 2.117, "Mo": 1.550, "Hf": 3.020, "Ta": 2.224, "W": 1.655,
+             "Re": 1.267, "Al": 1.900, "Si": 1.900}
+    return sum(x * table[el] for el, x in at.items())
+
+
+class TestPhacompSourcedValues(unittest.TestCase):
+    """Physics audit TK-2 / TK-4: Md for Cr/Mn/Fe/V and Nv for Ni/Si were not the published values, the
+    0.985 / 0.920 thresholds and the 850 / 820 C sigma temperatures had no source, and every Cr/Fe-bearing
+    Ni alloy came out 'High'."""
+
+    IN718_WT = {"Ni": 53.0, "Cr": 19.0, "Fe": 18.0, "Nb": 5.0, "Mo": 3.0, "Ti": 1.0, "Al": 0.5}
+    IN625_WT = {"Ni": 61.0, "Cr": 21.5, "Mo": 9.0, "Nb": 3.6, "Fe": 4.0}
+
+    def phacomp(self, elements):
+        _, at = cs.normalize_composition(dict(elements))
+        return at, cs.calculate_phacomp(at)
+
+    def test_md_table_is_morinaga_table_1(self):
+        for el, md in {"Cr": 1.142, "Mn": 0.957, "Fe": 0.858, "V": 1.543, "Cu": 0.615, "Re": 1.267}.items():
+            self.assertEqual(cs.PHACOMP_DATA[el]["Md"], md, el)
+
+    def test_in718_and_in625_md_and_risk(self):
+        # former code: IN718 m_d_bar 1.0224 'High' 850 C; IN625 1.0009 'High' 850 C
+        for elements, expected_md, risk in ((self.IN718_WT, 0.9249, "Moderate"), (self.IN625_WT, 0.9090, "Moderate")):
+            with self.subTest(elements=elements):
+                at, p = self.phacomp(elements)
+                self.assertAlmostEqual(p["m_d_bar"], expected_md, delta=5e-4)
+                self.assertAlmostEqual(p["m_d_bar"], _morinaga_md_bar(at), delta=1e-4)
+                self.assertNotAlmostEqual(p["m_d_bar"], 1.0224 if "Ti" in elements else 1.0009, delta=0.05)
+                self.assertEqual(p["tcpEmbrittlementRisk"], risk)
+                self.assertIsNone(p["tcpSigmaRiskTemperatureC"])
+                self.assertIsNone(p["thermodynamicStabilityIndex"])
+                self.assertIn("bulk", p["compositionBasis"])
+
+    def test_risk_classes_use_the_sourced_critical_md(self):
+        self.assertEqual(cs.PHACOMP_CRITICAL_MD, ((1073.0, 0.900), (1477.0, 0.925)))
+        _, p = self.phacomp({"Ni": 80.0, "Cr": 20.0})  # bulk Md 0.8105 (former 0.8867)
+        self.assertAlmostEqual(p["m_d_bar"], 0.8105, delta=5e-4)
+        self.assertEqual(p["tcpEmbrittlementRisk"], "Low")
+        # Ni-35Cr-15Mo (wt%): bulk Md above 0.925 -> High
+        at, p = self.phacomp({"Ni": 50.0, "Cr": 35.0, "Mo": 15.0})
+        self.assertGreater(_morinaga_md_bar(at), 0.925)
+        self.assertEqual(p["tcpEmbrittlementRisk"], "High")
+
+    def test_nv_values_are_sims_1968(self):
+        self.assertEqual(cs.PHACOMP_DATA["Ni"]["Nv"], 0.61)
+        self.assertEqual(cs.PHACOMP_DATA["Si"]["Nv"], 6.66)   # 10.66 - group number 4 (former 8.66)
+        self.assertEqual(cs.PHACOMP_DATA["Al"]["Nv"], 7.66)   # 10.66 - 3
+        at, p = self.phacomp({"Ni": 80.0, "Cr": 20.0})
+        self.assertAlmostEqual(p["n_v_bar"], at["Ni"] * 0.61 + at["Cr"] * 4.66, delta=1e-4)
+        self.assertIn("residual gamma matrix", p["nvNote"])
+
+    def test_md_only_elements_leave_nv_unavailable_and_unlisted_ones_refuse(self):
+        _, p = self.phacomp({"Ni": 90.0, "Cu": 10.0})  # Cu: Md tabulated, no Nv in Sims 1968
+        self.assertEqual(p["status"], "screening-tabulated-values")
+        self.assertIsNone(p["n_v_bar"])
+        self.assertIn("Cu", p["nvNote"])
+        _, p = self.phacomp({"Ni": 90.0, "Ag": 10.0})  # Ag: no tabulated Md, no default
+        self.assertEqual(p["status"], "unavailable")
+        self.assertIn("Ag", p["reason"])
+
+
+class TestEmptyCompositionIsRefused(unittest.TestCase):
+    """Physics audit TK-7: an empty / all-zero composition silently became Ni-10Al-10Cr wt%."""
+
+    def test_normalize_composition_refuses_empty_and_zero(self):
+        for elements in ({}, {"Ni": 0, "Cr": None}, {"Ni": 0.0}):
+            with self.subTest(elements=elements):
+                with self.assertRaises(cs.ValidationError) as ctx:
+                    cs.normalize_composition(elements)
+                self.assertEqual(ctx.exception.code, "OUT_OF_RANGE")
+                self.assertEqual(ctx.exception.field, "elements")
+
+    def test_cli_refuses_empty_and_missing_composition(self):
+        for payload in ({"elements": {}}, {"elements": {"Ni": 0, "Cr": None}}, {"name": "x"}):
+            with self.subTest(payload=payload):
+                proc = subprocess.run([sys.executable, "-B", str(HERE / "calphad_solver.py")],
+                                      input=json.dumps(payload), capture_output=True, text=True, cwd=str(HERE),
+                                      timeout=300)
+                self.assertEqual(proc.returncode, 2, proc.stderr[-500:])
+                out = json.loads(proc.stdout)
+                self.assertEqual(out["errorKind"], "validation")
+                self.assertEqual(out["error"]["code"], "OUT_OF_RANGE")
+                self.assertEqual(out["error"]["field"], "elements")
+                self.assertNotIn("nominalComposition", out)
+
+
+class TestEffectiveGridIsReported(unittest.TestCase):
+    """Physics audit TK-6: the clamped grid was reported with the requested range and step."""
+
+    def report(self, t_min, t_max, step):
+        t0 = max(cs.GRID_T_MIN_K, t_min + 273.15)
+        t1 = min(cs.GRID_T_MAX_K, t_max + 273.15)
+        n = max(cs.GRID_MIN_POINTS, min(cs.GRID_MAX_POINTS, int(round((t1 - t0) / step)) + 1))
+        return cs.effective_grid_report(t_min, t_max, step, t0, t1, n)
+
+    def test_point_cap_and_floor_are_reported(self):
+        r = self.report(-100.0, 1500.0, 5.0)
+        self.assertEqual(r["effectiveTemperatureRangeC"], [25.0, 1500.0])
+        self.assertAlmostEqual(r["effectiveTemperatureStepC"], 1475.0 / 79.0, places=3)  # 18.67, not 5
+        fields = {a["field"]: a for a in r["gridAdjustments"]}
+        self.assertEqual(fields["tMin"]["requested"], -100.0)
+        self.assertEqual(fields["tMin"]["used"], 25.0)
+        self.assertEqual((fields["tStep"]["requestedPoints"], fields["tStep"]["usedPoints"]), (296, 80))
+
+    def test_ceiling_is_reported_and_an_exact_grid_has_no_adjustment(self):
+        r = self.report(500.0, 3000.0, 50.0)
+        self.assertEqual(r["effectiveTemperatureRangeC"][1], round(3000.0 - 273.15, 2))
+        self.assertIn("tMax", {a["field"] for a in r["gridAdjustments"]})
+        r = self.report(700.0, 1500.0, 25.0)
+        self.assertEqual(r["gridAdjustments"], [])
+        self.assertEqual(r["effectiveTemperatureStepC"], 25.0)
+
+
+def _narrow_binary(k=0.95, t_melt=1455.0, slope=-100.0):
+    """Binary with a straight liquidus T = Tm + m*C_L and constant k; freezing range |m| C0 (1/k - 1)."""
+    def run_point(t_c, x):
+        xb = x["AL"]
+        c_l = (t_c - t_melt) / slope
+        if xb >= c_l:
+            return {"liquid": 1.0, "liquidX": {"NI": 1.0 - xb, "AL": xb}, "phases": {}}
+        c_s = k * c_l
+        if xb <= c_s:
+            return {"liquid": 0.0, "liquidX": {}, "phases": {"ALPHA": 1.0},
+                    "phasesX": {"ALPHA": {"NI": 1.0 - xb, "AL": xb}}}
+        f_l = (xb - c_s) / (c_l - c_s)
+        return {"liquid": f_l, "liquidX": {"NI": 1.0 - c_l, "AL": c_l}, "phases": {"ALPHA": 1.0 - f_l},
+                "phasesX": {"ALPHA": {"NI": 1.0 - c_s, "AL": c_s}}}
+    return run_point
+
+
+class TestScheilNarrowFreezingRange(unittest.TestCase):
+    """Physics audit TK-5: a freezing range narrower than the Scheil step froze the whole liquid in the
+    first step: complete status, no primary phase, every k unavailable (Ni-5 at% Al: range 0.2 C)."""
+
+    K, TM, M, C0 = 0.95, 1455.0, -100.0, 0.05  # freezing range 100 * 0.05 * (1/0.95 - 1) = 0.263 C
+
+    def scheil_path(self):
+        t_liq = self.TM + self.M * self.C0
+        return cs.scheil_gulliver(_narrow_binary(self.K, self.TM, self.M), t_liq,
+                                  {"NI": 1 - self.C0, "AL": self.C0}, step_c=2.0, min_temperature_c=t_liq - 30.0)
+
+    def test_former_fixed_step_lost_the_tie_line(self):
+        with mock.patch.object(cs, "SCHEIL_MIN_STEP_C", 2.0):  # no bisection = the former algorithm
+            out = self.scheil_path()
+        self.assertEqual(out["steps"], 1)
+        self.assertEqual(out["terminationReason"], "liquid-exhausted-within-step")
+        self.assertTrue(out["firstStepUnresolved"])
+        _, block, rows = cs._scheil_outputs(out, None, {"Ni": 95.0, "Al": 5.0}, "db", ["NI", "AL"])
+        self.assertTrue(all(r["partitionCoefficient_k"] is None for r in rows))
+        self.assertIn("minimum Scheil step", rows[0]["reason"])
+
+    def test_bisected_first_step_recovers_the_primary_phase_and_k(self):
+        out = self.scheil_path()
+        self.assertGreater(out["stepBisections"], 0)
+        self.assertFalse(out["firstStepUnresolved"])
+        fa = out["firstAppearance"]["ALPHA"]
+        self.assertAlmostEqual(fa["phaseX"]["AL"] / fa["liquidX"]["AL"], self.K, places=9)
+        _, block, rows = cs._scheil_outputs(out, None, {"Ni": 95.0, "Al": 5.0}, "db", ["NI", "AL"])
+        self.assertEqual(block["primarySolidPhase"], "ALPHA")
+        k_b = {r["element"]: r["partitionCoefficient_k"] for r in rows}["AL"]
+        self.assertAlmostEqual(k_b, self.K, places=4)
+        self.assertLess(out["massBalanceMaxAbsError"], 1e-12)
+        self.assertNotIn("invariant reaction;", block["note"])
+
+
+@unittest.skipUnless(cs.PYCALPHAD_AVAILABLE, "needs pycalphad (alni_dupin_2001 equilibria)")
+class TestActivityReferenceState(unittest.TestCase):
+    """Physics audit TK-1: activities were exp(MU/RT) on the database SER scale, e.g. a_Ni = 0.00459 for
+    Ni-5 at% Al at 700 C. Against pure FCC Ni at the same T, a_Ni = exp((MU_Ni - G_FCC_Ni(T))/RT) = 0.938."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.out = cs.compute_multi_component_equilibrium(
+            "Ni-5Al", {"Ni": 95.0, "Al": 5.0}, unit="at_pct", t_min_c=700.0, t_max_c=1500.0, t_step_c=25.0)
+
+    def point(self, t_c):
+        return next(p for p in self.out["equilibriumProfile"] if abs(p["temperatureC"] - t_c) < 1e-6)
+
+    def test_activity_is_against_pure_fcc_at_the_same_temperature(self):
+        from pycalphad import Database, calculate
+        p = self.point(700.0)
+        t_k = p["temperatureK"]
+        rt = cs.GAS_CONSTANT_R * t_k
+        dbf = Database(str(HERE / "databases" / "alni_dupin_2001.tdb"))
+        # independent reference: lowest sampled GM of pure FCC_A1 Ni (pycalphad's own point sampling)
+        g_ni = float(np.nanmin(calculate(dbf, ["NI", "VA"], "FCC_A1", T=t_k, P=101325, N=1).GM.values))
+        self.assertAlmostEqual(g_ni, -43041.0, delta=2.0)
+        mu_ni = p["chemicalPotentials_J_mol"]["NI"]
+        a_ni = p["thermodynamicActivities"]["NI"]
+        self.assertAlmostEqual(a_ni, np.exp((mu_ni - g_ni) / rt), delta=1e-3)
+        self.assertAlmostEqual(a_ni, 0.938, delta=0.003)
+        self.assertGreater(a_ni / np.exp(mu_ni / rt), 100.0)  # the former value, 0.00459, is ~200x too low
+        self.assertAlmostEqual(p["thermodynamicActivities"]["AL"], 1.96e-9, delta=0.05e-9)
+        ref = self.out["activityReferenceStates"]["NI"]
+        self.assertEqual((ref["phase"], ref["status"]), ("FCC_A1", "available"))
+
+    def test_liquid_activity_of_the_solvent_is_close_to_raoult(self):
+        a_ni = self.point(1500.0)["thermodynamicActivities"]["NI"]
+        self.assertTrue(0.85 < a_ni < 1.0, a_ni)  # the former value was 7.7e-4 for X_Ni = 0.95
+
+    def test_missing_reference_phase_is_unavailable_not_guessed(self):
+        fake = SimpleNamespace(refstates={"NI": {"phase": "BLANK"}}, phases={})
+        ref = cs._pure_element_reference_gm(fake, "NI", [973.15])
+        self.assertIsNone(ref["gm"])
+        self.assertIn("BLANK", ref["reason"])
+
+    def test_narrow_freezing_range_scheil_has_a_primary_phase(self):
+        # TK-5 end to end: Ni-5 at% Al freezes over about 0.2 C
+        block = self.out["scheilSolidification"]
+        self.assertEqual(block["primarySolidPhase"], "FCC_L12")
+        k = {r["element"]: r["partitionCoefficient_k"] for r in self.out["solutePartitioning"]}
+        self.assertAlmostEqual(k["AL"], 0.959, delta=0.01)
 
 
 if __name__ == "__main__":

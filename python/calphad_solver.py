@@ -15,7 +15,8 @@ Gibbs-Duhem relation.
 What a successful pycalphad run computes:
  1. Gibbs free energy minimisation (pycalphad equilibrium, compound-energy formalism)
     on a temperature grid at fixed composition and 1 atm.
- 2. Chemical potentials (MU) and activities a_i = exp(mu_i / RT).
+ 2. Chemical potentials (MU, database SER scale) and activities a_i = exp((mu_i - G_i_ref(T)) / RT)
+    against pure i in its SER reference phase at the same T (activityReferenceStates).
  3. Phase constitution (phase names, fractions, phase compositions) per temperature.
  4. New-PHACOMP Nv / Md screening (Ni-base only, tabulated values; unavailable otherwise).
  5. Liquidus / solidus refined between grid points by multi-section equilibria.
@@ -70,7 +71,7 @@ except Exception as e:
 import physical_constants
 from alloy_data_calphad_battery_icme import provenance as _domain_data_provenance
 from calphad_model_cache import process_cache, read_tdb_text
-from input_validation import UNKNOWN_ELEMENT, ValidationError, validation_envelope
+from input_validation import OUT_OF_RANGE, UNKNOWN_ELEMENT, ValidationError, validation_envelope
 
 # Phase 6a value step (b): R is the exact SI 2019 product N_A*k from
 # physical_constants (it replaced the CODATA printed truncation 8.314462618;
@@ -100,26 +101,51 @@ def _atomic_weight(el: str) -> float:
              "source": physical_constants.CIAAW_SOURCE},
         ) from None
 
-# New-PHACOMP Electron Hole Numbers (N_v) and d-orbital energy levels (Md in eV)
+# PHACOMP screening constants, each from a primary source (audit TK-2, TK-4).
+#
+# Md (eV), New PHACOMP: M. Morinaga, N. Yukawa, H. Adachi, H. Ezaki, "New PHACOMP and its
+# applications to alloy design", Superalloys 1984, pp. 523-532, Table 1 (p. 526): the d-orbital
+# energy level of each alloying element in Ni3Al (DV-X alpha cluster calculation).
+#
+# Nv, classical PHACOMP electron-vacancy (hole) numbers: C. T. Sims, "PHACOMP Revisited",
+# Superalloys 1968, pp. 47-66. p. 55: "set at 0.61 for Ni, 1.71 for Co, 4.66 for Cr, Mo and W,
+# 3.66 for Mn, 2.66 for Fe" (Woodyatt, Sims and Beattie); p. 51: Group IIIB, IVA and VA elements
+# are assigned Nv = 10.66 - GN (GN the group number), which gives Al 7.66 and Si 6.66; the Group
+# VA / IVA transition metals take the same per-group values (V, Nb, Ta 5.66; Ti, Zr, Hf 6.66).
+# Cu and Re have a tabulated Md but no Nv in that source (None: n_v_bar is then unavailable).
+#
+# C and B are not in either table. They are kept at 0 because the classical procedure removes them
+# from the matrix as carbides / borides (Sims 1968, p. 54); their atoms still dilute the bulk average.
 PHACOMP_DATA = {
-    "Cr": {"Nv": 4.66, "Md": 1.488},
+    "Cr": {"Nv": 4.66, "Md": 1.142},
     "Mo": {"Nv": 4.66, "Md": 1.550},
     "W":  {"Nv": 4.66, "Md": 1.655},
-    "Mn": {"Nv": 3.66, "Md": 1.183},
-    "Fe": {"Nv": 2.66, "Md": 0.985},
+    "Mn": {"Nv": 3.66, "Md": 0.957},
+    "Fe": {"Nv": 2.66, "Md": 0.858},
     "Co": {"Nv": 1.71, "Md": 0.777},
-    "Ni": {"Nv": 0.66, "Md": 0.717},
-    "V":  {"Nv": 5.66, "Md": 1.872},
+    "Ni": {"Nv": 0.61, "Md": 0.717},
+    "Cu": {"Nv": None, "Md": 0.615},
+    "V":  {"Nv": 5.66, "Md": 1.543},
     "Nb": {"Nv": 5.66, "Md": 2.117},
     "Ta": {"Nv": 5.66, "Md": 2.224},
     "Ti": {"Nv": 6.66, "Md": 2.271},
     "Zr": {"Nv": 6.66, "Md": 2.944},
     "Hf": {"Nv": 6.66, "Md": 3.020},
+    "Re": {"Nv": None, "Md": 1.267},
     "Al": {"Nv": 7.66, "Md": 1.900},
-    "Si": {"Nv": 8.66, "Md": 1.900},
+    "Si": {"Nv": 6.66, "Md": 1.900},
     "C":  {"Nv": 0.00, "Md": 0.000},
     "B":  {"Nv": 0.00, "Md": 0.000},
 }
+PHACOMP_MD_SOURCE = ("Morinaga, Yukawa, Adachi, Ezaki, New PHACOMP and its applications to alloy design, "
+                     "Superalloys 1984, pp. 523-532, Table 1 (Md) and p. 527 / Eq. 3 (critical Md)")
+PHACOMP_NV_SOURCE = "Sims, PHACOMP Revisited, Superalloys 1968, pp. 47-66 (Nv values p. 55; Nv = 10.66 - GN, p. 51)"
+# Critical Md for the gamma / gamma + sigma boundary (Morinaga 1984, p. 527): 0.900 eV at 1073 K
+# (Fe-Ni-Cr) and 0.925 eV at 1477 K (Ni-Co-Cr, Ni-Cr-Mo); Eq. 3 fits them as 6.25e-5 T + 0.834.
+PHACOMP_CRITICAL_MD = ((1073.0, 0.900), (1477.0, 0.925))
+# Classical critical Nv (Sims 1968, p. 55): 2.49 for sigma, 2.30 for mu / chi / Laves, both for the
+# RESIDUAL gamma matrix after gamma-prime, carbide and boride formation.
+PHACOMP_CRITICAL_NV_SIGMA = 2.49
 
 # Database status values of OPEN_TDB_CATALOG entries.
 DB_STATUS_ASSESSMENT = "assessment"
@@ -330,11 +356,15 @@ def normalize_composition(elements: dict, unit: str = "wt_pct") -> Tuple[dict, d
         clean[el_symbol] = float(val)
 
     if not clean:
-        clean = {"Ni": 80.0, "Al": 10.0, "Cr": 10.0}
+        # No substitute alloy (audit TK-7): the former default Ni-10Al-10Cr was computed and reported
+        # as nominalComposition as if the caller had sent it.
+        raise ValidationError(
+            OUT_OF_RANGE, "elements",
+            "the composition has no element with a positive amount; there is no default alloy",
+            {"type": type(elements).__name__, "reason": "empty-composition"},
+        )
 
     total = sum(clean.values())
-    if total <= 0:
-        total = 1.0
 
     if unit == "at_pct":
         at_frac = {el: val / total for el, val in clean.items()}
@@ -642,12 +672,22 @@ PHACOMP_UNAVAILABLE_KEYS = {
 
 
 def calculate_phacomp(at_frac: dict) -> dict:
-    """New-PHACOMP N_v and M_d for TCP embrittlement screening.
+    """New-PHACOMP M_d (Morinaga 1984) and classical N_v (Sims 1968) for TCP screening.
 
     Applies to Ni-base superalloys only; for any other base element it is unavailable
     (the audit showed AlSi10Mg and Ti-6Al-4V reported "High" TCP risk and an 850 C sigma
-    temperature). An element without a tabulated N_v/M_d makes it unavailable too: the
-    former default of 1.0 for unlisted elements was an invented value.
+    temperature). An element without a tabulated M_d makes it unavailable too: the former
+    default of 1.0 for unlisted elements was an invented value.
+
+    Both averages are taken over the BULK alloy composition. The sourced criteria are for the
+    gamma matrix: Morinaga's critical Md is the gamma / gamma + sigma boundary (bulk = matrix only
+    for a single-phase gamma alloy), and the classical 2.49 Nv limit is for the residual matrix
+    after gamma-prime / carbide / boride removal. gamma-prime and carbide formers (Al, Ti, Nb, Ta,
+    Hf) raise the bulk averages above the matrix values, so the class is a bulk screening value.
+    The risk class uses Md only, against the critical values the source states with their
+    temperatures (0.900 eV at 1073 K, 0.925 eV at 1477 K); n_v_bar is reported, not classified.
+    No sigma temperature and no stability index are given: the former 850 / 820 C constants and
+    the 100 - (Nv - 2) * 80 index had no source (audit TK-2).
     """
     base = base_element(at_frac)
     if base != "Ni":
@@ -658,30 +698,43 @@ def calculate_phacomp(at_frac: dict) -> dict:
     unlisted = [el for el in at_frac if el not in PHACOMP_DATA]
     if unlisted:
         return {"status": "unavailable",
-                "reason": f"no tabulated Nv/Md value for element(s) {', '.join(unlisted)}",
+                "reason": f"no tabulated Md value for element(s) {', '.join(unlisted)} "
+                          f"(Morinaga 1984, Table 1)",
                 **PHACOMP_UNAVAILABLE_KEYS}
-    n_v_bar = sum(at_frac[elem] * PHACOMP_DATA[elem]["Nv"] for elem in at_frac)
     m_d_bar = sum(at_frac[elem] * PHACOMP_DATA[elem]["Md"] for elem in at_frac)
+    no_nv = [el for el in at_frac if PHACOMP_DATA[el]["Nv"] is None]
+    n_v_bar = None if no_nv else sum(at_frac[elem] * PHACOMP_DATA[elem]["Nv"] for elem in at_frac)
 
-    if n_v_bar > 2.49 or m_d_bar > 0.985:
+    (t_low_k, md_low), (t_high_k, md_high) = PHACOMP_CRITICAL_MD
+    if m_d_bar > md_high:
         risk = "High"
-        sigma_temp_c = 850.0
-    elif n_v_bar > 2.30 or m_d_bar > 0.920:
+        risk_basis = (f"bulk Md {m_d_bar:.4f} eV is above the critical Md {md_high} eV at {t_high_k:g} K "
+                      f"(and so above the critical value at every lower temperature)")
+    elif m_d_bar > md_low:
         risk = "Moderate"
-        sigma_temp_c = 820.0
+        risk_basis = (f"bulk Md {m_d_bar:.4f} eV is above the critical Md {md_low} eV at {t_low_k:g} K "
+                      f"but not above {md_high} eV at {t_high_k:g} K")
     else:
         risk = "Low"
-        sigma_temp_c = None
-
-    stability_index = max(0.0, min(100.0, 100.0 - (n_v_bar - 2.0) * 80.0))
+        risk_basis = f"bulk Md {m_d_bar:.4f} eV is not above the critical Md {md_low} eV at {t_low_k:g} K"
 
     return {
         "status": "screening-tabulated-values",
-        "n_v_bar": round(n_v_bar, 4),
+        "n_v_bar": None if n_v_bar is None else round(n_v_bar, 4),
         "m_d_bar": round(m_d_bar, 4),
         "tcpEmbrittlementRisk": risk,
-        "tcpSigmaRiskTemperatureC": sigma_temp_c,
-        "thermodynamicStabilityIndex": round(stability_index, 1)
+        "tcpSigmaRiskTemperatureC": None,
+        "thermodynamicStabilityIndex": None,
+        "compositionBasis": "bulk alloy composition (atomic fractions), not the gamma-matrix composition",
+        "riskBasis": risk_basis,
+        "criticalMd": [{"temperatureK": t, "criticalMd_eV": md} for t, md in PHACOMP_CRITICAL_MD],
+        "nvNote": ((f"no tabulated Nv for {', '.join(no_nv)} (Sims 1968): n_v_bar unavailable"
+                    if no_nv else
+                    f"bulk-composition Nv; the classical critical Nv {PHACOMP_CRITICAL_NV_SIGMA} applies to the "
+                    f"residual gamma matrix after gamma-prime / carbide / boride removal, so it is not compared here")),
+        "tcpSigmaRiskTemperatureReason": "the PHACOMP screening gives no sigma temperature",
+        "thermodynamicStabilityIndexReason": "no sourced definition; not reported",
+        "sources": {"Md": PHACOMP_MD_SOURCE, "Nv": PHACOMP_NV_SOURCE},
     }
 
 
@@ -831,7 +884,7 @@ def derive_critical_temperatures(
                                               "note": "New-PHACOMP risk-class constant, not a calculated solvus"}
     else:
         status["tcpSigmaRiskTemperatureC"] = _unavailable(
-            "no sigma phase on the grid, and New-PHACOMP gives no sigma temperature (not a Ni-base alloy, or risk Low)")
+            "no sigma phase on the grid, and the PHACOMP screening gives no sigma temperature (it has no sourced one)")
     for key in ("gammaDoublePrimeSolvusC", "deltaSolvusC", "carbidePrecipitationC"):
         status[key] = _unavailable("not computed by this engine")
 
@@ -941,6 +994,56 @@ class _EquilibriumRunner:
         return result.get_dataset() if as_dataset else result
 
 
+ACTIVITY_REFERENCE_DEFINITION = (
+    "a_i = exp((mu_i - G_i_ref(T)) / RT): mu_i from the equilibrium (database SER scale) and G_i_ref the "
+    "molar Gibbs energy of pure i in its SER reference phase (the database ELEMENT record) at the same T "
+    "and 1 atm, from the same database (Lukas, Fries & Sundman, Computational Thermodynamics: The Calphad "
+    "Method, 2007, reference states; the Thermo-Calc 'SET-REFERENCE-STATE <el> <phase> * 1E5' convention)")
+
+
+def _pure_element_reference_gm(dbf: Any, element: str, temps_k: List[float]) -> Dict[str, Any]:
+    """Molar Gibbs energy of pure ``element`` in its SER reference phase at each temperature (audit TK-1).
+
+    The reference phase is the one named in the database's ELEMENT record. The pure-element end member
+    is set explicitly (the element on every sublattice that admits it, vacancies on the others), so no
+    sampled configuration stands in for it. Returns {"phase", "gm": [J/mol per T] or None, "reason"}.
+    """
+    ref = (getattr(dbf, "refstates", None) or {}).get(element) or {}
+    phase = ref.get("phase")
+    out: Dict[str, Any] = {"phase": phase, "gm": None, "reason": None}
+    if not phase or phase not in dbf.phases:
+        out["reason"] = (f"the database gives no modelled reference phase for {element} "
+                         f"(ELEMENT record phase {phase!r} is not a phase of the database)")
+        return out
+    try:
+        from pycalphad import Model, calculate
+        comps = [element, "VA"]
+        model = Model(dbf, comps, phase)
+        point = []
+        for sublattice in range(len(model.constituents)):
+            names = sorted(sp.name for sp in model.constituents[sublattice])
+            if element in names:
+                chosen = element
+            elif "VA" in names:
+                chosen = "VA"
+            else:
+                out["reason"] = f"phase {phase} has a sublattice that admits neither {element} nor vacancies"
+                return out
+            point.extend(1.0 if s.species.name == chosen else 0.0
+                         for s in model.site_fractions if s.sublattice_index == sublattice)
+        res = calculate(dbf, comps, phase, T=[float(t) for t in temps_k], P=101325.0, N=1,
+                        points={phase: np.array([point])}, model={phase: model}, output="GM")
+        gm = [float(g) for g in np.asarray(res.GM.values).reshape(len(temps_k), -1)[:, 0]]
+    except Exception as err:  # the activity is then unavailable, never a guessed value
+        out["reason"] = f"the pure-element reference Gibbs energy could not be evaluated: {err}"
+        return out
+    if not all(math.isfinite(g) for g in gm):
+        out["reason"] = "the pure-element reference Gibbs energy is not finite on this grid"
+        return out
+    out["gm"] = gm
+    return out
+
+
 def _flat_point_arrays(eq_r: Any, n: int) -> Tuple[Any, Any, Any, Any, Any]:
     """(GM[n], MU[n, c], Phase[n, v], NP[n, v], X[n, v, c] or None) for n temperatures at one composition."""
     def arr(x: Any) -> Any:
@@ -963,6 +1066,10 @@ SCHEIL_MAX_STEPS = 400
 SCHEIL_TIME_BUDGET_S = 20.0
 SCHEIL_LIQUID_STOP = 1e-3       # stop when < 0.1 % liquid remains (same cut-off as the solidus definition)
 SCHEIL_MIN_MOLE_FRACTION = 1e-6  # lower bound for a liquid-composition condition (clamps are counted)
+# Before the first solid has been resolved, a step in which the whole liquid freezes is halved (down to
+# this step) so that the first solid is seen next to its liquid: a freezing range narrower than the step
+# otherwise left no tie-line, no primary phase and no partition coefficient (audit TK-5).
+SCHEIL_MIN_STEP_C = 0.01
 
 
 def scheil_gulliver(
@@ -988,6 +1095,11 @@ def scheil_gulliver(
     is then known to within that step), when a point does not converge, at the step or time
     limit, or at the lowest temperature. Every stop is reported with its reason; nothing is
     extrapolated. Pure function of ``run_point``: testable without pycalphad.
+
+    Until the first solid has formed next to remaining liquid, a step that freezes the whole liquid
+    is retried with half the step (down to SCHEIL_MIN_STEP_C); after a resolved step the step grows
+    back towards ``step_c`` by doubling. If even the minimum step freezes everything, the solid that
+    formed is recorded as the first phase without a tie-line (``firstStepUnresolved``).
     """
     t0 = time.perf_counter()
     comps = sorted(x0)
@@ -1004,12 +1116,15 @@ def scheil_gulliver(
     reason = "step-limit"
     terminal_bracket: Optional[List[float]] = None
     steps = 0
+    step_now = step_c
+    bisections = 0
+    first_step_unresolved = False
     while steps < max_steps:
         if time.perf_counter() - t0 > time_budget_s:
             reason = "time-budget"
             break
         t_prev = t_c
-        t_c = t_prev - step_c
+        t_c = t_prev - step_now
         if t_c < min_temperature_c:
             reason = "temperature-floor"
             break
@@ -1031,8 +1146,23 @@ def scheil_gulliver(
         local_liq = float(res["liquid"])
         solids = {k: float(v) for k, v in res["phases"].items() if v > 0.0}
         local_solid = max(0.0, 1.0 - local_liq)
+        if local_liq <= 1e-9 and first_solid is None and step_now > SCHEIL_MIN_STEP_C:
+            # The whole liquid froze before any solid was seen next to it: halve the step and retry.
+            step_now = max(SCHEIL_MIN_STEP_C, step_now / 2.0)
+            bisections += 1
+            t_c = t_prev
+            continue
         if local_liq <= 1e-9:
             # The remaining liquid solidified completely inside this step.
+            if first_solid is None:
+                # even the minimum step froze everything: the first solid is known, its tie-line is not
+                first_step_unresolved = True
+                first_solid = {"temperatureC": round(t_c, 2), "liquidX": dict(cond_x), "solidX": dict(cond_x),
+                               "phases": sorted(solids)}
+                for name in solids:
+                    first_appearance[name] = {"temperatureC": round(t_c, 2),
+                                              "phaseX": dict((res.get("phasesX") or {}).get(name) or {}),
+                                              "liquidX": None, "amount": float(solids[name]), "tieLine": False}
             for name, amount in solids.items():
                 phase_amounts[name] = phase_amounts.get(name, 0.0) + f_liq * amount
             for c in comps:
@@ -1061,6 +1191,7 @@ def scheil_gulliver(
                                               "liquidX": dict(new_x_liq), "amount": float(solids.get(name, 0.0))}
         f_liq *= local_liq
         x_liq = new_x_liq
+        step_now = min(step_c, step_now * 2.0)
         points.append({"temperatureC": round(t_c, 2), "fractionSolid": round(1.0 - f_liq, 6),
                        "liquidX": dict(x_liq), "solidX": solid_x, "solidPhases": sorted(solids)})
         if f_liq < SCHEIL_LIQUID_STOP:
@@ -1077,6 +1208,9 @@ def scheil_gulliver(
         "remainingLiquidFraction": round(f_liq, 6),
         "steps": steps,
         "stepC": step_c,
+        "stepBisections": bisections,
+        "minimumStepC": SCHEIL_MIN_STEP_C,
+        "firstStepUnresolved": first_step_unresolved,
         "points": points,
         "phaseAmounts": {k: round(v, 6) for k, v in sorted(phase_amounts.items())},
         "firstSolid": first_solid,
@@ -1085,6 +1219,41 @@ def scheil_gulliver(
         "massBalanceMaxAbsError": balance,
         "elapsedMs": round((time.perf_counter() - t0) * 1000.0, 2),
     }
+
+
+GRID_T_MIN_K = 298.15
+GRID_T_MAX_K = 3000.0
+GRID_MIN_POINTS = 5
+GRID_MAX_POINTS = 80
+
+
+def effective_grid_report(t_min_c: float, t_max_c: float, t_step_c: float, t_start_k: float, t_end_k: float,
+                          num_steps: int) -> Dict[str, Any]:
+    """The grid actually computed next to the requested one, and every clamp that acted (audit TK-6).
+
+    The grid is evenly spaced between the clamped end points, so its step is (Tmax - Tmin) / (n - 1),
+    which differs from the requested step whenever the range is not a whole multiple of it.
+    """
+    start_c = round(t_start_k - ZERO_CELSIUS_K, 2)
+    end_c = round(t_end_k - ZERO_CELSIUS_K, 2)
+    step_c = round((t_end_k - t_start_k) / (num_steps - 1), 4) if num_steps > 1 else None
+    adjustments: List[Dict[str, Any]] = []
+    if t_min_c + ZERO_CELSIUS_K < GRID_T_MIN_K:
+        adjustments.append({"field": "tMin", "requested": t_min_c, "used": start_c,
+                            "reason": f"the grid starts at {GRID_T_MIN_K} K (25 degC) at the lowest"})
+    if t_max_c + ZERO_CELSIUS_K > GRID_T_MAX_K:
+        adjustments.append({"field": "tMax", "requested": t_max_c, "used": end_c,
+                            "reason": f"the grid ends at {GRID_T_MAX_K} K at the highest"})
+    requested_points = int(round((t_end_k - t_start_k) / t_step_c)) + 1 if t_step_c > 0 else None
+    if requested_points != num_steps:
+        adjustments.append({"field": "tStep", "requested": t_step_c, "used": step_c,
+                            "requestedPoints": requested_points, "usedPoints": num_steps,
+                            "reason": f"the grid has {GRID_MIN_POINTS} to {GRID_MAX_POINTS} evenly spaced points"})
+    elif step_c is not None and abs(step_c - t_step_c) > 1e-6:
+        adjustments.append({"field": "tStep", "requested": t_step_c, "used": step_c,
+                            "reason": "the range is not a whole multiple of the step; the points are evenly spaced"})
+    return {"effectiveTemperatureRangeC": [start_c, end_c], "effectiveTemperatureStepC": step_c,
+            "gridAdjustments": adjustments}
 
 
 def solve_pycalphad_equilibrium(
@@ -1161,10 +1330,11 @@ def solve_pycalphad_equilibrium(
     phases = list(dbf.phases.keys())
 
     # Build temperature grid
-    t_start_k = max(298.15, t_min_c + ZERO_CELSIUS_K)
-    t_end_k = min(3000.0, t_max_c + ZERO_CELSIUS_K)
-    num_steps = max(5, min(80, int(round((t_end_k - t_start_k) / t_step_c)) + 1))
+    t_start_k = max(GRID_T_MIN_K, t_min_c + ZERO_CELSIUS_K)
+    t_end_k = min(GRID_T_MAX_K, t_max_c + ZERO_CELSIUS_K)
+    num_steps = max(GRID_MIN_POINTS, min(GRID_MAX_POINTS, int(round((t_end_k - t_start_k) / t_step_c)) + 1))
     temp_grid_k = [round(float(t_start_k + i * (t_end_k - t_start_k) / (num_steps - 1)), 2) for i in range(num_steps)]
+    grid_report = effective_grid_report(t_min_c, t_max_c, t_step_c, t_start_k, t_end_k, num_steps)
 
     conditions = {
         v.P: 101325.0,
@@ -1192,6 +1362,7 @@ def solve_pycalphad_equilibrium(
         if runner.lock is not None:
             runner.lock.release()
 
+    result.update(grid_report)
     elapsed_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
     timings["total"] = elapsed_ms
     result["computeTimeMs"] = elapsed_ms
@@ -1226,6 +1397,13 @@ def _solve_with_runner(runner, conditions, dep_comp, indep_comps, alloy_name, wt
     # Extract coordinates and arrays
     t_coords = list(eq.T.values)
     eq_comps = [str(c) for c in eq.component.values]
+
+    # Pure-element reference Gibbs energies for the activities (audit TK-1): one evaluation per element
+    # over the whole grid. MU is on the database SER scale, so exp(MU/RT) is not an activity.
+    reference_gm = {c: _pure_element_reference_gm(runner.dbf, c, t_coords) for c in eq_comps}
+    t_mark_now = time.perf_counter()
+    timings["activityReferences"] = round((t_mark_now - t_mark) * 1000.0, 2)
+    t_mark = t_mark_now
 
     equilibrium_profile = []
     not_converged_temps: List[float] = []
@@ -1324,8 +1502,11 @@ def _solve_with_runner(runner, conditions, dep_comp, indep_comps, alloy_name, wt
         for c_idx, c_name in enumerate(eq_comps):
             mu_val = mu_values[c_idx]
             chem_potentials_j_mol[c_name] = round(mu_val, 1)
-            # a_i = exp(mu_i / RT)
-            activities[c_name] = float(math.exp(mu_val / rt))
+            # a_i = exp((mu_i - G_i_ref(T)) / RT), pure i in its SER reference phase at the same T
+            ref_gm = reference_gm[c_name]["gm"]
+            exponent = None if ref_gm is None else (mu_val - ref_gm[i]) / rt
+            activities[c_name] = (float(math.exp(exponent))
+                                  if exponent is not None and math.isfinite(exponent) and exponent < 700.0 else None)
 
         # Phase-name based observations; the critical temperatures are assembled
         # after the loop (liquidus / solidus / gamma-prime are checked there).
@@ -1484,6 +1665,11 @@ def _solve_with_runner(runner, conditions, dep_comp, indep_comps, alloy_name, wt
         "criticalTemperatures": critical_temperatures,
         "criticalTemperatureStatus": status,
         "phacompAnalysis": phacomp,
+        "activityReferenceStates": {
+            c: {"phase": ref["phase"], "temperature": "same as the equilibrium", "pressurePa": 101325.0,
+                "status": "available" if ref["gm"] is not None else "unavailable", "reason": ref["reason"],
+                "definition": ACTIVITY_REFERENCE_DEFINITION}
+            for c, ref in reference_gm.items()},
         "solutePartitioning": partitioning_table,
         "multiElementScheil": scheil_points,
         "multiElementScheilStatus": scheil_block["status"],
@@ -1571,7 +1757,7 @@ def _scheil_outputs(scheil_result: Optional[Dict[str, Any]], unavailable_reason:
     rows = []
     for c in comps:
         k = None
-        if tie is not None and tie["liquidX"].get(c, 0.0) > 1e-9 and c in tie["phaseX"]:
+        if tie is not None and tie.get("liquidX") and tie["liquidX"].get(c, 0.0) > 1e-9 and c in tie["phaseX"]:
             k = tie["phaseX"][c] / tie["liquidX"][c]
         if k is None:
             role = None
@@ -1585,7 +1771,11 @@ def _scheil_outputs(scheil_result: Optional[Dict[str, Any]], unavailable_reason:
             "element": c,
             "partitionCoefficient_k": round(k, 4) if k is not None else None,
             "partitionCoefficientSource": "scheil-primary-phase-tie-line" if k is not None else "unavailable",
-            "reason": None if k is not None else "no tie-line between the primary solid and the liquid on the path",
+            "reason": None if k is not None else (
+                f"the whole liquid solidified within the minimum Scheil step ({SCHEIL_MIN_STEP_C} degC): no liquid "
+                f"coexists with the primary solid on the path, so there is no tie-line"
+                if scheil_result.get("firstStepUnresolved") else
+                "no tie-line between the primary solid and the liquid on the path"),
             "temperatureC": tie["temperatureC"] if tie else None,
             "primarySolidPhase": primary,
             "role": role,
@@ -1594,7 +1784,8 @@ def _scheil_outputs(scheil_result: Optional[Dict[str, Any]], unavailable_reason:
     reason_text = {
         "liquid-below-0.1-percent": "the remaining liquid fell below 0.1 %",
         "liquid-exhausted-within-step": "the remaining liquid solidified within the last temperature step "
-                                        "(invariant reaction; temperature known to within one step)",
+                                        "(an invariant reaction, or the step passed the end of solidification; "
+                                        "temperature known to within that step)",
         "equilibrium-not-converged": "an equilibrium on the path did not converge or showed a liquid miscibility gap",
         "time-budget": "the time budget was reached",
         "step-limit": "the step limit was reached",
@@ -1616,6 +1807,8 @@ def _scheil_outputs(scheil_result: Optional[Dict[str, Any]], unavailable_reason:
         "remainingLiquidFraction": scheil_result["remainingLiquidFraction"],
         "stepC": scheil_result["stepC"],
         "steps": scheil_result["steps"],
+        "stepBisections": scheil_result.get("stepBisections", 0),
+        "firstStepUnresolved": scheil_result.get("firstStepUnresolved", False),
         "phaseAmounts": scheil_result["phaseAmounts"],
         "primarySolidPhase": primary,
         "phaseNameNotes": phase_name_notes(list(scheil_result["phaseAmounts"]) + ([primary] if primary else [])),
@@ -1758,7 +1951,12 @@ def main():
             return
 
         name = payload.get("name", "Multi-Component Alloy")
-        elements = payload.get("elements", {"Ni": 75, "Al": 10, "Cr": 15})
+        elements = payload.get("elements")
+        if not isinstance(elements, dict):
+            # No invented alloy when the composition is missing (audit TK-7).
+            raise ValidationError(OUT_OF_RANGE, "elements",
+                                  "an 'elements' mapping {symbol: amount} is required; there is no default alloy",
+                                  {"type": type(elements).__name__, "reason": "missing-composition"})
         unit = payload.get("unit", "wt_pct")
         t_min = float(payload.get("tMin", 500.0))
         t_max = float(payload.get("tMax", 1450.0))

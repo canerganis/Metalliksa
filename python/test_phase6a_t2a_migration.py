@@ -473,9 +473,11 @@ class CalphadElementTest(unittest.TestCase):
     def test_case_variants_and_zero_amounts_are_unchanged(self):
         wt, at = calphad_solver.normalize_composition({"ni": 50.0, "CR": 50.0, "Xx": 0, "Yy": None})
         self.assertEqual(set(wt), {"Ni", "Cr"})
-        # Empty input keeps its documented default.
-        wt, _ = calphad_solver.normalize_composition({})
-        self.assertEqual(wt, {"Ni": 80.0, "Al": 10.0, "Cr": 10.0})
+        # Empty input is refused (physics audit TK-7): the former default Ni-10Al-10Cr was reported as
+        # if the caller had requested it.
+        with self.assertRaises(iv.ValidationError) as ctx:
+            calphad_solver.normalize_composition({})
+        self.assertEqual((ctx.exception.code, ctx.exception.field), ("OUT_OF_RANGE", "elements"))
 
     def test_atomic_weights_and_r(self):
         self.assertEqual(calphad_solver.GAS_CONSTANT_R, pc.GAS_CONSTANT_R.value)
