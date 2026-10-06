@@ -647,12 +647,37 @@ def _meltpool_geometry_um(value: Dict[str, Any]) -> List[Any]:
     return [geometry[key] for key in ("width_um", "depth_um", "length_um", "keyholeVaporCavityDepth_um")]
 
 
+# Since the 2026-10-06 tier-2 bump calculate_meltpool_physics touches the GPU modules only on explicit
+# request (absorption_model="powder-raytrace" or thermal_slice_backend="warp"); no G11/G18 payload makes
+# that request, so their results no longer depend on whether warp is importable. G11/G18 used to be
+# skipped on warp hosts; they now run everywhere with the two GPU modules blocked, so a silent GPU
+# path would raise ImportError (a FAIL) instead of drifting or being skipped.
+_GPU_MELTPOOL_MODULES = ("powder_bed_raytracer", "warp_thermal_solver")
+_GPU_MELTPOOL_OPTIONS = ("absorption_model", "thermal_slice_backend")
+
+
+def _cpu_meltpool_only(observe):
+    """Run observe() with the GPU melt-pool modules made unimportable (see _GPU_MELTPOOL_MODULES)."""
+    import sys
+    from unittest import mock
+    with mock.patch.dict(sys.modules, {name: None for name in _GPU_MELTPOOL_MODULES}):
+        return observe()
+
+
+def _require_cpu_meltpool_payloads(payloads) -> None:
+    for payload in payloads:
+        requested = sorted(set(payload) & set(_GPU_MELTPOOL_OPTIONS))
+        if requested:
+            raise ValueError(f"G11/G18 payloads must not request the GPU melt-pool path: {requested}")
+
+
 def case_g18_in625_latent_heat(ctx: CaseContext) -> Dict[str, Any]:
     """Which IN625 fusion latent heat each path uses today (value level)."""
-    import importlib.util
-    if importlib.util.find_spec("warp") is not None:
-        raise CaseSkipped("warp is importable here: calculate_meltpool_physics would take the GPU "
-                          "ray-tracing path; the G18 golden pins the CPU fallback without warp")
+    _require_cpu_meltpool_payloads([IN625_MELTPOOL_PAYLOAD])
+    return _cpu_meltpool_only(lambda: _g18_observations(ctx))
+
+
+def _g18_observations(ctx: CaseContext) -> Dict[str, Any]:
     import lpbf_material_registry as registry
     import in625_thermal_material as in625
     from lpbf_thermal_solver import calculate_meltpool_physics, SECONDARY_THERMOPHYSICAL_DB
@@ -1045,12 +1070,11 @@ G11_PAYLOADS = (
 
 
 def case_g11_build_job_meltpool(ctx: CaseContext) -> Dict[str, Any]:
-    import importlib.util
-    if importlib.util.find_spec("warp") is not None:
-        # calculate_meltpool_physics tries the Warp powder-bed ray tracer and the Warp thermal
-        # slice first; the goldens were recorded on their CPU fallback ("No module named 'warp'").
-        raise CaseSkipped("warp is importable here: calculate_meltpool_physics would take the GPU "
-                          "ray-tracing path; the G11 golden pins the CPU fallback without warp")
+    _require_cpu_meltpool_payloads(G11_PAYLOADS)
+    return _cpu_meltpool_only(lambda: _g11_observations(ctx))
+
+
+def _g11_observations(ctx: CaseContext) -> Dict[str, Any]:
     from lpbf_thermal_solver import calculate_meltpool_physics, classify_enthalpy_regime, THERMOPHYSICAL_DB
 
     observations: Dict[str, Any] = {}
@@ -1234,7 +1258,8 @@ NOT_COVERED = (
     "Worker-side consumers of opticalObserver / NIST section operators (lpbf_worker.py, "
     "lpbf_nist_*; not in the manifest); G15 pins only that the setting passes through run()",
     "CpuRunProgress source-work budget failures (maximum_source_evaluations / _cell_steps)",
-    "G11 and G18 with warp installed (skipped, see case_g11_build_job_meltpool)",
+    "The opt-in GPU melt-pool paths (absorption_model='powder-raytrace', thermal_slice_backend='warp'); "
+    "G11/G18 run with those modules blocked (see _cpu_meltpool_only)",
 )
 
 

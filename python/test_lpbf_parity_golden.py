@@ -247,7 +247,7 @@ class ParityHarnessTests(unittest.TestCase):
             for case_id in ("g1_v1_60w_in718", "g3_powder_stripe_multilayer", "g4_layered_plate",
                             "g8_observers"):
                 with self.subTest(case=case_id):
-                    outcome = parity.check_case(parity.CASE_BY_ID[case_id], self.root)
+                    outcome = parity.check_case(parity.CASE_BY_ID[case_id], self.root, allow_environment_mismatch=True)
                     self.assertEqual(outcome["problems"], [])
                     self.assertEqual(outcome["implementationHashes"], [fake])
 
@@ -295,7 +295,10 @@ class ParityHarnessTests(unittest.TestCase):
         self.assertEqual(compared["problems"], [])
         self.assertTrue(any("compared despite" in w for w in compared["warnings"]))
 
-    def test_g11_is_skipped_not_passed_when_warp_is_importable(self):
+    def test_g11_g18_run_with_gpu_modules_blocked_when_warp_is_importable(self):
+        # Since the tier-2 bump the melt-pool kernels touch the GPU modules only on explicit request, so
+        # G11/G18 are no longer skipped on warp hosts: they run with the GPU modules blocked.
+        import importlib
         import importlib.util
         original = importlib.util.find_spec
 
@@ -303,10 +306,16 @@ class ParityHarnessTests(unittest.TestCase):
             return object() if name == "warp" else original(name, *args, **kwargs)
 
         with patch.object(importlib.util, "find_spec", find_spec):
-            outcome = parity.check_case(parity.CASE_BY_ID["g11_build_job_meltpool"], self.root)
-            self.assertIn("warp is importable", outcome["skipped"])
-            self.assertEqual(parity.main(["--check", "--case", "g11_build_job_meltpool",
-                                          "--work-root", str(self.root)]), 3)
+            for case_id in ("g11_build_job_meltpool", "g18_in625_latent_heat"):
+                outcome = parity.check_case(parity.CASE_BY_ID[case_id], self.root, allow_environment_mismatch=True)
+                self.assertIsNone(outcome["skipped"], case_id)
+        for name in parity._GPU_MELTPOOL_MODULES:
+            with self.assertRaises(ImportError):
+                parity._cpu_meltpool_only(lambda name=name: importlib.import_module(name))
+        with self.assertRaisesRegex(ValueError, "must not request the GPU melt-pool path"):
+            parity._require_cpu_meltpool_payloads([{"absorption_model": "powder-raytrace"}])
+        with self.assertRaisesRegex(ValueError, "must not request the GPU melt-pool path"):
+            parity._require_cpu_meltpool_payloads([{"thermal_slice_backend": "warp"}])
 
     def test_cfd_case_module_falls_back_only_when_lpbf_cfd_cases_itself_is_missing(self):
         import sys
