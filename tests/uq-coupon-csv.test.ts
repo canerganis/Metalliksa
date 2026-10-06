@@ -36,13 +36,14 @@ test("CSV roundtrip preserves quotes, commas, multiline metadata, zero and missi
   assert.deepEqual(parseCSVToCoupons(csv, "different-dataset"), [coupon]);
 });
 
-test("synthetic coupon export/reupload cannot become a measured dataset", () => {
+test("synthetic-flagged coupon export/reupload cannot become a measured dataset", () => {
   const dataset = AEROSPACE_MATERIAL_DATASETS[0];
-  const parsed = parseCSVToCoupons(exportCouponsToCSV(dataset.coupons, dataset.name), "upload");
-  assert.deepEqual(parsed, dataset.coupons);
-  assert.ok(parsed.every(row => row.evidenceOrigin === "synthetic"));
+  const row: CouponTestSpecimen = { id: "u-1", specimenNumber: "S1", heatLotId: "H1", testTempC: 25, yieldStrengthMPa: 900, utsMPa: 1000, elongationPct: 12, reductionOfAreaPct: null, hardnessHRC: undefined, testStandard: "ASTM E8", orientation: "L", evidenceOrigin: "synthetic" };
+  const parsed = parseCSVToCoupons(exportCouponsToCSV([row], dataset.name), "upload");
+  assert.ok(parsed.length === 1 && parsed.every(r => r.evidenceOrigin === "synthetic"));
   assert.equal(isSyntheticCouponDataset({ ...dataset, coupons: parsed, couponSource: "uploaded" }), true);
-  assert.throws(() => parseCSVToCoupons(`${coreHeader},Evidence_Origin\n900,1000,12,verified`, "upload"), /cannot certify/);
+  assert.throws(() => parseCSVToCoupons(`${coreHeader},Evidence_Origin
+900,1000,12,verified`, "upload"), /cannot certify/);
 });
 
 test("missing property columns, missing values and unlabelled or conflicting units are rejected", () => {

@@ -1,5 +1,4 @@
 import { createUqRunSession } from '../utils/uqRunSession';
-import { AccessibleModal } from "./AccessibleModal";
 import { CouponSummary, CouponWorksheet, formatUqNumber, UqModelStatusNote } from './UqCouponReport';
 import { ResponsiveContainer } from './VisibleResponsiveContainer';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
@@ -67,18 +66,16 @@ import {
   MMPDSEmpiricalAllowableStats,
   computeMMPDSEmpiricalStats,
   calculateMMPDSToleranceFactor,
-  generateSyntheticCoupons,
   parseCSVToCoupons,
   exportCouponsToCSV,
   isSyntheticCouponDataset
 } from "./uqLabData";
 import { ENGINEERING_ESTIMATE_DISCLAIMER, EngineeringEstimateBanner, SYNTHETIC_COUPON_MMPDS_NOTICE } from "../utils/engineeringDisclaimer";
 
-interface UQLabProps {
-  onNavigate?: (tabId: string) => void;
-}
+export const UQ_ILLUSTRATIVE_MODEL_NOTE =
+  "Illustrative model, not measured or calibrated: the strength model behind this run is a toy superposition (it predicts about 3.5 GPa yield for the Inconel 718 default). Only relative sensitivity indices are shown; the model's strength, UTS, fracture-toughness and critical-flaw outputs are not displayed because they are not supported. Preset chemistry, tolerance and thermal inputs are placeholders, not sourced process data.";
 
-export function UQLab({ onNavigate }: UQLabProps) {
+export function UQLab() {
   // Active Dataset
   const [datasets, setDatasets] = useState<MaterialDataset[]>(AEROSPACE_MATERIAL_DATASETS);
   const [activeDatasetId, setActiveDatasetId] = useState<string>("inconel718-ams5664");
@@ -92,10 +89,11 @@ export function UQLab({ onNavigate }: UQLabProps) {
   const samplingMethod = "sobol_qmc" as const;
   const [scramble, setScramble] = useState<boolean>(true);
   const [mcSamples, setMcSamples] = useState<number>(2500);
-  const [seed, setSeed] = useState<number>(42);
+  // Fixed seed: the run is reproducible and the seed is shown with the result.
+  const seed = 42;
 
   // Active Tab
-  const [activeViewTab, setActiveViewTab] = useState<"distribution" | "sensitivity" | "coupons" | "comparison" | "certificate">("distribution");
+  const [activeViewTab, setActiveViewTab] = useState<"distribution" | "sensitivity" | "coupons" | "certificate">("distribution");
   const [selectedProperty, setSelectedProperty] = useState<"yieldStrength" | "uts" | "elongation">("yieldStrength");
 
   // Coupon Search & Filter
@@ -105,9 +103,6 @@ export function UQLab({ onNavigate }: UQLabProps) {
 
   // File Upload Ref
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isSynthesizeModalOpen, setIsSynthesizeModalOpen] = useState<boolean>(false);
-  const [synthSampleSize, setSynthSampleSize] = useState<number>(40);
-  const [synthLotCount, setSynthLotCount] = useState<number>(4);
 
   // Python QMC Computation Result
   const [resultRecord, setResultRecord] = useState<{ key: string; result: PythonStochasticUQResult } | null>(null);
@@ -116,7 +111,6 @@ export function UQLab({ onNavigate }: UQLabProps) {
   const uqResult = resultRecord?.key === requestKey ? resultRecord.result : null;
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [lastRunTimestamp, setLastRunTimestamp] = useState<string>("");
 
   // Copy Feedback
   const [copiedNotification, setCopiedNotification] = useState<string | null>(null);
@@ -180,14 +174,12 @@ export function UQLab({ onNavigate }: UQLabProps) {
       setIsLoading(state.loading);
       setErrorMsg(state.error);
       setResultRecord(state.result ? { key, result: state.result } : null);
-      if (state.result) setLastRunTimestamp(new Date().toLocaleTimeString());
     });
   }, [requestKey]);
 
-  useEffect(() => {
-    void runQMCSolver();
-    return () => requestSession.current.invalidate();
-  }, [runQMCSolver]);
+  // The illustrative model runs only on an explicit click; changing inputs discards a stale result.
+  useEffect(() => () => requestSession.current.invalidate(), []);
+  useEffect(() => { requestSession.current.invalidate(); setIsLoading(false); }, [requestKey]);
 
   // --------------------------------------------------------------------------
   // DATASET MODIFICATION HANDLERS
@@ -224,29 +216,6 @@ export function UQLab({ onNavigate }: UQLabProps) {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
-  const handleSynthesizeBatch = () => {
-    if (!Number.isInteger(synthSampleSize) || synthSampleSize < 10 || synthSampleSize > 200 || !Number.isInteger(synthLotCount) || synthLotCount < 2 || synthLotCount > 12 || synthLotCount > synthSampleSize) { setErrorMsg("Synthetic samples must be 10–200, with 2–12 lots and no more lots than samples."); return; }
-    setErrorMsg(null);
-    const newCoupons = generateSyntheticCoupons({
-      datasetId: activeDataset.id,
-      sampleSize: synthSampleSize,
-      lotCount: synthLotCount,
-      meanYield: activeDataset.specMinYieldMPa + 80,
-      stdYield: 28,
-      meanUTS: activeDataset.specMinUTSMPa + 70,
-      stdUTS: 24,
-      meanElongation: activeDataset.specMinElongationPct + 4.5,
-      stdElongation: 1.6,
-      testStandard: "ASTM E8M / MMPDS-01"
-    });
-
-    setDatasets((prev) =>
-      prev.map((d) => (d.id === activeDataset.id ? { ...d, coupons: newCoupons, couponSource: "synthetic" } : d))
-    );
-    setIsSynthesizeModalOpen(false);
-    setCouponPage(1);
-  };
-
   const handleDeleteCoupon = (couponId: string) => {
     setDatasets((prev) =>
       prev.map((d) =>
@@ -270,27 +239,24 @@ export function UQLab({ onNavigate }: UQLabProps) {
           title: "Yield Strength (0.2% Offset)",
           symbol: "F_ty / R_p0.2",
           unit: "MPa",
-          specMin: activeDataset.specMinYieldMPa,
-          stochasticStat: uqResult?.stochasticProperties?.yieldStrength_Rp02
+          specMin: activeDataset.specMinYieldMPa
         };
       case "uts":
         return {
           title: "Ultimate Tensile Strength",
           symbol: "F_tu / R_m",
           unit: "MPa",
-          specMin: activeDataset.specMinUTSMPa,
-          stochasticStat: uqResult?.stochasticProperties?.ultimateTensileStrength_UTS
+          specMin: activeDataset.specMinUTSMPa
         };
       case "elongation":
         return {
           title: "Total Elongation at Break",
           symbol: "e / A_%",
           unit: "%",
-          specMin: activeDataset.specMinElongationPct,
-          stochasticStat: uqResult?.stochasticProperties?.elongationPct
+          specMin: activeDataset.specMinElongationPct
         };
     }
-  }, [selectedProperty, activeDataset, uqResult]);
+  }, [selectedProperty, activeDataset]);
 
   // Combined Chart Histogram Data
   const chartData = useMemo(() => {
@@ -355,7 +321,7 @@ export function UQLab({ onNavigate }: UQLabProps) {
 
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1.5 shadow-sm">
                 <Zap className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-                Sobol sampling · screening
+                Illustrative Sobol model · on demand
               </span>
 
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
@@ -369,8 +335,7 @@ export function UQLab({ onNavigate }: UQLabProps) {
             </h1>
 
             <p className="text-xs md:text-sm text-slate-400 max-w-3xl leading-relaxed">
-              Propagate composition tolerances and thermal scatter using{" "}
-              <strong className="text-amber-300">Quasi-Monte Carlo Sobol sequences</strong> for teaching and screening.
+              Descriptive statistics and approximate normal-model tolerance limits are computed from <strong className="text-sky-300">coupon data you upload</strong>; no coupon measurements are bundled. An optional Sobol sensitivity run on an uncalibrated illustrative model is available on demand.{" "}
               Uploaded CSV values remain unverified; normal-model tolerance estimates do not establish MMPDS handbook allowables.
             </p>
             <EngineeringEstimateBanner className="mt-3 max-w-3xl" />
@@ -384,16 +349,16 @@ export function UQLab({ onNavigate }: UQLabProps) {
               className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-sky-400 hover:from-sky-400 hover:to-sky-300 text-slate-950 font-bold text-xs transition flex items-center gap-2 shadow-lg shadow-sky-500/25 disabled:opacity-50 cursor-pointer"
             >
               <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
-              {isLoading ? "Running QMC Sobol..." : "Run QMC Solver"}
+              {isLoading ? "Running..." : "Run illustrative sensitivity"}
             </button>
 
             <button
               onClick={() => fileInputRef.current?.click()}
               className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition flex items-center gap-1.5 cursor-pointer"
-              title="Upload CSV coupon test data"
+              title="Upload your measured coupon data as CSV"
             >
               <Upload className="w-3.5 h-3.5 text-sky-400" />
-              Upload CSV
+              Upload coupon CSV
             </button>
             <input aria-label="Upload CSV"
               type="file"
@@ -404,18 +369,9 @@ export function UQLab({ onNavigate }: UQLabProps) {
             />
 
             <button
-              onClick={() => setIsSynthesizeModalOpen(true)}
-              className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition flex items-center gap-1.5 cursor-pointer"
-              title="Generate synthetic lot batches"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              Synthesize Lot
-            </button>
-
-            <button
               onClick={handleExportCSV}
               className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition flex items-center gap-1.5 cursor-pointer"
-              title="Export active coupons as CSV"
+              title="Export the loaded coupon records as CSV"
             >
               <Download className="w-3.5 h-3.5 text-emerald-400" />
               Export
@@ -598,6 +554,13 @@ export function UQLab({ onNavigate }: UQLabProps) {
       {/* ==================================================================== */}
       {/* 3. EXECUTIVE ALLOWABLE COMPARISON KPI CARDS */}
       {/* ==================================================================== */}
+      {activeDataset.coupons.length === 0 && (
+        <div role="status" className="rounded-2xl border border-sky-500/40 bg-sky-950/30 p-4 text-sm text-sky-100 space-y-2">
+          <p className="font-semibold">No coupon data loaded for {activeDataset.name.split("(")[0].trim()}.</p>
+          <p className="text-xs text-sky-200">This preset only supplies specification context. Statistics and tolerance limits need your measured tensile coupons: use Upload coupon CSV (at least 3 rows for a tolerance estimate; heat/lot IDs are needed for lot grouping). Nothing is generated or assumed in their place.</p>
+          <button onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 rounded-xl bg-sky-500 text-slate-950 text-xs font-bold cursor-pointer">Upload coupon CSV</button>
+        </div>
+      )}
       <CouponSummary stats={empiricalStats} unit={propertyMeta.unit} synthetic={isSyntheticCoupons} />
 
       {/* ==================================================================== */}
@@ -733,6 +696,9 @@ export function UQLab({ onNavigate }: UQLabProps) {
           </div>
 
           {/* Histogram Chart */}
+          {chartData.length === 0 ? (
+            <p className="h-40 flex items-center justify-center text-xs text-slate-400">No histogram: no coupon records are loaded. Upload a coupon CSV.</p>
+          ) : (
           <div className="h-80 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={chartData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
@@ -859,6 +825,7 @@ export function UQLab({ onNavigate }: UQLabProps) {
               </ComposedChart>
             </ResponsiveContainer>
           </div>
+          )}
 
           {/* Detailed Statistical Table */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 font-mono text-xs">
@@ -904,6 +871,13 @@ export function UQLab({ onNavigate }: UQLabProps) {
       {/* ==================================================================== */}
       {/* TAB 2: SALTELLI-SOBOL GLOBAL SENSITIVITY DECOMPOSITION */}
       {/* ==================================================================== */}
+      {activeViewTab === "sensitivity" && !uqResult && (
+        <div className="p-5 rounded-2xl bg-slate-900/90 border border-amber-500/30 space-y-2">
+          <h3 className="text-sm font-bold text-amber-300">Illustrative Sobol sensitivity (not run)</h3>
+          <p className="text-xs text-slate-300">{isLoading ? "Running the illustrative model..." : "Press Run illustrative sensitivity to rank the supplied composition and process scatter by their effect on the model's yield output."}</p>
+          <p className="text-xs text-slate-400">{UQ_ILLUSTRATIVE_MODEL_NOTE}</p>
+        </div>
+      )}
       {activeViewTab === "sensitivity" && uqResult && (
         <div className="p-5 rounded-2xl bg-slate-900/90 border border-amber-500/30 space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -922,6 +896,8 @@ export function UQLab({ onNavigate }: UQLabProps) {
             </span>
           </div>
 
+          <p className="text-xs text-amber-200">{UQ_ILLUSTRATIVE_MODEL_NOTE}</p>
+          <p className="text-xs text-slate-400">Run settings: Sobol QMC, {uqResult.sampleSizeN.toLocaleString()} samples, fixed seed {seed}.</p>
           <p className="text-xs text-amber-200">{uqResult.sensitivityMetadata?.limitations}</p>
           <UqModelStatusNote modelStatus={uqResult.provenance?.modelStatus} />
           {/* Bar Chart */}
@@ -1137,78 +1113,6 @@ export function UQLab({ onNavigate }: UQLabProps) {
       {/* TAB 4: MMPDS QUALIFICATION CERTIFICATE */}
       {/* ==================================================================== */}
       {activeViewTab === "certificate" && <CouponWorksheet dataset={activeDataset} onCopy={copyToClipboard} notification={copiedNotification} />}
-
-      {/* ==================================================================== */}
-      {/* SYNTHESIZE BATCH MODAL */}
-      {/* ==================================================================== */}
-      {isSynthesizeModalOpen && (
-        <AccessibleModal
-          open
-          onClose={() => setIsSynthesizeModalOpen(false)}
-          label="Synthesize coupon data"
-          overlayClassName="bg-black/70 backdrop-blur-sm p-4"
-          panelClassName="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl"
-        >
-            {errorMsg && <p role="alert" className="text-sm text-rose-300">{errorMsg}</p>}
-            <div className="flex items-center justify-between">
-              <h4 className="text-base font-bold text-slate-100 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-400" />
-                Synthesize Lot Coupon Batch
-              </h4>
-              <button
-                onClick={() => setIsSynthesizeModalOpen(false)}
-                className="text-slate-400 hover:text-slate-200 cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Generate a teaching coupon population using Box-Muller sampling. Synthetic n/lot is not MMPDS A/B handbook allowables.
-            </p>
-
-            <div className="space-y-3 font-mono text-xs">
-              <div>
-                <label className="block text-slate-400 mb-1">Coupon Sample Size (N):</label>
-                <input aria-label="Coupon Sample Size (N)"
-                  type="number"
-                  min={10}
-                  max={200}
-                  value={synthSampleSize}
-                  onChange={(e) => setSynthSampleSize(parseInt(e.target.value) || 30)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-200"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-400 mb-1">Number of Melt Lots / Heats:</label>
-                <input aria-label="Number of Melt Lots / Heats"
-                  type="number"
-                  min={2}
-                  max={12}
-                  value={synthLotCount}
-                  onChange={(e) => setSynthLotCount(parseInt(e.target.value) || 4)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-200"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                onClick={() => setIsSynthesizeModalOpen(false)}
-                className="px-4 py-2 rounded-xl text-xs text-slate-400 hover:text-slate-200 cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSynthesizeBatch}
-                className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs cursor-pointer"
-              >
-                Generate Coupons
-              </button>
-            </div>
-        </AccessibleModal>
-      )}
     </div>
   );
 }

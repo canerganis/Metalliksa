@@ -1,5 +1,5 @@
 /**
- * UQ-Lab datasets and descriptive statistics with approximate normal-model
+ * UQ-Lab material presets (no bundled measurements) and descriptive statistics with approximate normal-model
  * one-sided tolerance limits. These calculations do not certify allowables.
  */
 
@@ -43,7 +43,8 @@ export interface MaterialDataset {
   };
   description: string;
   coupons: CouponTestSpecimen[];
-  couponSource: "synthetic" | "uploaded";
+  /** "none": preset with no coupon records; "uploaded": user-supplied CSV; "synthetic": rows flagged synthetic. */
+  couponSource: "none" | "synthetic" | "uploaded";
 }
 
 export interface MMPDSEmpiricalAllowableStats {
@@ -255,45 +256,13 @@ export function computeMMPDSEmpiricalStats(
   }
   return result;
 }
-/**
- * Synthetic Coupon Batch Generator using Box-Muller transformation
- * with realistic lot-to-lot thermal variance and within-lot test variance.
- */
-export function generateSyntheticCoupons(params: {
-  datasetId: string;
-  sampleSize: number;
-  lotCount: number;
-  meanYield: number;
-  stdYield: number;
-  meanUTS: number;
-  stdUTS: number;
-  meanElongation: number;
-  stdElongation: number;
-  testStandard?: string;
-}): CouponTestSpecimen[] {
-  // Deterministic fallback for unit testing without Math.random
-  return [{
-    id: `${params.datasetId}-mock-1`,
-    specimenNumber: "Mock-1",
-    heatLotId: "LOT-MOCK",
-    testTempC: 25,
-    yieldStrengthMPa: params.meanYield,
-    utsMPa: params.meanUTS,
-    elongationPct: params.meanElongation,
-    reductionOfAreaPct: null,
-    hardnessHRC: undefined,
-    testStandard: params.testStandard || "ASTM E8",
-    orientation: "L",
-    evidenceOrigin: "synthetic"
-  }];
-}
-
 export function isSyntheticCouponDataset(dataset: MaterialDataset): boolean {
-  return dataset.couponSource !== "uploaded" || dataset.coupons.some(c => c.evidenceOrigin === "synthetic");
+  return dataset.couponSource === "synthetic" || dataset.coupons.some(c => c.evidenceOrigin === "synthetic");
 }
 
 // --------------------------------------------------------------------------
-// TEACHING SYNTHETIC DATASETS (not MMPDS handbook lots)
+// MATERIAL CONTEXT PRESETS. They carry spec context and illustrative solver
+// inputs only. No coupon measurements are bundled: upload a coupon CSV.
 // --------------------------------------------------------------------------
 
 export const AEROSPACE_MATERIAL_DATASETS: MaterialDataset[] = [
@@ -320,20 +289,9 @@ export const AEROSPACE_MATERIAL_DATASETS: MaterialDataset[] = [
       agingTime_h: 8,
       serviceStress_MPa: 780
     },
-    description: "Teaching synthetic coupon set (Box-Muller). Not MMPDS handbook allowables.",
-    coupons: generateSyntheticCoupons({
-      datasetId: "inconel718",
-      sampleSize: 42,
-      lotCount: 5,
-      meanYield: 1184,
-      stdYield: 31.5,
-      meanUTS: 1442,
-      stdUTS: 28.0,
-      meanElongation: 16.4,
-      stdElongation: 1.8,
-      testStandard: "ASTM E8 / E21"
-    }),
-    couponSource: "synthetic"
+    description: "Forged nickel superalloy preset. Carries no coupon data; upload a coupon CSV.",
+    coupons: [],
+    couponSource: "none"
   },
   {
     id: "ti64-ams4928",
@@ -359,19 +317,8 @@ export const AEROSPACE_MATERIAL_DATASETS: MaterialDataset[] = [
       serviceStress_MPa: 620
     },
     description: "Structural primary fuselage bulkhead and wing lug forging batches. High fracture toughness and fatigue resistance for high-load primary structure.",
-    coupons: generateSyntheticCoupons({
-      datasetId: "ti64",
-      sampleSize: 36,
-      lotCount: 4,
-      meanYield: 892,
-      stdYield: 24.2,
-      meanUTS: 968,
-      stdUTS: 22.1,
-      meanElongation: 14.8,
-      stdElongation: 1.6,
-      testStandard: "ASTM E8M"
-    }),
-    couponSource: "synthetic"
+    coupons: [],
+    couponSource: "none"
   },
   {
     id: "al7075-t651",
@@ -397,19 +344,8 @@ export const AEROSPACE_MATERIAL_DATASETS: MaterialDataset[] = [
       serviceStress_MPa: 340
     },
     description: "High-strength zinc-magnesium precipitation-hardened aluminum wing spar upper skins and bulkhead ribs. High compressive yield strength.",
-    coupons: generateSyntheticCoupons({
-      datasetId: "al7075",
-      sampleSize: 38,
-      lotCount: 4,
-      meanYield: 508,
-      stdYield: 15.6,
-      meanUTS: 574,
-      stdUTS: 14.2,
-      meanElongation: 11.2,
-      stdElongation: 1.3,
-      testStandard: "ASTM B557 / E8"
-    }),
-    couponSource: "synthetic"
+    coupons: [],
+    couponSource: "none"
   },
   {
     id: "steel4340-ams6414",
@@ -435,19 +371,8 @@ export const AEROSPACE_MATERIAL_DATASETS: MaterialDataset[] = [
       serviceStress_MPa: 950
     },
     description: "Aircraft main landing gear outer cylinders, trunnions, and structural arrestor hooks subjected to high impact shock loads and cyclic fatigue.",
-    coupons: generateSyntheticCoupons({
-      datasetId: "steel4340",
-      sampleSize: 32,
-      lotCount: 4,
-      meanYield: 1456,
-      stdYield: 26.8,
-      meanUTS: 1598,
-      stdUTS: 24.5,
-      meanElongation: 12.8,
-      stdElongation: 1.2,
-      testStandard: "ASTM E8 / E18"
-    }),
-    couponSource: "synthetic"
+    coupons: [],
+    couponSource: "none"
   },
   {
     id: "alsi10mg-lpbf-ams4215",
@@ -473,19 +398,8 @@ export const AEROSPACE_MATERIAL_DATASETS: MaterialDataset[] = [
       serviceStress_MPa: 180
     },
     description: "Additively manufactured satellite heat-exchangers and optical mounts printed on EOS M290 across vertical and horizontal build orientations.",
-    coupons: generateSyntheticCoupons({
-      datasetId: "alsi10mg",
-      sampleSize: 36,
-      lotCount: 3,
-      meanYield: 254,
-      stdYield: 14.8,
-      meanUTS: 372,
-      stdUTS: 16.5,
-      meanElongation: 7.6,
-      stdElongation: 1.4,
-      testStandard: "ASTM F3318 / E8M"
-    }),
-    couponSource: "synthetic"
+    coupons: [],
+    couponSource: "none"
   },
   {
     id: "hastelloy-x-ams5754",
@@ -511,19 +425,8 @@ export const AEROSPACE_MATERIAL_DATASETS: MaterialDataset[] = [
       serviceStress_MPa: 240
     },
     description: "Solid-solution strengthened nickel-chromium-iron-molybdenum superalloy sheet for jet engine combustion liners, tailpipes, and afterburners.",
-    coupons: generateSyntheticCoupons({
-      datasetId: "hastelloyx",
-      sampleSize: 30,
-      lotCount: 3,
-      meanYield: 368,
-      stdYield: 18.2,
-      meanUTS: 785,
-      stdUTS: 19.4,
-      meanElongation: 43.5,
-      stdElongation: 2.8,
-      testStandard: "ASTM E8 / E21"
-    }),
-    couponSource: "synthetic"
+    coupons: [],
+    couponSource: "none"
   }
 ];
 

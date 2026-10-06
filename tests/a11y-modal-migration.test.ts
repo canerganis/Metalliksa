@@ -9,7 +9,6 @@ const MIGRATED = [
   "src/components/MaterialsDatabaseView.tsx",
   "src/components/SendToModuleModal.tsx",
   "src/components/TafelPolarizationLab.tsx",
-  "src/components/UQLab.tsx",
 ];
 
 const read = (rel: string) => readFileSync(resolve(process.cwd(), rel), "utf8").replace(/\r/g, "");
