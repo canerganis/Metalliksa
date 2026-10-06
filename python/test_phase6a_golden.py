@@ -204,13 +204,16 @@ class GoldenBindingTest(unittest.TestCase):
         # then takes the "pycalphad-open-tdb" path, while every calphad golden was captured
         # without pycalphad. capture() therefore hides GOLDEN_HIDDEN_MODULES in blob runs.
         self.assertEqual(golden.GOLDEN_HIDDEN_MODULES, ("pycalphad",))
+        calphad_cases = []
         for solver, case in golden.iter_golden_cases():
             if solver != "calphad_solver":
                 continue
+            calphad_cases.append(case)
             stdout = golden.load_golden(solver, case)["stdout"]
-            if "pycalphadVersion" in stdout:
-                self.assertEqual(stdout["pycalphadVersion"], "No module named 'pycalphad'", case)
-                self.assertEqual(stdout["engine"], "subregular-adaptive-minimizer", case)
+            self.assertIn("pycalphadVersion", stdout, case)
+            self.assertEqual(stdout["pycalphadVersion"], "No module named 'pycalphad'", case)
+            self.assertEqual(stdout["engine"], "subregular-adaptive-minimizer", case)
+        self.assertTrue(calphad_cases, "no calphad_solver golden cases were found")
 
     def test_hidden_modules_raise_the_not_installed_error_in_blob_runs_only(self):
         with tempfile.TemporaryDirectory() as tmp:

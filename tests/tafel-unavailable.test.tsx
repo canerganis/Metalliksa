@@ -259,7 +259,9 @@ test("client annual-rate fallback: a missing i_corr is unavailable, not 1.25 uA/
     assert.equal(res[key], null, key);
   }
   assert.deepEqual(res.timelineProjections, []);
-  assert.doesNotMatch(JSON.stringify(res), /1\.25|NaN/);
+  // timestamp and durationMs are wall-clock values (e.g. "15:50:11.259Z" contains "1.25"), so they are left out
+  const { timestamp: _timestamp, durationMs: _durationMs, ...computed } = res;
+  assert.doesNotMatch(JSON.stringify(computed), /1\.25|NaN/);
 });
 
 test("client annual-rate fallback: no substrate, no invented 316L preset", () => {

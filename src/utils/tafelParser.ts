@@ -772,7 +772,8 @@ export function autoFitTafel(
 }
 
 /**
- * Exports Tafel dataset and fit result as an ASTM-compliant CSV report
+ * Exports the Tafel dataset and fit result as CSV. The header names the ASTM G102 / G59
+ * relations used for the computed quantities; the export is not checked against an ASTM field list.
  */
 export function exportTafelToCSV(dataset: TafelDataset, fitResult: TafelFitResult): string {
   const meta = dataset.metadata;

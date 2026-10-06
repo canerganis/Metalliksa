@@ -70,7 +70,12 @@ import {
 interface TafelPolarizationLabProps {
   onDatasetLoaded?: (dataset: TafelDataset) => void;
   className?: string;
-  /** A polarization dataset the caller has already parsed from a user file. */
+  /**
+   * A polarization dataset the caller has already parsed from a user file (also the test
+   * injection point). Read once as the initial value: later changes to this prop are ignored,
+   * so key the component on the dataset if it can change. Never pass a bundled or synthetic
+   * dataset here.
+   */
   initialDataset?: TafelDataset;
 }
 
