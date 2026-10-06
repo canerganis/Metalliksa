@@ -156,7 +156,7 @@ class PowderLayerAnalysisTests(unittest.TestCase):
         self.assertEqual(len(ks["cases"]), 3)
         self.assertEqual(ks["maxRelativeDifference"], 0.0)
         self.assertTrue(ks["layerIgnored"])
-        self.assertEqual(ks["fallbackWarnings"], ks["solverCalls"])  # flat-plate path was the realized one
+        self.assertEqual(ks["flatPlateCalls"], ks["solverCalls"])  # flat-plate path was the realized one
 
 
 if __name__ == "__main__":

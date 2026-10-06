@@ -154,15 +154,15 @@ def _predict(task: Dict[str, Any]) -> Dict[str, Any]:
             res = calculate_meltpool_physics(
                 row["material"], row["power_W"], row["speed_mm_s"], row["beamDiameter_um"],
                 row["preheat_C"], layer, row.get("hatch_um") or DEFAULT_HATCH_UM,
-                heat_source=KERNEL, prop_overrides={"absorptivity_IR": a})
+                heat_source=KERNEL, prop_overrides={"absorptivity_IR": a}, absorption_model="flat-plate")
         g = res["meltPoolGeometry"]
         status = g.get("extentStatus")
         return {"width_um": round(float(g["width_um"]), 3), "depth_um": round(float(g["depth_um"]), 3),
                 "extentStatus": status, "included": status == "computed",
-                "fallbackWarnings": captured.getvalue().count(FALLBACK_WARNING_TEXT)}
+                "flatPlateCalls": int(res["processParameters"].get("absorptionModel") == "flat-plate")}
     except Exception as exc:  # recorded as data
         return {"width_um": None, "depth_um": None, "extentStatus": f"error: {type(exc).__name__}",
-                "included": False, "fallbackWarnings": captured.getvalue().count(FALLBACK_WARNING_TEXT)}
+                "included": False, "flatPlateCalls": 0}
 
 
 def build_table(rows: Sequence[Dict[str, Any]], grid: Sequence[float], jobs: int = 1,
@@ -182,9 +182,9 @@ def build_table(rows: Sequence[Dict[str, Any]], grid: Sequence[float], jobs: int
     table: Dict[str, Dict[str, Any]] = {a_key(a): {} for a in grid}
     warnings = 0
     for t, p in zip(tasks, preds):
-        warnings += int(p.pop("fallbackWarnings", 0) or 0)
+        warnings += int(p.pop("flatPlateCalls", 0) or 0)
         table[a_key(t["a"])][t["row"]["rowId"]] = p
-    return {"grid": list(grid), "predictions": table, "solverCalls": len(tasks), "fallbackWarnings": warnings}
+    return {"grid": list(grid), "predictions": table, "solverCalls": len(tasks), "flatPlateCalls": warnings}
 
 
 # ---------------------------------------------------------------------------------------------
@@ -652,10 +652,10 @@ def assemble_document(rows_h: Sequence[Dict[str, Any]], rows_t: Sequence[Dict[st
         "schema": SCHEMA, "generatedAt": generated_at, "quick": bool(quick),
         "implementationHash": fp, "codeRevision": revision or {},
         "kernel": {"name": KERNEL, "entryPoint": "lpbf_thermal_solver.calculate_meltpool_physics(heat_source='eagar-tsai')",
-                   "absorptionPath": "flat-plate (sys.modules['powder_bed_raytracer'] = None, as in the comparison harness)",
+                   "absorptionPath": "flat-plate (absorption_model='flat-plate'; sys.modules['powder_bed_raytracer'] = None as well)",
                    "variedParameter": "prop_overrides={'absorptivity_IR': a}; nothing else is changed",
                    "secondScalar": "none fitted (the regime variant is a class-wise absorptivity, not a second physical parameter)",
-                   "fallbackWarnings": table.get("fallbackWarnings"), "solverCalls": table.get("solverCalls"),
+                   "flatPlateCalls": table.get("flatPlateCalls", table.get("fallbackWarnings")), "solverCalls": table.get("solverCalls"),
                    "tableSource": table_source, "tableSeconds": round(table_seconds, 1)},
         "datasets": meta["datasets"], "regimeRule": meta["regimeRule"],
         "assumptions": {"hatch_um": DEFAULT_HATCH_UM, "layerForBarePlate_um": NOMINAL_LAYER_FOR_BARE_UM,
@@ -771,8 +771,8 @@ def render_markdown(doc: Dict[str, Any]) -> str:
          f"Honesty: {doc['evidence']['statement']}.", "",
          "## What was done", "",
          f"- Kernel: {doc['kernel']['entryPoint']}, {doc['kernel']['absorptionPath']}; varied: {doc['kernel']['variedParameter']}; "
-         f"second scalar: {doc['kernel']['secondScalar']}. Solver calls {doc['kernel']['solverCalls']}, flat-plate fallback "
-         f"warnings {doc['kernel']['fallbackWarnings']} (table source: {doc['kernel']['tableSource']}).",
+         f"second scalar: {doc['kernel']['secondScalar']}. Solver calls {doc['kernel']['solverCalls']}, flat-plate "
+         f"calls {doc['kernel']['flatPlateCalls']} (table source: {doc['kernel']['tableSource']}).",
          f"- Grid: {len(p['grid'])} absorptivity values from {p['grid'][0]:.2f} to {p['grid'][-1]:.2f} (step {GRID_STEP}, plus the material defaults).",
          f"- Loss: {p['lossDefinition']}",
          f"- Split: {p['splitRule']} k = {p['kFolds']}, seeds {p['cvSeeds']}; bootstrap {p['bootstrap']['replicates']} replicates, seed {p['bootstrap']['seed']}.",

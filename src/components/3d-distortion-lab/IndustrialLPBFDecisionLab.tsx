@@ -467,7 +467,11 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
                 ok={decision.literatureWindow.inside}
                 hint={`${decision.literatureWindow.box.powerMin_W}–${decision.literatureWindow.box.powerMax_W} W`}
               />
-              <Metric label="Recoater" value={shortRisk(thermal.defectDiagnostics.recoaterCrashRisk)} hint="advisory · no verdict effect" />
+              <Metric
+                label="Recoater"
+                value={thermal.defectDiagnostics.recoaterCrashRisk.startsWith("Not evaluated") ? "Not evaluated" : shortRisk(thermal.defectDiagnostics.recoaterCrashRisk)}
+                hint="alloy/layer/preheat-only index · not from scan parameters · no verdict effect"
+              />
               <Metric
                 label="Balling"
                 value={geometryResolved ? shortRisk(thermal.defectDiagnostics.ballingInstabilityRisk) : "unavailable"}

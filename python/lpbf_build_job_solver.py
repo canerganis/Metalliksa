@@ -319,7 +319,9 @@ def compose_verdict(thermal, alloy_id, extras=None):
     lof_warn = def_["lackOfFusionStatus"] == "Warning"
     keyhole_high = str(def_["keyholePorosityRisk"]).startswith("High")
     balling_high = str(def_["ballingInstabilityRisk"]).startswith("High")
-    recoater_high = str(def_["recoaterCrashRisk"]).startswith("High")
+    # The frozen solver no longer bands recoaterCrashRisk (alloy/layer/preheat-only index, not evaluated
+    # from scan parameters); the advisory keeps its documented threshold on the unchanged index.
+    recoater_high = float(def_["distortionIndex"]) > 2.0
     distortion_high = float(def_["distortionIndex"]) >= 0.65
     dh = float(thermal["processParameters"]["normalizedEnthalpy"])
     win = evaluate_literature_pv(

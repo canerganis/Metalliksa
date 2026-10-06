@@ -168,6 +168,19 @@ THERMOPHYSICAL_DB = {**four_alloy_thermophysical_db(), **SECONDARY_THERMOPHYSICA
 ENTHALPY_TRANSITION = 15.0
 ENTHALPY_KEYHOLE = 30.0
 
+# Absorption model of the screening kernels. "flat-plate" (default, every machine): the material
+# authority's flat absorptivity feeds ΔH/hs, the multiple-reflection η_eff, the conduction power and
+# the process map. "powder-raytrace": the GPU powder-bed ray tracer (Warp + CUDA) supplies the
+# conduction absorptivity; it runs ONLY when requested explicitly and its errors propagate (no
+# silent import-success branch, so results do not depend on whether CUDA is installed).
+ABSORPTION_MODEL_FLAT = "flat-plate"
+ABSORPTION_MODEL_POWDER_RAYTRACE = "powder-raytrace"
+ABSORPTION_MODELS = (ABSORPTION_MODEL_FLAT, ABSORPTION_MODEL_POWDER_RAYTRACE)
+# thermalSlices sampler: "cpu" (default, every machine) or "warp" (float32 GPU sampler, opt-in only).
+THERMAL_SLICE_BACKENDS = ("cpu", "warp")
+DISTORTION_INDEX_BASIS = ("alloy/layer/preheat-only: E, alpha, nu, T_solidus - T_preheat and layer thickness; "
+                          "not evaluated from scan parameters (P, v, hatch)")
+
 
 def classify_enthalpy_regime(normalized_enthalpy: float) -> str:
     if normalized_enthalpy >= ENTHALPY_KEYHOLE:
@@ -210,6 +223,50 @@ def sample_thermal_slice(eval_T, axis_a, axis_b, na, nb):
     return temps
 
 
+def _normalize_absorption_model(absorption_model: str | None) -> str:
+    if absorption_model is None or (isinstance(absorption_model, str) and not absorption_model.strip()):
+        return ABSORPTION_MODEL_FLAT
+    if not isinstance(absorption_model, str):
+        raise ValueError(f"Unsupported LPBF absorption model: {absorption_model!r}")
+    key = absorption_model.strip().lower().replace("_", "-")
+    if key in ("flat", "flat-plate"):
+        return ABSORPTION_MODEL_FLAT
+    if key == ABSORPTION_MODEL_POWDER_RAYTRACE:
+        return ABSORPTION_MODEL_POWDER_RAYTRACE
+    raise ValueError(f"Unsupported LPBF absorption model: {absorption_model!r} (expected one of {ABSORPTION_MODELS})")
+
+
+def _normalize_thermal_slice_backend(backend: str | None) -> str:
+    if backend is None or (isinstance(backend, str) and not backend.strip()):
+        return "cpu"
+    key = backend.strip().lower() if isinstance(backend, str) else None
+    if key not in THERMAL_SLICE_BACKENDS:
+        raise ValueError(f"Unsupported LPBF thermal slice backend: {backend!r} (expected one of {THERMAL_SLICE_BACKENDS})")
+    return key
+
+
+def _axial_peak_x(T_field, lo_x, hi_x, n_scan=97, refine_iters=40):
+    """x of the axial (y = z = 0) temperature maximum on [lo_x, hi_x]: a uniform scan, then a ternary
+    refinement inside the bracketing cells. The regularised moving-source fields peak BEHIND the
+    beam centre at high speed, so x = 0 is not a safe anchor for the liquidus extent search."""
+    xs = [lo_x + (hi_x - lo_x) * i / (n_scan - 1) for i in range(n_scan)]
+    temps = [float(T_field(x, 0.0, 0.0)) for x in xs]
+    i_best = max(range(n_scan), key=lambda i: temps[i])
+    a = xs[max(0, i_best - 1)]
+    b = xs[min(n_scan - 1, i_best + 1)]
+    for _ in range(refine_iters):
+        m1 = a + (b - a) / 3.0
+        m2 = b - (b - a) / 3.0
+        if T_field(m1, 0.0, 0.0) < T_field(m2, 0.0, 0.0):
+            a = m1
+        else:
+            b = m2
+    x_peak = 0.5 * (a + b)
+    if float(T_field(x_peak, 0.0, 0.0)) < float(T_field(0.0, 0.0, 0.0)):
+        x_peak = 0.0
+    return x_peak
+
+
 def _normalize_heat_source(heat_source: str | None) -> str:
     if heat_source is None or (isinstance(heat_source, str) and not heat_source.strip()):
         return "rosenthal"
@@ -245,16 +302,24 @@ def calculate_meltpool_physics(
     prop_overrides: dict | None = None,
     heat_source: str | None = None,
     sulfur_ppm: float = 15.0,
+    absorption_model: str | None = None,
+    thermal_slice_backend: str | None = None,
 ):
     """
     Evaluates 3D multi-regime melt pool physics, geometry, defects, and microstructure.
     Optional prop_overrides merge onto the resolved thermophysical dict (UQ / AM-Bench).
     heat_source: "rosenthal" (Build Job default), "eagar-tsai", or "goldak" (Melt Pool lab).
     sulfur_ppm: Heiple–Roper screening only (does not refit W/D or re-score Build Job).
+    absorption_model: "flat-plate" (default) or "powder-raytrace" (explicit GPU opt-in; ΔH/hs stays flat).
+    thermal_slice_backend: "cpu" (default) or "warp" (explicit GPU opt-in, Rosenthal only).
     """
     if not isinstance(material_name, str) or not material_name.strip():
         raise ValueError(f"Unsupported LPBF material identity: {material_name!r}")
     source = _normalize_heat_source(heat_source)
+    absorption_model = _normalize_absorption_model(absorption_model)
+    thermal_slice_backend = _normalize_thermal_slice_backend(thermal_slice_backend)
+    if thermal_slice_backend == "warp" and source != "rosenthal":
+        raise ValueError("thermal_slice_backend='warp' is available for the Rosenthal field only")
     base = thermal_props(material_name) or SECONDARY_THERMOPHYSICAL_DB.get(material_name)
     if base is None:
         raise ValueError(f"Unsupported LPBF material identity: {material_name!r}")
@@ -320,15 +385,15 @@ def calculate_meltpool_physics(
         )
     eta_base_flat = float(props[wavelength_property])
 
-    try:
+    if absorption_model == ABSORPTION_MODEL_POWDER_RAYTRACE:
+        # Explicit opt-in only; import or CUDA errors propagate instead of silently changing physics.
         from powder_bed_raytracer import calculate_powder_bed_absorptivity
         powder_metrics = calculate_powder_bed_absorptivity(
             beam_radius_um=r_beam * 1e6,
             base_absorptivity=eta_base_flat
         )
-        eta_base = powder_metrics["effective_absorptivity"]
-    except Exception as e:
-        print(f"Warning: GPU Powder Bed Ray Tracing failed, using flat plate absorptivity. {e}")
+        eta_base = float(powder_metrics["effective_absorptivity"])
+    else:
         eta_base = eta_base_flat
 
     # 1. Volumetric and Linear Energy Densities
@@ -340,9 +405,13 @@ def calculate_meltpool_physics(
     led_J_m = P_laser / v_scan
 
     # 2. Normalized Enthalpy (King / Rubenchik) + peak intensity I0 — solid k, Cp
-    # ΔH/hs = (η P) / (ρ cp (Tliq-T0) sqrt(π α v r^3))
+    # King et al. 2014 (doi 10.1016/j.jmatprotec.2014.06.005) Eq. (2.6), Hann calibration, pi INSIDE
+    # the root: dH/hs = A P / (hs sqrt(pi D u sigma^3)), A = flat absorptivity. Repo convention differs
+    # from King's calibration: r = 1/e^2 radius (King sigma = r/2), hs = rho cp_s (T_liq - T0), D = solid
+    # diffusivity; the 15/30 thresholds are applied to this convention as a screening proxy.
+    # dH always uses the flat absorptivity, also when the powder ray tracer is requested.
     enthalpy_denom = rho * cp_s * max(50.0, T_liq - T_preheat) * math.sqrt(math.pi * alpha_solid * v_scan * (r_beam ** 3))
-    normalized_enthalpy = (eta_base * P_laser) / max(1e-9, enthalpy_denom)
+    normalized_enthalpy = (eta_base_flat * P_laser) / max(1e-9, enthalpy_denom)
     # Gaussian 1/e² diameter d=2w: I0 = 2P/(πw²) = 8P/(πd²).
     peak_intensity_W_m2 = (8.0 * P_laser) / (math.pi * d_beam ** 2)
     peak_intensity_MW_cm2 = peak_intensity_W_m2 * 1e-10
@@ -407,6 +476,9 @@ def calculate_meltpool_physics(
     search_depth = max(d_beam * 2.2, w_analytical * 2.0, 40e-6, fabbro["depth_m"] * 1.35)
 
     t_peak_C = float(T_field(0.0, 0.0, 0.0))
+    # Axial field maximum: the extent search is anchored there (it lies behind x = 0 at high speed).
+    x_peak = _axial_peak_x(T_field, -search_len * 1.4 * 8.0, search_len)
+    t_peak_C = max(t_peak_C, float(T_field(x_peak, 0.0, 0.0)))
     # No artificial 3900 °C display ceiling — report the field peak (may exceed boiling).
 
     # 4. Liquidus extents from the conduction field (Rosenthal or Eagar–Tsai). The search box is a
@@ -426,14 +498,26 @@ def calculate_meltpool_physics(
             extent_flags.append(label)
         return value
 
-    x_front = _extent_with_growth(lambda x: T_field(x, 0.0, 0.0) >= T_liq, search_len, "front-search-limit")
-    x_rear = _extent_with_growth(lambda s: T_field(-s, 0.0, 0.0) >= T_liq, search_len * 1.4, "rear-search-limit")
+    # Probes are anchored at the axial peak x_peak and search outward (front/rear distances are
+    # measured from x_peak); a field that is below liquidus even at its peak is genuinely unmelted.
+    front_rel = _extent_with_growth(lambda s: T_field(x_peak + s, 0.0, 0.0) >= T_liq, search_len,
+                                    "front-search-limit")
+    rear_rel = _extent_with_growth(lambda s: T_field(x_peak - s, 0.0, 0.0) >= T_liq, search_len * 1.4,
+                                   "rear-search-limit")
+    if float(T_field(x_peak, 0.0, 0.0)) >= T_liq:
+        x_front = x_peak + front_rel
+        x_rear = rear_rel - x_peak
+    else:
+        x_front = 0.0
+        x_rear = 0.0
     half_w = 0.0
-    for x_probe in (-x_rear * 0.35, -x_rear * 0.15, -x_rear * 0.05, 0.0, x_front * 0.35):
+    for frac in (-0.35, -0.15, -0.05, 0.0, 0.35):
+        x_probe = x_peak + (frac * rear_rel if frac <= 0.0 else frac * front_rel)
         half_w = max(half_w, _extent_with_growth(lambda y, x_probe=x_probe: T_field(x_probe, y, 0.0) >= T_liq,
                                                  search_half_w, "width-search-limit"))
     d_iso = 0.0
-    for x_probe in (-x_rear * 0.25, -x_rear * 0.1, -x_rear * 0.04, 0.0):
+    for frac in (-0.25, -0.1, -0.04, 0.0):
+        x_probe = x_peak + frac * rear_rel
         d_iso = max(d_iso, _extent_with_growth(lambda z, x_probe=x_probe: T_field(x_probe, 0.0, z) >= T_liq,
                                                search_depth, "depth-search-limit"))
 
@@ -608,13 +692,10 @@ def calculate_meltpool_physics(
     elastic_stress_max_mpa = (e_gpa * 1e3 * alpha_exp * delta_t_stress) / max(0.01, 1.0 - nu)
     effective_residual_stress_mpa = elastic_stress_max_mpa * 0.72
     distortion_index = (effective_residual_stress_mpa * (float(layer_thickness_um) / 40.0)) / 420.0
-    
-    if distortion_index > 2.0:
-        recoater_risk = "High (Blade Collision & Part Curl Risk)"
-    elif distortion_index > 1.2:
-        recoater_risk = "Moderate (Anchor Support Structures Required)"
-    else:
-        recoater_risk = "Low (Safe Thermal Stress Window)"
+    # The index has no scan-dependent term (alloy, preheat and layer thickness only), so no recoater
+    # High/Moderate/Low band is assigned from it here; the value itself is unchanged.
+    recoater_risk = (f"Not evaluated from scan parameters (alloy/layer/preheat-only distortion index "
+                     f"{distortion_index:.2f})")
 
     # 12. Geometric 2D contours from liquidus isolines (plus keyhole extra depth)
     depth_scale = d_melt_m / max(1e-9, d_iso)
@@ -669,19 +750,15 @@ def calculate_meltpool_physics(
     def T_yz(y_um, z_um):
         return T_field(0.0, y_um * 1e-6, z_um * 1e-6)
 
-    if source not in ("eagar-tsai", "goldak"):
-        try:
-            from warp_thermal_solver import compute_rosenthal_slice_warp
-            x_span_m = (x_span[0] * 1e-6, x_span[1] * 1e-6)
-            z_span_m = (z_span[0] * 1e-6, z_span[1] * 1e-6)
-            y_span_m = (y_span[0] * 1e-6, y_span[1] * 1e-6)
-            
-            slice_xz = compute_rosenthal_slice_warp(x_span_m, z_span_m, nx_s, nz_s, 1, 0.0, T_preheat, P_geom, k_th, v_scan, alpha_th, r_reg)
-            slice_yz = compute_rosenthal_slice_warp(y_span_m, z_span_m, ny_s, nz_s, 2, 0.0, T_preheat, P_geom, k_th, v_scan, alpha_th, r_reg)
-        except Exception as e:
-            print(f"Warp thermal slice failed: {e}")
-            slice_xz = sample_thermal_slice(T_xz, x_span, z_span, nx_s, nz_s)
-            slice_yz = sample_thermal_slice(T_yz, y_span, z_span, ny_s, nz_s)
+    if thermal_slice_backend == "warp":
+        # Explicit opt-in only (float32 GPU sampler, not bit-equal to the CPU sampler); errors propagate.
+        from warp_thermal_solver import compute_rosenthal_slice_warp
+        x_span_m = (x_span[0] * 1e-6, x_span[1] * 1e-6)
+        z_span_m = (z_span[0] * 1e-6, z_span[1] * 1e-6)
+        y_span_m = (y_span[0] * 1e-6, y_span[1] * 1e-6)
+
+        slice_xz = compute_rosenthal_slice_warp(x_span_m, z_span_m, nx_s, nz_s, 1, 0.0, T_preheat, P_geom, k_th, v_scan, alpha_th, r_reg)
+        slice_yz = compute_rosenthal_slice_warp(y_span_m, z_span_m, ny_s, nz_s, 2, 0.0, T_preheat, P_geom, k_th, v_scan, alpha_th, r_reg)
     else:
         slice_xz = sample_thermal_slice(T_xz, x_span, z_span, nx_s, nz_s)
         slice_yz = sample_thermal_slice(T_yz, y_span, z_span, ny_s, nz_s)
@@ -728,7 +805,7 @@ def calculate_meltpool_physics(
             # Quick evaluation of regime
             v_m = float(v_val) * 1e-3
             denom_th = rho * cp_s * (T_liq - T_preheat) * math.sqrt(math.pi * alpha_solid * v_m * (r_beam ** 3))
-            enth = (eta_base * float(p_val)) / max(1e-9, denom_th)
+            enth = (eta_base_flat * float(p_val)) / max(1e-9, denom_th)
             
             # Width & Depth proxy
             eff_p = (1.0 - (1.0 - eta_base) ** 2.2) * float(p_val) if enth > ENTHALPY_TRANSITION else eta_base * float(p_val)
@@ -800,6 +877,8 @@ def calculate_meltpool_physics(
             "peakIntensity_MW_cm2": round(peak_intensity_MW_cm2, 3),
             "normalizedEnthalpy": round(normalized_enthalpy, 2),
             "heatSource": source,
+            "absorptionModel": absorption_model,
+            "thermalSliceBackend": thermal_slice_backend,
         },
         "meltPoolGeometry": {
             "length_um": round(l_melt_um, 1),
@@ -811,6 +890,7 @@ def calculate_meltpool_physics(
             "regime": regime,
             "extentStatus": extent_status,
             "extentNote": extent_note,
+            "peakOffset_um": round(x_peak * 1e6, 1),
             "goldakParameters": {
                 "semiAxis_af_front_um": round(goldak_af_um, 1),
                 "semiAxis_ar_rear_um": round(goldak_ar_um, 1),
@@ -861,7 +941,8 @@ def calculate_meltpool_physics(
             "ballingInstabilityRisk": balling_risk,
             "recoaterCrashRisk": recoater_risk,
             "effectiveResidualStress_MPa": round(effective_residual_stress_mpa, 1),
-            "distortionIndex": round(distortion_index, 2)
+            "distortionIndex": round(distortion_index, 2),
+            "distortionIndexBasis": DISTORTION_INDEX_BASIS,
         },
         "solidificationKinetics": {
             "modelId": SOLIDIFICATION_MODEL_ID,
@@ -943,6 +1024,8 @@ if __name__ == "__main__":
         hatch = float(data.get("hatchSpacing_um", 110.0))
         wavelength = data.get("laserWavelength", "IR_1064nm")
         heat_source = data.get("heatSource") or data.get("heat_source") or "rosenthal"
+        absorption_model = data.get("absorptionModel")
+        thermal_slice_backend = data.get("thermalSliceBackend")
         sulfur_ppm = float(data.get("sulfur_ppm", data.get("sulfurPpm", 15.0)))
         
         t0 = time.time()
@@ -950,6 +1033,8 @@ if __name__ == "__main__":
             mat, power, speed, beam, preheat, layer, hatch, wavelength,
             heat_source=heat_source,
             sulfur_ppm=sulfur_ppm,
+            absorption_model=absorption_model,
+            thermal_slice_backend=thermal_slice_backend,
         )
         result["computeTimeMs"] = round((time.time() - t0) * 1000.0, 1)
         print(json.dumps(result, indent=2))

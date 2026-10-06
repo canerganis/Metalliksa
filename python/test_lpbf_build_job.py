@@ -82,11 +82,11 @@ def microstructure_fixture_blocks():
     common = {"beamDiameter_um": 80, "layerThickness_um": 40, "hatchSpacing_um": 110, "bypassCache": True}
     available = run_job({"alloyId": "in718", "laserPower_W": 285, "scanSpeed_mm_s": 960, **common})
     fallback = run_job({"alloyId": "in718", "laserPower_W": 60, "scanSpeed_mm_s": 2000, **common})
-    degenerate = run_job({"alloyId": "in718", "laserPower_W": 285, "scanSpeed_mm_s": 1200, **common})
+    degenerate = run_job({"alloyId": "in718", "laserPower_W": 100, "scanSpeed_mm_s": 960, **common})
     return {
         "available_in718_285_960": available["microstructure"],
         "screening_fallback_in718_60_2000": fallback["microstructure"],
-        "degenerate_floor_in718_285_1200": degenerate["microstructure"],
+        "degenerate_floor_in718_100_960": degenerate["microstructure"],
         "unavailable_no_kinetics": project_build_job_microstructure({}),
     }
 
@@ -353,8 +353,9 @@ DEGENERATE_FLOOR_REASON = (
 
 
 def check_build_job_microstructure_degenerate_floor():
-    """IN718 285 W / 1200 mm/s: the frozen front mapper clamps R and cooling to their floors."""
-    job = run_job({"alloyId": "in718", "laserPower_W": 285, "scanSpeed_mm_s": 1200, "beamDiameter_um": 80,
+    """IN718 100 W / 960 mm/s: the frozen front mapper clamps R and cooling to their floors. (285 W / 1200 mm/s
+    was the case before the 2026-10-06 tier-2 bump; the peak-anchored extent search resolves it now.)"""
+    job = run_job({"alloyId": "in718", "laserPower_W": 100, "scanSpeed_mm_s": 960, "beamDiameter_um": 80,
                    "layerThickness_um": 40, "hatchSpacing_um": 110, "bypassCache": True})
     kin = job["thermal"]["solidificationKinetics"]
     micro = job["microstructure"]
@@ -372,7 +373,7 @@ def check_build_job_microstructure_degenerate_floor():
     assert micro["SDAS_um"] == kin["secondaryDendriteArmSpacing_SDAS_um"]
     assert micro["morphology"] == kin["microstructureMorphology"]
     assert "not a computed result" in micro["disclaimer"]
-    print("  degenerate-floor in718 285 W / 1200 mm/s:", "R", micro["R_m_s"], "cooling", micro["coolingRate_K_s"],
+    print("  degenerate-floor in718 100 W / 960 mm/s:", "R", micro["R_m_s"], "cooling", micro["coolingRate_K_s"],
           "G", micro["G_K_m"], "PDAS", micro["PDAS_um"], "SDAS", micro["SDAS_um"], micro["morphology"], micro["status"])
 
     # Synthetic: field map used, R above the floor but cooling on its floor, and vice versa.
@@ -397,8 +398,10 @@ def check_extent_status_consumers():
     common = {"alloyId": "in718", "beamDiameter_um": 80, "layerThickness_um": 30,
               "hatchSpacing_um": 100, "bypassCache": True}
 
-    # (a) IN718 200 W / 1000 mm/s / d80: the Rosenthal path has no resolvable liquidus extent.
-    heur = run_job({**common, "laserPower_W": 200, "scanSpeed_mm_s": 1000})
+    # (a) IN718 60 W / 1000 mm/s / d80: the Rosenthal field stays below liquidus even at its axial peak.
+    # (200 W / 1000 mm/s was this case before the 2026-10-06 tier-2 bump: the peak-anchored extent search
+    # resolves it now. 60 W is below the IN718 literature box, so literature_pv warns.)
+    heur = run_job({**common, "laserPower_W": 60, "scanSpeed_mm_s": 1000})
     geo = heur["thermal"]["meltPoolGeometry"]
     assert geo["extentStatus"] == "heuristic-width-fallback", geo["extentStatus"]
     v = heur["verdict"]
@@ -413,7 +416,7 @@ def check_extent_status_consumers():
         assert by_id[gid]["reason"] == reason and by_id[gid]["measured"] is None
     # Geometry-independent gates keep their result.
     assert by_id["keyhole"]["status"] == "pass" and by_id["keyhole"]["measured"] == heur["thermal"]["processParameters"]["normalizedEnthalpy"]
-    assert by_id["literature_pv"]["status"] == "pass" and by_id["downskin"]["status"] == "pass"
+    assert by_id["literature_pv"]["status"] == "warn" and by_id["downskin"]["status"] == "pass"
     # Parameter-independent alloy/layer advisories: reported, never verdict-driving.
     assert by_id["recoater"]["status"] == "advisory" and by_id["distortion"]["status"] == "advisory"
     assert v["verdict"] not in ("printable", "do-not-print", "risky")
@@ -439,10 +442,11 @@ def check_extent_status_consumers():
     assert comp["thermal"]["meltPoolGeometry"]["extentStatus"] == "computed"
     cv = comp["verdict"]
     # Tier 1 verdict policy: balling (steady-Rosenthal L/W screen) is risky, not do-not-print;
-    # recoater / distortion are advisories. The keyhole outcome depends on the absorptivity path of
-    # the frozen solver: flat-plate fallback gives dH ~30.8 (keyhole warn -> risky); the powder
-    # ray tracer, when it runs, gives dH ~47.6 (keyhole fail -> do-not-print, keyhole only).
+    # recoater / distortion are advisories. Since the 2026-10-06 tier-2 bump dH uses the flat-plate
+    # absorptivity on every machine (~30.8, keyhole warn -> risky), with or without CUDA.
     dh = float(comp["thermal"]["processParameters"]["normalizedEnthalpy"])
+    assert comp["thermal"]["processParameters"]["absorptionModel"] == "flat-plate"
+    assert abs(dh - 30.8) < 0.05, dh
     keyhole_blocks = dh > 35.0
     assert cv["verdict"] == ("do-not-print" if keyhole_blocks else "risky"), (dh, cv["verdict"])
     assert cv["geometryResolved"] is True and cv["verdictReason"] is None
@@ -540,7 +544,7 @@ def main():
         "lpbf-build-job-kinetics-li1998-extent-v7",
         "lpbf-build-job-kinetics-li1998-extent-v8",
     ), BUILD_JOB_SOLVER_REVISION
-    assert BUILD_JOB_SOLVER_REVISION == "lpbf-build-job-verdict-advisory-v9"
+    assert BUILD_JOB_SOLVER_REVISION == "lpbf-build-job-flat-absorptivity-peak-extent-v10"
     assert ti["processSeed"] == 42
     assert ti["scanStrategy"]["id"] == "stripe"
     assert ti["uq"] is None  # lazy default

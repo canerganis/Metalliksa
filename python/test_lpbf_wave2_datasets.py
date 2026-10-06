@@ -301,10 +301,10 @@ class ScreeningPropsTests(unittest.TestCase):
 
 
 def _stub_prediction(row):
-    """Fixed stand-in for one kernel call: +10 % width, -10 % depth, one counted fallback warning."""
+    """Fixed stand-in for one kernel call: +10 % width, -10 % depth, one counted flat-plate call."""
     return {"width_um": round(row["width_um"] * 1.1, 6), "depth_um": round(row["depth_um"] * 0.9, 6),
             "length_um": 100.0, "extentStatus": "computed", "extentNote": None, "included": True,
-            "_fallbackWarnings": 1}
+            "_flatPlateCalls": 1}
 
 
 class Wave2BlockStubTests(unittest.TestCase):
@@ -329,7 +329,7 @@ class Wave2BlockStubTests(unittest.TestCase):
         for r in rows:
             regime = pds.classify_regime(r["material"], r["power_W"], r["speed_mm_s"], r["beamDiameter_um"],
                                          r["preheat_C"], r["balling"])
-            pred = {kk: v for kk, v in _stub_prediction(r).items() if kk != "_fallbackWarnings"}
+            pred = {kk: v for kk, v in _stub_prediction(r).items() if kk != "_flatPlateCalls"}
             self.out_rows.append({
                 "dataset": r["dataset"], "rowId": r["rowId"],
                 "inputs": {"power_W": r["power_W"], "speed_mm_s": r["speed_mm_s"],
@@ -354,7 +354,7 @@ class Wave2BlockStubTests(unittest.TestCase):
         self.assertEqual(w["laneNominalPowerSensitivity"]["rows"], 1)
         acct = w["sensitivityRunAccounting"]
         self.assertEqual(acct["solverCalls"], 3 * len(cmp.KERNELS))
-        self.assertEqual(acct["fallbackWarnings"], 3 * len(cmp.KERNELS))
+        self.assertEqual(acct["flatPlateCalls"], 3 * len(cmp.KERNELS))
         self.assertEqual(sum(self.calls), acct["solverCalls"])
         counts = w["kuRegimeLabelCrosstab"]["counts"]
         self.assertEqual(sum(n for v in counts.values() for n in v.values()), 2)

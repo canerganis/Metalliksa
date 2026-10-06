@@ -210,7 +210,11 @@ _ISM = {
     },
 }
 
-# Screening Rosenthal vs published single-track W/D, or King class when W/D is not claimed.
+# Screening Rosenthal vs reference single-track W/D, or King class when W/D is not claimed.
+# The keys keep their historical names ("publishedWidth_um", ...); "widthDepthBasis" says what the
+# numbers are. Only "published-measurement" would be a measured, cited track; none of these is.
+# King et al. 2014 (doi 10.1016/j.jmatprotec.2014.06.005, keyhole-mode LPBF of 316L) is cited only for
+# the normalized-enthalpy regime threshold: King did not measure these tracks (and did not study IN718).
 LITERATURE_MELT_POOL_CASES = [
     {
         "id": "ti64-rosenthal-proof003",
@@ -227,12 +231,13 @@ LITERATURE_MELT_POOL_CASES = [
         "publishedRegime": "Transition",
         "source": "Rosenthal 3D moving source high-speed asymptotic (PROOF 003)",
         "doi": "10.1063/1.1712881",
+        "widthDepthBasis": "analytical-asymptotic-not-measured",
         "check": "wd",
     },
     {
         "id": "ss316l-king-window",
         "alloy_id": "ss316l",
-        "label": "316L King-style P-v window",
+        "label": "316L typical LPBF track (typical values, not published)",
         "laserPower_W": 200,
         "scanSpeed_mm_s": 800,
         "beamDiameter_um": 70,
@@ -242,14 +247,17 @@ LITERATURE_MELT_POOL_CASES = [
         "publishedWidth_um": 140.0,
         "publishedDepth_um": 70.0,
         "publishedRegime": "Transition",
-        "source": "King et al., J. Mater. Process. Technol. (2014) — normalized-enthalpy map",
-        "doi": "10.1016/j.jmatprotec.2014.04.021",
+        "source": ("Typical 316L single-track W/D (not a published measurement; not from King et al. 2014, "
+                   "which measured 316L at other parameters); regime class per the King et al. 2014 "
+                   "normalized-enthalpy threshold"),
+        "doi": "10.1016/j.jmatprotec.2014.06.005",
+        "widthDepthBasis": "typical-not-published",
         "check": "wd",
     },
     {
         "id": "in718-eos-like",
         "alloy_id": "in718",
-        "label": "IN718 typical LPBF track",
+        "label": "IN718 typical LPBF track (typical values, not published)",
         "laserPower_W": 285,
         "scanSpeed_mm_s": 960,
         "beamDiameter_um": 80,
@@ -259,8 +267,10 @@ LITERATURE_MELT_POOL_CASES = [
         "publishedWidth_um": 160.0,
         "publishedDepth_um": 90.0,
         "publishedRegime": "Keyhole",
-        "source": "Typical IN718 single-track window near King ΔH/hs ≈ 30 onset",
-        "doi": "10.1016/j.jmatprotec.2014.04.021",
+        "source": ("Typical IN718 single-track W/D near the King ΔH/hs ≈ 30 onset (not a published measurement; "
+                   "King et al. 2014 did not study IN718 and is cited only for the regime threshold)"),
+        "doi": "10.1016/j.jmatprotec.2014.06.005",
+        "widthDepthBasis": "typical-not-published",
         "check": "wd",
     },
     {
@@ -278,6 +288,7 @@ LITERATURE_MELT_POOL_CASES = [
         "publishedRegime": "Conduction",
         "source": "Read et al., Mater. Des. (2015) process window — class only (no published W/D)",
         "doi": "10.1016/j.matdes.2014.09.044",
+        "widthDepthBasis": None,
         "check": "class",
     },
 ]

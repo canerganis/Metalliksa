@@ -58,7 +58,7 @@ class TinyGrid(unittest.TestCase):
                     "limits", "generatedAt"):
             self.assertIn(key, d)
         self.assertTrue(d["absorption"]["pinned"])
-        self.assertEqual(d["absorption"]["fallbackWarnings"], d["absorption"]["solverCalls"])
+        self.assertEqual(d["absorption"]["flatPlateCalls"], d["absorption"]["solverCalls"])
         for c in d["cells"]:
             for key in ("width_um", "depth_um", "length_um", "extentStatus", "extentNote", "normalizedEnthalpy",
                         "regime", "defectDiagnostics", "geometricDefectScreen", "computed"):
@@ -96,7 +96,7 @@ class TinyGrid(unittest.TestCase):
              "heuristicZones": {"rosenthal": {"cells": 2, "computed": 1, "nonComputed": 1,
                                               "byExtentStatus": {"heuristic-width-fallback": 1}, "list": []}},
              "overlay": [], "absorption": {"path": "p", "pinned": True, "howPinned": "h", "absorptivity_by_material": {},
-                                           "fallbackWarnings": 0, "solverCalls": 0, "note": "n"},
+                                           "flatPlateCalls": 0, "solverCalls": 0, "note": "n"},
              "limits": []}
         self.assertIn("| 1 | C | K* |", pm.render_markdown(d))
 

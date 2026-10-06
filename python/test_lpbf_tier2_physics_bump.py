@@ -1,0 +1,226 @@
+"""Tier 2 planned-physics bump (2026-10-06): flat-plate absorptivity by default on every machine,
+peak-anchored liquidus extent search, alloy/layer/preheat-only distortion labelling, King 2014 DOI.
+
+Self-contained: the GPU modules (powder_bed_raytracer, warp_thermal_solver) are replaced by stubs
+in sys.modules, so these tests give the same answer with and without Warp/CUDA installed.
+"""
+
+import contextlib
+import io
+import json
+import math
+import sys
+import types
+import unittest
+
+import lpbf_thermal_solver as solver
+from four_alloy_materials import LITERATURE_MELT_POOL_CASES
+from lpbf_build_job_solver import compose_verdict
+
+GPU_MODULES = ("powder_bed_raytracer", "warp_thermal_solver")
+
+
+@contextlib.contextmanager
+def gpu_modules(mode):
+    """mode 'absent': imports fail (no Warp). mode 'stub': importable fakes that return values a
+    silent GPU branch would pick up (raytraced A = 0.9, slices of 9999 C) and count their calls."""
+    saved = {name: sys.modules.get(name, KeyError) for name in GPU_MODULES}
+    calls = {"raytrace": 0, "slice": 0}
+    try:
+        if mode == "absent":
+            for name in GPU_MODULES:
+                sys.modules[name] = None
+        else:
+            rt = types.ModuleType("powder_bed_raytracer")
+
+            def calculate_powder_bed_absorptivity(beam_radius_um, base_absorptivity):
+                calls["raytrace"] += 1
+                return {"effective_absorptivity": 0.9}
+            rt.calculate_powder_bed_absorptivity = calculate_powder_bed_absorptivity
+            ws = types.ModuleType("warp_thermal_solver")
+
+            def compute_rosenthal_slice_warp(span_a, span_b, na, nb, *args):
+                calls["slice"] += 1
+                return [9999.0] * (na * nb)
+            ws.compute_rosenthal_slice_warp = compute_rosenthal_slice_warp
+            sys.modules["powder_bed_raytracer"] = rt
+            sys.modules["warp_thermal_solver"] = ws
+        yield calls
+    finally:
+        for name, value in saved.items():
+            if value is KeyError:
+                sys.modules.pop(name, None)
+            else:
+                sys.modules[name] = value
+
+
+def run(*args, **kwargs):
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        result = solver.calculate_meltpool_physics(*args, **kwargs)
+    return result, out.getvalue()
+
+
+IN718_280 = ("Inconel 718", 280.0, 940.0, 80.0, 80.0, 40.0, 100.0)
+IN718_287 = ("Inconel 718", 287.34, 1231.49, 80.0, 80.0, 40.0, 100.0)
+
+
+class FlatDefaultTest(unittest.TestCase):
+    def test_in718_280_940_flat_enthalpy(self):
+        with gpu_modules("stub") as calls:
+            result, stdout = run(*IN718_280)
+        pp = result["processParameters"]
+        self.assertEqual(calls, {"raytrace": 0, "slice": 0})
+        self.assertEqual(stdout, "")
+        self.assertEqual(pp["absorptionModel"], "flat-plate")
+        self.assertEqual(pp["thermalSliceBackend"], "cpu")
+        self.assertEqual(pp["conductionAbsorptivity"], 0.38)
+        self.assertAlmostEqual(pp["normalizedEnthalpy"], 30.58, delta=0.01)
+        self.assertAlmostEqual(pp["effectiveAbsorptivity"], 0.884, delta=0.001)
+        self.assertTrue(result["defectDiagnostics"]["keyholePorosityRisk"].startswith("High"))
+
+    def test_enthalpy_formula_pi_inside_root(self):
+        # King 2014 Eq. (2.6) form in the repo convention (r = d/2, hs = rho cp_s (T_liq - T0)).
+        props = solver.THERMOPHYSICAL_DB["Inconel 718"]
+        rho, cp_s, k_s = props["density_kg_m3"], props["specific_heat_J_kgK"], props["thermal_conductivity_W_mK"]
+        alpha = k_s / (rho * cp_s)
+        r = 40e-6
+        expected = 0.38 * 280.0 / (rho * cp_s * (props["liquidus_C"] - 80.0)
+                                   * math.sqrt(math.pi * alpha * 0.94 * r ** 3))
+        result, _ = run(*IN718_280)
+        self.assertAlmostEqual(result["processParameters"]["normalizedEnthalpy"], round(expected, 2), places=6)
+
+    def test_raytrace_opt_in_keeps_enthalpy_flat(self):
+        with gpu_modules("stub") as calls:
+            result, _ = run(*IN718_280, absorption_model="powder-raytrace")
+        pp = result["processParameters"]
+        self.assertEqual(calls["raytrace"], 1)
+        self.assertEqual(pp["absorptionModel"], "powder-raytrace")
+        self.assertEqual(pp["conductionAbsorptivity"], 0.9)
+        self.assertAlmostEqual(pp["normalizedEnthalpy"], 30.58, delta=0.01)
+        flat_result, _ = run(*IN718_280)
+        self.assertEqual([p["normalizedEnthalpy"] for p in result["processWindowMap"]["grid"]],
+                         [p["normalizedEnthalpy"] for p in flat_result["processWindowMap"]["grid"]])
+
+    def test_raytrace_opt_in_without_gpu_fails_loudly(self):
+        with gpu_modules("absent"):
+            with self.assertRaises(ImportError):
+                run(*IN718_280, absorption_model="powder-raytrace")
+            with self.assertRaises(ImportError):
+                run(*IN718_280, thermal_slice_backend="warp")
+
+    def test_invalid_options(self):
+        with self.assertRaises(ValueError):
+            run(*IN718_280, absorption_model="raytrace-maybe")
+        with self.assertRaises(ValueError):
+            run(*IN718_280, thermal_slice_backend="cuda")
+        with self.assertRaises(ValueError):
+            run(*IN718_280, heat_source="eagar-tsai", thermal_slice_backend="warp")
+
+    def test_warp_slice_opt_in(self):
+        with gpu_modules("stub") as calls:
+            result, _ = run(*IN718_280, thermal_slice_backend="warp")
+        self.assertEqual(calls["slice"], 2)
+        self.assertEqual(result["processParameters"]["thermalSliceBackend"], "warp")
+        self.assertEqual(set(result["thermalSlices"]["xz"]["T_C"]), {9999.0})
+
+
+class HostIndependenceTest(unittest.TestCase):
+    """Same result whether the GPU modules are importable (stubbed) or absent, when not requested."""
+
+    def test_identical_with_and_without_gpu_modules(self):
+        cases = (
+            dict(args=IN718_280),
+            dict(args=IN718_287),
+            dict(args=("Ti-6Al-4V", 200.0, 900.0, 80.0, 150.0, 30.0, 100.0)),
+            dict(args=("316L Stainless Steel", 200.0, 800.0, 70.0, 80.0, 30.0, 100.0)),
+            dict(args=("Ti-6Al-4V", 280.0, 1200.0, 70.0, 200.0, 30.0, 120.0), kwargs={"heat_source": "eagar-tsai"}),
+            dict(args=("316L Stainless Steel", 370.0, 600.0, 60.0, 25.0, 50.0, 90.0), kwargs={"heat_source": "goldak"}),
+        )
+        for case in cases:
+            kwargs = case.get("kwargs", {})
+            with gpu_modules("absent"):
+                without, _ = run(*case["args"], **kwargs)
+            with gpu_modules("stub") as calls:
+                with_gpu, _ = run(*case["args"], **kwargs)
+            self.assertEqual(calls, {"raytrace": 0, "slice": 0}, case)
+            self.assertEqual(json.dumps(without, sort_keys=True), json.dumps(with_gpu, sort_keys=True), case)
+
+    def test_real_environment_matches_stubbed_absent(self):
+        # On a CUDA host this exercises the real Warp import path; elsewhere it is the plain path.
+        real, _ = run(*IN718_280)
+        with gpu_modules("absent"):
+            absent, _ = run(*IN718_280)
+        self.assertEqual(json.dumps(real, sort_keys=True), json.dumps(absent, sort_keys=True))
+
+
+class PeakAnchoredExtentTest(unittest.TestCase):
+    def test_in718_287_1231_is_computed(self):
+        result, _ = run(*IN718_287)
+        g = result["meltPoolGeometry"]
+        self.assertEqual(g["extentStatus"], "computed")
+        self.assertIsNone(g["extentNote"])
+        self.assertLess(g["peakOffset_um"], 0.0)
+        self.assertAlmostEqual(g["width_um"], 148.3, delta=0.2)
+        self.assertAlmostEqual(g["depth_um"], 116.6, delta=0.2)
+        self.assertAlmostEqual(g["length_um"], 1191.7, delta=0.5)
+        # T(0,0,0) is below liquidus here; the peak behind the beam centre is above it.
+        self.assertGreater(result["hydrodynamicsAndRecoil"]["peakTemperature_C"],
+                           solver.THERMOPHYSICAL_DB["Inconel 718"]["liquidus_C"])
+        self.assertNotEqual(compose_verdict(result, "in718")["verdict"], "inconclusive")
+
+    def test_in718_280_940_geometry(self):
+        result, _ = run(*IN718_280)
+        g = result["meltPoolGeometry"]
+        self.assertEqual(g["extentStatus"], "computed")
+        self.assertAlmostEqual(g["width_um"], 175.2, delta=0.2)
+        self.assertAlmostEqual(g["depth_um"], 159.7, delta=0.2)
+        self.assertAlmostEqual(g["length_um"], 1250.5, delta=0.5)
+
+    def test_axial_peak_locator(self):
+        def field(x, y, z):
+            return 1000.0 - ((x + 30e-6) * 1e6) ** 2 - (y * 1e6) ** 2 - (z * 1e6) ** 2
+        self.assertAlmostEqual(solver._axial_peak_x(field, -400e-6, 50e-6) * 1e6, -30.0, delta=1e-3)
+
+        def monotone_front(x, y, z):  # maximum at the scan end: never anchored ahead of x = 0 wrongly
+            return 1000.0 - abs(x) * 1e6
+        self.assertAlmostEqual(solver._axial_peak_x(monotone_front, -400e-6, 50e-6) * 1e6, 0.0, delta=1e-3)
+
+    def test_unmelted_field_keeps_heuristic_fallback(self):
+        result, _ = run("Inconel 718", 20.0, 2000.0, 80.0, 80.0, 40.0, 100.0)
+        g = result["meltPoolGeometry"]
+        self.assertEqual(g["extentStatus"], "heuristic-width-fallback")
+        self.assertLess(result["hydrodynamicsAndRecoil"]["peakTemperature_C"],
+                        solver.THERMOPHYSICAL_DB["Inconel 718"]["liquidus_C"])
+
+
+class DistortionLabelAndDoiTest(unittest.TestCase):
+    def test_recoater_label_not_evaluated(self):
+        result, _ = run(*IN718_280)
+        dd = result["defectDiagnostics"]
+        self.assertEqual(dd["distortionIndex"], 7.59)
+        self.assertTrue(dd["recoaterCrashRisk"].startswith("Not evaluated from scan parameters"))
+        self.assertIn("not evaluated from scan parameters", dd["distortionIndexBasis"])
+        # The advisory keeps its threshold on the unchanged index (never a verdict gate).
+        verdict = compose_verdict(result, "in718")
+        recoater = next(g for g in verdict["gates"] if g["id"] == "recoater")
+        self.assertEqual(recoater["status"], "advisory")
+
+    def test_distortion_independent_of_scan(self):
+        a, _ = run(*IN718_280)
+        b, _ = run("Inconel 718", 150.0, 600.0, 80.0, 80.0, 40.0, 120.0)
+        self.assertEqual(a["defectDiagnostics"]["distortionIndex"], b["defectDiagnostics"]["distortionIndex"])
+        self.assertEqual(a["defectDiagnostics"]["recoaterCrashRisk"], b["defectDiagnostics"]["recoaterCrashRisk"])
+
+    def test_king_doi_and_typical_labels(self):
+        for case in LITERATURE_MELT_POOL_CASES:
+            self.assertNotEqual(case["doi"], "10.1016/j.jmatprotec.2014.04.021")
+            self.assertIn("widthDepthBasis", case)
+            if case["id"] in ("ss316l-king-window", "in718-eos-like"):
+                self.assertEqual(case["doi"], "10.1016/j.jmatprotec.2014.06.005")
+                self.assertEqual(case["widthDepthBasis"], "typical-not-published")
+                self.assertIn("not a published measurement", case["source"])
+
+
+if __name__ == "__main__":
+    unittest.main()

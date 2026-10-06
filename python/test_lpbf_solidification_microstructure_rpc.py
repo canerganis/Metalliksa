@@ -80,10 +80,12 @@ class SolidificationMicrostructureRpcTest(unittest.TestCase):
         self.assertEqual(out["gradientSource"], "tail-length-fallback")
         self.assertTrue(math.isfinite(out["G_K_m"]))
 
-    def test_degenerate_floor_in718_285_1200(self):
+    def test_degenerate_floor_in718_100_960(self):
         # Real output: the frozen front mapper reports usedFieldMap True but clamps R and cooling to floors.
-        out = rpc({**IN718_285, "speed_mm_s": 1200})
-        kin = calculate_meltpool_physics("Inconel 718", 285, 1200, 80, 80, 40, 110, heat_source="rosenthal")["solidificationKinetics"]
+        # (285 W / 1200 mm/s was this case before the 2026-10-06 tier-2 bump; the peak-anchored extent
+        # search resolves that pool now.)
+        out = rpc({**IN718_285, "power_W": 100})
+        kin = calculate_meltpool_physics("Inconel 718", 100, 960, 80, 80, 40, 110, heat_source="rosenthal")["solidificationKinetics"]
         self.assertIs(kin["usedFieldMap"], True)
         self.assertLessEqual(kin["solidificationRate_R_mm_s"], 0.1)
         self.assertLessEqual(kin["coolingRate_K_s"], 1.0)
@@ -96,7 +98,7 @@ class SolidificationMicrostructureRpcTest(unittest.TestCase):
         self.assertEqual(out["PDAS_um"], kin["primaryDendriteArmSpacing_PDAS_um"])
         self.assertLessEqual(out["R_m_s"], 1.0e-4 * (1.0 + 1.0e-9))
         self.assertIn("not a computed result", out["disclaimer"])
-        print("  rpc degenerate-floor IN718 285/1200:", {k: out[k] for k in ("status", "R_m_s", "coolingRate_K_s", "PDAS_um", "SDAS_um", "morphology")})
+        print("  rpc degenerate-floor IN718 100/960:", {k: out[k] for k in ("status", "R_m_s", "coolingRate_K_s", "PDAS_um", "SDAS_um", "morphology")})
 
     def test_no_available_result_sits_on_a_clamp_floor(self):
         # Sample grid (4 alloys x 5 powers x 5 speeds), calculate_meltpool_physics + projection directly.

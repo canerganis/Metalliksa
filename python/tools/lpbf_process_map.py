@@ -85,15 +85,18 @@ def parse_kernels(text: str) -> List[str]:
 # solver calls
 # ---------------------------------------------------------------------------------------------
 def _cell_worker(task: Dict[str, Any]) -> Dict[str, Any]:
-    """One (P, v, kernel) cell. Solver stdout is captured; fallback warnings are counted and popped by the caller."""
+    """One (P, v, kernel) cell. Solver stdout is captured; flat-plate calls are counted and popped by the caller."""
     dc.pin_flat_plate(bool(task.get("allowRaytracer")))
+    absorption_model = "powder-raytrace" if task.get("allowRaytracer") else "flat-plate"
+    flat_plate = 0
     from lpbf_thermal_solver import calculate_meltpool_physics
     captured = io.StringIO()
     try:
         with contextlib.redirect_stdout(captured):
             res = calculate_meltpool_physics(
                 task["material"], task["power_W"], task["speed_mm_s"], task["beam_um"], task["preheat_C"],
-                task["layer_um"], task["hatch_um"], heat_source=task["kernel"])
+                task["layer_um"], task["hatch_um"], heat_source=task["kernel"], absorption_model=absorption_model)
+        flat_plate = int(res["processParameters"].get("absorptionModel") == "flat-plate")
         g = res["meltPoolGeometry"]
         dd = res.get("defectDiagnostics", {})
         gs = res.get("geometricDefectScreen", {})
@@ -109,7 +112,7 @@ def _cell_worker(task: Dict[str, Any]) -> Dict[str, Any]:
                "extentStatus": f"error: {type(exc).__name__}", "extentNote": str(exc)[:300], "solverRegime": None,
                "keyholeVaporCavityDepth_um": None, "solverNormalizedEnthalpy": None,
                "defectDiagnostics": {}, "geometricDefectScreen": {}}
-    out["_fallbackWarnings"] = captured.getvalue().count(dc.FALLBACK_WARNING_TEXT)
+    out["_flatPlateCalls"] = flat_plate
     return out
 
 
@@ -268,7 +271,7 @@ def build_document(material: str, beam_um: float, layer_um: float, hatch_um: flo
     warn_by_kernel = {k: 0 for k in kernels}
     cells: List[Dict[str, Any]] = []
     for t, pr in zip(tasks, preds):
-        warn_by_kernel[t["kernel"]] += int(pr.pop("_fallbackWarnings", 0) or 0)
+        warn_by_kernel[t["kernel"]] += int(pr.pop("_flatPlateCalls", 0) or 0)
         reg = pd.classify_regime(material, t["power_W"], t["speed_mm_s"], beam_um, preheat_C, None)
         status = pr["extentStatus"]
         cell = {"kernel": t["kernel"], "power_W": t["power_W"], "speed_mm_s": t["speed_mm_s"],
@@ -282,25 +285,25 @@ def build_document(material: str, beam_um: float, layer_um: float, hatch_um: flo
 
     zones = heuristic_zones(cells, kernels)
     absorption = {
-        "path": "flat-plate" if not allow_raytracer else "unpinned (solver's own choice)",
+        "path": "flat-plate" if not allow_raytracer else "powder-raytrace (explicit opt-in)",
         "pinned": not allow_raytracer,
-        "howPinned": ("sys.modules['powder_bed_raytracer'] = None is set in the main process and in every worker "
-                      "before lpbf_thermal_solver is imported, so the solver's `from powder_bed_raytracer import ...` "
-                      "raises ImportError and its except branch (flat-plate absorptivity) is taken; the solver is "
-                      "not edited" if not allow_raytracer else
-                      "not pinned (--allow-raytracer): the solver imports the ray tracer if it can"),
+        "howPinned": ("calculate_meltpool_physics(absorption_model='flat-plate'), the solver default on every machine "
+                      "since the 2026-10-06 tier-2 bump; sys.modules['powder_bed_raytracer'] = None is also set in "
+                      "the main process and in every worker so any ray-tracer import fails loudly" if not allow_raytracer
+                      else "--allow-raytracer: calculate_meltpool_physics(absorption_model='powder-raytrace'); the "
+                      "ray tracer's errors propagate (no silent fallback)"),
         "raytracerModulePresent": (PYTHON_DIR / f"{dc.RAYTRACER_MODULE}.py").is_file(),
         "raytracerImportable": dc.probe_raytracer_importable() if probe_raytracer else None,
         "absorptivity_by_material": {material.replace(" Stainless Steel", ""): thermal_props(material)["absorptivity_IR"]},
-        "fallbackWarnings": sum(warn_by_kernel.values()),
-        "fallbackWarningsByKernel": warn_by_kernel,
+        "flatPlateCalls": sum(warn_by_kernel.values()),
+        "flatPlateCallsByKernel": warn_by_kernel,
         "solverCalls": len(tasks),
-        "note": ("flat-plate absorptivity_IR; the GPU powder ray tracer was not used. fallbackWarnings counts the "
-                 "solver's 'GPU Powder Bed Ray Tracing failed' messages (captured, not suppressed): with the pin it "
-                 "fires once per solver call (solverCalls), which confirms the flat-plate branch was the realized path."
+        "note": ("flat-plate absorptivity_IR; the GPU powder ray tracer was not used. flatPlateCalls counts the solver "
+                 "results that report processParameters.absorptionModel == 'flat-plate'; equal to solverCalls when "
+                 "every call took the flat-plate path (failed calls report none)."
                  if not allow_raytracer else
-                 "ray-tracer path not pinned; fallbackWarnings of solverCalls calls fell back to flat-plate; "
-                 "calls without a fallback warning used the ray tracer."),
+                 "ray tracer requested explicitly (absorption_model='powder-raytrace'); flatPlateCalls is 0 when "
+                 "every call used it."),
     }
     ov = load_overlay(material, beam_um, overlay_beam_tol_um) if overlay else None
     ov_provenance = load_overlay_provenance(material, beam_um, overlay_beam_tol_um) if overlay else []
@@ -412,7 +415,8 @@ def render_markdown(doc: Dict[str, Any]) -> str:
     L += ["## Absorption path", "",
           f"Path: **{ab['path']}** (pinned: {ab['pinned']}). {ab['howPinned']}. Absorptivity by material: "
           + ", ".join(f"{m} {a}" for m, a in ab["absorptivity_by_material"].items())
-          + f". Fallback warnings captured: {ab['fallbackWarnings']} of {ab['solverCalls']} solver calls.", "",
+          + (f". Flat-plate calls: {ab['flatPlateCalls']} of {ab['solverCalls']} solver calls." if "flatPlateCalls" in ab
+             else f". Fallback warnings captured: {ab['fallbackWarnings']} of {ab['solverCalls']} solver calls."), "",
           ab["note"], "", "## Limits", ""]
     for x in doc["limits"]:
         L.append(f"- {x}")

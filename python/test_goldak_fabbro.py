@@ -1,23 +1,21 @@
 #!/usr/bin/env python3
 """Goldak field + Fabbro keyhole + recoil/Marangoni kıvam (PROOF 019/020).
 
-The Goldak melt-pool *width* depends on which absorptivity path
-lpbf_thermal_solver.calculate_meltpool_physics takes:
+The Goldak melt-pool *width* depends on which absorptivity model
+lpbf_thermal_solver.calculate_meltpool_physics uses:
 
-- GPU path: powder_bed_raytracer (NVIDIA warp, device "cuda:0") ray-traces the
-  powder bed and returns an effective conduction absorptivity (0.581 for the
-  NIST case below on an RTX 4060, warp 1.17.0), giving width 102.2 um with the
-  goldak-total-power-v2 kernel (Q = P/2); the v3 half-space kernel has not been run on a GPU host.
-- CPU fallback: when that import/launch fails the solver prints
-  "Warning: GPU Powder Bed Ray Tracing failed, using flat plate absorptivity."
-  and uses the material's flat-plate absorptivity (IN718 IR: 0.38), giving
-  width 117.4 um (v2 kernel: 81.7 um). This is the path on the CPU lock (Docker verify stage,
-  GitHub `python` job) and on any host without warp + CUDA.
+- Default (every machine since the 2026-10-06 tier-2 bump): the material's flat-plate
+  absorptivity (IN718 IR: 0.38), width 117.3 um with goldak-half-space-v3 and the peak-anchored
+  extent search (117.4 um before it; retired v2 kernel: 81.7 um).
+- Explicit opt-in absorption_model="powder-raytrace": powder_bed_raytracer (NVIDIA warp, device
+  "cuda:0") ray-traces the powder bed and returns an effective conduction absorptivity (0.581 for
+  the NIST case below on an RTX 4060, warp 1.17.0): width 145.9 um with v3 (measured 2026-10-06;
+  102.2 um with the retired v2 kernel). Both paths are inside the 0.70-1.40 NIST band here.
 
-The NIST width band check is skipped ONLY when the ray tracer cannot run on
-this host: `import warp` fails or warp reports no CUDA device. Where warp and a
-CUDA device are present, the ray-tracing path must be taken: if the solver falls
-back to the flat plate (any ray-tracer exception), the test FAILS.
+The NIST width band check of the ray-traced path is skipped ONLY when the ray tracer cannot run on
+this host: `import warp` fails or warp reports no CUDA device. Where warp and a CUDA device are
+present, the explicitly requested ray tracer must run; any ray-tracer exception now propagates
+(there is no silent flat-plate fallback), so the test FAILS.
 METALLIKSA_REQUIRE_GPU_RAYTRACE=1 turns the skip into a failure (for a GPU host
 that must check the width). Under GitHub Actions a skipped width check also
 prints a `::warning::` annotation. The fallback behaviour is pinned separately
@@ -42,19 +40,19 @@ NIST_WIDTH_UM = 136.3
 NIST_DEPTH_UM = 139.7
 NIST_CASE = ("Inconel 718", 285, 960, 67, 23.5, 40, 110)
 FALLBACK_WARNING = "GPU Powder Bed Ray Tracing failed, using flat plate absorptivity"
-GPU_SKIP_REASON = "requires GPU warp ray tracing; CPU fallback uses the flat-plate absorptivity"
+GPU_SKIP_REASON = "requires GPU warp ray tracing (explicit absorption_model='powder-raytrace')"
 
 
-def _goldak_nist(force_flat_plate=False):
-    """Run the NIST Goldak case; return (result, captured stdout)."""
+def _goldak_nist(force_flat_plate=False, raytrace=False):
+    """Run the NIST Goldak case; return (result, captured stdout). force_flat_plate also makes the
+    ray tracer unimportable, to show that the default path never needs it."""
     out = io.StringIO()
     with contextlib.ExitStack() as stack:
         if force_flat_plate:
-            # A None entry makes `from powder_bed_raytracer import ...` raise
-            # ImportError, i.e. exactly the solver's own fallback branch.
             stack.enter_context(mock.patch.dict(sys.modules, {"powder_bed_raytracer": None}))
         stack.enter_context(contextlib.redirect_stdout(out))
-        gk = calculate_meltpool_physics(*NIST_CASE, heat_source="goldak")
+        gk = calculate_meltpool_physics(*NIST_CASE, heat_source="goldak",
+                                        absorption_model="powder-raytrace" if raytrace else None)
     return gk, out.getvalue()
 
 
@@ -142,7 +140,7 @@ class GoldakNistWidthGpuRayTracingTests(unittest.TestCase):
         unavailable = _gpu_raytrace_unavailable_reason()
         if unavailable is not None:
             reason = (
-                f"{GPU_SKIP_REASON}: {unavailable} (flat-plate width 117.4 um vs NIST {NIST_WIDTH_UM} um; "
+                f"{GPU_SKIP_REASON}: {unavailable} (flat-plate width 117.3 um vs NIST {NIST_WIDTH_UM} um; "
                 "see GoldakCpuFallbackTests)"
             )
             if os.environ.get("METALLIKSA_REQUIRE_GPU_RAYTRACE") == "1":
@@ -151,27 +149,30 @@ class GoldakNistWidthGpuRayTracingTests(unittest.TestCase):
                 print(f"::warning title=Goldak NIST width check skipped::{reason}", flush=True)
             print(f"SKIP test_nist_width_in_band_with_ray_tracing: {reason}", file=sys.stderr)
             self.skipTest(reason)
-        gk, stdout = _goldak_nist()
+        gk, stdout = _goldak_nist(raytrace=True)
         W = gk["meltPoolGeometry"]["width_um"]
-        # warp and a CUDA device are present, so a flat-plate result means the ray tracer raised.
+        self.assertEqual(gk["processParameters"]["absorptionModel"], "powder-raytrace")
         self.assertFalse(_used_flat_plate(gk, stdout),
-                         f"GPU ray tracing is available but the solver fell back to the flat plate: {stdout.strip()}")
+                         f"GPU ray tracing was requested but the flat plate was used: {stdout.strip()}")
         self.assertTrue(0.70 * NIST_WIDTH_UM <= W <= 1.40 * NIST_WIDTH_UM, f"Goldak NIST width {W}")
 
 
 class GoldakCpuFallbackTests(unittest.TestCase):
-    """Pins the documented flat-plate fallback (forced, so it runs on every host).
+    """Pins the flat-plate default (the ray tracer made unimportable, so it runs on every host).
 
-    With the goldak-half-space-v3 kernel the fallback width (117.4 um) is 0.86x the NIST value
-    (136.3 um) and inside the 0.70-1.40 band (the retired v2 kernel gave 81.7 um, ratio 0.60,
-    outside the band). This test pins the CPU-fallback value only and does NOT claim a NIST
-    match: the GPU ray-traced path (102.2 um with v2) has not been re-run with v3. It also pins
-    that the fallback says so.
+    With the goldak-half-space-v3 kernel and the peak-anchored extent search the flat-plate width
+    (117.3 um) is 0.86x the NIST value (136.3 um) and inside the 0.70-1.40 band (the retired v2
+    kernel gave 81.7 um, ratio 0.60, outside the band). This test pins the default value only and
+    does NOT claim a NIST match. The default is labelled in processParameters.absorptionModel and
+    prints no fallback warning (there is no fallback any more).
     """
 
     def test_fallback_is_labelled_and_pinned(self):
         gk, stdout = _goldak_nist(force_flat_plate=True)
-        self.assertIn(FALLBACK_WARNING, stdout, "fallback must print its warning")
+        self.assertNotIn(FALLBACK_WARNING, stdout, "the flat-plate default is not a fallback")
+        self.assertEqual(gk["processParameters"]["absorptionModel"], "flat-plate")
+        default, _ = _goldak_nist()
+        self.assertEqual(default, gk, "default result does not depend on the ray tracer being importable")
         flat = _flat_plate_absorptivity()
         self.assertAlmostEqual(flat, 0.38, places=9, msg="IN718 IR flat-plate absorptivity")
         pp = gk["processParameters"]
@@ -179,7 +180,7 @@ class GoldakCpuFallbackTests(unittest.TestCase):
                                msg="fallback conduction absorptivity is the flat-plate value")
         self.assertAlmostEqual(pp["fabbroAbsorptivity"], round(flat, 3), places=9)
         W = gk["meltPoolGeometry"]["width_um"]
-        self.assertAlmostEqual(W, 117.4, delta=0.5, msg=f"flat-plate fallback width {W}")
+        self.assertAlmostEqual(W, 117.3, delta=0.5, msg=f"flat-plate default width {W}")
         self.assertAlmostEqual(gk["meltPoolGeometry"]["depth_um"], 123.9, delta=0.5)
 
 
