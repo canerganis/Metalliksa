@@ -44,10 +44,23 @@ for (const [platform, project, active] of [
   });
 }
 
-test("missing venvs are skipped; Windows launcher keeps -3 prefix", () => {
+test("missing venvs are skipped; the Windows launcher prefers the supported 3.12", () => {
   const f = fixture(); f.working.add("py");
-  assert.deepEqual(resolvePythonCommand(f.options), { cmd: "py", prefix: ["-3"] });
+  assert.deepEqual(resolvePythonCommand(f.options), { cmd: "py", prefix: ["-3.12"] });
   assert.equal(f.calls.length, 1);
+});
+
+test("Windows launcher: 3.12, then 3.11, then any Python 3 (never the newest first)", () => {
+  const installed = (...versions: string[]) => {
+    const f = fixture();
+    f.options.probe = command => { f.calls.push(command); return command.cmd === "py" && versions.includes(command.prefix[0]); };
+    return f;
+  };
+  assert.deepEqual(resolvePythonCommand(installed("-3.12", "-3.11", "-3").options), { cmd: "py", prefix: ["-3.12"] });
+  assert.deepEqual(resolvePythonCommand(installed("-3.11", "-3").options), { cmd: "py", prefix: ["-3.11"] });
+  const only3 = installed("-3");
+  assert.deepEqual(resolvePythonCommand(only3.options), { cmd: "py", prefix: ["-3"] });
+  assert.deepEqual(only3.calls.map(c => c.prefix[0]), ["-3.12", "-3.11", "-3"]);
 });
 
 test("Unix system preference and complete failure", () => {

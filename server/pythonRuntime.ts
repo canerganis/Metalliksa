@@ -33,7 +33,10 @@ export function resolvePythonCommand(options: PythonResolutionOptions): PythonCo
     }
   }
   candidates.push(...(platform === "win32"
-    ? [{ cmd: "py", prefix: ["-3"] }, { cmd: "python", prefix: [] }, { cmd: "python3", prefix: [] }]
+    // The supported interpreters (3.12, then 3.11) come before "any Python 3": `py -3` selects the newest install,
+    // which can be an unsupported 3.14 without numpy/scipy/warp while the supported one has them.
+    ? [{ cmd: "py", prefix: ["-3.12"] }, { cmd: "py", prefix: ["-3.11"] }, { cmd: "py", prefix: ["-3"] },
+      { cmd: "python", prefix: [] }, { cmd: "python3", prefix: [] }]
     : [{ cmd: "python3", prefix: [] }, { cmd: "python", prefix: [] }]));
   for (const command of candidates) if (probe(command)) return command;
   throw new Error("No working host Python found. Configure METALLIX_PYTHON or a project .venv / active VIRTUAL_ENV.");
