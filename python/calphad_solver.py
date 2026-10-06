@@ -114,8 +114,9 @@ def _atomic_weight(el: str) -> float:
 # VA / IVA transition metals take the same per-group values (V, Nb, Ta 5.66; Ti, Zr, Hf 6.66).
 # Cu and Re have a tabulated Md but no Nv in that source (None: n_v_bar is then unavailable).
 #
-# C and B are not in either table. They are kept at 0 because the classical procedure removes them
-# from the matrix as carbides / borides (Sims 1968, p. 54); their atoms still dilute the bulk average.
+# C and B are not in either table, so neither has an Md or an Nv. The classical procedure removes them
+# from the matrix as carbides / borides (Sims 1968, p. 54): they are left out of both averages and the
+# remaining atomic fractions are renormalised (PHACOMP_EXCLUDED_ELEMENTS), not counted as zero.
 PHACOMP_DATA = {
     "Cr": {"Nv": 4.66, "Md": 1.142},
     "Mo": {"Nv": 4.66, "Md": 1.550},
@@ -134,9 +135,8 @@ PHACOMP_DATA = {
     "Re": {"Nv": None, "Md": 1.267},
     "Al": {"Nv": 7.66, "Md": 1.900},
     "Si": {"Nv": 6.66, "Md": 1.900},
-    "C":  {"Nv": 0.00, "Md": 0.000},
-    "B":  {"Nv": 0.00, "Md": 0.000},
 }
+PHACOMP_EXCLUDED_ELEMENTS = ("C", "B")
 PHACOMP_MD_SOURCE = ("Morinaga, Yukawa, Adachi, Ezaki, New PHACOMP and its applications to alloy design, "
                      "Superalloys 1984, pp. 523-532, Table 1 (Md) and p. 527 / Eq. 3 (critical Md)")
 PHACOMP_NV_SOURCE = "Sims, PHACOMP Revisited, Superalloys 1968, pp. 47-66 (Nv values p. 55; Nv = 10.66 - GN, p. 51)"
@@ -668,6 +668,14 @@ PHACOMP_UNAVAILABLE_KEYS = {
     "tcpEmbrittlementRisk": None,
     "tcpSigmaRiskTemperatureC": None,
     "thermodynamicStabilityIndex": None,
+    "compositionBasis": None,
+    "excludedElements": None,
+    "riskBasis": None,
+    "criticalMd": None,
+    "nvNote": None,
+    "tcpSigmaRiskTemperatureReason": None,
+    "thermodynamicStabilityIndexReason": None,
+    "sources": None,
 }
 
 
@@ -695,15 +703,24 @@ def calculate_phacomp(at_frac: dict) -> dict:
                 "reason": f"New-PHACOMP (Nv/Md TCP screening) applies to Ni-base superalloys only; "
                           f"this alloy is {base}-base",
                 **PHACOMP_UNAVAILABLE_KEYS}
-    unlisted = [el for el in at_frac if el not in PHACOMP_DATA]
+    unlisted = [el for el in at_frac if el not in PHACOMP_DATA and el not in PHACOMP_EXCLUDED_ELEMENTS]
     if unlisted:
         return {"status": "unavailable",
                 "reason": f"no tabulated Md value for element(s) {', '.join(unlisted)} "
                           f"(Morinaga 1984, Table 1)",
                 **PHACOMP_UNAVAILABLE_KEYS}
-    m_d_bar = sum(at_frac[elem] * PHACOMP_DATA[elem]["Md"] for elem in at_frac)
-    no_nv = [el for el in at_frac if PHACOMP_DATA[el]["Nv"] is None]
-    n_v_bar = None if no_nv else sum(at_frac[elem] * PHACOMP_DATA[elem]["Nv"] for elem in at_frac)
+    # C and B: removed (carbides / borides), the rest renormalised; never averaged in as zero
+    excluded = sorted(el for el in at_frac if el in PHACOMP_EXCLUDED_ELEMENTS and at_frac[el] > 0.0)
+    kept = {el: x for el, x in at_frac.items() if el not in PHACOMP_EXCLUDED_ELEMENTS}
+    kept_total = sum(kept.values())
+    kept = {el: x / kept_total for el, x in kept.items()}
+    m_d_bar = sum(kept[elem] * PHACOMP_DATA[elem]["Md"] for elem in kept)
+    no_nv = [el for el in kept if PHACOMP_DATA[el]["Nv"] is None]
+    n_v_bar = None if no_nv else sum(kept[elem] * PHACOMP_DATA[elem]["Nv"] for elem in kept)
+    composition_basis = "bulk alloy composition (atomic fractions), not the gamma-matrix composition"
+    if excluded:
+        composition_basis += (f"; {', '.join(excluded)} left out (no Md / Nv; removed as carbides / borides, "
+                              f"Sims 1968 p. 54) and the other atomic fractions renormalised")
 
     (t_low_k, md_low), (t_high_k, md_high) = PHACOMP_CRITICAL_MD
     if m_d_bar > md_high:
@@ -725,7 +742,8 @@ def calculate_phacomp(at_frac: dict) -> dict:
         "tcpEmbrittlementRisk": risk,
         "tcpSigmaRiskTemperatureC": None,
         "thermodynamicStabilityIndex": None,
-        "compositionBasis": "bulk alloy composition (atomic fractions), not the gamma-matrix composition",
+        "compositionBasis": composition_basis,
+        "excludedElements": excluded,
         "riskBasis": risk_basis,
         "criticalMd": [{"temperatureK": t, "criticalMd_eV": md} for t, md in PHACOMP_CRITICAL_MD],
         "nvNote": ((f"no tabulated Nv for {', '.join(no_nv)} (Sims 1968): n_v_bar unavailable"
@@ -1072,6 +1090,22 @@ SCHEIL_MIN_MOLE_FRACTION = 1e-6  # lower bound for a liquid-composition conditio
 SCHEIL_MIN_STEP_C = 0.01
 
 
+ACTIVITY_EXPONENT_LIMIT = 700.0  # exp(709.8) overflows a double
+
+
+def activity_against_reference(mu_j_mol: float, ref_gm_j_mol: Optional[float],
+                               rt_j_mol: float) -> Tuple[Optional[float], Optional[str]]:
+    """a_i = exp((mu_i - G_i_ref) / RT) and, when it is null, the reason (audit TK-1)."""
+    if ref_gm_j_mol is None:
+        return None, "no reference Gibbs energy (see activityReferenceStates)"
+    diff = mu_j_mol - ref_gm_j_mol
+    exponent = diff / rt_j_mol
+    if math.isfinite(exponent) and exponent < ACTIVITY_EXPONENT_LIMIT:
+        return float(math.exp(exponent)), None
+    return None, (f"exponent overflow: mu_i - G_i_ref = {diff:.6g} J/mol, "
+                  f"(mu_i - G_i_ref)/RT = {exponent:.6g} is not finite or not below {ACTIVITY_EXPONENT_LIMIT:g}")
+
+
 def scheil_gulliver(
     run_point: Callable[[float, Dict[str, float]], Optional[Dict[str, Any]]],
     start_c: float,
@@ -1100,6 +1134,10 @@ def scheil_gulliver(
     is retried with half the step (down to SCHEIL_MIN_STEP_C); after a resolved step the step grows
     back towards ``step_c`` by doubling. If even the minimum step freezes everything, the solid that
     formed is recorded as the first phase without a tie-line (``firstStepUnresolved``).
+
+    ``steps`` counts every equilibrium call, including the ``stepBisections`` retries that were
+    discarded; ``pathSteps`` is the number of resolved path points after the start (len(points) - 1).
+    ``clampedSteps`` counts equilibrium calls too.
     """
     t0 = time.perf_counter()
     comps = sorted(x0)
@@ -1207,6 +1245,7 @@ def scheil_gulliver(
         "terminalBracketC": terminal_bracket,
         "remainingLiquidFraction": round(f_liq, 6),
         "steps": steps,
+        "pathSteps": len(points) - 1,
         "stepC": step_c,
         "stepBisections": bisections,
         "minimumStepC": SCHEIL_MIN_STEP_C,
@@ -1498,15 +1537,17 @@ def _solve_with_runner(runner, conditions, dep_comp, indep_comps, alloy_name, wt
 
         # Chemical Potentials and Thermodynamic Activities
         activities = {}
+        activity_null_reasons = {}
         chem_potentials_j_mol = {}
         for c_idx, c_name in enumerate(eq_comps):
             mu_val = mu_values[c_idx]
             chem_potentials_j_mol[c_name] = round(mu_val, 1)
             # a_i = exp((mu_i - G_i_ref(T)) / RT), pure i in its SER reference phase at the same T
             ref_gm = reference_gm[c_name]["gm"]
-            exponent = None if ref_gm is None else (mu_val - ref_gm[i]) / rt
-            activities[c_name] = (float(math.exp(exponent))
-                                  if exponent is not None and math.isfinite(exponent) and exponent < 700.0 else None)
+            activity, null_reason = activity_against_reference(mu_val, None if ref_gm is None else ref_gm[i], rt)
+            activities[c_name] = activity
+            if null_reason is not None:
+                activity_null_reasons[c_name] = null_reason
 
         # Phase-name based observations; the critical temperatures are assembled
         # after the loop (liquidus / solidus / gamma-prime are checked there).
@@ -1524,7 +1565,8 @@ def _solve_with_runner(runner, conditions, dep_comp, indep_comps, alloy_name, wt
             "phases": step_phases,
             "totalGibbsEnergy_kJ_mol": gm_kj_mol,
             "chemicalPotentials_J_mol": chem_potentials_j_mol,
-            "thermodynamicActivities": activities
+            "thermodynamicActivities": activities,
+            "activityNullReasons": activity_null_reasons,
         })
 
     if not equilibrium_profile or 2 * len(not_converged_temps) > len(equilibrium_profile) \
@@ -1807,6 +1849,8 @@ def _scheil_outputs(scheil_result: Optional[Dict[str, Any]], unavailable_reason:
         "remainingLiquidFraction": scheil_result["remainingLiquidFraction"],
         "stepC": scheil_result["stepC"],
         "steps": scheil_result["steps"],
+        "stepsNote": "steps counts equilibrium calls including stepBisections retries; pathSteps is resolved path points",
+        "pathSteps": scheil_result.get("pathSteps", len(scheil_result["points"]) - 1),
         "stepBisections": scheil_result.get("stepBisections", 0),
         "firstStepUnresolved": scheil_result.get("firstStepUnresolved", False),
         "phaseAmounts": scheil_result["phaseAmounts"],

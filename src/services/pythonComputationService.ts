@@ -141,11 +141,15 @@ export interface PythonCalphadSolveResult
     tcpEmbrittlementRisk: "Low" | "Moderate" | "High" | null;
     tcpSigmaRiskTemperatureC: number | null;
     thermodynamicStabilityIndex: number | null;
-    compositionBasis?: string;
-    riskBasis?: string;
-    criticalMd?: Array<{ temperatureK: number; criticalMd_eV: number }>;
-    nvNote?: string;
-    sources?: { Md: string; Nv: string };
+    compositionBasis?: string | null;
+    /** C / B left out of both averages (no Md / Nv; carbides / borides), the rest renormalised. */
+    excludedElements?: string[] | null;
+    riskBasis?: string | null;
+    criticalMd?: Array<{ temperatureK: number; criticalMd_eV: number }> | null;
+    nvNote?: string | null;
+    tcpSigmaRiskTemperatureReason?: string | null;
+    thermodynamicStabilityIndexReason?: string | null;
+    sources?: { Md: string; Nv: string } | null;
   };
   /** pycalphad only: reference state of each component's activity (pure element, SER phase, same T). */
   activityReferenceStates?: Record<string, {

@@ -35,6 +35,8 @@ export interface PhaseEquilibriumPoint {
   status?: "converged" | "not-converged";
   /** a_i against pure i in its reference phase at the same T; null where that reference is unavailable. */
   thermodynamicActivities?: { [element: string]: number | null } | null;
+  /** Reason for each null activity (missing reference state or exponent overflow). */
+  activityNullReasons?: { [element: string]: string };
   chemicalPotentials_J_mol?: { [element: string]: number } | null;
   phaseCompositions?: { [phaseId: string]: { [element: string]: number } };
 }

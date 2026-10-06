@@ -17,6 +17,7 @@ reason otherwise; it was run with .runtime/scientific-win-py312-cu128 (pycalphad
 
 import contextlib
 import json
+import math
 import os
 import subprocess
 import sys
@@ -731,6 +732,31 @@ class TestPhacompSourcedValues(unittest.TestCase):
         self.assertEqual(p["status"], "unavailable")
         self.assertIn("Ag", p["reason"])
 
+    def test_carbon_and_boron_are_left_out_not_averaged_as_zero(self):
+        # Former table: C and B at Md = 0 / Nv = 0 diluted the bulk average (an invented value).
+        elements = dict(self.IN718_WT, C=0.5, B=0.1)
+        at, p = self.phacomp(elements)
+        diluted_md = _morinaga_md_bar({el: x for el, x in at.items() if el not in ("C", "B")})
+        kept = {el: x for el, x in at.items() if el not in ("C", "B")}
+        total = sum(kept.values())
+        renormalised_md = _morinaga_md_bar({el: x / total for el, x in kept.items()})
+        self.assertGreater(renormalised_md - diluted_md, 5e-3)  # the former number was measurably lower
+        self.assertAlmostEqual(p["m_d_bar"], renormalised_md, delta=1e-4)
+        self.assertNotAlmostEqual(p["m_d_bar"], diluted_md, delta=1e-3)
+        self.assertEqual(p["excludedElements"], ["B", "C"])
+        self.assertIn("renormalised", p["compositionBasis"])
+        self.assertNotIn("C", cs.PHACOMP_DATA)
+        self.assertNotIn("B", cs.PHACOMP_DATA)
+        _, p = self.phacomp(self.IN718_WT)
+        self.assertEqual(p["excludedElements"], [])
+
+    def test_unavailable_and_available_payloads_have_the_same_keys(self):
+        _, ok = self.phacomp(self.IN718_WT)
+        _, na = self.phacomp({"Ni": 90.0, "Ag": 10.0})
+        _, base = self.phacomp(TI64)
+        self.assertEqual(set(ok) - {"status"}, set(na) - {"status", "reason"})
+        self.assertEqual(set(na), set(base))
+
 
 class TestEmptyCompositionIsRefused(unittest.TestCase):
     """Physics audit TK-7: an empty / all-zero composition silently became Ni-10Al-10Cr wt%."""
@@ -835,6 +861,38 @@ class TestScheilNarrowFreezingRange(unittest.TestCase):
         self.assertLess(out["massBalanceMaxAbsError"], 1e-12)
         self.assertNotIn("invariant reaction;", block["note"])
 
+    def test_steps_count_equilibrium_calls_and_path_steps_count_points(self):
+        # Review: steps (6 for Ni-5Al) included the stepBisections retries; it is not the path length.
+        out = self.scheil_path()
+        self.assertEqual(out["pathSteps"], len(out["points"]) - 1)
+        self.assertEqual(out["steps"], out["pathSteps"] + out["stepBisections"])
+        self.assertLess(out["pathSteps"], out["steps"])
+        _, block, _ = cs._scheil_outputs(out, None, {"Ni": 95.0, "Al": 5.0}, "db", ["NI", "AL"])
+        self.assertEqual(block["pathSteps"], out["pathSteps"])
+        self.assertIn("stepBisections", block["stepsNote"])
+
+
+class TestActivityNullReasons(unittest.TestCase):
+    """Review of TK-1: an overflowing activity was nulled with no reason."""
+
+    def test_overflow_gives_null_with_reason(self):
+        rt = 8.314462618 * 1000.0
+        a, why = cs.activity_against_reference(1.0e7, 0.0, rt)
+        self.assertIsNone(a)
+        self.assertIn("exponent overflow", why)
+        self.assertIn("1e+07 J/mol", why)
+        a, why = cs.activity_against_reference(float("nan"), 0.0, rt)
+        self.assertIsNone(a)
+        self.assertIn("exponent overflow", why)
+
+    def test_missing_reference_and_normal_value(self):
+        a, why = cs.activity_against_reference(-1000.0, None, 8314.0)
+        self.assertIsNone(a)
+        self.assertIn("activityReferenceStates", why)
+        a, why = cs.activity_against_reference(-1000.0, -500.0, 8314.0)
+        self.assertIsNone(why)
+        self.assertAlmostEqual(a, math.exp(-500.0 / 8314.0), places=12)
+
 
 @unittest.skipUnless(cs.PYCALPHAD_AVAILABLE, "needs pycalphad (alni_dupin_2001 equilibria)")
 class TestActivityReferenceState(unittest.TestCase):
@@ -866,6 +924,7 @@ class TestActivityReferenceState(unittest.TestCase):
         self.assertAlmostEqual(p["thermodynamicActivities"]["AL"], 1.96e-9, delta=0.05e-9)
         ref = self.out["activityReferenceStates"]["NI"]
         self.assertEqual((ref["phase"], ref["status"]), ("FCC_A1", "available"))
+        self.assertEqual(p["activityNullReasons"], {})  # every activity present: no null, no reason
 
     def test_liquid_activity_of_the_solvent_is_close_to_raoult(self):
         a_ni = self.point(1500.0)["thermodynamicActivities"]["NI"]
