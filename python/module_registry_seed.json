@@ -172,7 +172,7 @@
   {
     "id": "materials-project",
     "workspace": "materials",
-    "label": "Elastic Constants",
+    "label": "Elastic-constants calculator (user-supplied constants)",
     "scope": "Research",
     "description": "User-supplied elastic constants or isotropic moduli; continuum calculations via Python.",
     "next": "calculators",

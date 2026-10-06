@@ -501,7 +501,7 @@ export const MODULE_REGISTRY_CORE = {
       "id": "materials-project",
       "version": "0.1.0",
       "workspace": "materials",
-      "label": "Elastic Constants",
+      "label": "Elastic-constants calculator (user-supplied constants)",
       "description": "User-supplied elastic constants or isotropic moduli; continuum calculations via Python.",
       "next": "calculators",
       "maturity": "Research",
