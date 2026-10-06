@@ -214,8 +214,9 @@ class MetricTests(unittest.TestCase):
 
 class EndToEndOfflineTests(unittest.TestCase):
     def test_document_and_markdown_without_datasets_or_solver(self):
+        preloaded = "lpbf_thermal_solver" in sys.modules  # another test module in the same process may have imported it
         rows_a, rows_b, table = fixture()
-        self.assertNotIn("lpbf_thermal_solver", sys.modules)
+        self.assertEqual("lpbf_thermal_solver" in sys.modules, preloaded)
         self.assertEqual(table["solverCalls"], len(table["grid"]) * (len(rows_a) + len(rows_b)))
         meta = {"datasets": [{"id": "synth-a", "doi": "-", "license": "-", "url": "-", "tableSha256": "-", "rows": len(rows_a),
                               "material": "SynthA", "citation": "synthetic"},
@@ -223,7 +224,7 @@ class EndToEndOfflineTests(unittest.TestCase):
                               "material": "SynthB", "citation": "synthetic"}],
                 "regimeRule": "synthetic P/v thresholds"}
         doc = cal.assemble_document(rows_a, rows_b, meta, table, "0" * 64, "2026-01-01", False, replicates=40, seeds=(0, 1))
-        self.assertNotIn("lpbf_thermal_solver", sys.modules)
+        self.assertEqual("lpbf_thermal_solver" in sys.modules, preloaded)
         json.dumps(doc)  # serialisable
         self.assertFalse(doc["evidence"]["experimentalValidation"])
         self.assertFalse(doc["evidence"]["opticalOperatorMatched"])
@@ -253,7 +254,7 @@ class EndToEndOfflineTests(unittest.TestCase):
         low = md.lower()
         self.assertNotIn("validated", low)
         self.assertNotIn("predictive", low)
-        self.assertNotIn("lpbf_thermal_solver", sys.modules)
+        self.assertEqual("lpbf_thermal_solver" in sys.modules, preloaded)
 
 
 if __name__ == "__main__":
