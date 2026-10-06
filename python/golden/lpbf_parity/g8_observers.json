@@ -4,9 +4,9 @@
  "group": "G8",
  "description": "final-state, selected-time, local-history observers and CpuRunProgress; rejection messages",
  "slow": false,
- "recordedImplementationHash": "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932",
+ "recordedImplementationHash": "f3ba98969a723702d9dbe15ae623d28f1327356441919ffdd6edf4e74a6a150d",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "68e386015aad2f4c060e6b7832a2eea1e5155830",
+ "recordedGitHead": "93f94e34b5e6be1dfc5c6236e58e1d8ed3c1517e",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  31.9,
-  31.4
+  25.0,
+  24.9
  ],
  "recordedTwice": true,
  "observations": {
-  "result.canonicalSha256": "8cb2429bbac8ce1d36807ee05fa7a0b85b871a8a26411fbda609654c3d61120e",
-  "result.orderedTypedSha256": "c848624722089db3688d8a4878e30ad16ddad170289a45f3cdae64cb0f547e8a",
+  "result.canonicalSha256": "6985d3163f9e01439537412f5487434263436f8e6e47204b4f34867642683002",
+  "result.orderedTypedSha256": "005a52cf0fc2d261001f9faab414bce4baec61ccff019fd6ddee391fa50177a3",
   "result.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -98,6 +98,7 @@
    "fieldOverlapDiagnostics",
    "midTrackCrossSection",
    "midTrackInterpolatedCrossSection",
+   "solidificationResolution",
    "numericalDiagnostics",
    "energyBalance",
    "discretization",
@@ -139,13 +140,14 @@
   "result.key.fieldOverlapDiagnostics": "0893c3df1e607e5f062611f2707aa0c2e2d3ed1edfde2b7e409ec4194f1d3e56",
   "result.key.midTrackCrossSection": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "result.key.midTrackInterpolatedCrossSection": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "result.key.solidificationResolution": "bd4928038921379c25558ad419e224b7c7f67ef5531cbbeab7789bd872a2be13",
   "result.key.numericalDiagnostics": "c4e3cb4105c1862f7859b4ab3d355526ba7246da665fe7e3d2506487427a8df0",
   "result.key.energyBalance": "446e62d98fa7c8196c7f871256c67e68cbfceac16e3927bc2da3ef4dfeac1982",
   "result.key.discretization": "de4bf78aef1d26dff8aa7161dfe5ad1c7ba92747b1cb97e4e4ee6cde6f88ae52",
   "result.key.scanPath": "31e7b730955481e6ca5c0169c90550c9fc4b8c1c2265570134f089708f2403e0",
   "result.key.massBalance": "0dcb26ca225fc96194a3091693545b2458abdbe8226aa7d513e5bacd35aa7e22",
   "result.key.phaseAudit": "2b38844c60c61e57cf711eafea7ad75fab0d863c525e5dec541775e83c18521a",
-  "result.key.geometricDefectScreen": "a5f72831e413eaf31922948d4c9a55ee8be8e217140996d36d6bb594f6dee863",
+  "result.key.geometricDefectScreen": "c97482ccccd9779cac5190a489d90a52d3e28e0668922ba3073d0c0014fd323a",
   "result.key.regime": "8402f9dee3219d19f615e013b48c1880ccf31bc2e1badfb4e04de65d76e2547e",
   "result.key.mainRisk": "3e47a880ef2d2d03259ff6adc09f4e6ae9ec408f168c8327752846fb584d73fd",
   "result.key.recommendation": "f8d6898175c7acb736377dc94259b1a1e55e937d669cfe302362297e1ad64bde",
@@ -603,7 +605,7 @@
   "observer.runProgress.count": 419,
   "observer.runProgress.chainSha256": "d010409affccdd4328e120b100f720a403ada99231b611626252f2ff2eb53670",
   "observer.runProgress.finalSnapshot": "499527d6ae5a1d3f5f61786a41a1d610c52c4e2d5172b5b40e6f01dc11d19fbb",
-  "plain.canonicalSha256": "1c12c5c9d84406189adc84315142e30bcdaf8a0ebebf320e3eaffc07a4a01bfb",
+  "plain.canonicalSha256": "5fb70076f33ac99b8804030fddb2027329141c981b8672aba7fe695b8e8faa99",
   "plain.key.analyticalComparison": "fc0532aeb4bcacfaa25726de67f3aae2eda62225c48176c3355d0412c5fc8dc0",
   "reject.finalState.screening": "ValueError: Final state capture supports standard reference powder-layer runs only",
   "reject.finalState.meshStudy": "ValueError: Final state capture supports standard reference powder-layer runs only",
@@ -781,8 +783,9 @@
    },
    "keyhole": {
     "depthToWidth": 1.0,
-    "risk": "moderate",
-    "reason": "Aspect ratio D/W >= 1.0 indicates unstable transition regime."
+    "risk": null,
+    "kingModeIndicator": "keyhole-mode",
+    "reason": "D/W 1.00 > 0.5: keyhole-mode by the King et al. 2014 depth > half-width classification. Aspect ratio alone cannot resolve vapor depression stability or keyhole pore formation, so no risk is assigned."
    },
    "balling": {
     "lengthToWidth": 1.0,
@@ -809,9 +812,9 @@
      "use": "Rayleigh-Plateau capillary instability for single-track balling (L/W > \u03c0)."
     },
     {
-     "title": "King et al. (2014) & Cunningham et al. (2019)",
-     "url": "https://doi.org/10.1126/science.aav4687",
-     "use": "Aspect ratio D/W > 1.5 for keyhole instability and vapor depression collapse porosity."
+     "title": "King et al. (2014), J. Mater. Process. Technol. 214, 2915, sec. 5.2",
+     "url": "https://doi.org/10.1016/j.jmatprotec.2014.06.005",
+     "use": "Keyhole-mode classification when melt-pool depth exceeds the half-width (D/W > 0.5); label only."
     }
    ]
   },
@@ -1039,6 +1042,16 @@
    "powderGridPolicy": "layer-conforming",
    "absorptivity": 0.38,
    "emissivity": 0.35
+  },
+  "result.key.solidificationResolution": {
+   "methodId": "melt-pool-cell-count-v1",
+   "mesh_um": 40.0,
+   "cellsAcrossWidth": 1.0,
+   "cellsAcrossDepth": 1.0,
+   "gradientStencilCells": 2,
+   "meshVerified": false,
+   "status": "not-available",
+   "note": "thermalGradient_K_m, solidificationRate_m_s and coolingRate_K_s are single-mesh values; discretisation error is unbounded until a three-grid study (Celik et al. 2008, J. Fluids Eng. 130:078001) converges for them."
   },
   "result.key.solver": {
    "id": "enthalpy-fv-6",

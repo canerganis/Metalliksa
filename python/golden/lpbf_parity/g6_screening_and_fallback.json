@@ -4,9 +4,9 @@
  "group": "G6",
  "description": "Screening (Goldak/Rosenthal) and the honest high-fidelity fallback",
  "slow": false,
- "recordedImplementationHash": "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932",
+ "recordedImplementationHash": "f3ba98969a723702d9dbe15ae623d28f1327356441919ffdd6edf4e74a6a150d",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "68e386015aad2f4c060e6b7832a2eea1e5155830",
+ "recordedGitHead": "93f94e34b5e6be1dfc5c6236e58e1d8ed3c1517e",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  7.1,
-  7.4
+  5.1,
+  5.2
  ],
  "recordedTwice": true,
  "observations": {
-  "screening.canonicalSha256": "8861444dc50dea05aaa6e947664d2ac71f046a02575099cef7afede67ab0351d",
-  "screening.orderedTypedSha256": "c80aa70b2b1decc2de7cefd0b4cb20a3f4c677db3cae1ed304eb3a3d7ed927e2",
+  "screening.canonicalSha256": "f85f308655739c47ef87762570ff2ea0e177e1ddcc853e7602b627d8283f164d",
+  "screening.orderedTypedSha256": "1480ebad050b185ecd33b6be27717ac1f53e0a2f5363058032ebbc8296de2d8e",
   "screening.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -118,7 +118,7 @@
   "screening.key.assumptions": "b92c3612941ad13942f8e847409052ec2ae2018681536c5d4c0f834e921ca7ef",
   "screening.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "screening.key.metrics": "5662934c0f81df7b2d1b43891643f2ec1db6d3554284e6a0c67d16ee387a3538",
-  "screening.key.geometricDefectScreen": "30361a0ad3d4468df384b75e43fa10a19cbf757de24d07385392c3425454b636",
+  "screening.key.geometricDefectScreen": "ad27ced5ca9b2f25a6aead0a244388281c4c54757d2259b3b4e0322bd47e91cd",
   "screening.key.regime": "40fd22838049669095e60b9df57f0c4721939348b454b4c8d571bbdc8aedd490",
   "screening.key.mainRisk": "1497fd8c59f82b61822181a127ff0da60d7df8c098e27e54b41ee5c0f55fb74a",
   "screening.key.recommendation": "9f8af9e48aaf7e009bbf332a3176f5692a8c3f2778c53d195be0496ceb440575",
@@ -138,8 +138,8 @@
   "screening.label": "Screening only",
   "screening.confidence": "low",
   "screening.implementationHashOccurrencesAfterStrip": 0,
-  "highFidelityFallback.canonicalSha256": "862fdd8e1c7925738d6efd13d5e5361f3cfcd9d409a9ef775635b2eaebc6902d",
-  "highFidelityFallback.orderedTypedSha256": "2c62423c464957710d7d77862931adfdd4e78c507e93bbdb791e754c41f7ff99",
+  "highFidelityFallback.canonicalSha256": "467e010771b32ac1ab146711532d40cc07fb9c24cb869c720acf2d28747cbe67",
+  "highFidelityFallback.orderedTypedSha256": "6f5d1b3b088c11603be0e46e45a6a556c48b43536c613b035be42d5fafa75a35",
   "highFidelityFallback.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -183,7 +183,7 @@
   "highFidelityFallback.key.assumptions": "b92c3612941ad13942f8e847409052ec2ae2018681536c5d4c0f834e921ca7ef",
   "highFidelityFallback.key.fallbackReason": "6e4dd5716eb9a19c332be02caf7d68e7dcf8b128c09279475225cfc2ff3ddaec",
   "highFidelityFallback.key.metrics": "5662934c0f81df7b2d1b43891643f2ec1db6d3554284e6a0c67d16ee387a3538",
-  "highFidelityFallback.key.geometricDefectScreen": "30361a0ad3d4468df384b75e43fa10a19cbf757de24d07385392c3425454b636",
+  "highFidelityFallback.key.geometricDefectScreen": "ad27ced5ca9b2f25a6aead0a244388281c4c54757d2259b3b4e0322bd47e91cd",
   "highFidelityFallback.key.regime": "40fd22838049669095e60b9df57f0c4721939348b454b4c8d571bbdc8aedd490",
   "highFidelityFallback.key.mainRisk": "1497fd8c59f82b61822181a127ff0da60d7df8c098e27e54b41ee5c0f55fb74a",
   "highFidelityFallback.key.recommendation": "9f8af9e48aaf7e009bbf332a3176f5692a8c3f2778c53d195be0496ceb440575",
@@ -203,8 +203,8 @@
   "highFidelityFallback.label": "Screening only",
   "highFidelityFallback.confidence": "low",
   "highFidelityFallback.implementationHashOccurrencesAfterStrip": 0,
-  "screeningTi64.canonicalSha256": "a58dc565baccedf97ed09be178a6756b40fe6d059f8ff709ba7c0e195d971069",
-  "screeningTi64.orderedTypedSha256": "9a460e870ab8f415888d0f39b48c34a6568aaace2d627a1e23348be61a73a4af",
+  "screeningTi64.canonicalSha256": "6748217ee2f028f87d7585c82fd3ec1ad984cb25d045927ef50d26bf97486504",
+  "screeningTi64.orderedTypedSha256": "10b5b1c869d5453da630fe50b421876dd87dc5dcf4baba324b63634b71be3c00",
   "screeningTi64.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -248,7 +248,7 @@
   "screeningTi64.key.assumptions": "b92c3612941ad13942f8e847409052ec2ae2018681536c5d4c0f834e921ca7ef",
   "screeningTi64.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "screeningTi64.key.metrics": "1a09a5e4d7b10c770cf0c737122a86c44c4b38cb543a95cd839bcc6ada46440d",
-  "screeningTi64.key.geometricDefectScreen": "55e7a76e9caa6fcadae4564fc332cb811c44d6c070d23eda8f32dd8073a31545",
+  "screeningTi64.key.geometricDefectScreen": "4004b4d6625274d0d737e52fe326a7d022d8140716accccb1fffe6e4c49a8541",
   "screeningTi64.key.regime": "40fd22838049669095e60b9df57f0c4721939348b454b4c8d571bbdc8aedd490",
   "screeningTi64.key.mainRisk": "1497fd8c59f82b61822181a127ff0da60d7df8c098e27e54b41ee5c0f55fb74a",
   "screeningTi64.key.recommendation": "9f8af9e48aaf7e009bbf332a3176f5692a8c3f2778c53d195be0496ceb440575",
@@ -268,8 +268,8 @@
   "screeningTi64.label": "Screening only",
   "screeningTi64.confidence": "low",
   "screeningTi64.implementationHashOccurrencesAfterStrip": 0,
-  "highFidelityFallbackWithOpenfoam.canonicalSha256": "5331f74bb3dd46983ef68545d74de3aa84df3bf08efae29ad245bc303dbf3859",
-  "highFidelityFallbackWithOpenfoam.orderedTypedSha256": "3fa1845d338d4077370f05a331a5c34f6f04fc0786bc9f9c2f2e10036688093f",
+  "highFidelityFallbackWithOpenfoam.canonicalSha256": "0c1d5f8fc7406685867a5ce15a19ce195eae618b1de9d43dd8d04f89ec7e7343",
+  "highFidelityFallbackWithOpenfoam.orderedTypedSha256": "e62e75b2f99ac360561e210dd1049836c951def84879ea733aa6f10ecaaa5417",
   "highFidelityFallbackWithOpenfoam.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -313,7 +313,7 @@
   "highFidelityFallbackWithOpenfoam.key.assumptions": "b92c3612941ad13942f8e847409052ec2ae2018681536c5d4c0f834e921ca7ef",
   "highFidelityFallbackWithOpenfoam.key.fallbackReason": "6f422ebac6e741612c1f4552bcd6df77dfdaf0e405954690205b62f3ca79cea6",
   "highFidelityFallbackWithOpenfoam.key.metrics": "5662934c0f81df7b2d1b43891643f2ec1db6d3554284e6a0c67d16ee387a3538",
-  "highFidelityFallbackWithOpenfoam.key.geometricDefectScreen": "30361a0ad3d4468df384b75e43fa10a19cbf757de24d07385392c3425454b636",
+  "highFidelityFallbackWithOpenfoam.key.geometricDefectScreen": "ad27ced5ca9b2f25a6aead0a244388281c4c54757d2259b3b4e0322bd47e91cd",
   "highFidelityFallbackWithOpenfoam.key.regime": "40fd22838049669095e60b9df57f0c4721939348b454b4c8d571bbdc8aedd490",
   "highFidelityFallbackWithOpenfoam.key.mainRisk": "1497fd8c59f82b61822181a127ff0da60d7df8c098e27e54b41ee5c0f55fb74a",
   "highFidelityFallbackWithOpenfoam.key.recommendation": "9f8af9e48aaf7e009bbf332a3176f5692a8c3f2778c53d195be0496ceb440575",
@@ -428,8 +428,9 @@
    },
    "keyhole": {
     "depthToWidth": 0.5,
-    "risk": "low",
-    "reason": "Aspect ratio D/W < 1.0 indicates stable conduction/transition mode."
+    "risk": null,
+    "kingModeIndicator": "conduction-mode",
+    "reason": "D/W 0.50 <= 0.5: conduction-mode by the King et al. 2014 depth > half-width classification. Aspect ratio alone cannot resolve vapor depression stability or keyhole pore formation, so no risk is assigned."
    },
    "balling": {
     "lengthToWidth": 5.774999999999999,
@@ -456,9 +457,9 @@
      "use": "Rayleigh-Plateau capillary instability for single-track balling (L/W > \u03c0)."
     },
     {
-     "title": "King et al. (2014) & Cunningham et al. (2019)",
-     "url": "https://doi.org/10.1126/science.aav4687",
-     "use": "Aspect ratio D/W > 1.5 for keyhole instability and vapor depression collapse porosity."
+     "title": "King et al. (2014), J. Mater. Process. Technol. 214, 2915, sec. 5.2",
+     "url": "https://doi.org/10.1016/j.jmatprotec.2014.06.005",
+     "use": "Keyhole-mode classification when melt-pool depth exceeds the half-width (D/W > 0.5); label only."
     }
    ]
   },
@@ -701,8 +702,9 @@
    },
    "keyhole": {
     "depthToWidth": 0.5,
-    "risk": "low",
-    "reason": "Aspect ratio D/W < 1.0 indicates stable conduction/transition mode."
+    "risk": null,
+    "kingModeIndicator": "conduction-mode",
+    "reason": "D/W 0.50 <= 0.5: conduction-mode by the King et al. 2014 depth > half-width classification. Aspect ratio alone cannot resolve vapor depression stability or keyhole pore formation, so no risk is assigned."
    },
    "balling": {
     "lengthToWidth": 5.774999999999999,
@@ -729,9 +731,9 @@
      "use": "Rayleigh-Plateau capillary instability for single-track balling (L/W > \u03c0)."
     },
     {
-     "title": "King et al. (2014) & Cunningham et al. (2019)",
-     "url": "https://doi.org/10.1126/science.aav4687",
-     "use": "Aspect ratio D/W > 1.5 for keyhole instability and vapor depression collapse porosity."
+     "title": "King et al. (2014), J. Mater. Process. Technol. 214, 2915, sec. 5.2",
+     "url": "https://doi.org/10.1016/j.jmatprotec.2014.06.005",
+     "use": "Keyhole-mode classification when melt-pool depth exceeds the half-width (D/W > 0.5); label only."
     }
    ]
   },
@@ -974,8 +976,9 @@
    },
    "keyhole": {
     "depthToWidth": 0.5,
-    "risk": "low",
-    "reason": "Aspect ratio D/W < 1.0 indicates stable conduction/transition mode."
+    "risk": null,
+    "kingModeIndicator": "conduction-mode",
+    "reason": "D/W 0.50 <= 0.5: conduction-mode by the King et al. 2014 depth > half-width classification. Aspect ratio alone cannot resolve vapor depression stability or keyhole pore formation, so no risk is assigned."
    },
    "balling": {
     "lengthToWidth": 5.774999999999999,
@@ -1002,9 +1005,9 @@
      "use": "Rayleigh-Plateau capillary instability for single-track balling (L/W > \u03c0)."
     },
     {
-     "title": "King et al. (2014) & Cunningham et al. (2019)",
-     "url": "https://doi.org/10.1126/science.aav4687",
-     "use": "Aspect ratio D/W > 1.5 for keyhole instability and vapor depression collapse porosity."
+     "title": "King et al. (2014), J. Mater. Process. Technol. 214, 2915, sec. 5.2",
+     "url": "https://doi.org/10.1016/j.jmatprotec.2014.06.005",
+     "use": "Keyhole-mode classification when melt-pool depth exceeds the half-width (D/W > 0.5); label only."
     }
    ]
   },
@@ -1247,8 +1250,9 @@
    },
    "keyhole": {
     "depthToWidth": 0.5,
-    "risk": "low",
-    "reason": "Aspect ratio D/W < 1.0 indicates stable conduction/transition mode."
+    "risk": null,
+    "kingModeIndicator": "conduction-mode",
+    "reason": "D/W 0.50 <= 0.5: conduction-mode by the King et al. 2014 depth > half-width classification. Aspect ratio alone cannot resolve vapor depression stability or keyhole pore formation, so no risk is assigned."
    },
    "balling": {
     "lengthToWidth": 7.199999999999999,
@@ -1275,9 +1279,9 @@
      "use": "Rayleigh-Plateau capillary instability for single-track balling (L/W > \u03c0)."
     },
     {
-     "title": "King et al. (2014) & Cunningham et al. (2019)",
-     "url": "https://doi.org/10.1126/science.aav4687",
-     "use": "Aspect ratio D/W > 1.5 for keyhole instability and vapor depression collapse porosity."
+     "title": "King et al. (2014), J. Mater. Process. Technol. 214, 2915, sec. 5.2",
+     "url": "https://doi.org/10.1016/j.jmatprotec.2014.06.005",
+     "use": "Keyhole-mode classification when melt-pool depth exceeds the half-width (D/W > 0.5); label only."
     }
    ]
   },

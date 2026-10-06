@@ -4,9 +4,9 @@
  "group": "G3",
  "description": "Two-track two-layer stripe powder run with dwell, scan angle and layer rotation",
  "slow": false,
- "recordedImplementationHash": "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932",
+ "recordedImplementationHash": "f3ba98969a723702d9dbe15ae623d28f1327356441919ffdd6edf4e74a6a150d",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "68e386015aad2f4c060e6b7832a2eea1e5155830",
+ "recordedGitHead": "93f94e34b5e6be1dfc5c6236e58e1d8ed3c1517e",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  4.2,
-  4.2
+  2.6,
+  2.5
  ],
  "recordedTwice": true,
  "observations": {
-  "result.canonicalSha256": "900867751a31cda1e6da0046628efded0686ddd3953d6b5a0b6c1dee12b6bd89",
-  "result.orderedTypedSha256": "e2d0efcdcc1e049b414512e8fa90e1d84c3715e39523c2e4852e6f0dbb8baa74",
+  "result.canonicalSha256": "69a39d79ec4644ce2aa03931634f69042306c5e6de9de26b8ffae8cf9b767d7b",
+  "result.orderedTypedSha256": "ae18c3a9aa97d909ae4c86b61f0fcde19fd637db20b3855b8e12ed89a482324c",
   "result.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -98,6 +98,7 @@
    "fieldOverlapDiagnostics",
    "midTrackCrossSection",
    "midTrackInterpolatedCrossSection",
+   "solidificationResolution",
    "numericalDiagnostics",
    "energyBalance",
    "discretization",
@@ -139,13 +140,14 @@
   "result.key.fieldOverlapDiagnostics": "594fc19ee3baef7690db320e64a0b390bf95cda4b1b7bdc8f04bc217f7a6dc5f",
   "result.key.midTrackCrossSection": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "result.key.midTrackInterpolatedCrossSection": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "result.key.solidificationResolution": "70e6fb35880479a8f97bd94b327c99846a212172a6f2b70e283e775efdd39c53",
   "result.key.numericalDiagnostics": "2d671dcbbd1b3cc49e3bb7bd71d748cce829957f2f1a29b56cdbe0596a25e40f",
   "result.key.energyBalance": "14be321e1193398513629d0d5a8b306b876c8cfd29a666e21430df1704d79eff",
   "result.key.discretization": "85daf46945246c1ab124ac7b91a5c5345505b6cda7ce4606a2f7684523bc4569",
   "result.key.scanPath": "98271a8f17b45298d9550816309c3be3d80e666373d60beea4d6b34b159c1fae",
   "result.key.massBalance": "9dd164c10bbe077391a35fa8bd941a88ecee35b4f4e80b716378cc197fd7bab1",
   "result.key.phaseAudit": "39a2bf7318ad0828e59c2087d66fce7f834ba90de0b981fe91ec2fb832af76ce",
-  "result.key.geometricDefectScreen": "a3a7826ad29cacf5f3d30fa5c48f64d0c524ac3349edd116232941511e245364",
+  "result.key.geometricDefectScreen": "9a513b4f8abcd5c5ea3f45e4427109d294524f6aa1628f5eca1c0e891537700a",
   "result.key.regime": "95fd0c8a1259227d532f335c7a2397c54eefbc3fff887e5b389729a74dbbbb89",
   "result.key.mainRisk": "779fe3f4c9028ac87f56ff337b6205b3d7475f9d7db1e3878dd57dcb03aa4f24",
   "result.key.recommendation": "6e15ced91807ac3813bff511a08abc595b88e7563cbe8a01dd6b98852a2ba46a",
@@ -723,6 +725,7 @@
    "keyhole": {
     "depthToWidth": null,
     "risk": null,
+    "kingModeIndicator": null,
     "reason": "Aspect ratio alone cannot resolve vapor depression stability or keyhole pore formation."
    },
    "balling": {
@@ -1015,6 +1018,16 @@
    "powderGridPolicy": "layer-conforming",
    "absorptivity": 0.38,
    "emissivity": 0.35
+  },
+  "result.key.solidificationResolution": {
+   "methodId": "melt-pool-cell-count-v1",
+   "mesh_um": 40.0,
+   "cellsAcrossWidth": 2.164207,
+   "cellsAcrossDepth": 1.0,
+   "gradientStencilCells": 2,
+   "meshVerified": false,
+   "status": "stencil-spans-melt-pool",
+   "note": "thermalGradient_K_m, solidificationRate_m_s and coolingRate_K_s are single-mesh values; discretisation error is unbounded until a three-grid study (Celik et al. 2008, J. Fluids Eng. 130:078001) converges for them."
   },
   "result.key.solver": {
    "id": "enthalpy-fv-6",

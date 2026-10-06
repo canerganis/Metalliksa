@@ -4,9 +4,9 @@
  "group": "G13",
  "description": "integrated_source N-vs-2N refinement branch (unreachable from the CPU transient)",
  "slow": false,
- "recordedImplementationHash": "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932",
+ "recordedImplementationHash": "f3ba98969a723702d9dbe15ae623d28f1327356441919ffdd6edf4e74a6a150d",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "68e386015aad2f4c060e6b7832a2eea1e5155830",
+ "recordedGitHead": "93f94e34b5e6be1dfc5c6236e58e1d8ed3c1517e",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,8 +68,8 @@
   }
  },
  "recordedRuns_s": [
-  0.5,
-  0.5
+  0.3,
+  0.3
  ],
  "recordedTwice": true,
  "observations": {

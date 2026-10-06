@@ -33,11 +33,11 @@ _SPEC.loader.exec_module(parity)
 PRE_BUMP_FINGERPRINT = "7482697c458b6c1aa2a77829f2fbce0c4ce4ac9466e9a3583e97b9a799b5e483"
 # Main before the 5c bump (design 5c stage B); that bump record's "from" side.
 PRE_BUMP_REVISION = "520903802a5cb89e368af60f68e53f232c99046d"
-# The goldens are recorded at this implementation (re-recorded after the 2026-10-06 tier-2 physics
-# bump 11b04b8f -> ddd8358a), and GOLDEN_REVISION is a commit carrying it (the re-pin commit of
-# feat/lpbf-physics-bump-flat-absorptivity): the "from" side of the next bump.
-GOLDEN_FINGERPRINT = "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932"
-GOLDEN_REVISION = "231d92138f472dc8c1767984f04b595206c45d03"
+# The goldens are recorded at this implementation (re-recorded after the 2026-10-07 Wave B physics
+# bump ddd8358a -> f3ba9896), and GOLDEN_REVISION is a commit carrying it (the re-pin commit of
+# feat/lpbf-physics-bump-wave-b): the "from" side of the next bump.
+GOLDEN_FINGERPRINT = "f3ba98969a723702d9dbe15ae623d28f1327356441919ffdd6edf4e74a6a150d"
+GOLDEN_REVISION = "012c99000afd2781df3dd00112db6229b48e8227"
 SLOW = os.environ.get("LPBF_PARITY_SLOW") == "1"
 # Off the reference machine every case test is skipped (the goldens are bit-exact for one
 # environment). METALLIKSA_REQUIRE_PARITY=1 turns such a "NOT VERIFIED" skip into a failure,
@@ -101,8 +101,12 @@ class ParityHarnessTests(unittest.TestCase):
         # Corrected-physics bump: only analyticalComparison.goldak differs from the archived V1 run.
         self.assertIs(observations["v1Archive.strippedResultEqual"], False)
         self.assertNotEqual(observations["result.canonicalSha256"], parity.V1_ARCHIVED_RESULT_STRIPPED_SHA256)
+        # Wave B (2026-10-07): LA-3 (keyhole risk null + King mode indicator) and the LT-3 top-level
+        # solidificationResolution label move the stripped digest 6a5e59be... -> ff428b93...; the V1
+        # metrics, numericalDiagnostics, artifacts and identity digests are bit-equal.
         self.assertEqual(observations["result.canonicalSha256"],
-                         "6a5e59bec2d296b4decdffcae4aab13c64eb84e02f1f7af80d83b17a057c81e9")
+                         "ff428b93852d32f0b80a871770108b62c58b0784aa4c5e353c9301d10f26d4c6")
+        self.assertEqual(observations["result.key.solidificationResolution"] is not None, True)
         self.assertEqual(observations["result.implementationHashOccurrencesAfterStrip"], 0)
         self.assertEqual(observations["result.artifactsImplementationHashOccurrences"], 0)
         bare = json.loads(parity.golden_path(
@@ -132,11 +136,13 @@ class ParityHarnessTests(unittest.TestCase):
                          [False, False, True])
         self.assertEqual(in625["in625.snapshot.latentHeat_J_kg"][0], 290000.0)
         self.assertEqual(in625["in625.transientSpecification.latentHeat_J_kg"][0], 227000.0)
-        # Tier-2 bump (2026-10-06): peak-anchored extents; the reported peak stays T(0,0,0).
+        # Tier-2 bump (2026-10-06): peak-anchored extents; the reported peak stays T(0,0,0). Wave B
+        # (2026-10-07, LA-2): T(0,0,0) is now the regularised point-source value, 2500.2 -> 35097.0 C
+        # (labelled peakTemperatureBasis), and the extents grow (144.7/104.2/755.3/33.2 before).
         g11 = json.loads(parity.golden_path(parity.CASE_BY_ID["g11_build_job_meltpool"]).read_text(
             encoding="utf-8"))["rawValues"]
-        self.assertEqual(g11["meltpool.0.geometry_um"], [144.7, 104.2, 755.3, 33.2])
-        self.assertEqual(g11["meltpool.0.peakTemperature_C"], 2500.2)
+        self.assertEqual(g11["meltpool.0.geometry_um"], [154.9, 110.4, 804.9, 35.2])
+        self.assertEqual(g11["meltpool.0.peakTemperature_C"], 35097.0)
         emissivity = json.loads(parity.golden_path(parity.CASE_BY_ID["g19_emissivity_echo"]).read_text(
             encoding="utf-8"))["observations"]
         for name in ("Ti-6Al-4V", "316L Stainless Steel", "AlSi10Mg", "Inconel 718"):

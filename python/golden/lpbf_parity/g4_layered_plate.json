@@ -4,9 +4,9 @@
  "group": "G4",
  "description": "layered-plate-enthalpy-v1 with SS304 support",
  "slow": false,
- "recordedImplementationHash": "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932",
+ "recordedImplementationHash": "f3ba98969a723702d9dbe15ae623d28f1327356441919ffdd6edf4e74a6a150d",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "68e386015aad2f4c060e6b7832a2eea1e5155830",
+ "recordedGitHead": "93f94e34b5e6be1dfc5c6236e58e1d8ed3c1517e",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  11.2,
-  9.7
+  4.7,
+  4.6
  ],
  "recordedTwice": true,
  "observations": {
-  "result.canonicalSha256": "5397c9a5b3d87f8551424578fc2ebe554bba0a2c6d72a3b666116ba6c83ff959",
-  "result.orderedTypedSha256": "b56c75b2f9bda2984f858bf3093217b071ca5c5ac788e3b1a258d6a065e9215a",
+  "result.canonicalSha256": "84df5932fea635f5bac0c984d4debdb95c90616c68cc8b5aff93e0bf4b68fecb",
+  "result.orderedTypedSha256": "d9b7773555ed860d28677810b6cd704c774417ed51392c8066c094f70f613cd0",
   "result.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -98,6 +98,7 @@
    "fieldOverlapDiagnostics",
    "midTrackCrossSection",
    "midTrackInterpolatedCrossSection",
+   "solidificationResolution",
    "numericalDiagnostics",
    "energyBalance",
    "discretization",
@@ -143,6 +144,7 @@
   "result.key.fieldOverlapDiagnostics": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "result.key.midTrackCrossSection": "68a8165a96522fffcc4fa6eb4d27d388942a125a3be3b54dec7eda385bb32c18",
   "result.key.midTrackInterpolatedCrossSection": "50dea7b1f259952fc6dd3989812c590d80ac8565f3a3fe4ddb134cd60302682f",
+  "result.key.solidificationResolution": "105b259e2d994139a25d210a1776b9b70f78efaf3018b4b9f723e2dfd2cf4f73",
   "result.key.numericalDiagnostics": "dd518d7cf6c108aff14d9a0ae90daaef51379cf54ca0e79c780c6eb578f6f868",
   "result.key.energyBalance": "9f534943c42762a791e7217fd3daaa36abcf5349b953efe9a17f7c4ea3939fa8",
   "result.key.discretization": "d93f6bfb16a1ed485bdd6d2ae31b225abd7f0596ee41e1af82c2a99fadb64bb9",
@@ -852,6 +854,16 @@
    "beamProfileModelId": "assumed-oblique-gaussian-normal-plane-v1",
    "absorptivity": 0.38,
    "emissivity": 0.35
+  },
+  "result.key.solidificationResolution": {
+   "methodId": "melt-pool-cell-count-v1",
+   "mesh_um": 20.0,
+   "cellsAcrossWidth": 0.0,
+   "cellsAcrossDepth": 0.0,
+   "gradientStencilCells": 2,
+   "meshVerified": false,
+   "status": "not-available",
+   "note": "thermalGradient_K_m, solidificationRate_m_s and coolingRate_K_s are single-mesh values; discretisation error is unbounded until a three-grid study (Celik et al. 2008, J. Fluids Eng. 130:078001) converges for them."
   },
   "result.key.solver": {
    "id": "layered-enthalpy-fv-1",

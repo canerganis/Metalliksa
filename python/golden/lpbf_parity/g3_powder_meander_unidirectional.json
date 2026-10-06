@@ -4,9 +4,9 @@
  "group": "G3",
  "description": "Two-track meander and unidirectional powder runs",
  "slow": false,
- "recordedImplementationHash": "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932",
+ "recordedImplementationHash": "f3ba98969a723702d9dbe15ae623d28f1327356441919ffdd6edf4e74a6a150d",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "68e386015aad2f4c060e6b7832a2eea1e5155830",
+ "recordedGitHead": "93f94e34b5e6be1dfc5c6236e58e1d8ed3c1517e",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  5.5,
-  5.4
+  3.5,
+  3.4
  ],
  "recordedTwice": true,
  "observations": {
-  "meander.canonicalSha256": "e36391458e7d1d4d520920f9c96a4b5f8c6ad94dc1460954a248391a557a7973",
-  "meander.orderedTypedSha256": "927619ec7fc4dae542a516934eb8441d65971418c73af6e41c34aaf3f833a1dd",
+  "meander.canonicalSha256": "34e51da80c62cc3af65e2ab6ad2f68c5bda870ecb350bc50229e2bf17534570e",
+  "meander.orderedTypedSha256": "2e336567f9d8c1faa7f620e2816ab1db6605562a0a5443bf038e43be92c9e412",
   "meander.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -98,6 +98,7 @@
    "fieldOverlapDiagnostics",
    "midTrackCrossSection",
    "midTrackInterpolatedCrossSection",
+   "solidificationResolution",
    "numericalDiagnostics",
    "energyBalance",
    "discretization",
@@ -136,13 +137,14 @@
   "meander.key.fieldOverlapDiagnostics": "3261e9027969757880e99d1f428dd687980fcb583759e76183510cfdf1d01711",
   "meander.key.midTrackCrossSection": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "meander.key.midTrackInterpolatedCrossSection": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "meander.key.solidificationResolution": "dcc56bca2391eef8c403e2350f29076d3cebd78244eac839debb9749a21aca08",
   "meander.key.numericalDiagnostics": "a19ae09a1f3f462c6d2c6703c7553f72e60f8492a3cb1258808747d4ddab21f6",
   "meander.key.energyBalance": "732da8b442950a4d35e22fdbd4408e4a55503189787e13b2e33fb603b732c8f2",
   "meander.key.discretization": "b8827ccd19c37f3f6746621f8508433cb4df9912058ecc4b1bec47559a5be54b",
   "meander.key.scanPath": "b99047db5feea8b5829dd7429c85c6af246b69ba5e3bfa8473ee4cca95af99b5",
   "meander.key.massBalance": "877146d10eae646043cad817a11fc948269375431594355f0cfdb5d2ecea18f0",
   "meander.key.phaseAudit": "42008fe45abc3af5313dd766733e2adcc458ec6af8fc1662d27e1653ec3faf8e",
-  "meander.key.geometricDefectScreen": "a3a7826ad29cacf5f3d30fa5c48f64d0c524ac3349edd116232941511e245364",
+  "meander.key.geometricDefectScreen": "9a513b4f8abcd5c5ea3f45e4427109d294524f6aa1628f5eca1c0e891537700a",
   "meander.key.regime": "95fd0c8a1259227d532f335c7a2397c54eefbc3fff887e5b389729a74dbbbb89",
   "meander.key.mainRisk": "779fe3f4c9028ac87f56ff337b6205b3d7475f9d7db1e3878dd57dcb03aa4f24",
   "meander.key.recommendation": "6e15ced91807ac3813bff511a08abc595b88e7563cbe8a01dd6b98852a2ba46a",
@@ -162,8 +164,8 @@
   "meander.label": "Unvalidated transient thermal",
   "meander.confidence": "low",
   "meander.implementationHashOccurrencesAfterStrip": 0,
-  "unidirectional.canonicalSha256": "ac3ec9ac1269c4e3a6978b47d65c049128d49f63cabbc731af81173bb0dc943d",
-  "unidirectional.orderedTypedSha256": "700b5bbb8931327b7dcbc744f960e63a1b4fd2df95b554dbe916d21e66c53ea9",
+  "unidirectional.canonicalSha256": "294c047cfb81de1fe160febcf03c1bdecfd0becf745d5ad09c32ea12d53e6e18",
+  "unidirectional.orderedTypedSha256": "c407ab835f0e4c53d0afbe9c7068759742d5a6beb7fc4b6ee63a6a317cbcf5a1",
   "unidirectional.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -187,6 +189,7 @@
    "fieldOverlapDiagnostics",
    "midTrackCrossSection",
    "midTrackInterpolatedCrossSection",
+   "solidificationResolution",
    "numericalDiagnostics",
    "energyBalance",
    "discretization",
@@ -225,13 +228,14 @@
   "unidirectional.key.fieldOverlapDiagnostics": "3261e9027969757880e99d1f428dd687980fcb583759e76183510cfdf1d01711",
   "unidirectional.key.midTrackCrossSection": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "unidirectional.key.midTrackInterpolatedCrossSection": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "unidirectional.key.solidificationResolution": "dcc56bca2391eef8c403e2350f29076d3cebd78244eac839debb9749a21aca08",
   "unidirectional.key.numericalDiagnostics": "2d03f33b36c740461e2e0af338773ce3190a3d0994bf1a7b3234911dc1e727eb",
   "unidirectional.key.energyBalance": "f3e76f0317497bc696fe8d0d42b068b858efb0c5f08565c7f20efab6493e106a",
   "unidirectional.key.discretization": "d299cfe3465bcfa293505514a36228fe67cb241a6d6e8649e0f2ae85df1fdb61",
   "unidirectional.key.scanPath": "e6dc4c6ff5fd67a363b39180eb031b1ff7c4444db7573f52613fd06226be0d3c",
   "unidirectional.key.massBalance": "877146d10eae646043cad817a11fc948269375431594355f0cfdb5d2ecea18f0",
   "unidirectional.key.phaseAudit": "600c849f209fbbf22c97e686ba4be179eb0f4bd4687276fdbdcad718a5f6a28e",
-  "unidirectional.key.geometricDefectScreen": "a3a7826ad29cacf5f3d30fa5c48f64d0c524ac3349edd116232941511e245364",
+  "unidirectional.key.geometricDefectScreen": "9a513b4f8abcd5c5ea3f45e4427109d294524f6aa1628f5eca1c0e891537700a",
   "unidirectional.key.regime": "95fd0c8a1259227d532f335c7a2397c54eefbc3fff887e5b389729a74dbbbb89",
   "unidirectional.key.mainRisk": "779fe3f4c9028ac87f56ff337b6205b3d7475f9d7db1e3878dd57dcb03aa4f24",
   "unidirectional.key.recommendation": "6e15ced91807ac3813bff511a08abc595b88e7563cbe8a01dd6b98852a2ba46a",
@@ -384,6 +388,7 @@
    "keyhole": {
     "depthToWidth": null,
     "risk": null,
+    "kingModeIndicator": null,
     "reason": "Aspect ratio alone cannot resolve vapor depression stability or keyhole pore formation."
    },
    "balling": {
@@ -646,6 +651,16 @@
    "absorptivity": 0.38,
    "emissivity": 0.35
   },
+  "meander.key.solidificationResolution": {
+   "methodId": "melt-pool-cell-count-v1",
+   "mesh_um": 40.0,
+   "cellsAcrossWidth": 1.0,
+   "cellsAcrossDepth": 1.0,
+   "gradientStencilCells": 2,
+   "meshVerified": false,
+   "status": "stencil-spans-melt-pool",
+   "note": "thermalGradient_K_m, solidificationRate_m_s and coolingRate_K_s are single-mesh values; discretisation error is unbounded until a three-grid study (Celik et al. 2008, J. Fluids Eng. 130:078001) converges for them."
+  },
   "meander.key.solver": {
    "id": "enthalpy-fv-6",
    "version": "enthalpy-fv-6",
@@ -793,6 +808,7 @@
    "keyhole": {
     "depthToWidth": null,
     "risk": null,
+    "kingModeIndicator": null,
     "reason": "Aspect ratio alone cannot resolve vapor depression stability or keyhole pore formation."
    },
    "balling": {
@@ -1054,6 +1070,16 @@
    "powderGridPolicy": "layer-conforming",
    "absorptivity": 0.38,
    "emissivity": 0.35
+  },
+  "unidirectional.key.solidificationResolution": {
+   "methodId": "melt-pool-cell-count-v1",
+   "mesh_um": 40.0,
+   "cellsAcrossWidth": 1.0,
+   "cellsAcrossDepth": 1.0,
+   "gradientStencilCells": 2,
+   "meshVerified": false,
+   "status": "stencil-spans-melt-pool",
+   "note": "thermalGradient_K_m, solidificationRate_m_s and coolingRate_K_s are single-mesh values; discretisation error is unbounded until a three-grid study (Celik et al. 2008, J. Fluids Eng. 130:078001) converges for them."
   },
   "unidirectional.key.solver": {
    "id": "enthalpy-fv-6",

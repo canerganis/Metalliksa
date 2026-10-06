@@ -4,9 +4,9 @@
  "group": "G2",
  "description": "Real bare-plate 100 W corridor job 7ec9dc57...; compared with the in-repo fixture (~106 s)",
  "slow": true,
- "recordedImplementationHash": "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932",
+ "recordedImplementationHash": "f3ba98969a723702d9dbe15ae623d28f1327356441919ffdd6edf4e74a6a150d",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "68e386015aad2f4c060e6b7832a2eea1e5155830",
+ "recordedGitHead": "93f94e34b5e6be1dfc5c6236e58e1d8ed3c1517e",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  104.1,
-  95.1
+  57.6,
+  57.2
  ],
  "recordedTwice": true,
  "observations": {
-  "result.canonicalSha256": "a9eff58ad570659ff4feb81e6b727d2a19a0dce095e7941542e261cb41c34245",
-  "result.orderedTypedSha256": "751a39e092e770ccfef562200439d78896bfa8a5e2a6cedaba713a805d72272b",
+  "result.canonicalSha256": "f0dd90c2bd1eecd52dc8041eb0d179fe3b59a70f6bfda8557c70dc0df1112556",
+  "result.orderedTypedSha256": "60093e4690ce2bae90af6ff181b6cc6cf8c462353a9f7fe088312997e21285aa",
   "result.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -100,6 +100,7 @@
    "midTrackInterpolatedCrossSection",
    "barePlateSectionObservations",
    "barePlateSectionFieldArtifact",
+   "solidificationResolution",
    "numericalDiagnostics",
    "energyBalance",
    "discretization",
@@ -145,6 +146,7 @@
   "result.key.midTrackInterpolatedCrossSection": "8210ae9a0b64390458aac27e2a123e8c54f1b088209569ecff894cd1a85a58f4",
   "result.key.barePlateSectionObservations": "91cb81de75fee3bfc92d5fd6247d6ddc609525925557f5762cbf87867aa247c7",
   "result.key.barePlateSectionFieldArtifact": "8d896bf1b1716decae2353fbdcca88848ab8a33acf7be5c9996e5cb0ae0ea732",
+  "result.key.solidificationResolution": "937b7da8423d8c9a74d723dab457bae3e9f30096a9efce8c456baf6fde29d647",
   "result.key.numericalDiagnostics": "004b0154eefff191b00284e9f2ccd1e67b934f62735949d5b49caacefb8d6303",
   "result.key.energyBalance": "66c6087b9225b136ac2f11544b60b4d748bbdc7ded75b5e91133a687205d2c2f",
   "result.key.discretization": "7050ed8a5e535c5307bfc8287492a657d76e733b29501776c1d3616cf4c348a8",
@@ -1145,6 +1147,16 @@
    "absorptivity": 0.38,
    "corridorWidth_um": 402.0,
    "emissivity": 0.35
+  },
+  "result.key.solidificationResolution": {
+   "methodId": "melt-pool-cell-count-v1",
+   "mesh_um": 39.84765625,
+   "cellsAcrossWidth": 1.0,
+   "cellsAcrossDepth": 1.0,
+   "gradientStencilCells": 2,
+   "meshVerified": false,
+   "status": "stencil-spans-melt-pool",
+   "note": "thermalGradient_K_m, solidificationRate_m_s and coolingRate_K_s are single-mesh values; discretisation error is unbounded until a three-grid study (Celik et al. 2008, J. Fluids Eng. 130:078001) converges for them."
   },
   "result.key.solver": {
    "id": "enthalpy-fv-6",

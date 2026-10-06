@@ -4,9 +4,9 @@
  "group": "G17",
  "description": "evaporationModel=True Ti-6Al-4V 80 W: L_v passed to the inversion (today IN718's 6.4e6)",
  "slow": false,
- "recordedImplementationHash": "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932",
+ "recordedImplementationHash": "f3ba98969a723702d9dbe15ae623d28f1327356441919ffdd6edf4e74a6a150d",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "68e386015aad2f4c060e6b7832a2eea1e5155830",
+ "recordedGitHead": "93f94e34b5e6be1dfc5c6236e58e1d8ed3c1517e",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  6.7,
-  7.0
+  4.7,
+  4.7
  ],
  "recordedTwice": true,
  "observations": {
-  "result.canonicalSha256": "23580e504c3627f9b8221c1dc0e75fb8dd5af8a7cb535d192079c2dd8487124a",
-  "result.orderedTypedSha256": "d877c0caa6d074f2ba969a84c224d2bb85947465234bee43d0ad09b10dce2dd6",
+  "result.canonicalSha256": "2a60f3636b132f6291ebeabfa2aff9019a452e84dd6b3242d09c414300daf50c",
+  "result.orderedTypedSha256": "f956af655a04fe7f4af1cdb5514e7792e74e90bd9dd49dc947dd66921087cbdc",
   "result.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -99,6 +99,7 @@
    "fieldOverlapDiagnostics",
    "midTrackCrossSection",
    "midTrackInterpolatedCrossSection",
+   "solidificationResolution",
    "numericalDiagnostics",
    "energyBalance",
    "discretization",
@@ -141,13 +142,14 @@
   "result.key.fieldOverlapDiagnostics": "f5cb9224fc25f118bf416166e55fcfe41e21462e516b7a4b47fcb0441b9020c9",
   "result.key.midTrackCrossSection": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "result.key.midTrackInterpolatedCrossSection": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "result.key.solidificationResolution": "ec8537d84b4aaa5ebd6ded1b460df3151dfeee892d281770e99b6177d5bc5fcc",
   "result.key.numericalDiagnostics": "ad1441d0accdf06616ac4613d6e9069709e799a5d7f5d9f80771b9c47fb5ee8c",
   "result.key.energyBalance": "9dcdcb120d4a48f1a760d378c33c2ca4541dc8245030168f9f553e77099eed57",
   "result.key.discretization": "7eae482de8585fe5485f017174972ec111a0415c86e789c9db8f4a035b65826e",
   "result.key.scanPath": "dc3e33ed474765b3e39a505f1c66a57f2edc24dbbce56e8bf39fb3727e217e9c",
   "result.key.massBalance": "76a18c37ca1159ef0fcb6d6f0483efa7736fc770b403d21b9e86686171436628",
   "result.key.phaseAudit": "022d24590ea9bd359e5f8f4ac7a6da059876cfb69be9712a92677630a4014709",
-  "result.key.geometricDefectScreen": "030fe6fbe85a5ff078e2412e468d5cd2210481a8d494b46d97d3b0e727559dd6",
+  "result.key.geometricDefectScreen": "5972cbd8d3f2d0518055d4c1c410a6e2222b2702722e34f6023f3f5b3f706c8c",
   "result.key.regime": "40fd22838049669095e60b9df57f0c4721939348b454b4c8d571bbdc8aedd490",
   "result.key.mainRisk": "3e47a880ef2d2d03259ff6adc09f4e6ae9ec408f168c8327752846fb584d73fd",
   "result.key.recommendation": "f8d6898175c7acb736377dc94259b1a1e55e937d669cfe302362297e1ad64bde",
@@ -754,8 +756,9 @@
    },
    "keyhole": {
     "depthToWidth": 0.33333333333333337,
-    "risk": "low",
-    "reason": "Aspect ratio D/W < 1.0 indicates stable conduction/transition mode."
+    "risk": null,
+    "kingModeIndicator": "conduction-mode",
+    "reason": "D/W 0.33 <= 0.5: conduction-mode by the King et al. 2014 depth > half-width classification. Aspect ratio alone cannot resolve vapor depression stability or keyhole pore formation, so no risk is assigned."
    },
    "balling": {
     "lengthToWidth": 1.6666666666666665,
@@ -782,9 +785,9 @@
      "use": "Rayleigh-Plateau capillary instability for single-track balling (L/W > \u03c0)."
     },
     {
-     "title": "King et al. (2014) & Cunningham et al. (2019)",
-     "url": "https://doi.org/10.1126/science.aav4687",
-     "use": "Aspect ratio D/W > 1.5 for keyhole instability and vapor depression collapse porosity."
+     "title": "King et al. (2014), J. Mater. Process. Technol. 214, 2915, sec. 5.2",
+     "url": "https://doi.org/10.1016/j.jmatprotec.2014.06.005",
+     "use": "Keyhole-mode classification when melt-pool depth exceeds the half-width (D/W > 0.5); label only."
     }
    ]
   },
@@ -1012,6 +1015,16 @@
    "powderGridPolicy": "layer-conforming",
    "absorptivity": 0.35,
    "emissivity": 0.35
+  },
+  "result.key.solidificationResolution": {
+   "methodId": "melt-pool-cell-count-v1",
+   "mesh_um": 40.0,
+   "cellsAcrossWidth": 3.0,
+   "cellsAcrossDepth": 1.0,
+   "gradientStencilCells": 2,
+   "meshVerified": false,
+   "status": "stencil-spans-melt-pool",
+   "note": "thermalGradient_K_m, solidificationRate_m_s and coolingRate_K_s are single-mesh values; discretisation error is unbounded until a three-grid study (Celik et al. 2008, J. Fluids Eng. 130:078001) converges for them."
   },
   "result.key.solver": {
    "id": "enthalpy-fv-6",

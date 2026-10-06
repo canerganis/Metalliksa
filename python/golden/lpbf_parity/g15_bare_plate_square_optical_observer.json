@@ -4,9 +4,9 @@
  "group": "G15",
  "description": "Square bare plate with opticalObserver='nist-six-section', all artifacts",
  "slow": false,
- "recordedImplementationHash": "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932",
+ "recordedImplementationHash": "f3ba98969a723702d9dbe15ae623d28f1327356441919ffdd6edf4e74a6a150d",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "68e386015aad2f4c060e6b7832a2eea1e5155830",
+ "recordedGitHead": "93f94e34b5e6be1dfc5c6236e58e1d8ed3c1517e",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  0.9,
-  0.9
+  0.5,
+  0.4
  ],
  "recordedTwice": true,
  "observations": {
-  "result.canonicalSha256": "2f2095f48e0870daca8c1c20377600549d34dc3417e7a15a77a2af17defa7053",
-  "result.orderedTypedSha256": "6f8a8420bf771851a944f66e66793eef8a91869da5f7a82caa603511e3bc3413",
+  "result.canonicalSha256": "4945bee4d34970f338d09b70a558c86e5fb56a55cfb873d9b5b6ee0674c31bfb",
+  "result.orderedTypedSha256": "42355996a75070f426612673c7de646e01b11eaf02aea0b5e33e5bbe822e46d5",
   "result.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -98,6 +98,7 @@
    "fieldOverlapDiagnostics",
    "midTrackCrossSection",
    "midTrackInterpolatedCrossSection",
+   "solidificationResolution",
    "numericalDiagnostics",
    "energyBalance",
    "discretization",
@@ -141,6 +142,7 @@
   "result.key.fieldOverlapDiagnostics": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "result.key.midTrackCrossSection": "63e2beb9012951f26f192a599f0f0146ca352a47e0fe7da6ca39cf4ab56eddac",
   "result.key.midTrackInterpolatedCrossSection": "8a0b75feb1e807c916bf3f8cdbd94599fd2cce7939674b83504472425bbd35b4",
+  "result.key.solidificationResolution": "dcc56bca2391eef8c403e2350f29076d3cebd78244eac839debb9749a21aca08",
   "result.key.numericalDiagnostics": "eaddddec2fde094364bbe5e1ffbc9c7d45cac6c0357fd8ffadef857ae6da21d5",
   "result.key.energyBalance": "6cd9e0de88f2d0e59ab871526392a57ae679e99fd71b7d13df4f7ef3acbecd69",
   "result.key.discretization": "c3bfe7a25789033d654c517908affa6e14ca67b6df3cc8f8915e434ec40d4bd4",
@@ -914,6 +916,16 @@
    "opticalObserver": "nist-six-section",
    "absorptivity": 0.38,
    "emissivity": 0.35
+  },
+  "result.key.solidificationResolution": {
+   "methodId": "melt-pool-cell-count-v1",
+   "mesh_um": 40.0,
+   "cellsAcrossWidth": 1.0,
+   "cellsAcrossDepth": 1.0,
+   "gradientStencilCells": 2,
+   "meshVerified": false,
+   "status": "stencil-spans-melt-pool",
+   "note": "thermalGradient_K_m, solidificationRate_m_s and coolingRate_K_s are single-mesh values; discretisation error is unbounded until a three-grid study (Celik et al. 2008, J. Fluids Eng. 130:078001) converges for them."
   },
   "result.key.solver": {
    "id": "enthalpy-fv-6",

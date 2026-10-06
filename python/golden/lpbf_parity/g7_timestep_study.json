@@ -4,9 +4,9 @@
  "group": "G7",
  "description": "study='timestep' (2x and sqrt(2)x maxDt)",
  "slow": false,
- "recordedImplementationHash": "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932",
+ "recordedImplementationHash": "f3ba98969a723702d9dbe15ae623d28f1327356441919ffdd6edf4e74a6a150d",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "68e386015aad2f4c060e6b7832a2eea1e5155830",
+ "recordedGitHead": "93f94e34b5e6be1dfc5c6236e58e1d8ed3c1517e",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  2.6,
-  2.6
+  2.0,
+  1.9
  ],
  "recordedTwice": true,
  "observations": {
-  "result.canonicalSha256": "33635500c3c21335ae6309250aaa8f90afc7e449e996bf3b38900b99c42be36d",
-  "result.orderedTypedSha256": "93962d06e34e88433251abc9367e7728905aa2fadea72834783137f135727d02",
+  "result.canonicalSha256": "f23d177bcce4ad69b02408269de63bcbb48a11c74d0a2024fde065c02fcfc753",
+  "result.orderedTypedSha256": "4acf97fc77a270a95992518b62428312bd1ab70c6a387de3de4d6c1d96a8b446",
   "result.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -98,6 +98,7 @@
    "fieldOverlapDiagnostics",
    "midTrackCrossSection",
    "midTrackInterpolatedCrossSection",
+   "solidificationResolution",
    "numericalDiagnostics",
    "energyBalance",
    "discretization",
@@ -137,14 +138,15 @@
   "result.key.fieldOverlapDiagnostics": "9b2ee165cd55c8e39b2f749a2755565318547b48fc3d12f3fc4388347a7f94dd",
   "result.key.midTrackCrossSection": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "result.key.midTrackInterpolatedCrossSection": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "result.key.solidificationResolution": "037d958a32c44f0f7fa0765447d738efae4e9a9f1c5aaefd5d8125d58118c8e6",
   "result.key.numericalDiagnostics": "c4dd615939502c57406a929d2b2f9877b3bf92a9a16a207d0b26ed0062182f5f",
   "result.key.energyBalance": "e8b5df6fbabe9d7ce2f72bc40dcb1dd52cd14e3506ed77eea02800fd19d95468",
   "result.key.discretization": "ba58e6e5f76b680148a6a5f343fdb7e88d4a75856e9338ce2f29e7f5d2106eb3",
   "result.key.scanPath": "dc3e33ed474765b3e39a505f1c66a57f2edc24dbbce56e8bf39fb3727e217e9c",
   "result.key.massBalance": "df3c166301bce35854b1ccfba15685bf5cbc80d6d86aacf68637b79fae432c0f",
   "result.key.phaseAudit": "ae091d27f961edd95e45d3d32234c9e6e5f952e9d70db43293159240fefca025",
-  "result.key.convergenceStudy": "f08c7941e9c3d7d74b9e2492405629d614babc08b8b15420eca98dc18f957266",
-  "result.key.geometricDefectScreen": "43867101716fcdc7857b9cf88106b954e227138470743736864a254e5d7a1703",
+  "result.key.convergenceStudy": "55d4e06f8cd45563a133daaeb2b7ed32930fe593eaea0b1cad3f765fce9dfb4d",
+  "result.key.geometricDefectScreen": "c8568df656a6295fea25971a00f187e442dc832ebacf9708189087673ba10fcc",
   "result.key.regime": "40fd22838049669095e60b9df57f0c4721939348b454b4c8d571bbdc8aedd490",
   "result.key.mainRisk": "3e47a880ef2d2d03259ff6adc09f4e6ae9ec408f168c8327752846fb584d73fd",
   "result.key.recommendation": "f8d6898175c7acb736377dc94259b1a1e55e937d669cfe302362297e1ad64bde",
@@ -208,9 +210,9 @@
   "result.key.convergenceStudy": {
    "kind": "timestep",
    "spacings": [
-    1.9999999999999995e-06,
-    1.4112903225806449e-06,
-    9.999999999999997e-07
+    9.999999999999997e-07,
+    7.056451612903224e-07,
+    4.999999999999999e-07
    ],
    "metricSource": "metrics",
    "results": [
@@ -220,43 +222,43 @@
      "depth_um": 0.0,
      "volume_um3": 0.0,
      "crossSectionArea_um2": 0.0,
-     "peakTemperature_K": 1068.1219340204007,
-     "thermalGradient_K_m": null,
-     "solidificationRate_m_s": null,
-     "coolingRate_K_s": null,
-     "keyholeDepth_um": null,
-     "recoilPressure_Pa": null,
-     "marangoniNumber": 0.0,
-     "pecletNumber": 0.0,
-     "aspectRatio": null,
-     "trackOverlapRatio": null,
-     "remeltingRatio": 0.0
-    },
-    {
-     "length_um": 0.0,
-     "width_um": 0.0,
-     "depth_um": 0.0,
-     "volume_um3": 0.0,
-     "crossSectionArea_um2": 0.0,
-     "peakTemperature_K": 1067.8263559745908,
-     "thermalGradient_K_m": null,
-     "solidificationRate_m_s": null,
-     "coolingRate_K_s": null,
-     "keyholeDepth_um": null,
-     "recoilPressure_Pa": null,
-     "marangoniNumber": 0.0,
-     "pecletNumber": 0.0,
-     "aspectRatio": null,
-     "trackOverlapRatio": null,
-     "remeltingRatio": 0.0
-    },
-    {
-     "length_um": 0.0,
-     "width_um": 0.0,
-     "depth_um": 0.0,
-     "volume_um3": 0.0,
-     "crossSectionArea_um2": 0.0,
      "peakTemperature_K": 1067.596026335284,
+     "thermalGradient_K_m": null,
+     "solidificationRate_m_s": null,
+     "coolingRate_K_s": null,
+     "keyholeDepth_um": null,
+     "recoilPressure_Pa": null,
+     "marangoniNumber": 0.0,
+     "pecletNumber": 0.0,
+     "aspectRatio": null,
+     "trackOverlapRatio": null,
+     "remeltingRatio": 0.0
+    },
+    {
+     "length_um": 0.0,
+     "width_um": 0.0,
+     "depth_um": 0.0,
+     "volume_um3": 0.0,
+     "crossSectionArea_um2": 0.0,
+     "peakTemperature_K": 1067.4255439439994,
+     "thermalGradient_K_m": null,
+     "solidificationRate_m_s": null,
+     "coolingRate_K_s": null,
+     "keyholeDepth_um": null,
+     "recoilPressure_Pa": null,
+     "marangoniNumber": 0.0,
+     "pecletNumber": 0.0,
+     "aspectRatio": null,
+     "trackOverlapRatio": null,
+     "remeltingRatio": 0.0
+    },
+    {
+     "length_um": 0.0,
+     "width_um": 0.0,
+     "depth_um": 0.0,
+     "volume_um3": 0.0,
+     "crossSectionArea_um2": 0.0,
+     "peakTemperature_K": 1067.3123163063315,
      "thermalGradient_K_m": null,
      "solidificationRate_m_s": null,
      "coolingRate_K_s": null,
@@ -279,6 +281,18 @@
      "reason": "Three positive results required"
     },
     "volume_um3": {
+     "status": "inconclusive",
+     "reason": "Three positive results required"
+    },
+    "thermalGradient_K_m": {
+     "status": "inconclusive",
+     "reason": "Three positive results required"
+    },
+    "solidificationRate_m_s": {
+     "status": "inconclusive",
+     "reason": "Three positive results required"
+    },
+    "coolingRate_K_s": {
      "status": "inconclusive",
      "reason": "Three positive results required"
     }
@@ -374,6 +388,7 @@
    "keyhole": {
     "depthToWidth": null,
     "risk": null,
+    "kingModeIndicator": null,
     "reason": "Aspect ratio alone cannot resolve vapor depression stability or keyhole pore formation."
    },
    "balling": {
@@ -616,6 +631,16 @@
    "powderGridPolicy": "layer-conforming",
    "absorptivity": 0.38,
    "emissivity": 0.35
+  },
+  "result.key.solidificationResolution": {
+   "methodId": "melt-pool-cell-count-v1",
+   "mesh_um": 40.0,
+   "cellsAcrossWidth": 0.0,
+   "cellsAcrossDepth": 0.0,
+   "gradientStencilCells": 2,
+   "meshVerified": false,
+   "status": "not-available",
+   "note": "thermalGradient_K_m, solidificationRate_m_s and coolingRate_K_s are single-mesh values; discretisation error is unbounded until a three-grid study (Celik et al. 2008, J. Fluids Eng. 130:078001) converges for them."
   },
   "result.key.solver": {
    "id": "enthalpy-fv-6",
