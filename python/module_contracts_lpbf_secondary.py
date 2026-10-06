@@ -72,9 +72,11 @@ def build_lpbf_optimizer_contract(seed: Mapping[str, str]) -> ModuleContract:
         ),
         # paramBounds is a map of four two-number intervals, not four flat request keys.
         # String alloyId is also outside InputField's scalar vocabulary.
-        undeclared_input=("alloyId", "paramBounds", "nIterations", "nWarmup", "seed"),
+        undeclared_input=("alloyId", "paramBounds", "nIterations", "nWarmup", "seed", "beamDiameter_um", "preheatTemp_C"),
         output=OutputSchema(
-            fields=("success", "alloyId", "bestParams", "bestScore", "iterations", "converged", "elapsedMs", "nIterations"),
+            fields=("success", "error", "errorKind", "alloyId", "bestParams", "bestVerdict", "noPositiveScore", "bestScore",
+                    "verdictCounts", "nInconclusive", "iterations", "converged", "elapsedMs", "nIterations", "nWarmup",
+                    "surrogateSteps", "beamDiameter_um", "preheatTemp_C", "objective"),
             status_key=None,
         ),
     )
@@ -82,17 +84,23 @@ def build_lpbf_optimizer_contract(seed: Mapping[str, str]) -> ModuleContract:
         seed,
         operation,
         notes=(
-            "The view submits only on Run Optimization. Its body is alloyId from the active specimen, nested "
-            "paramBounds for laserPower_W (W), scanSpeed_mms (mm/s), hatch_um (µm), layer_um (µm), "
-            "nIterations, nWarmup and seed=42. Initial UI intervals are [100,500], [200,2000], [60,200] "
-            "and [20,80]; number controls have no HTML min/max/step and the authority does not validate interval "
-            "ordering or positive widths. These inputs remain undeclared rather than inventing a nested schema.",
-            "The entry point defaults missing alloyId to in718, bounds to the script constants, iterations to 20, "
-            "warmup to 5 and seed to 42; nIterations is capped above at 30 but not given a lower bound. "
-            "An unresolved alloy id silently resolves to in718. The objective combines a screening build-verdict "
-            "score with normalized scan-rate productivity; fixed beam diameter 80 µm, preheat 80 °C and "
-            "1064 nm are used internally. bestScore and the UI's 'best' candidate are heuristic software outputs, "
-            "not a qualified process recommendation, experimental result or validated optimum.",
+            "The view submits only on Run Optimization. Its body is alloyId (a solver alloy key derived from the "
+            "active material name by src/utils/lpbfOptimizerAlloy.ts), nested paramBounds for laserPower_W (W), "
+            "scanSpeed_mms (mm/s), hatch_um (µm), layer_um (µm), nIterations, nWarmup, beamDiameter_um (default 80 µm), "
+            "preheatTemp_C (default 80 °C) and seed=42. Initial UI intervals are [100,500], [200,2000], [60,200] "
+            "and [20,80]. These inputs remain undeclared rather than inventing a nested schema.",
+            "alloyId is required and must resolve through four_alloy_materials; a missing or unknown alloy is refused "
+            "with errorKind 'validation' (HTTP 422 via server/pythonDispatchStatus.ts) and no fallback alloy is used. "
+            "nIterations must be an integer in 1-30 and is rejected, not clamped or truncated; nWarmup must be an "
+            "integer >= 1; seed must be an integer; bounds must be finite with 0 < min < max and unknown paramBounds "
+            "keys are rejected; beamDiameter_um must be > 0 and preheatTemp_C must be >= 0 and below the alloy solidus. "
+            "When nWarmup >= nIterations every candidate is a random sample and the result reports surrogateSteps=0.",
+            "Thermal-solver exceptions return success:false with errorKind 'solver' and surrogate/acquisition exceptions "
+            "errorKind 'optimizer' (HTTP 200, body error); they are never scored as 0. The objective is the verdict score "
+            "(printable 1, risky 0.5, do-not-print 0, inconclusive/geometry-unresolved 0) times normalised v*h. When no "
+            "candidate scores above 0 the result has bestParams=null and noPositiveScore=true. bestScore and the UI's "
+            "best candidate are heuristic software outputs, not a qualified process recommendation, experimental result "
+            "or validated optimum.",
             "The script imports numpy and scipy at module load and has no dependency-unavailable envelope or "
             "fallback. Dispatch/IPC errors surface through the route/service failure path. The request has a "
             "120000 ms Python-IPC timeout and is not warm. The browser holds request/result/loading/error state; "
@@ -100,10 +108,10 @@ def build_lpbf_optimizer_contract(seed: Mapping[str, str]) -> ModuleContract:
         ),
         sources=(
             "src/components/LpbfBayesianOptimizerLab.tsx::LpbfBayesianOptimizerLab",
-            "src/services/pythonComputationService.ts:647-655#lpbf-bayesian-optimize",
+            "src/services/pythonComputationService.ts:652-664#lpbf-bayesian-optimize",
             "routes/physics.ts:83-84#120000",
             "python/lpbf_bayesian_optimizer.py::run_bayesian_optimization",
-            "python/lpbf_bayesian_optimizer.py:151-174#nIterations",
+            "python/lpbf_bayesian_optimizer.py:254-274#nIterations",
         ),
     )
 
@@ -164,7 +172,7 @@ def build_solidification_microstructure_contract(seed: Mapping[str, str]) -> Mod
         sources=(
             "src/components/SolidificationMicrostructureLab.tsx::SolidificationMicrostructureLab",
             "src/components/SolidificationMicrostructureLab.tsx::solidificationRequest",
-            "src/services/pythonComputationService.ts:659-676#lpbf-solidification-microstructure",
+            "src/services/pythonComputationService.ts:674-691#lpbf-solidification-microstructure",
             "routes/lpbfSimulation.ts:22-38#solidification-microstructure",
             "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
             "python/lpbf_worker_rpc.py::_rpc_solidification_microstructure",

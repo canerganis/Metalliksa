@@ -34,16 +34,19 @@ class LpbfSecondaryContractTests(unittest.TestCase):
                           operation.authority.timeout_ms, operation.authority.warm),
                          ("python-ipc", "python/lpbf_bayesian_optimizer.py", 120000, False))
         self.assertEqual(operation.undeclared_input,
-                         ("alloyId", "paramBounds", "nIterations", "nWarmup", "seed"))
+                         ("alloyId", "paramBounds", "nIterations", "nWarmup", "seed",
+                          "beamDiameter_um", "preheatTemp_C"))
         payload = {"alloyId": "in718", "paramBounds": {"laserPower_W": [100, 500]},
-                   "nIterations": 20, "nWarmup": 5, "seed": 42}
+                   "nIterations": 20, "nWarmup": 5, "seed": 42,
+                   "beamDiameter_um": 80, "preheatTemp_C": 80}
         self.assertEqual(operation.input_problems(payload), [])
         self.assertEqual(contract.evidence.emits, ())
         self.assertEqual(contract.evidence.ceiling, "screening-only")
         self.assertEqual(contract.tests.oracle.status, "pending")
         self.assertEqual(contract.lifecycle.resources, ("fetch",))
-        self.assertTrue(any("unresolved alloy id silently resolves to in718" in note
-                            for note in contract.legacy_notes))
+        self.assertFalse(any("silently resolves to in718" in note for note in contract.legacy_notes))
+        self.assertTrue(any("missing or unknown alloy is refused" in note for note in contract.legacy_notes))
+        self.assertIn("errorKind", operation.output.fields)
         self.assertTrue(any("not a qualified process recommendation" in note
                             for note in contract.legacy_notes))
 
