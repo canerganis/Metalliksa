@@ -38,8 +38,8 @@ function mirrorSharedMaterial(shared:ActiveSpecimenState): void {
     hardness_HV:null,lpbf:{...shared.lpbf},xrd:{...shared.xrd},
     sourceTab:shared.sourceTab,lastModified:shared.lastModified,isCustomModified:shared.isCustomModified,
     metadata:{...previous.metadata,id:shared.id,serialNumber:"",category:normalizeMaterialCategory(shared.category,shared.baseMetal),baseMetal:shared.baseMetal,density_gcm3:shared.density_gcm3,
-      standardDesignation:"Unverified shared material profile",condition:"Unspecified",manufacturingRoute:"Unspecified",
-      source:shared.materialTransfer?.sourceModule||shared.sourceTab,notes:"Shared material context. Derived properties remain screening estimates; no experimental validation is implied.",lastModified:shared.lastModified},
+      standardDesignation:"",standardDesignationSource:undefined,condition:"Unspecified",manufacturingRoute:"Unspecified",
+      source:shared.materialTransfer?.sourceModule||shared.sourceTab,notes:"Shared material context. No standard designation is inferred and no composition-derived temperatures or strengths are held; no experimental validation is implied.",lastModified:shared.lastModified},
   });
   useMaterialStore.setState({activeMaterialSpecimen:mirrored,activeSpecimen:mirrored});
 }
@@ -56,10 +56,10 @@ function applyIdentity(transfer:TransferIdentity): boolean {
     const liveProcess=Object.fromEntries(processKeys.map(key=>[key,current.lpbf[key]]));
     // Derive with the existing model without re-publishing over the original source payload.
     const derived=deriveSpecimenProperties({...transfer.composition},transfer.name,transfer.baseMetal);
-    const shared:ActiveSpecimenState={...derived,id:materialProfileIdentity(transfer.name,transfer.baseMetal,transfer.composition),sourceTab:`${transfer.sourceModule} · screening estimates`,lastModified:Date.now(),isCustomModified:true,unit:"wt_pct",lpbf:{...derived.lpbf,...liveProcess},materialTransfer:{sourceModule:transfer.sourceModule,sourceRecordId:transfer.sourceRecordId,compositionInterpretation:transfer.interpretation||"nominal",resultType:"Screening only",note:"Only material identity and composition were transferred. Existing composition-based properties remain estimates; source property values and confidence were not promoted."}};
+    const shared:ActiveSpecimenState={...derived,id:materialProfileIdentity(transfer.name,transfer.baseMetal,transfer.composition),sourceTab:`${transfer.sourceModule} · composition transfer`,lastModified:Date.now(),isCustomModified:true,unit:"wt_pct",lpbf:{...derived.lpbf,...liveProcess},materialTransfer:{sourceModule:transfer.sourceModule,sourceRecordId:transfer.sourceRecordId,compositionInterpretation:transfer.interpretation||"nominal",resultType:"Screening only",note:"Only material identity and composition were transferred. No properties are derived from composition; source property values and confidence were not promoted."}};
     useMaterialSpecimenStore.setState({activeSpecimen:shared});
     mirrorSharedMaterial(shared);
-    useMaterialContextBridgeStore.setState({error:false,message:`Shared material: ${shared.name}. ${transfer.interpretation==="range-midpoint"?"Composition ranges are represented by nominal midpoints. ":""}LPBF process settings retained; derived properties remain screening estimates.`});
+    useMaterialContextBridgeStore.setState({error:false,message:`Shared material: ${shared.name}. ${transfer.interpretation==="range-midpoint"?"Composition ranges are represented by nominal midpoints. ":""}LPBF process settings retained; no properties are derived from composition.`});
     return true;
   } finally {applying=false;}
 }

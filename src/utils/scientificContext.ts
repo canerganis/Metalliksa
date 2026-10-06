@@ -13,6 +13,8 @@ export interface ScientificContext {
 
 // Browser-locale formatting showed "1.200 mm/s" and "31,25 J/mm³" in a Turkish browser; same rounding, fixed locale.
 const format = formatDisplayNumber;
+// The shared specimen holds no composition-derived temperatures or strengths (COMPOSITION_PROPERTY_UNAVAILABLE_NOTE).
+const COMPOSITION_PROPERTY_UNAVAILABLE_SHORT = 'unavailable (not computed from composition)';
 
 export function buildScientificContext(moduleId: ModuleId, specimen: ActiveSpecimenState): ScientificContext {
   if (moduleId === 'materials-project') return {
@@ -27,10 +29,10 @@ export function buildScientificContext(moduleId: ModuleId, specimen: ActiveSpeci
   if (moduleId === 'alloy-builder') return {
     title: 'Composition editor and estimate context',
     observation: 'This editor uses element percentages in the displayed wt.% or at.% unit. Normalize Composition is an explicit action; edits do not automatically make the total 100%.',
-    mechanism: 'For weight-percent compositions, browser rules estimate density and selected properties using composition and material-family assumptions. No CALPHAD, DFT or LPBF simulation runs here.',
-    variables: ['Element content: 0–100%, finite values', 'Displayed estimates: density g/cm³, temperatures °C, strength MPa', 'Composition-derived LPBF starting estimates: W and mm/s'],
-    interpretation: 'Composition-derived starting estimates are separate from the current shared process settings, which are retained. Atomic-percent edits preserve their unit and do not recompute weight-percent property estimates.',
-    limitation: 'These estimates are unvalidated and may include fallback values. Displayed or retained values are not measurements, phase-equilibrium results or qualified process settings. Retained values are not newly computed properties of an atomic-percent composition. Hardness can remain unavailable.',
+    mechanism: 'For weight-percent compositions, density is computed by the inverse rule of mixtures from tabulated elemental densities. No CALPHAD, DFT or LPBF simulation runs here, and no temperature, strength or process window is derived from composition.',
+    variables: ['Element content: 0–100%, finite values', 'Computed: density g/cm³ (wt.% only; unavailable when an element has no tabulated density)', 'Unavailable here: liquidus/solidus °C, yield strength and UTS MPa'],
+    interpretation: 'The current shared process settings are user settings and are retained across composition edits. Atomic-percent edits preserve their unit and do not recompute weight-percent values such as density.',
+    limitation: 'The density assumes ideal mixing (no excess volume, phases or porosity). Displayed values are not measurements, phase-equilibrium results or qualified process settings. Retained values are not newly computed properties of an atomic-percent composition. Hardness can remain unavailable.',
   };
 
   const { lpbf } = specimen;
@@ -52,7 +54,7 @@ export function buildScientificContext(moduleId: ModuleId, specimen: ActiveSpeci
     title: 'How thermal history changes microstructure',
     observation: `${shared} This module checks temperature-time path, phase equilibrium, or kinetic transformation behavior.`,
     mechanism: 'Phase stability follows Gibbs free-energy balance; transformation rates follow diffusion and nucleation kinetics. Fast cooling can shift behavior away from equilibrium; soak steps increase diffusion-controlled growth.',
-    variables: [`Liquidus / solidus: ${format(specimen.liquidus_C)} / ${format(specimen.solidus_C)} °C`, `Solvus: ${format(specimen.solvus_C)} °C`, `Predicted stable phases: ${specimen.stablePhases.join(', ')}`, `Thermal conductivity: ${format(lpbf.thermalConductivity_k_WmK)} W/m·K`],
+    variables: [`Liquidus / solidus / solvus: ${COMPOSITION_PROPERTY_UNAVAILABLE_SHORT}`, `Nominal phase labels (rule-based, not computed): ${specimen.stablePhases.join(', ')}`, `Thermal conductivity: ${format(lpbf.thermalConductivity_k_WmK)} W/m·K`],
     interpretation: 'Equilibrium diagrams provide a near-equilibrium reference, while TTT/CCT maps kinetics for a specific composition and cooling trajectory. Neither replaces direct microstructural measurement.',
     limitation: 'Results depend on database quality, initial microstructure assumptions, and cooling-rate accuracy. This is not a substitute for experiment.',
   };
@@ -70,7 +72,7 @@ export function buildScientificContext(moduleId: ModuleId, specimen: ActiveSpeci
     title: 'Evidence chain for any claim',
     observation: `${shared} Here the goal is traceability: which data supports a claim, under which conditions, with what uncertainty.`,
     mechanism: 'Scientific confidence is built through claim → method → data → condition match → uncertainty characterization → independent validation. Solver convergence supports numerical robustness; external comparison supports real-world confidence.',
-    variables: [`Freeze range: ${format(specimen.freezingRange_C)} °C`, `Nominal yield strength: ${format(specimen.yieldStrength_25C_MPa)} MPa`, `Specimen source: ${specimen.sourceTab}`, `Process seed: ${lpbf.processSeed}`],
+    variables: [`Freeze range and yield strength: ${COMPOSITION_PROPERTY_UNAVAILABLE_SHORT}`, `Specimen source: ${specimen.sourceTab}`, `Process seed: ${lpbf.processSeed}`],
     interpretation: 'Treat values as context, not a final conclusion. Evidence types should remain separated as measured data, literature estimate, simulation screening, or unresolved.',
     limitation: 'If the source is missing, conditions do not match, or synthetic data dominates, it must not be escalated into qualification evidence.',
   };
@@ -79,7 +81,7 @@ export function buildScientificContext(moduleId: ModuleId, specimen: ActiveSpeci
     title: 'Scientific interpretation for this module',
     observation: `${shared} The model output shown in this module reflects how input parameters and assumptions map to predicted behavior.`,
     mechanism: 'The model combines constitutive assumptions, material properties, and boundary conditions to generate a testable prediction.',
-    variables: [`Composition: ${Object.entries(specimen.composition).map(([element, value]) => `${element} ${format(value)}%`).join(', ')}`, `Density: ${format(specimen.density_gcm3)} g/cm³`, `Solidification range: ${format(specimen.freezingRange_C)} °C`],
+    variables: [`Composition: ${Object.entries(specimen.composition).map(([element, value]) => `${element} ${format(value)}%`).join(', ')}`, `Density: ${format(specimen.density_gcm3)} g/cm³`, `Solidification range: ${COMPOSITION_PROPERTY_UNAVAILABLE_SHORT}`],
     interpretation: 'Start by checking assumptions, then sensitive inputs, then the evidence type attached to each value.',
     limitation: 'Model output is not a measurement. Uncertainty, coverage, and validation status must always be carried with the result.',
   };

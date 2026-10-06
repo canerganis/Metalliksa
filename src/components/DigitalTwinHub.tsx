@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { useDigitalTwin } from "../context/DigitalTwinContext";
 import { useMaterialStore } from "../store/useMaterialStore";
+import { availableProperty } from "../utils/compositionPropertyAvailability";
 import { SampleDigitalTwin, DigitalTwinAttachment } from "../types/digitalTwin";
 import {
   BarChart,
@@ -86,7 +87,7 @@ export const DigitalTwinHub: React.FC<{ onNavigateToModule?: (tab: string) => vo
   const handleSyncFromGlobalSpecimen = () => {
     updateActiveTwin((prev) => ({
       ...prev,
-      evidence: prev.evidence?.kind === "demo" ? prev.evidence : { ...prev.evidence, kind: "user-supplied", qualification: "not-assessed", note: "Composition and property estimates synchronized from the material store. Measurement provenance and qualification remain unresolved." },
+      evidence: prev.evidence?.kind === "demo" ? prev.evidence : { ...prev.evidence, kind: "user-supplied", qualification: "not-assessed", note: "Composition synchronized from the material store. The store holds no composition-derived mechanical properties, so yield, UTS and elongation are unresolved; measurement provenance and qualification remain unresolved." },
       sampleName: activeMaterialSpecimen.name,
       materialCategory: (activeMaterialSpecimen.metadata?.category || prev.materialCategory) as any,
       standardDesignation: activeMaterialSpecimen.metadata?.standardDesignation || prev.standardDesignation,
@@ -98,9 +99,10 @@ export const DigitalTwinHub: React.FC<{ onNavigateToModule?: (tab: string) => vo
       },
       mechanical: {
         ...prev.mechanical,
-        yieldStrengthMpa: activeMaterialSpecimen.yieldStrength_25C_MPa,
-        ultimateTensileStrengthMpa: activeMaterialSpecimen.uts_25C_MPa,
-        elongationPct: activeMaterialSpecimen.elongation_pct,
+        // null (Unresolved) unless the record really carries a value; never the removed composition heuristics.
+        yieldStrengthMpa: availableProperty(activeMaterialSpecimen.yieldStrength_25C_MPa),
+        ultimateTensileStrengthMpa: availableProperty(activeMaterialSpecimen.uts_25C_MPa),
+        elongationPct: availableProperty(activeMaterialSpecimen.elongation_pct),
       },
     }));
     setSyncNotice("Synced twin from shared material store!");
@@ -344,7 +346,7 @@ Provide an evidence-gap review:
               id="btn-sync-from-store"
               onClick={handleSyncFromGlobalSpecimen}
               className="px-2.5 py-1 bg-sky-600/20 hover:bg-sky-600/30 text-sky-300 border border-sky-500/40 rounded-lg text-xs font-medium flex items-center gap-1 transition-colors"
-              title="Pull composition and properties from activeMaterialSpecimen into this digital twin"
+              title="Pull the composition from the shared material store into this record (its mechanical properties become Unresolved: the store has none)"
             >
               <RotateCw className="w-3 h-3 text-sky-400" />
               <span>Pull from Store</span>

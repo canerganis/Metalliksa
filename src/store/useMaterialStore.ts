@@ -2,6 +2,9 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { setActivePipelineMaterial, PipelineMaterialPayload } from "../utils/materialDataPipeline";
 import { estimateSpecimenHardnessHV, type HardnessHVEstimateStatus } from "../utils/hardnessStrengthEstimate";
+import { deriveSpecimenProperties } from "./useMaterialSpecimenStore";
+import { materialCategoryForBase } from "../utils/materialCategory";
+import { withoutCompositionHeuristicProperties } from "../utils/compositionPropertyAvailability";
 
 export type BaseMetalType = "Ni" | "Fe" | "Ti" | "Al" | "Cu" | "Co" | "Mg" | "Refractory" | "Other";
 
@@ -10,7 +13,10 @@ export interface MaterialMetadata {
   serialNumber: string;
   category: string;
   baseMetal: BaseMetalType;
+  /** Empty unless a catalogue preset or the user set it; never inferred from composition. */
   standardDesignation: string;
+  /** "catalogue": from a preset (cleared once the composition is edited away from it); "user": typed by the user. */
+  standardDesignationSource?: "catalogue" | "user";
   manufacturingRoute: string;
   condition: string;
   leadMetallurgist: string;
@@ -32,18 +38,18 @@ export interface MaterialSpecimen {
   unit: "wt_pct" | "at_pct";
   metadata: MaterialMetadata;
 
-  // Thermodynamic Properties
-  liquidus_C: number;
-  solidus_C: number;
-  freezingRange_C: number;
-  solvus_C: number;
+  // Thermodynamic and mechanical properties: null = unavailable (no validated composition-to-property model; see
+  // COMPOSITION_PROPERTY_UNAVAILABLE_NOTE). Never filled from composition heuristics.
+  liquidus_C: number | null;
+  solidus_C: number | null;
+  freezingRange_C: number | null;
+  solvus_C: number | null;
   stablePhases: string[];
 
-  // Mechanical Properties
-  yieldStrength_25C_MPa: number;
-  uts_25C_MPa: number;
-  youngsModulus_GPa: number;
-  elongation_pct: number;
+  yieldStrength_25C_MPa: number | null;
+  uts_25C_MPa: number | null;
+  youngsModulus_GPa: number | null;
+  elongation_pct: number | null;
   /**
    * Never a measurement: an estimate from the (itself composition-based) yield strength for non-austenitic
    * hypoeutectoid steels only (Pavlina & Van Tyne 2008), otherwise null (unavailable). See hardnessHVNote.
@@ -220,109 +226,48 @@ export function deriveProperties(
 ): Omit<MaterialSpecimen, "id" | "sourceTab" | "lastModified" | "isCustomModified"> {
   const baseMetal = forcedBase || detectBaseMetal(composition);
   const density_gcm3 = calculateDensity(composition);
-  const density_rho_kgm3 = Math.round(density_gcm3 * 1000);
   const chemicalFormula = generateFormula(composition, baseMetal);
 
   const cr = composition["Cr"] || 0;
-  const co = composition["Co"] || 0;
   const mo = composition["Mo"] || 0;
   const w = composition["W"] || 0;
   const ta = composition["Ta"] || 0;
   const al = composition["Al"] || 0;
   const ti = composition["Ti"] || 0;
   const nb = composition["Nb"] || 0;
-  const fe = composition["Fe"] || 0;
   const c = composition["C"] || 0;
   const v = composition["V"] || 0;
-  const mg = composition["Mg"] || 0;
-  const si = composition["Si"] || 0;
+  const fe = composition["Fe"] || 0;
 
-  let category = existingMetadata?.category || "Nickel Superalloy";
-  let standardDesignation = existingMetadata?.standardDesignation || "UNS N07718 / AMS 5662";
-  let liquidus_C = 1340;
-  let solidus_C = 1260;
-  let solvus_C = 1120;
-  let yieldStrength_25C_MPa = 1050;
-  let uts_25C_MPa = 1350;
-  let youngsModulus_GPa = 210;
-  let elongation_pct = 16;
+  // Liquidus/solidus/solvus, yield, UTS, modulus and elongation are no longer filled by per-base linear formulas
+  // (e.g. Ni yield 320 + 85 x gamma-prime formers, steel 750 + 900 C so pure Fe showed 750 MPa, Al solidus a constant
+  // 570 degC): none had a source. See COMPOSITION_PROPERTY_UNAVAILABLE_NOTE.
+  // A standard designation is never inferred from composition thresholds (any Ni alloy with Nb > 2.5 used to become
+  // "UNS N07718 / AMS 5662"): only a catalogue preset or the user sets one.
+  let category = existingMetadata?.category || materialCategoryForBase(baseMetal);
+  const standardDesignation = existingMetadata?.standardDesignation ?? "";
   let crystalSystem: "FCC" | "BCC" | "HCP" | "Tetragonal" | "Other" = "FCC";
   let spaceGroup = "Fm-3m (225)";
   let latticeA_A = 3.595;
   let latticeC_A: number | undefined = undefined;
   let targetPhases: string[] = ["austenite-fcc", "gamma-prime-ni3al"];
-  let thermalConductivity_k_WmK = 11.5;
-  let specificHeat_Cp_JkgK = 435;
-  let recommendedLaserPower_W = 285;
-  let recommendedScanSpeed_mms = 960;
-  let recommendedPreheatTemp_C = 120;
-  let hotTearingSusceptibility: "Low" | "Moderate" | "High" = "Moderate";
-  let crackingMechanism = "Interdendritic solute segregation during terminal solidification";
-  let mitigationRecommendation = "Maintain bed preheat >=150°C and optimize volumetric energy density (VED).";
 
   if (baseMetal === "Ni") {
     category = "Nickel Superalloy";
     const gammaPrimeFormers = al + ti + ta + nb;
-    const refractoryMoW = mo + w;
-
-    liquidus_C = Math.round(1455 - (cr * 2.5 + mo * 4 + al * 8 + ti * 10 + c * 40));
-    solidus_C = Math.round(liquidus_C - (35 + gammaPrimeFormers * 4.5 + nb * 12 + c * 30));
-    solvus_C = Math.min(solidus_C - 40, Math.round(950 + gammaPrimeFormers * 22 + refractoryMoW * 6));
-
-    yieldStrength_25C_MPa = Math.round(320 + gammaPrimeFormers * 85 + refractoryMoW * 45 + cr * 12 + co * 6);
-    uts_25C_MPa = Math.round(yieldStrength_25C_MPa * 1.32 + 80);
-    elongation_pct = Math.max(6, Math.min(28, parseFloat((28 - gammaPrimeFormers * 1.6).toFixed(1))));
-    youngsModulus_GPa = Math.round(205 + refractoryMoW * 3.5);
-
     crystalSystem = "FCC";
     spaceGroup = "Fm-3m (225)";
     latticeA_A = parseFloat((3.524 + cr * 0.0018 + mo * 0.0035 + w * 0.0038 + ta * 0.0045 + al * 0.0022 + ti * 0.003).toFixed(3));
-
     if (nb > 2.5) {
       targetPhases = ["austenite-fcc", "gamma-double-prime", "laves-fe2nb"];
-      standardDesignation = "UNS N07718 / AMS 5662";
     } else if (gammaPrimeFormers > 3.0) {
       targetPhases = ["austenite-fcc", "gamma-prime-ni3al", "carbide-mc"];
-      standardDesignation = "AMS 5873 (René 41 Class)";
     } else {
       targetPhases = ["austenite-fcc", "carbide-m23c6"];
-      standardDesignation = "Hastelloy X Class";
-    }
-
-    thermalConductivity_k_WmK = parseFloat((11.0 + refractoryMoW * 0.3 - (cr + al) * 0.15).toFixed(1));
-    specificHeat_Cp_JkgK = 435;
-    recommendedLaserPower_W = 280;
-    recommendedScanSpeed_mms = 940;
-
-    const freezingRange = liquidus_C - solidus_C;
-    if (freezingRange > 80 || (al + ti) > 4.5) {
-      hotTearingSusceptibility = "High";
-      crackingMechanism = "Strain-age cracking along high-angle grain boundaries (Al+Ti > 4.5 wt%)";
-      mitigationRecommendation = "Elevate build plate preheating to >=200°C; implement rapid solidification scan vectors.";
-    } else if (freezingRange > 45) {
-      hotTearingSusceptibility = "Moderate";
-      crackingMechanism = "Terminal liquid film tearing in interdendritic zones";
-      mitigationRecommendation = "Apply 100-150°C preheat; use bidirectional island scanning pattern with 67° rotation.";
-    } else {
-      hotTearingSusceptibility = "Low";
-      crackingMechanism = "Negligible hot tearing under standard parameter window";
-      mitigationRecommendation = "Standard LPBF parameters: 280W, 950 mm/s, 110 µm hatch.";
     }
   } else if (baseMetal === "Ti") {
     category = "Titanium Alloy";
-    standardDesignation = "ASTM B348 / AMS 4928";
-    const alEquiv = al + (1 / 3) * (composition["Sn"] || 0) + (1 / 6) * (composition["Zr"] || 0);
     const moEquiv = mo + 0.67 * v + 0.44 * (composition["W"] || 0) + 0.28 * nb + 1.25 * cr + 1.25 * fe;
-
-    liquidus_C = Math.round(1668 - (fe * 12 + cr * 8 + mo * 2 - alEquiv * 4));
-    solidus_C = Math.round(liquidus_C - (40 + moEquiv * 8));
-    solvus_C = Math.round(882 + alEquiv * 12.5 - moEquiv * 14.5);
-
-    yieldStrength_25C_MPa = Math.round(450 + alEquiv * 68 + moEquiv * 42);
-    uts_25C_MPa = Math.round(yieldStrength_25C_MPa * 1.15 + 60);
-    elongation_pct = Math.max(8, Math.min(22, parseFloat((18 - (alEquiv + moEquiv) * 0.8).toFixed(1))));
-    youngsModulus_GPa = Math.round(114 - moEquiv * 1.5);
-
     if (moEquiv > 10) {
       crystalSystem = "BCC";
       spaceGroup = "Im-3m (229)";
@@ -335,109 +280,62 @@ export function deriveProperties(
       latticeC_A = 4.68;
       targetPhases = ["alpha-hcp", "beta-bcc"];
     }
-
-    thermalConductivity_k_WmK = 6.7;
-    specificHeat_Cp_JkgK = 526;
-    recommendedLaserPower_W = 200;
-    recommendedScanSpeed_mms = 1200;
-    recommendedPreheatTemp_C = 200;
-    hotTearingSusceptibility = "Low";
-    crackingMechanism = "High residual stress accumulation due to low thermal conductivity";
-    mitigationRecommendation = "Maintain argon inert atmosphere (<200 ppm O2) and heated build platform.";
   } else if (baseMetal === "Fe") {
     category = "Steels & Irons";
     // Si defaults to 0: a Si-free composition gave NaN here and skipped the austenitic branch below.
     const crEq = cr + mo * 1.5 + (composition["Si"] || 0) * 1.5 + (composition["Nb"] || 0) * 0.5;
     // Parenthesised: `Ni || 0 + ...` counted only Ni whenever Ni was present (C, N, Mn were dropped).
     const niEq = (composition["Ni"] || 0) + c * 30 + (composition["N"] || 0) * 30 + (composition["Mn"] || 0) * 0.5;
-
-    liquidus_C = Math.round(1538 - (c * 65 + cr * 2.5 + niEq * 2));
-    solidus_C = Math.round(liquidus_C - (30 + c * 80 + cr * 3));
-    solvus_C = Math.round(727 + cr * 8 - niEq * 12);
-
     if (niEq > 8 && crEq > 16) {
-      standardDesignation = "AISI 316L / ASTM A276";
       crystalSystem = "FCC";
       spaceGroup = "Fm-3m (225)";
       latticeA_A = 3.595;
       targetPhases = ["austenite-fcc", "delta-ferrite"];
-      yieldStrength_25C_MPa = Math.round(480 + (cr - 16) * 15 + (mo - 2) * 25);
-      uts_25C_MPa = Math.round(yieldStrength_25C_MPa * 1.35 + 100);
-      elongation_pct = 38;
-      youngsModulus_GPa = 195;
-      thermalConductivity_k_WmK = 16.2;
     } else {
-      standardDesignation = "Alloy Steel / Tool Steel";
       crystalSystem = "BCC";
       spaceGroup = "Im-3m (229)";
       latticeA_A = 2.866;
       targetPhases = ["martensite-bct", "retained-austenite"];
-      yieldStrength_25C_MPa = Math.round(750 + c * 900 + cr * 25 + mo * 40);
-      uts_25C_MPa = Math.round(yieldStrength_25C_MPa * 1.28 + 120);
-      elongation_pct = 14;
-      youngsModulus_GPa = 210;
-      thermalConductivity_k_WmK = 24.5;
     }
-
-    specificHeat_Cp_JkgK = 500;
-    recommendedLaserPower_W = 220;
-    recommendedScanSpeed_mms = 850;
-    recommendedPreheatTemp_C = 100;
-    hotTearingSusceptibility = "Low";
-    crackingMechanism = "Thermal stress cracking during rapid martensitic transformation";
-    mitigationRecommendation = "Stress relief anneal within 2 hours of post-build cooling.";
   } else if (baseMetal === "Al") {
     category = "Aluminum Alloys";
-    standardDesignation = "AlSi10Mg / EN AC-43000";
-    // Absent Cu counts as 0 wt% (a Cu-free alloy such as AlSi10Mg gave NaN).
-    liquidus_C = Math.round(660 - (si * 6.5 + mg * 4.5 + (composition["Cu"] || 0) * 3));
-    solidus_C = 570;
-    solvus_C = 510;
-    yieldStrength_25C_MPa = Math.round(240 + si * 8 + mg * 35);
-    uts_25C_MPa = Math.round(yieldStrength_25C_MPa * 1.45);
-    elongation_pct = 8.5;
-    youngsModulus_GPa = 71;
     crystalSystem = "FCC";
     spaceGroup = "Fm-3m (225)";
     latticeA_A = 4.049;
     targetPhases = ["alpha-al-fcc", "eutectic-si", "mg2si-precipitates"];
-    thermalConductivity_k_WmK = 140;
-    specificHeat_Cp_JkgK = 900;
-    recommendedLaserPower_W = 350;
-    recommendedScanSpeed_mms = 1300;
-    recommendedPreheatTemp_C = 150;
-    hotTearingSusceptibility = "Moderate";
-    crackingMechanism = "Gas porosity & keyholing from high optical reflectivity at 1064nm";
-    mitigationRecommendation = "Utilize higher laser power (350W+), preheat bed to 150°C, and maintain strict powder dryness.";
   }
 
-  // HV is never measured here. The old per-class rules (YS/3.05 Ni, YS/2.9 Ti, YS/3.1 steel, 210 HV austenitic,
-  // 115 HV Al, 380 HV for every other base) had no source; see hardnessStrengthEstimate.ts.
+  // HV is never measured here, and without a yield strength it is Unavailable for every class.
   const hardnessEstimate = estimateSpecimenHardnessHV({
     baseMetal,
     crystalSystem,
     composition,
-    yieldStrength_MPa: yieldStrength_25C_MPa,
+    yieldStrength_MPa: null,
   });
+
+  // One LPBF block for both stores: the shared specimen store's derivation (it feeds the live LPBF vector on preset
+  // load, so its values stay as they are). This store used to keep a second, diverging copy.
+  const { lpbf: sharedLpbf } = deriveSpecimenProperties(composition, customName, baseMetal);
 
   const name = customName || existingMetadata?.name || `${chemicalFormula} Specimen`;
 
   const metadata: MaterialMetadata = {
     id: existingMetadata?.id || `specimen-${Date.now()}`,
-    serialNumber: existingMetadata?.serialNumber || `SPEC-${baseMetal}-${Date.now().toString().slice(-4)}`,
+    serialNumber: existingMetadata?.serialNumber || "",
     category,
     baseMetal,
     standardDesignation,
-    manufacturingRoute: existingMetadata?.manufacturingRoute || "LPBF (Laser Powder Bed Fusion)",
-    condition: existingMetadata?.condition || "As-Built / Condition T6",
-    leadMetallurgist: existingMetadata?.leadMetallurgist || "Dr. E. Vance (Chief Metallurgist)",
-    organization: existingMetadata?.organization || "MetalliX ICME Materials Consortium",
-    notes: existingMetadata?.notes || `Universal Specimen Thread (${chemicalFormula})`,
+    ...(existingMetadata?.standardDesignationSource ? { standardDesignationSource: existingMetadata.standardDesignationSource } : {}),
+    manufacturingRoute: existingMetadata?.manufacturingRoute || "Unspecified",
+    condition: existingMetadata?.condition || "Unspecified",
+    leadMetallurgist: existingMetadata?.leadMetallurgist || "",
+    organization: existingMetadata?.organization || "",
+    notes: existingMetadata?.notes || `Composition record (${chemicalFormula})`,
     createdDate: existingMetadata?.createdDate || new Date().toISOString().split("T")[0],
     lastModified: Date.now(),
-    source: existingMetadata?.source || "MetalliX Universal Material Store",
+    source: existingMetadata?.source || "Alloy Builder composition editor",
     density_gcm3,
-    tags: existingMetadata?.tags || [category, baseMetal, "Universal Specimen"],
+    tags: existingMetadata?.tags || [category, baseMetal],
   };
 
   return {
@@ -446,33 +344,33 @@ export function deriveProperties(
     composition,
     unit: "wt_pct",
     metadata,
-    liquidus_C,
-    solidus_C,
-    freezingRange_C: liquidus_C - solidus_C,
-    solvus_C,
+    liquidus_C: null,
+    solidus_C: null,
+    freezingRange_C: null,
+    solvus_C: null,
     stablePhases: targetPhases,
-    yieldStrength_25C_MPa,
-    uts_25C_MPa,
-    youngsModulus_GPa,
-    elongation_pct,
+    yieldStrength_25C_MPa: null,
+    uts_25C_MPa: null,
+    youngsModulus_GPa: null,
+    elongation_pct: null,
     hardness_HV: hardnessEstimate.hv,
     hardnessHVStatus: hardnessEstimate.status,
     hardnessHVNote: hardnessEstimate.note,
     lpbf: {
-      recommendedLaserPower_W,
-      recommendedScanSpeed_mms,
-      recommendedHatch_um: 110,
-      recommendedLayer_um: 30,
-      recommendedPreheatTemp_C,
-      thermalConductivity_k_WmK,
-      density_rho_kgm3,
-      specificHeat_Cp_JkgK,
-      laserAbsorptivity: baseMetal === "Al" ? 0.32 : baseMetal === "Ti" ? 0.76 : 0.68,
-      thermalExpansion_CTE_10e6: baseMetal === "Al" ? 23.5 : baseMetal === "Ti" ? 8.6 : 13.2,
-      criticalGradient_G_Km: 4.8e5,
-      hotTearingSusceptibility,
-      crackingMechanism,
-      mitigationRecommendation,
+      recommendedLaserPower_W: sharedLpbf.recommendedLaserPower_W,
+      recommendedScanSpeed_mms: sharedLpbf.recommendedScanSpeed_mms,
+      recommendedHatch_um: sharedLpbf.recommendedHatch_um,
+      recommendedLayer_um: sharedLpbf.recommendedLayer_um,
+      recommendedPreheatTemp_C: sharedLpbf.recommendedPreheatTemp_C,
+      thermalConductivity_k_WmK: sharedLpbf.thermalConductivity_k_WmK,
+      density_rho_kgm3: sharedLpbf.density_rho_kgm3,
+      specificHeat_Cp_JkgK: sharedLpbf.specificHeat_Cp_JkgK,
+      laserAbsorptivity: sharedLpbf.laserAbsorptivity,
+      thermalExpansion_CTE_10e6: sharedLpbf.thermalExpansion_CTE_10e6,
+      criticalGradient_G_Km: sharedLpbf.criticalGradient_G_Km,
+      hotTearingSusceptibility: sharedLpbf.hotTearingSusceptibility,
+      crackingMechanism: sharedLpbf.crackingMechanism,
+      mitigationRecommendation: sharedLpbf.mitigationRecommendation,
     },
     xrd: {
       crystalSystem,
@@ -486,6 +384,8 @@ export function deriveProperties(
   };
 }
 
+export const MATERIAL_STORE_VERSION = 2;
+
 /** Recompute the hardness fields of a stored specimen (used for persisted records and atomic-percent edits). */
 export function withHardnessEstimate(specimen: MaterialSpecimen): MaterialSpecimen {
   const e = estimateSpecimenHardnessHV({
@@ -498,15 +398,83 @@ export function withHardnessEstimate(specimen: MaterialSpecimen): MaterialSpecim
   return { ...specimen, hardness_HV: e.hv, hardnessHVStatus: e.status, hardnessHVNote: e.note };
 }
 
-/** Persisted state before version 1 carries hardness_HV from the removed unsourced YS/x rules. */
+/** Designations the removed threshold rules assigned from composition (plus the old default preset's non-standard). */
+const AUTO_ASSIGNED_DESIGNATIONS = new Set([
+  "UNS N07718 / AMS 5662",
+  "AMS 5873 (René 41 Class)",
+  "Hastelloy X Class",
+  "ASTM B348 / AMS 4928",
+  "AISI 316L / ASTM A276",
+  "Alloy Steel / Tool Steel",
+  "AlSi10Mg / EN AC-43000",
+  "Aerospace High-T Turbine Rotor",
+]);
+
+function sameComposition(a: Record<string, number> | undefined, b: Record<string, number>): boolean {
+  if (!a || typeof a !== "object") return false;
+  const keysA = Object.keys(a).filter((k) => a[k] !== 0);
+  const keysB = Object.keys(b).filter((k) => b[k] !== 0);
+  return keysA.length === keysB.length && keysB.every((k) => a[k] === b[k]);
+}
+
+/** The catalogue preset whose composition this is exactly, if any. */
+export function catalogueDesignationFor(composition: Record<string, number> | undefined): string | null {
+  for (const preset of Object.values(MATERIAL_PRESETS)) {
+    if (sameComposition(composition, preset.composition)) return preset.standard;
+  }
+  return null;
+}
+
+/**
+ * A catalogue designation belongs to the catalogue composition: editing the composition away from it clears the
+ * designation (unless this edit sets one). A user-typed designation is the user's claim and is kept.
+ */
+export function designationAfterCompositionEdit(
+  current: Pick<MaterialSpecimen, "composition" | "metadata">,
+  nextComposition: Record<string, number>,
+  metadataPatch?: Partial<MaterialMetadata>
+): Partial<MaterialMetadata> {
+  if (metadataPatch && "standardDesignation" in metadataPatch) return {};
+  if (current.metadata?.standardDesignationSource !== "catalogue") return {};
+  if (sameComposition(current.composition, nextComposition)) return {};
+  return { standardDesignation: "", standardDesignationSource: undefined };
+}
+
+/**
+ * Version 2: drop the heuristic property numbers and the designations the threshold rules made up. A record whose
+ * composition is exactly a catalogue preset keeps that preset's designation; any other designation the rules could
+ * have produced is cleared; anything else (typed by the user) is kept.
+ */
+function withoutInventedDesignation(specimen: MaterialSpecimen): MaterialSpecimen {
+  const metadata = specimen.metadata;
+  if (!metadata || typeof metadata !== "object") return specimen;
+  const catalogue = catalogueDesignationFor(specimen.composition);
+  if (catalogue !== null && specimen.unit !== "at_pct") {
+    return { ...specimen, metadata: { ...metadata, standardDesignation: catalogue, standardDesignationSource: "catalogue" } };
+  }
+  if (AUTO_ASSIGNED_DESIGNATIONS.has(metadata.standardDesignation)) {
+    const cleared: MaterialMetadata = { ...metadata, standardDesignation: "" };
+    delete cleared.standardDesignationSource;
+    return { ...specimen, metadata: cleared };
+  }
+  return specimen;
+}
+
+/**
+ * Version 1 recomputed hardness_HV (the removed unsourced YS/x rules). Version 2 nulls the composition-heuristic
+ * properties (liquidus ... elongation), recomputes HV without them (Unavailable) and clears invented designations.
+ */
 export function migrateMaterialStoreState(persisted: unknown, version: number): unknown {
-  if (version >= 1 || !persisted || typeof persisted !== "object") return persisted;
+  if (version >= MATERIAL_STORE_VERSION || !persisted || typeof persisted !== "object") return persisted;
   const state = persisted as Record<string, unknown>;
-  // Every specimen-like entry is recomputed; one without a yield strength gets Unavailable ("no yield strength" or the
-  // class reason) instead of keeping its stale HV. Non-objects pass through.
+  const isSpecimenLike = (s: unknown) =>
+    !!s && typeof s === "object" && !Array.isArray(s)
+    && ("hardness_HV" in (s as object) || "yieldStrength_25C_MPa" in (s as object) || "composition" in (s as object));
+  // Every specimen-like entry is recomputed; one without a yield strength gets Unavailable instead of keeping a stale
+  // HV. Non-objects pass through.
   const fix = (s: unknown) =>
-    s && typeof s === "object" && !Array.isArray(s) && ("hardness_HV" in (s as object) || "yieldStrength_25C_MPa" in (s as object))
-      ? withHardnessEstimate(s as MaterialSpecimen)
+    isSpecimenLike(s)
+      ? withHardnessEstimate(withoutInventedDesignation(withoutCompositionHeuristicProperties(s as MaterialSpecimen)))
       : s;
   return {
     ...state,
@@ -597,11 +565,12 @@ export const MATERIAL_PRESETS: Record<
     },
   },
   "custom-ni-superalloy": {
-    name: "René 850 High-T Marine Superalloy",
+    name: "Custom Ni Superalloy (example composition)",
     category: "Nickel Superalloy",
     base: "Ni",
-    standard: "Aerospace High-T Turbine Rotor",
-    description: "Gamma-prime strengthened superalloy engineered for marine turbine rotors operating at 850°C.",
+    // Not a catalogue alloy: no standard designation.
+    standard: "",
+    description: "Example gamma-prime-former-rich Ni composition for editing; not a catalogue alloy and not characterised.",
     composition: {
       Ni: 58.2,
       Cr: 16.5,
@@ -720,6 +689,7 @@ const DEFAULT_DERIVED = deriveProperties(
   {
     category: DEFAULT_PRESET.category,
     standardDesignation: DEFAULT_PRESET.standard,
+    standardDesignationSource: "catalogue",
     notes: DEFAULT_PRESET.description,
   }
 );
@@ -750,13 +720,14 @@ export const useMaterialStore = create<MaterialStore>()(
         const current = get().activeMaterialSpecimen;
         const resolvedComp = typeof newComposition === "function" ? newComposition({ ...current.composition }) : newComposition;
         if (!isValidCompositionInput(resolvedComp)) return;
+        const designationPatch = designationAfterCompositionEdit(current, resolvedComp, metadataPatch);
         // Atomic-percent edits retain their unit and identity; weight-percent models are not evaluated.
         if (current.unit === "at_pct") {
-          const next: MaterialSpecimen = withHardnessEstimate({...current,composition:resolvedComp,name:customName||current.name,sourceTab,lastModified:Date.now(),isCustomModified:true,metadata:{...current.metadata,...metadataPatch,source:"Atomic-percent composition; weight-percent property estimates unresolved"}});
+          const next: MaterialSpecimen = withHardnessEstimate({...current,composition:resolvedComp,name:customName||current.name,sourceTab,lastModified:Date.now(),isCustomModified:true,metadata:{...current.metadata,...metadataPatch,...designationPatch,source:"Atomic-percent composition; weight-percent property estimates unresolved"}});
           set({activeMaterialSpecimen:next,activeSpecimen:next});
           return;
         }
-        const updatedMetadata = { ...current.metadata, ...metadataPatch, lastModified: Date.now() };
+        const updatedMetadata = { ...current.metadata, ...metadataPatch, ...designationPatch, lastModified: Date.now() };
         const derived = deriveProperties(resolvedComp, customName || current.name, undefined, updatedMetadata);
 
         const nextSpecimen: MaterialSpecimen = {
@@ -785,6 +756,7 @@ export const useMaterialStore = create<MaterialStore>()(
             compositionUnit: nextSpecimen.unit,
             compositionInterpretation: "nominal",
             baseMetal: nextSpecimen.metadata.baseMetal as any,
+            // null: unavailable (no validated composition-to-property model), never a heuristic number.
             yieldStrength: nextSpecimen.yieldStrength_25C_MPa,
             tensileStrength: nextSpecimen.uts_25C_MPa,
             youngsModulus: nextSpecimen.youngsModulus_GPa,
@@ -806,7 +778,8 @@ export const useMaterialStore = create<MaterialStore>()(
               activationEnergy_kJ_mol: 285,
               preExponential_k0: 1.2e-4,
               solvusTemp_C: nextSpecimen.solvus_C,
-              criticalTemp_Ac3_C: nextSpecimen.solvus_C + 50,
+              // Was solvus + 50 (and null + 50 = 50 once solvus became unavailable): not derived.
+              criticalTemp_Ac3_C: null,
               solidusTemp_C: nextSpecimen.solidus_C,
               precipitateType: "Intermetallic / Carbides",
               initialPrecipVolFrac: 15,
@@ -823,7 +796,8 @@ export const useMaterialStore = create<MaterialStore>()(
               measuredYield_MPa: nextSpecimen.yieldStrength_25C_MPa,
               measuredUTS_MPa: nextSpecimen.uts_25C_MPa,
               workHardeningExponent_n: 0.15,
-              strengthCoefficient_K_MPa: nextSpecimen.uts_25C_MPa * 1.45,
+              // Was UTS x 1.45 on the heuristic UTS: unavailable.
+              strengthCoefficient_K_MPa: null,
               cahoon_m: 0.33,
               tabor_c: 2.95,
               taborConstraintFactor_c: 2.95,
@@ -914,9 +888,14 @@ export const useMaterialStore = create<MaterialStore>()(
 
       updateMetadata: (metadataPatch) => {
         const current = get().activeMaterialSpecimen;
+        const typedDesignation =
+          "standardDesignation" in metadataPatch && !("standardDesignationSource" in metadataPatch)
+            ? { standardDesignationSource: "user" as const }
+            : {};
         const nextMetadata: MaterialMetadata = {
           ...current.metadata,
           ...metadataPatch,
+          ...typedDesignation,
           lastModified: Date.now(),
         };
         const next: MaterialSpecimen = {
@@ -958,6 +937,7 @@ export const useMaterialStore = create<MaterialStore>()(
         const derived = deriveProperties(preset.composition, preset.name, preset.base, {
           category: preset.category,
           standardDesignation: preset.standard,
+          standardDesignationSource: "catalogue",
           notes: preset.description,
         });
         const nextSpecimen: MaterialSpecimen = {
@@ -971,6 +951,7 @@ export const useMaterialStore = create<MaterialStore>()(
         get().updateComposition(preset.composition, preset.name, {
           category: preset.category,
           standardDesignation: preset.standard,
+          standardDesignationSource: "catalogue",
           notes: preset.description,
         }, "Preset Selector");
       },
@@ -1030,7 +1011,7 @@ export const useMaterialStore = create<MaterialStore>()(
     }),
     {
       name: "metallix-material-specimen-store",
-      version: 1,
+      version: MATERIAL_STORE_VERSION,
       migrate: (persisted, version) => migrateMaterialStoreState(persisted, version) as MaterialStore,
       merge: (persisted, current) => mergeMaterialStoreState(persisted, current),
     }

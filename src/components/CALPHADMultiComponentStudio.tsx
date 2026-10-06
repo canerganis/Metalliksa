@@ -704,7 +704,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
               </span>
             </div>
             <p className="text-[11px] text-slate-400 mt-0.5">
-              Source: <span className="text-slate-300 font-semibold">{activeSpecimen.sourceTab}</span> • Liquidus: <span className="text-amber-300 font-semibold">{activeSpecimen.liquidus_C}°C</span> • Solidus: <span className="text-emerald-300 font-semibold">{activeSpecimen.solidus_C}°C</span> • Yield (25°C): <span className="text-purple-300 font-semibold">{activeSpecimen.yieldStrength_25C_MPa} MPa</span>
+              Source: <span className="text-slate-300 font-semibold">{activeSpecimen.sourceTab}</span> • <span data-testid="calphad-specimen-properties-unavailable">Specimen liquidus, solidus and yield strength: unavailable (not computed from composition); liquidus/solidus come only from the calculation in this studio.</span>
             </p>
           </div>
         </div>

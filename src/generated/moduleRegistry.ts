@@ -3024,7 +3024,7 @@ export const MODULE_REGISTRY = {
       "owner": "unassigned (needs maintainer)",
       "workspace": "materials",
       "label": "Composition Editor",
-      "description": "Edit and normalise the active specimen's composition (wt%) with simple composition-based estimates; no inverse design.",
+      "description": "Edit and normalise the active specimen's composition (wt%); computes a rule-of-mixtures density only (no property estimates, no inverse design).",
       "next": "phase-diagram",
       "maturity": "Research",
       "navigation": "listed",
@@ -3307,30 +3307,6 @@ export const MODULE_REGISTRY = {
             "transportValues": {},
             "transportObjects": {}
           }
-        },
-        {
-          "id": "save-current-specimen",
-          "method": null,
-          "route": null,
-          "authority": {
-            "kind": "browser-local",
-            "script": null,
-            "workerMethod": null,
-            "timeoutMs": null,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": "AlloyBuilder calls browser Zustand actions directly; this operation has no server route or execution deadline."
-          },
-          "input": [],
-          "undeclaredInput": [],
-          "output": {
-            "fields": [
-              "savedSpecimens"
-            ],
-            "statusKey": null,
-            "transportValues": {},
-            "transportObjects": {}
-          }
         }
       ],
       "validityDomain": null,
@@ -3345,7 +3321,7 @@ export const MODULE_REGISTRY = {
           "productionReady",
           "airworthy"
         ],
-        "note": "No oracle is present. The browser editor's composition-based KPI display is explicitly unvalidated and remains screening-only; software contract checks do not establish physical validation."
+        "note": "No oracle is present. The editor computes only a rule-of-mixtures density from the shown composition; liquidus/solidus and strength are displayed as unavailable. Software contract checks do not establish physical validation."
       },
       "lifecycle": {
         "backgroundWork": "none",
@@ -3367,20 +3343,21 @@ export const MODULE_REGISTRY = {
         "String-valued arguments are recorded by their actual key in undeclaredInput because the SDK value types do not include strings. Category and route choices can include the active value at runtime, so no closed enum is inferred.",
         "Add Element calls setElement with the selected symbol and a fixed 1.0; the editable number and slider call setElement with the current symbol and value. The numeric control has min=0/max=100/step=0.1; the slider max is 100 for the active base metal and 35 otherwise. The store rejects non-finite, negative and over-100 content before modifying state or deriving estimates.",
         "normalizeComposition is a separate click action; invalid entries or a non-finite/non-positive total are rejected before scaling by 100/total. JSON import validates composition before derivation and rejects exponent overflow; invalid maps leave both active specimen aliases unchanged.",
-        "Preset buttons call loadPreset(key); Reset calls resetToDefault; Save calls saveCurrentSpecimen with a generated time label and updates savedSpecimens. The save confirmation is cleared by a 2500 ms setTimeout. Lifecycle vocabulary has no timeout resource, so this UI timer is recorded here and is not mislabeled as an interval or background job.",
+        "Preset buttons call loadPreset(key), which sets the preset's catalogue designation; editing the composition away from that preset clears it. Reset calls resetToDefault. The editor has no snapshot button: savedSpecimens had no view, so the Save action was removed from the UI.",
         "The component destructures updateComposition but does not call it directly; edits currently use setElement/removeElement and the separate metadata setters. Weight-percent updates also publish an active pipeline payload; atomic-percent updates return before that pipeline sync.",
-        "Name/category/designation/route, composition edits, preset, reset, normalize, and save are separate browser-local actions; the component does not submit one combined specimen-editor request.",
-        "The visible density/thermal/mechanical KPI panel is composition-derived and states 'Composition-based estimate; unvalidated.' No physical oracle is present."
+        "Name/category/designation/route, composition edits, preset, reset and normalize are separate browser-local actions; the component does not submit one combined specimen-editor request.",
+        "The KPI panel shows the inverse rule-of-mixtures density (unavailable for at.% or an element without a tabulated density), states liquidus/solidus/yield/UTS as unavailable (no validated composition-to-property model), and shows the user's shared LPBF process settings. No physical oracle is present."
       ],
       "sourceRefs": [
-        "src/components/AlloyBuilder.tsx:38-80#activeMaterialSpecimen",
-        "src/components/AlloyBuilder.tsx:70-80#saveCurrentSpecimen",
-        "src/components/AlloyBuilder.tsx:145-160#resetToDefault",
-        "src/components/AlloyBuilder.tsx:183-229#Specimen Name",
-        "src/components/AlloyBuilder.tsx:54-58#categoryOptions",
-        "src/components/AlloyBuilder.tsx:239-253#loadPreset(key)",
-        "src/components/AlloyBuilder.tsx:263-360#Auto-Normalize to 100%",
-        "src/components/AlloyBuilder.tsx:422#Composition-based estimate; unvalidated",
+        "src/components/AlloyBuilder.tsx:31-61#activeMaterialSpecimen",
+        "src/components/AlloyBuilder.tsx:110-115#resetToDefault",
+        "src/components/AlloyBuilder.tsx:136-185#Specimen Name",
+        "src/components/AlloyBuilder.tsx:46-47#categoryOptions",
+        "src/components/AlloyBuilder.tsx:195-210#loadPreset(key)",
+        "src/components/AlloyBuilder.tsx:215-245#Auto-Normalize to 100%",
+        "src/components/AlloyBuilder.tsx:55-62#ruleOfMixturesDensity",
+        "src/components/AlloyBuilder.tsx:340-346#COMPOSITION_PROPERTY_UNAVAILABLE_NOTE",
+        "src/utils/compositionPropertyAvailability.ts::ruleOfMixturesDensity",
         "src/store/useMaterialStore.ts:27-89#composition: Record<string, number>",
         "src/store/useMaterialStore.ts:94-119#Core Actions",
         "src/store/useMaterialStore.ts::isValidCompositionInput",

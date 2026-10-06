@@ -31,12 +31,13 @@ export interface PipelineMaterialPayload {
   originalComposition?: Record<string, number | { min: number; max: number }>;
   baseMetal: "Ni" | "Fe" | "Ti" | "Al" | "Cu" | "Co" | "Mg" | "Other";
   
-  // Mechanical & Physical Properties
-  yieldStrength: number;
-  tensileStrength: number;
-  youngsModulus: number;
+  // Mechanical & Physical Properties. null = unavailable: the shared specimen stores publish null here because they
+  // have no validated composition-to-property model (catalogue records carry their tabulated values).
+  yieldStrength: number | null;
+  tensileStrength: number | null;
+  youngsModulus: number | null;
   density: number;
-  elongation: number;
+  elongation: number | null;
   hardness: string;
   /** null = unavailable (no reported/convertible hardness and no verified relation for this alloy class). */
   hardnessHV: number | null;
@@ -66,11 +67,12 @@ export interface PipelineMaterialPayload {
 
   // Phase Diagram & ICME Parameters
   icmeProfile: {
-    liquidusTemp_C: number;
-    solidusTemp_C: number;
+    /** null = unavailable (not computed from composition). */
+    liquidusTemp_C: number | null;
+    solidusTemp_C: number | null;
     carbonEquivalent?: number;
     criticalAc3_C?: number;
-    solvusTemp_C: number;
+    solvusTemp_C: number | null;
     dominantPhases: string[];
   };
 }

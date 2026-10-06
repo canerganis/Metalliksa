@@ -34,6 +34,7 @@ import { MeltPoolExtentNotice } from "../MeltPoolExtentNotice";
 import { isComputedMeltPoolExtent, meltPoolExtentInfo } from "../../utils/meltPoolExtentStatus";
 import { BuildJobKineticsPanel } from "./BuildJobKineticsPanel";
 import { BuildJobMicrostructurePanel } from "./BuildJobMicrostructurePanel";
+import { stressProxyYieldCheck } from "../../utils/residualStressYieldCheck";
 
 interface Props {
   onOpenSlicer?: () => void;
@@ -91,14 +92,6 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
 
   const litPoints = useMemo(() => literatureOverlayPoints(materials.alloyId), [materials.alloyId]);
 
-  const yieldOk =
-    literature && literature.record.properties.yieldStrength_MPa
-      ? specimen.yieldStrength_25C_MPa >= literature.record.properties.yieldStrength_MPa * 0.9
-      : null;
-  const utsOk =
-    literature && literature.record.properties.ultimateTensileStrength_MPa
-      ? specimen.uts_25C_MPa >= literature.record.properties.ultimateTensileStrength_MPa * 0.9
-      : null;
 
   return (
     <div className="space-y-4 font-mono">
@@ -509,11 +502,11 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
               )}
               {!liveMesh && lpbf.cadAssetName && (
                 <p className="text-[10px] text-amber-300/80">
-                  Filename {lpbf.cadAssetName} is on the twin but the triangle buffer is session-only — re-upload the STL in the slicer to slice the live mesh.
+                  Filename {lpbf.cadAssetName} is recorded in the shared process vector but the triangle buffer is session-only — re-upload the STL in the slicer to slice the uploaded mesh.
                 </p>
               )}
               {!liveMesh && !lpbf.cadAssetName && (
-                <p className="text-[10px] text-amber-300/80">No uploaded STL on the twin — using a demo CAD preset. Open the slicer to bind a CAD file.</p>
+                <p className="text-[10px] text-amber-300/80">No uploaded STL in the shared process vector — using a demo CAD preset. Open the slicer to bind a CAD file.</p>
               )}
             </div>
           )}
@@ -535,11 +528,9 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
                   ok={thermal.defectDiagnostics.distortionIndex < 0.65}
                   hint="Screening threshold < 0.65"
                 />
-                <Metric
-                  label="Stress proxy (MPa); unresolved field"
-                  value={String(thermal.defectDiagnostics.effectiveResidualStress_MPa)}
-                  ok={thermal.defectDiagnostics.effectiveResidualStress_MPa < specimen.yieldStrength_25C_MPa * 0.7}
-                  hint={`< 0.7 Rp0.2 (${Math.round(specimen.yieldStrength_25C_MPa * 0.7)})`}
+                <StressProxyMetric
+                  stress_MPa={thermal.defectDiagnostics.effectiveResidualStress_MPa}
+                  yieldStrength_MPa={specimen.yieldStrength_25C_MPa}
                 />
                 <Metric label="Peak T (°C)" value={String(thermal.hydrodynamicsAndRecoil.peakTemperature_C)} ok />
                 <Metric label="Preheat (°C)" value={String(lpbf.preheatTemp_C)} ok={lpbf.preheatTemp_C >= 80} />
@@ -556,7 +547,7 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
         <div className="rounded-2xl border border-[#1e2d46] bg-[#090e18] p-3.5 space-y-3">
           <div className="flex items-center gap-2">
             <Database className="w-4 h-4 text-sky-400" />
-            <h3 className="text-xs font-bold text-white">Literature context and estimated specimen properties</h3>
+            <h3 className="text-xs font-bold text-white">Literature context (specimen properties unavailable)</h3>
             <button type="button" onClick={onOpenGroundTruth} className="ml-auto text-[10px] text-sky-300 underline">
               Experimental comparison
             </button>
@@ -579,14 +570,14 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
                   ok={literature.record.properties.relativeDensity_pct >= 99.5}
                 />
                 <Metric
-                  label="Estimated Rp0.2 / literature"
-                  value={`${specimen.yieldStrength_25C_MPa} / ${literature.record.properties.yieldStrength_MPa ?? "—"}`}
-                  hint="Context only; not an acceptance test"
+                  label="Literature Rp0.2 (MPa)"
+                  value={String(literature.record.properties.yieldStrength_MPa ?? "—")}
+                  hint="Specimen Rp0.2 unavailable; no comparison"
                 />
                 <Metric
-                  label="Estimated UTS / literature"
-                  value={`${specimen.uts_25C_MPa} / ${literature.record.properties.ultimateTensileStrength_MPa ?? "—"}`}
-                  hint="Context only; not an acceptance test"
+                  label="Literature UTS (MPa)"
+                  value={String(literature.record.properties.ultimateTensileStrength_MPa ?? "—")}
+                  hint="Specimen UTS unavailable; no comparison"
                 />
               </div>
               {htCohorts.length > 0 && (
@@ -773,13 +764,23 @@ export const VerdictBanner: React.FC<{
   </div>
 );
 
-const Metric: React.FC<{ label: string; value: string; ok?: boolean; hint?: string }> = ({ label, value, ok = true, hint }) => (
-  <div className={`rounded-lg border px-2 py-1.5 ${ok ? "border-[#162032] bg-[#060a12]" : "border-amber-500/40 bg-amber-500/10"}`}>
+/** ok = null: no pass/fail is possible (dashed, neutral), distinct from a passed check. */
+const Metric: React.FC<{ label: string; value: string; ok?: boolean | null; hint?: string }> = ({ label, value, ok = true, hint }) => (
+  <div
+    data-check={ok === null ? "unavailable" : ok ? "ok" : "flag"}
+    className={`rounded-lg border px-2 py-1.5 ${ok === null ? "border-dashed border-slate-700 bg-[#060a12]" : ok ? "border-[#162032] bg-[#060a12]" : "border-amber-500/40 bg-amber-500/10"}`}
+  >
     <div className="text-[9px] text-slate-500 uppercase">{label}</div>
     <div className="text-[12px] text-white font-bold truncate">{value}</div>
     {hint && <div className="text-[9px] text-slate-500">{hint}</div>}
   </div>
 );
+
+/** Stress proxy vs 0.7 Rp0.2: pass/fail only with a real yield strength, otherwise explicitly unavailable. */
+export const StressProxyMetric: React.FC<{ stress_MPa: number; yieldStrength_MPa: number | null | undefined }> = ({ stress_MPa, yieldStrength_MPa }) => {
+  const check = stressProxyYieldCheck(stress_MPa, yieldStrength_MPa);
+  return <Metric label="Stress proxy (MPa); unresolved field" value={String(stress_MPa)} ok={check.ok} hint={check.hint} />;
+};
 
 const Tiny: React.FC<{ label: string; value: string; icon?: React.ReactNode }> = ({ label, value, icon }) => (
   <div className="rounded-lg border border-[#162032] bg-[#060a12] px-2 py-1.5">

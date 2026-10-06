@@ -24,7 +24,11 @@ test('Alloy Builder context describes composition estimates independently of pro
   assert.match(text, /g\/cm³.*°C.*MPa/);
   assert.match(text, /current shared process settings.*retained/i);
   assert.match(text, /no CALPHAD, DFT or LPBF simulation runs/i);
-  assert.match(text, /unvalidated.*fallback/i);
+  // No invented temperatures/strengths or composition-derived process window are presented as estimates.
+  assert.match(text, /no temperature, strength or process window is derived from composition/i);
+  assert.match(text, /Unavailable here: liquidus\/solidus °C, yield strength and UTS MPa/);
+  assert.match(text, /density assumes ideal mixing.*not measurements/i);
+  assert.doesNotMatch(text, /starting estimate|fallback values/i);
   assert.doesNotMatch(text, /501 W|1701 mm\/s|151 µm|constitutive assumptions|predicted behavior/);
   // This correction is scoped to the editor; existing process context stays dynamic.
   assert.notDeepEqual(buildScientificContext('3d-distortion-lab', specimen),
@@ -38,7 +42,7 @@ test('Alloy Builder context does not promote retained atomic-percent properties 
   const atomic: ActiveSpecimenState = { ...defaultSpecimen, unit: 'at_pct', composition: { Ni: 50, Cr: 50 } };
   const context = buildScientificContext('alloy-builder', atomic);
   assert.match(context.interpretation, /atomic-percent edits preserve their unit/i);
-  assert.match(context.interpretation, /do not recompute weight-percent property estimates/i);
+  assert.match(context.interpretation, /do not recompute weight-percent values/i);
   assert.match(context.limitation, /retained values.*not.*newly computed.*atomic-percent/i);
   assert.match(context.limitation, /not measurements.*phase-equilibrium.*qualified process/i);
   assert.match(context.limitation, /hardness.*unavailable/i);
@@ -75,7 +79,7 @@ test('Elastic Constants context describes form inputs independently of the share
   assert.equal(generic.title, 'Scientific interpretation for this module');
   assert.match(generic.observation, /Shared IN718 fixture; 280 W/);
   assert.deepEqual(generic.variables, [
-    'Composition: Ni 52%, Cr 19%', 'Density: 8.2 g/cm³', 'Solidification range: 80 °C',
+    'Composition: Ni 52%, Cr 19%', 'Density: 8.2 g/cm³', 'Solidification range: unavailable (not computed from composition)',
   ]);
 });
 
@@ -119,4 +123,19 @@ test('each module family gets its own context; unrelated modules never fall into
     assert.notEqual(title(id), microstructure, `${id} must not show the LPBF microstructure context`);
     assert.equal(title(id), 'Scientific interpretation for this module', id);
   }
+});
+
+test('phase and evidence contexts never print specimen liquidus, solidus or yield numbers', () => {
+  const specimen = {
+    name: 'Ni alloy fixture', baseMetal: 'Ni', unit: 'wt%', sourceTab: 'database',
+    composition: { Ni: 52, Cr: 19 }, density_gcm3: 8.19, freezingRange_C: 80, yieldStrength_25C_MPa: 1000,
+    liquidus_C: 1336, solidus_C: 1260, solvus_C: 900, stablePhases: ['FCC'],
+    lpbf: { laserPower_W: 280, scanSpeed_mms: 940, hatch_um: 100, layer_um: 40, thermalConductivity_k_WmK: 11, preheatTemp_C: 80, processSeed: 7 },
+    xrd: { crystalSystem: 'FCC', spaceGroup: 'Fm-3m' },
+  } as unknown as ActiveSpecimenState;
+  for (const id of ['phase-diagram', 'research-hub', 'database'] as const) {
+    const vars = buildScientificContext(id, specimen).variables.join(' ');
+    assert.doesNotMatch(vars, /1336|1260|900|1000 MPa|80 °C/, id);
+  }
+  assert.match(buildScientificContext('phase-diagram', specimen).variables.join(' '), /Liquidus \/ solidus \/ solvus: unavailable/);
 });

@@ -41,6 +41,10 @@ test("rehydration drops malformed legacy active material and retains valid saved
   assert.notEqual(active.liquidus_C, malformed.liquidus_C);
   assert.deepEqual(useMaterialStore.getState().savedSpecimens.map((item) => item.name), ["valid saved alloy"]);
   assert.deepEqual(useMaterialStore.getState().savedSpecimens[0].composition, {Ni: 70, Cr: 60});
-  assert.deepEqual(useMaterialStore.getState().savedSpecimens[0], validSaved);
+  // Kept as persisted except the version-2 migration: the heuristic liquidus is dropped and HV is recomputed.
+  const saved = useMaterialStore.getState().savedSpecimens[0];
+  assert.equal(saved.liquidus_C, null);
+  assert.equal(saved.hardness_HV, null);
+  for (const [key, value] of Object.entries(validSaved).filter(([key]) => key !== "liquidus_C")) assert.deepEqual((saved as unknown as Record<string, unknown>)[key], value, key);
   assert.strictEqual(useMaterialStore.getState().activeSpecimen, active);
 });

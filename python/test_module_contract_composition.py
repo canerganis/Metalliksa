@@ -19,7 +19,7 @@ class CompositionContractTests(unittest.TestCase):
             (contract.id, contract.workspace, contract.label, contract.description,
              contract.next, contract.maturity),
             ("alloy-builder", "materials", "Composition Editor",
-             "Edit and normalise the active specimen's composition (wt%) with simple composition-based estimates; no inverse design.",
+             "Edit and normalise the active specimen's composition (wt%); computes a rule-of-mixtures density only (no property estimates, no inverse design).",
              "phase-diagram", "Research"),
         )
         self.assertEqual(contract.seed_derived, ("label", "description", "next", "maturity"))
@@ -38,13 +38,13 @@ class CompositionContractTests(unittest.TestCase):
             tuple(operations),
             ("update-specimen-name", "update-category", "update-standard-designation",
              "update-manufacturing-route", "add-element", "set-element-content", "remove-element",
-             "normalize-composition", "load-preset", "reset-to-default", "save-current-specimen"),
+             "normalize-composition", "load-preset", "reset-to-default"),
         )
         self.assertTrue(all(operation.route is None and operation.method is None for operation in operations.values()))
         self.assertTrue(all(operation.authority.kind == "browser-local" for operation in operations.values()))
         self.assertTrue(all(operation.authority.timeout_ms is None for operation in operations.values()))
         self.assertEqual(operations["update-category"].undeclared_input, ("category",))
-        self.assertEqual(operations["save-current-specimen"].output.fields, ("savedSpecimens",))
+        self.assertNotIn("save-current-specimen", operations)  # no snapshot button: savedSpecimens had no view
 
     def test_percentage_type_and_store_input_bounds_are_declared(self):
         operation = next(op for op in COMPOSITION_OPERATIONS if op.id == "set-element-content")

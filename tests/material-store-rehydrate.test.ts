@@ -51,7 +51,7 @@ mem.set(
   JSON.stringify({ state: { activeMaterialSpecimen: ss316l, activeSpecimen: ss316l, savedSpecimens: [maraging, in718, lowAlloy, null] }, version: 0 })
 );
 
-test("version-0 blob rehydrates on store creation: saved specimens kept, HV recomputed, blob rewritten as version 1", async () => {
+test("version-0 blob rehydrates on store creation: saved specimens kept, HV recomputed, blob rewritten as version 2", async () => {
   const { useMaterialStore } = await import("../src/store/useMaterialStore");
   assert.equal(useMaterialStore.persist.hasHydrated(), true);
   const s = useMaterialStore.getState();
@@ -63,12 +63,21 @@ test("version-0 blob rehydrates on store creation: saved specimens kept, HV reco
   assert.equal(s.savedSpecimens[0].hardness_HV, null); // was 307: Ni 18.5 / Co 9 outside the low-alloy data set
   assert.match(s.savedSpecimens[0].hardnessHVNote ?? "", /outside the regression's data set/);
   assert.equal(s.savedSpecimens[1].hardness_HV, null); // was 406
-  assert.equal(s.savedSpecimens[2].hardness_HV, 379); // (1000 + 90.7) / 2.876; was 323
+  // Was 323 (YS/3.1), then 379 by inverting the regression on the persisted 1000 MPa. That yield came from the removed
+  // composition heuristic, so version 2 drops it and the in-scope steel has no yield strength to invert.
+  assert.equal(s.savedSpecimens[2].yieldStrength_25C_MPa, null);
+  assert.equal(s.savedSpecimens[2].hardness_HV, null);
+  assert.match(s.savedSpecimens[2].hardnessHVNote ?? "", /no yield strength/);
+  for (const x of [s.activeMaterialSpecimen, ...s.savedSpecimens]) {
+    assert.equal(x.uts_25C_MPa, null, x.name);
+    assert.equal(x.youngsModulus_GPa, null, x.name);
+    assert.equal(x.elongation_pct, null, x.name);
+  }
   assert.equal(typeof s.updateComposition, "function"); // actions come from the current store, not the blob
-  // Any later write stores version 1 with JSON null hardness.
+  // Any later write stores version 2 with JSON null hardness.
   s.updateName("AISI 316L renamed");
   const blob = JSON.parse(mem.get(STORAGE_KEY)!);
-  assert.equal(blob.version, 1);
+  assert.equal(blob.version, 2);
   assert.equal(blob.state.activeMaterialSpecimen.hardness_HV, null);
   assert.equal(blob.state.savedSpecimens.length, 3);
 });
