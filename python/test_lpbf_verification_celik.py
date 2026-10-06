@@ -130,7 +130,7 @@ class SolidificationResolutionLT3(unittest.TestCase):
 
     def test_label_present_and_never_mesh_verified(self):
         for r in (self.cold, self.hot):
-            res = r["numericalDiagnostics"]["solidificationResolution"]
+            res = r["solidificationResolution"]
             self.assertEqual(res["methodId"], "melt-pool-cell-count-v1")
             self.assertFalse(res["meshVerified"])
             self.assertEqual(res["gradientStencilCells"], 2)
@@ -138,7 +138,7 @@ class SolidificationResolutionLT3(unittest.TestCase):
 
     def test_status_follows_cell_count(self):
         for r in (self.cold, self.hot):
-            res = r["numericalDiagnostics"]["solidificationResolution"]
+            res = r["solidificationResolution"]
             if r["metrics"].get("thermalGradient_K_m") is None:
                 self.assertEqual(res["status"], "not-available")
             elif min(res["cellsAcrossWidth"], res["cellsAcrossDepth"]) < 2:
@@ -149,8 +149,8 @@ class SolidificationResolutionLT3(unittest.TestCase):
 
     def test_known_cases(self):
         # 10 W at 40 um does not melt; 60 W melts one cell deep and wide (the 2-cell stencil spans it).
-        self.assertEqual(self.cold["numericalDiagnostics"]["solidificationResolution"]["status"], "not-available")
-        self.assertEqual(self.hot["numericalDiagnostics"]["solidificationResolution"]["status"],
+        self.assertEqual(self.cold["solidificationResolution"]["status"], "not-available")
+        self.assertEqual(self.hot["solidificationResolution"]["status"],
                          "stencil-spans-melt-pool")
 
 

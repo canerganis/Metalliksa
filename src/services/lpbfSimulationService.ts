@@ -55,6 +55,12 @@ export interface CoreContractV2 {
 export type CoreContract = CoreContractV1 | CoreContractV2;
 export interface SimulationResult {
   coreContract?: CoreContract;
+  /** Wave B LT-3: G, R and cooling rate are single-mesh values; status says how many cells span the pool. */
+  solidificationResolution?: {
+    methodId: string; mesh_um: number; cellsAcrossWidth: number; cellsAcrossDepth: number;
+    gradientStencilCells: number; meshVerified: false;
+    status: "not-available" | "stencil-spans-melt-pool" | "single-mesh-unverified"; note: string;
+  };
   numericalDiagnostics?: {
     meltPoolExtraction?: string;
     overlapExtraction?: string;
@@ -63,12 +69,6 @@ export interface SimulationResult {
     sourceIntegration: string; stabilityLimit: string; minimumCapturedSourceFraction: number;
     maximumSourceRenormalization: number; maximumSurfaceOffset_um: number;
     maximumTimestep_s: number; maximumEnthalpyIncrement_K: number; sourceTimestepRetries: number;
-    /** Wave B LT-3: G, R and cooling rate are single-mesh values; status says how many cells span the pool. */
-    solidificationResolution?: {
-      methodId: string; mesh_um: number; cellsAcrossWidth: number; cellsAcrossDepth: number;
-      gradientStencilCells: number; meshVerified: false;
-      status: "not-available" | "stencil-spans-melt-pool" | "single-mesh-unverified"; note: string;
-    };
     acceptedTimestepDistribution?: {
       methodId: "accepted-timestep-distribution-v1"; count: number; total_s: number; sumSquared_s2: number;
       mean_s: number; minimum_s: number; p50_s: number; p90_s: number; p99_s: number; maximum_s: number;

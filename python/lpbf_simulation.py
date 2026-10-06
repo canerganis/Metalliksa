@@ -806,7 +806,8 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
                 aspectRatio=best["depth_um"]/best["width_um"] if width else None,
                 trackOverlapRatio=overlap_metrics["trackOverlapRatio"] if overlap_metrics else None,
                 remeltingRatio=overlap_metrics["globalRemeltRatio"] if overlap_metrics else None)
-    # LT-3: G, R and cooling rate come from one mesh. Report how many cells span the pool; the
+    # LT-3: G, R and cooling rate come from one mesh. Report how many cells span the pool (a top-level
+    # result label, not part of numericalDiagnostics, which the reference parity cases pin bit-exact); the
     # gradient at a liquidus crossing averages the two adjacent face differences (a 2-cell stencil,
     # active_gradient_components), so a pool fewer than 2 cells deep or wide puts the whole stencil
     # across the pool boundary. No literature cell-count threshold is claimed.
@@ -871,7 +872,8 @@ def transient(p, m, report=lambda *args: None, artifact_dir=None, final_state_ob
                    if rectangular_corridor else {}),
                 **({"barePlateSectionFieldArtifact": section_field_artifact}
                    if section_field_artifact is not None else {}),
-                numericalDiagnostics=dict(**peak_diagnostics, solidificationResolution=solidification_resolution, overlapExtraction=OVERLAP_MODEL_ID if overlap_metrics else None, sourceIntegration=SOURCE_INTEGRATION, solidificationExtraction="linear-liquidus-crossing-v1",
+                solidificationResolution=solidification_resolution,
+                numericalDiagnostics=dict(**peak_diagnostics, overlapExtraction=OVERLAP_MODEL_ID if overlap_metrics else None, sourceIntegration=SOURCE_INTEGRATION, solidificationExtraction="linear-liquidus-crossing-v1",
                     stabilityLimit="local-conductance-row-sum", minimumCapturedSourceFraction=minimum_capture,
                     maximumSourceRenormalization=1/minimum_capture, maximumSurfaceOffset_um=surface_offset,
                     maximumTimestep_s=max_dt, maximumEnthalpyIncrement_K=max_increment,
