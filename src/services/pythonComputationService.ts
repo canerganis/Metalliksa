@@ -1391,7 +1391,7 @@ export interface PythonSTLSlicerResult {
   };
 }
 
-/** "advisory": reported but never changes the verdict (recoater / distortion: parameter-independent alloy/layer index). */
+/** "advisory": reported but never changes the verdict (recoater / distortion: alloy/layer index, independent of P, v and hatch). */
 export type PythonLpbfGateStatus = "pass" | "warn" | "fail" | "unavailable" | "advisory";
 
 export interface PythonLpbfScreeningGate {

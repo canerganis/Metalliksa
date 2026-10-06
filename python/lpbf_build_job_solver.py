@@ -280,8 +280,8 @@ GEOMETRY_DEPENDENT_GATES = ("lof_tang", "lof_wh", "lof_dt", "balling")
 # not of P, v or hatch, so it cannot discriminate between process parameter sets.
 ADVISORY_GATES = ("recoater", "distortion")
 PARAMETER_INDEPENDENT_ADVISORY_NOTE = (
-    "parameter-independent alloy/layer advisory: the frozen distortion index depends only on alloy "
-    "properties, preheat and layer thickness (not on P, v or hatch); it does not change the verdict"
+    "alloy/layer advisory independent of P, v and hatch: the frozen distortion index depends only on "
+    "alloy properties, preheat and layer thickness (not on P, v or hatch); it does not change the verdict"
 )
 BALLING_SCREEN_NOTE = (
     "steady-Rosenthal aspect-ratio screen (frozen L/W > 3.8 flag), not a demonstrated balling "

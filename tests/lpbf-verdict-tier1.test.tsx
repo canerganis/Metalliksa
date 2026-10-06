@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
-import { BlockingGateSummary, formatIterationGates } from "../src/components/LpbfBayesianOptimizerLab";
+import { BlockingGateSummary, formatIterationAspectRatio, formatIterationGates } from "../src/components/LpbfBayesianOptimizerLab";
 import { toActionableReason } from "../src/utils/lpbfActionableReasons";
 import type { PythonBayesianOptimizationResult } from "../src/services/pythonComputationService";
 
@@ -28,6 +28,24 @@ test("per-iteration gate cell separates failing, risk and advisory-only gates", 
   assert.equal(formatIterationGates({ ...d, blockingGates: [], riskGates: [], advisoryGates: [] }), "none");
 });
 
+test("L/W cell marks the heuristic fallback value as unavailable for non-computed extents", () => {
+  const d = {
+    blockingGates: [], riskGates: [], advisoryGates: [], reasons: [], extentStatus: "computed",
+    normalizedEnthalpy: 47.29, aspectRatio_L_over_W: 7.59, keyholeRisk: "High", keyholeHigh: true,
+  };
+  assert.equal(formatIterationAspectRatio(d), "7.59");
+  assert.equal(formatIterationAspectRatio({ ...d, extentStatus: "heuristic-width-fallback", aspectRatio_L_over_W: 2.1 }),
+    "2.1 (unavailable: heuristic-width-fallback)");
+  assert.equal(formatIterationAspectRatio({ ...d, aspectRatio_L_over_W: null }), "not returned");
+  assert.equal(formatIterationAspectRatio(undefined), "not returned");
+});
+
+test("per-iteration verdict reasons are rendered inline (details), not only in a title tooltip", () => {
+  const src = read("src/components/LpbfBayesianOptimizerLab.tsx");
+  assert.ok(!/title=\{d \? d\.reasons/.test(src));
+  assert.match(src, /<details[^>]*>\s*<summary[^>]*>Reasons \(\{d\.reasons\.length\}\)<\/summary>/);
+});
+
 test("all-zero run shows the dominant blocking gates and the frozen keyhole note", () => {
   const result = {
     success: true, alloyId: "in718", bestScore: 0, iterations: [], converged: false, elapsedMs: 1, nIterations: 20,
@@ -50,14 +68,14 @@ test("all-zero run shows the dominant blocking gates and the frozen keyhole note
 
 test("optimizer table has the failing-gate diagnostic columns", () => {
   const src = read("src/components/LpbfBayesianOptimizerLab.tsx");
-  for (const col of ["Failing gates", "Extent", "ΔH/hₛ", "L/W", "Keyhole flag"]) assert.match(src, new RegExp(`<th scope="col"[^>]*>${col}</th>`), col);
+  for (const col of ["Gates \\(fail / warn / advisory\\)", "Extent", "ΔH/hₛ", "L/W", "Keyhole flag"]) assert.match(src, new RegExp(`<th scope="col"[^>]*>${col}</th>`), col);
   assert.ok(src.includes("<BlockingGateSummary result={result} />"));
 });
 
 test("advisory reasons get no P/v action; balling screen still gets its action", () => {
-  const adv = "Advisory: inherent-strain distortion index 7.59 (≥0.65) — parameter-independent alloy/layer advisory: the frozen distortion index depends only on alloy properties, preheat and layer thickness (not on P, v or hatch); it does not change the verdict.";
+  const adv = "Advisory: inherent-strain distortion index 7.59 (≥0.65) — alloy/layer advisory independent of P, v and hatch: the frozen distortion index depends only on alloy properties, preheat and layer thickness (not on P, v or hatch); it does not change the verdict.";
   assert.equal(toActionableReason(adv), adv);
-  const rec = "Advisory: recoater crash / part curl flag High (distortion index 7.59 > 2.0) — parameter-independent alloy/layer advisory.";
+  const rec = "Advisory: recoater crash / part curl flag High (distortion index 7.59 > 2.0) — alloy/layer advisory independent of P, v and hatch.";
   assert.equal(toActionableReason(rec), rec);
   assert.match(toActionableReason("Plateau–Rayleigh balling screen: L/W = 7.59 (> 3.8) — steady-Rosenthal aspect-ratio screen."), /Action:/);
 });

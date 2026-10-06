@@ -1,7 +1,7 @@
 """Tier 1 build-job verdict policy (python/lpbf_build_job_solver.py compose_verdict).
 
 - The frozen balling flag (steady-Rosenthal L/W > 3.8) makes a verdict risky, never do-not-print.
-- Recoater / distortion flags are parameter-independent alloy/layer advisories: reported, never
+- Recoater / distortion flags are alloy/layer advisories independent of P, v and hatch: reported, never
   verdict-driving, never the dominant gate.
 - The keyhole rule (High and dH > 35 -> do-not-print) is unchanged.
 
@@ -163,6 +163,21 @@ class In718EndToEnd(unittest.TestCase):
         self.assertLessEqual(dh, 35.0)
         self.assertEqual(v["verdict"], "risky")
         self.assertEqual(v["blockingGates"], [])
+
+    def test_in718_280_940_ray_traced_absorptivity_path_is_keyhole_do_not_print(self):
+        # Runs the do-not-print branch on every machine: the frozen ray tracer is patched (not edited) to
+        # return the effective absorptivity it produced for IN718 / 80 um beam (0.588, recorded in the
+        # STATUS diagnosis for 280 W / 940 mm/s), so dH ~47.3 > 35 regardless of GPU availability.
+        import powder_bed_raytracer as pbr
+        with mock.patch.object(pbr, "calculate_powder_bed_absorptivity",
+                               return_value={"effective_absorptivity": 0.588}):
+            v, dh = self._check(solve_lpbf_build_job(dict(self.PAYLOAD)))
+        self.assertGreater(dh, 35.0)
+        self.assertEqual(v["verdict"], "do-not-print")
+        self.assertEqual(v["blockingGates"], ["keyhole"])
+        self.assertEqual(v["dominantGate"], "keyhole")
+        gates = {g["id"]: g["status"] for g in v["gates"]}
+        self.assertEqual([gid for gid, st in gates.items() if st == "fail"], ["keyhole"])
 
 
 if __name__ == "__main__":

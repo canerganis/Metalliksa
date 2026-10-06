@@ -36,6 +36,14 @@ export function formatIterationGates(d: PythonBayesianIterationDiagnostics): str
   return parts.length ? parts.join("; ") : "none";
 }
 
+/** L/W is only a verdict input when the extent was computed; otherwise it is the heuristic fallback value. */
+export function formatIterationAspectRatio(d: PythonBayesianIterationDiagnostics | undefined | null): string {
+  if (d == null || d.aspectRatio_L_over_W == null) return "not returned";
+  if (d.extentStatus === "computed") return String(d.aspectRatio_L_over_W);
+  if (d.extentStatus == null) return `${d.aspectRatio_L_over_W} (extent status not returned)`;
+  return `${d.aspectRatio_L_over_W} (unavailable: ${d.extentStatus})`;
+}
+
 const formatCounts = (m: Record<string, number> | undefined): string =>
   m && Object.keys(m).length ? Object.entries(m).map(([k, n]) => `${k} ×${n}`).join(", ") : "none";
 
@@ -308,7 +316,7 @@ export const LpbfBayesianOptimizerLab: React.FC = () => {
                   <table className="w-full whitespace-nowrap text-xs text-slate-300 [&_td]:pr-2 [&_th]:pr-2">
                     <caption className="sr-only">Per-iteration parameters, screening verdict, score and the gates behind the verdict</caption>
                     <thead className="text-slate-500 text-left">
-                      <tr><th scope="col">#</th><th scope="col">P (W)</th><th scope="col">v (mm/s)</th><th scope="col">h (µm)</th><th scope="col">t (µm)</th><th scope="col">Verdict</th><th scope="col">Score</th><th scope="col" className="px-1">Failing gates</th><th scope="col">Extent</th><th scope="col">ΔH/hₛ</th><th scope="col">L/W</th><th scope="col">Keyhole flag</th></tr>
+                      <tr><th scope="col">#</th><th scope="col">P (W)</th><th scope="col">v (mm/s)</th><th scope="col">h (µm)</th><th scope="col">t (µm)</th><th scope="col">Verdict</th><th scope="col">Score</th><th scope="col" className="px-1">Gates (fail / warn / advisory)</th><th scope="col">Extent</th><th scope="col">ΔH/hₛ</th><th scope="col">L/W</th><th scope="col">Keyhole flag</th></tr>
                     </thead>
                     <tbody>
                       {result.iterations.map(it => {
@@ -318,10 +326,22 @@ export const LpbfBayesianOptimizerLab: React.FC = () => {
                             <td>{it.iteration}</td><td>{it.params.laserPower_W}</td><td>{it.params.scanSpeed_mms}</td>
                             <td>{it.params.hatch_um}</td><td>{it.params.layer_um}</td>
                             <td>{it.verdict}</td><td className="font-mono">{it.score}</td>
-                            <td data-testid="optimizer-iter-gates" className="min-w-[16rem] whitespace-normal" title={d ? d.reasons.join(" | ") : undefined}>{d ? formatIterationGates(d) : "not returned"}</td>
+                            <td data-testid="optimizer-iter-gates" className="min-w-[16rem] whitespace-normal">
+                              {d ? (
+                                <>
+                                  <div>{formatIterationGates(d)}</div>
+                                  {d.reasons.length > 0 && (
+                                    <details className="mt-0.5">
+                                      <summary className="cursor-pointer text-slate-500">Reasons ({d.reasons.length})</summary>
+                                      <ul className="list-disc pl-4 text-slate-400">{d.reasons.map((r, i) => <li key={i}>{r}</li>)}</ul>
+                                    </details>
+                                  )}
+                                </>
+                              ) : "not returned"}
+                            </td>
                             <td className="font-mono">{d?.extentStatus ?? "not returned"}</td>
                             <td className="font-mono">{d?.normalizedEnthalpy ?? "not returned"}</td>
-                            <td className="font-mono">{d?.aspectRatio_L_over_W ?? "not returned"}</td>
+                            <td className="font-mono">{formatIterationAspectRatio(d)}</td>
                             <td>{d == null || d.keyholeHigh == null ? "not returned" : d.keyholeHigh ? "High" : "not High"}</td>
                           </tr>
                         );

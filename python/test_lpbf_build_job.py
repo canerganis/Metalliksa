@@ -439,16 +439,21 @@ def check_extent_status_consumers():
     assert comp["thermal"]["meltPoolGeometry"]["extentStatus"] == "computed"
     cv = comp["verdict"]
     # Tier 1 verdict policy: balling (steady-Rosenthal L/W screen) is risky, not do-not-print;
-    # recoater / distortion are advisories. Keyhole stays warn here (dH <= 35 on this path).
-    assert cv["verdict"] == "risky", cv["verdict"]
+    # recoater / distortion are advisories. The keyhole outcome depends on the absorptivity path of
+    # the frozen solver: flat-plate fallback gives dH ~30.8 (keyhole warn -> risky); the powder
+    # ray tracer, when it runs, gives dH ~47.6 (keyhole fail -> do-not-print, keyhole only).
+    dh = float(comp["thermal"]["processParameters"]["normalizedEnthalpy"])
+    keyhole_blocks = dh > 35.0
+    assert cv["verdict"] == ("do-not-print" if keyhole_blocks else "risky"), (dh, cv["verdict"])
     assert cv["geometryResolved"] is True and cv["verdictReason"] is None
     assert cv["unavailableGates"] == [] and cv["geometryIndependentFailGates"] == []
     assert {g["id"]: g["status"] for g in cv["gates"]} == {
-        "lof_tang": "pass", "lof_wh": "pass", "lof_dt": "pass", "keyhole": "warn",
+        "lof_tang": "pass", "lof_wh": "pass", "lof_dt": "pass", "keyhole": "fail" if keyhole_blocks else "warn",
         "balling": "warn", "literature_pv": "pass", "recoater": "advisory", "distortion": "advisory",
         "downskin": "pass"}, cv["gates"]
     assert cv["dominantGate"] == "keyhole"
-    assert cv["blockingGates"] == [] and cv["advisoryGates"] == ["recoater", "distortion"]
+    assert cv["blockingGates"] == (["keyhole"] if keyhole_blocks else []), (dh, cv["blockingGates"])
+    assert cv["advisoryGates"] == ["recoater", "distortion"]
     assert all("reason" not in g and g["measured"] is not None or g["id"] == "downskin" for g in cv["gates"])
     assert not any("not resolved" in r for r in cv["reasons"])
 
