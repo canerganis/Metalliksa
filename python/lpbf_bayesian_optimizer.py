@@ -103,49 +103,91 @@ class BayesianProcessOptimizer:
     @property
     def history(self): return list(self._history)
 
-def run_bayesian_optimization(alloy_id, param_bounds=None, n_iter=20, n_warmup=5, seed=42):
-    from four_alloy_materials import ALLOY_MATERIALS, resolve_alloy_id
+MAX_ITERATIONS = 30
+DEFAULT_BEAM_DIAMETER_UM = 80.0
+DEFAULT_PREHEAT_TEMP_C = 80.0
+
+
+def _refuse(kind, message):
+    return {'success': False, 'errorKind': kind, 'error': message}
+
+
+def run_bayesian_optimization(alloy_id, param_bounds=None, n_iter=20, n_warmup=5, seed=42,
+                              beam_diameter_um=DEFAULT_BEAM_DIAMETER_UM,
+                              preheat_temp_C=DEFAULT_PREHEAT_TEMP_C):
+    """Expected-improvement search over (P, v, h, t).
+
+    Objective (unchanged): three-level verdict score (compose_verdict -> _verdict_score) multiplied by the
+    normalised volumetric-rate proxy v*h/(v_max*h_max). Unknown alloys, invalid inputs and solver errors are
+    returned as explicit failures (errorKind 'validation' or 'solver'); nothing is silently substituted or
+    scored as 0.
+    """
+    from four_alloy_materials import resolve_alloy_id
     from lpbf_thermal_solver import calculate_meltpool_physics
     from lpbf_build_job_solver import compose_verdict
     from lpbf_screening_uq import _verdict_score as verdict_score
-    resolved=resolve_alloy_id(alloy_id) or 'in718'
-    mats=ALLOY_MATERIALS.get(resolved,ALLOY_MATERIALS['in718'])
-    thermal_mat=mats['thermal']
-    merged={**_DEFAULT_BOUNDS,**(param_bounds or {})}
-    v_max,h_max=merged['scanSpeed_mms'][1],merged['hatch_um'][1]
+    if alloy_id is None or str(alloy_id).strip() == '':
+        return _refuse('validation', 'alloyId is required; no default alloy is assumed.')
+    resolved = resolve_alloy_id(alloy_id)
+    if resolved is None:
+        return _refuse('validation', f"Unknown alloy '{alloy_id}': not resolvable by four_alloy_materials; no fallback alloy is used.")
+    try:
+        n_iter = int(n_iter); n_warmup = int(n_warmup)
+        beam = float(beam_diameter_um); preheat = float(preheat_temp_C)
+    except (TypeError, ValueError):
+        return _refuse('validation', 'nIterations, nWarmup, beamDiameter_um and preheatTemp_C must be numbers.')
+    if not (1 <= n_iter <= MAX_ITERATIONS):
+        return _refuse('validation', f'nIterations must be between 1 and {MAX_ITERATIONS} (got {n_iter}); it is not silently clamped.')
+    if n_warmup < 1:
+        return _refuse('validation', 'nWarmup must be at least 1.')
+    if not (math.isfinite(beam) and beam > 0):
+        return _refuse('validation', 'beamDiameter_um must be a positive finite number.')
+    if not (math.isfinite(preheat) and preheat >= 0):
+        return _refuse('validation', 'preheatTemp_C must be a finite number >= 0.')
+    merged = {**_DEFAULT_BOUNDS, **(param_bounds or {})}
+    try:
+        for k in _PARAM_KEYS:
+            lo, hi = float(merged[k][0]), float(merged[k][1])
+            if not (math.isfinite(lo) and math.isfinite(hi) and 0 < lo < hi):
+                raise ValueError(k)
+            merged[k] = (lo, hi)
+    except (TypeError, ValueError, KeyError, IndexError) as e:
+        return _refuse('validation', f'Invalid bounds for {e}: each needs finite 0 < min < max.')
+    v_max, h_max = merged['scanSpeed_mms'][1], merged['hatch_um'][1]
 
     def _obj(params):
-        try:
-            th=calculate_meltpool_physics(
-                material_name=resolved,
-                laser_power_W=float(params['laserPower_W']),
-                scan_speed_mm_s=float(params['scanSpeed_mms']),
-                beam_diameter_um=80.0,
-                preheat_temp_C=80.0,
-                layer_thickness_um=float(params['layer_um']),
-                hatch_spacing_um=float(params['hatch_um']),
-                laser_wavelength='IR_1064nm')
-            vd=compose_verdict(th,resolved)
-            vs=verdict_score(vd['verdict'])
-            prod=(float(params['scanSpeed_mms'])*float(params['hatch_um']))/(v_max*h_max)
-            return float(vs)*float(prod),vd['verdict']
-        except Exception as e:
-            return 0.0, str(e)
+        th = calculate_meltpool_physics(
+            material_name=resolved,
+            laser_power_W=float(params['laserPower_W']),
+            scan_speed_mm_s=float(params['scanSpeed_mms']),
+            beam_diameter_um=beam,
+            preheat_temp_C=preheat,
+            layer_thickness_um=float(params['layer_um']),
+            hatch_spacing_um=float(params['hatch_um']),
+            laser_wavelength='IR_1064nm')
+        vd = compose_verdict(th, resolved)
+        vs = verdict_score(vd['verdict'])
+        prod = (float(params['scanSpeed_mms']) * float(params['hatch_um'])) / (v_max * h_max)
+        return float(vs) * float(prod), vd['verdict']
 
-    opt=BayesianProcessOptimizer(resolved,lambda p:_obj(p)[0],
-                                  param_bounds=param_bounds,n_warmup=n_warmup,seed=seed)
-    t0=time.time(); iters=[]
-    for i in range(n_iter):
-        sug=opt.suggest_next(); sc,verd=_obj(sug); opt.observe(sug,sc)
-        iters.append({'iteration':i+1,'params':{k:round(sug[k],2) for k in _PARAM_KEYS},
-                      'score':round(sc,4),'verdict':verd})
-    elapsed=round((time.time()-t0)*1000.0,1)
-    best=opt.best_params()
-    recent=[it['score'] for it in iters[-5:]]
-    converged=len(recent)>=5 and (max(recent)-min(recent))<1e-3
-    return {'success':True,'alloyId':resolved,'bestParams':best['params'] if best else None,
-            'bestScore':round(max(it['score'] for it in iters),4) if iters else 0.0,
-            'iterations':iters,'converged':converged,'elapsedMs':elapsed,'nIterations':n_iter}
+    opt = BayesianProcessOptimizer(resolved, None, param_bounds=merged, n_warmup=n_warmup, seed=seed)
+    t0 = time.time(); iters = []
+    try:
+        for i in range(n_iter):
+            sug = opt.suggest_next(); sc, verd = _obj(sug); opt.observe(sug, sc)
+            iters.append({'iteration': i + 1, 'params': {k: round(sug[k], 2) for k in _PARAM_KEYS},
+                          'score': round(sc, 4), 'verdict': verd})
+    except Exception as e:
+        return _refuse('solver', f'Solver failed at iteration {len(iters) + 1}: {type(e).__name__}: {e}')
+    elapsed = round((time.time() - t0) * 1000.0, 1)
+    best = opt.best_params()
+    recent = [it['score'] for it in iters[-5:]]
+    converged = len(recent) >= 5 and (max(recent) - min(recent)) < 1e-3
+    return {'success': True, 'alloyId': resolved, 'bestParams': best['params'] if best else None,
+            'bestScore': round(max(it['score'] for it in iters), 4),
+            'iterations': iters, 'converged': converged, 'elapsedMs': elapsed, 'nIterations': n_iter,
+            'nWarmup': n_warmup, 'beamDiameter_um': beam, 'preheatTemp_C': preheat,
+            'objective': 'three-level verdict score x normalised v*h (v*h / (v_max*h_max))'}
 
 
 def optimize_process_window(alloy_id="in718", bounds=None, param_bounds=None, n_iterations=20, n_iter=None, n_initial=5, n_warmup=None, seed=42):
@@ -168,11 +210,13 @@ def main():
         print(json.dumps({'error': f'Invalid JSON: {e}'}))
         sys.exit(1)
     result = run_bayesian_optimization(
-        alloy_id=data.get('alloyId', 'in718'),
+        alloy_id=data.get('alloyId'),
         param_bounds=data.get('paramBounds'),
-        n_iter=min(int(data.get('nIterations', 20)), 30),
-        n_warmup=int(data.get('nWarmup', 5)),
+        n_iter=data.get('nIterations', 20),
+        n_warmup=data.get('nWarmup', 5),
         seed=int(data.get('seed', 42)),
+        beam_diameter_um=data.get('beamDiameter_um', DEFAULT_BEAM_DIAMETER_UM),
+        preheat_temp_C=data.get('preheatTemp_C', DEFAULT_PREHEAT_TEMP_C),
     )
     print(json.dumps(result, allow_nan=False))
 

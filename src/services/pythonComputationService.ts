@@ -502,7 +502,13 @@ export interface PythonKineticsResult {
 
 export interface PythonBayesianOptimizationResult {
   success: boolean;
+  error?: string;
+  errorKind?: "validation" | "solver";
   alloyId: string;
+  beamDiameter_um?: number;
+  preheatTemp_C?: number;
+  nWarmup?: number;
+  objective?: string;
   bestParams?: {
     laserPower_W: number;
     scanSpeed_mms: number;
@@ -649,7 +655,11 @@ class PythonComputationService {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) {
+      let detail = "";
+      try { const b = await res.json(); detail = b?.error ? `: ${b.error}` : ""; } catch { /* body not JSON */ }
+      throw new Error(`HTTP ${res.status}${detail}`);
+    }
     return res.json();
   }
 
