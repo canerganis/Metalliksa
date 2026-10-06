@@ -109,9 +109,9 @@ def build_lpbf_optimizer_contract(seed: Mapping[str, str]) -> ModuleContract:
         sources=(
             "src/components/LpbfBayesianOptimizerLab.tsx::LpbfBayesianOptimizerLab",
             "src/services/pythonComputationService.ts:652-664#lpbf-bayesian-optimize",
-            "routes/physics.ts:83-84#120000",
+            "routes/physics.ts:78-79#120000",
             "python/lpbf_bayesian_optimizer.py::run_bayesian_optimization",
-            "python/lpbf_bayesian_optimizer.py:254-274#nIterations",
+            "python/lpbf_bayesian_optimizer.py:254-281#nIterations",
         ),
     )
 
