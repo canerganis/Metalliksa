@@ -1,0 +1,796 @@
+{
+ "pycalphad": "0.11.2",
+ "tdb": "mc_ni_repaired.tdb",
+ "xlsx": "Superalloys.xlsx",
+ "phases": [
+  "LIQUID",
+  "FCC_A1",
+  "BCC_A2",
+  "HCP_A3",
+  "GAMMA_PRIME",
+  "DELTA",
+  "SIGMA",
+  "MU_PHASE",
+  "LAVES",
+  "P_PHASE",
+  "R_PHASE",
+  "M23C6",
+  "M6C",
+  "M7C3",
+  "M3C2",
+  "ETA",
+  "CRB",
+  "CR2B",
+  "CR5B3",
+  "M2B",
+  "MOB",
+  "MOB2",
+  "NBB",
+  "NB3B2",
+  "NB5B6",
+  "TIB",
+  "TIB2",
+  "TI3B4",
+  "NI5HF",
+  "NI7HF2",
+  "NITI2",
+  "NI2CR",
+  "G_PHASE",
+  "CHI_A12",
+  "DIAMOND_A4",
+  "GRAPHITE"
+ ],
+ "liquidDefinition": {
+  "liquidusFraction>=": 0.999,
+  "solidusFraction>": 0.001
+ },
+ "results": [
+  {
+   "alloy": "Inconel 718",
+   "family": "Ni-based",
+   "compositionWtPct": {
+    "Al": 0.5,
+    "C": 0.04,
+    "Cr": 19.0,
+    "Fe": 18.5,
+    "Mo": 3.0,
+    "Nb": 5.1,
+    "Ni": 52.96,
+    "Ti": 0.9
+   },
+   "tableSolidusC": 1483.0,
+   "tableLiquidusC": 1586.0,
+   "tableFreezingRangeK": 103.0,
+   "ourLiquidusC": 1347.99,
+   "ourSolidusC": 1252.01,
+   "liquidusStatus": "ok",
+   "solidusStatus": "ok",
+   "liquidusBracketC": [
+    1347.84,
+    1348.15
+   ],
+   "solidusBracketC": [
+    1251.85,
+    1252.16
+   ],
+   "equilibriumSeconds": 88.5,
+   "scheilStatus": "complete",
+   "scheilTerminationReason": "liquid-exhausted-within-step",
+   "scheilTerminalC": 1109.99,
+   "scheilTerminalBracketC": [
+    1109.99,
+    1114.99
+   ],
+   "scheilRemainingLiquid": 0.0,
+   "scheilStepC": 5.0,
+   "scheilMassBalanceMaxAbsError": 1.1102230246251565e-16,
+   "scheilFirstSolidPhases": [
+    "FCC_A1"
+   ],
+   "scheilSeconds": 47.3,
+   "status": "computed"
+  },
+  {
+   "alloy": "IN718",
+   "family": "Ni-based",
+   "compositionWtPct": {
+    "Al": 0.5,
+    "B": 0.02,
+    "Cr": 19.0,
+    "Mo": 3.0,
+    "Nb": 5.1,
+    "Ni": 71.48,
+    "Ti": 0.9
+   },
+   "tableSolidusC": 1555.0,
+   "tableLiquidusC": 1617.0,
+   "tableFreezingRangeK": 62.0,
+   "ourLiquidusC": 1359.1,
+   "ourSolidusC": 1282.56,
+   "liquidusStatus": "ok",
+   "solidusStatus": "ok",
+   "liquidusBracketC": [
+    1358.95,
+    1359.26
+   ],
+   "solidusBracketC": [
+    1282.41,
+    1282.72
+   ],
+   "equilibriumSeconds": 31.0,
+   "scheilStatus": "complete",
+   "scheilTerminationReason": "liquid-exhausted-within-step",
+   "scheilTerminalC": 1161.1,
+   "scheilTerminalBracketC": [
+    1161.1,
+    1166.1
+   ],
+   "scheilRemainingLiquid": 0.0,
+   "scheilStepC": 5.0,
+   "scheilMassBalanceMaxAbsError": 3.3306690738754696e-16,
+   "scheilFirstSolidPhases": [
+    "FCC_A1"
+   ],
+   "scheilSeconds": 13.0,
+   "status": "computed"
+  },
+  {
+   "alloy": "Inconel 625",
+   "family": "Ni-based",
+   "compositionWtPct": {
+    "Al": 0.2,
+    "C": 0.012,
+    "Cr": 21.5,
+    "Fe": 4.0,
+    "Mo": 8.3,
+    "Nb": 3.3,
+    "Ni": 62.648,
+    "Ti": 0.04
+   },
+   "tableSolidusC": 1535.0,
+   "tableLiquidusC": 1613.0,
+   "tableFreezingRangeK": 78.0,
+   "ourLiquidusC": 1368.06,
+   "ourSolidusC": 1307.56,
+   "liquidusStatus": "ok",
+   "solidusStatus": "ok",
+   "liquidusBracketC": [
+    1367.9,
+    1368.21
+   ],
+   "solidusBracketC": [
+    1307.41,
+    1307.72
+   ],
+   "equilibriumSeconds": 60.2,
+   "scheilStatus": "incomplete",
+   "scheilTerminationReason": "equilibrium-not-converged",
+   "scheilTerminalC": 1170.06,
+   "scheilTerminalBracketC": [
+    1165.06,
+    1170.06
+   ],
+   "scheilRemainingLiquid": 0.041807,
+   "scheilStepC": 5.0,
+   "scheilMassBalanceMaxAbsError": 1.1102230246251565e-16,
+   "scheilFirstSolidPhases": [
+    "FCC_A1"
+   ],
+   "scheilSeconds": 28.5,
+   "status": "computed"
+  },
+  {
+   "alloy": "Inconel 600",
+   "family": "Ni-based",
+   "compositionWtPct": {
+    "Al": 1.0,
+    "Co": 0.012,
+    "Cr": 15.9,
+    "Fe": 9.0,
+    "Ni": 74.088
+   },
+   "tableSolidusC": 1691.0,
+   "tableLiquidusC": 1693.0,
+   "tableFreezingRangeK": 2.0,
+   "ourLiquidusC": 1417.44,
+   "ourSolidusC": 1413.46,
+   "liquidusStatus": "ok",
+   "solidusStatus": "ok",
+   "liquidusBracketC": [
+    1417.28,
+    1417.59
+   ],
+   "solidusBracketC": [
+    1413.35,
+    1413.56
+   ],
+   "equilibriumSeconds": 17.3,
+   "scheilStatus": "complete",
+   "scheilTerminationReason": "liquid-exhausted-within-step",
+   "scheilTerminalC": 1409.44,
+   "scheilTerminalBracketC": [
+    1409.44,
+    1414.44
+   ],
+   "scheilRemainingLiquid": 0.0,
+   "scheilStepC": 5.0,
+   "scheilMassBalanceMaxAbsError": 1.3552527156068805e-20,
+   "scheilFirstSolidPhases": [
+    "FCC_A1"
+   ],
+   "scheilSeconds": 0.2,
+   "status": "computed"
+  },
+  {
+   "alloy": "Inconel 601",
+   "family": "Ni-based",
+   "compositionWtPct": {
+    "Al": 1.0,
+    "C": 0.1,
+    "Cr": 23.0,
+    "Fe": 16.3,
+    "Ni": 59.6
+   },
+   "tableSolidusC": 1661.0,
+   "tableLiquidusC": 1675.0,
+   "tableFreezingRangeK": 14.0,
+   "ourLiquidusC": 1396.14,
+   "ourSolidusC": 1343.98,
+   "liquidusStatus": "ok",
+   "solidusStatus": "ok",
+   "liquidusBracketC": [
+    1395.99,
+    1396.3
+   ],
+   "solidusBracketC": [
+    1343.83,
+    1344.14
+   ],
+   "equilibriumSeconds": 6.1,
+   "scheilStatus": "complete",
+   "scheilTerminationReason": "liquid-below-0.1-percent",
+   "scheilTerminalC": 1328.14,
+   "scheilTerminalBracketC": null,
+   "scheilRemainingLiquid": 0.000358,
+   "scheilStepC": 5.0,
+   "scheilMassBalanceMaxAbsError": 2.7755575615628914e-17,
+   "scheilFirstSolidPhases": [
+    "FCC_A1"
+   ],
+   "scheilSeconds": 1.1,
+   "status": "computed"
+  },
+  {
+   "alloy": "Inconel 617",
+   "family": "Ni-based",
+   "compositionWtPct": {
+    "Al": 1.4,
+    "C": 0.05,
+    "Cr": 23.0,
+    "Fe": 14.1,
+    "Ni": 61.45
+   },
+   "tableSolidusC": 1667.0,
+   "tableLiquidusC": 1675.0,
+   "tableFreezingRangeK": 8.0,
+   "ourLiquidusC": 1395.52,
+   "ourSolidusC": 1343.67,
+   "liquidusStatus": "ok",
+   "solidusStatus": "ok",
+   "liquidusBracketC": [
+    1395.37,
+    1395.68
+   ],
+   "solidusBracketC": [
+    1343.52,
+    1343.83
+   ],
+   "equilibriumSeconds": 6.4,
+   "scheilStatus": "complete",
+   "scheilTerminationReason": "liquid-exhausted-within-step",
+   "scheilTerminalC": 1262.52,
+   "scheilTerminalBracketC": [
+    1262.52,
+    1267.52
+   ],
+   "scheilRemainingLiquid": 0.0,
+   "scheilStepC": 5.0,
+   "scheilMassBalanceMaxAbsError": 8.556266806181156e-12,
+   "scheilFirstSolidPhases": [
+    "FCC_A1"
+   ],
+   "scheilSeconds": 1.5,
+   "status": "computed"
+  },
+  {
+   "alloy": "Inconel 690",
+   "family": "Ni-based",
+   "compositionWtPct": {
+    "C": 0.025,
+    "Cr": 29.0,
+    "Fe": 9.0,
+    "Ni": 61.975
+   },
+   "tableSolidusC": 1666.0,
+   "tableLiquidusC": 1673.0,
+   "tableFreezingRangeK": 7.0,
+   "ourLiquidusC": 1395.22,
+   "ourSolidusC": 1362.5,
+   "liquidusStatus": "ok",
+   "solidusStatus": "ok",
+   "liquidusBracketC": [
+    1395.06,
+    1395.37
+   ],
+   "solidusBracketC": [
+    1362.35,
+    1362.65
+   ],
+   "equilibriumSeconds": 6.9,
+   "scheilStatus": "complete",
+   "scheilTerminationReason": "liquid-exhausted-within-step",
+   "scheilTerminalC": 1307.22,
+   "scheilTerminalBracketC": [
+    1307.22,
+    1312.22
+   ],
+   "scheilRemainingLiquid": 0.0,
+   "scheilStepC": 5.0,
+   "scheilMassBalanceMaxAbsError": 2.220446049250313e-16,
+   "scheilFirstSolidPhases": [
+    "FCC_A1"
+   ],
+   "scheilSeconds": 1.2,
+   "status": "computed"
+  },
+  {
+   "alloy": "Inconel X750",
+   "family": "Ni-based",
+   "compositionWtPct": {
+    "Al": 0.4,
+    "Co": 1.0,
+    "Cr": 15.0,
+    "Ni": 81.1,
+    "Ti": 2.5
+   },
+   "tableSolidusC": 1665.0,
+   "tableLiquidusC": 1682.0,
+   "tableFreezingRangeK": 17.0,
+   "ourLiquidusC": 1401.39,
+   "ourSolidusC": 1383.49,
+   "liquidusStatus": "ok",
+   "solidusStatus": "ok",
+   "liquidusBracketC": [
+    1401.23,
+    1401.54
+   ],
+   "solidusBracketC": [
+    1383.33,
+    1383.64
+   ],
+   "equilibriumSeconds": 13.5,
+   "scheilStatus": "complete",
+   "scheilTerminationReason": "liquid-below-0.1-percent",
+   "scheilTerminalC": 1303.39,
+   "scheilTerminalBracketC": null,
+   "scheilRemainingLiquid": 0.000205,
+   "scheilStepC": 5.0,
+   "scheilMassBalanceMaxAbsError": 2.220446049250313e-16,
+   "scheilFirstSolidPhases": [
+    "FCC_A1"
+   ],
+   "scheilSeconds": 2.3,
+   "status": "computed"
+  },
+  {
+   "alloy": "Inconel 706",
+   "family": "Fe-based",
+   "compositionWtPct": {
+    "Al": 0.2,
+    "C": 0.03,
+    "Cr": 16.0,
+    "Fe": 40.0,
+    "Nb": 2.9,
+    "Ni": 39.07,
+    "Ti": 1.8
+   },
+   "tableSolidusC": 1522.0,
+   "tableLiquidusC": 1628.0,
+   "tableFreezingRangeK": 106.0,
+   "ourLiquidusC": 1382.87,
+   "ourSolidusC": 1287.19,
+   "liquidusStatus": "ok",
+   "solidusStatus": "ok",
+   "liquidusBracketC": [
+    1382.72,
+    1383.02
+   ],
+   "solidusBracketC": [
+    1287.04,
+    1287.35
+   ],
+   "equilibriumSeconds": 39.6,
+   "scheilStatus": "complete",
+   "scheilTerminationReason": "liquid-exhausted-within-step",
+   "scheilTerminalC": 1129.87,
+   "scheilTerminalBracketC": [
+    1129.87,
+    1134.87
+   ],
+   "scheilRemainingLiquid": 0.0,
+   "scheilStepC": 5.0,
+   "scheilMassBalanceMaxAbsError": 4.440892098500626e-16,
+   "scheilFirstSolidPhases": [
+    "FCC_A1"
+   ],
+   "scheilSeconds": 15.6,
+   "status": "computed"
+  },
+  {
+   "alloy": "Waspaloy",
+   "family": "Ni-based",
+   "compositionWtPct": {
+    "Al": 1.3,
+    "B": 0.006,
+    "C": 0.08,
+    "Co": 13.5,
+    "Cr": 19.5,
+    "Mo": 4.3,
+    "Ni": 58.314,
+    "Ti": 3.0
+   },
+   "tableSolidusC": 1490.0,
+   "tableLiquidusC": 1661.0,
+   "tableFreezingRangeK": 171.0,
+   "ourLiquidusC": 1366.51,
+   "ourSolidusC": 1305.4,
+   "liquidusStatus": "ok",
+   "solidusStatus": "ok",
+   "liquidusBracketC": [
+    1366.36,
+    1366.67
+   ],
+   "solidusBracketC": [
+    1305.25,
+    1305.56
+   ],
+   "equilibriumSeconds": 70.7,
+   "scheilStatus": "complete",
+   "scheilTerminationReason": "liquid-exhausted-within-step",
+   "scheilTerminalC": 1313.51,
+   "scheilTerminalBracketC": [
+    1313.51,
+    1318.51
+   ],
+   "scheilRemainingLiquid": 0.0,
+   "scheilStepC": 5.0,
+   "scheilMassBalanceMaxAbsError": 1.1102230246251565e-16,
+   "scheilFirstSolidPhases": [
+    "FCC_A1"
+   ],
+   "scheilSeconds": 7.9,
+   "status": "computed"
+  },
+  {
+   "alloy": "Hastelloy X",
+   "family": "Ni-based",
+   "compositionWtPct": {
+    "Al": 0.3,
+    "B": 0.009,
+    "Cr": 15.5,
+    "Fe": 1.0,
+    "Mo": 14.5,
+    "Ni": 68.691
+   },
+   "tableSolidusC": 1581.0,
+   "tableLiquidusC": 1656.0,
+   "tableFreezingRangeK": 75.0,
+   "ourLiquidusC": 1400.46,
+   "ourSolidusC": 1359.41,
+   "liquidusStatus": "ok",
+   "solidusStatus": "ok",
+   "liquidusBracketC": [
+    1400.31,
+    1400.62
+   ],
+   "solidusBracketC": [
+    1359.26,
+    1359.57
+   ],
+   "equilibriumSeconds": 15.4,
+   "scheilStatus": "complete",
+   "scheilTerminationReason": "liquid-below-0.1-percent",
+   "scheilTerminalC": 1267.46,
+   "scheilTerminalBracketC": null,
+   "scheilRemainingLiquid": 0.000561,
+   "scheilStepC": 5.0,
+   "scheilMassBalanceMaxAbsError": 1.1102230246251565e-16,
+   "scheilFirstSolidPhases": [
+    "FCC_A1"
+   ],
+   "scheilSeconds": 3.2,
+   "status": "computed"
+  },
+  {
+   "alloy": "Incoloy 800",
+   "family": "Fe-based",
+   "compositionWtPct": {
+    "Al": 0.38,
+    "C": 0.05,
+    "Cr": 21.0,
+    "Fe": 45.7,
+    "Ni": 32.49,
+    "Ti": 0.38
+   },
+   "tableSolidusC": 1668.0,
+   "tableLiquidusC": 1689.0,
+   "tableFreezingRangeK": 21.0,
+   "ourLiquidusC": 1427.01,
+   "ourSolidusC": 1377.93,
+   "liquidusStatus": "ok",
+   "solidusStatus": "ok",
+   "liquidusBracketC": [
+    1426.85,
+    1427.16
+   ],
+   "solidusBracketC": [
+    1377.78,
+    1378.09
+   ],
+   "equilibriumSeconds": 14.6,
+   "scheilStatus": "complete",
+   "scheilTerminationReason": "liquid-exhausted-within-step",
+   "scheilTerminalC": 1319.01,
+   "scheilTerminalBracketC": [
+    1319.01,
+    1324.01
+   ],
+   "scheilRemainingLiquid": 0.0,
+   "scheilStepC": 5.0,
+   "scheilMassBalanceMaxAbsError": 3.9390712913700554e-13,
+   "scheilFirstSolidPhases": [
+    "FCC_A1"
+   ],
+   "scheilSeconds": 2.5,
+   "status": "computed"
+  },
+  {
+   "alloy": "Nimonic 80A",
+   "family": "Ni-based",
+   "compositionWtPct": {
+    "Al": 1.5,
+    "Cr": 19.5,
+    "Ni": 76.6,
+    "Ti": 2.4
+   },
+   "tableSolidusC": 1649.0,
+   "tableLiquidusC": 1669.0,
+   "tableFreezingRangeK": 20.0,
+   "ourLiquidusC": 1384.72,
+   "ourSolidusC": 1362.5,
+   "liquidusStatus": "ok",
+   "solidusStatus": "ok",
+   "liquidusBracketC": [
+    1384.57,
+    1384.88
+   ],
+   "solidusBracketC": [
+    1362.35,
+    1362.65
+   ],
+   "equilibriumSeconds": 4.2,
+   "scheilStatus": "complete",
+   "scheilTerminationReason": "liquid-below-0.1-percent",
+   "scheilTerminalC": 1251.72,
+   "scheilTerminalBracketC": null,
+   "scheilRemainingLiquid": 0.000995,
+   "scheilStepC": 5.0,
+   "scheilMassBalanceMaxAbsError": 2.220446049250313e-16,
+   "scheilFirstSolidPhases": [
+    "FCC_A1"
+   ],
+   "scheilSeconds": 1.2,
+   "status": "computed"
+  },
+  {
+   "alloy": "Nimonic 90",
+   "family": "Ni-based",
+   "compositionWtPct": {
+    "Al": 1.8,
+    "Cr": 19.5,
+    "Ni": 76.2,
+    "Ti": 2.5
+   },
+   "tableSolidusC": 1646.0,
+   "tableLiquidusC": 1667.0,
+   "tableFreezingRangeK": 21.0,
+   "ourLiquidusC": 1381.64,
+   "ourSolidusC": 1358.49,
+   "liquidusStatus": "ok",
+   "solidusStatus": "ok",
+   "liquidusBracketC": [
+    1381.48,
+    1381.79
+   ],
+   "solidusBracketC": [
+    1358.33,
+    1358.64
+   ],
+   "equilibriumSeconds": 4.7,
+   "scheilStatus": "complete",
+   "scheilTerminationReason": "liquid-below-0.1-percent",
+   "scheilTerminalC": 1233.64,
+   "scheilTerminalBracketC": null,
+   "scheilRemainingLiquid": 3.6e-05,
+   "scheilStepC": 5.0,
+   "scheilMassBalanceMaxAbsError": 4.440892098500626e-16,
+   "scheilFirstSolidPhases": [
+    "FCC_A1"
+   ],
+   "scheilSeconds": 1.9,
+   "status": "computed"
+  },
+  {
+   "alloy": "Astroloy",
+   "family": "Ni-based",
+   "compositionWtPct": {
+    "Al": 4.0,
+    "Co": 17.0,
+    "Cr": 15.0,
+    "Mo": 5.3,
+    "Ni": 55.2,
+    "Ti": 3.5
+   },
+   "tableSolidusC": 1609.0,
+   "tableLiquidusC": 1658.0,
+   "tableFreezingRangeK": 49.0,
+   "ourLiquidusC": 1347.07,
+   "ourSolidusC": 1300.15,
+   "liquidusStatus": "ok",
+   "solidusStatus": "ok",
+   "liquidusBracketC": [
+    1346.91,
+    1347.22
+   ],
+   "solidusBracketC": [
+    1300.0,
+    1300.31
+   ],
+   "equilibriumSeconds": 20.6,
+   "scheilStatus": "complete",
+   "scheilTerminationReason": "liquid-below-0.1-percent",
+   "scheilTerminalC": 1059.07,
+   "scheilTerminalBracketC": null,
+   "scheilRemainingLiquid": 0.000929,
+   "scheilStepC": 5.0,
+   "scheilMassBalanceMaxAbsError": 1.3877787807814457e-16,
+   "scheilFirstSolidPhases": [
+    "FCC_A1"
+   ],
+   "scheilSeconds": 12.6,
+   "status": "computed"
+  },
+  {
+   "alloy": "Rene 41",
+   "family": "Ni-based",
+   "compositionWtPct": {
+    "Al": 1.5,
+    "B": 0.005,
+    "C": 0.09,
+    "Co": 11.0,
+    "Cr": 19.0,
+    "Mo": 10.0,
+    "Ni": 55.305,
+    "Ti": 3.1
+   },
+   "tableSolidusC": 1556.0,
+   "tableLiquidusC": 1623.0,
+   "tableFreezingRangeK": 67.0,
+   "ourLiquidusC": 1333.18,
+   "ourSolidusC": 1258.18,
+   "liquidusStatus": "ok (1 non-converged grid points elsewhere)",
+   "solidusStatus": "ok (1 non-converged grid points elsewhere)",
+   "liquidusBracketC": [
+    1333.02,
+    1333.33
+   ],
+   "solidusBracketC": [
+    1258.02,
+    1258.33
+   ],
+   "equilibriumSeconds": 73.5,
+   "scheilStatus": "incomplete",
+   "scheilTerminationReason": "equilibrium-not-converged",
+   "scheilTerminalC": 1260.18,
+   "scheilTerminalBracketC": [
+    1255.18,
+    1260.18
+   ],
+   "scheilRemainingLiquid": 0.209532,
+   "scheilStepC": 5.0,
+   "scheilMassBalanceMaxAbsError": 2.220446049250313e-16,
+   "scheilFirstSolidPhases": [
+    "FCC_A1"
+   ],
+   "scheilSeconds": 10.6,
+   "status": "computed"
+  },
+  {
+   "alloy": "Udimet 720",
+   "family": "Ni-based",
+   "compositionWtPct": {
+    "Al": 2.5,
+    "B": 0.03,
+    "C": 0.03,
+    "Co": 14.7,
+    "Cr": 17.9,
+    "Mo": 3.0,
+    "Ni": 55.56,
+    "Ti": 5.0,
+    "W": 1.25,
+    "Zr": 0.03
+   },
+   "tableSolidusC": 1403.0,
+   "tableLiquidusC": 1638.0,
+   "tableFreezingRangeK": 235.0,
+   "ourLiquidusC": 1214.04,
+   "ourSolidusC": 1177.31,
+   "liquidusStatus": "ok",
+   "solidusStatus": "ok",
+   "liquidusBracketC": [
+    1213.89,
+    1214.2
+   ],
+   "solidusBracketC": [
+    1177.16,
+    1177.47
+   ],
+   "equilibriumSeconds": 149.0,
+   "scheilStatus": "complete",
+   "scheilTerminationReason": "liquid-exhausted-within-step",
+   "scheilTerminalC": 1176.04,
+   "scheilTerminalBracketC": [
+    1176.04,
+    1181.04
+   ],
+   "scheilRemainingLiquid": 0.0,
+   "scheilStepC": 5.0,
+   "scheilMassBalanceMaxAbsError": 1.1102230246251565e-16,
+   "scheilFirstSolidPhases": [
+    "GAMMA_PRIME"
+   ],
+   "scheilSeconds": 14.7,
+   "status": "computed"
+  },
+  {
+   "alloy": "Rene 80",
+   "family": "Ni-based",
+   "compositionWtPct": {
+    "Al": 3.0,
+    "B": 0.015,
+    "C": 0.16,
+    "Co": 9.0,
+    "Cr": 14.0,
+    "Hf": 0.8,
+    "Mo": 4.0,
+    "Ni": 60.315,
+    "Ti": 4.7,
+    "W": 4.0,
+    "Zr": 0.01
+   },
+   "tableSolidusC": 1427.0,
+   "tableLiquidusC": 1547.0,
+   "tableFreezingRangeK": 120.0,
+   "ourLiquidusC": null,
+   "ourSolidusC": null,
+   "liquidusStatus": "non-converged point next to the boundary",
+   "solidusStatus": "non-converged point next to the boundary",
+   "liquidusBracketC": null,
+   "solidusBracketC": null,
+   "equilibriumSeconds": 154.6,
+   "status": "incomplete"
+  }
+ ],
+ "skipped": [],
+ "note": "Merged from several runs of tools/xcheck_superalloy_table.py (one process per batch); see docs/XCHECK_SUPERALLOY_TABLE.md"
+}
