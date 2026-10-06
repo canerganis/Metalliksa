@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { FlaskConical } from 'lucide-react';
-import { sourceMeasurements } from '../services/lpbfSourceService';
+import { sourceMeasurements, SourceNotImportedError } from '../services/lpbfSourceService';
 import { useLpbfEngineeringStore } from '../store/useLpbfEngineeringStore';
 import { aggregateByVelocity, overlayGate, residualAt, CMU_OVERLAY_SCOPE, MEASURED_DEPTH_LABEL, DEPTH_NOT_COMPARABLE_REASON, describePowers, type MeasuredRow, type ResidualQuantity, type Residual } from '../utils/experimentalValidation';
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceDot } from 'recharts';
@@ -28,18 +28,25 @@ export const DepthRow: React.FC<{ q: NonNullable<Residual['depth']> | undefined 
   </tr>
 );
 
+export const SourceLoadStatus: React.FC<{ error: { message: string; notImported: boolean } }> = ({ error }) => error.notImported ? (
+  <div role="status" className="text-amber-200 space-y-1">
+    <p className="font-semibold">The CMU Ti-6Al-4V measurement source is not imported in this installation.</p>
+    <p className="text-sm">To import it, open LPBF Engineering, go to the Experimental Comparison stage, and use the Source Archive panel: select the CMU source, choose Preview, then Import previewed source. Then reopen this view.</p>
+  </div>
+) : <p className="text-rose-400">Failed to load experimental data: {error.message}</p>;
+
 export const ExperimentalValidationLab: React.FC = () => {
   const job = useLpbfEngineeringStore(state => state.job);
   const [data, setData] = useState<MeasuredRow[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [unresolved, setUnresolved] = useState<readonly string[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string; notImported: boolean } | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
     sourceMeasurements('cmu-ti64-meltpool-v1', controller.signal)
       .then(res => { if (!controller.signal.aborted) { setData(res.data); setUnresolved(res.scope?.unresolved ?? []); setLoaded(true); } })
-      .catch(err => { if (!controller.signal.aborted) setError(err.message); });
+      .catch(err => { if (!controller.signal.aborted) setError({ message: err.message, notImported: err instanceof SourceNotImportedError }); });
     return () => controller.abort();
   }, []);
 
@@ -64,7 +71,7 @@ export const ExperimentalValidationLab: React.FC = () => {
       <div className="bg-slate-900/80 p-5 rounded-xl border border-slate-700 space-y-4">
         <h3 className="text-base font-semibold text-white">CMU Ti-6Al-4V multi-track, powder-entrained measurements ({powerLabel})</h3>
         {error ? (
-          <p className="text-rose-400">Failed to load experimental data: {error}</p>
+          <SourceLoadStatus error={error} />
         ) : !loaded ? (
           <p className="text-slate-400">Loading experimental data...</p>
         ) : data.length === 0 ? (
