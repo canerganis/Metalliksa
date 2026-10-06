@@ -9,7 +9,7 @@ import json
 from four_alloy_materials import (
     ALLOY_MATERIALS, FOUR_ALLOY_IDS, LITERATURE_MELT_POOL_CASES,
     THERMAL_NAME, canonical_material_source, inherent_strain_props,
-    marangoni_props, resolve_alloy_id,
+    marangoni_props, resolve_alloy_id, PROPERTY_PROVENANCE,
 )
 from in625_thermal_material import (
     SOLID_TEMPERATURE_RANGE_C, SOURCE_URL, in625_lpbf_thermal_snapshot,
@@ -106,6 +106,13 @@ def _four_alloy_capability(alloy_id):
             "inherentStrain": inherent_strain["absorptivity"],
             "note": "Model-specific assumptions; differing values are not silently reconciled.",
         },
+        "crossModelDGammaDT": {
+            "buildJob": build_snapshot["thermal"]["d_gamma_dT_N_mK"],
+            "transient": transient["dGamma_dT"],
+            "marangoniPure": marangoni["d_gamma_dT_pure_N_mK"],
+            "provenance": PROPERTY_PROVENANCE.get(alloy_id, {}).get("d_gamma_dT_N_mK"),
+        },
+        "emissivityProvenance": PROPERTY_PROVENANCE["*"]["emissivity"],
         "samePhysicsGpuQualification": "open",
     }
 

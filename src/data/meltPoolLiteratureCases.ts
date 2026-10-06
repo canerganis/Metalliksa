@@ -104,8 +104,8 @@ export const MELT_POOL_LITERATURE_CASES: MeltPoolLiteratureCase[] = [
     publishedDepth_um: 62.5,
     publishedRegime: "Transition",
     kind: "asymptotic",
-    source: "Rosenthal 3D high-speed asymptotic (PROOF 003) — theory, not a measured track",
-    doi: "10.1063/1.1712881",
+    source: "Rosenthal 3D high-speed asymptotic (PROOF 003); Rosenthal, Trans. ASME 68 (1946) 849-865 — theory, not a measured track",
+    doi: "10.1115/1.4018624",
   },
   {
     id: "ti64-no-measured-track",

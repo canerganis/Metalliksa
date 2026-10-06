@@ -177,10 +177,54 @@ _THERMAL = {
 }
 
 _MARANGONI = {
-    "in718": {"critical_Ma": 4500.0, "sulfur_activity_factor": 0.000035, "d_gamma_dT_pure_N_mK": -0.00042, "absorptivity": 0.42},
+    "in718": {"critical_Ma": 4500.0, "sulfur_activity_factor": 0.000035, "d_gamma_dT_pure_N_mK": -0.00040, "absorptivity": 0.42},
     "ti6al4v": {"critical_Ma": 3800.0, "sulfur_activity_factor": 0.000015, "d_gamma_dT_pure_N_mK": -0.00028, "absorptivity": 0.38},
     "ss316l": {"critical_Ma": 4200.0, "sulfur_activity_factor": 0.000048, "d_gamma_dT_pure_N_mK": -0.00045, "absorptivity": 0.44},
-    "alsi10mg": {"critical_Ma": 3200.0, "sulfur_activity_factor": 0.000010, "d_gamma_dT_pure_N_mK": -0.00018, "absorptivity": 0.18},
+    "alsi10mg": {"critical_Ma": 3200.0, "sulfur_activity_factor": 0.000010, "d_gamma_dT_pure_N_mK": -0.00035, "absorptivity": 0.18},
+}
+
+# Per-property provenance for values in _THERMAL/_MARANGONI. Kept OUT of _THERMAL so that
+# canonical_material_source() digests (and every identity derived from them) are unchanged by
+# labelling. "basis" vocabulary: cited-primary | cited-secondary | assumed-screening-constant |
+# unsourced-estimate.
+PROPERTY_PROVENANCE = {
+    "in718": {
+        "d_gamma_dT_N_mK": {
+            "value": -0.00040,
+            "basis": "cited-primary",
+            "scope": "zero-O, zero-S alloy (upper bound for commercial melts)",
+            "source": ("Mills, Youssef, Li & Su, ISIJ Int. 46(5) (2006) 623-632, "
+                       "doi:10.2355/isijinternational.46.623, section 11.3, Eq. (24): "
+                       "-0.4 mN/(m K), identical to pure Ni, for every Ni superalloy"),
+            "commercialMeasured_N_mK": -0.00011,
+            "commercialMeasuredSource": ("Brooks et al. oscillating drop, as cited by Mills et al. 2006 "
+                                         "(section 11.1) and by Sabau et al., Metall. Mater. Trans. B 51 (2020), "
+                                         "doi:10.1007/s11663-020-01808-w ('For IN718, dσ/dT was measured to be "
+                                         "-1.1e-4', ref. 55)"),
+            "note": ("Marangoni numbers built from this value are zero-O/S upper bounds, about 3.6x the "
+                     "value implied by the measured commercial coefficient."),
+        },
+    },
+    "alsi10mg": {
+        "d_gamma_dT_N_mK": {
+            "value": -0.00035,
+            "basis": "unsourced-estimate",
+            "scope": "alloy melt; no AlSi10Mg-specific measurement located",
+            "source": None,
+            "note": ("A former second value (-1.8e-4 in the Marangoni table) was also unsourced and was "
+                     "removed so both routes use one number; magnitude uncertain by about 2x."),
+        },
+    },
+    "*": {
+        "emissivity": {
+            "value": 0.35,
+            "basis": "assumed-screening-constant",
+            "source": None,
+            "note": ("Applied to every legacy alloy and to IN625. Ni superalloys: 0.1-0.2 polished, 0.8-0.9 "
+                     "oxidised (Mills et al. 2006, section 12.1); powder-bed effective values are higher than "
+                     "polished bulk Cu/Al. Radiative loss is negligible against laser input in these solvers."),
+        },
+    },
 }
 
 _ISM = {
@@ -229,10 +273,11 @@ LITERATURE_MELT_POOL_CASES = [
         "publishedWidth_um": 125.0,
         "publishedDepth_um": 62.5,
         "publishedRegime": "Transition",
-        "source": "Rosenthal 3D moving source high-speed asymptotic (PROOF 003)",
-        "doi": "10.1063/1.1712881",
+        "source": ("Rosenthal 3D moving source high-speed asymptotic (PROOF 003); Rosenthal, Trans. ASME 68 "
+                   "(1946) 849-865"),
+        "doi": "10.1115/1.4018624",
         "widthDepthBasis": "analytical-asymptotic-not-measured",
-        "check": "wd",
+        "check": "class",
     },
     {
         "id": "ss316l-king-window",
@@ -252,25 +297,27 @@ LITERATURE_MELT_POOL_CASES = [
                    "normalized-enthalpy threshold"),
         "doi": "10.1016/j.jmatprotec.2014.06.005",
         "widthDepthBasis": "typical-not-published",
-        "check": "wd",
+        "check": "class",
     },
     {
-        "id": "in718-eos-like",
+        "id": "in718-nist-amb2022-03-0",
         "alloy_id": "in718",
-        "label": "IN718 typical LPBF track (typical values, not published)",
+        "label": "IN718 NIST AMB2022-03 case 0 (measured bare-plate track)",
         "laserPower_W": 285,
         "scanSpeed_mm_s": 960,
-        "beamDiameter_um": 80,
-        "preheatTemp_C": 80,
+        "beamDiameter_um": 67,
+        "preheatTemp_C": 23.5,
         "layerThickness_um": 40,
-        "hatchSpacing_um": 110,
-        "publishedWidth_um": 160.0,
-        "publishedDepth_um": 90.0,
-        "publishedRegime": "Keyhole",
-        "source": ("Typical IN718 single-track W/D near the King ΔH/hs ≈ 30 onset (not a published measurement; "
-                   "King et al. 2014 did not study IN718 and is cited only for the regime threshold)"),
-        "doi": "10.1016/j.jmatprotec.2014.06.005",
-        "widthDepthBasis": "typical-not-published",
+        "hatchSpacing_um": 100,
+        "publishedWidth_um": 136.3,
+        "publishedDepth_um": 139.7,
+        "publishedRegime": None,
+        "source": ("Lane et al., Integr. Mater. Manuf. Innov. (2024) Table 4 case 0 (AMB2022-03 baseline), "
+                   "mean of six optical cross-sections; bare plate, D4sigma 67 um; same row as "
+                   "meltpool_literature_catalog.TRACKS['nist-amb2022-03-0']. No regime label is published; "
+                   "layer/hatch are placeholders the single-track kernel does not use."),
+        "doi": "10.1007/s40192-024-00355-5",
+        "widthDepthBasis": "published-measurement",
         "check": "wd",
     },
     {
@@ -404,9 +451,12 @@ def regime_family(regime):
     return "Conduction"
 
 
-# Temperature-dependent U95 relative uncertainties (expanded k=2, 95% confidence):
-# Derived from published thermophysical uncertainty budgets (e.g. Mills 2002,
-# NIST Table 4, Touloukian 1970).
+# Temperature-dependent relative uncertainties labelled U95 (k=2). ASSUMED engineering budget:
+# round values chosen by the authors, NOT derived from a cited uncertainty table (no per-value
+# source exists). For orientation only: Mills et al., ISIJ Int. 46 (2006) 623, section 14(2),
+# gives "probable uncertainties" of its calculated Ni-superalloy properties (density 2 %, Cp 2-5 %,
+# conductivity 10 %, viscosity 10 %), not k=2 budgets.
+FOUR_ALLOY_U95_BUDGET_BASIS = "assumed-engineering-budget-not-derived"
 FOUR_ALLOY_U95_BUDGET = {
     "in718": {
         "solid": {"k_u95_rel": 0.05, "cp_u95_rel": 0.04, "rho_u95_rel": 0.015},

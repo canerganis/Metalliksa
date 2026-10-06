@@ -66,7 +66,8 @@ def catalog():
     return [{"name": n, "quality": "estimated" if n in LEGACY else "missing",
              "available": n in LEGACY,
              "thermalOnlyAvailable": n == "Inconel 625",
-             "note": "Legacy solid/liquid endpoints; estimated interpolation, constant viscosity."
+             "note": ("Legacy solid/liquid endpoints; estimated interpolation, constant viscosity; "
+                      "emissivity 0.35 is an assumed screening constant.")
              if n in LEGACY else (
                  "Bounded fusion-enthalpy literature-model screening only; full transient solver unavailable."
                  if n == "Inconel 625" else "Supply a sourced property table; no surrogate alloy is substituted.")}
@@ -88,6 +89,46 @@ def thermal_screening_at(name, temperature_k):
     if not _in625_identity(name):
         raise ValueError("Thermal-only screening material unavailable for this identity")
     return in625_lpbf_thermal_at_kelvin(temperature_k)
+
+
+# Sourced solid conductivity at the solidus where one exists (W/(m K), citation). Otherwise the
+# room-temperature solid value is held to the solidus (estimated).
+_SOLIDUS_CONDUCTIVITY = {
+    # Ho, Powell & Liley, J. Phys. Chem. Ref. Data 1 (1972) 279, doi:10.1063/1.3253100,
+    # copper recommended values: solid k at the melting point 1357.6 K = 3.28 W/(cm K).
+    "Pure Copper (Cu-OF)": 328.0,
+}
+
+
+def _legacy_table(p, solidus_k, liquidus_k, boiling_k, name=None):
+    """Estimated legacy table: RT solid, solidus, liquidus and boiling rows.
+
+    rho and cp keep the historical straight line from 273.15 K to the liquid endpoint at the
+    liquidus (the solidus row lies on that line, so their interpolation is unchanged). Solid k
+    follows the same line where it rises with temperature (Ni, Fe, Ti, Co alloys), but never
+    drops below its room-temperature value before the solidus: for alloys whose tabulated liquid
+    k is below the solid value (Al alloys, Cu) the drop to the liquid value happens across the
+    mushy zone, not linearly from 273 K. Estimated shape, not a measured curve (MD-1).
+    A pure metal (solidus == liquidus) gets the same 1 K regularisation window as its latent heat.
+    """
+    t_rt = 273.15
+    k_rt, k_liq = p["thermal_conductivity_W_mK"], p["thermal_conductivity_liquid_W_mK"]
+    liquid = (p["density_liquid_kg_m3"], k_liq, p["specific_heat_liquid_J_kgK"])
+    room = (p["density_kg_m3"], k_rt, p["specific_heat_J_kgK"])
+    if k_liq >= k_rt:
+        # Rising solid k: the historical three-row table is kept bit-for-bit (no identity drift).
+        rows = [(t_rt, room), (liquidus_k, liquid), (boiling_k, liquid)]
+        return [[t, rho, k, cp, p["viscosity_Pa_s"]] for t, (rho, k, cp) in rows]
+    if solidus_k == liquidus_k:
+        solidus_k, liquidus_k = solidus_k - .5, liquidus_k + .5
+    f = (solidus_k - t_rt) / (liquidus_k - t_rt)
+    line = lambda solid, liquid: solid + (liquid - solid) * f
+    solid_at_solidus = (line(p["density_kg_m3"], p["density_liquid_kg_m3"]),
+                        _SOLIDUS_CONDUCTIVITY.get(name, k_rt),
+                        line(p["specific_heat_J_kgK"], p["specific_heat_liquid_J_kgK"]))
+    return [[t, rho, k, cp, p["viscosity_Pa_s"]] for t, (rho, k, cp) in [
+        (t_rt, room),
+        (solidus_k, solid_at_solidus), (liquidus_k, liquid), (boiling_k, liquid)]]
 
 
 def material(name, supplied=None):
@@ -127,10 +168,7 @@ def material(name, supplied=None):
                  dGamma_dT=p["d_gamma_dT_N_mK"],
                  source="Existing four_alloy_materials.py / lpbf_thermal_solver.py; endpoint provenance not independently verified",
                  quality="estimated")
-        m["table"] = [[t, rho, k, cp, p["viscosity_Pa_s"]] for t, rho, k, cp in [
-            (273.15, p["density_kg_m3"], p["thermal_conductivity_W_mK"], p["specific_heat_J_kgK"]),
-            (m["liquidus_K"], p["density_liquid_kg_m3"], p["thermal_conductivity_liquid_W_mK"], p["specific_heat_liquid_J_kgK"]),
-            (m["boiling_K"], p["density_liquid_kg_m3"], p["thermal_conductivity_liquid_W_mK"], p["specific_heat_liquid_J_kgK"])]]
+        m["table"] = _legacy_table(p, m["solidus_K"], m["liquidus_K"], m["boiling_K"], name)
     for key in ("solidus_K", "liquidus_K", "boiling_K", "latentHeat_J_kg", "absorptivity", "emissivity", "dGamma_dT"):
         if isinstance(m.get(key), bool) or not isinstance(m.get(key), (int, float)) or not math.isfinite(m[key]):
             raise ValueError(f"Invalid material property: {key}")

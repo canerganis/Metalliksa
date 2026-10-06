@@ -234,9 +234,11 @@ IN625_D_GAMMA_DT_N_MK = -0.00040                  # -0.4 mN/(m K)
 IN625_ABSORPTIVITY_IR = 0.40
 IN625_EMISSIVITY = 0.35
 
-# Temperature-dependent U95 relative uncertainties (expanded k=2):
-# Based on Georgia Tech (260..1000 C) and high-temperature metrology budgets
-# (Mills 2002, Touloukian 1970).
+# Relative uncertainties labelled U95 (k=2): ASSUMED engineering budget, not derived from a cited
+# uncertainty table. The only cited measured solid data (Special Metals Tables 2/3) end at 982 C
+# (1255.15 K); the "solid" values above that temperature are extrapolated assumptions.
+IN625_U95_BUDGET_BASIS = "assumed-engineering-budget-not-derived"
+IN625_U95_SOLID_SOURCE_LIMIT_K = SOLID_TEMPERATURE_RANGE_C[1] + 273.15
 IN625_U95_BUDGET = {
     "solid": {
         "temperatureRange_K": [273.15, 1563.15],
@@ -312,48 +314,57 @@ def in625_transient_material_specification():
         "dGamma_dT": IN625_D_GAMMA_DT_N_MK,
         "table": table,
         "uncertaintyNote": (
-            "Mills (2002) & Kim (1975) liquid thermophysical compilation; "
-            "U95 expanded uncertainty bounds (k=2) evaluated across solid, mushy, and liquid regimes."
+            "Mills (2002) & Kim (1975) liquid thermophysical compilation; the solid/mushy/liquid "
+            "U95 values are an assumed engineering budget, not derived from a cited uncertainty table; "
+            "emissivity 0.35 is an assumed screening constant (Sabau et al. 2020 used 0.7)."
         ),
     }
 
 
+def _in625_spec_density(temperature_k):
+    """Solid/mushy density from the transient specification table (one density law per module)."""
+    table = in625_transient_material_specification()["table"]
+    for (t0, r0, *_), (t1, r1, *_) in zip(table, table[1:]):
+        if t0 <= temperature_k <= t1:
+            return r0 + (r1 - r0) * (temperature_k - t0) / (t1 - t0)
+    return table[-1][1]
+
+
 def in625_extended_thermal_at_kelvin(temperature_k):
-    """Return Cp, k, rho, liquid fraction, and specific enthalpy from 273.15 K up to 3173.15 K."""
+    """Return Cp, k, rho, liquid fraction, and specific enthalpy from 273.15 K up to 3173.15 K.
+
+    Enthalpy route: the Sabau et al. (2020) screening law throughout (L = 290 kJ/kg, liquid
+    Cp = 700 J/(kg K), liquid k = 30 W/(m K)), continued above the liquidus with the same liquid
+    Cp, so the reported latent heat and liquid Cp are the ones actually integrated. Density is the
+    transient-specification table (Mills 2002 liquid 7750 kg/m^3). The Mills-route transient
+    specification (L = 227 kJ/kg) is a separate, differently sourced route (see G18).
+    """
     if isinstance(temperature_k, bool) or not isinstance(temperature_k, (int, float)):
         raise ValueError("IN625 temperature must be a finite Kelvin number")
     temperature_k = float(temperature_k)
     if not math.isfinite(temperature_k) or not 273.15 <= temperature_k <= IN625_BOILING_K:
         raise ValueError(f"IN625 extended thermal outside 273.15..{IN625_BOILING_K} K")
-    
+    route = {
+        "enthalpyRoute": "sabau-2020-screening-law-continued-above-liquidus",
+        "densityRoute": "in625_transient_material_specification-table",
+        "liquidCp_J_kgK": LIQUID_CP_J_KGK,
+        "latentHeatFusion_J_kg": LATENT_HEAT_J_KG,
+    }
     if temperature_k <= IN625_LIQUIDUS_K:
-        # Use existing screening model below liquidus
         base = in625_lpbf_thermal_at_kelvin(temperature_k)
-        rho = IN625_SOLID_RHO_KG_M3 if temperature_k <= IN625_SOLIDUS_K else (
-            IN625_SOLID_RHO_KG_M3 + (IN625_LIQUID_RHO_MILLS_KG_M3 - IN625_SOLID_RHO_KG_M3) * base["liquidFraction"]
-        )
-        return {
-            **base,
-            "density_kg_m3": rho,
-            "liquidCp_J_kgK": IN625_LIQUID_CP_MILLS_J_KGK,
-            "latentHeatFusion_J_kg": IN625_LATENT_HEAT_FUSION_MILLS_J_KG,
-        }
-    
-    # Liquid regime (T > LIQUIDUS_K)
+        return {**base, "density_kg_m3": _in625_spec_density(temperature_k), **route}
     base_liq = in625_lpbf_thermal_at_kelvin(IN625_LIQUIDUS_K)
-    delta_liq = temperature_k - IN625_LIQUIDUS_K
-    enthalpy = base_liq["specificEnthalpy_J_kg"] + IN625_LIQUID_CP_MILLS_J_KGK * delta_liq
+    enthalpy = base_liq["specificEnthalpy_J_kg"] + LIQUID_CP_J_KGK * (temperature_k - IN625_LIQUIDUS_K)
     return {
         "materialId": "in625",
         "materialRevisionSha256": in625_lpbf_thermal_snapshot()["materialRevisionSha256"],
         "validationStatus": "unvalidated-literature-extended-liquid",
         "temperature_K": temperature_k,
-        "specificHeat_J_kgK": IN625_LIQUID_CP_MILLS_J_KGK,
-        "effectiveHeatCapacity_J_kgK": IN625_LIQUID_CP_MILLS_J_KGK,
-        "thermalConductivity_W_mK": IN625_LIQUID_K_MILLS_W_MK,
+        "specificHeat_J_kgK": LIQUID_CP_J_KGK,
+        "effectiveHeatCapacity_J_kgK": LIQUID_CP_J_KGK,
+        "thermalConductivity_W_mK": LIQUID_K_W_MK,
         "density_kg_m3": IN625_LIQUID_RHO_MILLS_KG_M3,
         "liquidFraction": 1.0,
         "specificEnthalpy_J_kg": enthalpy,
-        "liquidCp_J_kgK": IN625_LIQUID_CP_MILLS_J_KGK,
-        "latentHeatFusion_J_kg": IN625_LATENT_HEAT_FUSION_MILLS_J_KG,
+        **route,
     }

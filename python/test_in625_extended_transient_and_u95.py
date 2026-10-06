@@ -70,13 +70,13 @@ class TestIn625ExtendedTransientAndU95(unittest.TestCase):
         t_above = 2000.0
         res = in625_extended_thermal_at_kelvin(t_above)
         self.assertEqual(res["liquidFraction"], 1.0)
-        self.assertEqual(res["specificHeat_J_kgK"], 720.0)
+        self.assertEqual(res["specificHeat_J_kgK"], 700.0)
         self.assertEqual(res["thermalConductivity_W_mK"], 30.0)
         self.assertEqual(res["density_kg_m3"], 7750.0)
         
         # Check linear enthalpy rise in liquid phase: dH = Cp * dT
         delta_t = t_above - IN625_LIQUIDUS_K
-        expected_dh = 720.0 * delta_t
+        expected_dh = 700.0 * delta_t
         self.assertAlmostEqual(res["specificEnthalpy_J_kg"] - liq["specificEnthalpy_J_kg"], expected_dh, delta=1e-5)
         
         # Boiling point boundary check

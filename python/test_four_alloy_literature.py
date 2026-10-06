@@ -44,11 +44,14 @@ def main():
             case["hatchSpacing_um"],
         )
         pred_fam = regime_family(result["meltPoolGeometry"]["regime"])
-        assert_true(
-            pred_fam == case["publishedRegime"],
-            f"{case['id']} class {pred_fam} vs {case['publishedRegime']}",
-        )
+        if case["publishedRegime"] is not None:
+            assert_true(
+                pred_fam == case["publishedRegime"],
+                f"{case['id']} class {pred_fam} vs {case['publishedRegime']}",
+            )
         if case["check"] == "wd":
+            # Only a cited measurement may serve as a W/D anchor (MD-3).
+            assert_true(case["widthDepthBasis"] == "published-measurement", f"{case['id']} wd basis")
             W = result["meltPoolGeometry"]["width_um"]
             D = result["meltPoolGeometry"]["depth_um"]
             pub_w = case["publishedWidth_um"]
