@@ -71,7 +71,7 @@ Background work: none; resources: fetch.
 - `src/components/MaterialsProjectExplorer.tsx::MaterialsProjectExplorer`
 - `src/components/MaterialsProjectElasticityPanel.tsx`
 - `src/services/pythonComputationService.ts`
-- `routes/physics.ts:67-69#/api/python/dft-properties`
+- `routes/physics.ts:62-64#/api/python/dft-properties`
 - `routes/physics.ts:11-17#25000`
 - `python/persistent_ipc_service.py:95-100#dft_property_calculator`
 - `python/dft_property_calculator.py::calculate_dft_properties`

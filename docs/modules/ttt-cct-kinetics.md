@@ -68,7 +68,7 @@ Background work: none; resources: fetch.
 - `python/alloy_data_kinetics_uq_fatigue.py::KINETICS_LEGACY_NAMES`
 - `python/input_validation.py::require_known_alloy`
 - `routes/physics.ts::handlePythonDispatch`
-- `routes/physics.ts:94#python/kinetics_ttt_cct_solver.py`
+- `routes/physics.ts:89#python/kinetics_ttt_cct_solver.py`
 - `python/persistent_ipc_service.py::WARM_MODULE_NAMES`
 - `src/components/PhaseKineticsTTTCCTStudio.tsx::PhaseKineticsTTTCCTStudio`
 - `src/services/pythonComputationService.ts::calculatePhaseKineticsTTTCCT`
