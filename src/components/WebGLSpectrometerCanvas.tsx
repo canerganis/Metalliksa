@@ -155,7 +155,7 @@ export const WebGLSpectrometerCanvas: React.FC<WebGLSpectrometerCanvasProps> = (
     gl.bindBuffer(gl.ARRAY_BUFFER, areaBuf);
     gl.bufferData(gl.ARRAY_BUFFER, areaVertices, gl.STATIC_DRAW);
 
-    // 3. Deconvolution Peak Buffers
+    // 3. Background overlay buffers
     const peakBufs = backgroundOverlays.map((peak) => {
       const pLineVertices = new Float32Array(peak.points.length * 2);
       for (let i = 0; i < peak.points.length; i++) {

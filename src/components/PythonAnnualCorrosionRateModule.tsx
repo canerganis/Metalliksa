@@ -334,7 +334,7 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
 
             <div className="mt-3 flex items-baseline gap-2">
               <span className="text-4xl sm:text-5xl font-extrabold tracking-tight font-mono text-slate-900 dark:text-slate-100">
-                {result ? fmtTafelNumber(result.corrosionRateMmYr, { digits: 5 }) : unavailableRate ? UNAVAILABLE_TEXT : "—"}
+                {result ? fmtTafelNumber(result.corrosionRateMmYr, { digits: 5 }) : unavailableRate ? UNAVAILABLE_TEXT : result ? "Unavailable: zero corrosion rate gives no finite life" : "—"}
               </span>
               <span className="text-base font-semibold text-slate-600 dark:text-slate-400">mm / year</span>
             </div>
@@ -430,7 +430,7 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
               Substrate & Operating Conditions Control
             </span>
             <span className="text-xs text-slate-500 dark:text-slate-400">
-              Live updates propagate to Python calculation
+              Changes re-run the Python calculation
             </span>
           </div>
 

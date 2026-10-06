@@ -55,7 +55,7 @@ def _supplied_number(raw, label):
     return value, None
 
 
-def simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr_ua_cm2, e_pit_v, e0_v, exposure_days=90):
+def simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr_ua_cm2, e_pit_v, e0_v):
     """
     Computes the Stern-Geary polarization resistance, the Faraday penetration rate (ASTM G102)
     and the pitting-potential margin.
@@ -71,7 +71,7 @@ def simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr_ua_cm2
     or invalid input makes only the outputs that need it unavailable (null + reason, `status` "partial", or
     "unavailable" when nothing can be computed): Stern-Geary B and Rp need betaA, betaC, i0; the Faraday rate
     needs i0 and metalId; the pitting margin needs ePit and e0. A metalId that is
-    sent but unknown still raises ValidationError(UNKNOWN_ALLOY). exposureDays is accepted for request compatibility but no output depends on it.
+    sent but unknown still raises ValidationError(UNKNOWN_ALLOY). exposureDays is no longer an input: no output depends on it.
     Corrosion rates are rounded to 6 significant digits (a fixed 5 decimals printed 9e-5 mm/yr with one).
     """
     unavailable = {}
@@ -98,8 +98,6 @@ def simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr_ua_cm2
     e0_v, reason = _supplied_number(e0_v, "e0")
     if reason:
         unavailable["e0"] = reason
-    if exposure_days is None:
-        exposure_days = 90
 
     # Stern-Geary constant B (V) = (beta_a * beta_c) / (ln(10) * (beta_a + beta_c)); needs betaA, betaC
     # Polarization Resistance R_p = B / i_corr (i0 converted from uA/cm2 to A/cm2); needs i0 as well
@@ -190,8 +188,7 @@ if __name__ == "__main__":
             i0_corr = data.get("i0Corr_uA")
             e_pit = data.get("ePit")
             e0 = data.get("e0")
-            days = data.get("exposureDays", 90)
-            res = simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr, e_pit, e0, days)
+            res = simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr, e_pit, e0)
 
         else:
             res = {"error": f"Unknown action '{action}'"}

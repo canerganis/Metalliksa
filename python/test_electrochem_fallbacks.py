@@ -441,7 +441,7 @@ class CorrosionKineticsRequiredInputsTest(unittest.TestCase):
         args = dict(self.ALL)
         args.update(over)
         return battery.simulate_corrosion_eis_and_kinetics(
-            args["metal_id"], args["beta_a"], args["beta_c"], args["i0_corr_ua_cm2"], args["e_pit_v"], args["e0_v"], 60)
+            args["metal_id"], args["beta_a"], args["beta_c"], args["i0_corr_ua_cm2"], args["e_pit_v"], args["e0_v"])
 
     def test_complete_input_has_no_status(self):
         out = self.run_kinetics()
@@ -540,10 +540,6 @@ class TafelSourceGuardTest(unittest.TestCase):
             self.assertNotIn(pattern, source)
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class EyewashRemovalTest(unittest.TestCase):
     """Fixed-constant coating output, annual-rate script template and pitting x3.5 heuristic are gone."""
 
@@ -565,3 +561,7 @@ class EyewashRemovalTest(unittest.TestCase):
     def test_tafel_solver_method_does_not_claim_a_global_optimiser(self):
         source = (HERE / "tafel_corrosion_rate_solver.py").read_text(encoding="utf-8")
         self.assertNotIn("Evans Optimization", source)
+
+
+if __name__ == "__main__":
+    unittest.main()

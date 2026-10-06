@@ -61,3 +61,26 @@ test("database: no 'Calibrated' composition claim and no pooled-family correlati
   const heatmap = src("src/components/MaterialsPropertyHeatmapD3.tsx");
   assert.doesNotMatch(heatmap, /property-correlation|Pearson|Correlation \(r\) Matrix|correlationData/);
 });
+
+test("calculator info text makes no AWS D1.1 preheat prescription or WRC-1992 claim", () => {
+  const info = src("src/components/StandardInfoIcon.tsx");
+  assert.doesNotMatch(info, /standardCode: "[^"]*(AWS|WRC|ISO 8249)/);
+  assert.doesNotMatch(info, /secondaryCodes: \[[^\]]*(ISO 17660|BS 5135|ASME Sec IX|ASTM A240)/);
+  assert.doesNotMatch(info, /to prescribe minimum preheat|Preheat recommended when CE|mandatory hydrogen-controlled/);
+  assert.match(info, /unsourced in-house heuristic/);
+  assert.doesNotMatch(src("src/components/MetallurgyCopilot.tsx"), /AWS D1\.1/);
+  assert.doesNotMatch(src("src/components/PocketCalculators.tsx"), /label: "Schaeffler Diagram"/);
+});
+
+test("copilot client sends only real turns as history", () => {
+  assert.match(src("src/components/MetallurgyCopilot.tsx"), /buildApiHistory\(messages\)/);
+});
+
+test("quick-conversions inputs: no NaN-to-0 fallback on temperature entry", () => {
+  const grid = src("src/components/MetallurgicalQuickConversionsGrid.tsx");
+  assert.doesNotMatch(grid, /handleTemp[CKRF]Change\(parseFloat\(e\.target\.value\) \|\| 0\)/);
+});
+
+test("database contract text no longer describes the removed correlation mode", () => {
+  assert.doesNotMatch(src("src/generated/moduleRegistry.json"), /Pearson/);
+});

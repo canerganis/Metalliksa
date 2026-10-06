@@ -14,6 +14,7 @@ import {
   Layers,
 } from "lucide-react";
 import { ConsultMessage } from "../types";
+import { buildApiHistory } from "../utils/copilotHistory";
 import {
   ConsultationResponseError,
   parseConsultationResponse,
@@ -32,7 +33,7 @@ You can consult me on:
 - **Physical Metallurgy & Strengthening Mechanisms**: Solid solution, precipitation hardening (e.g. Al-Cu GP zones, $\\gamma'-\\text{Ni}_3(\\text{Al,Ti})$), grain boundary Hall-Petch, dislocation density, and work hardening.
 - **Heat Treatment & Thermodynamics**: Quench & temper cycles, carburizing/nitriding kinetics, homogenizing, sub-zero cryogenic treatment, and CALPHAD principles.
 - **Failure Analysis & Fractography**: Fatigue striations, hydrogen embrittlement (HICC), stress corrosion cracking (SCC), creep rupture, and intergranular sensitization ($M_{23}C_6$).
-- **Welding Metallurgy & Additive Manufacturing**: AWS D1.1 preheat calculations, Schaeffler constitution, epitaxial solidification, and LPBF keyhole porosity mitigation.
+- **Welding Metallurgy & Additive Manufacturing**: carbon-equivalent (IIW CE / Pcm) screening, Schaeffler-type Cr_eq / Ni_eq, epitaxial solidification, and LPBF keyhole porosity mitigation.
 
 How can I assist your engineering investigation or alloy formulation today?`,
       timestamp: Date.now(),
@@ -110,17 +111,14 @@ How can I assist your engineering investigation or alloy formulation today?`,
 
     try {
       // Build conversation history format for API
-      const apiHistory = newHistory.map((m) => ({
-        role: m.role,
-        content: m.content,
-      }));
+      const apiHistory = buildApiHistory(messages);
 
       const res = await fetch("/api/metallurgy/consult", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           prompt: userText,
-          history: apiHistory.slice(0, -1), // prior history
+          history: apiHistory, // prior real turns only
         }),
         signal: request.signal,
       });

@@ -167,6 +167,18 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
     return convertTemperature(sourceVal, sourceUnit);
   }, [tempInputScale, tempValC, tempValK, tempValR, tempValF]);
 
+  // Empty or invalid entry is NaN (shown as unavailable downstream), never silently 0. The active scale keeps the raw
+  // typed value so the user's own field is not rewritten by an unavailable conversion.
+  const parseTempInput = (raw: string): number => {
+    const v = parseFloat(raw);
+    return Number.isFinite(v) ? v : NaN;
+  };
+  const tempFieldValue = (scale: "C" | "K" | "R"): number | string => {
+    const raw = { C: tempValC, K: tempValK, R: tempValR }[scale];
+    const v = tempInputScale === scale ? raw : tempConversions[scale];
+    return Number.isFinite(v) ? v : "";
+  };
+
   const handleTempCChange = (val: number) => {
     setTempInputScale("C");
     setTempValC(val);
@@ -797,8 +809,8 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
                           id="input-temp-celsius"
                           type="number"
                           inputMode="decimal"
-                          value={Number.isFinite(tempConversions.C) ? tempConversions.C : ""}
-                          onChange={(e) => handleTempCChange(parseFloat(e.target.value) || 0)}
+                          value={tempFieldValue("C")}
+                          onChange={(e) => handleTempCChange(parseTempInput(e.target.value))}
                           className="w-full px-2 py-1.5 bg-[#090e18] border border-[#1e2d46] rounded-lg font-mono font-bold text-xs text-amber-400 focus:outline-none focus:border-amber-400"
                         />
                         <button
@@ -829,8 +841,8 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
                           type="number"
                           inputMode="decimal"
                           min={0}
-                          value={Number.isFinite(tempConversions.K) ? tempConversions.K : ""}
-                          onChange={(e) => handleTempKChange(parseFloat(e.target.value) || 0)}
+                          value={tempFieldValue("K")}
+                          onChange={(e) => handleTempKChange(parseTempInput(e.target.value))}
                           className="w-full px-2 py-1.5 bg-[#090e18] border border-[#1e2d46] rounded-lg font-mono font-bold text-xs text-sky-400 focus:outline-none focus:border-sky-400"
                         />
                         <button
@@ -861,8 +873,8 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
                           type="number"
                           inputMode="decimal"
                           min={0}
-                          value={Number.isFinite(tempConversions.R) ? tempConversions.R : ""}
-                          onChange={(e) => handleTempRChange(parseFloat(e.target.value) || 0)}
+                          value={tempFieldValue("R")}
+                          onChange={(e) => handleTempRChange(parseTempInput(e.target.value))}
                           className="w-full px-2 py-1.5 bg-[#090e18] border border-[#1e2d46] rounded-lg font-mono font-bold text-xs text-rose-400 focus:outline-none focus:border-rose-400"
                         />
                         <button
@@ -887,8 +899,8 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
                       min={-200}
                       max={1600}
                       step={5}
-                      value={Number.isFinite(tempConversions.C) ? tempConversions.C : ""}
-                      onChange={(e) => handleTempCChange(parseFloat(e.target.value) || 0)}
+                      value={Number.isFinite(tempConversions.C) ? tempConversions.C : 0}
+                      onChange={(e) => handleTempCChange(parseTempInput(e.target.value))}
                       className="w-full accent-amber-400 bg-[#090e18] h-1.5 rounded cursor-pointer"
                     />
                   </div>
@@ -897,7 +909,7 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
                   <div className="grid grid-cols-2 gap-2 mt-2.5 p-2 bg-[#090e18] rounded-lg border border-[#162032] items-center text-xs font-mono">
                     <div>
                       <span className="text-[9px] text-slate-500 block">Fahrenheit (°F)</span>
-                      <span className="font-bold text-slate-200">{tempConversions.F} °F</span>
+                      <span className="font-bold text-slate-200">{Number.isFinite(tempConversions.F) ? `${tempConversions.F} °F` : "unavailable"}</span>
                     </div>
                     <div className="text-right text-[10px] text-slate-400">
                       <span>°R = 1.8 × K</span>

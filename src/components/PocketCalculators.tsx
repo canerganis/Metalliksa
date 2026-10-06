@@ -259,7 +259,7 @@ export const PocketCalculators: React.FC = () => {
             { id: "hardness", label: "Hardness & Rm", icon: ArrowRightLeft, stdCategory: "hardness" },
             { id: "weldability", label: "CE & Weldability", icon: Flame, stdCategory: "weldability" },
             { id: "diffusion", label: "Fick's Diffusion", icon: Sliders, stdCategory: "diffusion" },
-            { id: "schaeffler", label: "Schaeffler Diagram", icon: Layers, stdCategory: "schaeffler" },
+            { id: "schaeffler", label: "Cr_eq / Ni_eq (Schaeffler-type)", icon: Layers, stdCategory: "schaeffler" },
             { id: "xrd", label: "XRD & Bragg", icon: Activity, stdCategory: "xrd" },
             { id: "hall-petch", label: "Hall-Petch", icon: TrendingUp, stdCategory: "hall_petch" },
             { id: "transformation", label: "Ms / Bs / Ac3", icon: Thermometer, stdCategory: "transformation" },
@@ -876,7 +876,7 @@ export const PocketCalculators: React.FC = () => {
                 <div className="text-right">
                   <span className="text-xs text-slate-400 font-mono block">Rough ferrite estimate (rule-based, not a measured FN)</span>
                   <span className="text-lg font-bold font-mono text-sky-400">
-                    {schaefflerResult.ferriteNumberEstimated} FN
+                    {schaefflerResult.ferriteNumberEstimated} (rule-based class value)
                   </span>
                 </div>
               </div>

@@ -157,7 +157,7 @@ export function calculateSchaeffler(comp: CompositionInput): SchaefflerResult {
     martensiticHardeningRisk = "High";
   } else if (crEq >= 16 && niEq >= 8 && niEq <= 16) {
     primaryPhase = "Austenite + Ferrite";
-    // DeLong / WRC-1992 FN formula approximation
+    // Rule-based linear estimate, not the DeLong / WRC-1992 FN formulation
     ferriteNumberEstimated = Math.max(
       0,
       Math.min(100, Math.round(3.0 * (crEq - 0.93 * niEq - 6.7)))

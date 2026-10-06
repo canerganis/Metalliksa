@@ -236,6 +236,12 @@ class DatabaseContractTests(unittest.TestCase):
         parent = read_product_source("src/components/MaterialsDatabaseView.tsx")
         self.assertIn('(activeTab === "split" || activeTab === "heatmap")', parent)
 
+    def test_contract_text_does_not_describe_the_removed_correlation_mode(self):
+        contract = build_database_contract(self.seed)
+        text = " ".join(contract.legacy_notes).lower()
+        self.assertNotIn("correlation", text)
+        self.assertNotIn("pearson", text)
+
     def test_contract_source_references_resolve_and_use_generated_docs_placeholder(self):
         contract = build_database_contract(self.seed)
         generated = frozenset({mr.module_doc_path("database")})

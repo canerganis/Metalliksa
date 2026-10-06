@@ -252,6 +252,16 @@ export function calculateHomologousTemperature(
   tempC: number,
   meltingTempC: number
 ): HomologousInterpretation {
+  if (!Number.isFinite(tempC) || !Number.isFinite(meltingTempC) || tempC + 273.15 < 0 || meltingTempC + 273.15 <= 0) {
+    // No valid temperature (for example below absolute zero): never fall through to a regime verdict.
+    return {
+      th: NaN,
+      regime: "Unavailable (no valid temperature)",
+      deformationMechanism: "",
+      color: "text-slate-400",
+      recommendation: "",
+    };
+  }
   const tk = tempC + 273.15;
   const tmk = meltingTempC + 273.15;
   const th = Number((tk / tmk).toFixed(3));

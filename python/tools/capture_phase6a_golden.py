@@ -287,7 +287,9 @@ def load_expected(solver: str, case: str) -> Dict[str, Any]:
 # predictedHardness_HV -> ASTM E140 and the UQ norm_ppf sign fix from phase6a_t2b_golden_cases; pourbaix
 # WP-E equilibrium engine from pourbaix_golden_check), each row verified exactly by
 # documented_change_violation; it does not widen the bound for any other row.
-STEP_B_ALLOWED_STRING_KEYS = frozenset({"pythonCode", "solverMethod"})
+STEP_B_ALLOWED_STRING_KEYS = frozenset({"pythonCode"})
+# The tafel solverMethod string was made truthful (linear regression, not "Evans Optimization"); scoped to that solver.
+STEP_B_ALLOWED_STRING_KEYS_BY_SOLVER = {"tafel_corrosion_rate_solver": frozenset({"solverMethod"})}
 # Eyewash removal (fix/eyewash-labels-dead-ui): the tafel annual-rate output no longer carries the template
 # "pythonCode" script (it was not the code that ran) nor the unsourced x3.5 pitting heuristic. Only these leaf keys
 # of the tafel solver may be absent from a re-blessed stdout; any other removed row is still a violation.
@@ -765,7 +767,8 @@ def step_b_violations(solver: str, rows: List[Dict[str, Any]],
                 out.append(f"{r['key']}: |rel| {abs(r['rel']):.3g} > {bound:.3g}")
         elif r["kind"] == "removed" and leaf in STEP_B_ALLOWED_REMOVED_KEYS.get(solver, frozenset()):
             continue
-        elif not (r["kind"] == "changed" and leaf in STEP_B_ALLOWED_STRING_KEYS
+        elif not (r["kind"] == "changed"
+                  and leaf in (STEP_B_ALLOWED_STRING_KEYS | STEP_B_ALLOWED_STRING_KEYS_BY_SOLVER.get(solver, frozenset()))
                   and isinstance(r["old"], str) and isinstance(r["new"], str)):
             out.append(f"{r['key']}: {r['kind']} row is not a value drift")
     if solver == "icme_multiscale_pipeline_solver":

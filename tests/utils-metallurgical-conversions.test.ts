@@ -411,3 +411,17 @@ test("HBW -> HV -> HBW round trip is the identity on the tabulated range", () =>
   }
   for (const hbw of [120, 200]) assert.equal(convertSteelHardness(hbw, "HBW").HV, null);
 });
+
+test("homologous temperature: an invalid temperature is unavailable, never a Hot Working verdict", () => {
+  const below = convertTemperature(-300, "C");
+  assert.ok(Number.isNaN(below.C));
+  const r = calculateHomologousTemperature(below.C, 1538);
+  assert.ok(Number.isNaN(r.th));
+  assert.match(r.regime, /^Unavailable/);
+  assert.equal(r.recommendation, "");
+  assert.equal(r.deformationMechanism, "");
+  assert.doesNotMatch(r.regime, /Hot Working/);
+  // Below absolute zero in degrees C is also rejected when passed directly.
+  assert.match(calculateHomologousTemperature(-300, 1538).regime, /^Unavailable/);
+  assert.match(calculateHomologousTemperature(650, 1538).regime, /Warm|Hot|Cold/);
+});
