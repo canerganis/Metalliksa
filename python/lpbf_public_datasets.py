@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Typed loaders for two public single-track melt-pool datasets (comparison inputs only).
+"""Typed loaders for public single-track melt-pool datasets and transcribed literature tables (comparison inputs only).
 
 Datasets (both CC BY 4.0, measured; nothing here is a calibration or a validation):
 
@@ -556,15 +556,534 @@ def load_ku_leuven_in718(verify: bool = True) -> Dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------------------------
+# Wave 2 (2026-10-06): KU Leuven 316L / Ti-6Al-4V, Lane 2020 IN625, NIST AMB2022-03 thermal targets,
+# Simonds 2018 316L absorptance. Retrieval date of every source below: 2026-10-06.
+# ---------------------------------------------------------------------------------------------
+WAVE2_RETRIEVED = "2026-10-06"
+
+KU_WAVE2_DIR = REPO_ROOT / "data" / "benchmark" / "ku-leuven-316l-ti64-2021"
+KU_WAVE2_SOURCE_DIR = KU_WAVE2_DIR / "source"
+KU_WAVE2_TABLE = KU_WAVE2_DIR / "conditions.csv"
+KU_WAVE2_TABLE_SHA256 = "e031aead71bf64c70a35ae05d64c0c576d33c2ae757a1e5bda68b5da532ac831"
+KU_WAVE2_ARTICLE = {
+    "doi": "10.1016/j.jmatprotec.2022.117547",
+    "citation": ("V. Coen, L. Goossens, B. Van Hooreweder, 'Methodology and experimental validation of analytical "
+                 "melt pool models for laser powder bed fusion', J. Mater. Process. Technol. 304 (2022) 117547, "
+                 "doi:10.1016/j.jmatprotec.2022.117547 (article not read: publisher returned HTTP 403)."),
+}
+# One record per Figshare item (all CC0, uploader Viktor Coen, published 2021-07-22). md5 is Figshare's
+# computed_md5; sha256/bytes were computed locally on the 2026-10-06 download.
+KU_WAVE2_FILES = [
+    {"alloy": "316L", "role": "raw-sections", "file": "Data Stainless Steel 316L (1).csv",
+     "doi": "10.6084/m9.figshare.15035733.v1", "url": "https://ndownloader.figshare.com/files/28914423",
+     "bytes": 13265, "md5": "a8a7a365dcf26ac3480181c87dd4f510",
+     "sha256": "3f740254deb645fa2c27f64686bc47d1e606a49a8d457a8046516c121a46a13b"},
+    {"alloy": "316L", "role": "processed", "file": "Data Stainless Steel 316L (2).csv",
+     "doi": "10.6084/m9.figshare.15035703.v1", "url": "https://ndownloader.figshare.com/files/28914396",
+     "bytes": 6127, "md5": "43b448c9f5d78560f209ebb18666745c",
+     "sha256": "9d55aca22193e8bb9f5a5656497a0abbb987d1b2b2cd091d21b4a25764fc9225"},
+    {"alloy": "Ti-6Al-4V", "role": "raw-sections", "file": "Data Ti-6Al-4V (1).csv",
+     "doi": "10.6084/m9.figshare.15035709.v1", "url": "https://ndownloader.figshare.com/files/28914390",
+     "bytes": 4746, "md5": "f03ed22aa39c0ba98107a94d6030043a",
+     "sha256": "2bac87febd59c8ea8022e088cb308026bbedbfd0c627c03c05df2a0747c59705"},
+    {"alloy": "Ti-6Al-4V", "role": "processed", "file": "Data Ti-6Al-4V (2).csv",
+     "doi": "10.6084/m9.figshare.15035712.v2", "url": "https://ndownloader.figshare.com/files/28914477",
+     "bytes": 1759, "md5": "12815f222f8b2d49ebe8288906191e73",
+     "sha256": "62ceb073a80d4b6b4e524d94cc88e07b8cabc3e54f3cab252d82ca7a90c3ad98"},
+]
+KU_WAVE2_MATERIAL = {"316L": "316L Stainless Steel", "Ti-6Al-4V": "Ti-6Al-4V"}
+KU_WAVE2_DATASET_ID = {"316L": "ku-leuven-316l-2021", "Ti-6Al-4V": "ku-leuven-ti64-2021"}
+# Beam diameter: NOT read from the paywalled article. 37.5 um is the value the repo's 2026-10-05 KU Leuven IN718
+# record attributes to the same paper ("Paper reports 37.5 um spot"); whether it is a diameter or a radius and its
+# definition (1/e^2, D4sigma, FWHM) are unverified. KU_WAVE2_BEAM_SENSITIVITY_UM is the radius reading (x2).
+KU_WAVE2_BEAM_DIAMETER_UM = 37.5
+KU_WAVE2_BEAM_SENSITIVITY_UM = 75.0
+KU_WAVE2_BEAM_STATUS = ("unverified: 37.5 um carried from the 2026-10-05 KU Leuven IN718 record ('Paper reports 37.5 um "
+                        "spot'); the article (doi:10.1016/j.jmatprotec.2022.117547) could not be read (HTTP 403), so "
+                        "diameter vs radius and the beam-size definition are not confirmed")
+KU_WAVE2_PROCESSED_REQUIRED = ["Sample", "P", "v", "w exp", "d exp", "R exp", "melting regime"]
+KU_WAVE2_TABLE_COLUMNS = ["alloy", "sample", "power_W", "speed_mm_s", "w_exp_um", "d_exp_um", "R_exp",
+                          "published_regime", "raw_sections_n", "raw_mean_width_um", "raw_mean_depth_um"]
+KU_WAVE2_PROVENANCE = {
+    "license": "CC0",
+    "citation": ("V. Coen (KU Leuven), melt-pool measurement CSVs for 316L and Ti-6Al-4V, Figshare (CC0, 2021-07-22): "
+                 "316L 10.6084/m9.figshare.15035733.v1 (raw) and 15035703.v1 (processed); Ti-6Al-4V 15035709.v1 (raw) "
+                 "and 15035712.v2 (processed). Manuscript: " + KU_WAVE2_ARTICLE["citation"]),
+    "evidenceKind": "published measurement (open dataset, measured cross-sections)",
+    "caveats": [
+        "Only the measured 'w exp', 'd exp', 'R exp' columns and the authors' 'melting regime' label are read from the "
+        "processed '(2)' files; their 'model' and 'error' columns (analytical-model outputs) are excluded by name.",
+        "Units: the raw '(1)' files tag every section row with 'um' (micrometre sign); the processed '(2)' files carry no "
+        "units. 316L 'w exp'/'d exp' equal the arithmetic means of the raw sections; Ti-6Al-4V values differ from the raw "
+        "means by a few um (see raw_mean_* columns), so the processing step is not fully reproduced here.",
+        "Width operator: 'Width' in the raw files; the authors' R = d/w with keyhole for R > 1 implies full width "
+        "(inference, the article was not read).",
+        "Regime labels are the authors' published labels ('melting regime' column), kept verbatim; they are not "
+        "a strict function of R exp and are not the repo's screening classifier.",
+        "Beam diameter " + KU_WAVE2_BEAM_STATUS + ".",
+        "Powder layer, preheat and absorptivity are not stated in the files read; 20 C preheat is an assumption.",
+        "Conditions blank in the processed file (316L 600 W at 400/500/1000/1100 mm/s) carry no exp value and are not "
+        "compared, although the raw file has partial sections for some of them.",
+        "Condition means: per-condition section count is taken from the raw file (raw_sections_n); the trailing "
+        "'nb. of samples' column of the processed file belongs to its regime-summary block and is not used.",
+    ],
+}
+
+
+def _ku_text(data: bytes) -> str:
+    # The Figshare CSVs are single-byte encoded (the unit cell is b'\xb5m'); latin-1 maps every byte.
+    return data.decode("latin-1")
+
+
+def verify_ku_wave2_sources(source_dir: Union[str, Path] = KU_WAVE2_SOURCE_DIR) -> Dict[str, str]:
+    """sha256-check the four committed Figshare CSVs; raises ValueError on a missing or changed file."""
+    out = {}
+    for spec in KU_WAVE2_FILES:
+        path = Path(source_dir) / spec["file"]
+        if not path.is_file():
+            raise FileNotFoundError(f"KU Leuven source file missing: {path}")
+        data = path.read_bytes()
+        digest = sha256_bytes(data)
+        if digest != spec["sha256"] or len(data) != spec["bytes"]:
+            raise ValueError(f"KU Leuven source sha256 mismatch for {spec['file']}: {digest}")
+        out[spec["file"]] = digest
+    return out
+
+
+def parse_ku_leuven_processed(text: str) -> Dict[str, Any]:
+    """Measured columns only from a processed '(2)' CSV. Model/error columns are located and excluded by name."""
+    reader = csv.reader(io.StringIO(text, newline=""), delimiter=";", strict=True)
+    header = [h.strip() for h in next(reader)]
+    index = {}
+    for name in KU_WAVE2_PROCESSED_REQUIRED:
+        if header.count(name) != 1:
+            raise ValueError(f"KU Leuven processed header lacks a unique {name!r} column")
+        index[name] = header.index(name)
+    excluded = [h for h in header if "model" in h.lower() or "error" in h.lower()]
+    if not excluded:
+        raise ValueError("KU Leuven processed header has no model/error columns; unexpected file layout")
+    rows = []
+    for line, cells in enumerate(reader, 2):
+        if not cells or not cells[0].strip().isdigit():
+            continue
+        cells = cells + [""] * (len(header) - len(cells))
+
+        def num(name):
+            raw = cells[index[name]].strip().replace(",", ".")
+            if not raw:
+                return None
+            value = float(raw)
+            if not math.isfinite(value):
+                raise ValueError(f"nonfinite {name} at line {line}")
+            return value
+        power, speed = num("P"), num("v")
+        if power is None or power <= 0 or speed is None or speed <= 0:
+            raise ValueError(f"invalid process input at line {line}")
+        w, d = num("w exp"), num("d exp")
+        if (w is None) != (d is None) or (w is not None and (w <= 0 or d <= 0)):
+            raise ValueError(f"inconsistent measured geometry at line {line}")
+        label = cells[index["melting regime"]].strip() or None
+        if label not in (None, "conduction", "transition", "keyhole"):
+            raise ValueError(f"unexpected regime label {label!r} at line {line}")
+        rows.append({"sample": int(cells[0]), "power_W": power, "speed_mm_s": speed, "w_exp_um": w,
+                     "d_exp_um": d, "R_exp": num("R exp"), "published_regime": label})
+    return {"rows": rows, "excludedColumns": excluded}
+
+
+def parse_ku_leuven_raw_sections(text: str) -> List[Dict[str, Any]]:
+    """Per-section depth/width from a raw '(1)' CSV (blocks: Power -> Scanning Speed columns -> Depth;Width)."""
+    power = None
+    blocks: List[tuple] = []  # (start column, speed)
+    out = []
+    for line, raw_line in enumerate(text.splitlines(), 1):
+        cells = raw_line.split(";")
+        first = cells[1].strip() if len(cells) > 1 else ""
+        if first == "Power":
+            power = float(cells[2])
+            blocks = []
+            continue
+        if first == "Scanning Speed":
+            blocks = [(j - 1, float(cells[j + 1])) for j, c in enumerate(cells) if c.strip() == "Scanning Speed"]
+            continue
+        if first == "Depth":
+            for s, _ in blocks:
+                if cells[s + 1].strip() != "Depth" or cells[s + 2].strip() != "Width":
+                    raise ValueError(f"unexpected KU Leuven raw column order at line {line}")
+            continue
+        for s, speed in blocks:
+            if s < len(cells) and cells[s].strip().isdigit():
+                if power is None:
+                    raise ValueError(f"section row before a Power block at line {line}")
+                if cells[s + 3].strip() != "µm":
+                    raise ValueError(f"unexpected unit {cells[s + 3]!r} at line {line}")
+                depth = float(cells[s + 1]) if cells[s + 1].strip() else None
+                width = float(cells[s + 2]) if cells[s + 2].strip() else None
+                out.append({"power_W": power, "speed_mm_s": speed, "section": int(cells[s]),
+                            "depth_um": depth, "width_um": width, "sourceLine": line})
+    return out
+
+
+def build_ku_wave2_table(source_dir: Union[str, Path] = KU_WAVE2_SOURCE_DIR, out: Path = KU_WAVE2_TABLE) -> str:
+    """Rebuild conditions.csv from the committed (sha-verified) source CSVs; returns its sha256."""
+    verify_ku_wave2_sources(source_dir)
+    rows = []
+    for alloy in ("316L", "Ti-6Al-4V"):
+        specs = {s["role"]: s for s in KU_WAVE2_FILES if s["alloy"] == alloy}
+        processed = parse_ku_leuven_processed(_ku_text((Path(source_dir) / specs["processed"]["file"]).read_bytes()))
+        sections = parse_ku_leuven_raw_sections(_ku_text((Path(source_dir) / specs["raw-sections"]["file"]).read_bytes()))
+        for r in processed["rows"]:
+            both = [s for s in sections if s["power_W"] == r["power_W"] and s["speed_mm_s"] == r["speed_mm_s"]
+                    and s["depth_um"] is not None and s["width_um"] is not None]
+            rows.append({"alloy": alloy, "sample": r["sample"], "power_W": f"{r['power_W']:g}",
+                         "speed_mm_s": f"{r['speed_mm_s']:g}",
+                         "w_exp_um": "" if r["w_exp_um"] is None else repr(r["w_exp_um"]),
+                         "d_exp_um": "" if r["d_exp_um"] is None else repr(r["d_exp_um"]),
+                         "R_exp": "" if r["R_exp"] is None else repr(r["R_exp"]),
+                         "published_regime": r["published_regime"] or "",
+                         "raw_sections_n": len(both),
+                         "raw_mean_width_um": f"{sum(s['width_um'] for s in both) / len(both):.4f}" if both else "",
+                         "raw_mean_depth_um": f"{sum(s['depth_um'] for s in both) / len(both):.4f}" if both else ""})
+    return _write_table(KU_WAVE2_TABLE_COLUMNS, rows, Path(out))
+
+
+def load_ku_leuven_316l_ti64(verify: bool = True, beam_diameter_um: float = KU_WAVE2_BEAM_DIAMETER_UM) -> Dict[str, Any]:
+    """Condition-mean rows with both measured w exp and d exp (others are listed in provenance['notCompared'])."""
+    records = _load_pinned_csv(KU_WAVE2_TABLE, KU_WAVE2_TABLE_SHA256 if verify else sha256_file(KU_WAVE2_TABLE),
+                               KU_WAVE2_TABLE_COLUMNS, "KU Leuven 316L/Ti-6Al-4V")
+    rows, not_compared = [], []
+    for item in records:
+        alloy = item["alloy"]
+        row_id = f"{KU_WAVE2_DATASET_ID[alloy]}-{int(item['sample']):02d}"
+        if not item["w_exp_um"] or not item["d_exp_um"]:
+            not_compared.append({"rowId": row_id, "reason": "w exp / d exp blank in the processed source file"})
+            continue
+        rows.append({"dataset": KU_WAVE2_DATASET_ID[alloy], "rowId": row_id, "material": KU_WAVE2_MATERIAL[alloy],
+                     "power_W": float(item["power_W"]), "speed_mm_s": float(item["speed_mm_s"]),
+                     "beamDiameter_um": beam_diameter_um, "layer_um": None, "preheat_C": ASSUMED_PREHEAT_C,
+                     "width_um": float(item["w_exp_um"]), "depth_um": float(item["d_exp_um"]),
+                     "area_um2": None, "balling": None, "height_um": None, "hatch_um": None,
+                     "publishedRegime": item["published_regime"] or None,
+                     "sampleCount": int(item["raw_sections_n"]) if item["raw_sections_n"] else None})
+    prov = dict(KU_WAVE2_PROVENANCE)
+    prov.update(id="ku-leuven-316l-ti64-2021", file=KU_WAVE2_TABLE.name, fileSha256=sha256_file(KU_WAVE2_TABLE),
+                rows=len(rows), notCompared=not_compared, sourceFiles=[dict(s) for s in KU_WAVE2_FILES],
+                retrieved=WAVE2_RETRIEVED, beamDiameter_um=beam_diameter_um, beamDiameterStatus=KU_WAVE2_BEAM_STATUS,
+                columns={"w_exp_um": "um (full width, inferred)", "d_exp_um": "um", "R_exp": "d/w",
+                         "published_regime": "authors' label, verbatim"})
+    return {"rows": rows, "provenance": prov}
+
+
+# ---- Lane et al. 2020 (AMB2018-02 IN625 bare-plate single tracks), Tables 3 and 4 ----------------------------
+LANE_DIR = REPO_ROOT / "data" / "benchmark" / "lane-in625-amb2018-02"
+LANE_TRACKS_TABLE = LANE_DIR / "table3_tracks.csv"
+LANE_SUMMARY_TABLE = LANE_DIR / "table4_summary.csv"
+LANE_TRACKS_TABLE_SHA256 = "32fe10fb8606a49cdc59e1e3753b40e6be9ea9751dae9ec8ac95c217e6d16179"
+LANE_SUMMARY_TABLE_SHA256 = "5ea0e60266a948d266d80f253eaa9df130aece639060cb1fc5f54f2a9d59390d"
+LANE_SOURCE = {
+    "doi": "10.1007/s40192-020-00169-1", "pmcid": "PMC8194244", "nihmsid": "NIHMS1686029",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8194244/",
+    "retrievalUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=8194244",
+    "retrieved": WAVE2_RETRIEVED, "bytes": 185979,
+    "sha256": "19757c67b91aeee5b4575722482103649dc98d03167bced14d64244f5313b460",
+    "hashOf": "PMC JATS XML returned by NCBI efetch (two fetches gave identical bytes); not committed",
+}
+LANE_PROVENANCE = {
+    "id": "lane-in625-2020", "doi": LANE_SOURCE["doi"], "url": LANE_SOURCE["url"],
+    "license": ("not stated as a licence: PMC author manuscript (NIHMS1686029), PMC permissions text 'available for "
+                "text mining ... fair use'; NIST-authored; numeric table values transcribed with citation"),
+    "citation": ("B. Lane et al., 'Measurements of melt pool geometry and cooling rates of individual laser traces on "
+                 "IN625 bare plates', Integr. Mater. Manuf. Innov. 9(1) (2020), doi:10.1007/s40192-020-00169-1, "
+                 "PMC8194244, Tables 3 and 4 (AM-Bench AMB2018-02)."),
+    "material": "Inconel 625",
+    "evidenceKind": "published measurement (table transcription)",
+    "caveats": [
+        "Width and depth are Table 3 'Cross Section (um)' track means (N = 3 microscopy measurements per track, sigma "
+        "= spread, not an uncertainty); the first Cross Section column is width, the second depth (their CBM means "
+        "reproduce Table 4 Class Width/Depth).",
+        "Bare IN625 plate, no powder; preheat not stated (20 C assumed). Spot sizes are D4sigma diameters (CBM 100 um, "
+        "AMMT 170 um, Table 1); for a Gaussian beam D4sigma equals the 1/e^2 diameter the kernels take.",
+        "AMMT power: Table 3 lists 137.9 W (case A) and 179.2 W (cases B, C) while the text gives case powers 150 W "
+        "and 195 W; the paper text retrieved does not explain the difference. Kernel inputs use the Table 3 values; "
+        "the discrepancy is UNRESOLVED and a nominal-power sensitivity is reported separately.",
+        "AMMT cooling rates: Table 3 footnote c says they 'should not be used' (motion blur / calibration range); they "
+        "are stored flagged do-not-use. AMMT 1290-1000 C cooling rates are blank (footnote b). AMMT-100us case C "
+        "emittance 0.519 is assumed (footnote a). The conclusions call all cooling rates exemplar, not reference data.",
+        "AMMT-100us and AMMT-20us tracks are different physical tracks made under nominally the same conditions "
+        "(paper Fig. 7); CBM case A is described as near or at keyholing.",
+        "IN625 kernel properties come from lpbf_thermal_solver.SECONDARY_THERMOPHYSICAL_DB (provenance class "
+        "'legacy-estimated-secondary', absorptivity_IR 0.38 estimated), not from a measured property set.",
+    ],
+}
+LANE_TRACK_COLUMNS = ["machine", "integration_time_us", "track", "case", "power_W", "nominal_case_power_W",
+                      "speed_mm_s", "d4sigma_um", "video_frames", "effective_emittance_mean",
+                      "effective_emittance_sigma", "length_mean_um", "length_sigma_um", "cr_1290_1190_mean_C_s",
+                      "cr_1290_1190_sigma_C_s", "cr_1290_1000_mean_C_s", "cr_1290_1000_sigma_C_s", "width_mean_um",
+                      "width_sigma_um", "depth_mean_um", "depth_sigma_um", "footnotes", "cooling_rate_use"]
+LANE_SUMMARY_COLUMNS = ["class", "cr_1290_1190_mean_C_s", "cr_N", "cr_Umean_C_s", "length_mean_um", "length_N",
+                        "length_Umean_um", "width_mean_um", "width_N", "width_Umean_um", "depth_mean_um", "depth_N",
+                        "depth_Umean_um"]
+LANE_NOMINAL_CASE_POWER_W = {"A": 150.0, "B": 195.0, "C": 195.0}  # paper text, Section 2 (case definitions)
+
+
+def _jats_tables(xml_bytes: bytes) -> Dict[str, List[List[str]]]:
+    """{label: rows of cell text} for every table-wrap in a JATS XML document (stdlib only)."""
+    root = ET.fromstring(xml_bytes)
+    out = {}
+    for tw in root.iter("table-wrap"):
+        label = tw.find("label")
+        key = re.sub(r"\s+", " ", "".join(label.itertext())).strip().rstrip(":. ") if label is not None else tw.get("id", "")
+        rows = []
+        for tr in tw.iter("tr"):
+            rows.append([re.sub(r"\s+", " ", "".join(c.itertext())).strip() for c in tr if c.tag in ("td", "th")])
+        out[key] = rows
+    return out
+
+
+def build_lane_tables(xml_path: Union[str, Path], tracks_out: Path = LANE_TRACKS_TABLE,
+                      summary_out: Path = LANE_SUMMARY_TABLE) -> tuple:
+    """Regenerate the two CSVs from the PMC XML (sha256-checked). Values are copied as published strings."""
+    data = Path(xml_path).read_bytes()
+    if sha256_bytes(data) != LANE_SOURCE["sha256"]:
+        raise ValueError("Lane PMC XML sha256 mismatch")
+    tables = _jats_tables(data)
+    t3, t4 = tables["Table 3"], tables["Table 4"]
+    tracks = []
+    for cells in t3:
+        if len(cells) != 20 or cells[0] not in ("CBM", "AMMT"):
+            continue
+        flags = sorted({f for c in cells[8:] for f in "abc" if c.endswith(f) and (c == f or c[:-1][-1:].isdigit())})
+        clean = [c[:-1] if c and c[-1] in "abc" and c[:-1][-1:].isdigit() else ("" if c in ("a", "b", "c") else c)
+                 for c in cells]
+        machine = cells[0]
+        tracks.append({
+            "machine": machine, "integration_time_us": clean[7], "track": clean[1], "case": clean[2],
+            "power_W": clean[3], "nominal_case_power_W": f"{LANE_NOMINAL_CASE_POWER_W[clean[2]]:g}",
+            "speed_mm_s": clean[4], "d4sigma_um": clean[5], "video_frames": clean[6],
+            "effective_emittance_mean": clean[8], "effective_emittance_sigma": clean[9],
+            "length_mean_um": clean[10], "length_sigma_um": clean[11],
+            "cr_1290_1190_mean_C_s": clean[12], "cr_1290_1190_sigma_C_s": clean[13],
+            "cr_1290_1000_mean_C_s": clean[14], "cr_1290_1000_sigma_C_s": clean[15],
+            "width_mean_um": clean[16], "width_sigma_um": clean[17], "depth_mean_um": clean[18],
+            "depth_sigma_um": clean[19], "footnotes": "".join(flags),
+            "cooling_rate_use": ("do-not-use (Table 3 footnote c)" if machine == "AMMT"
+                                 else "exemplar, not reference (paper conclusions)")})
+    summary = []
+    for cells in t4:
+        if len(cells) == 13 and re.fullmatch(r"(AMMT|CBM)-[ABC]", cells[0]):
+            summary.append(dict(zip(LANE_SUMMARY_COLUMNS, cells)))
+    if len(tracks) != 23 or len(summary) != 6:
+        raise ValueError(f"Lane table parse: {len(tracks)} tracks / {len(summary)} classes (expected 23 / 6)")
+    return (_write_table(LANE_TRACK_COLUMNS, tracks, Path(tracks_out)),
+            _write_table(LANE_SUMMARY_COLUMNS, summary, Path(summary_out)))
+
+
+def load_lane_in625(verify: bool = True, use_nominal_power: bool = False) -> Dict[str, Any]:
+    """23 per-track rows (Table 3) with width/depth means; Table 4 class summary in provenance['table4']."""
+    tracks = _load_pinned_csv(LANE_TRACKS_TABLE, LANE_TRACKS_TABLE_SHA256 if verify else sha256_file(LANE_TRACKS_TABLE),
+                              LANE_TRACK_COLUMNS, "Lane Table 3")
+    summary = _load_pinned_csv(LANE_SUMMARY_TABLE,
+                               LANE_SUMMARY_TABLE_SHA256 if verify else sha256_file(LANE_SUMMARY_TABLE),
+                               LANE_SUMMARY_COLUMNS, "Lane Table 4")
+    rows = []
+    for t in tracks:
+        tag = f"{t['machine'].lower()}{t['integration_time_us']}"
+        power = float(t["nominal_case_power_W"] if use_nominal_power else t["power_W"])
+        rows.append({"dataset": LANE_PROVENANCE["id"], "rowId": f"lane-in625-{tag}-t{int(t['track']):02d}-{t['case']}",
+                     "material": LANE_PROVENANCE["material"], "power_W": power,
+                     "speed_mm_s": float(t["speed_mm_s"]), "beamDiameter_um": float(t["d4sigma_um"]),
+                     "layer_um": 0.0, "preheat_C": ASSUMED_PREHEAT_C,
+                     "width_um": float(t["width_mean_um"]), "depth_um": float(t["depth_mean_um"]),
+                     "widthSigma_um": float(t["width_sigma_um"]), "depthSigma_um": float(t["depth_sigma_um"]),
+                     "area_um2": None, "balling": None, "height_um": None, "hatch_um": None,
+                     "machine": t["machine"], "case": t["case"], "table3Power_W": float(t["power_W"]),
+                     "coolingRateUse": t["cooling_rate_use"], "source": "Lane 2020 Table 3"})
+    prov = dict(LANE_PROVENANCE)
+    prov.update(file=f"{LANE_TRACKS_TABLE.name} + {LANE_SUMMARY_TABLE.name}",
+                fileSha256=sha256_file(LANE_TRACKS_TABLE), fileSha256ByName={
+                    LANE_TRACKS_TABLE.name: sha256_file(LANE_TRACKS_TABLE),
+                    LANE_SUMMARY_TABLE.name: sha256_file(LANE_SUMMARY_TABLE)},
+                rows=len(rows), source=dict(LANE_SOURCE), table4=summary, powerInput=(
+                    "nominal case power from the paper text (sensitivity)" if use_nominal_power else "Table 3 power"))
+    return {"rows": rows, "provenance": prov}
+
+
+# ---- NIST AMB2022-03 Measurement and Result Descriptions v1.0, Tables 1-3 (IN718 thermal targets) ------------
+NIST_THERMAL_DIR = REPO_ROOT / "data" / "benchmark" / "nist-amb2022-03-thermal-targets"
+NIST_THERMAL_TABLE = NIST_THERMAL_DIR / "tables2_3_thermal.csv"
+NIST_THERMAL_TABLE_SHA256 = "296b526f49fd484cb482c9f3db733ecd62283ad50eb6e529750a0b30f2f81426"
+NIST_THERMAL_SOURCE = {
+    "title": "AMB2022-03 Benchmark Measurements and Challenge Results (Measurement and Result Descriptions v1.0)",
+    "url": ("https://www.nist.gov/system/files/documents/2022/07/27/"
+            "AMB2022-03Measurement%20and%20%20Result%20Descriptions_v1.0.pdf"),
+    "documentDate": "last updated 07/21/2022 (page 1)", "retrieved": WAVE2_RETRIEVED,
+    "bytes": 1195056, "sha256": "dea3feddec2bc23281ae86c6fd9cee4d0a934a4304501fe0c038f24c7dbc9db0",
+    "license": "not stated on the document; NIST publication (US public domain by inference, not confirmed)",
+}
+NIST_THERMAL_COLUMNS = ["case", "power_W", "speed_mm_s", "d4sigma_um", "TTAM_s", "TSCR_C_s", "TLCR_C_s", "TTCR_C_s"]
+NIST_THERMAL_PROVENANCE = {
+    "id": "nist-amb2022-03-thermal-2022", "citation": (
+        "NIST AM-Bench, 'AMB2022-03 Benchmark Measurements and Challenge Results' (Measurement and Result Descriptions "
+        "v1.0, 2022): Table 1 (process cases), Table 2 (TTAM, TSCR, TLCR), Table 3 (TTCR, supplementary), page 2 and 4."),
+    "material": "Inconel 718", "evidenceKind": "published measurement (thermography-derived, table transcription)",
+    "caveats": [
+        "Thermography of bare IN718 single tracks; each value is the mean of three tracks over 30 centerline pixels at a "
+        "nominally steady-state location (page 2).",
+        "Processing assumptions stated on page 2: no undercooling, and emissivity set so the apparent solidification "
+        "inflection equals the solidus/liquidus midpoint (TTAM threshold assumed 1298 C). The document notes the "
+        "measurement error in TAM and SCR may be greatest at the largest spot size (case 1.2).",
+        "TTCR is listed as supplementary data 'for reference', not a challenge quantity (Table 3); its definition is in "
+        "the separate challenge-description document, which was not transcribed here.",
+        "Same seven cases as the IN718 optical width/depth record already in the app (NIST mds2-2718 / AMB2022-03 "
+        "Table 4); process parameters agree with lpbf_nist_in718_comparison.CASE_PROCESS.",
+    ],
+}
+
+
+def build_nist_thermal_table(pdf_path: Union[str, Path], out: Path = NIST_THERMAL_TABLE) -> str:
+    """Regenerate from the PDF (needs the optional pypdf package; only used for rebuilding)."""
+    data = Path(pdf_path).read_bytes()
+    if sha256_bytes(data) != NIST_THERMAL_SOURCE["sha256"]:
+        raise ValueError("AMB2022-03 results PDF sha256 mismatch")
+    import pypdf  # optional, rebuild only
+    reader = pypdf.PdfReader(io.BytesIO(data))
+    p2, p4 = reader.pages[1].extract_text(), reader.pages[3].extract_text()
+    sci = r"(\d\.\d+E[+-]\d+)"
+    t1 = {m[0]: m[1:] for m in re.findall(rf"(?m)(\d(?:\.\d)?) (\d+) (\d+) (\d+) ?$", p2)}
+    t2 = {m[0]: m[1:] for m in re.findall(rf"(?m)^(\d(?:\.\d)?) {sci} {sci} {sci} ?$", p4)}
+    t3_text = p4.split("Table 3")[1]
+    t3 = dict(re.findall(rf"(?m)^(\d(?:\.\d)?) {sci} ?$", t3_text))
+    cases = ["0", "1.1", "1.2", "2.1", "2.2", "3.1", "3.2"]
+    if not all(c in t1 and c in t2 and c in t3 for c in cases):
+        raise ValueError("AMB2022-03 PDF table parse incomplete")
+    rows = [{"case": c, "power_W": t1[c][0], "speed_mm_s": t1[c][1], "d4sigma_um": t1[c][2], "TTAM_s": t2[c][0],
+             "TSCR_C_s": t2[c][1], "TLCR_C_s": t2[c][2], "TTCR_C_s": t3[c]} for c in cases]
+    return _write_table(NIST_THERMAL_COLUMNS, rows, Path(out))
+
+
+def load_nist_amb2022_03_thermal(verify: bool = True) -> Dict[str, Any]:
+    records = _load_pinned_csv(NIST_THERMAL_TABLE,
+                               NIST_THERMAL_TABLE_SHA256 if verify else sha256_file(NIST_THERMAL_TABLE),
+                               NIST_THERMAL_COLUMNS, "AMB2022-03 thermal")
+    rows = [{"case": r["case"], "power_W": float(r["power_W"]), "speed_mm_s": float(r["speed_mm_s"]),
+             "d4sigma_um": float(r["d4sigma_um"]), "TTAM_s": float(r["TTAM_s"]), "TSCR_C_s": float(r["TSCR_C_s"]),
+             "TLCR_C_s": float(r["TLCR_C_s"]), "TTCR_C_s": float(r["TTCR_C_s"]),
+             "tableRefs": {"process": "Table 1", "TTAM/TSCR/TLCR": "Table 2", "TTCR": "Table 3 (supplementary)"}}
+            for r in records]
+    prov = dict(NIST_THERMAL_PROVENANCE)
+    prov.update(file=NIST_THERMAL_TABLE.name, fileSha256=sha256_file(NIST_THERMAL_TABLE), rows=len(rows),
+                source=dict(NIST_THERMAL_SOURCE))
+    return {"rows": rows, "provenance": prov}
+
+
+# ---- Simonds et al. 2018 Phys. Rev. Applied 10, 044061, Table III (316L stationary-spot absorptance) ----------
+SIMONDS_DIR = REPO_ROOT / "data" / "benchmark" / "simonds-316l-2018"
+SIMONDS_TABLE = SIMONDS_DIR / "table3_absorptance.csv"
+SIMONDS_TABLE_SHA256 = "e5fbaeb037371935c167d3e0e1740a348427313c886f7aab2ee439ee3c789db0"
+SIMONDS_SOURCE = {
+    "doi": "10.1103/PhysRevApplied.10.044061", "pmcid": "PMC7047776", "nihmsid": "NIHMS1541713",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7047776/",
+    "retrievalUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=7047776",
+    "retrieved": WAVE2_RETRIEVED, "bytes": 127169,
+    "sha256": "aaf9a603e57e95d37c7db39cbceda30cef7a6edf78f5b8626628aa68f95e86f8",
+    "hashOf": "PMC JATS XML returned by NCBI efetch (two fetches gave identical bytes); not committed",
+}
+SIMONDS_COLUMNS = ["E_in_J", "avg_irradiance_MW_cm2", "W_weld_um", "L_weld_um", "E_abs_J", "eta_coupling",
+                   "time_to_melt_ms", "time_to_keyhole_ms"]
+SIMONDS_PROVENANCE = {
+    "id": "simonds-316l-2018", "doi": SIMONDS_SOURCE["doi"], "url": SIMONDS_SOURCE["url"],
+    "license": ("US Government work: the PMC manuscript states 'This work of the U.S. Government is not subject to "
+                "U.S. copyright' (acknowledgments)"),
+    "citation": ("B. J. Simonds et al., 'Time-Resolved Absorptance and Melt Pool Dynamics during Intense Laser "
+                 "Irradiation of a Metal', Phys. Rev. Applied 10, 044061 (2018), doi:10.1103/PhysRevApplied.10.044061, "
+                 "PMC7047776, Table III (integrating-sphere optical results)."),
+    "material": "316L Stainless Steel (NIST SRM 1155a)",
+    "evidenceKind": "published measurement (table transcription)",
+    "caveats": [
+        "Stationary 10 ms laser spot welds (1070 nm, 303 um top-hat, full width at 1/e^2), polished SRM 1155a disc "
+        "(RMS roughness 79 +- 20 nm), no powder, no scanning: not a scan-track coupling value.",
+        "eta_coupling is the average coupling efficiency over the weld (E_abs / E_in) from the integrating sphere; "
+        "time-to-keyhole is defined in the paper as the time absorptance reaches 0.40 after the initial rise; '-' "
+        "(no keyhole reached) is stored as blank.",
+        "The Table III caption names W_weld width and L_weld 'length' without defining the direction; keyhole rows have "
+        "L > W, so L may be a penetration length. It is stored but not used.",
+        "Power-meter uncertainty 3 % (stated); per-row uncertainties are not in Table III.",
+    ],
+}
+
+
+def build_simonds_table(xml_path: Union[str, Path], out: Path = SIMONDS_TABLE) -> str:
+    data = Path(xml_path).read_bytes()
+    if sha256_bytes(data) != SIMONDS_SOURCE["sha256"]:
+        raise ValueError("Simonds PMC XML sha256 mismatch")
+    t = _jats_tables(data)["TABLE III"]
+    rows = [dict(zip(SIMONDS_COLUMNS, ["" if c == "–" else c for c in cells]))
+            for cells in t if len(cells) == 8 and re.fullmatch(r"\d+(\.\d+)?", cells[0])]
+    if len(rows) != 10:
+        raise ValueError(f"Simonds Table III parse produced {len(rows)} rows (expected 10)")
+    return _write_table(SIMONDS_COLUMNS, rows, Path(out))
+
+
+def load_simonds_316l(verify: bool = True) -> Dict[str, Any]:
+    records = _load_pinned_csv(SIMONDS_TABLE, SIMONDS_TABLE_SHA256 if verify else sha256_file(SIMONDS_TABLE),
+                               SIMONDS_COLUMNS, "Simonds Table III")
+    rows = [{k: (float(v) if v else None) for k, v in r.items()} for r in records]
+    prov = dict(SIMONDS_PROVENANCE)
+    prov.update(file=SIMONDS_TABLE.name, fileSha256=sha256_file(SIMONDS_TABLE), rows=len(rows),
+                source=dict(SIMONDS_SOURCE))
+    return {"rows": rows, "provenance": prov}
+
+
+def wave2_reference_targets() -> List[Dict[str, Any]]:
+    """(c) and (d) as reference targets; the comparison is marked unavailable with the reason."""
+    nist, sim = load_nist_amb2022_03_thermal(), load_simonds_316l()
+    return [
+        {"dataset": nist["provenance"]["id"], "kind": "thermal targets (IN718 single tracks)",
+         "evidenceKind": nist["provenance"]["evidenceKind"], "citation": nist["provenance"]["citation"],
+         "source": nist["provenance"]["source"], "tableSha256": nist["provenance"]["fileSha256"],
+         "caveats": nist["provenance"]["caveats"],
+         # TTAM is carried in ms here so the record's 4-decimal rounding keeps every published digit (1.22E-03 s).
+         "rows": [{"case": r["case"], "power_W": r["power_W"], "speed_mm_s": r["speed_mm_s"],
+                   "d4sigma_um": r["d4sigma_um"], "TTAM_ms": round(r["TTAM_s"] * 1e3, 6), "TSCR_C_s": r["TSCR_C_s"],
+                   "TLCR_C_s": r["TLCR_C_s"], "TTCR_C_s": r["TTCR_C_s"], "tableRefs": r["tableRefs"]}
+                  for r in nist["rows"]],
+         "comparison": {"status": "unavailable", "reason": (
+             "No like-for-like model comparison exists in the app for these quantities. The screening kernels report "
+             "solidificationKinetics.coolingRate_K_s as G x R at their solidification-front points, not the surface "
+             "centerline cooling rate just below the solidus (TSCR) or above the liquidus (TLCR), and no reviewed "
+             "operator converts a kernel melt-pool length into a time above 1298 C at the surface centerline (TTAM). "
+             "Adding such an operator is a model change that needs its own review; nothing was computed here.")}},
+        {"dataset": sim["provenance"]["id"], "kind": "absorptance targets (316L stationary spot welds)",
+         "evidenceKind": sim["provenance"]["evidenceKind"], "citation": sim["provenance"]["citation"],
+         "source": sim["provenance"]["source"], "tableSha256": sim["provenance"]["fileSha256"],
+         "caveats": sim["provenance"]["caveats"], "rows": sim["rows"],
+         "comparison": {"status": "unavailable", "reason": (
+             "The app has no stationary-spot (non-scanning) absorptance model: the kernels take a moving source and a "
+             "constant flat-plate absorptivity_IR (316L 0.42, estimated), so there is no like-for-like prediction of a "
+             "10 ms, 303 um top-hat spot's average coupling efficiency. Not computed.")}},
+    ]
+
+
+# ---------------------------------------------------------------------------------------------
 # Regime screening
 # ---------------------------------------------------------------------------------------------
-def normalized_enthalpy(material: str, power_W: float, speed_mm_s: float, beam_diameter_um: float,
-                        preheat_C: float) -> float:
-    """dH/h_s with flat-plate absorptivity (same formula as lpbf_thermal_solver.py, King/Rubenchik)."""
+def screening_props(material: str) -> Dict[str, Any]:
+    """Material properties for the screening classifier: the four-alloy authority first, then the solver's
+    SECONDARY_THERMOPHYSICAL_DB (same lookup order as calculate_meltpool_physics; IN625 is legacy-estimated there).
+    Unknown names raise; there is no default material."""
     from four_alloy_materials import thermal_props
     props = thermal_props(material)
     if props is None:
+        from lpbf_thermal_solver import SECONDARY_THERMOPHYSICAL_DB
+        props = SECONDARY_THERMOPHYSICAL_DB.get(material)
+    if props is None:
         raise ValueError(f"Unsupported material {material!r}")
+    return props
+
+
+def normalized_enthalpy(material: str, power_W: float, speed_mm_s: float, beam_diameter_um: float,
+                        preheat_C: float) -> float:
+    """dH/h_s with flat-plate absorptivity (same formula as lpbf_thermal_solver.py, King/Rubenchik)."""
+    props = screening_props(material)
     v = speed_mm_s * 1e-3
     r = beam_diameter_um * 1e-6 / 2.0
     rho = props["density_kg_m3"]
