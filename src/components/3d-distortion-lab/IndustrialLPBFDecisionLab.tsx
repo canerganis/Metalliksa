@@ -24,6 +24,7 @@ import {
   literatureOverlayPoints,
   mapSpecimenToSolverMaterials,
   PrintVerdict,
+  PRINT_VERDICT_SCREENING_LABEL,
 } from "../../utils/lpbfIndustrialDecision";
 import { mapActionableReasons, modelHonestyLine, toActionableHeadline } from "../../utils/lpbfActionableReasons";
 import { heatTreatmentCohorts, orientationCohorts } from "../../utils/lpbfFourAlloySchema";
@@ -686,7 +687,7 @@ function verdictTone(v: PrintVerdict): string {
   return "border-rose-500/40 bg-rose-500/10 text-rose-100";
 }
 
-const VerdictBanner: React.FC<{
+export const VerdictBanner: React.FC<{
   verdict: PrintVerdict;
   headline: string;
   reasons: string[];
@@ -714,6 +715,7 @@ const VerdictBanner: React.FC<{
   qualStatus,
 }) => (
   <div className={`rounded-2xl border p-4 ${verdictTone(verdict)}`}>
+    <p data-testid="print-verdict-screening-label" className="mb-1 text-[10px] font-semibold uppercase tracking-wide opacity-90">{PRINT_VERDICT_SCREENING_LABEL}</p>
     <div className="flex items-center gap-2 font-bold text-sm">
       {verdict === "printable" ? (
         <CheckCircle2 className="w-5 h-5" />

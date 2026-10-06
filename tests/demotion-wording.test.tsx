@@ -19,3 +19,14 @@ test("UQ solver output is labelled an illustrative tolerance estimate on an unca
   assert.doesNotMatch(read("src/components/UQLab.tsx"), /Distribution & Allowables/);
   assert.doesNotMatch(read("src/services/pythonComputationService.ts"), /Aerospace MMPDS Allowables Solver/);
 });
+
+test("build-job printable / risky / do-not-print verdict is labelled a screening indication and keeps its value", async () => {
+  const { VerdictBanner } = await import("../src/components/3d-distortion-lab/IndustrialLPBFDecisionLab");
+  const { PRINT_VERDICT_SCREENING_LABEL } = await import("../src/utils/lpbfIndustrialDecision");
+  assert.equal(PRINT_VERDICT_SCREENING_LABEL, "Screening indication (not validated against build outcomes)");
+  for (const verdict of ["printable", "risky", "do-not-print"] as const) {
+    const html = renderToStaticMarkup(<VerdictBanner verdict={verdict} headline={`Headline ${verdict}`} reasons={[]} />);
+    assert.match(html, /Screening indication \(not validated against build outcomes\)/, verdict);
+    assert.match(html, new RegExp(`Headline ${verdict}`), "headline (underlying value) unchanged");
+  }
+});

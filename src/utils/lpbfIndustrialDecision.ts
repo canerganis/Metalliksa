@@ -12,6 +12,9 @@ import type { BaseMetalType } from "../store/useMaterialSpecimenStore";
 /** "inconclusive": melt-pool geometry not resolved (extentStatus !== "computed"); no print / do-not-print claim. */
 export type PrintVerdict = "printable" | "risky" | "do-not-print" | "inconclusive";
 
+/** Label for every place the printable / risky / do-not-print verdict is shown; the verdict itself is unchanged. */
+export const PRINT_VERDICT_SCREENING_LABEL = "Screening indication (not validated against build outcomes)";
+
 export interface SolverMaterialMap {
   pythonThermal: string;
   pythonSlicer: string;
