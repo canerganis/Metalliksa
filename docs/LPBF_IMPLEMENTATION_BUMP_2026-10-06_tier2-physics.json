@@ -6,7 +6,7 @@
   "numpy": "2.2.6",
   "platform": "Windows-11-10.0.26300-SP0"
  },
- "pinnedExpectedFingerprint": "e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635",
+ "pinnedExpectedFingerprint": "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932",
  "parityGoldens": {
   "g10_openfoam_case_generation": {
    "group": "G10",
@@ -3427,7 +3427,7 @@
   "revision": "worktree",
   "version": "enthalpy-fv-6",
   "fingerprintSchema": "lpbf-thermal-implementation-manifest-v3-canonical-utf8-crlf",
-  "implementationHash": "e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635",
+  "implementationHash": "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932",
   "manifestCount": 36,
   "manifest": [
    "four_alloy_materials.py",
@@ -3619,10 +3619,10 @@
     "rawBytes": 5205
    },
    "lpbf_thermal_solver.py": {
-    "canonicalSha256": "3d693c7554bf132e53935336bc982af611a98d3d51af31cc96dbf612658565a2",
-    "canonicalBytes": 47410,
-    "rawSha256": "d166f75cc17a9d8f88feed5300f4d9abbd8c51ba122b222a2a43f757c1db93b5",
-    "rawBytes": 48453
+    "canonicalSha256": "e65c7a7b0f6bad8f007dd062186fbf7740aa9e7711f192a02e4486e3e533c729",
+    "canonicalBytes": 47891,
+    "rawSha256": "e65c7a7b0f6bad8f007dd062186fbf7740aa9e7711f192a02e4486e3e533c729",
+    "rawBytes": 47891
    },
    "lpbf_transient_3d_gpu.py": {
     "canonicalSha256": "62d030baa95c819e4e6d73eddd6227130c302e7ef323973c8f909160527d4308",
@@ -3686,10 +3686,10 @@
    }
   },
   "rawSchema": "lpbf-thermal-implementation-manifest-v2",
-  "rawByteImplementationHash": "3e180429f1f62f5380cedb710efa0a9739e5e6890c26b8a330cfa4d799052c2a"
+  "rawByteImplementationHash": "d5cb80f2a9601380ee78bad6c6e3e22cd6de7bf7cf2ab864da7f4f240db85564"
  },
  "fromHash": "11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359",
- "toHash": "e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635",
+ "toHash": "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932",
  "dryRunSameHash": false,
  "versionUnchanged": true,
  "pinMatchesToHash": true,
@@ -3739,20 +3739,31 @@
  },
  "commits": {
   "fromRevision": "b0d77480750d9f68679f343d3c6a54d0a500db8c",
-  "toRevision": "b87f74a7214a7ada9b5ede82148ad4fc1b9ea174",
+  "toRevision": "231d92138f472dc8c1767984f04b595206c45d03",
   "worktreeDirty": false
  },
  "expectDrift": [
-  "g9_material_snapshots:fam.LITERATURE_MELT_POOL_CASES,g11_build_job_meltpool:meltpool.0.canonicalSha256,g11_build_job_meltpool:meltpool.0.typedSha256,g11_build_job_meltpool:meltpool.0.geometry_um,g11_build_job_meltpool:meltpool.0.peakTemperature_C,g11_build_job_meltpool:meltpool.1.canonicalSha256,g11_build_job_meltpool:meltpool.1.typedSha256,g11_build_job_meltpool:meltpool.1.geometry_um,g11_build_job_meltpool:meltpool.1.peakTemperature_C,g11_build_job_meltpool:meltpool.2.canonicalSha256,g11_build_job_meltpool:meltpool.2.typedSha256,g11_build_job_meltpool:meltpool.2.geometry_um,g11_build_job_meltpool:meltpool.2.peakTemperature_C,g18_in625_latent_heat:meltpool.in625,g18_in625_latent_heat:meltpool.in625.geometry_um"
+  "g9_material_snapshots:fam.LITERATURE_MELT_POOL_CASES",
+  "g11_build_job_meltpool:meltpool.0.canonicalSha256",
+  "g11_build_job_meltpool:meltpool.0.typedSha256",
+  "g11_build_job_meltpool:meltpool.0.geometry_um",
+  "g11_build_job_meltpool:meltpool.1.canonicalSha256",
+  "g11_build_job_meltpool:meltpool.1.typedSha256",
+  "g11_build_job_meltpool:meltpool.1.geometry_um",
+  "g11_build_job_meltpool:meltpool.2.canonicalSha256",
+  "g11_build_job_meltpool:meltpool.2.typedSha256",
+  "g11_build_job_meltpool:meltpool.2.geometry_um",
+  "g18_in625_latent_heat:meltpool.in625",
+  "g18_in625_latent_heat:meltpool.in625.geometry_um"
  ],
  "parityAfter": {
   "g1_v1_60w_in718": {
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 22.8,
+   "elapsed_s": 18.9,
    "implementationHashes": [
-    "e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635"
+    "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932"
    ],
    "observationsSha256": "3572d3ed296e4533f3c8c7cffeb9553f6618a50c6988c434dbd55c3afb7e3a03"
   },
@@ -3760,9 +3771,9 @@
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 122.5,
+   "elapsed_s": 106.6,
    "implementationHashes": [
-    "e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635"
+    "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932"
    ],
    "observationsSha256": "43a0dbf8ae46b24d77aa224699a44e9b0207919b00ffc47540801e148111ae7f"
   },
@@ -3770,9 +3781,9 @@
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 5.0,
+   "elapsed_s": 4.0,
    "implementationHashes": [
-    "e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635"
+    "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932"
    ],
    "observationsSha256": "23c7ae2570af666508fbc9f4dea2d8436cb670fe60595a0b35ef5dfe3a484305"
   },
@@ -3780,9 +3791,9 @@
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 3.3,
+   "elapsed_s": 2.7,
    "implementationHashes": [
-    "e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635"
+    "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932"
    ],
    "observationsSha256": "28d26495a7d2851eda248e18e9f60376a641c2185320f0f145e3859c2e168c1f"
   },
@@ -3790,9 +3801,9 @@
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 11.0,
+   "elapsed_s": 8.6,
    "implementationHashes": [
-    "e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635"
+    "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932"
    ],
    "observationsSha256": "98562457468d05be380b760a474c7356baf7e83546f3f748386a89f4d34d6d04"
   },
@@ -3800,9 +3811,9 @@
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 7.2,
+   "elapsed_s": 5.4,
    "implementationHashes": [
-    "e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635"
+    "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932"
    ],
    "observationsSha256": "48251bf4a2e294d24cb0dbe1b55a54fdf13f1575d8961290d90b974e8627ede5"
   },
@@ -3810,9 +3821,9 @@
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 9.3,
+   "elapsed_s": 6.8,
    "implementationHashes": [
-    "e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635"
+    "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932"
    ],
    "observationsSha256": "8eb126d5a3e1fc5fd4a819c510693cf3d0fc88c812e3ecc18fa175a97532154f"
   },
@@ -3820,9 +3831,9 @@
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 6.2,
+   "elapsed_s": 4.7,
    "implementationHashes": [
-    "e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635"
+    "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932"
    ],
    "observationsSha256": "25a713282049efef88051de804d72114ba8d6aa7b94471184e1c9c48df1cb482"
   },
@@ -3830,9 +3841,9 @@
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 2.9,
+   "elapsed_s": 2.4,
    "implementationHashes": [
-    "e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635"
+    "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932"
    ],
    "observationsSha256": "fa6c290383f3f19fab21f942b5ecd1154d7ce5f270608b0afd9e9cbf2c3f8193"
   },
@@ -3840,9 +3851,9 @@
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 6.9,
+   "elapsed_s": 5.5,
    "implementationHashes": [
-    "e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635"
+    "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932"
    ],
    "observationsSha256": "cfad11ea988cec9b02fa751a3c770578fdc2c4a824348ab12f3280048924d88c"
   },
@@ -3850,7 +3861,7 @@
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 0.7,
+   "elapsed_s": 0.5,
    "implementationHashes": [],
    "observationsSha256": "bc0dd78eadb282f3509b116799d1e3d58631252abc00ffa1aaac86e835960472"
   },
@@ -3858,9 +3869,9 @@
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 4.9,
+   "elapsed_s": 4.6,
    "implementationHashes": [
-    "e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635"
+    "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932"
    ],
    "observationsSha256": "6c37c5d1170d8f2eb3f4a3baeafd83ecdd453c9f85f46591af937ad1595f1336"
   },
@@ -3870,7 +3881,7 @@
    "drift": [],
    "elapsed_s": 0.9,
    "implementationHashes": [
-    "e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635"
+    "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932"
    ],
    "observationsSha256": "6939ea83fbe63f175666fb171965d180bfa33142dea8b350c33aab3e3c400c6d"
   },
@@ -3878,9 +3889,9 @@
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 7.1,
+   "elapsed_s": 6.2,
    "implementationHashes": [
-    "e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635"
+    "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932"
    ],
    "observationsSha256": "40b898fe5fa99a9f005c121bca9e526fe8e0c8097d8812d250aa4a53124b94c0"
   },
@@ -3888,9 +3899,9 @@
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 8.3,
+   "elapsed_s": 6.5,
    "implementationHashes": [
-    "e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635"
+    "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932"
    ],
    "observationsSha256": "8be0380ee9081edd69ca7c0892c87f85a8ce2988e3963d1c39d3cba0900ff59f"
   },
@@ -3898,9 +3909,9 @@
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 7.3,
+   "elapsed_s": 6.0,
    "implementationHashes": [
-    "e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635"
+    "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932"
    ],
    "observationsSha256": "d2e3d4209f27768744b063d114655873571e6c5f46ee6799630057c121593248"
   },
@@ -3908,9 +3919,9 @@
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 9.1,
+   "elapsed_s": 7.7,
    "implementationHashes": [
-    "e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635"
+    "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932"
    ],
    "observationsSha256": "9e483f9bbcd15fdcc8d94e9fdfcbc8766f4f8f33fbb6b48b03e4037afbe0aa9b"
   },
@@ -3921,7 +3932,7 @@
     {
      "key": "meltpool.in625",
      "before": "3bfb5efeac406ac8c7578781412b2701b604578042e54edddcc48628c9ebd2e2",
-     "after": "4fef01e65aaaf0fa9d92778029b6b6ba6d48bd2d9d6690ab3e2168768a26da19"
+     "after": "82374699caa88019e851f625111513bc62e753b6225db92f37edc281a93d97f6"
     },
     {
      "key": "meltpool.in625.geometry_um",
@@ -3946,17 +3957,17 @@
      ]
     }
    ],
-   "elapsed_s": 0.1,
+   "elapsed_s": 0.0,
    "implementationHashes": [],
-   "observationsSha256": "82e2ac9639557cb0d79ab62ae3baae8d27d319655d6763332a4530cd33df1b92"
+   "observationsSha256": "34ae4cc71c044e2ab1c45f3899ff01d1320be46f5abc7ad1f5cd8501959b26fc"
   },
   "g19_emissivity_echo": {
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 8.3,
+   "elapsed_s": 6.5,
    "implementationHashes": [
-    "e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635"
+    "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932"
    ],
    "observationsSha256": "0c5b6762aa93991617d5ad899f62cb6bc98f598e0b32a34662a6bdfa861fd962"
   },
@@ -3964,9 +3975,9 @@
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 54.8,
+   "elapsed_s": 32.2,
    "implementationHashes": [
-    "e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635"
+    "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932"
    ],
    "observationsSha256": "9eb9a4434e8e1b755bb123e5dbc1024f4b6282c788acdb04071fa19b4b6c96d7"
   },
@@ -4136,7 +4147,7 @@
      ]
     }
    ],
-   "elapsed_s": 0.3,
+   "elapsed_s": 0.2,
    "implementationHashes": [],
    "observationsSha256": "a8d2acba9092d41b54c4c42ed4fe485678512f6021cb5f2df5f945cfc20b9108"
   },
@@ -4144,7 +4155,7 @@
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 2.3,
+   "elapsed_s": 0.8,
    "implementationHashes": [],
    "observationsSha256": "02683c67d2fd424fbb454e4bdd826e516d904f8d5237cef751c3edd0c8f09b08"
   },
@@ -4155,7 +4166,7 @@
     {
      "key": "meltpool.0.canonicalSha256",
      "before": "c6a6013c3c98c9314b90209622dfc3d98b1d78e2fa8bfef4bd78862aae935f94",
-     "after": "b4eabe3dc1b30f0564738fe0a9f254495e938f8fc638ebbb369280cfb17ff39c"
+     "after": "303615f12835f5ffde49749a5a59a573ef4ae64b679de752fa7f2122c6aff65f"
     },
     {
      "key": "meltpool.0.geometry_um",
@@ -4180,24 +4191,14 @@
      ]
     },
     {
-     "key": "meltpool.0.peakTemperature_C",
-     "before": "a9e27258b9e252e7aa28fbda07565b5b72693666ee46a172a59f63a0e5bb1dc8",
-     "after": "4ee880238e87b44a8b792203461cba7eed22e5a9298748b59617b667c416acb7",
-     "rawBefore": 2500.2,
-     "rawAfter": 8731.5,
-     "rawChanges": [
-      "<value>: 2500.2 (0x1.3886666666666p+11) -> 8731.5 (0x1.10dc000000000p+13)"
-     ]
-    },
-    {
      "key": "meltpool.0.typedSha256",
      "before": "fe93b2707f9c70c7ac8093f8bc92f9014e1f620501c8874dcbe25537ec29f2eb",
-     "after": "f26ac215fa71727efd74182bf45a00e1d1d5c83ff0c5648f36ef4c8b0a75e8d2"
+     "after": "2f12f1259e6edeacdb7ae6ae9d028cb1cbe46c1c7653cc53f2642f2b71a18993"
     },
     {
      "key": "meltpool.1.canonicalSha256",
      "before": "bc97b57dbbe1ef06bfaec2fcc65941092106b5fa27ab3d6664cb47ccefb88daa",
-     "after": "c20063db871ea188eeb1bea44b847006ad3100b68d09424013f0f79bc47f83e4"
+     "after": "783a84fe671b4d361163ff0f0bae1062f5366c3e98f37c5cd3baf47bfb8d6de4"
     },
     {
      "key": "meltpool.1.geometry_um",
@@ -4221,24 +4222,14 @@
      ]
     },
     {
-     "key": "meltpool.1.peakTemperature_C",
-     "before": "a72db60d805fcc76ad4b4aa582c455eae4af1b0a67ba268c4b68c433e4e0a7ea",
-     "after": "a15a1931dea14c57cb1c901a0ef451765195bb68abcf4ef14d68fdbd48a013ce",
-     "rawBefore": 28776.6,
-     "rawAfter": 31514.7,
-     "rawChanges": [
-      "<value>: 28776.6 (0x1.c1a2666666666p+14) -> 31514.7 (0x1.ec6accccccccdp+14)"
-     ]
-    },
-    {
      "key": "meltpool.1.typedSha256",
      "before": "9a7a16cd688063e51ceba2d4232faf4fe16845bdc6435b9e32b3943d09c258cf",
-     "after": "2d5c22330719c3e58446c3b9d00c335ccdad3e9135ebdff184821b4a5e227862"
+     "after": "d1c48d1f4e3aaa4d8e82124a6ff5ce5056619c7b929f0c667430b0b535177d67"
     },
     {
      "key": "meltpool.2.canonicalSha256",
      "before": "78420b31374538bb0eda25a37cda12aea068ac7d0b6bc800ef1385453617c5ad",
-     "after": "49bc02782cd5f60048e598e221e5e47ee305aa480bde4626c69ce9a1faa81d18"
+     "after": "71b1f225161a5f1563855712312e23dee3f585945af04ef65e2c529e3991077d"
     },
     {
      "key": "meltpool.2.geometry_um",
@@ -4262,30 +4253,20 @@
      ]
     },
     {
-     "key": "meltpool.2.peakTemperature_C",
-     "before": "4811a080aed033e0b1631950cc518662d9a456f97da7c97fc85c8902052a0638",
-     "after": "84720552300613c9d8f5604fa96a880f23a459bf302679f753c5dae1a45dba37",
-     "rawBefore": 19247.4,
-     "rawAfter": 25360.9,
-     "rawChanges": [
-      "<value>: 19247.4 (0x1.2cbd99999999ap+14) -> 25360.9 (0x1.8c4399999999ap+14)"
-     ]
-    },
-    {
      "key": "meltpool.2.typedSha256",
      "before": "159a4431ddb2779e410891e59b9e296334a077d2973b665e390103811fa0d81f",
-     "after": "26029c899c993de0fb9127cc67e96e85c60b6cb0394ce7322e72c557722afd33"
+     "after": "28a067cb1e901d89cccd21395c50b68f0c94cc37c0a0989fd2a23199405b1ef7"
     }
    ],
-   "elapsed_s": 1.7,
+   "elapsed_s": 0.7,
    "implementationHashes": [],
-   "observationsSha256": "89f3922a715a0c36c4202b2bd979bb9e2f89251f189f39ae80d2bb77e85afd73"
+   "observationsSha256": "5b1b5baa2355a71ec39db30b181637cb9093c7dd0a3660a19d91989be6db6987"
   },
   "g12_analytical_modules": {
    "status": "PASS",
    "problems": [],
    "drift": [],
-   "elapsed_s": 0.3,
+   "elapsed_s": 0.1,
    "implementationHashes": [],
    "observationsSha256": "cae30531fe1109042f86ab5d48b0fb16d8cebaf959f070db334b916fa916c2cb"
   },
