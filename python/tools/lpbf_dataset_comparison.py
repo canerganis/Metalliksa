@@ -14,8 +14,12 @@ Usage (from python/, locked interpreter, PYTHONDONTWRITEBYTECODE=1):
 Options: --jobs N (worker processes, default 6), --ref-budget-s S (reference-transient total budget,
 default 900), --skip-reference, --reuse-reference <record.json> (copy that record's referenceTransient block
 instead of re-running the wall-clock-budgeted transient), --allow-raytracer (do NOT pin the flat-plate
-absorption path), --view-out <path> (slim view record, default <out>.view.json).  The companion .md is written
-next to the json.
+absorption path), --view-out <path> (slim view record, default <out>.view.json), --include-wave2 (add the
+2026-10-06 datasets: KU Leuven 316L/Ti-6Al-4V condition means and Lane 2020 IN625 tracks through the same kernels,
+plus the NIST AMB2022-03 thermal and Simonds 2018 absorptance tables as reference targets whose model comparison
+is recorded as unavailable). The companion .md is written next to the json.
+    python -B tools/lpbf_dataset_comparison.py --include-wave2 --generated-at 2026-10-06 \
+        --reuse-reference ../docs/LPBF_DATASET_COMPARISON_2026-10-05.json --out ../docs/LPBF_DATASET_COMPARISON_2026-10-06.json
 Nothing is written under python/golden.
 """
 
@@ -370,7 +374,7 @@ def _pop_warnings(preds: Sequence[Dict[str, Any]]) -> int:
 
 
 def build_limits(out_rows: Sequence[Dict[str, Any]], summary: Dict[str, Any],
-                 absorption: Dict[str, Any]) -> List[str]:
+                 absorption: Dict[str, Any], include_wave2: bool = False) -> List[str]:
     """Plain-language limits, with every number computed from the record (nothing hardcoded)."""
     n_rows = len(out_rows)
     lim: List[str] = []
@@ -395,9 +399,17 @@ def build_limits(out_rows: Sequence[Dict[str, Any]], summary: Dict[str, Any],
                     "Eagar-Tsai and Goldak keyhole-regime depth statistics are near-identical (bias "
                     f"{et['bias_pct']:+.1f} / {gk['bias_pct']:+.1f} %, MAPE {et['mape_pct']:.1f} / {gk['mape_pct']:.1f} %)")
                    + " because both add the same Fabbro keyhole depth term; they are not independent evidence.")
-    lim.append("The measurements carry no uncertainty model (neither dataset provides per-row measurement "
-               "uncertainty); the bootstrap intervals cover resampling of parameter sets only, not measurement "
-               "error, the estimated material laws or the assumed absorptivity.")
+    if include_wave2:
+        lim.append("The measurements carry no uncertainty model: the pooled-summary datasets (Hofmann 316L, Totis "
+                   "Ti-6Al-4V) provide no per-row measurement uncertainty; the wave 2 Lane IN625 rows carry Table 3 "
+                   "per-track sigma (measured.widthSigma_um / depthSigma_um, the spread of N = 3 microscopy "
+                   "measurements, not an uncertainty) and the statistics do not use it. The bootstrap intervals cover "
+                   "resampling of parameter sets only, not measurement error, the estimated material laws or the "
+                   "assumed absorptivity.")
+    else:
+        lim.append("The measurements carry no uncertainty model (neither dataset provides per-row measurement "
+                   "uncertainty); the bootstrap intervals cover resampling of parameter sets only, not measurement "
+                   "error, the estimated material laws or the assumed absorptivity.")
     hof = [r for r in out_rows if str(r["dataset"]).startswith("hofmann")]
     if hof:
         sets = len({_set_key(r) for r in hof})
@@ -423,7 +435,7 @@ def build_limits(out_rows: Sequence[Dict[str, Any]], summary: Dict[str, Any],
 
 def build_document(quick: bool, jobs: int, ref_budget_s: float, skip_reference: bool,
                    generated_at: str, allow_raytracer: bool = False,
-                   reuse_reference: Optional[Path] = None) -> Dict[str, Any]:
+                   reuse_reference: Optional[Path] = None, include_wave2: bool = False) -> Dict[str, Any]:
     pin_flat_plate(allow_raytracer)
     import lpbf_public_datasets as pd
     from lpbf_simulation import implementation_fingerprint
@@ -434,6 +446,9 @@ def build_document(quick: bool, jobs: int, ref_budget_s: float, skip_reference: 
     cmu = pd.load_cmu_ti64()
     kl = pd.load_ku_leuven_in718()
     data_rows = h["rows"][:40] + t["rows"][:40] if quick else h["rows"] + t["rows"]
+    w2 = load_wave2(pd) if include_wave2 else None
+    if w2:
+        data_rows = data_rows + w2["rows"]
     extra_rows = cmu["rows"] + kl["rows"]
     if quick:
         extra_rows = [r for dataset_id in ("cmu-ti64-st-2026", "cmu-ti64-mt-2026", "ku-leuven-in718-2021")
@@ -443,6 +458,8 @@ def build_document(quick: bool, jobs: int, ref_budget_s: float, skip_reference: 
         r["regime"] = pd.classify_regime(r["material"], r["power_W"], r["speed_mm_s"], r["beamDiameter_um"],
                                          r["preheat_C"], r["balling"])
         r["regime"]["dOverW"] = r["depth_um"] / r["width_um"]
+        if r.get("publishedRegime"):
+            r["regime"]["publishedLabel"] = r["publishedRegime"]
 
     tasks = [{"row": r, "kernel": k, "allowRaytracer": allow_raytracer} for r in data_rows for k in KERNELS]
     preds = _map(tasks, jobs)
@@ -457,6 +474,9 @@ def build_document(quick: bool, jobs: int, ref_budget_s: float, skip_reference: 
             measured["balling"] = r["balling"]
         if r["height_um"] is not None:
             measured["height_um"] = r["height_um"]
+        for key in ("widthSigma_um", "depthSigma_um", "sampleCount"):
+            if r.get(key) is not None:
+                measured[key] = r[key]
         out_rows.append({
             "dataset": r["dataset"], "rowId": r["rowId"],
             "inputs": {"material": r["material"], "power_W": r["power_W"], "speed_mm_s": r["speed_mm_s"],
@@ -485,8 +505,12 @@ def build_document(quick: bool, jobs: int, ref_budget_s: float, skip_reference: 
         out_rows.append({"dataset": r["dataset"], "rowId": r["rowId"], "inputs": inputs,
                          "measured": measured, "regime": regime, "predictions": predictions})
 
-    summary = summarize(out_rows, with_ci=True)
-    add_common_cells(summary, out_rows, with_ci=True)
+    # The pooled headline, its limits and the absorptivity sensitivity cover the 2026-10-05 dataset scope only;
+    # wave 2 rows are scored per dataset in doc['wave2']['scorecard'] (their inputs carry unverified values).
+    wave2_ids = set(WAVE2_SCORECARD_DATASETS) if w2 else set()
+    pooled_rows = [r for r in out_rows if r["dataset"] not in wave2_ids]
+    summary = summarize(pooled_rows, with_ci=True)
+    add_common_cells(summary, pooled_rows, with_ci=True)
     breakdowns: Dict[str, Any] = {"byDataset": {}, "bySpotSize_um": {}, "byPowderLayer_um": {}}
     for ds in sorted({r["dataset"] for r in out_rows}):
         breakdowns["byDataset"][ds] = summarize([r for r in out_rows if r["dataset"] == ds])
@@ -496,7 +520,7 @@ def build_document(quick: bool, jobs: int, ref_budget_s: float, skip_reference: 
     for L in sorted({r["inputs"]["layer_um"] for r in hof}):
         breakdowns["byPowderLayer_um"][f"{L:g}"] = summarize([r for r in hof if r["inputs"]["layer_um"] == L])
 
-    cond_rows = [r for r in out_rows if r["regime"]["label"] == "conduction"]
+    cond_rows = [r for r in pooled_rows if r["regime"]["label"] == "conduction"]
     cond_data = {r["rowId"]: next(x for x in data_rows if x["rowId"] == r["rowId"]) for r in cond_rows}
     by_value: Dict[float, Dict[str, Dict[str, Any]]] = {}
     sens_warnings = 0
@@ -517,6 +541,8 @@ def build_document(quick: bool, jobs: int, ref_budget_s: float, skip_reference: 
     n_warn = sum(warn_by_kernel.values()) + sens_warnings
     abs_by_material = {pr["material"].replace(" Stainless Steel", ""): thermal_props(pr["material"])["absorptivity_IR"]
                        for pr in (h["provenance"], t["provenance"])}
+    if w2:
+        abs_by_material["Inconel 625"] = pd.screening_props("Inconel 625")["absorptivity_IR"]
     absorption = {
         "path": "flat-plate" if not allow_raytracer else "unpinned (solver's own choice)",
         "pinned": not allow_raytracer,
@@ -571,7 +597,7 @@ def build_document(quick: bool, jobs: int, ref_budget_s: float, skip_reference: 
                                    "not pinned, see `absorption`"),
         },
         "absorption": absorption,
-        "limits": build_limits(out_rows, summary, absorption),
+        "limits": build_limits(pooled_rows, summary, absorption, include_wave2=bool(w2)),
         "rows": out_rows,
         "summary": summary,
         "breakdowns": breakdowns,
@@ -603,13 +629,46 @@ def build_document(quick: bool, jobs: int, ref_budget_s: float, skip_reference: 
                           "source": {"file": "Data_Inconel718.csv", "rawSha256": "029f5c6992bd261891b30966d3bcc01ff327cd2cf1c7a6963e94de075766e1e5"},
                           "materialKey": "Inconel 718"})
     doc["datasets"].extend(extra_catalog)
+    if w2:
+        doc["datasets"].extend(wave2_catalog(pd, w2, out_rows))
+        doc["wave2"] = build_wave2_block(pd, w2, out_rows, jobs, allow_raytracer)
+        doc["summaryScope"] = {
+            "datasets": sorted({r["dataset"] for r in pooled_rows}), "rows": len(pooled_rows),
+            "excludedWave2Datasets": sorted(wave2_ids), "excludedWave2Rows": len(out_rows) - len(pooled_rows),
+            "note": ("summary, limits and absorptivitySensitivity cover the 2026-10-05 dataset scope only, so the "
+                     "pooled headline is comparable to the 2026-10-05 record; wave 2 rows are scored per dataset in "
+                     "wave2.scorecard because their inputs include unverified (KU Leuven beam diameter) or "
+                     "legacy-estimated (IN625 properties) values.")}
+        doc["limits"].extend(wave2_limits(pd, w2, out_rows))
+        doc["regimeFilter"]["rule"] += (" Wave 2 rows (KU Leuven 316L/Ti-6Al-4V, Lane IN625) are classified by the same "
+                                          "screening rule; the KU Leuven authors' own labels are kept verbatim in "
+                                          "regime.publishedLabel and are not used for the statistics' regime split.")
+        doc["assumptions"]["wave2"] = (
+            "KU Leuven rows: beam diameter " + pd.KU_WAVE2_BEAM_STATUS + "; layer left unset ("
+            + pd.KU_WAVE2_LAYER_STATUS + "; kernels ignore it); 20 C "
+            "preheat assumed. Lane rows: bare plate (layer 0, passed as the nominal layer), Table 3 power, D4sigma spot "
+            "as the 1/e^2 diameter, 20 C preheat assumed, IN625 properties from the solver's legacy-estimated secondary "
+            "table. No kernel parameter was changed for these rows; sensitivities are reported separately.")
+    ku_in718 = "KU Leuven IN718 (ku-leuven-in718-2021)" if w2 else "KU Leuven"
     doc["regimeFilter"]["rule"] += (" Added datasets without a reported beam diameter (CMU) or with unresolved measured "
-                                      "dimension units/operator (KU Leuven) are labeled unclassified and excluded "
+                                      f"dimension units/operator ({ku_in718}) are labeled unclassified and excluded "
                                       "from kernel predictions; no regime label is inferred for them.")
     doc["assumptions"]["addedDatasetTreatment"] = (
-        "CMU ST has no power field; all CMU rows lack beam diameter. KU Leuven source dimensions retain unresolved "
+        f"CMU ST has no power field; all CMU rows lack beam diameter. {ku_in718} source dimensions retain unresolved "
         "units and width operator. These rows have no numeric regime classification or kernel predictions and are "
-        "excluded from MAPE/statistics; source observations remain in rows with explicit extentStatus reasons.")
+        "excluded from MAPE/statistics; source observations remain in rows with explicit extentStatus reasons."
+        + (" This applies to the IN718 file only: the wave 2 KU Leuven 316L/Ti-6Al-4V units were resolved from their "
+           "raw '(1)' files (see the wave 2 catalog notes); the same raw-file check was not applied to the IN718 file "
+           "in this record." if w2 else ""))
+    if w2:
+        doc["assumptions"]["hatch_um"] = (f"{DEFAULT_HATCH_UM:g} (no dataset in this record has a hatch: single tracks; "
+                                          "the hatch only enters the lack-of-fusion screen, not the width/depth/length "
+                                          "extents)")
+        doc["assumptions"]["preheat_C"] = ("20 C assumed for every dataset (no dataset in this record states a "
+                                           "build-plate or substrate temperature in the files read)")
+        doc["assumptions"]["absorptivity"] = ("the repo's estimated absorptivity_IR (316L 0.42, Ti-6Al-4V 0.35; "
+                                              f"IN625 {abs_by_material['Inconel 625']} from the legacy-estimated "
+                                              "secondary table, wave 2 Lane rows only), flat-plate")
     if reuse_reference is not None:
         sha, norm = _lf_sha256(reuse_reference)
         src = json.loads(norm.decode("utf-8"))
@@ -620,7 +679,8 @@ def build_document(quick: bool, jobs: int, ref_budget_s: float, skip_reference: 
                                "note": "block copied, not re-run: it depends on wall-clock budgets"}
         doc["referenceTransient"] = block
     elif not skip_reference:
-        doc["referenceTransient"] = run_reference_transient(data_rows, ref_budget_s)
+        doc["referenceTransient"] = run_reference_transient(
+            [r for r in data_rows if r["dataset"] not in wave2_ids], ref_budget_s)
     return _round(doc)
 
 
@@ -664,6 +724,139 @@ def _summary_table(title: str, summ: Dict[str, Any]) -> List[str]:
     return lines
 
 
+def load_wave2(pd: Any) -> Dict[str, Any]:
+    ku = pd.load_ku_leuven_316l_ti64()
+    lane = pd.load_lane_in625()
+    return {"ku": ku, "lane": lane, "rows": ku["rows"] + lane["rows"]}
+
+
+def wave2_catalog(pd: Any, w2: Dict[str, Any], out_rows: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    ku, lane = w2["ku"]["provenance"], w2["lane"]["provenance"]
+    out = []
+    for alloy in ("316L", "Ti-6Al-4V"):
+        dataset_id = pd.KU_WAVE2_DATASET_ID[alloy]
+        files = [f for f in ku["sourceFiles"] if f["alloy"] == alloy]
+        out.append({"id": dataset_id, "doi": " + ".join(f["doi"] for f in files), "license": ku["license"],
+                    "url": files[0]["url"], "sha256": ku["fileSha256"],
+                    "rows": sum(1 for r in out_rows if r["dataset"] == dataset_id), "citation": ku["citation"],
+                    "notes": ku["caveats"] + [f"not compared: {x['rowId']} ({x['reason']})" for x in ku["notCompared"]
+                                              if x["rowId"].startswith(dataset_id)],
+                    "source": {"files": files, "retrieved": ku["retrieved"]},
+                    "materialKey": pd.KU_WAVE2_MATERIAL[alloy], "evidenceKind": ku["evidenceKind"]})
+    out.append({"id": lane["id"], "doi": lane["doi"], "license": lane["license"], "url": lane["url"],
+                "sha256": lane["fileSha256"], "rows": sum(1 for r in out_rows if r["dataset"] == lane["id"]),
+                "citation": lane["citation"], "notes": lane["caveats"],
+                "source": dict(lane["source"], tableSha256ByName=lane["fileSha256ByName"]),
+                "materialKey": lane["material"], "evidenceKind": lane["evidenceKind"]})
+    return out
+
+
+def _rerun_summary(rows: Sequence[Dict[str, Any]], jobs: int, allow_raytracer: bool,
+                   accounting: Optional[Dict[str, int]] = None) -> Dict[str, Any]:
+    """Kernel statistics for a variant of the input rows (same kernels, same statistics, no fitting).
+    Solver calls and captured ray-tracer fallback warnings are added to `accounting` when given."""
+    import lpbf_public_datasets as pd
+    tasks = [{"row": r, "kernel": k, "allowRaytracer": allow_raytracer} for r in rows for k in KERNELS]
+    preds = _map(tasks, jobs)
+    n_warn = _pop_warnings(preds)
+    if accounting is not None:
+        accounting["solverCalls"] += len(tasks)
+        accounting["fallbackWarnings"] += n_warn
+    out_rows = []
+    for i, r in enumerate(rows):
+        regime = pd.classify_regime(r["material"], r["power_W"], r["speed_mm_s"], r["beamDiameter_um"],
+                                    r["preheat_C"], r["balling"])
+        out_rows.append({"dataset": r["dataset"], "rowId": r["rowId"],
+                         "inputs": {"power_W": r["power_W"], "speed_mm_s": r["speed_mm_s"],
+                                    "beamDiameter_um": r["beamDiameter_um"], "layer_um": r["layer_um"]},
+                         "measured": {"width_um": r["width_um"], "depth_um": r["depth_um"]}, "regime": regime,
+                         "predictions": {k: preds[i * len(KERNELS) + j] for j, k in enumerate(KERNELS)}})
+    summ = summarize(out_rows, with_ci=True)
+    add_common_cells(summ, out_rows, with_ci=True)
+    return summ
+
+
+WAVE2_SCORECARD_DATASETS = ("ku-leuven-316l-2021", "ku-leuven-ti64-2021", "lane-in625-2020")
+
+
+def build_wave2_block(pd: Any, w2: Dict[str, Any], out_rows: Sequence[Dict[str, Any]], jobs: int,
+                      allow_raytracer: bool) -> Dict[str, Any]:
+    by_id = {r["rowId"]: r for r in out_rows}
+    ku_rows = [dict(r, beamDiameter_um=pd.KU_WAVE2_BEAM_SENSITIVITY_UM) for r in w2["ku"]["rows"]]
+    ammt = [r for r in w2["lane"]["rows"] if r["machine"] == "AMMT"]
+    nominal = [dict(r, power_W=pd.LANE_NOMINAL_CASE_POWER_W[r["case"]]) for r in ammt]
+    crosstab: Dict[str, Dict[str, int]] = {}
+    for r in w2["ku"]["rows"]:
+        if r["rowId"] not in by_id:
+            continue
+        published = r.get("publishedRegime") or "none"
+        screened = by_id[r["rowId"]]["regime"]["label"]
+        crosstab.setdefault(published, {}).setdefault(screened, 0)
+        crosstab[published][screened] += 1
+    scorecard = {}
+    for ds in WAVE2_SCORECARD_DATASETS:
+        rows = [r for r in out_rows if r["dataset"] == ds]
+        if not rows:
+            continue
+        s = summarize(rows, with_ci=True)
+        add_common_cells(s, rows, with_ci=True)
+        scorecard[ds] = s
+    all_ids = {r["rowId"] for r in out_rows}
+    ku_rows = [r for r in ku_rows if r["rowId"] in all_ids]
+    nominal = [r for r in nominal if r["rowId"] in all_ids]
+    acct = {"solverCalls": 0, "fallbackWarnings": 0}
+    ku_sens = {ds: _rerun_summary([r for r in ku_rows if r["dataset"] == ds], jobs, allow_raytracer, acct)
+               for ds in ("ku-leuven-316l-2021", "ku-leuven-ti64-2021") if any(r["dataset"] == ds for r in ku_rows)}
+    lane_sens = _rerun_summary(nominal, jobs, allow_raytracer, acct) if nominal else None
+    return {
+        "label": ("Wave 2 (2026-10-06): new open measured datasets run through the unchanged screening kernels; "
+                  "comparison, not validation"),
+        "scorecard": scorecard,
+        "kuBeamDiameterSensitivity": {
+            "label": ("SENSITIVITY on an unresolved input, not a fit: KU Leuven rows re-run with beam diameter "
+                      f"{pd.KU_WAVE2_BEAM_SENSITIVITY_UM:g} um (the 37.5 um value read as a radius)"),
+            "beamDiameter_um": pd.KU_WAVE2_BEAM_SENSITIVITY_UM, "rows": len(ku_rows), "byDataset": ku_sens},
+        "laneNominalPowerSensitivity": {
+            "label": ("SENSITIVITY on an unresolved input, not a fit: Lane AMMT rows re-run at the nominal case power "
+                      "from the paper text (150 W case A, 195 W cases B/C) instead of the Table 3 power (137.9/179.2 W)"),
+            "rows": len(nominal), "summary": lane_sens},
+        "sensitivityRunAccounting": dict(acct, note=(
+            "solver calls of the two wave 2 sensitivity re-runs, not included in absorption.solverCalls; "
+            "fallbackWarnings counts the captured ray-tracer fallback messages of those calls")),
+        "kuRegimeLabelCrosstab": {
+            "label": ("rows: KU Leuven authors' published label; columns: the repo's screening classifier at the "
+                      "primary inputs. Counts only; the published label is not a measured regime boundary."),
+            "counts": crosstab},
+        "laneTable4": w2["lane"]["provenance"]["table4"],
+        "referenceTargets": pd.wave2_reference_targets(),
+        "evidence": {"experimentalValidation": False, "opticalOperatorMatched": False,
+                     "measured": "KU Leuven w/d exp, Lane Table 3/4 cross sections, NIST Table 2/3, Simonds Table III",
+                     "estimated": "all material laws (IN625 legacy-estimated secondary), absorptivity, preheat",
+                     "computed": "kernel outputs and statistics"},
+    }
+
+
+def wave2_limits(pd: Any, w2: Dict[str, Any], out_rows: Sequence[Dict[str, Any]]) -> List[str]:
+    ku_ids = set(pd.KU_WAVE2_DATASET_ID.values())
+    n_ku = sum(1 for r in out_rows if r["dataset"] in ku_ids)
+    n_lane = sum(1 for r in out_rows if r["dataset"] == "lane-in625-2020")
+    return [
+        f"KU Leuven 316L/Ti-6Al-4V ({n_ku} condition means): the beam diameter is {pd.KU_WAVE2_BEAM_STATUS}; the "
+        f"{pd.KU_WAVE2_BEAM_SENSITIVITY_UM:g} um re-run in wave2.kuBeamDiameterSensitivity shows how much the "
+        "statistics move with it. Rows are condition means of 7 to 16 sections; the bootstrap resamples conditions, "
+        "not sections.",
+        f"Lane IN625 ({n_lane} tracks): AMMT kernel inputs use the Table 3 power (137.9/179.2 W). "
+        + pd.LANE_POWER_QUESTION + " See wave2.laneNominalPowerSensitivity. IN625 properties are legacy estimates "
+        f"(absorptivity_IR {pd.screening_props('Inconel 625')['absorptivity_IR']}).",
+        "Wave 2 reference targets (NIST AMB2022-03 thermal Tables 2-3, Simonds 2018 Table III) have no like-for-like "
+        "model comparison in the app; their comparison status is 'unavailable' with the reason recorded.",
+        f"The pooled summary, its limits above and the absorptivity sensitivity exclude the {n_ku + n_lane} wave 2 rows "
+        "(KU Leuven 316L/Ti-6Al-4V, Lane IN625; see summaryScope), so the pooled headline keeps the 2026-10-05 scope "
+        "and is comparable to it. Per-dataset wave 2 figures are in wave2.scorecard; they are not pooled across "
+        "materials.",
+    ]
+
+
 def render_markdown(doc: Dict[str, Any], view_name: Optional[str] = None,
                     view_sha256: Optional[str] = None) -> str:
     L = [f"# LPBF dataset comparison ({doc['generatedAt']})", "", HEADER_MD, "",
@@ -695,7 +888,12 @@ def render_markdown(doc: Dict[str, Any], view_name: Optional[str] = None,
           ab["note"], "", "## Limits", ""]
     for x in doc["limits"]:
         L.append(f"- {x}")
-    L += ["", "## Summary: kernel x regime (all datasets pooled)", "",
+    scope = doc.get("summaryScope")
+    L += ["", "## Summary: kernel x regime (" + ("2026-10-05 dataset scope pooled; wave 2 rows excluded, see the "
+          "wave 2 scorecard" if scope else "all datasets pooled") + ")", ""]
+    if scope:
+        L += [scope["note"] + f" Pooled rows: {scope['rows']}; excluded wave 2 rows: {scope['excludedWave2Rows']}.", ""]
+    L += [
           "Bias = mean((pred-meas)/meas); rows with extentStatus other than `computed` are excluded and counted. "
           "Fractions: share of rows within +-30 % of the measurement / within the x0.5-2 band.", ""]
     L += _summary_table("Pooled (the `common` regime = rows where all kernels are computed)", doc["summary"])
@@ -732,6 +930,8 @@ def render_markdown(doc: Dict[str, Any], view_name: Optional[str] = None,
     L += ["", "Included row counts vary with assumed absorptivity: each column uses only rows where the "
           "kernel resolves an extent. These are different evaluation subsets; lower width error can accompany "
           "higher depth error. Sensitivity, not calibration.", ""]
+    if doc.get("wave2"):
+        L += render_wave2_markdown(doc["wave2"])
     ref = doc.get("referenceTransient")
     if ref:
         c = ref["counts"]
@@ -753,6 +953,58 @@ def render_markdown(doc: Dict[str, Any], view_name: Optional[str] = None,
                      f"{r['measured']['depth_um']:.1f} |")
         L.append("")
     return "\n".join(L).rstrip("\n") + "\n"
+
+
+def render_wave2_markdown(w: Dict[str, Any]) -> List[str]:
+    L = ["## Wave 2 datasets (2026-10-06)", "", w["label"] + ". Per-dataset kernel x regime tables (regime = the "
+         "repo's screening classifier) with cluster-bootstrap intervals:", ""]
+    for ds, s in w["scorecard"].items():
+        L += _summary_table(f"Wave 2 scorecard: {ds}", s)
+        L += _ci_table(s)
+    sens = w["kuBeamDiameterSensitivity"]
+    L += ["### " + sens["label"], ""]
+    for ds, s in sens["byDataset"].items():
+        L += _summary_table(f"{ds} at beam diameter {sens['beamDiameter_um']:g} um", s)
+    lp = w["laneNominalPowerSensitivity"]
+    L += ["### " + lp["label"], ""]
+    if lp["summary"]:
+        L += _summary_table(f"Lane AMMT at nominal power ({lp['rows']} rows)", lp["summary"])
+    acct = w.get("sensitivityRunAccounting")
+    if acct:
+        L += [f"Sensitivity re-runs: {acct['solverCalls']} solver calls, {acct['fallbackWarnings']} captured "
+              f"ray-tracer fallback warnings ({acct['note']}).", ""]
+    ct = w["kuRegimeLabelCrosstab"]
+    cols = sorted({c for v in ct["counts"].values() for c in v})
+    L += ["### KU Leuven published regime label vs screening classifier", "", ct["label"], "",
+          "| published / screening | " + " | ".join(cols) + " |", "|---|" + "---|" * len(cols)]
+    for pub, v in sorted(ct["counts"].items()):
+        L.append(f"| {pub} | " + " | ".join(str(v.get(c, 0)) for c in cols) + " |")
+    L += ["", "### Lane 2020 Table 4 class summary (published, transcribed)", "",
+          "| class | width um (N, Umean) | depth um (N, Umean) | length um (N, Umean) | "
+          "cooling rate 1290-1190 C/s (N, Umean) | cooling-rate use |", "|---|---|---|---|---|---|"]
+    for c in w["laneTable4"]:
+        L.append(f"| {c['class']} | {c['width_mean_um']} ({c['width_N']}, {c['width_Umean_um']}) | {c['depth_mean_um']} "
+                 f"({c['depth_N']}, {c['depth_Umean_um']}) | {c['length_mean_um']} ({c['length_N']}, "
+                 f"{c['length_Umean_um']}) | {c['cr_1290_1190_mean_C_s']} ({c['cr_N']}, {c['cr_Umean_C_s']}) | "
+                 f"{c.get('cooling_rate_use') or '-'} |")
+    L += ["", "Umean is the standard uncertainty of the mean as labelled in Table 4 (Tables 5-7 give the uncertainty "
+          "budgets for length, width and depth). Per the Table 4 caption, AMMT length and cooling rate come from the "
+          "AMMT-20 us tracks only, so the AMMT class cooling rates are the same AMMT-20 us values that Table 3 "
+          "footnote c says should not be used; they are flagged do-not-use. The paper calls all cooling rates "
+          "exemplar, not reference data.", ""]
+    for t in w["referenceTargets"]:
+        src = t["source"]
+        L += [f"### Reference target: {t['dataset']} ({t['kind']})", "",
+              f"{t['citation']} Evidence kind: {t['evidenceKind']}. Source sha256 `{src['sha256']}` ({src['bytes']} B, "
+              f"retrieved {src['retrieved']}); committed table sha256 `{t['tableSha256']}`.", ""]
+        keys = [k for k in t["rows"][0].keys() if k != "tableRefs"]
+        L += ["| " + " | ".join(keys) + " |", "|" + "---|" * len(keys)]
+        for r in t["rows"]:
+            L.append("| " + " | ".join("-" if r[k] is None else f"{r[k]:g}" if isinstance(r[k], float) else str(r[k])
+                                       for k in keys) + " |")
+        L += [""] + [f"- caveat: {c}" for c in t["caveats"]]
+        L += ["", f"**Comparison: {t['comparison']['status']}.** {t['comparison']['reason']}", ""]
+    return L
 
 
 def make_view_record(doc: Dict[str, Any]) -> Dict[str, Any]:
@@ -791,6 +1043,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("--reuse-reference", default=None,
                     help="copy referenceTransient from this earlier record instead of re-running it")
     ap.add_argument("--view-out", default=None, help="slim view record path (default <out>.view.json)")
+    ap.add_argument("--include-wave2", action="store_true",
+                    help="add the 2026-10-06 datasets (KU Leuven 316L/Ti-6Al-4V, Lane IN625) and reference targets")
     a = ap.parse_args(argv)
     out = Path(a.out).resolve()
     if "golden" in out.parts:
@@ -803,7 +1057,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     t0 = time.perf_counter()
     doc = build_document(a.quick, a.jobs, a.ref_budget_s, a.skip_reference, a.generated_at,
                          allow_raytracer=a.allow_raytracer,
-                         reuse_reference=Path(a.reuse_reference).resolve() if a.reuse_reference else None)
+                         reuse_reference=Path(a.reuse_reference).resolve() if a.reuse_reference else None,
+                         include_wave2=a.include_wave2)
     out.parent.mkdir(parents=True, exist_ok=True)
     view = make_view_record(doc)
     view_text = json.dumps(view, sort_keys=True, indent=1, ensure_ascii=False) + "\n"

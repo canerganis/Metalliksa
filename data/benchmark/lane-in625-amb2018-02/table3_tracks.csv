@@ -1,0 +1,24 @@
+machine,integration_time_us,track,case,power_W,nominal_case_power_W,speed_mm_s,d4sigma_um,video_frames,effective_emittance_mean,effective_emittance_sigma,length_mean_um,length_sigma_um,cr_1290_1190_mean_C_s,cr_1290_1190_sigma_C_s,cr_1290_1000_mean_C_s,cr_1290_1000_sigma_C_s,width_mean_um,width_sigma_um,depth_mean_um,depth_sigma_um,footnotes,cooling_rate_use
+CBM,40,3,A,150,150,400,100,53,0.225,0.011,654,34,6.21E+05,7.19E+04,5.59E+05,4.46E+04,173.82,0.35,154.40,0.58,,"exemplar, not reference (paper conclusions)"
+CBM,40,6,A,150,150,400,100,27,0.237,0.010,660,12,6.58E+05,9.41E+04,5.84E+05,5.96E+04,168.94,0.21,129.77,0.80,,"exemplar, not reference (paper conclusions)"
+CBM,40,9,A,150,150,400,100,49,0.232,0.009,664,15,5.81E+05,4.38E+04,5.35E+05,2.55E+04,170.24,2.25,170.41,2.41,,"exemplar, not reference (paper conclusions)"
+CBM,40,2,B,195,195,800,100,25,0.205,0.012,778,25,9.00E+05,1.65E+05,9.33E+05,9.24E+04,134.96,0.20,89.50,0.17,,"exemplar, not reference (paper conclusions)"
+CBM,40,5,B,195,195,800,100,25,0.230,0.013,781,23,9.51E+05,1.44E+05,9.57E+05,8.16E+04,132.16,0.34,91.13,0.38,,"exemplar, not reference (paper conclusions)"
+CBM,40,8,B,195,195,800,100,9,0.229,0.009,786,14,9.53E+05,1.11E+05,9.57E+05,7.74E+04,131.94,0.08,93.13,0.35,,"exemplar, not reference (paper conclusions)"
+CBM,40,1,C,195,195,1200,100,11,0.169,0.020,756,56,1.31E+06,4.71E+05,1.38E+06,3.21E+05,97.82,0.20,59.61,0.39,,"exemplar, not reference (paper conclusions)"
+CBM,40,4,C,195,195,1200,100,13,0.204,0.015,747,36,1.17E+06,3.71E+05,1.43E+06,2.46E+05,102.04,0.46,60.75,0.52,,"exemplar, not reference (paper conclusions)"
+CBM,40,7,C,195,195,1200,100,15,0.220,0.018,758,44,1.40E+06,3.71E+05,1.54E+06,3.23E+05,100.73,0.16,60.03,0.35,,"exemplar, not reference (paper conclusions)"
+CBM,40,10,C,195,195,1200,100,13,0.194,0.024,754,46,1.25E+06,3.13E+05,1.34E+06,2.42E+05,99.68,0.38,60.33,0.35,,"exemplar, not reference (paper conclusions)"
+AMMT,100,5,A,137.9,150,400,170,51,0.673,0.034,350,8,1.20E+07,5.66E+05,,,144.00,0.32,44.40,0.12,bc,do-not-use (Table 3 footnote c)
+AMMT,100,6,A,137.9,150,400,170,55,0.667,0.044,349,9,1.45E+07,4.77E+06,,,151.30,0.07,41.00,0.19,bc,do-not-use (Table 3 footnote c)
+AMMT,100,7,A,137.9,150,400,170,55,0.679,0.060,346,9,1.21E+07,7.15E+05,,,148.50,0.36,42.10,0.11,bc,do-not-use (Table 3 footnote c)
+AMMT,100,8,B,179.2,195,800,170,27,0.575,0.065,438,12,1.97E+07,1.27E+06,,,116.40,0.19,38.20,0.18,bc,do-not-use (Table 3 footnote c)
+AMMT,100,9,B,179.2,195,800,170,31,0.581,0.062,421,13,1.98E+07,1.82E+06,,,129.10,0.14,34.80,0.04,bc,do-not-use (Table 3 footnote c)
+AMMT,100,10,B,179.2,195,800,170,31,0.583,0.032,415,10,1.90E+07,1.85E+06,,,124.90,0.20,34.90,0.15,bc,do-not-use (Table 3 footnote c)
+AMMT,100,1,C,179.2,195,1200,170,21,0.519,,444,13,2.90E+07,5.33E+06,,,104.40,0.19,29.00,0.08,abc,do-not-use (Table 3 footnote c)
+AMMT,100,2,C,179.2,195,1200,170,22,0.519,,435,16,2.78E+07,4.88E+06,,,107.70,0.19,29.20,0.04,abc,do-not-use (Table 3 footnote c)
+AMMT,100,3,C,179.2,195,1200,170,22,0.519,,445,14,2.76E+07,5.80E+06,,,106.60,0.07,30.00,0.00,abc,do-not-use (Table 3 footnote c)
+AMMT,100,4,C,179.2,195,1200,170,16,0.519,,455,11,2.83E+07,4.46E+06,,,105.40,0.22,30.20,0.15,abc,do-not-use (Table 3 footnote c)
+AMMT,20,2,A,137.9,150,400,170,19,0.600,0.016,300,12,1.16E+06,2.68E+05,,,152.00,2.00,43.00,0.90,bc,do-not-use (Table 3 footnote c)
+AMMT,20,3,B,179.2,195,800,170,10,0.565,0.017,359,20,1.08E+06,5.88E+05,,,132.00,2.00,36.00,0.90,bc,do-not-use (Table 3 footnote c)
+AMMT,20,1,C,179.2,195,1200,170,7,0.519,0.031,370,10,1.90E+06,5.52E+05,,,113.00,1.00,29.00,0.90,bc,do-not-use (Table 3 footnote c)
