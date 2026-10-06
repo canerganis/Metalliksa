@@ -10,7 +10,6 @@ import {
   Sliders,
   Sparkles,
   Info,
-  CheckCircle2,
   AlertTriangle,
   Compass,
   ArrowRight,
@@ -20,7 +19,6 @@ import {
   Box,
   Play,
   Download,
-  FileCode,
   SlidersHorizontal,
   Target,
   Gauge,
@@ -29,13 +27,11 @@ import {
   Clock,
   Split,
   FileSpreadsheet,
-  Check,
   Atom,
   ShieldCheck,
   ShieldAlert,
   BarChart3,
-  Scale,
-  Copy
+  Scale
 } from "lucide-react";
 import {
   LineChart,
@@ -129,8 +125,7 @@ export function ICMEMultiScalePipelineStudio() {
     Cr: 19.0, Fe: 18.0, Nb: 5.1, Mo: 3.0, Ti: 0.9, Al: 0.5, C: 0.05, Si: 0.2, Mn: 0.2
   });
 
-  const [activeScaleTab, setActiveScaleTab] = useState<"all" | "scale0" | "scale1" | "scale2" | "scale3" | "scale4" | "cae">("all");
-  const [copiedCard, setCopiedCard] = useState<string | null>(null);
+  const [activeScaleTab, setActiveScaleTab] = useState<"all" | "scale0" | "scale1" | "scale2" | "scale3" | "scale4">("all");
 
   // Result state
   const [pipelineResult, setPipelineResult] = useState<PythonICMEMultiScaleResult | null>(null);
@@ -181,6 +176,8 @@ export function ICMEMultiScalePipelineStudio() {
       setPipelineResult(res);
     } catch (err: any) {
       console.error("ICME pipeline execution failed:", err);
+      // Never leave a result computed from earlier inputs under rejected ones.
+      setPipelineResult(null);
       setErrorMsg(err.message || "Failed to execute ICME multi-scale Python solver.");
     } finally {
       setIsLoading(false);
@@ -194,12 +191,6 @@ export function ICMEMultiScalePipelineStudio() {
     }, 300);
     return () => clearTimeout(timer);
   }, [runPipelineComputation]);
-
-  const handleCopyCard = (format: "abaqus" | "lsDyna" | "ansys", text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedCard(format);
-    setTimeout(() => setCopiedCard(null), 2500);
-  };
 
   // Prepare Strengthening Breakdown Chart Data
   const strengtheningData = useMemo(() => {
@@ -224,7 +215,7 @@ export function ICMEMultiScalePipelineStudio() {
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/30 flex items-center gap-1.5">
                 <Atom className="w-3.5 h-3.5 text-sky-400" />
-                ICME illustrative estimate (10⁻¹⁰ m → 10⁻¹ m)
+                ICME illustrative estimate
               </span>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                 Illustrative · closed-form
@@ -234,7 +225,7 @@ export function ICMEMultiScalePipelineStudio() {
               Yield Strength Breakdown (Illustrative)
             </h1>
             <p className="text-xs md:text-sm text-slate-400 max-w-3xl">
-              Closed-form chain on tabulated constants (no DFT, CALPHAD or FEA is run): <span className="text-sky-300 font-medium">Elastic constants table (Cᵢⱼ)</span> → <span className="text-indigo-300 font-medium">Solute strengthening table</span> → <span className="text-emerald-300 font-medium">LSW/Orowan Microstructure</span> → <span className="text-amber-300 font-medium">Schematic σ-ε Curve</span> → <span className="text-rose-300 font-medium">Yield-only Component Check</span>.
+              Closed-form chain on tabulated constants (no DFT, CALPHAD or FEA is run): <span className="text-sky-300 font-medium">Elastic constants table (Cᵢⱼ)</span> → <span className="text-indigo-300 font-medium">Solute strengthening table</span> → <span className="text-emerald-300 font-medium">LSW/Orowan Microstructure</span> → <span className="text-amber-300 font-medium">Schematic σ-ε Curve</span> → <span className="text-rose-300 font-medium">Illustrative Yield Ratio (no verdict)</span>.
             </p>
             <p data-testid="icme-not-statement" className="text-[11px] text-amber-300/90 max-w-3xl">Not a calibrated strength prediction: tabulated constants are not matched to your alloy, and no atomistic, CALPHAD or finite-element step is run.</p>
             <p role="note" className="text-[11px] text-amber-300/90 max-w-3xl">
@@ -255,96 +246,14 @@ export function ICMEMultiScalePipelineStudio() {
           </div>
         </div>
 
-        {/* 5-SCALE THREAD VISUALIZER */}
-        <div className="mt-5 pt-4 border-t border-slate-800 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 font-mono text-xs">
-          <div
-            onClick={() => setActiveScaleTab("scale0")}
-            className={`p-2.5 rounded-xl border transition cursor-pointer ${
-              activeScaleTab === "scale0"
-                ? "bg-sky-950/60 border-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.3)]"
-                : "bg-slate-900/60 border-slate-800 hover:border-slate-700"
-            }`}
-          >
-            <div className="flex items-center justify-between text-[10px] text-sky-400 mb-0.5">
-              <span>SCALE 0 (10⁻¹⁰ m)</span>
-              <Atom className="w-3 h-3" />
-            </div>
-            <div className="font-bold text-slate-200">Elastic Constants</div>
-            <div className="text-[10px] text-slate-400 mt-0.5">Cᵢⱼ, G, B, τ_PN, Taylor M</div>
-          </div>
-
-          <div
-            onClick={() => setActiveScaleTab("scale1")}
-            className={`p-2.5 rounded-xl border transition cursor-pointer ${
-              activeScaleTab === "scale1"
-                ? "bg-indigo-950/60 border-indigo-400 shadow-[0_0_12px_rgba(129,140,248,0.3)]"
-                : "bg-slate-900/60 border-slate-800 hover:border-slate-700"
-            }`}
-          >
-            <div className="flex items-center justify-between text-[10px] text-indigo-400 mb-0.5">
-              <span>SCALE 1 (10⁻⁸ m)</span>
-              <Layers className="w-3 h-3" />
-            </div>
-            <div className="font-bold text-slate-200">Solute Strengthening</div>
-            <div className="text-[10px] text-slate-400 mt-0.5">Size/Modulus Misfit, Δσ_ss</div>
-          </div>
-
-          <div
-            onClick={() => setActiveScaleTab("scale2")}
-            className={`p-2.5 rounded-xl border transition cursor-pointer ${
-              activeScaleTab === "scale2"
-                ? "bg-emerald-950/60 border-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.3)]"
-                : "bg-slate-900/60 border-slate-800 hover:border-slate-700"
-            }`}
-          >
-            <div className="flex items-center justify-between text-[10px] text-emerald-400 mb-0.5">
-              <span>SCALE 2 (10⁻⁶ m)</span>
-              <Flame className="w-3 h-3" />
-            </div>
-            <div className="font-bold text-slate-200">Microstructure</div>
-            <div className="text-[10px] text-slate-400 mt-0.5">SDAS, Hall-Petch, LSW, Orowan</div>
-          </div>
-
-          <div
-            onClick={() => setActiveScaleTab("scale3")}
-            className={`p-2.5 rounded-xl border transition cursor-pointer ${
-              activeScaleTab === "scale3"
-                ? "bg-amber-950/60 border-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.3)]"
-                : "bg-slate-900/60 border-slate-800 hover:border-slate-700"
-            }`}
-          >
-            <div className="flex items-center justify-between text-[10px] text-amber-400 mb-0.5">
-              <span>SCALE 3 (10⁻³ m)</span>
-              <Activity className="w-3 h-3" />
-            </div>
-            <div className="font-bold text-slate-200">Tensile Constitutive</div>
-            <div className="text-[10px] text-slate-400 mt-0.5">σ-ε, Rp0.2, J-C (UTS, K₁c unavailable)</div>
-          </div>
-
-          <div
-            onClick={() => setActiveScaleTab("scale4")}
-            className={`p-2.5 rounded-xl border transition cursor-pointer ${
-              activeScaleTab === "scale4"
-                ? "bg-rose-950/60 border-rose-400 shadow-[0_0_12px_rgba(248,113,113,0.3)]"
-                : "bg-slate-900/60 border-slate-800 hover:border-slate-700"
-            }`}
-          >
-            <div className="flex items-center justify-between text-[10px] text-rose-400 mb-0.5">
-              <span>SCALE 4 (10⁻¹ m)</span>
-              <Target className="w-3 h-3" />
-            </div>
-            <div className="font-bold text-slate-200">Macro Yield Check</div>
-            <div className="text-[10px] text-slate-400 mt-0.5">Component Load, CAE (flaw a_c unavailable)</div>
-          </div>
-        </div>
       </div>
 
-      {/* BENCHMARK ALLOY PRESET SELECTOR */}
+      {/* EXAMPLE INPUT PRESET SELECTOR */}
       <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
             <Sparkles className="w-4 h-4 text-amber-400" />
-            Standard Benchmark Preset:
+            Example input preset (not a benchmark):
           </span>
           <div className="flex flex-wrap items-center gap-1.5">
             {ICME_PRESETS.map((p) => (
@@ -365,11 +274,16 @@ export function ICMEMultiScalePipelineStudio() {
 
         {pipelineResult && (
           <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            Solver latency: <span className="text-emerald-300 font-bold">{pipelineResult.computeTimeMs} ms</span>
+            Compute time: <span className="text-slate-300">{pipelineResult.computeTimeMs} ms</span>
           </div>
         )}
       </div>
+
+      {errorMsg && (
+        <div role="alert" data-testid="icme-error" className="p-4 rounded-2xl bg-rose-950/60 border border-rose-700 text-rose-200 text-xs">
+          <span className="font-semibold">Pipeline not computed:</span> {errorMsg}
+        </div>
+      )}
 
       {/* INPUT PARAMETER CONTROLS */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
@@ -586,17 +500,7 @@ export function ICMEMultiScalePipelineStudio() {
               : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
           }`}
         >
-          <Target className="w-3.5 h-3.5" /> Scale 4: Yield Check
-        </button>
-        <button
-          onClick={() => setActiveScaleTab("cae")}
-          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
-            activeScaleTab === "cae"
-              ? "bg-purple-500/20 text-purple-300 border border-purple-500/40"
-              : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
-          }`}
-        >
-          <FileCode className="w-3.5 h-3.5" /> CAE Material Cards
+          <Target className="w-3.5 h-3.5" /> Scale 4: Yield Ratio
         </button>
       </div>
 
@@ -720,7 +624,7 @@ export function ICMEMultiScalePipelineStudio() {
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-sky-300 flex items-center gap-2">
                   <Atom className="w-4 h-4 text-sky-400" />
-                  Scale 0 (10⁻¹⁰ m): Tabulated Elastic Stiffness & Peierls-Nabarro Estimate
+                  Scale 0: Tabulated Elastic Stiffness & Peierls-Nabarro Estimate
                 </h3>
                 <span className="text-xs font-mono text-slate-400">Tabulated constants (no DFT run)</span>
               </div>
@@ -805,7 +709,7 @@ export function ICMEMultiScalePipelineStudio() {
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-bold text-indigo-300 flex items-center gap-2">
                     <Layers className="w-4 h-4 text-indigo-400" />
-                    Scale 1 (10⁻⁸ m): Solute Size & Modulus Misfit (Labusch)
+                    Scale 1: Solute Size & Modulus Misfit (Labusch)
                   </h3>
                   <span className="text-xs font-mono text-indigo-400 font-bold">
                     Total Δσ_ss: {pipelineResult.scale1_calphadSoluteMisfit.totalSolidSolutionStrengthening_MPa} MPa
@@ -848,7 +752,7 @@ export function ICMEMultiScalePipelineStudio() {
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-bold text-emerald-300 flex items-center gap-2">
                     <Flame className="w-4 h-4 text-emerald-400" />
-                    Scale 2 (10⁻⁶ m): Microstructure & LSW Precipitate Looping
+                    Scale 2: Microstructure & LSW Precipitate Looping
                   </h3>
                   <span className="text-xs font-mono text-emerald-400">Kinetics & Dislocation Obstacles</span>
                 </div>
@@ -894,47 +798,39 @@ export function ICMEMultiScalePipelineStudio() {
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-rose-300 flex items-center gap-2">
                   <Target className="w-4 h-4 text-rose-400" />
-                  Scale 4 (10⁻¹ m): Macro Yield Check (no FEA); Flaw Tolerance Unavailable
+                  Scale 4: Illustrative Yield Ratio (no FEA, no verdict); Flaw Tolerance Unavailable
                 </h3>
-                <span className="text-xs font-mono text-slate-400">Yield-only check, no creep / fracture check</span>
+                <span className="text-xs font-mono text-slate-400">Fixed example stress, not your component</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-3.5 rounded-xl bg-slate-800/50 border border-slate-700/60 space-y-2">
-                  <div className="text-xs font-semibold text-slate-300">Component Load Rating</div>
+                  <div className="text-xs font-semibold text-slate-300">Illustrative Catalogue Case</div>
                   <div className="space-y-1 text-xs font-mono">
                     <div className="flex justify-between">
                       <span className="text-slate-400">Target Part:</span>
                       <span className="text-slate-200 font-bold">{pipelineResult.scale4_macroComponentFEA.componentName}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Applied Service Stress:</span>
+                      <span className="text-slate-400">Fixed catalogue stress (illustrative):</span>
                       <span className="text-amber-400 font-bold">{pipelineResult.scale4_macroComponentFEA.appliedStress_MPa} MPa</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Required Safety Factor:</span>
+                      <span className="text-slate-400">Catalogue design factor (illustrative):</span>
                       <span className="text-slate-300">{pipelineResult.scale4_macroComponentFEA.requiredSafetyFactor}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-slate-800/50 border border-slate-700/60 space-y-2">
-                  <div className="text-xs font-semibold text-slate-300">Actual Structural Safety Factor</div>
+                  <div className="text-xs font-semibold text-slate-300">Rp0.2 / Catalogue Stress</div>
                   <div className="flex items-baseline gap-2 font-mono">
-                    <span className="text-2xl font-bold text-emerald-400">{pipelineResult.scale4_macroComponentFEA.actualSafetyFactor}x</span>
-                    <span className="text-xs text-slate-400">against Rp0.2</span>
+                    <span className="text-2xl font-bold text-slate-200">{pipelineResult.scale4_macroComponentFEA.actualSafetyFactor}x</span>
+                    <span className="text-xs text-slate-400">illustrative ratio</span>
                   </div>
-                  <div
-                    className={`p-2 rounded border text-[11px] font-semibold flex items-center gap-1.5 ${
-                      pipelineResult.scale4_macroComponentFEA.structuralVerdict.startsWith("WARNING")
-                        ? "bg-amber-950/40 border-amber-500/30 text-amber-300"
-                        : "bg-emerald-950/40 border-emerald-500/30 text-emerald-300"
-                    }`}
-                    title={pipelineResult.scale4_macroComponentFEA.structuralVerdictBasis}
-                  >
-                    <CheckCircle2 className="w-4 h-4 shrink-0" />
-                    {pipelineResult.scale4_macroComponentFEA.structuralVerdict}
-                  </div>
+                  <p data-testid="icme-no-verdict" className="text-[11px] text-slate-400">
+                    No pass/warning verdict is shown: the stress comes from a fixed example catalogue, not from your component or loads, and the yield strength is an uncalibrated estimate.
+                  </p>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-slate-800/50 border border-slate-700/60 space-y-2">
@@ -957,71 +853,9 @@ export function ICMEMultiScalePipelineStudio() {
             </div>
           )}
 
-          {/* CAE MATERIAL CARD EXPORTER */}
-          {(activeScaleTab === "all" || activeScaleTab === "cae") && (
-            <div className="p-5 rounded-2xl bg-slate-900/90 border border-purple-500/30 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-purple-300 flex items-center gap-2">
-                  <FileCode className="w-4 h-4 text-purple-400" />
-                  Illustrative CAE Material Cards (Abaqus, ANSYS, LS-DYNA; uncalibrated)
-                </h3>
-                <span className="text-xs font-mono text-slate-400">Uncalibrated deck export, not for design use</span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Abaqus */}
-                <div className="p-3.5 rounded-xl bg-slate-800/50 border border-slate-700/60 space-y-2 flex flex-col justify-between">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-200">Abaqus Standard / Explicit</span>
-                    <button
-                      onClick={() => handleCopyCard("abaqus", pipelineResult.caeExportCards.abaqus)}
-                      className="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-[11px] text-slate-200 flex items-center gap-1 cursor-pointer"
-                    >
-                      {copiedCard === "abaqus" ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                      {copiedCard === "abaqus" ? "Copied!" : "Copy"}
-                    </button>
-                  </div>
-                  <pre className="p-2.5 rounded-lg bg-slate-950 font-mono text-[10px] text-sky-300 overflow-x-auto max-h-48">
-                    {pipelineResult.caeExportCards.abaqus}
-                  </pre>
-                </div>
-
-                {/* LS-DYNA */}
-                <div className="p-3.5 rounded-xl bg-slate-800/50 border border-slate-700/60 space-y-2 flex flex-col justify-between">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-200">LS-DYNA (*MAT_024)</span>
-                    <button
-                      onClick={() => handleCopyCard("lsDyna", pipelineResult.caeExportCards.lsDyna)}
-                      className="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-[11px] text-slate-200 flex items-center gap-1 cursor-pointer"
-                    >
-                      {copiedCard === "lsDyna" ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                      {copiedCard === "lsDyna" ? "Copied!" : "Copy"}
-                    </button>
-                  </div>
-                  <pre className="p-2.5 rounded-lg bg-slate-950 font-mono text-[10px] text-amber-300 overflow-x-auto max-h-48">
-                    {pipelineResult.caeExportCards.lsDyna}
-                  </pre>
-                </div>
-
-                {/* ANSYS */}
-                <div className="p-3.5 rounded-xl bg-slate-800/50 border border-slate-700/60 space-y-2 flex flex-col justify-between">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-200">ANSYS Workbench APDL</span>
-                    <button
-                      onClick={() => handleCopyCard("ansys", pipelineResult.caeExportCards.ansys)}
-                      className="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-[11px] text-slate-200 flex items-center gap-1 cursor-pointer"
-                    >
-                      {copiedCard === "ansys" ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                      {copiedCard === "ansys" ? "Copied!" : "Copy"}
-                    </button>
-                  </div>
-                  <pre className="p-2.5 rounded-lg bg-slate-950 font-mono text-[10px] text-emerald-300 overflow-x-auto max-h-48">
-                    {pipelineResult.caeExportCards.ansys}
-                  </pre>
-                </div>
-              </div>
-            </div>
-          )}
+          <p data-testid="icme-cae-removed" className="text-[11px] text-slate-400">
+            CAE material cards are not offered: their hardening points use a placeholder hardening exponent n, so they would look like a usable deck without any calibration behind them.
+          </p>
         </div>
       )}
     </div>

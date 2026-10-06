@@ -47,6 +47,30 @@ export function labelTwinEvidence(twin: SampleDigitalTwin, demoIds: readonly str
     evidence: { kind: demo ? "demo" : twin.evidence?.kind ?? "user-supplied", qualification: "not-assessed", note: demo ? "Synthetic demonstration record. Values illustrate the interface and are not measured or validated evidence." : twin.evidence?.note ?? "Legacy or imported record. Source, measurement conditions and qualification have not been verified. Original declared claims are preserved as unverified reportedClaims in exports.", reportedClaims: preserveReportedClaims(twin) },
     currentStatus: "R&D Prototype",
     certification: { ...twin.certification, aerospaceFlightReadinessScorePct: null, qualificationAuditStatus: "Not assessed", complianceRiskLevel: "Unresolved", nonDestructiveTestResults: { ultrasonicInspection: "Pending", xrayRadiography: "Pending", surfaceDyePenetrant: "Pending" }, blockchainHashCertificate: undefined },
-    mechanical: { ...twin.mechanical, mmpdsStatisticalBasis: { ...twin.mechanical.mmpdsStatisticalBasis, basisLevel: "Not assessed" } },
+    // A synthetic record has no coupon population: derived statistics (Cpk, N) are scrubbed, not shown.
+    mechanical: { ...twin.mechanical, mmpdsStatisticalBasis: { ...twin.mechanical.mmpdsStatisticalBasis, basisLevel: "Not assessed", ...(demo ? { sampleCountN: null, cpkReliability: null } : {}) } },
   };
+}
+
+/**
+ * Apply a composition edit. Values derived from the old composition (Schaeffler / carbon
+ * equivalent, liquidus / solidus / freezing range, stable phases, Scheil indices) no longer
+ * describe the record, so they are cleared rather than left stale; nothing here recomputes them.
+ */
+export function withEditedComposition(twin: SampleDigitalTwin, composition: Record<string, number>): SampleDigitalTwin {
+  return {
+    ...twin,
+    chemistry: { ...twin.chemistry, nominalComposition: composition, schaefflerCoordinates: undefined, carbonEquivalent: undefined },
+    thermodynamics: {
+      ...twin.thermodynamics,
+      liquidusTemperatureC: null, solidusTemperatureC: null, freezingRangeC: null, stablePhasesAtRoomTemp: [],
+      scheilSolidification: { eutecticFractionPct: null, hotTearingIndexKou: null, microsegregationSeverity: "Unresolved" },
+    },
+  };
+}
+
+/** Full-content download link for an attachment; never truncates the stored data. */
+export function attachmentDownloadHref(data: string): string {
+  if (data.startsWith("data:")) return data;
+  return `data:application/octet-stream;charset=utf-8,${encodeURIComponent(data)}`;
 }

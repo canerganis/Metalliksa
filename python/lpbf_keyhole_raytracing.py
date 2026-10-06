@@ -2,6 +2,8 @@
 
 The angular absorption law is empirical, not complex-index Fresnel optics.
 Power still in flight at the bounce limit is unresolved, never escaped/absorbed.
+Rays that never hit the finite mesh (start outside its aperture) are reported as
+missed power, separately from power that escapes after at least one reflection.
 """
 import math
 import time
@@ -123,12 +125,30 @@ def compute_keyhole_raytracing(params):
     wp.synchronize_device(device)
     points, powers, counts = points_wp.numpy(), powers_wp.numpy(), counts_wp.numpy()
     escaped = escaped_wp.numpy().astype(bool)
+    # A ray that escapes on its first query never touched the mesh: it fell outside the
+    # finite aperture. That is a geometry artefact, not reflected (escaped) power.
+    missed = escaped & (counts == 1)
+    reflected_out = escaped & ~missed
     remaining = powers[np.arange(count), counts].astype(np.float64)
     absorbed = initial.astype(np.float64) - remaining
     absorbed_w = float(absorbed.sum())
-    escaped_w = float(remaining[escaped].sum())
+    missed_w = float(remaining[missed].sum())
+    escaped_w = float(remaining[reflected_out].sum())
     truncated_w = float(remaining[~escaped].sum())
+    half_extent_um = float(min((nx - 1) * dx, (ny - 1) * dy) / 2 * 1e6)
+    limitations = ["Prescribed Gaussian cavity, not a solved free surface",
+                   "Empirical angular absorption, not Fresnel optics",
+                   "Finite mesh aperture; no material or experimental qualification",
+                   "Bounce-limited power remains unresolved"]
+    if missed_w > 0:
+        limitations.append(
+            f"{missed_w / power * 100:.2f}% of the input power falls outside the {2 * half_extent_um:.0f} um mesh "
+            "aperture and never reaches the cavity; absorption of total input is reduced by this geometry "
+            "artefact (a mesh aperture of at least 3x the beam radius avoids it)")
     efficiency = absorbed_w / power if power else 0.0
+    intercepted_w = power - missed_w
+    # Absorption of the power that actually reaches the mesh; None when nothing reaches it.
+    intercepted_efficiency = absorbed_w / intercepted_w if intercepted_w > 0 else None
     fractions = absorbed / (power / count) if power else np.zeros(count)
     se = float(np.std(fractions, ddof=1) / np.sqrt(count))
     # UI stream never changes physics samples.
@@ -139,9 +159,13 @@ def compute_keyhole_raytracing(params):
         "device": str(device), "warp_version": wp.__version__,
         "solve_time_ms": (time.perf_counter() - started) * 1000,
         "total_input_W": power, "total_absorbed_W": absorbed_w,
-        "total_escaped_W": escaped_w, "total_truncated_W": truncated_w,
-        "energy_balance_relative_error": abs(power - absorbed_w - escaped_w - truncated_w) / power if power else 0.0,
+        "total_escaped_W": escaped_w, "total_truncated_W": truncated_w, "total_missed_W": missed_w,
+        "mesh_aperture_half_extent_um": half_extent_um,
+        "energy_balance_relative_error": (abs(power - absorbed_w - escaped_w - truncated_w - missed_w) / power
+                                          if power else 0.0),
         "absorption_efficiency": efficiency,
+        "absorption_efficiency_of_intercepted": intercepted_efficiency,
+        "missed_fraction": (missed_w / power) if power else 0.0,
         "sampling": {"method": "equal-power Gaussian Monte Carlo", "generator": "PCG64",
                      "seed": seed, "num_rays": count, "beam_radius_definition": "1/e^2 intensity",
                      "absorption_efficiency_standard_error": se,
@@ -150,10 +174,7 @@ def compute_keyhole_raytracing(params):
                        beam_radius_um=radius * 1e6, keyhole_depth_um=depth * 1e6,
                        base_absorption=absorption, max_bounces=bounces, seed=seed,
                        num_rays=count, device=str(device), ui_ray_limit=ui_count),
-        "limitations": ["Prescribed Gaussian cavity, not a solved free surface",
-                        "Empirical angular absorption, not Fresnel optics",
-                        "Finite mesh aperture; no material or experimental qualification",
-                        "Bounce-limited power remains unresolved"],
+        "limitations": limitations,
         "mesh": {"vertices": vertices.ravel().tolist(), "indices": faces.ravel().tolist()},
         "ray_paths": [{"points": points[i, :counts[i] + 1].tolist(),
                        "powers": powers[i, :counts[i] + 1].tolist()} for i in selected],

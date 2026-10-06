@@ -1,12 +1,12 @@
 import React, { useState, useCallback } from 'react';
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell
-} from 'recharts';
 import { pythonComputationService } from '../services/pythonComputationService';
 
 const SAMPLE_GCODE = `; MetalliX Thin Wall Lattice Cross-Section (Phase 14 -> Phase 12)
-; This geometry forces severe galvo mirror deceleration at sharp corners.
-; Toggle "Skywriting" to see how the kinematic energy spikes (Hotspots) are mitigated.
+; Each vector is 15 mm long. At the default 1000 mm/s and 40000 mm/s^2 a vector needs 25 mm to
+; reach speed and slow down, so none of them has a constant-velocity cruise phase (triangular profile).
+; Without Skywriting the laser fires through the ramps and the energy-density hotspots are reported.
+; With Skywriting the laser would fire only during cruise, so here it never fires (0 J):
+; that is NOT a mitigation. Lower the speed or use longer vectors to get a cruise phase.
 
 ; --- X-Aligned Lattice Walls ---
 G0 X-7.5 Y-7.5
@@ -53,6 +53,44 @@ G1 X7.5 Y7.5 F60000
 M5
 G0 X0.0 Y0.0`;
 
+/** Warnings produced by the kinematics engine (e.g. skywriting with no cruise phase), if any. */
+export function toolpathWarnings(result: any): string[] {
+  if (!result) return [];
+  const w: string[] = Array.isArray(result.warnings) ? [...result.warnings] : [];
+  if (result.laser_never_fires && !w.some(x => /never fires/i.test(x))) {
+    w.push('The laser never fires in this toolpath under skywriting (0 J deposited).');
+  }
+  return w;
+}
+
+/** Returns an input error for the process defaults, or null when they are usable. */
+export function toolpathDefaultsError(defaultPower: number, defaultSpeed: number): string | null {
+  if (!Number.isFinite(defaultPower) || defaultPower <= 0) {
+    return 'Default laser power must be a positive number (W).';
+  }
+  if (!Number.isFinite(defaultSpeed) || defaultSpeed <= 0) {
+    return 'Default scan speed must be a positive number (mm/s).';
+  }
+  return null;
+}
+
+/**
+ * Text shown when no segment is flagged. Null means there is no caveat beyond the
+ * threshold statement. The skywriting no-energy explanation is shown only when the
+ * engine reports skywriting was on and vectors lacked a cruise phase.
+ */
+export function zeroFlagCaveat(result: any): string | null {
+  if (!result || result.hotspot_count !== 0) return null;
+  const noCruise = Number(result.no_cruise_segment_count) || 0;
+  if (result.laser_never_fires || (result.skywriting_mitigation_active && noCruise > 0)) {
+    return 'Zero flags reported, but see the warning above: with skywriting on, vectors without a cruise phase deposit no energy, so zero flags here means no exposure, not an acceptable exposure.';
+  }
+  if (toolpathWarnings(result).length > 0) {
+    return 'Zero flags reported; see the warning above about vectors that never reach their commanded speed.';
+  }
+  return null;
+}
+
 export const LpbfToolpathStudioLab: React.FC = () => {
   const [toolpathText, setToolpathText] = useState(SAMPLE_GCODE);
   const [format, setFormat] = useState<'gcode' | 'cli'>('gcode');
@@ -65,7 +103,10 @@ export const LpbfToolpathStudioLab: React.FC = () => {
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const inputError = toolpathDefaultsError(defaultPower, defaultSpeed);
+
   const handleSimulate = useCallback(async () => {
+    if (toolpathDefaultsError(defaultPower, defaultSpeed)) return;
     setIsLoading(true);
     setError(null);
     try {
@@ -91,11 +132,11 @@ export const LpbfToolpathStudioLab: React.FC = () => {
       <div className="flex items-center justify-between p-4 bg-gray-800 border-b border-gray-700">
         <div>
           <h2 className="text-lg font-bold text-white">Toolpath & Scanner Kinematics Studio</h2>
-          <p className="text-sm text-gray-400">Phase 12: Galvo Mirror Acceleration, Delays & Thermal Overheating Prediction</p>
+          <p className="text-sm text-gray-400">Trapezoidal / triangular scanner velocity profiles and a linear-energy-density screen (no thermal field is solved)</p>
         </div>
         <button
           onClick={handleSimulate}
-          disabled={isLoading}
+          disabled={isLoading || inputError !== null}
           className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-medium disabled:opacity-50"
         >
           {isLoading ? 'Simulating Physics...' : 'Simulate Kinematics'}
@@ -136,7 +177,21 @@ export const LpbfToolpathStudioLab: React.FC = () => {
           </div>
 
           <div className="space-y-3 pt-2 border-t border-gray-800">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Galvo Scanner Dynamics</h3>
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Process Defaults</h3>
+            <p className="text-[10px] text-gray-500">Used for vectors without an explicit power (S) or feed (F) word. Scanner delays (laser-on, mark, jump) use the engine defaults and are not editable here.</p>
+            <label className="block text-xs">
+              <span className="text-gray-400">Default Laser Power (W)</span>
+              <input aria-label="Default Laser Power" type="number" min={1} step={10}
+                value={defaultPower} onChange={e => setDefaultPower(Number(e.target.value))}
+                className="w-full mt-1 bg-gray-950 border border-gray-700 rounded p-1 font-mono text-white" />
+            </label>
+            <label className="block text-xs">
+              <span className="text-gray-400">Default Scan Speed (mm/s)</span>
+              <input aria-label="Default Scan Speed" type="number" min={1} step={50}
+                value={defaultSpeed} onChange={e => setDefaultSpeed(Number(e.target.value))}
+                className="w-full mt-1 bg-gray-950 border border-gray-700 rounded p-1 font-mono text-white" />
+            </label>
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider pt-2">Galvo Scanner Dynamics</h3>
 
             <label className="block text-xs">
               <span className="text-gray-400">Max Acceleration (mm/s²)</span>
@@ -175,6 +230,11 @@ export const LpbfToolpathStudioLab: React.FC = () => {
 
         {/* Sağ Panel: Çıktılar & Analiz */}
         <div className="flex-1 p-6 overflow-y-auto bg-gray-950">
+          {inputError && (
+            <div role="alert" className="mb-4 p-4 bg-red-900/40 border border-red-700 text-red-200 rounded text-sm">
+              {inputError}
+            </div>
+          )}
           {error && (
             <div className="mb-4 p-4 bg-red-900/40 border border-red-700 text-red-200 rounded text-sm">
               {error}
@@ -189,6 +249,11 @@ export const LpbfToolpathStudioLab: React.FC = () => {
 
           {result && (
             <div className="space-y-6">
+              {toolpathWarnings(result).map((w, i) => (
+                <div key={i} role="alert" className="p-3 bg-amber-900/30 border border-amber-700 rounded text-xs text-amber-200">
+                  Warning: {w}
+                </div>
+              ))}
               {/* Özet Metrik Kartları */}
               <div className="grid grid-cols-4 gap-4">
                 <div className="p-3 bg-gray-800 border border-gray-700 rounded flex flex-col items-center">
@@ -204,23 +269,31 @@ export const LpbfToolpathStudioLab: React.FC = () => {
                   <span className="text-lg font-mono font-bold text-amber-400">{result.total_energy_input_J} J</span>
                 </div>
                 <div className="p-3 bg-gray-800 border border-gray-700 rounded flex flex-col items-center">
-                  <span className="text-xs text-gray-400 mb-1">Overheating Hotspots</span>
-                  <span className={`text-lg font-mono font-bold ${result.hotspot_count > 0 ? 'text-red-400' : 'text-green-400'}`}>
-                    {result.hotspot_count}
-                  </span>
+                  <span className="text-xs text-gray-400 mb-1">LED Screen Flags (&gt;1.25x nominal)</span>
+                  {result.laser_never_fires ? (
+                    <span className="text-lg font-mono font-bold text-amber-400">no exposure</span>
+                  ) : (
+                    <span className={`text-lg font-mono font-bold ${result.hotspot_count > 0 ? 'text-red-400' : 'text-gray-200'}`}>
+                      {result.hotspot_count}
+                    </span>
+                  )}
                 </div>
               </div>
 
               {/* Hotspot & Energy Density Analizi */}
               <div className="bg-gray-800 border border-gray-700 rounded p-4">
-                <h3 className="text-sm font-semibold text-white mb-2">Turnaround Thermal Overheating Hotspots</h3>
+                <h3 className="text-sm font-semibold text-white mb-2">Average-LED Screen Flags</h3>
                 <p className="text-xs text-gray-400 mb-4">
-                  Galvanometer deceleration at vector endpoints causes actual Linear Energy Density (LED = P/v) to surge beyond nominal values, triggering local keyhole porosity.
+                  Galvanometer deceleration at vector endpoints causes average Linear Energy Density (LED = P/v) to exceed the nominal value. A segment is flagged when its average LED is more than 1.25x nominal; this is a screening rule and does not predict porosity or any melt-pool outcome.
                 </p>
 
-                {result.hotspot_count === 0 ? (
-                  <div className="p-3 bg-green-900/20 border border-green-800 rounded text-xs text-green-300">
-                    No critical deceleration hotspots detected. Skywriting or vector length is sufficient to maintain steady-state laser velocity.
+                {zeroFlagCaveat(result) ? (
+                  <div className="p-3 bg-amber-900/20 border border-amber-800 rounded text-xs text-amber-200">
+                    {zeroFlagCaveat(result)}
+                  </div>
+                ) : result.hotspot_count === 0 ? (
+                  <div className="p-3 bg-gray-900 border border-gray-700 rounded text-xs text-gray-300">
+                    No segment exceeds the 1.25x nominal LED screening threshold for the entered inputs.
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
@@ -231,7 +304,7 @@ export const LpbfToolpathStudioLab: React.FC = () => {
                           <th className="p-2">Position (X, Y)</th>
                           <th className="p-2">Nominal LED</th>
                           <th className="p-2">Actual LED</th>
-                          <th className="p-2">Energy Surge</th>
+                          <th className="p-2">LED above nominal</th>
                           <th className="p-2">Root Cause</th>
                         </tr>
                       </thead>

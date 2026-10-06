@@ -48,6 +48,7 @@ class KeyholeContract(unittest.TestCase):
         self.assertAlmostEqual(result["total_absorbed_W"], 75.0, delta=1e-4)
         self.assertAlmostEqual(result["total_escaped_W"], 175.0, delta=1e-4)
         self.assertEqual(result["total_truncated_W"], 0.0)
+        self.assertEqual(result["total_missed_W"], 0.0)
         self.assertLess(result["energy_balance_relative_error"], 1e-6)
         self.assertEqual(result["device"], "cpu")
         vertices = np.array(result["mesh"]["vertices"]).reshape(16, 16, 3)
@@ -91,6 +92,41 @@ class KeyholeContract(unittest.TestCase):
                 self.assertLess(abs(result["absorption_efficiency"] - expected), 5 * se + 1e-6)
                 self.assertGreater(se, 0)
                 self.assertLess(result["energy_balance_relative_error"], 1e-6)
+
+    def test_rays_outside_mesh_are_missed_not_escaped(self):
+        # Aperture +-30 um, beam radius 150 um: most rays never touch the mesh.
+        result = self.run_case(nx=7, ny=7, dx=10e-6, dy=10e-6, beam_radius_um=150.0, base_absorption=0.0)
+        self.assertAlmostEqual(result["mesh_aperture_half_extent_um"], 30.0, places=6)
+        self.assertGreater(result["total_missed_W"], 0.5 * 250.0)
+        # Flat surface, zero absorption: every ray that hits reflects straight out once.
+        self.assertAlmostEqual(result["total_missed_W"] + result["total_escaped_W"], 250.0, delta=1e-3)
+        self.assertLess(result["total_escaped_W"], 0.5 * 250.0)
+        self.assertLess(result["energy_balance_relative_error"], 1e-6)
+        self.assertTrue(any("mesh aperture" in item for item in result["limitations"]))
+        # Independent check: Gaussian fraction inside the square aperture.
+        inside = math.erf(math.sqrt(2) * 30 / 150) ** 2
+        self.assertAlmostEqual(result["total_escaped_W"] / 250.0, inside, delta=0.05)
+        self.assertAlmostEqual(result["missed_fraction"], result["total_missed_W"] / 250.0, places=9)
+        # Zero absorption: nothing absorbed of the intercepted power either.
+        self.assertAlmostEqual(result["absorption_efficiency_of_intercepted"], 0.0, places=6)
+
+    def test_intercepted_absorption_excludes_missed_power(self):
+        result = self.run_case(nx=7, ny=7, dx=10e-6, dy=10e-6, beam_radius_um=150.0, base_absorption=0.3)
+        intercepted = 250.0 - result["total_missed_W"]
+        self.assertAlmostEqual(result["absorption_efficiency_of_intercepted"],
+                               result["total_absorbed_W"] / intercepted, places=9)
+        self.assertGreater(result["absorption_efficiency_of_intercepted"], result["absorption_efficiency"])
+
+    def test_beam_sized_mesh_has_negligible_missed_power_at_300um(self):
+        # Mirrors the UI request (KeyholeRaytracingLab keyholeMeshForBeam): 64 nodes,
+        # aperture half-extent = 3x the beam radius. 300 um diameter -> r = 150 um.
+        radius_um = 150.0
+        dx = max(2e-6, 6 * radius_um * 1e-6 / 63)
+        result = self.run_case(nx=64, ny=64, dx=dx, dy=dx, beam_radius_um=radius_um,
+                               keyhole_depth_um=120.0, num_rays=4096)
+        self.assertGreaterEqual(result["mesh_aperture_half_extent_um"], 3 * radius_um - 1e-6)
+        self.assertLess(result["missed_fraction"], 0.01)
+        self.assertLess(result["energy_balance_relative_error"], 1e-6)
 
     @unittest.skipUnless(_WARP_MISSING is None and wp.is_cuda_available(), "CUDA unavailable")
     def test_cpu_gpu_same_sample_comparison(self):

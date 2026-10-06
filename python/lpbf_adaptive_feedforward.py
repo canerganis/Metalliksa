@@ -1,15 +1,17 @@
 """
-lpbf_adaptive_feedforward.py — Phase 15: Closed-Loop Feed-Forward Defect Mitigation Engine
-========================================================================================
-Generative Adaptive Laser Power and Scan Rotation Controller.
+lpbf_adaptive_feedforward.py — Phase 15: Open-Loop Feed-Forward Power Scaling
+==============================================================================
+Open-loop (no sensor feedback) per-vector laser power scaling plus optional scan rotation.
 
-Physics Principles:
-  1. Inverse Kinematic Power Compensation:
-       To maintain constant Linear Energy Density E_L = P(t) / v(t) = E_L_nominal:
-       P_compensated(t) = P_nominal * (v_actual(t) / v_nominal)
-  2. Overheating suppression at turnaround corners (deceleration zones).
-  3. Interlayer scan rotation by 67.0 degrees to suppress crystallographic texture anisotropy.
-  4. Generative G-Code export with dynamic laser power assignment (S-words).
+Model (screening only, not machine-validated):
+  1. Per-vector power scaling from the kinematic peak speed of each vector:
+       P_vector = P_nominal * min(1, v_peak / v_nominal)
+     One constant S-word per vector; power is NOT ramped along the acceleration /
+     deceleration phases inside a vector.
+  2. Optional rotation of the toolpath by 67 deg x layer_index about the origin.
+     No microstructure or texture effect is computed.
+  3. G-code export with one S-word per marking vector; travel moves are emitted
+     with an explicit S0 so the laser is commanded off during G0 jumps.
 """
 
 from __future__ import annotations
@@ -37,7 +39,7 @@ class MitigatedSegment:
 
 
 class AdaptiveFeedforwardMitigator:
-    """Computes real-time dynamic laser power compensation to eliminate turnaround hotspots."""
+    """Open-loop per-vector power scaling from scanner kinematics (no sensor feedback)."""
 
     def __init__(self, profile: Optional[ScannerProfile] = None):
         self.profile = profile or ScannerProfile()
@@ -61,7 +63,7 @@ class AdaptiveFeedforwardMitigator:
                 mitigated_led_J_mm=0.0,
                 energy_saved_pct=0.0,
                 is_mitigated=False,
-                gcode_command=f"G0 X{vec.x_end:.3f} Y{vec.y_end:.3f}"
+                gcode_command=f"G0 X{vec.x_end:.3f} Y{vec.y_end:.3f} S0"
             )
 
         nom_led = vec.nominal_power_W / vec.nominal_speed_mms
@@ -72,7 +74,7 @@ class AdaptiveFeedforwardMitigator:
         speed_ratio = min(1.0, seg.v_peak_mms / vec.nominal_speed_mms)
         compensated_power = vec.nominal_power_W * speed_ratio
 
-        # Mitigated linear energy density during peak cruise
+        # Linear energy density at the scaled power and peak speed
         mitigated_led = compensated_power / max(seg.v_peak_mms, 1e-4)
 
         is_mitigated = speed_ratio < 0.99
@@ -133,8 +135,9 @@ class AdaptiveFeedforwardMitigator:
         total_nominal_energy_J = 0.0
         total_mitigated_energy_J = 0.0
         gcode_lines = [
-            f"; Metalliksa Phase 15 Mitigated Toolpath (Layer {layer_index})",
-            f"; Rotation: {math.degrees(rot_angle_rad):.1f} deg | Adaptive Power Control: ENABLED",
+            f"; Metalliksa per-vector power-scaled toolpath (Layer {layer_index})",
+            f"; Rotation: {math.degrees(rot_angle_rad):.1f} deg | Open-loop per-vector power scaling",
+            "; NOT machine-validated: review S-words, travel moves and controller laser mode before use",
             "M3 S0"
         ]
 
@@ -154,7 +157,7 @@ class AdaptiveFeedforwardMitigator:
                 total_mitigated_energy_J += mseg.compensated_power_W * t_nom
 
         gcode_lines.append("M5")
-        gcode_lines.append("; End of layer mitigation")
+        gcode_lines.append("; End of power-scaled layer")
 
         overall_energy_reduction_pct = (
             ((total_nominal_energy_J - total_mitigated_energy_J) / max(total_nominal_energy_J, 1e-4)) * 100.0

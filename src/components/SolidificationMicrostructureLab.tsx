@@ -237,9 +237,10 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
             </p>
           </div>
           <div className="flex min-w-[152px] items-center gap-3 rounded-xl border border-white/[.08] bg-black/15 px-3 py-2.5">
-            <span className={`relative flex h-2.5 w-2.5 ${isLoading ? '' : 'animate-pulse'}`}>
-              <span className={`absolute inline-flex h-full w-full rounded-full ${isLoading ? 'bg-amber-300/50' : 'bg-emerald-300/40'}`} />
-              <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${isLoading ? 'bg-amber-300' : 'bg-emerald-300'}`} />
+            {/* Animate only while the solver is running; idle is a static neutral dot. */}
+            <span data-testid="solidification-status-dot" className={`relative flex h-2.5 w-2.5 ${isLoading ? 'animate-pulse' : ''}`}>
+              <span className={`absolute inline-flex h-full w-full rounded-full ${isLoading ? 'bg-amber-300/50' : result ? 'bg-cyan-200/30' : 'bg-slate-400/30'}`} />
+              <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${isLoading ? 'bg-amber-300' : result ? 'bg-cyan-200' : 'bg-slate-400'}`} />
             </span>
             <div>
               <div className="text-xs font-semibold text-slate-200">{isLoading ? 'Solver running' : result ? 'Analysis ready' : 'Ready to analyse'}</div>
