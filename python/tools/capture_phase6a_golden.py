@@ -23,6 +23,16 @@ Binding: every golden records the sha256 (CRLF->LF normalised, i.e. git blob for
 of the solver that produced it plus git HEAD. A capture labelled d33b6f5 is refused
 unless the solver bytes it runs equal the d33b6f5 blob; after the migration use
 --from-revision d33b6f5, which runs the immutable blob from a temp dir.
+
+Optional imports: the d33b6f5 goldens were captured on an interpreter WITHOUT
+pycalphad (the locked LPBF interpreter; python/requirements-lpbf*.lock has no
+pycalphad), so the calphad_solver goldens record the base blob's no-pycalphad branch
+("pycalphadVersion": "No module named 'pycalphad'"). The base blob imports pycalphad
+when it can and then takes a different path (engine "pycalphad-open-tdb"), so a
+blob re-capture on an interpreter that has pycalphad (python/requirements.txt pins
+pycalphad>=0.11.2,<0.13) would not reproduce the goldens. Blob runs therefore hide
+GOLDEN_HIDDEN_MODULES: importing them raises the same ModuleNotFoundError an
+interpreter without the package raises, so the capture is identical on both.
 """
 
 from __future__ import annotations
@@ -43,6 +53,9 @@ PYTHON_DIR = Path(__file__).resolve().parent.parent
 GOLDEN_DIR = PYTHON_DIR / "golden" / "phase6a"
 BASE_REVISION = "d33b6f5"
 GOLDEN_SCHEMA = "phase6a-golden-1"
+# Optional packages that were absent when the d33b6f5 goldens were captured (see the
+# module docstring). Hidden from every base-blob run made by capture().
+GOLDEN_HIDDEN_MODULES: Tuple[str, ...] = ("pycalphad",)
 
 # Keys removed at any depth before comparison. durationMs/computeTimeMs are
 # time.perf_counter wall times, timestamp is wall-clock UTC, pythonVersion is the
@@ -192,6 +205,14 @@ def git_head() -> Optional[str]:
 
 _BLOB_RUNNER = (
     "import os, sys\n"
+    "_hidden = tuple(n for n in os.environ.get('PHASE6A_HIDE_MODULES', '').split(',') if n)\n"
+    "class _HideFinder:\n"
+    "    def find_spec(self, name, path=None, target=None):\n"
+    "        if name.split('.')[0] in _hidden:\n"
+    "            raise ModuleNotFoundError(f\"No module named '{name}'\", name=name)\n"
+    "        return None\n"
+    "if _hidden:\n"
+    "    sys.meta_path.insert(0, _HideFinder())\n"
     "_f = os.environ['PHASE6A_BLOB_AS_FILE']\n"
     "sys.argv = [_f]\n"
     "with open(os.environ['PHASE6A_BLOB_SCRIPT'], 'rb') as _h:\n"
@@ -201,13 +222,19 @@ _BLOB_RUNNER = (
 
 
 def run_solver(solver: str, payload: Any, python: str = sys.executable, timeout: float = 180.0,
-               script: Optional[Path] = None) -> Dict[str, Any]:
+               script: Optional[Path] = None, hide_modules: Tuple[str, ...] = ()) -> Dict[str, Any]:
     """Run ``<solver>.py`` like the app's ad-hoc spawn; return exit code and parsed stdout.
 
     ``script`` runs another copy of the solver (e.g. a git blob extracted to a temp
     dir) with the same cwd, and python/ on PYTHONPATH for its local imports.
+    ``hide_modules`` (only with ``script``, not with a module driver) makes importing
+    those top-level packages raise ModuleNotFoundError("No module named '<name>'"),
+    as on an interpreter where they are not installed.
     """
     env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
+    env.pop("PHASE6A_HIDE_MODULES", None)
+    if hide_modules and (script is None or solver in MODULE_DRIVERS):
+        raise ValueError("hide_modules needs a base-blob script run (not the working tree or a module driver)")
     cmd = [python, "-B", f"{solver}.py"]
     driver = MODULE_DRIVERS.get(solver)
     if driver is not None:
@@ -222,6 +249,8 @@ def run_solver(solver: str, payload: Any, python: str = sys.executable, timeout:
         # real directory, and sys.argv must look like a plain script run.
         env["PHASE6A_BLOB_SCRIPT"] = str(script)
         env["PHASE6A_BLOB_AS_FILE"] = str(PYTHON_DIR / f"{solver}.py")
+        if hide_modules:
+            env["PHASE6A_HIDE_MODULES"] = ",".join(hide_modules)
         cmd = [python, "-B", "-c", _BLOB_RUNNER]
     proc = subprocess.run(
         cmd, input=json.dumps(payload).encode("utf-8"),
@@ -888,7 +917,8 @@ def capture(solver: str, case: str, force: bool, label: str = BASE_REVISION,
         if from_revision is not None:
             script = Path(tmp) / f"{solver}.py"
             script.write_bytes(source)
-        result = run_solver(solver, payload, script=script)
+        hidden = GOLDEN_HIDDEN_MODULES if script is not None and solver not in MODULE_DRIVERS else ()
+        result = run_solver(solver, payload, script=script, hide_modules=hidden)
     doc = dict(meta)
     doc.update({
         "schema": GOLDEN_SCHEMA,
