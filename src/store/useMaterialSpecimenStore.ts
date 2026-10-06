@@ -43,6 +43,11 @@ export interface LpbfSpecimenState {
   inclineAngle_deg: number;
   /** Overhang from vertical (deg); omit/0 = flat upskin. */
   downskinOverhang_deg: number;
+  /**
+   * Fields that were missing when this vector was built and were filled from LPBF_PROCESS_FALLBACKS. These values are
+   * generic placeholders, not material-specific or measured; consumers should show them as defaults.
+   */
+  defaultsApplied?: LpbfDefaultedField[];
 }
 
 export type LpbfProcessPatch = Partial<
@@ -64,35 +69,58 @@ export type LpbfProcessPatch = Partial<
   >
 >;
 
+/**
+ * Values substituted when a caller omits a field. Generic placeholders with no source: they are listed in
+ * `LpbfSpecimenState.defaultsApplied` so the UI can disclose them. Numeric behaviour is unchanged.
+ */
+export const LPBF_PROCESS_FALLBACKS = {
+  thermalConductivity_k_WmK: 11.5,
+  density_rho_kgm3: 8200,
+  specificHeat_Cp_JkgK: 435,
+  laserAbsorptivity: 0.58,
+  thermalExpansion_CTE_10e6: 13,
+  criticalGradient_G_Km: 1.5e7,
+  hotTearingSusceptibility: "Moderate",
+  beamDiameter_um: 80,
+  scanStrategy: "stripe",
+  beamProfile: "gaussian",
+} as const;
+export type LpbfDefaultedField = keyof typeof LPBF_PROCESS_FALLBACKS;
+
 export function withLpbfProcessDefaults(lpbf: Partial<LpbfSpecimenState> & Pick<LpbfSpecimenState, "recommendedLaserPower_W" | "recommendedScanSpeed_mms" | "recommendedHatch_um" | "recommendedLayer_um" | "recommendedPreheatTemp_C">): LpbfSpecimenState {
+  // A field stays flagged when it still holds its fallback value from an earlier fill; an explicit different value clears it.
+  const previous = new Set(lpbf.defaultsApplied ?? []);
+  const defaultsApplied = (Object.keys(LPBF_PROCESS_FALLBACKS) as LpbfDefaultedField[])
+    .filter(key => lpbf[key] === undefined || (previous.has(key) && lpbf[key] === LPBF_PROCESS_FALLBACKS[key]));
   return {
     recommendedLaserPower_W: lpbf.recommendedLaserPower_W,
     recommendedScanSpeed_mms: lpbf.recommendedScanSpeed_mms,
     recommendedHatch_um: lpbf.recommendedHatch_um,
     recommendedLayer_um: lpbf.recommendedLayer_um,
     recommendedPreheatTemp_C: lpbf.recommendedPreheatTemp_C,
-    thermalConductivity_k_WmK: lpbf.thermalConductivity_k_WmK ?? 11.5,
-    density_rho_kgm3: lpbf.density_rho_kgm3 ?? 8200,
-    specificHeat_Cp_JkgK: lpbf.specificHeat_Cp_JkgK ?? 435,
-    laserAbsorptivity: lpbf.laserAbsorptivity ?? 0.58,
-    thermalExpansion_CTE_10e6: lpbf.thermalExpansion_CTE_10e6 ?? 13,
-    criticalGradient_G_Km: lpbf.criticalGradient_G_Km ?? 1.5e7,
-    hotTearingSusceptibility: lpbf.hotTearingSusceptibility ?? "Moderate",
+    thermalConductivity_k_WmK: lpbf.thermalConductivity_k_WmK ?? LPBF_PROCESS_FALLBACKS.thermalConductivity_k_WmK,
+    density_rho_kgm3: lpbf.density_rho_kgm3 ?? LPBF_PROCESS_FALLBACKS.density_rho_kgm3,
+    specificHeat_Cp_JkgK: lpbf.specificHeat_Cp_JkgK ?? LPBF_PROCESS_FALLBACKS.specificHeat_Cp_JkgK,
+    laserAbsorptivity: lpbf.laserAbsorptivity ?? LPBF_PROCESS_FALLBACKS.laserAbsorptivity,
+    thermalExpansion_CTE_10e6: lpbf.thermalExpansion_CTE_10e6 ?? LPBF_PROCESS_FALLBACKS.thermalExpansion_CTE_10e6,
+    criticalGradient_G_Km: lpbf.criticalGradient_G_Km ?? LPBF_PROCESS_FALLBACKS.criticalGradient_G_Km,
+    hotTearingSusceptibility: lpbf.hotTearingSusceptibility ?? LPBF_PROCESS_FALLBACKS.hotTearingSusceptibility,
     crackingMechanism: lpbf.crackingMechanism ?? "",
     mitigationRecommendation: lpbf.mitigationRecommendation ?? "",
     laserPower_W: lpbf.laserPower_W ?? lpbf.recommendedLaserPower_W,
     scanSpeed_mms: lpbf.scanSpeed_mms ?? lpbf.recommendedScanSpeed_mms,
     hatch_um: lpbf.hatch_um ?? lpbf.recommendedHatch_um,
     layer_um: lpbf.layer_um ?? lpbf.recommendedLayer_um,
-    beamDiameter_um: lpbf.beamDiameter_um ?? 80,
+    beamDiameter_um: lpbf.beamDiameter_um ?? LPBF_PROCESS_FALLBACKS.beamDiameter_um,
     preheatTemp_C: lpbf.preheatTemp_C ?? lpbf.recommendedPreheatTemp_C,
-    scanStrategy: lpbf.scanStrategy ?? "stripe",
-    beamProfile: lpbf.beamProfile ?? "gaussian",
+    scanStrategy: lpbf.scanStrategy ?? LPBF_PROCESS_FALLBACKS.scanStrategy,
+    beamProfile: lpbf.beamProfile ?? LPBF_PROCESS_FALLBACKS.beamProfile,
     cadAssetName: lpbf.cadAssetName ?? "",
     specimenDoi: lpbf.specimenDoi ?? "",
     processSeed: lpbf.processSeed ?? 42,
     inclineAngle_deg: lpbf.inclineAngle_deg ?? 0,
     downskinOverhang_deg: lpbf.downskinOverhang_deg ?? 0,
+    ...(defaultsApplied.length ? { defaultsApplied } : {}),
   };
 }
 
@@ -712,6 +740,8 @@ export const useMaterialSpecimenStore = create<MaterialSpecimenStore>()(
             lpbf: withLpbfProcessDefaults({
               ...current.activeSpecimen.lpbf,
               ...specimen.lpbf,
+              // The persisted record is authoritative about its own defaults; never inherit the fresh preset's list.
+              defaultsApplied: specimen.lpbf?.defaultsApplied,
             }),
           },
         };

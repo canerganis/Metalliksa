@@ -93,7 +93,7 @@ export const METALLURGICAL_STANDARDS: Record<string, StandardDetails> = {
     governingBody: "ISO Committee on Conformity Assessment (CASCO) / Nadcap",
     methodology:
       "Establishes technical competence, traceability of measurement standards, and test certificate reporting conformity. Standardizes EN 10204 Type 3.1 inspection certificate dual-unit SI / US Customary reporting.",
-    equations: "Dual certified reporting: SI (MPa, HV, °C, J) + US Customary (ksi, HRC, °F, ft-lbf)",
+    equations: "Dual-unit reporting (EN 10204 certificate units): SI (MPa, HV, °C, J) + US Customary (ksi, HRC, °F, ft-lbf)",
     validRange: "Global aerospace, defense, nuclear, and pressure vessel engineering documentation.",
     criticalNotes:
       "Requires recorded calibration traceability to NIST/PTB standards and documented measurement uncertainty.",
