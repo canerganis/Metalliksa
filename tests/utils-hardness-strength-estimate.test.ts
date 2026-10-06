@@ -148,11 +148,13 @@ test("B1 through both stores: stainless/duplex/PH/tool/maraging specimens get no
   const ss304 = OUT_OF_SCOPE["AISI 304"].comp;
   assert.equal(deriveProperties(ss304, "304", "Fe").xrd.crystalSystem, "FCC");
   assert.equal(deriveSpecimenProperties(ss304, "304", "Fe").xrd.crystalSystem, "FCC");
-  // HSLA-100 stays estimated in the builder
+  // HSLA-100 is in the regression's scope, but the builder no longer invents a yield strength to invert: no HV.
   const hsla = deriveProperties(IN_SCOPE["HSLA-100"], "HSLA-100", "Fe");
   assert.equal(hsla.xrd.crystalSystem, "BCC");
-  assert.equal(hsla.hardnessHVStatus, "estimate-pavlina-van-tyne-2008");
-  assert.equal(hsla.hardness_HV, Math.round((hsla.yieldStrength_25C_MPa + 90.7) / 2.876));
+  assert.equal(hsla.yieldStrength_25C_MPa, null);
+  assert.equal(hsla.hardnessHVStatus, "unavailable");
+  assert.equal(hsla.hardness_HV, null);
+  assert.match(hsla.hardnessHVNote!, /no yield strength/);
 });
 
 test("estimate note names the source, the validity range and 'not measured'", () => {
@@ -182,27 +184,28 @@ test("material builder presets: no preset gets an estimate (none is a carbon/low
     assert.equal(derived[k].hardnessHVStatus, "unavailable", k);
     assert.match(derived[k].hardnessHVNote!, /^Unavailable: no verified hardness-strength relation/, k);
   }
-  // maraging 300: round 1 gave 362 (old 307); now outside the data set (Ni 18.5, Co 9)
+  // maraging 300: round 1 gave 362 (old 307); now outside the data set (Ni 18.5, Co 9). Its yield is no longer the
+  // invented 951 MPa (750 + 900 C + 25 Cr + 40 Mo): unavailable.
   const m = derived["maraging300"];
-  assert.equal(m.yieldStrength_25C_MPa, 951);
+  assert.equal(m.yieldStrength_25C_MPa, null);
   assert.equal(m.hardness_HV, null);
   assert.match(m.hardnessHVNote!, /^Unavailable: outside the regression's data set .*Ni 18\.5 wt% >= 5/);
 });
 
-test("AlSi10Mg preset: finite liquidus and freezing range (absent Cu counts as 0; was NaN)", () => {
-  const p = MATERIAL_PRESETS["alsi10mg"];
-  const d = deriveProperties(p.composition, p.name, p.base);
-  assert.ok(Number.isFinite(d.liquidus_C), String(d.liquidus_C));
-  assert.ok(Number.isFinite(d.freezingRange_C), String(d.freezingRange_C));
-  assert.equal(d.liquidus_C, Math.round(660 - (9.8 * 6.5 + 0.45 * 4.5 + 0 * 3))); // 594
-  assert.equal(d.freezingRange_C, 594 - 570);
+test("no preset gets heuristic temperatures or strengths (AlSi10Mg solidus was a constant 570 degC)", () => {
+  for (const [key, p] of Object.entries(MATERIAL_PRESETS)) {
+    const d = deriveProperties(p.composition, p.name, p.base);
+    for (const field of ["liquidus_C", "solidus_C", "freezingRange_C", "solvus_C", "yieldStrength_25C_MPa", "uts_25C_MPa", "youngsModulus_GPa", "elongation_pct"] as const) {
+      assert.equal(d[field], null, `${key}.${field}`);
+    }
+  }
 });
 
-test("builder niEq parentheses: C, N and Mn count when Ni is present", () => {
-  // niEq = Ni + 30 C + 30 N + 0.5 Mn; solvus = 727 + 8 Cr - 12 niEq (the store's own heuristic)
-  const d = deriveProperties({ Fe: 80, Ni: 4, Mn: 2, C: 0.1, Cr: 1 }, "niEq fixture", "Fe");
-  const niEq = 4 + 0.1 * 30 + 2 * 0.5; // 8 (was 4: only Ni counted)
-  assert.equal(d.solvus_C, Math.round(727 + 1 * 8 - niEq * 12));
+test("builder niEq parentheses: C, N and Mn count when Ni is present (crystal class only)", () => {
+  // niEq = Ni + 30 C + 30 N + 0.5 Mn; with Cr-eq > 16 an Fe alloy with niEq > 8 is classed FCC.
+  // Ni 4 + 30 x 0.2 C = 10 > 8 only when C counts (it was dropped whenever Ni was present).
+  const d = deriveProperties({ Fe: 75.8, Ni: 4, C: 0.2, Cr: 20 }, "niEq fixture", "Fe");
+  assert.equal(d.xrd.crystalSystem, "FCC");
 });
 
 test("Si-free austenitic composition is classified FCC (was NaN -> BCC) and gets no steel estimate", () => {
@@ -212,7 +215,7 @@ test("Si-free austenitic composition is classified FCC (was NaN -> BCC) and gets
   assert.match(d.hardnessHVNote!, /Austenitic stainless steel/);
 });
 
-test("persisted state before version 1 is recomputed; atomic-percent specimens are unavailable", () => {
+test("persisted state before version 2 is recomputed; atomic-percent specimens are unavailable", () => {
   const p = MATERIAL_PRESETS["ti64-gr5"];
   const fresh = { id: "x", ...deriveProperties(p.composition, p.name, p.base), sourceTab: "t", lastModified: 0, isCustomModified: false } as MaterialSpecimen;
   const stale = { ...fresh, hardness_HV: 346, hardnessHVStatus: undefined, hardnessHVNote: undefined } as MaterialSpecimen;
@@ -226,7 +229,11 @@ test("persisted state before version 1 is recomputed; atomic-percent specimens a
   assert.equal((migrated.savedSpecimens[1] as MaterialSpecimen).hardness_HV, null); // was kept at 210
   assert.equal(migrated.savedSpecimens[2], null); // non-objects pass through the migration
   assert.equal(migrated.savedSpecimens[3], 5);
-  const untouched = migrateMaterialStoreState({ activeMaterialSpecimen: stale }, 1) as Migrated;
+  // version 1 still carried heuristic yields (and steel HV estimates inverted from them): migrated as well.
+  const v1 = migrateMaterialStoreState({ activeMaterialSpecimen: { ...stale, yieldStrength_25C_MPa: 1000 } }, 1) as Migrated;
+  assert.equal(v1.activeMaterialSpecimen.yieldStrength_25C_MPa, null);
+  assert.equal(v1.activeMaterialSpecimen.hardness_HV, null);
+  const untouched = migrateMaterialStoreState({ activeMaterialSpecimen: stale }, 2) as Migrated;
   assert.equal(untouched.activeMaterialSpecimen.hardness_HV, 346);
   const atPct = withHardnessEstimate({ ...fresh, unit: "at_pct" });
   assert.equal(atPct.hardness_HV, null);
@@ -251,14 +258,17 @@ test("both specimen stores publish the labelled estimate or Unavailable (old: YS
     assert.equal(p.hardnessHVSource, "unavailable");
     assert.match(p.hardness, /^Unavailable: no verified hardness-strength relation for this alloy class \(Nickel alloy\)/);
 
+    // In-scope low-alloy steel: the store no longer invents a yield strength (it gave 509 MPa), so there is nothing
+    // to invert and the HV is Unavailable rather than an estimate of an estimate.
     useMaterialSpecimenStore.getState().updateComposition({ Fe: 97.6, C: 0.4, Mn: 0.8, Cr: 1.0, Mo: 0.2 }, "Steel fixture", "Fe");
     const s = useMaterialSpecimenStore.getState().activeSpecimen;
     p = payloads.at(-1)!;
     assert.equal(s.xrd.crystalSystem, "BCC");
-    assert.equal(s.yieldStrength_25C_MPa, 509); // the store's own composition-based estimate
-    assert.equal(p.hardnessHV, 209); // (509 + 90.7) / 2.876 = 208.5; old round(509 / 3.1) = 164
-    assert.equal(p.hardnessHVSource, "estimate-from-yield");
-    assert.match(p.hardness, /^≈ 209 HV: estimate from yield strength by inverting the Pavlina & Van Tyne \(2008\)/);
+    assert.equal(s.yieldStrength_25C_MPa, null);
+    assert.equal(p.yieldStrength, null);
+    assert.equal(p.hardnessHV, null);
+    assert.equal(p.hardnessHVSource, "unavailable");
+    assert.match(p.hardness, /no yield strength/);
 
     useMaterialStore.getState().updateComposition({ Ti: 90, Al: 6, V: 4 }, "Ti fixture");
     p = payloads.at(-1)!;
@@ -266,12 +276,14 @@ test("both specimen stores publish the labelled estimate or Unavailable (old: YS
     assert.equal(p.hardnessHVSource, "unavailable");
     assert.match(p.hardness, /Titanium alloy/);
 
-    // builder payload of an in-scope low-alloy steel: estimate with source "estimate-from-yield"
+    // builder payload of an in-scope low-alloy steel: no yield strength, so Unavailable as well
     useMaterialStore.getState().updateComposition(IN_SCOPE["AISI 4140"], "4140 fixture");
     p = payloads.at(-1)!;
     const b = useMaterialStore.getState().activeMaterialSpecimen;
-    assert.equal(p.hardnessHV, Math.round((b.yieldStrength_25C_MPa + 90.7) / 2.876));
-    assert.equal(p.hardnessHVSource, "estimate-from-yield");
+    assert.equal(b.yieldStrength_25C_MPa, null);
+    assert.equal(p.yieldStrength, null);
+    assert.equal(p.hardnessHV, null);
+    assert.equal(p.hardnessHVSource, "unavailable");
   } finally {
     if (originalWindow) Object.defineProperty(globalThis, "window", originalWindow);
     else delete (globalThis as { window?: unknown }).window;

@@ -2,25 +2,18 @@ import React, { useState } from "react";
 import {
   Boxes,
   Atom,
-  Sliders,
   Plus,
   Trash2,
   RotateCcw,
   CheckCircle2,
-  AlertTriangle,
-  Flame,
   Activity,
   Layers,
-  ArrowRight,
-  BookmarkPlus,
-  Info,
-  ExternalLink,
-  ShieldCheck,
   Cpu,
 } from "lucide-react";
-import { useMaterialStore, MATERIAL_PRESETS, BaseMetalType } from "../store/useMaterialStore";
+import { useMaterialStore, MATERIAL_PRESETS } from "../store/useMaterialStore";
 import { useMaterialSpecimenStore } from "../store/useMaterialSpecimenStore";
 import { MATERIAL_CATEGORIES, normalizeMaterialCategory } from "../utils/materialCategory";
+import { COMPOSITION_PROPERTY_UNAVAILABLE_NOTE, ruleOfMixturesDensity } from "../utils/compositionPropertyAvailability";
 
 interface AlloyBuilderProps {
   onNavigate?: (tabId: string) => void;
@@ -47,7 +40,6 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
     updateMetadata,
     loadPreset,
     resetToDefault,
-    saveCurrentSpecimen,
   } = useMaterialStore();
   const currentProcess = useMaterialSpecimenStore((state) => state.activeSpecimen.lpbf);
   const category = normalizeMaterialCategory(activeMaterialSpecimen.metadata?.category, activeMaterialSpecimen.metadata?.baseMetal);
@@ -57,21 +49,16 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
   const routeOptions = MANUFACTURING_ROUTES.includes(manufacturingRoute)
     ? MANUFACTURING_ROUTES : [...MANUFACTURING_ROUTES, manufacturingRoute];
 
-  // Local UI state for tab switching & element selection dropdown only
-  const [activeSubView, setActiveSubView] = useState<"specimen-studio">("specimen-studio");
+  // Local UI state for the element selection dropdown only
   const [selectedElementToAdd, setSelectedElementToAdd] = useState<string>("Re");
-  const [isSavedToast, setIsSavedToast] = useState<boolean>(false);
 
   // Derive total elemental weight sum
   const composition = activeMaterialSpecimen.composition || {};
   const totalWeight = Object.values(composition).reduce((acc, val) => acc + (typeof val === "number" ? val : 0), 0);
   const isBalanced = Math.abs(totalWeight - 100.0) < 0.05;
 
-  const handleSaveSnapshot = () => {
-    saveCurrentSpecimen(`Saved from AlloyBuilder at ${new Date().toLocaleTimeString()}`);
-    setIsSavedToast(true);
-    setTimeout(() => setIsSavedToast(false), 2500);
-  };
+  // Computed from the composition on screen; unavailable (no number) for at.% or an element without a density.
+  const density = ruleOfMixturesDensity(composition, activeMaterialSpecimen.unit);
 
   const handleAddElementClick = () => {
     if (selectedElementToAdd && composition[selectedElementToAdd] === undefined) {
@@ -96,60 +83,30 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
                     Composition Editor
                   </h1>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
-                    Live Shared Store
+                    Shared store
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Single source of truth for chemical composition, provenance metadata, and multi-physics propagation.
+                  Edits the shared specimen's chemical composition and provenance metadata.
                 </p>
               </div>
             </div>
           </div>
-
-          {/* Sub-View Navigation Tabs */}
-          <div className="flex items-center gap-2 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800">
-            <button
-              id="tab-specimen-studio"
-              onClick={() => setActiveSubView("specimen-studio")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                activeSubView === "specimen-studio"
-                  ? "bg-emerald-500 text-slate-950 shadow-md font-bold"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              <Sliders className="w-3.5 h-3.5" />
-              <span>Specimen Formulator</span>
-            </button>
-          </div>
         </div>
 
-        {/* Global Live Thread Status Strip */}
+        {/* Modules that read the shared specimen */}
         <div className="mt-4 pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-slate-400 font-medium">Broadcasting to:</span>
+          <div className="flex flex-wrap items-center gap-2" data-testid="alloy-shared-with">
+            <span className="text-slate-400 font-medium">Shared with:</span>
             <span className="px-2 py-0.5 rounded bg-slate-800/90 text-slate-300 font-mono text-[11px] border border-slate-700">
-              CALPHAD Thermodynamics
+              CALPHAD Multi-Component Studio (composition)
             </span>
             <span className="px-2 py-0.5 rounded bg-slate-800/90 text-slate-300 font-mono text-[11px] border border-slate-700">
-              LPBF Melt Pool
-            </span>
-            <span className="px-2 py-0.5 rounded bg-slate-800/90 text-slate-300 font-mono text-[11px] border border-slate-700">
-              Rapid XRD Lab
-            </span>
-            <span className="px-2 py-0.5 rounded bg-slate-800/90 text-slate-300 font-mono text-[11px] border border-slate-700">
-              Specimen Records
+              LPBF Build Job (material identity)
             </span>
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              id="btn-save-specimen-snapshot"
-              onClick={handleSaveSnapshot}
-              className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium border border-slate-700 flex items-center gap-1.5 transition-colors"
-            >
-              <BookmarkPlus className="w-3.5 h-3.5 text-emerald-400" />
-              <span>{isSavedToast ? "Snapshot Saved!" : "Save Snapshot"}</span>
-            </button>
             <button
               id="btn-reset-specimen-default"
               onClick={resetToDefault}
@@ -162,8 +119,7 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
         </div>
       </div>
 
-      {activeSubView === "specimen-studio" && (
-        <>
+      <>
           {/* Specimen Identity & Metadata Configurator */}
           <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
@@ -212,7 +168,7 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
                   value={activeMaterialSpecimen.metadata?.standardDesignation || ""}
                   onChange={(e) => updateMetadata({ standardDesignation: e.target.value })}
                   className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-slate-100 font-medium focus:outline-none focus:border-emerald-500 transition-colors"
-                  placeholder="e.g. UNS N07718 / AMS 5662"
+                  placeholder="None (set by a catalogue preset, or type one)"
                 />
               </div>
 
@@ -360,70 +316,48 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
             </div>
           </div>
 
-          {/* Real-time Multi-Physics Derived KPI Dashboard */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Derived values: only what is computed from the inputs above, or an explicit "unavailable" */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Density */}
-            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-lg space-y-1">
+            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-lg space-y-1" data-testid="alloy-density">
               <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1">
                 <Layers className="w-3.5 h-3.5 text-sky-400" />
-                <span>Alloy Density (Rule of Mixtures)</span>
+                <span>Alloy Density (Inverse Rule of Mixtures)</span>
               </span>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-xl font-black font-mono text-sky-300">
-                  {activeMaterialSpecimen.metadata?.density_gcm3?.toFixed(3) || "8.190"}
-                </span>
-                <span className="text-xs text-slate-400 font-mono">g/cm³</span>
-              </div>
+              {density.status === "computed" ? (
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-xl font-black font-mono text-sky-300">{density.density_gcm3.toFixed(3)}</span>
+                  <span className="text-xs text-slate-400 font-mono">g/cm³</span>
+                </div>
+              ) : (
+                <div className="text-sm font-bold text-slate-300">Unavailable</div>
+              )}
+              <p className="text-[11px] text-slate-400">{density.note}</p>
             </div>
 
-            {/* Solidification Freezing Range */}
-            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-lg space-y-1">
+            {/* Properties that are not computed here */}
+            <div className="bg-slate-900/80 border border-dashed border-slate-700 rounded-2xl p-4 shadow-lg space-y-1" data-testid="alloy-properties-unavailable">
               <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1">
-                <Flame className="w-3.5 h-3.5 text-amber-400" />
-                <span>Liquidus / Solidus Range</span>
+                <Activity className="w-3.5 h-3.5 text-slate-400" />
+                <span>Liquidus / Solidus, Yield Strength, UTS</span>
               </span>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-xl font-black font-mono text-amber-300">
-                  {activeMaterialSpecimen.freezingRange_C}
-                </span>
-                <span className="text-xs text-slate-400 font-mono">°C ΔT ({activeMaterialSpecimen.liquidus_C}° / {activeMaterialSpecimen.solidus_C}°)</span>
-              </div>
+              <div className="text-sm font-bold text-slate-300">Unavailable</div>
+              <p className="text-[11px] text-slate-400">{COMPOSITION_PROPERTY_UNAVAILABLE_NOTE}</p>
             </div>
 
-            {/* Yield Strength & UTS */}
-            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-lg space-y-1">
-              <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1">
-                <Activity className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Yield Strength (25°C)</span>
-              </span>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-xl font-black font-mono text-emerald-300">
-                  {activeMaterialSpecimen.yieldStrength_25C_MPa}
-                </span>
-                <span className="text-xs text-slate-400 font-mono">MPa (UTS: {activeMaterialSpecimen.uts_25C_MPa} MPa)</span>
-              </div>
-            </div>
-
-            {/* LPBF Additive Laser Power */}
+            {/* Shared LPBF process: user settings, not derived from composition */}
             <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-lg space-y-1">
               <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1">
                 <Cpu className="w-3.5 h-3.5 text-violet-400" />
-                <span>LPBF Starting Estimate (Screening)</span>
+                <span>Shared LPBF Process (User Settings)</span>
               </span>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-xl font-black font-mono text-violet-300">
-                  {activeMaterialSpecimen.lpbf?.recommendedLaserPower_W}
-                </span>
-                <span className="text-xs text-slate-400 font-mono">W @ {activeMaterialSpecimen.lpbf?.recommendedScanSpeed_mms} mm/s</span>
-              </div>
               <p className="text-xs text-slate-300" data-testid="alloy-current-process">
                 Current shared process: {currentProcess.laserPower_W} W @ {currentProcess.scanSpeed_mms} mm/s
               </p>
-              <p className="text-[11px] text-slate-400">Composition-based estimate; unvalidated. Current process settings are retained.</p>
+              <p className="text-[11px] text-slate-400">Set in the LPBF workspace; composition edits here do not change these settings and no process window is derived from composition.</p>
             </div>
           </div>
-        </>
-      )}
+      </>
     </div>
   );
 };

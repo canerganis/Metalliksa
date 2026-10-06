@@ -320,7 +320,7 @@ export const MODULE_REGISTRY_CORE = {
       "version": "0.1.0",
       "workspace": "materials",
       "label": "Composition Editor",
-      "description": "Edit and normalise the active specimen's composition (wt%) with simple composition-based estimates; no inverse design.",
+      "description": "Edit and normalise the active specimen's composition (wt%); computes a rule-of-mixtures density only (no property estimates, no inverse design).",
       "next": "phase-diagram",
       "maturity": "Research",
       "navigation": "listed",

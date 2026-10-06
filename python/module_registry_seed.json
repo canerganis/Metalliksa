@@ -104,7 +104,7 @@
     "workspace": "materials",
     "label": "Composition Editor",
     "scope": "Research",
-    "description": "Edit and normalise the active specimen's composition (wt%) with simple composition-based estimates; no inverse design.",
+    "description": "Edit and normalise the active specimen's composition (wt%); computes a rule-of-mixtures density only (no property estimates, no inverse design).",
     "next": "phase-diagram",
     "viewComponent": "src/components/AlloyBuilder.tsx",
     "viewExport": "AlloyBuilder"

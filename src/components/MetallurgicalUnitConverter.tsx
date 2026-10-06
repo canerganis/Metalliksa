@@ -56,6 +56,7 @@ import {
 import { SPECIMEN_HARDNESS_NOT_LOADED_NOTE } from "../utils/hardnessStrengthEstimate";
 import { HARDNESS_PRESETS } from "../utils/hardnessPresets";
 import { useMaterialStore } from "../store/useMaterialStore";
+import { specimenStrengthsToLoad } from "../utils/compositionPropertyAvailability";
 import { StandardInfoIcon } from "./StandardInfoIcon";
 
 // Display text of each unit <option> below, for accessible names (state holds raw keys such as "MPa_m05").
@@ -216,13 +217,15 @@ export const MetallurgicalUnitConverter: React.FC = () => {
 
   const handleSyncFromActiveSpecimen = () => {
     if (activeMaterialSpecimen) {
-      if (activeMaterialSpecimen.yieldStrength_25C_MPa > 0) {
-        setStressInput(activeMaterialSpecimen.yieldStrength_25C_MPa);
+      // Composition-only specimen records carry no yield/UTS (null = unavailable); only real values are loaded.
+      const { yieldMpa, utsMpa } = specimenStrengthsToLoad(activeMaterialSpecimen);
+      if (yieldMpa !== null) {
+        setStressInput(yieldMpa);
         setStressUnit("MPa");
-        setReportYieldMpa(activeMaterialSpecimen.yieldStrength_25C_MPa);
+        setReportYieldMpa(yieldMpa);
       }
-      if (activeMaterialSpecimen.uts_25C_MPa > 0) {
-        setReportUtsMpa(activeMaterialSpecimen.uts_25C_MPa);
+      if (utsMpa !== null) {
+        setReportUtsMpa(utsMpa);
       }
       // The hardness inputs take measured values. The specimen record's HV is a yield-strength estimate or
       // unavailable (never measured): the hardness tab is left unchanged and the report hardness is blanked.
@@ -271,7 +274,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
         <button
           onClick={handleSyncFromActiveSpecimen}
           className="px-3 py-1.5 bg-sky-600/20 hover:bg-sky-600/30 text-sky-300 border border-sky-500/40 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all self-start sm:self-auto shrink-0 shadow-sm"
-          title="Import mechanical strength and properties from active specimen"
+          title="Load the active specimen name, and its yield strength and UTS when the record has them (composition-only records do not)"
         >
           <Sparkles className="w-3.5 h-3.5 text-sky-400" />
           <span>Load Active Specimen ({activeMaterialSpecimen.name})</span>

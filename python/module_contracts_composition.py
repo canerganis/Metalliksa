@@ -83,7 +83,6 @@ COMPOSITION_OPERATIONS: Tuple[Operation, ...] = (
         _browser_operation("normalize-composition"),
         _browser_operation("load-preset", undeclared=("presetId",)),
         _browser_operation("reset-to-default"),
-        _browser_operation("save-current-specimen", output_field="savedSpecimens"),
 )
 
 
@@ -112,9 +111,9 @@ def build_composition_contract(seed: Mapping[str, str]) -> ModuleContract:
             ceiling=PENDING_ORACLE_CEILING,
             forbidden_claims=FORBIDDEN_CLAIM_KEYS,
             note=(
-                "No oracle is present. The browser editor's composition-based KPI display is explicitly "
-                "unvalidated and remains screening-only; software contract checks do not establish "
-                "physical validation."
+                "No oracle is present. The editor computes only a rule-of-mixtures density from the shown "
+                "composition; liquidus/solidus and strength are displayed as unavailable. Software contract "
+                "checks do not establish physical validation."
             ),
         ),
         tests=TestRefs(
@@ -139,27 +138,29 @@ def build_composition_contract(seed: Mapping[str, str]) -> ModuleContract:
             "normalizeComposition is a separate click action; invalid entries or a non-finite/non-positive "
             "total are rejected before scaling by 100/total. JSON import validates composition before "
             "derivation and rejects exponent overflow; invalid maps leave both active specimen aliases unchanged.",
-            "Preset buttons call loadPreset(key); Reset calls resetToDefault; Save calls saveCurrentSpecimen "
-            "with a generated time label and updates savedSpecimens. The save confirmation is cleared by a "
-            "2500 ms setTimeout. Lifecycle vocabulary has no timeout resource, so this UI timer is recorded "
-            "here and is not mislabeled as an interval or background job.",
+            "Preset buttons call loadPreset(key), which sets the preset's catalogue designation; editing the "
+            "composition away from that preset clears it. Reset calls resetToDefault. The editor has no "
+            "snapshot button: savedSpecimens had no view, so the Save action was removed from the UI.",
             "The component destructures updateComposition but does not call it directly; edits currently "
             "use setElement/removeElement and the separate metadata setters. Weight-percent updates also "
             "publish an active pipeline payload; atomic-percent updates return before that pipeline sync.",
-            "Name/category/designation/route, composition edits, preset, reset, normalize, and save are separate "
+            "Name/category/designation/route, composition edits, preset, reset and normalize are separate "
             "browser-local actions; the component does not submit one combined specimen-editor request.",
-            "The visible density/thermal/mechanical KPI panel is composition-derived and states "
-            "'Composition-based estimate; unvalidated.' No physical oracle is present.",
+            "The KPI panel shows the inverse rule-of-mixtures density (unavailable for at.% or an element "
+            "without a tabulated density), states liquidus/solidus/yield/UTS as unavailable (no validated "
+            "composition-to-property model), and shows the user's shared LPBF process settings. No physical "
+            "oracle is present.",
         ),
         source_refs=(
-            "src/components/AlloyBuilder.tsx:38-80#activeMaterialSpecimen",
-            "src/components/AlloyBuilder.tsx:70-80#saveCurrentSpecimen",
-            "src/components/AlloyBuilder.tsx:145-160#resetToDefault",
-            "src/components/AlloyBuilder.tsx:183-229#Specimen Name",
-            "src/components/AlloyBuilder.tsx:54-58#categoryOptions",
-            "src/components/AlloyBuilder.tsx:239-253#loadPreset(key)",
-            "src/components/AlloyBuilder.tsx:263-360#Auto-Normalize to 100%",
-            "src/components/AlloyBuilder.tsx:422#Composition-based estimate; unvalidated",
+            "src/components/AlloyBuilder.tsx:31-61#activeMaterialSpecimen",
+            "src/components/AlloyBuilder.tsx:110-115#resetToDefault",
+            "src/components/AlloyBuilder.tsx:136-185#Specimen Name",
+            "src/components/AlloyBuilder.tsx:46-47#categoryOptions",
+            "src/components/AlloyBuilder.tsx:195-210#loadPreset(key)",
+            "src/components/AlloyBuilder.tsx:215-245#Auto-Normalize to 100%",
+            "src/components/AlloyBuilder.tsx:55-62#ruleOfMixturesDensity",
+            "src/components/AlloyBuilder.tsx:340-346#COMPOSITION_PROPERTY_UNAVAILABLE_NOTE",
+            "src/utils/compositionPropertyAvailability.ts::ruleOfMixturesDensity",
             "src/store/useMaterialStore.ts:27-89#composition: Record<string, number>",
             "src/store/useMaterialStore.ts:94-119#Core Actions",
             "src/store/useMaterialStore.ts::isValidCompositionInput",

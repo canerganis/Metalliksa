@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { useDigitalTwin } from "../context/DigitalTwinContext";
 import { useMaterialStore } from "../store/useMaterialStore";
+import { designationPatchFromTwin, twinFromMaterialSpecimen } from "../utils/digitalTwinMaterialSync";
 import { SampleDigitalTwin, DigitalTwinAttachment } from "../types/digitalTwin";
 import {
   BarChart,
@@ -84,25 +85,7 @@ export const DigitalTwinHub: React.FC<{ onNavigateToModule?: (tab: string) => vo
 
   // Sync active digital twin FROM global shared material specimen
   const handleSyncFromGlobalSpecimen = () => {
-    updateActiveTwin((prev) => ({
-      ...prev,
-      evidence: prev.evidence?.kind === "demo" ? prev.evidence : { ...prev.evidence, kind: "user-supplied", qualification: "not-assessed", note: "Composition and property estimates synchronized from the material store. Measurement provenance and qualification remain unresolved." },
-      sampleName: activeMaterialSpecimen.name,
-      materialCategory: (activeMaterialSpecimen.metadata?.category || prev.materialCategory) as any,
-      standardDesignation: activeMaterialSpecimen.metadata?.standardDesignation || prev.standardDesignation,
-      chemistry: {
-        ...prev.chemistry,
-        baseElement: activeMaterialSpecimen.metadata?.baseMetal || prev.chemistry.baseElement,
-        nominalComposition: { ...activeMaterialSpecimen.composition },
-        measuredComposition: undefined,
-      },
-      mechanical: {
-        ...prev.mechanical,
-        yieldStrengthMpa: activeMaterialSpecimen.yieldStrength_25C_MPa,
-        ultimateTensileStrengthMpa: activeMaterialSpecimen.uts_25C_MPa,
-        elongationPct: activeMaterialSpecimen.elongation_pct,
-      },
-    }));
+    updateActiveTwin((prev) => twinFromMaterialSpecimen(prev, activeMaterialSpecimen));
     setSyncNotice("Synced twin from shared material store!");
     setTimeout(() => setSyncNotice(null), 3000);
   };
@@ -114,7 +97,7 @@ export const DigitalTwinHub: React.FC<{ onNavigateToModule?: (tab: string) => vo
       activeTwin.sampleName,
       {
         category: activeTwin.materialCategory,
-        standardDesignation: activeTwin.standardDesignation,
+        ...designationPatchFromTwin(activeTwin),
         manufacturingRoute: activeTwin.processHistory.manufacturingRoute,
         condition: activeTwin.processHistory.currentCondition,
         leadMetallurgist: activeTwin.leadMetallurgist,
@@ -344,7 +327,7 @@ Provide an evidence-gap review:
               id="btn-sync-from-store"
               onClick={handleSyncFromGlobalSpecimen}
               className="px-2.5 py-1 bg-sky-600/20 hover:bg-sky-600/30 text-sky-300 border border-sky-500/40 rounded-lg text-xs font-medium flex items-center gap-1 transition-colors"
-              title="Pull composition and properties from activeMaterialSpecimen into this digital twin"
+              title="Pull the composition from the shared material store into this record (its mechanical properties become Unresolved: the store has none)"
             >
               <RotateCw className="w-3 h-3 text-sky-400" />
               <span>Pull from Store</span>
@@ -644,7 +627,7 @@ Provide an evidence-gap review:
                         activeTwin.sampleName,
                         {
                           category: activeTwin.materialCategory,
-                          standardDesignation: activeTwin.standardDesignation,
+                          ...designationPatchFromTwin(activeTwin),
                         },
                         "Digital Twin Hub (Chemistry Tab)"
                       );

@@ -34,6 +34,10 @@ interface SendToModuleModalProps {
   onNavigate?: (tabId: string) => void;
 }
 
+// Specimen-store payloads carry null for properties they cannot compute; show that instead of "null MPa".
+export const mpaOrUnavailable = (value: number | null | undefined) => (value == null ? "unavailable" : `${value} MPa`);
+export const celsiusOrUnavailable = (value: number | null | undefined) => (value == null ? "unavailable" : `${value}°C`);
+
 export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
   isOpen,
   onClose,
@@ -74,7 +78,7 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
       description: `Loads this composition into the Alloy Builder as the shared active specimen for editing.`,
       highlights: [
         `Base: ${payload.baseMetal}-Matrix`,
-        `σy: ${payload.yieldStrength} MPa`,
+        `σy: ${mpaOrUnavailable(payload.yieldStrength)}`,
         `${Object.keys(payload.composition).length} Elements`,
       ],
     },
@@ -89,8 +93,8 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
       badge: "Scheil / SDAS",
       description: `Transfers composition to simulate non-equilibrium Scheil-Gulliver solidification, secondary dendrite arm spacing (SDAS), and microsegregation indices.`,
       highlights: [
-        `T_liq: ${payload.icmeProfile.liquidusTemp_C}°C`,
-        `T_sol: ${payload.icmeProfile.solidusTemp_C}°C`,
+        `T_liq: ${celsiusOrUnavailable(payload.icmeProfile.liquidusTemp_C)}`,
+        `T_sol: ${celsiusOrUnavailable(payload.icmeProfile.solidusTemp_C)}`,
         `CE: ${payload.icmeProfile.carbonEquivalent || "N/A"}%`,
       ],
     },
@@ -106,8 +110,8 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
       description: `Opens the Additive 3D LPBF wizard (alloy + process vector → optional STL → Python printability → literature DOI). Industrial verdict lives there — this transfer does not stamp printable.`,
       highlights: [
         `Alloy: ${payload.name}`,
-        `σy: ${payload.yieldStrength} MPa`,
-        "Shared twin vector",
+        `σy: ${mpaOrUnavailable(payload.yieldStrength)}`,
+        "Shared LPBF process vector",
       ],
     },
     {
@@ -121,9 +125,9 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
       badge: "Equilibrium / Ac3",
       description: `Maps equivalent carbon content onto the Iron-Carbon binary phase space to inspect austenite, ferrite, pearlite, and martensite start (Ms) boundaries.`,
       highlights: [
-        `Ac3: ${payload.icmeProfile.criticalAc3_C || 910}°C`,
+        `Ac3: ${celsiusOrUnavailable(payload.icmeProfile.criticalAc3_C ?? null)}`,
         `C-wt: ${(payload.composition.C || 0).toFixed(2)}%`,
-        `Solvus: ${payload.icmeProfile.solvusTemp_C}°C`,
+        `Solvus: ${celsiusOrUnavailable(payload.icmeProfile.solvusTemp_C)}`,
       ],
     },
   ];
@@ -194,7 +198,7 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
             <div className="flex items-center gap-3 text-xs font-mono">
               <div className="text-right">
                 <span className="text-[10px] text-slate-500 block uppercase">Yield / UTS</span>
-                <span className="text-emerald-400 font-bold">{payload.yieldStrength} / {payload.tensileStrength} MPa</span>
+                <span className="text-emerald-400 font-bold">{mpaOrUnavailable(payload.yieldStrength)} / {mpaOrUnavailable(payload.tensileStrength)}</span>
               </div>
               <div className="text-right">
                 <span className="text-[10px] text-slate-500 block uppercase">Hardness</span>

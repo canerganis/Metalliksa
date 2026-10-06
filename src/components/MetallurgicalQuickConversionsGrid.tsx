@@ -31,6 +31,7 @@ import {
 } from "../utils/hardnessConversion";
 import { HARDNESS_PRESETS, HardnessPreset } from "../utils/hardnessPresets";
 import { useMaterialStore } from "../store/useMaterialStore";
+import { specimenStrengthsToLoad } from "../utils/compositionPropertyAvailability";
 import { StandardInfoIcon } from "./StandardInfoIcon";
 
 interface Props {
@@ -39,6 +40,8 @@ interface Props {
 
 export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullSuite }) => {
   const { activeMaterialSpecimen } = useMaterialStore();
+  // The shared specimen holds no composition-derived yield strength; null disables "Use Specimen Values".
+  const specimenYield = specimenStrengthsToLoad(activeMaterialSpecimen).yieldMpa;
 
   // Search filter across the conversion grid
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -217,10 +220,8 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
   // SYNC FROM ACTIVE UNIVERSAL SPECIMEN
   // --------------------------------------------------------------------------
   const handleLoadSpecimen = () => {
-    if (!activeMaterialSpecimen) return;
-    if (activeMaterialSpecimen.yieldStrength_25C_MPa > 0) {
-      handleMpaChange(activeMaterialSpecimen.yieldStrength_25C_MPa);
-    }
+    if (!activeMaterialSpecimen || specimenYield === null) return;
+    handleMpaChange(specimenYield);
     // Hardness is not loaded: the hardness card takes measured values, and the specimen record's HV is a
     // yield-strength estimate or unavailable (never measured).
     handleTempCChange(25);
@@ -302,8 +303,11 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
           <button
             id="btn-sync-specimen-units-grid"
             onClick={handleLoadSpecimen}
-            className="px-2.5 py-1.5 bg-sky-600/20 hover:bg-sky-600/30 text-sky-300 border border-sky-500/40 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm"
-            title={`Load ${activeMaterialSpecimen.name} yield strength (hardness is not loaded: the specimen record holds no measured hardness)`}
+            disabled={specimenYield === null}
+            className="px-2.5 py-1.5 bg-sky-600/20 hover:bg-sky-600/30 text-sky-300 border border-sky-500/40 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            title={specimenYield === null
+              ? `${activeMaterialSpecimen.name}: yield strength unavailable (not computed from composition), nothing to load`
+              : `Load ${activeMaterialSpecimen.name} yield strength (hardness is not loaded: the specimen record holds no measured hardness)`}
           >
             <Sparkles className="w-3.5 h-3.5 text-sky-400" />
             <span className="hidden sm:inline">Use Specimen Values</span>

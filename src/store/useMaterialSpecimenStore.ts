@@ -4,6 +4,7 @@ import { materialProfileIdentity } from "../utils/materialProfileIdentity";
 import { materialCategoryForBase } from "../utils/materialCategory";
 import { setActivePipelineMaterial, PipelineMaterialPayload } from "../utils/materialDataPipeline";
 import { estimateSpecimenHardnessHV } from "../utils/hardnessStrengthEstimate";
+import { ELEMENTAL_DENSITY_GCM3, withoutCompositionHeuristicProperties } from "../utils/compositionPropertyAvailability";
 
 export type BaseMetalType = "Ni" | "Fe" | "Ti" | "Al" | "Cu" | "Co" | "Mg" | "Refractory" | "Other";
 
@@ -104,19 +105,19 @@ export interface ActiveSpecimenState {
   composition: Record<string, number>; // element symbol -> wt%
   unit: "wt_pct" | "at_pct";
   
-  // Thermodynamic Properties (Propagated directly to Tab 2 CALPHAD & Gibbs)
-  liquidus_C: number;
-  solidus_C: number;
-  freezingRange_C: number;
-  solvus_C: number;
+  // Thermodynamic and mechanical properties: null = unavailable. No validated composition-to-property model exists
+  // here (see COMPOSITION_PROPERTY_UNAVAILABLE_NOTE); the old per-base linear formulas had no source.
+  liquidus_C: number | null;
+  solidus_C: number | null;
+  freezingRange_C: number | null;
+  solvus_C: number | null;
   stablePhases: string[];
   
-  // Mechanical Properties
-  yieldStrength_25C_MPa: number;
-  uts_25C_MPa: number;
+  yieldStrength_25C_MPa: number | null;
+  uts_25C_MPa: number | null;
   density_gcm3: number;
-  youngsModulus_GPa: number;
-  elongation_pct: number;
+  youngsModulus_GPa: number | null;
+  elongation_pct: number | null;
   
   // 3D LPBF Additive & Melt Pool Parameters (single Build Job source)
   lpbf: LpbfSpecimenState;
@@ -181,33 +182,14 @@ export function detectBaseMetalFromComposition(comp: Record<string, number>): Ba
   return "Other";
 }
 
-// Element standard elemental densities (g/cm^3)
-const ELEMENT_DENSITIES: Record<string, number> = {
-  Ni: 8.908,
-  Fe: 7.874,
-  Cr: 7.19,
-  Co: 8.90,
-  Mo: 10.28,
-  W: 19.25,
-  Ta: 16.69,
-  Al: 2.70,
-  Ti: 4.506,
-  Nb: 8.57,
-  C: 2.26,
-  B: 2.34,
-  Zr: 6.52,
-  Hf: 13.31,
-  V: 6.11,
-  Mn: 7.21,
-  Si: 2.33,
-  Cu: 8.96,
-  Mg: 1.738,
-  Zn: 7.14,
-  Re: 21.02,
-  Sc: 2.985,
-};
+/** Tabulated elemental densities; single source in compositionPropertyAvailability. */
+const ELEMENT_DENSITIES = ELEMENTAL_DENSITY_GCM3;
 
-// Compute rule-of-mixtures density
+/**
+ * Internal LPBF-input density only (feeds lpbf.density_rho_kgm3 and must stay stable): it uses 8.0 g/cm3 for an
+ * element without a tabulated density and 8.2 g/cm3 for an empty composition. These fallbacks are NOT for display;
+ * screens use ruleOfMixturesDensity(), which reports 'unavailable' instead.
+ */
 export function calculateAlloyDensity(comp: Record<string, number>): number {
   let totalMass = 0;
   let totalVolume = 0;
@@ -260,23 +242,14 @@ export function deriveSpecimenProperties(
 
   // Normalize / compute key additions
   const cr = composition["Cr"] || 0;
-  const co = composition["Co"] || 0;
   const mo = composition["Mo"] || 0;
   const w = composition["W"] || 0;
   const ta = composition["Ta"] || 0;
   const al = composition["Al"] || 0;
   const ti = composition["Ti"] || 0;
   const nb = composition["Nb"] || 0;
-  const fe = composition["Fe"] || 0;
   const c = composition["C"] || 0;
 
-  let liquidus_C = 1340;
-  let solidus_C = 1260;
-  let solvus_C = 1120;
-  let yieldStrength_25C_MPa = 1050;
-  let uts_25C_MPa = 1350;
-  let youngsModulus_GPa = 210;
-  let elongation_pct = 16;
   let crystalSystem: "FCC" | "BCC" | "HCP" | "Tetragonal" | "Other" = "FCC";
   let spaceGroup = "Fm-3m (225)";
   let latticeA_A = 3.595;
@@ -296,15 +269,11 @@ export function deriveSpecimenProperties(
     const gammaPrimeFormers = al + ti + ta + nb;
     const refractoryMoW = mo + w;
 
-    liquidus_C = Math.round(1455 - (cr * 2.5 + mo * 4 + al * 8 + ti * 10 + c * 40));
-    solidus_C = Math.round(liquidus_C - (35 + gammaPrimeFormers * 4.5 + nb * 12 + c * 30));
-    solvus_C = Math.min(solidus_C - 40, Math.round(950 + gammaPrimeFormers * 22 + refractoryMoW * 6));
-
-    // Yield strength model: solid solution (Mo, W, Co, Cr) + precipitation hardening (gamma prime Al, Ti, Ta)
-    yieldStrength_25C_MPa = Math.round(320 + gammaPrimeFormers * 85 + refractoryMoW * 45 + cr * 12 + co * 6);
-    uts_25C_MPa = Math.round(yieldStrength_25C_MPa * 1.32 + 80);
-    elongation_pct = Math.max(6, Math.min(28, parseFloat((28 - gammaPrimeFormers * 1.6).toFixed(1))));
-    youngsModulus_GPa = Math.round(205 + refractoryMoW * 3.5);
+    // Internal screening index only: this unsourced liquidus-solidus spread still selects the hot-tearing class and the
+    // recommended preheat below, which loadPreset copies into the live LPBF vector (kept unchanged on purpose). It is
+    // never exposed as a liquidus, solidus or freezing range.
+    const heuristicLiquidus_C = Math.round(1455 - (cr * 2.5 + mo * 4 + al * 8 + ti * 10 + c * 40));
+    const heuristicSolidus_C = Math.round(heuristicLiquidus_C - (35 + gammaPrimeFormers * 4.5 + nb * 12 + c * 30));
 
     crystalSystem = "FCC";
     spaceGroup = "Fm-3m (225)";
@@ -324,8 +293,7 @@ export function deriveSpecimenProperties(
     recommendedLaserPower_W = 280;
     recommendedScanSpeed_mms = 940;
     
-    // Kou cracking index estimation
-    const freezingRange = liquidus_C - solidus_C;
+    const freezingRange = heuristicLiquidus_C - heuristicSolidus_C;
     if (freezingRange > 80 || (al + ti) > 4.5) {
       hotTearingSusceptibility = "High";
       recommendedPreheatTemp_C = 200;
@@ -344,18 +312,6 @@ export function deriveSpecimenProperties(
     }
   } else if (baseMetal === "Ti") {
     // Titanium Alloy Physics
-    const alEquiv = al + (composition["Sn"] || 0) / 3 + (composition["Zr"] || 0) / 6 + 10 * (composition["O"] || 0.15);
-    const moEquiv = mo + (composition["Ta"] || 0) / 5 + (composition["Nb"] || 0) / 3.6 + (composition["W"] || 0) / 2.5 + (composition["V"] || 0) / 1.5;
-
-    liquidus_C = Math.round(1665 + al * 4 - moEquiv * 8);
-    solidus_C = Math.round(liquidus_C - 55);
-    solvus_C = Math.round(882 + alEquiv * 12.5 - moEquiv * 15); // Beta transus
-    
-    yieldStrength_25C_MPa = Math.round(820 + alEquiv * 40 + moEquiv * 35);
-    uts_25C_MPa = Math.round(yieldStrength_25C_MPa + 90);
-    elongation_pct = 14;
-    youngsModulus_GPa = 114;
-
     crystalSystem = "HCP";
     spaceGroup = "P6_3/mmc (194)";
     latticeA_A = 2.950;
@@ -371,16 +327,7 @@ export function deriveSpecimenProperties(
     crackingMechanism = "Ultra-low thermal conductivity causes localized thermal shock and brittle martensitic alpha' transformation.";
     mitigationRecommendation = "Use 150–200°C baseplate preheat and high-purity argon (O2 < 100 ppm).";
   } else if (baseMetal === "Fe") {
-    // Steel / Stainless Steel Physics
-    liquidus_C = Math.round(1538 - (cr * 3.5 + (composition["Ni"] || 0) * 4.5 + c * 75));
-    solidus_C = Math.round(liquidus_C - (30 + c * 40));
-    solvus_C = 727;
-    
-    yieldStrength_25C_MPa = Math.round(310 + cr * 14 + mo * 25 + (composition["Ni"] || 0) * 8 + c * 450);
-    uts_25C_MPa = Math.round(yieldStrength_25C_MPa + 260);
-    elongation_pct = 40;
-    youngsModulus_GPa = 195;
-
+    // Steel / Stainless Steel
     // Ni >= 8 (was > 8): nominal AISI 304 (Cr 18, Ni 8) was classed BCC.
     crystalSystem = cr > 12 && (composition["Ni"] || 0) >= 8 ? "FCC" : "BCC";
     spaceGroup = crystalSystem === "FCC" ? "Fm-3m (225)" : "Im-3m (229)";
@@ -397,13 +344,6 @@ export function deriveSpecimenProperties(
     mitigationRecommendation = "Standard build parameters with adequate support volume.";
   } else if (baseMetal === "Al") {
     // Aluminum Alloy Physics
-    liquidus_C = 660 - (composition["Si"] || 0) * 7 - (composition["Mg"] || 0) * 5;
-    solidus_C = liquidus_C - 45;
-    solvus_C = 480;
-    yieldStrength_25C_MPa = 280;
-    uts_25C_MPa = 360;
-    elongation_pct = 8;
-    youngsModulus_GPa = 70;
     crystalSystem = "FCC";
     spaceGroup = "Fm-3m (225)";
     latticeA_A = 4.049;
@@ -418,8 +358,6 @@ export function deriveSpecimenProperties(
     mitigationRecommendation = "High power laser (350W+) with 150°C preheat to mitigate keyhole porosity and lack-of-fusion.";
   }
 
-  const freezingRange_C = Math.max(15, liquidus_C - solidus_C);
-
   // Auto-generate high-precision descriptive name if not provided
   const name = customName || `${baseMetal === "Ni" ? "Superalloy" : baseMetal} Specimen (${chemicalFormula})`;
 
@@ -430,16 +368,16 @@ export function deriveSpecimenProperties(
     baseMetal,
     composition,
     unit: "wt_pct",
-    liquidus_C,
-    solidus_C,
-    freezingRange_C,
-    solvus_C,
+    liquidus_C: null,
+    solidus_C: null,
+    freezingRange_C: null,
+    solvus_C: null,
     stablePhases: targetPhases,
-    yieldStrength_25C_MPa,
-    uts_25C_MPa,
+    yieldStrength_25C_MPa: null,
+    uts_25C_MPa: null,
     density_gcm3,
-    youngsModulus_GPa,
-    elongation_pct,
+    youngsModulus_GPa: null,
+    elongation_pct: null,
     lpbf: withLpbfProcessDefaults({
       recommendedLaserPower_W,
       recommendedScanSpeed_mms,
@@ -561,6 +499,21 @@ const INITIAL_SPECIMEN: ActiveSpecimenState = {
   isCustomModified: false,
 };
 
+export const MATERIAL_SPECIMEN_STORE_VERSION = 3;
+
+/**
+ * Version 3 nulls the composition-heuristic properties (liquidus ... elongation) of the persisted specimen. Everything
+ * else, the live LPBF process vector included, is kept as persisted. Without a migrate function zustand would drop an
+ * older blob entirely (and with it the user's process settings).
+ */
+export function migrateMaterialSpecimenStoreState(persisted: unknown, version: number): unknown {
+  if (version >= MATERIAL_SPECIMEN_STORE_VERSION || !persisted || typeof persisted !== "object" || Array.isArray(persisted)) return persisted;
+  const state = persisted as Record<string, unknown>;
+  return state.activeSpecimen && typeof state.activeSpecimen === "object"
+    ? { ...state, activeSpecimen: withoutCompositionHeuristicProperties(state.activeSpecimen) }
+    : state;
+}
+
 // ----------------------------------------------------------------------
 // Universal Zustand Reactive Store
 // ----------------------------------------------------------------------
@@ -611,7 +564,8 @@ export const useMaterialSpecimenStore = create<MaterialSpecimenStore>()(
             id: nextSpecimen.id,
             name: nextSpecimen.name,
             category: nextSpecimen.category,
-            standard: "MetalliX Universal Specimen Thread",
+            // The shared specimen carries no standard designation; never a pseudo-standard label.
+            standard: "",
             sourceModule: sourceTab,
             timestamp: Date.now(),
             composition: nextSpecimen.composition,
@@ -632,18 +586,19 @@ export const useMaterialSpecimenStore = create<MaterialSpecimenStore>()(
               id: nextSpecimen.id,
               name: nextSpecimen.name,
               baseMetal: (["Ni", "Fe", "Ti", "Al"].includes(nextSpecimen.baseMetal) ? nextSpecimen.baseMetal : "Ni") as any,
-              standardRef: "Universal Digital Specimen",
+              standardRef: "",
               initialGrainSize_um: 25,
               grainGrowthExponent_n: 2.1,
               activationEnergy_kJ_mol: 285,
               preExponential_k0: 1.2e-4,
               solvusTemp_C: nextSpecimen.solvus_C,
-              criticalTemp_Ac3_C: nextSpecimen.solvus_C + 50,
+              criticalTemp_Ac3_C: null,
               solidusTemp_C: nextSpecimen.solidus_C,
               precipitateType: "Intermetallic / Carbides",
               initialPrecipVolFrac: 15,
               precipMeanRadius_nm: 25,
-              hallPetch_ky_MPa_um05: 750,
+              // Unsourced constants (750 MPa·µm^0.5, 65 MPa·√m, L/LT/ST factors) removed: unavailable.
+              hallPetch_ky_MPa_um05: null,
             } as any,
             hardnessProfile: {
               id: nextSpecimen.id,
@@ -659,7 +614,7 @@ export const useMaterialSpecimenStore = create<MaterialSpecimenStore>()(
               measuredUTS_MPa: nextSpecimen.uts_25C_MPa,
               strainHardeningExponent_n: 0.15,
               workHardeningExponent_n: 0.15,
-              strengthCoefficient_K_MPa: nextSpecimen.uts_25C_MPa * 1.45,
+              strengthCoefficient_K_MPa: null,
               cahoon_m: 0.33,
               tabor_c: 2.95,
               taborConstraintFactor_c: 2.95,
@@ -669,15 +624,11 @@ export const useMaterialSpecimenStore = create<MaterialSpecimenStore>()(
               poissonsRatio_nu: 0.31,
               poissonsRatio: 0.31,
               uniformElongation_pct: nextSpecimen.elongation_pct,
-              fractureToughness_K1c_MPa_sqrt_m: 65,
-              estimatedK1c_MPam05: 65,
-              anisotropyFactors: {
-                L: { yieldFactor: 1.0, utsFactor: 1.0, elongFactor: 1.0, k1cFactor: 1.0 },
-                LT: { yieldFactor: 0.94, utsFactor: 0.96, elongFactor: 0.88, k1cFactor: 0.91 },
-                ST: { yieldFactor: 0.88, utsFactor: 0.91, elongFactor: 0.72, k1cFactor: 0.82 },
-              },
-              description: `Universal Specimen Thread (${nextSpecimen.chemicalFormula})`,
-              standardRef: "ASTM E8 / E384 Universal Thread",
+              fractureToughness_K1c_MPa_sqrt_m: null,
+              estimatedK1c_MPam05: null,
+              anisotropyFactors: null,
+              description: `Shared specimen composition (${nextSpecimen.chemicalFormula})`,
+              standardRef: "",
             } as any,
             xrdProfile: {
               crystalSystem: nextSpecimen.xrd.crystalSystem,
@@ -745,7 +696,8 @@ export const useMaterialSpecimenStore = create<MaterialSpecimenStore>()(
     }),
     {
       name: "metallix_active_material_specimen_v2",
-      version: 2,
+      version: MATERIAL_SPECIMEN_STORE_VERSION,
+      migrate: (persisted, version) => migrateMaterialSpecimenStoreState(persisted, version) as MaterialSpecimenStore,
       partialize: (state) => ({ activeSpecimen: state.activeSpecimen }),
       merge: (persisted, current) => {
         const persistedState = persisted as Partial<MaterialSpecimenStore> | undefined;
