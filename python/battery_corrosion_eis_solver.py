@@ -55,7 +55,17 @@ def _supplied_number(raw, label):
     return value, None
 
 
-def simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr_ua_cm2, e_pit_v, e0_v):
+def _supplied_reference(raw, label):
+    """(normalised name, None) for a supplied reference-electrode name, else (None, reason)."""
+    if raw is None:
+        return None, f"{label} was not supplied (the reference electrode the potential was measured against)"
+    if not isinstance(raw, str) or not raw.strip():
+        return None, f"{label} must be a non-empty reference-electrode name (received {raw!r})"
+    return " ".join(raw.split()), None
+
+
+def simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr_ua_cm2, e_pit_v, e_corr_v,
+                                        e_pit_reference=None, e_corr_reference=None):
     """
     Computes the Stern-Geary polarization resistance, the Faraday penetration rate (ASTM G102)
     and the pitting-potential margin.
@@ -66,11 +76,20 @@ def simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr_ua_cm2
     the former substring match ("al" in the id -> aluminium, "ti" -> titanium, anything else
     -> steel EW 27.9 / 7.87 g/cm3) is gone.
 
-    Every input is required: metalId, betaA, betaC, i0Corr_uA (> 0), ePit and e0 (finite, V). The former
+    Every input is required: metalId, betaA, betaC, i0Corr_uA (> 0), ePit and eCorr (finite, V) with
+    ePitReference and eCorrReference (the reference electrode each potential was measured against). The former
     defaults (steel-316l, betaA 0.12, betaC 0.11, i0 0.18, ePit 0.42, e0 0.08) were invented numbers. A missing
     or invalid input makes only the outputs that need it unavailable (null + reason, `status` "partial", or
     "unavailable" when nothing can be computed): Stern-Geary B and Rp need betaA, betaC, i0; the Faraday rate
-    needs i0 and metalId; the pitting margin needs ePit and e0. A metalId that is
+    needs i0 and metalId; the pitting margin needs ePit, eCorr and the same reference electrode for both.
+
+    Pitting margin (EUQ-12): dE_pit = E_pit - E_corr, both measured against the same reference electrode
+    (ASTM G61 cyclic polarization judges pitting susceptibility from E_pit, and E_prot, relative to E_corr).
+    It replaced E_pit - E0 with a substrate "E0", which in the UI presets was the SHE standard potential of the
+    pure base metal (Al -1.66, Mg -2.37, Fe -0.44 V) set against alloy E_pit values on another scale: an alloy
+    has no standard potential, and Al-7075 / AZ31B were labelled "Wide passivity margin" (0.98 / 0.95 V).
+    Different reference names are refused (no scale conversion is applied); the names are compared after
+    whitespace normalisation, case-insensitively. A metalId that is
     sent but unknown still raises ValidationError(UNKNOWN_ALLOY). exposureDays is no longer an input: no output depends on it.
     Corrosion rates are rounded to 6 significant digits (a fixed 5 decimals printed 9e-5 mm/yr with one).
     """
@@ -95,9 +114,23 @@ def simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr_ua_cm2
     e_pit_v, reason = _supplied_number(e_pit_v, "ePit")
     if reason:
         unavailable["ePit"] = reason
-    e0_v, reason = _supplied_number(e0_v, "e0")
+    e_corr_v, reason = _supplied_number(e_corr_v, "eCorr")
     if reason:
-        unavailable["e0"] = reason
+        unavailable["eCorr"] = reason
+    e_pit_reference, reason = _supplied_reference(e_pit_reference, "ePitReference")
+    if reason:
+        unavailable["ePitReference"] = reason
+    e_corr_reference, reason = _supplied_reference(e_corr_reference, "eCorrReference")
+    if reason:
+        unavailable["eCorrReference"] = reason
+    reference = None
+    if e_pit_reference is not None and e_corr_reference is not None:
+        if e_pit_reference.casefold() != e_corr_reference.casefold():
+            unavailable["referenceElectrode"] = (
+                f"ePit is against {e_pit_reference!r} but eCorr against {e_corr_reference!r}; the margin needs both "
+                "potentials on the same reference electrode (no scale conversion is applied)")
+        else:
+            reference = e_pit_reference
 
     # Stern-Geary constant B (V) = (beta_a * beta_c) / (ln(10) * (beta_a + beta_c)); needs betaA, betaC
     # Polarization Resistance R_p = B / i_corr (i0 converted from uA/cm2 to A/cm2); needs i0 as well
@@ -118,10 +151,10 @@ def simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr_ua_cm2
             cr_mm_per_year = (ASTM_G102_K1_MM_G_UA_CM_YR * i0_corr_ua_cm2 * ew) / density
             cr_mpy = cr_mm_per_year * _MILS_PER_MM  # mils per year (1 mil = 0.0254 mm exactly)
 
-    # Pitting Potential Breakdown Margin; needs ePit and e0
+    # Pitting margin E_pit - E_corr (ASTM G61); needs ePit, eCorr and one common reference electrode
     delta_e_pit = pitting_status = None
-    if e_pit_v is not None and e0_v is not None:
-        delta_e_pit = e_pit_v - e0_v
+    if e_pit_v is not None and e_corr_v is not None and reference is not None:
+        delta_e_pit = e_pit_v - e_corr_v
         pitting_status = "Wide passivity margin (dE_pit >= 0.30 V, in-house threshold)"
         if delta_e_pit < 0.10:
             pitting_status = "Severe Chloride Pitting Susceptibility"
@@ -146,6 +179,8 @@ def simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr_ua_cm2
         "corrosionRate_mm_yr": _round_sig(cr_mm_per_year),
         "corrosionRate_mpy": _round_sig(cr_mpy),
         "deltaE_pit_V": None if delta_e_pit is None else round(delta_e_pit, 3),
+        "deltaE_pit_definition": "E_pit - E_corr, both against the same reference electrode (ASTM G61 comparison)",
+        "pittingReferenceElectrode": None if delta_e_pit is None else reference,
         "pittingAssessment": pitting_status,
     }
     if unavailable:
@@ -187,8 +222,13 @@ if __name__ == "__main__":
             beta_c = data.get("betaC")
             i0_corr = data.get("i0Corr_uA")
             e_pit = data.get("ePit")
-            e0 = data.get("e0")
-            res = simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr, e_pit, e0)
+            e_corr = data.get("eCorr")
+            res = simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr, e_pit, e_corr,
+                                                      data.get("ePitReference"), data.get("eCorrReference"))
+            if "e0" in data:
+                # EUQ-12: a standard electrode potential is not the pitting reference; it is not read.
+                res["ignoredInputs"] = {"e0": "e0 (a standard electrode potential) is no longer an input; "
+                                              "the pitting margin is E_pit - E_corr (send eCorr with its reference)"}
 
         else:
             res = {"error": f"Unknown action '{action}'"}

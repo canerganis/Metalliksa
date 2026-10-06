@@ -111,6 +111,65 @@ def _is_documented_hirschorn_removal(row, old_flat, solver=None):
             and abs(old_flat[sibling_key] - row["old"]) <= 1e-12 * abs(row["old"]))
 
 
+# Documented change EUQ-2 (physics audit, cnls_fitting_solver): the CPE effective capacitances (Brug 1984,
+# Hsu-Mansfeld 2001) now use the FITTED Rs / Rct instead of the topology's initial-guess resistances, presets
+# get rows too, and the per-cm2 value / physics note are null without electrodeAreaCm2. The faa6684 goldens
+# hold the old numbers, so ONLY the cpeCapacitances subtree of the cnls solver is taken out of the tolerance
+# comparison, and the new subtree must equal an independent recomputation from the run's own fitted
+# parameters (euq2_expected_capacitances). Every other leaf still follows the tolerance rule.
+EUQ2_PRESET_ROLES = {"randles_cpe": (("Qdl", "ndl", "Rct", "Rs"),)}
+
+
+def split_cpe_capacitances(stdout):
+    """(copy of stdout without the cpeCapacitances list, that list or None)."""
+    out = json.loads(json.dumps(stdout))
+    holder = out.get("physicalValidation") if isinstance(out.get("physicalValidation"), dict) else out
+    return out, holder.pop("cpeCapacitances", None)
+
+
+def euq2_expected_capacitances(payload, stdout):
+    """Independent Brug / Hsu-Mansfeld values from the fitted parameters (fit) or the payload parameters."""
+    rows = stdout.get("parameters") or payload.get("parameters") or []
+    value = {(p["elementId"], p.get("field", "value")): p.get("fittedValue", p.get("value")) for p in rows}
+    by_name = {p["paramName"]: p.get("fittedValue", p.get("value")) for p in rows}
+    topology = payload["topology"]
+    triples = []  # (q, n, rs, rp)
+    if isinstance(topology, dict):
+        rs = sum(value.get((el["id"], "value"), el["value"]) for b in topology["branches"]
+                 if b["connection"] == "series" for el in b["elements"] if el["type"] == "R")
+        for b in topology["branches"]:
+            if b["connection"] != "parallel":
+                continue
+            rp = [value.get((el["id"], "value"), el["value"]) for el in b["elements"] if el["type"] == "R"]
+            for el in b["elements"]:
+                if el["type"] == "CPE":
+                    triples.append((value.get((el["id"], "value"), el["value"]),
+                                    value.get((el["id"], "exponent"), el["exponent"]),
+                                    rs, 1.0 / sum(1.0 / r for r in rp)))
+    else:
+        for q, n, rp, rs in EUQ2_PRESET_ROLES.get(topology, ()):
+            if q in by_name:
+                triples.append((by_name[q], by_name[n], by_name[rs], by_name[rp]))
+    expected = []
+    for q, n, rs, rp in triples:
+        expected.append({"cBrug_F": q ** (1 / n) * (rs * rp / (rs + rp)) ** ((1 - n) / n),
+                         "cHsuMansfeld_F": q ** (1 / n) * rp ** ((1 - n) / n),
+                         "associatedRs": round(rs, 3), "associatedRct": round(rp, 3)})
+    return expected
+
+
+def assert_euq2_capacitances(test, payload, stdout, label):
+    _, actual = split_cpe_capacitances(stdout)
+    expected = euq2_expected_capacitances(payload, stdout)
+    test.assertEqual(len(actual or []), len(expected), label)
+    for row, exp in zip(actual or [], expected):
+        for key in ("cBrug_F", "cHsuMansfeld_F"):
+            test.assertLessEqual(abs(row[key] / exp[key] - 1.0), 1e-9, f"{label}: {key}")
+        test.assertEqual((row["associatedRs"], row["associatedRct"]), (exp["associatedRs"], exp["associatedRct"]), label)
+        if payload.get("electrodeAreaCm2") is None:
+            test.assertIsNone(row["cEffectiveArea_uFcm2"], label)
+
+
 def tolerance_violations(old, new, rel_tol=REL_TOL, display_unit=False, solver=None):
     """Rows of drift_report.diff that break the "tolerance" rule (empty == parity).
 
@@ -547,8 +606,12 @@ class GoldenParityTest(unittest.TestCase):
                 if mode == "minimiser":
                     XrdParityTest.assert_minimiser_parity(self, case, doc["stdout"], fresh["stdout"])
                     continue
-                rows = (tolerance_violations(doc["stdout"], fresh["stdout"], display_unit=True, solver=solver) if mode == "tolerance"
-                        else drift_report.diff(doc["stdout"], fresh["stdout"]))
+                old_out, new_out = doc["stdout"], fresh["stdout"]
+                if solver == HIRSCHORN_SOLVER:  # EUQ-2: cpeCapacitances checked against the oracle instead
+                    assert_euq2_capacitances(self, cases.CASES[solver][case], new_out, f"{solver}/{case}")
+                    old_out, new_out = split_cpe_capacitances(old_out)[0], split_cpe_capacitances(new_out)[0]
+                rows = (tolerance_violations(old_out, new_out, display_unit=True, solver=solver) if mode == "tolerance"
+                        else drift_report.diff(old_out, new_out))
                 self.assertEqual(rows, [], drift_report.render(f"{solver}/{case}", rows, 20))
 
     def test_cnls_fitting_solver(self):
@@ -609,6 +672,33 @@ class HirschornRemovalGuardTest(unittest.TestCase):
                          ["physicalValidation.cpeCapacitances[0].cBrug_F"])
 
 
+class Euq2CapacitanceGuardTest(unittest.TestCase):
+    """The EUQ-2 exclusion of cpeCapacitances is backed by the oracle: a wrong row is detected."""
+
+    def test_initial_guess_resistances_are_detected(self):
+        case = "custom_two_rc_modulus_fit"
+        payload = cases.CASES["cnls_fitting_solver"][case]
+        out = _in_process("cnls_fitting_solver", payload)
+        assert_euq2_capacitances(self, payload, out, case)
+        golden_rows = split_cpe_capacitances(load("cnls_fitting_solver", case)["stdout"])[1]
+        self.assertEqual((golden_rows[0]["associatedRs"], golden_rows[0]["associatedRct"]), (15.0, 60.0))  # initial
+        bad = json.loads(json.dumps(out))
+        bad["physicalValidation"]["cpeCapacitances"] = golden_rows  # the old initial-guess values
+        with self.assertRaises(AssertionError):
+            assert_euq2_capacitances(self, payload, bad, case)
+
+    def test_preset_rows_are_required(self):
+        case = "randles_cpe_proportional_fit"
+        payload = cases.CASES["cnls_fitting_solver"][case]
+        out = _in_process("cnls_fitting_solver", payload)
+        self.assertEqual(len(split_cpe_capacitances(out)[1]), 1)
+        self.assertEqual(split_cpe_capacitances(load("cnls_fitting_solver", case)["stdout"])[1], [])
+        bad = json.loads(json.dumps(out))
+        bad["physicalValidation"]["cpeCapacitances"] = []
+        with self.assertRaises(AssertionError):
+            assert_euq2_capacitances(self, payload, bad, case)
+
+
 @require_git_revision(GIT, f"git or revision {BASE} unavailable")
 class CnlsKernelParityTest(unittest.TestCase):
     """Vectorised LM (normal equations, forward-difference Jacobian, LAPACK solve) and
@@ -627,7 +717,9 @@ class CnlsKernelParityTest(unittest.TestCase):
             with self.subTest(case=case):
                 old = _in_process("cnls_fitting_solver", payload, old_module)
                 new = _in_process("cnls_fitting_solver", payload)
-                rows = tolerance_violations(old, new, solver="cnls_fitting_solver")
+                assert_euq2_capacitances(self, payload, new, case)  # EUQ-2 documented change
+                rows = tolerance_violations(split_cpe_capacitances(old)[0], split_cpe_capacitances(new)[0],
+                                            solver="cnls_fitting_solver")
                 self.assertEqual(rows, [], drift_report.render(case, rows, 20))
 
     @staticmethod

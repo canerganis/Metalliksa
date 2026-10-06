@@ -237,8 +237,10 @@ class BaseBlobTest(unittest.TestCase):
         import math
         import re
         ba, bc, i0 = 0.12, 0.11, 1.85
+        # EUQ-12: the margin is E_pit - E_corr on one reference electrode; e0 is still sent so the base blob
+        # computes its old E_pit - E0 value, which the new solver no longer reads (ignoredInputs).
         payload = {"action": "corrosion_kinetics", "metalId": "al-7075", "betaA": ba, "betaC": bc, "i0Corr_uA": i0,
-                   "ePit": -0.68, "e0": -1.66}
+                   "ePit": -0.68, "e0": -1.66, "eCorr": -0.75, "ePitReference": "SCE", "eCorrReference": "SCE"}
         old = self._base("battery_corrosion_eis_solver", payload)
         new = golden.run_solver("battery_corrosion_eis_solver", payload)
         self.assertEqual((old["exitCode"], new["exitCode"]), (0, 0), new["stderr"])
@@ -249,14 +251,20 @@ class BaseBlobTest(unittest.TestCase):
         fixed = {"corrosionRate_mm_yr", "corrosionRate_mpy", "polarizationResistance_Rp_Ohm_cm2", "alloyId",
                  "equivalentWeight_g_eq", "density_g_cm3", "equivalentWeightNote",
                  # eyewash removal: "Immune / Wide Passivity Margin" claimed immunity from an in-house threshold
-                 "pittingAssessment"}
+                 "pittingAssessment",
+                 # EUQ-12: dE_pit = E_pit - E_corr (was E_pit - E0), its definition/reference and the unread e0
+                 "deltaE_pit_V", "deltaE_pit_definition", "pittingReferenceElectrode", "ignoredInputs.e0"}
         self.assertEqual({k for k in by_key if not nyquist.fullmatch(k)}, fixed,
                          drift_report.render("battery_corrosion_eis_solver", rows, 20))
-        for key in ("alloyId", "equivalentWeight_g_eq", "density_g_cm3", "equivalentWeightNote"):
+        for key in ("alloyId", "equivalentWeight_g_eq", "density_g_cm3", "equivalentWeightNote",
+                    "deltaE_pit_definition", "pittingReferenceElectrode", "ignoredInputs.e0"):
             self.assertEqual(by_key[key]["kind"], "added", key)
+        self.assertEqual(old["stdout"]["deltaE_pit_V"], 0.98)  # E_pit - E0(Al3+/Al vs SHE): "wide" for Al-7075
+        self.assertEqual(new["stdout"]["deltaE_pit_V"], 0.07)  # E_pit - E_corr, both vs SCE
+        self.assertEqual(new["stdout"]["pittingReferenceElectrode"], "SCE")
         self.assertTrue(all(r["kind"] == "removed" for k, r in by_key.items() if nyquist.fullmatch(k)))
         self.assertEqual(old["stdout"]["pittingAssessment"], "Immune / Wide Passivity Margin")
-        self.assertEqual(new["stdout"]["pittingAssessment"], "Wide passivity margin (dE_pit >= 0.30 V, in-house threshold)")
+        self.assertEqual(new["stdout"]["pittingAssessment"], "Severe Chloride Pitting Susceptibility")
         k1 = (1e-6 * 31557600.0 * 10.0) / pc.FARADAY.value
 
         def sig6(x):
@@ -519,7 +527,8 @@ class IcmeElementTest(unittest.TestCase):
 
 # The one remaining successful action of battery_corrosion_eis_solver (al-7075 registry record).
 CORROSION_PAYLOAD = {"action": "corrosion_kinetics", "metalId": "al-7075", "betaA": 0.12, "betaC": 0.11,
-                     "i0Corr_uA": 1.85, "ePit": -0.68, "e0": -1.66}
+                     "i0Corr_uA": 1.85, "ePit": -0.68, "eCorr": -0.75, "ePitReference": "SCE",
+                     "eCorrReference": "SCE"}
 
 
 class EnvelopeAndProvenanceTest(unittest.TestCase):

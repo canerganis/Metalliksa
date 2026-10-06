@@ -22,7 +22,7 @@ test('slicer, Pourbaix and corrosion EIS use the debounced latest-task hook with
 test('corrosion EIS signature only contains request inputs (coatingType is not sent)', () => {
   const text = src('src/components/CorrosionEISKineticsStudio.tsx');
   const signature = text.match(/corrosionInputSignature = JSON\.stringify\(\[([^\]]*)\]\)/)?.[1] ?? '';
-  assert.equal(signature.trim(), 'metalId, betaA, betaC, i0Corr, ePit, e0');
+  assert.equal(signature.trim(), 'metalId, betaA, betaC, i0Corr, ePit, eCorr, referenceElectrode');
   assert.doesNotMatch(signature, /coatingType/);
   assert.doesNotMatch(text.slice(text.indexOf('const runPythonSimulation'), text.indexOf('// Debounced, visibility-gated')), /coatingType/);
 });
