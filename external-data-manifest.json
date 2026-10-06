@@ -1,0 +1,113 @@
+{
+ "schema": 1,
+ "note": "Raw data is never committed. Files live under <dir>/<dataset id>/<name> (default dir: $METALLIKSA_EXTERNAL_DATA or <repo>/external-data, git-ignored). status 'downloaded' entries are verified by fetch_external_data.py --verify.",
+ "datasets": [
+  {
+   "id": "zenodo-22901717",
+   "title": "CALPHAD-derived solidification properties and crack susceptibility coefficients, 555 superalloys (Thermo-Calc 2024a, TCNI12)",
+   "landing": "https://doi.org/10.5281/zenodo.22901717",
+   "licence": "CC BY 4.0",
+   "files": [
+    {
+     "name": "Superalloys.xlsx",
+     "url": "https://zenodo.org/api/records/22901717/files/Superalloys.xlsx/content",
+     "sizeBytes": 573341,
+     "sha256": "03ca2aa992c8f66b96f5596c5652c67a99c9f66a90d333d7e0c1ca6950b2d90a",
+     "md5": "028d8188b3feab78b38352a5f703a707",
+     "status": "downloaded",
+     "retrieved": "2026-10-06"
+    }
+   ]
+  },
+  {
+   "id": "matcalc",
+   "title": "MatCalc open thermodynamic databases (mc_fe, mc_ni, mc_al)",
+   "landing": "https://www.matcalc.at/index.php/databases/open-databases",
+   "licence": "ODbL 1.0 (database) + DbCL 1.0 (contents); share-alike for derivative databases",
+   "files": [
+    {
+     "name": "mc_fe_v2062.tdb",
+     "url": "https://www.matcalc.at/images/stories/Download/Database/mc_fe_v2062.tdb",
+     "sizeBytes": 489296,
+     "sha256": "aa02077eac3f602dd7479cbeafb09b450e282716752b3ae2b1fc3a57d9c64865",
+     "status": "downloaded",
+     "retrieved": "2026-10-05"
+    },
+    {
+     "name": "mc_ni_v2036.tdb",
+     "url": "https://www.matcalc.at/images/stories/Download/Database/mc_ni_v2036.tdb",
+     "sizeBytes": 416720,
+     "sha256": "84ba813156e1f7d8bde495d74420319afec03572b981f6b56103807f305313ab",
+     "status": "downloaded",
+     "retrieved": "2026-10-05"
+    },
+    {
+     "name": "mc_al_v2037.tdb",
+     "url": "https://www.matcalc.at/images/stories/Download/Database/mc_al_v2037.tdb",
+     "sizeBytes": 308711,
+     "sha256": "87ec595f2caae189227ed11d5598c899b436b866ccfefea91304ca57188817c4",
+     "status": "downloaded",
+     "retrieved": "2026-10-05"
+    }
+   ]
+  },
+  {
+   "id": "nist-mds2-2923",
+   "title": "NIST single-track laser scan cross-sectional micrographs on IN625 and IN718 bare plates with melt pool measurements",
+   "landing": "https://data.nist.gov/pdr/lps/ark:/88434/mds2-2923",
+   "licence": "NIST open data (public domain/CC0 style; not confirmed from the landing page, which was unreachable)",
+   "files": [
+    {
+     "name": "Master_TrackList_Measurements.xlsx",
+     "url": "https://data.nist.gov/od/ds/mds2-2923/Master_TrackList_Measurements.xlsx",
+     "status": "unavailable",
+     "note": "data.nist.gov returned HTTP 503 (maintenance) on 2026-10-05/06; size and sha256 unknown"
+    },
+    {
+     "name": "ReadMe.txt",
+     "url": "https://data.nist.gov/od/ds/mds2-2923/ReadMe.txt",
+     "status": "unavailable",
+     "note": "data.nist.gov returned HTTP 503 (maintenance) on 2026-10-05/06; size and sha256 unknown"
+    }
+   ]
+  },
+  {
+   "id": "nist-mds2-2525",
+   "title": "NIST Ti-6Al-4V laser absorptance and X-ray",
+   "landing": "https://data.nist.gov/od/id/mds2-2525",
+   "licence": "NIST open data (not confirmed; landing page unreachable)",
+   "files": [
+    {
+     "name": "2525_README_v200.txt",
+     "url": "https://data.nist.gov/od/ds/mds2-2525/2525_README_v200.txt",
+     "status": "unavailable",
+     "note": "data.nist.gov returned HTTP 503 (maintenance) on 2026-10-05/06; size and sha256 unknown"
+    },
+    {
+     "name": "Absorption_Uncertainty_Analysis.pdf",
+     "url": "https://data.nist.gov/od/ds/mds2-2525/Absorption_Uncertainty_Analysis.pdf",
+     "status": "unavailable",
+     "note": "data.nist.gov returned HTTP 503 (maintenance) on 2026-10-05/06; size and sha256 unknown"
+    },
+    {
+     "name": "Scan on Bare Metal_Calibrated Absorption Data.csv",
+     "url": "https://data.nist.gov/od/ds/mds2-2525/Scan on Bare Metal_Calibrated Absorption Data.csv",
+     "status": "unavailable",
+     "note": "data.nist.gov returned HTTP 503 (maintenance) on 2026-10-05/06; size and sha256 unknown"
+    },
+    {
+     "name": "Spot on Bare Metal_Calibrated Absorption Data.csv",
+     "url": "https://data.nist.gov/od/ds/mds2-2525/Spot on Bare Metal_Calibrated Absorption Data.csv",
+     "status": "unavailable",
+     "note": "data.nist.gov returned HTTP 503 (maintenance) on 2026-10-05/06; size and sha256 unknown"
+    },
+    {
+     "name": "Beam Profile_5p5micron pixels_Normalized Integral.csv",
+     "url": "https://data.nist.gov/od/ds/mds2-2525/Beam Profile_5p5micron pixels_Normalized Integral.csv",
+     "status": "unavailable",
+     "note": "data.nist.gov returned HTTP 503 (maintenance) on 2026-10-05/06; size and sha256 unknown"
+    }
+   ]
+  }
+ ]
+}
