@@ -1,5 +1,5 @@
 import React from 'react';
-import { computeMMPDSEmpiricalStats, isSyntheticCouponDataset, type MaterialDataset, type MMPDSEmpiricalAllowableStats } from './uqLabData';
+import { SPEC_MINIMUM_UNAVAILABLE, hasSourcedMinimums, computeMMPDSEmpiricalStats, isSyntheticCouponDataset, type MaterialDataset, type MMPDSEmpiricalAllowableStats } from './uqLabData';
 
 export const formatUqNumber = (value: number | null | undefined, digits = 1) => typeof value === 'number' && Number.isFinite(value) ? value.toFixed(digits) : 'Not assessed';
 /** Shown wherever the on-demand Sobol run is offered or displayed. No strength number of the toy model is quoted: none is a measurement. */
@@ -26,6 +26,14 @@ export function couponReportRows(dataset: MaterialDataset) {
     { key: 'elongation', label: 'Elongation', unit: '%', minimum: dataset.specMinElongationPct, values: dataset.coupons.map(c => c.elongationPct) },
   ].map(row => ({ ...row, stats: computeMMPDSEmpiricalStats(row.values, row.minimum, dataset.coupons.some(c => c.heatLotId.trim()) ? dataset.coupons.map(c => c.heatLotId) : []) }));
 }
+/** Per-coupon comparison against the preset's reference minimums; unavailable (no badge) when the preset has no sourced minimum. */
+export function CouponMinimumBadge({ dataset, coupon }: { dataset: MaterialDataset; coupon: { yieldStrengthMPa: number; utsMPa: number; elongationPct: number } }) {
+  if (!hasSourcedMinimums(dataset)) return <span className="text-[10px] text-slate-400" data-testid="uq-coupon-badge-unavailable">{SPEC_MINIMUM_UNAVAILABLE}</span>;
+  const ok = coupon.yieldStrengthMPa >= dataset.specMinYieldMPa! && coupon.utsMPa >= dataset.specMinUTSMPa! && coupon.elongationPct >= dataset.specMinElongationPct!;
+  return ok
+    ? <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">≥ ref. min</span>
+    : <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">below ref. min</span>;
+}
 export const couponProvenance = (dataset: MaterialDataset) => dataset.coupons.length === 0
   ? UQ_NO_COUPONS_MESSAGE
   : isSyntheticCouponDataset(dataset)
@@ -46,7 +54,7 @@ export function couponWorksheetText(dataset: MaterialDataset): string {
     couponProvenance(dataset),
     'Listed specification minima are selected reference context, not verified applicability to imported rows.',
     'Normality not tested. No Anderson–Darling p-value or certified MMPDS allowable is computed.',
-    ...couponReportRows(dataset).map(row => `${row.label} (${row.unit}): n=${row.stats.sampleSize}; mean=${formatUqNumber(row.stats.mean)}; sample SD=${formatUqNumber(row.stats.stdDev)}; selected minimum=${row.minimum}; lower-spec index Cpl=${formatUqNumber(row.stats.cpl, 2)}; observed rows above selected minimum=${formatUqNumber(row.stats.conformancePct)}%.`),
+    ...couponReportRows(dataset).map(row => `${row.label} (${row.unit}): n=${row.stats.sampleSize}; mean=${formatUqNumber(row.stats.mean)}; sample SD=${formatUqNumber(row.stats.stdDev)}; selected minimum=${row.minimum === null ? SPEC_MINIMUM_UNAVAILABLE : row.minimum}; lower-spec index Cpl=${formatUqNumber(row.stats.cpl, 2)}; observed rows above selected minimum=${formatUqNumber(row.stats.conformancePct)}%.`),
     'Normal-model tolerance limits, when shown in the chart, assume independent normally distributed observations. They are approximate screening calculations, not reviewed handbook values.',
   ].join('\n');
 }
@@ -66,7 +74,7 @@ export function CouponWorksheet({ dataset, onCopy, notification }: { dataset: Ma
     return <section aria-label="Coupon statistics worksheet" className="space-y-2 rounded-xl border border-slate-700 bg-slate-900 p-5"><h3 className="font-semibold text-slate-100">Coupon statistics worksheet</h3><p role="status" className="text-xs text-sky-200">{UQ_NO_COUPONS_MESSAGE} Selected context: {dataset.name}. No statistics are computed or assumed in place of measured coupons.</p></section>;
   }
   const rows = couponReportRows(dataset);
-  return <section aria-label="Coupon statistics worksheet" className="space-y-4 rounded-xl border border-slate-700 bg-slate-900 p-5"><div className="flex flex-wrap justify-between gap-3"><h3 className="font-semibold text-slate-100">Coupon statistics worksheet</h3><button className="rounded border border-slate-600 px-3 py-2 text-xs text-slate-200" onClick={() => onCopy(couponWorksheetText(dataset), 'Worksheet copied')}>{notification || 'Copy Report'}</button></div><p className="text-xs text-amber-200">{couponProvenance(dataset)} No qualification or certified allowable is established.</p><p className="text-xs text-slate-400">Selected context: {dataset.name}. Reference minima are not verified specifications for imported specimens. Normality is not tested; source methods and lot independence require review.</p><div className="overflow-x-auto"><table className="w-full text-left text-xs text-slate-300"><thead><tr>{['Property','Unit','n','Mean','Sample SD','Selected minimum','Cpl','Observed conformance'].map(label => <th key={label} className="whitespace-nowrap border-b border-slate-700 p-2">{label}</th>)}</tr></thead><tbody>{rows.map(row => <tr key={row.key}><td className="p-2">{row.label}</td><td className="p-2">{row.unit}</td><td className="p-2">{row.stats.sampleSize}</td><td className="p-2">{formatUqNumber(row.stats.mean)}</td><td className="p-2">{formatUqNumber(row.stats.stdDev)}</td><td className="p-2">{row.minimum}</td><td className="p-2">{formatUqNumber(row.stats.cpl,2)}</td><td className="p-2">{formatUqNumber(row.stats.conformancePct)}%</td></tr>)}</tbody></table></div><p className="text-xs text-slate-500">Each property is calculated from its own supplied column. Missing or insufficient statistics remain not assessed. Changing the chart property does not change worksheet column identity.</p></section>;
+  return <section aria-label="Coupon statistics worksheet" className="space-y-4 rounded-xl border border-slate-700 bg-slate-900 p-5"><div className="flex flex-wrap justify-between gap-3"><h3 className="font-semibold text-slate-100">Coupon statistics worksheet</h3><button className="rounded border border-slate-600 px-3 py-2 text-xs text-slate-200" onClick={() => onCopy(couponWorksheetText(dataset), 'Worksheet copied')}>{notification || 'Copy Report'}</button></div><p className="text-xs text-amber-200">{couponProvenance(dataset)} No qualification or certified allowable is established.</p><p className="text-xs text-slate-400">Selected context: {dataset.name}. Reference minima are not verified specifications for imported specimens. Normality is not tested; source methods and lot independence require review.</p><div className="overflow-x-auto"><table className="w-full text-left text-xs text-slate-300"><thead><tr>{['Property','Unit','n','Mean','Sample SD','Selected minimum','Cpl','Observed conformance'].map(label => <th key={label} className="whitespace-nowrap border-b border-slate-700 p-2">{label}</th>)}</tr></thead><tbody>{rows.map(row => <tr key={row.key}><td className="p-2">{row.label}</td><td className="p-2">{row.unit}</td><td className="p-2">{row.stats.sampleSize}</td><td className="p-2">{formatUqNumber(row.stats.mean)}</td><td className="p-2">{formatUqNumber(row.stats.stdDev)}</td><td className="p-2">{row.minimum === null ? SPEC_MINIMUM_UNAVAILABLE : row.minimum}</td><td className="p-2">{formatUqNumber(row.stats.cpl,2)}</td><td className="p-2">{formatUqNumber(row.stats.conformancePct)}%</td></tr>)}</tbody></table></div><p className="text-xs text-slate-500">Each property is calculated from its own supplied column. Missing or insufficient statistics remain not assessed. Changing the chart property does not change worksheet column identity.</p></section>;
 }
 
 /** Empty-state guidance: presets carry specification context only, never coupon records. */

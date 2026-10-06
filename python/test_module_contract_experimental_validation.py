@@ -49,6 +49,7 @@ class ExperimentalValidationContractTests(unittest.TestCase):
         self.assertIn("/api/lpbf/sources/${encodeURIComponent(datasetId)}/measurements", client)
         self.assertIn("sourceMeasurements('cmu-ti64-meltpool-v1', controller.signal)", read_source("src/components/ExperimentalValidationLab.tsx"))
         self.assertIn("if (!current) throw new LpbfSourceArchiveError(404, 'Source dataset has not been imported.')", service)
+        self.assertIn("return { datasetId, scope: CMU_MT_SCOPE, data: parseCmuMeasurementsCsv(csv) };", service)
         self.assertIn("return { datasetId, data: [] };", service)
 
     def test_builder_rejects_a_different_seed_identity(self):
@@ -57,16 +58,19 @@ class ExperimentalValidationContractTests(unittest.TestCase):
 
     def test_response_shape_and_plotted_measurement_fields_follow_sources(self):
         load = self.operations["load-cmu-ti64-measurements"]
-        self.assertEqual(set(load.output.fields), {"datasetId", "data", "error"})
+        self.assertEqual(set(load.output.fields), {"datasetId", "scope", "data", "error"})
         self.assertIsNone(load.output.status_key)
         service = read_source("server/lpbfSourceArchiveService.ts")
+        parser = read_source("server/cmuMeasurements.ts")
         for key in ("slice", "orientation", "power_W", "velocity_mms", "width_um", "depth_um", "cap_um"):
-            self.assertRegex(service, rf"\b{key}: ")
+            self.assertRegex(parser, rf"\b{key}: ")
+        self.assertIn("raw/MTMeasurements.csv", service)
+        self.assertIn("multi-track-powder-entrained", parser)
         view = read_source("src/components/ExperimentalValidationLab.tsx")
-        self.assertIn("res.data.filter((d: any) => d.power_W === 370)", view)
+        self.assertNotIn("d.power_W === 370", view)  # no client power filter
         self.assertIn("dataKey=\"velocity_mms\"", view)
-        self.assertIn("{ ...d, value: d.width_um }", view)
-        self.assertIn("{ ...d, value: d.depth_um }", view)
+        self.assertIn("setData(res.data)", view)
+        self.assertIn("unresolved.join", view)
         self.assertIn("unit=\" mm/s\"", view)
         self.assertIn("unit=\" µm\"", view)
         self.assertNotIn("citation", view)
@@ -80,19 +84,28 @@ class ExperimentalValidationContractTests(unittest.TestCase):
         self.assertEqual(set(render.undeclared_input), {"measurementData", "job"})
         self.assertEqual(
             set(render.output.fields),
-            {"widthSeries", "depthSeries", "simulationReferenceDots", "loadingMessage", "errorMessage"},
+            {
+                "widthSeries", "remeltDepthSeries", "perVelocityAggregates", "overlayGate",
+                "simulationReferenceDots", "widthResidual", "remeltDepthContext",
+                "unresolvedScope", "loadingMessage", "emptyMessage", "errorMessage",
+            },
         )
         view = read_source("src/components/ExperimentalValidationLab.tsx")
         store = read_source("src/store/useLpbfEngineeringStore.ts")
         self.assertIn("const job = useLpbfEngineeringStore(state => state.job)", view)
         self.assertIn("const simResult = job?.result?.metrics", view)
         self.assertIn("const simInput = job?.result?.settings", view)
-        self.assertIn("Math.abs(simInput.power_W - 370) < 5", view)
+        self.assertIn("const gate = overlayGate(simInput)", view)
+        self.assertIn("residualAt(aggregates, simInput?.speed_mm_s, simResult)", view)
+        helper = read_source("src/utils/experimentalValidation.ts")
+        self.assertIn("material: 'ti6al4v'", helper)
+        self.assertIn("power_W: 370", helper)
+        self.assertIn("beamDiameter_um: 100", helper)
         self.assertIn("x={simInput.speed_mm_s} y={simResult.width_um}", view)
         self.assertIn("x={simInput.speed_mm_s} y={simResult.depth_um}", view)
         self.assertIn("job: SimulationJob | undefined", store)
         notes = " ".join(self.contract.legacy_notes)
-        for limitation in ("material identity", "result freshness/signature", "visual juxtaposition", "not calculated agreement"):
+        for limitation in ("overlayGate", "result freshness/signature", "juxtaposition", "not calculated agreement", "quantity definitions differ", "no interpolation"):
             self.assertIn(limitation, notes)
         self.assertEqual(self.contract.evidence.emits, ())
         self.assertEqual(self.contract.evidence.ceiling, "screening-only")
@@ -113,12 +126,15 @@ class ExperimentalValidationContractTests(unittest.TestCase):
         self.assertIn("if (!response.ok) throw new Error('Failed to load experimental measurements')", client)
         self.assertIn("catch (error) {", route)
         self.assertIn("res.status(503).json({ error:", route)
+        self.assertIn("!loaded", view)
         self.assertIn("data.length === 0", view)
+        self.assertIn("No measurement rows were returned", view)
         self.assertIn("Loading experimental data...", view)
         self.assertNotIn("Retry", view)
         notes = " ".join(self.contract.legacy_notes)
         self.assertIn("No request deadline", notes)
-        self.assertIn("indefinitely", notes)
+        self.assertIn("explicit empty message", notes)
+        self.assertNotIn("indefinitely", notes)
         self.assertIn("without a retry control", notes)
         self.assertTrue(load.route.startswith("/api/lpbf/sources/"))
 
@@ -129,6 +145,9 @@ class ExperimentalValidationContractTests(unittest.TestCase):
         self.assertTrue({
             "tests/lpbf-source-api.test.ts",
             "tests/lpbf-experimental-evidence.test.tsx",
+            "tests/lpbf-experimental-validation-logic.test.ts",
+            "src/utils/experimentalValidation.ts",
+            "server/cmuMeasurements.ts",
             "tests/lpbf-phase4-e2e.test.ts",
             "docs/MODULE_EVIDENCE_INVENTORY.md",
         } <= refs)

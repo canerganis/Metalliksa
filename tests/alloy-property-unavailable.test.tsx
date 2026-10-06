@@ -57,8 +57,8 @@ test("LPBF inputs from the specimen store are unchanged (values pinned from the 
   }
 });
 
-test("specimen store migration v2 -> v3 nulls heuristic properties and keeps the live LPBF vector", () => {
-  assert.equal(MATERIAL_SPECIMEN_STORE_VERSION, 3);
+test("specimen store migration v2 -> v4 nulls heuristic properties and keeps the live LPBF vector", () => {
+  assert.equal(MATERIAL_SPECIMEN_STORE_VERSION, 4);
   const base = deriveSpecimenProperties(SPECIMEN_PRESETS["inconel-718"].composition, "IN718 fixture", "Ni");
   const lpbf = { ...base.lpbf, laserPower_W: 333, scanSpeed_mms: 777, processSeed: 9 };
   const persisted = { activeSpecimen: { ...base, ...HEURISTIC_VALUES, id: "x", lpbf, sourceTab: "t", lastModified: 1, isCustomModified: true } };
@@ -68,7 +68,7 @@ test("specimen store migration v2 -> v3 nulls heuristic properties and keeps the
   assert.deepEqual(migrated.activeSpecimen.composition, base.composition);
   assert.equal(migrated.activeSpecimen.name, "IN718 fixture");
   // current-version blobs and non-objects pass through untouched
-  assert.equal(migrateMaterialSpecimenStoreState(persisted, 3), persisted);
+  assert.equal(migrateMaterialSpecimenStoreState(persisted, 4), persisted);
   assert.equal(migrateMaterialSpecimenStoreState(null, 1), null);
 });
 

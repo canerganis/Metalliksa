@@ -58,13 +58,19 @@ export function overlayGate(input: { material?: unknown; power_W?: unknown; beam
   return { eligible: reasons.length === 0, reasons };
 }
 
+/** Label for the measured CSV "Depth (um)" column: remelt depth of multi-track cross sections, cap excluded (data/benchmark/cmu-ti64-meltpool-v1/README.md; python/cmu_ti64_import.py maps it to remelt_depth_um). */
+export const MEASURED_DEPTH_LABEL = 'Remelt depth (cap excluded)';
+export const DEPTH_NOT_COMPARABLE_REASON = 'Not comparable: the measured depth is the remelt depth of multi-track sections with the cap excluded, while the simulated depth is a single-track melt-pool depth. The quantity definitions differ, so no residual is computed.';
+
 export interface ResidualQuantity { simulated: number; measuredMean: number; residual: number; sd: number | null; n: number; withinRange: boolean }
 export interface Residual {
   available: boolean;
   /** Why the residual is unavailable. */
   reason?: string;
   velocity_mms?: number;
-  width?: ResidualQuantity; depth?: ResidualQuantity;
+  width?: ResidualQuantity;
+  /** Shown for context only: depth is never differenced against the simulation (see DEPTH_NOT_COMPARABLE_REASON). */
+  depth?: Omit<ResidualQuantity, 'residual' | 'withinRange'>;
 }
 
 function quantity(simulated: unknown, s: Stat | null): ResidualQuantity | undefined {
@@ -77,7 +83,16 @@ export function residualAt(aggregates: VelocityAggregate[], speed_mm_s: unknown,
   if (typeof speed_mm_s !== 'number' || !Number.isFinite(speed_mm_s) || !metrics) return { available: false, reason: 'No simulated speed or metrics.' };
   const hit = aggregates.find(a => Math.abs(a.velocity_mms - speed_mm_s) <= 1e-6 * Math.max(1, Math.abs(speed_mm_s)));
   if (!hit) return { available: false, reason: `No measurements at ${speed_mm_s} mm/s; values are not interpolated between velocities.` };
-  const width = quantity(metrics.width_um, hit.width), depth = quantity(metrics.depth_um, hit.depth);
+  const width = quantity(metrics.width_um, hit.width);
+  const depthQ = quantity(metrics.depth_um, hit.depth);
+  const depth = depthQ ? { simulated: depthQ.simulated, measuredMean: depthQ.measuredMean, sd: depthQ.sd, n: depthQ.n } : undefined;
   if (!width && !depth) return { available: false, reason: 'Measurements at this velocity lack width and depth values.' };
   return { available: true, velocity_mms: hit.velocity_mms, width, depth };
+}
+
+/** Heading text derived from the loaded rows, never hard-coded. */
+export function describePowers(rows: MeasuredRow[]): string {
+  const powers = [...new Set(rows.map(r => r.power_W).filter((p): p is number => p != null))].sort((a, b) => a - b);
+  if (powers.length === 0) return 'power not recorded';
+  return powers.length === 1 ? `all rows ${powers[0]} W` : `mixed powers: ${powers.join(', ')} W`;
 }

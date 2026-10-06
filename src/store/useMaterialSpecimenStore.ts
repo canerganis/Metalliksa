@@ -87,11 +87,45 @@ export const LPBF_PROCESS_FALLBACKS = {
 } as const;
 export type LpbfDefaultedField = keyof typeof LPBF_PROCESS_FALLBACKS;
 
+/**
+ * Class-level constants that deriveSpecimenProperties passes explicitly (per base metal or for every alloy). They are
+ * unsourced heuristics, not measured or alloy-specific values, so they are flagged in defaultsApplied like the fallbacks.
+ */
+export const LPBF_DERIVED_HEURISTIC_FIELDS: readonly LpbfDefaultedField[] = [
+  "thermalConductivity_k_WmK", "specificHeat_Cp_JkgK", "laserAbsorptivity", "thermalExpansion_CTE_10e6", "criticalGradient_G_Km",
+];
+
+/** Human labels for the disclosure UI. */
+export const LPBF_DEFAULT_FIELD_LABELS: Record<LpbfDefaultedField, { label: string; unit: string }> = {
+  thermalConductivity_k_WmK: { label: "Thermal conductivity", unit: "W/m·K" },
+  density_rho_kgm3: { label: "Density", unit: "kg/m³" },
+  specificHeat_Cp_JkgK: { label: "Specific heat", unit: "J/kg·K" },
+  laserAbsorptivity: { label: "Laser absorptivity", unit: "" },
+  thermalExpansion_CTE_10e6: { label: "Thermal expansion (CTE)", unit: "10⁻⁶/K" },
+  criticalGradient_G_Km: { label: "Critical gradient G", unit: "K/m" },
+  hotTearingSusceptibility: { label: "Hot-tearing susceptibility", unit: "" },
+  beamDiameter_um: { label: "Beam diameter", unit: "µm" },
+  scanStrategy: { label: "Scan strategy", unit: "" },
+  beamProfile: { label: "Beam profile", unit: "" },
+};
+
+/** "Beam diameter 80 µm" style text for one flagged field. */
+export function describeLpbfDefault(key: LpbfDefaultedField, lpbf: Pick<LpbfSpecimenState, LpbfDefaultedField>): string {
+  const { label, unit } = LPBF_DEFAULT_FIELD_LABELS[key];
+  return `${label} ${lpbf[key]}${unit ? ` ${unit}` : ""}`;
+}
+
+/** An explicit user edit of a field removes it from the flagged list; nothing else does. */
+export function withoutEditedDefaults(flags: readonly LpbfDefaultedField[] | undefined, patch: object): LpbfDefaultedField[] {
+  return (flags ?? []).filter(key => (patch as Record<string, unknown>)[key] === undefined);
+}
+
 export function withLpbfProcessDefaults(lpbf: Partial<LpbfSpecimenState> & Pick<LpbfSpecimenState, "recommendedLaserPower_W" | "recommendedScanSpeed_mms" | "recommendedHatch_um" | "recommendedLayer_um" | "recommendedPreheatTemp_C">): LpbfSpecimenState {
-  // A field stays flagged when it still holds its fallback value from an earlier fill; an explicit different value clears it.
-  const previous = new Set(lpbf.defaultsApplied ?? []);
-  const defaultsApplied = (Object.keys(LPBF_PROCESS_FALLBACKS) as LpbfDefaultedField[])
-    .filter(key => lpbf[key] === undefined || (previous.has(key) && lpbf[key] === LPBF_PROCESS_FALLBACKS[key]));
+  // Flagged = filled from a fallback now, or already flagged by the caller (derived heuristics, earlier fills). Only an
+  // explicit edit through the store actions (withoutEditedDefaults) un-flags a field.
+  const flagged = new Set<LpbfDefaultedField>(lpbf.defaultsApplied ?? []);
+  for (const key of Object.keys(LPBF_PROCESS_FALLBACKS) as LpbfDefaultedField[]) if (lpbf[key] === undefined) flagged.add(key);
+  const defaultsApplied = (Object.keys(LPBF_PROCESS_FALLBACKS) as LpbfDefaultedField[]).filter(key => flagged.has(key));
   return {
     recommendedLaserPower_W: lpbf.recommendedLaserPower_W,
     recommendedScanSpeed_mms: lpbf.recommendedScanSpeed_mms,
@@ -421,6 +455,7 @@ export function deriveSpecimenProperties(
       hotTearingSusceptibility,
       crackingMechanism,
       mitigationRecommendation,
+      defaultsApplied: [...LPBF_DERIVED_HEURISTIC_FIELDS],
     }),
     xrd: {
       crystalSystem,
@@ -527,7 +562,7 @@ const INITIAL_SPECIMEN: ActiveSpecimenState = {
   isCustomModified: false,
 };
 
-export const MATERIAL_SPECIMEN_STORE_VERSION = 3;
+export const MATERIAL_SPECIMEN_STORE_VERSION = 4;
 
 /**
  * Version 3 nulls the composition-heuristic properties (liquidus ... elongation) of the persisted specimen. Everything
@@ -537,9 +572,27 @@ export const MATERIAL_SPECIMEN_STORE_VERSION = 3;
 export function migrateMaterialSpecimenStoreState(persisted: unknown, version: number): unknown {
   if (version >= MATERIAL_SPECIMEN_STORE_VERSION || !persisted || typeof persisted !== "object" || Array.isArray(persisted)) return persisted;
   const state = persisted as Record<string, unknown>;
-  return state.activeSpecimen && typeof state.activeSpecimen === "object"
-    ? { ...state, activeSpecimen: withoutCompositionHeuristicProperties(state.activeSpecimen) }
-    : state;
+  if (!state.activeSpecimen || typeof state.activeSpecimen !== "object") return state;
+  const specimen = version < 3 ? withoutCompositionHeuristicProperties(state.activeSpecimen) : state.activeSpecimen;
+  return { ...state, activeSpecimen: withLegacyDefaultsFlagged(specimen) };
+}
+
+/**
+ * Version 4 adds LpbfSpecimenState.defaultsApplied. A record without it has unknown provenance, so each field that still
+ * equals a fallback or the value this app derives for that composition is flagged (a user edit to another value is not).
+ * Numeric values are untouched.
+ */
+function withLegacyDefaultsFlagged(specimenValue: unknown): unknown {
+  const specimen = specimenValue as { lpbf?: Record<string, unknown>; composition?: Record<string, number>; name?: string; baseMetal?: BaseMetalType };
+  const lpbf = specimen.lpbf;
+  if (!lpbf || typeof lpbf !== "object" || Array.isArray(lpbf.defaultsApplied)) return specimenValue;
+  let derivedLpbf: Record<string, unknown> = {};
+  try {
+    if (specimen.composition) derivedLpbf = deriveSpecimenProperties(specimen.composition, specimen.name, specimen.baseMetal).lpbf as unknown as Record<string, unknown>;
+  } catch { /* unknown composition: compare against the fallbacks only */ }
+  const defaultsApplied = (Object.keys(LPBF_PROCESS_FALLBACKS) as LpbfDefaultedField[])
+    .filter(key => lpbf[key] === undefined || lpbf[key] === LPBF_PROCESS_FALLBACKS[key] || (LPBF_DERIVED_HEURISTIC_FIELDS.includes(key) && lpbf[key] === derivedLpbf[key]));
+  return { ...specimen, lpbf: { ...lpbf, ...(defaultsApplied.length ? { defaultsApplied } : {}) } };
 }
 
 // ----------------------------------------------------------------------
@@ -569,6 +622,11 @@ export const useMaterialSpecimenStore = create<MaterialSpecimenStore>()(
             beamProfile: previousProcess?.beamProfile,
             cadAssetName: previousProcess?.cadAssetName,
             specimenDoi: previousProcess?.specimenDoi,
+            // Derived class heuristics are always flagged; the carried-over beam/scan/profile keep their previous flag.
+            defaultsApplied: [
+              ...LPBF_DERIVED_HEURISTIC_FIELDS,
+              ...(previousProcess?.defaultsApplied ?? []).filter(key => key === "beamDiameter_um" || key === "scanStrategy" || key === "beamProfile"),
+            ],
           }),
           sourceTab,
           lastModified: Date.now(),
@@ -685,7 +743,7 @@ export const useMaterialSpecimenStore = create<MaterialSpecimenStore>()(
             ...state.activeSpecimen,
             ...partial,
             lpbf: partial.lpbf
-              ? withLpbfProcessDefaults({ ...state.activeSpecimen.lpbf, ...partial.lpbf })
+              ? withLpbfProcessDefaults({ ...state.activeSpecimen.lpbf, ...partial.lpbf, defaultsApplied: partial.lpbf.defaultsApplied ?? withoutEditedDefaults(state.activeSpecimen.lpbf.defaultsApplied, partial.lpbf) })
               : state.activeSpecimen.lpbf,
             lastModified: Date.now(),
             isCustomModified: true,
@@ -697,7 +755,7 @@ export const useMaterialSpecimenStore = create<MaterialSpecimenStore>()(
         set((state) => ({
           activeSpecimen: {
             ...state.activeSpecimen,
-            lpbf: withLpbfProcessDefaults({ ...state.activeSpecimen.lpbf, ...patch }),
+            lpbf: withLpbfProcessDefaults({ ...state.activeSpecimen.lpbf, ...patch, defaultsApplied: withoutEditedDefaults(state.activeSpecimen.lpbf.defaultsApplied, patch) }),
             lastModified: Date.now(),
             isCustomModified: true,
           },
@@ -740,8 +798,12 @@ export const useMaterialSpecimenStore = create<MaterialSpecimenStore>()(
             lpbf: withLpbfProcessDefaults({
               ...current.activeSpecimen.lpbf,
               ...specimen.lpbf,
-              // The persisted record is authoritative about its own defaults; never inherit the fresh preset's list.
-              defaultsApplied: specimen.lpbf?.defaultsApplied,
+              // The persisted record is authoritative about its own defaults (migrate flags legacy records); fields it lacks
+              // entirely are taken from the fresh preset and flagged. Never inherit the fresh preset's own list.
+              defaultsApplied: [
+                ...(specimen.lpbf?.defaultsApplied ?? []),
+                ...(Object.keys(LPBF_PROCESS_FALLBACKS) as LpbfDefaultedField[]).filter(key => specimen.lpbf?.[key] === undefined),
+              ],
             }),
           },
         };
