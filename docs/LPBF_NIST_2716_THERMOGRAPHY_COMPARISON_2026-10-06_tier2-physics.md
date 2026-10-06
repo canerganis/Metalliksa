@@ -2,7 +2,7 @@
 
 **Sensitivity-only trend comparison of the screening kernels against NIST mds2-2716 raw camera-signal metrics; not experimental validation; no temperature conversion; application outputs are screening and unvalidated; nothing was tuned.**
 
-Schema `lpbf-nist-2716-thermography-comparison-1`; implementation fingerprint `e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635`; quick mode: False; kernels: rosenthal, eagar-tsai, goldak. Honesty: comparison, not validation; raw camera signal in digital levels (DL); no temperature conversion executed; application outputs are screening and unvalidated; measured and model quantities refer to different isotherms, so only normalised trends and ranks are shown (sensitivity-only); nothing tuned. `experimentalValidation` = false, `opticalOperatorMatched` = false, `modelAcceptance` = false, `nistResidual` = null, `temperatureConversion` = null.
+Schema `lpbf-nist-2716-thermography-comparison-1`; implementation fingerprint `ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932`; quick mode: False; kernels: rosenthal, eagar-tsai, goldak. Honesty: comparison, not validation; raw camera signal in digital levels (DL); no temperature conversion executed; application outputs are screening and unvalidated; measured and model quantities refer to different isotherms, so only normalised trends and ranks are shown (sensitivity-only); nothing tuned. `experimentalValidation` = false, `opticalOperatorMatched` = false, `modelAcceptance` = false, `nistResidual` = null, `temperatureConversion` = null.
 
 ## Inputs
 

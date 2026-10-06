@@ -2,9 +2,9 @@
 
 **Comparison of screening kernels against published single-track measurements; not experimental validation; estimated material laws; absorptivity assumed.**
 
-Schema `lpbf-dataset-comparison-1`; implementation fingerprint `e2219b10481373c9ff3b4e5d12462e3d92e209121d01f834e7f0bf7e385f2635`; quick mode: False. Honesty: comparison, not validation; screening kernels; estimated material laws; absorptivity assumed (not measured); published single-track measurements, no replicate or uncertainty model; a failing comparison is reported, not fitted away. `experimentalValidation` = false.
+Schema `lpbf-dataset-comparison-1`; implementation fingerprint `ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932`; quick mode: False. Honesty: comparison, not validation; screening kernels; estimated material laws; absorptivity assumed (not measured); published single-track measurements, no replicate or uncertainty model; a failing comparison is reported, not fitted away. `experimentalValidation` = false.
 
-Slim view record `LPBF_DATASET_COMPARISON_2026-10-06_tier2-physics.view.json` (this record minus `breakdowns` and `referenceTransient.rows`; sha256 of its LF bytes `f131af81a67ec3f2f520151b2e1424d5d97c6c21215fb008413d8735e48d5428`).
+Slim view record `LPBF_DATASET_COMPARISON_2026-10-06_tier2-physics.view.json` (this record minus `breakdowns` and `referenceTransient.rows`; sha256 of its LF bytes `50dbfbf90fd48d30e7e75d6c10d67071b1c5043f139b7fecee1afb4054910683`).
 
 ## Datasets
 
