@@ -7,8 +7,12 @@ computed here; a consumer derives them from the centers.)
 
 Stretching rule (standard stretched-grid practice, Ferziger & Peric,
 "Computational Methods for Fluid Dynamics", non-uniform grid section): adjacent
-cell widths never jump by more than the stated growth ratio, and no cell is
-narrower than the fine spacing. The outer graded zone is built from an integer
+cell widths never jump by more than the stated growth ratio, and the graded
+outer cells are never narrower than the fine-zone cell. The fine zone uses
+n = round(fine_len / dx_fine) cells, so its width can differ from dx_fine by up
+to half a cell spread over n; the uniform fallback (outer span too short to
+grade) rounds its count down, so its cells are never narrower than dx_fine.
+The outer graded zone is built from an integer
 number of cells whose geometric ratio r <= growth_ratio is solved so the cells
 fill the outer span exactly; the last cell is never truncated to a sliver.
 """
@@ -61,8 +65,10 @@ def _graded_half_widths(fine_len_m, total_len_m, dx_fine_m, dx_coarse_m, growth_
         dx_fine_actual, total_len_m - fine_len_m, dx_coarse_m, growth_ratio
     )
     if outer is None:
-        # Outer span too short to grade: mesh the whole half uniformly at ~dx_fine.
-        n = max(1, int(round(total_len_m / dx_fine_m)))
+        # Outer span too short to grade: mesh the whole half uniformly. Round the
+        # count down so no cell is narrower than dx_fine (rounding up gave cells
+        # down to ~0.9*dx_fine, e.g. 2.256 um at span 22.56 um, dx_fine 2.5 um).
+        n = max(1, int(total_len_m // dx_fine_m))
         return [total_len_m / n] * n
     return [dx_fine_actual] * n_fine + outer
 

@@ -66,12 +66,18 @@ class TestGradedMeshStretchingLT5(unittest.TestCase):
         self.assertAlmostEqual(float(f[-1]), 50e-6, delta=1e-18)
 
     def test_axis_spans_and_ratios(self):
-        for span in (26e-6, 30e-6, 60e-6, 100e-6, 400e-6, 600e-6, 1000e-6):
+        for span in (22.56e-6, 23.1e-6, 26e-6, 30e-6, 33.9e-6, 60e-6, 100e-6, 400e-6, 600e-6, 1000e-6):
             for growth in (1.05, 1.15, 1.3):
                 with self.subTest(span=span, growth=growth):
                     _, w, _ = generate_graded_axis(span, 20e-6, 2.5e-6, 25e-6, growth)
                     self._assert_well_graded(w, span, 2.5e-6, growth)
                     self.assertLessEqual(float(w.max()), 25e-6 * (1.0 + TOL))
+
+    def test_fallback_rounds_count_down(self):
+        # Uniform fallback used round(): span 22.56 um gave 2.256 um cells (< 2.5 um).
+        _, w, _ = generate_graded_axis(22.56e-6, 20e-6, 2.5e-6, 25e-6)
+        self.assertGreaterEqual(float(w.min()), 2.5e-6 * (1.0 - TOL))
+        self.assertAlmostEqual(float(w.min()) * 1e6, 2.82, places=2)
 
     def test_axis_400um_end_cell_no_longer_jumps(self):
         _, w, _ = generate_graded_axis(400e-6, 20e-6, 2.5e-6, 25e-6)
