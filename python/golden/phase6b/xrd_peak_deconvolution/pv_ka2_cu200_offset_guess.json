@@ -1,0 +1,1763 @@
+{
+ "baseRevision": "faa6684",
+ "case": "pv_ka2_cu200_offset_guess",
+ "exitCode": 0,
+ "gitHead": "faa668432e6ceea2342308c4886b41c38f0e6cd0",
+ "input": {
+  "center": 50.4,
+  "enableKa2": true,
+  "eta": 0.3,
+  "fwhm": 0.3,
+  "intensity": 1500,
+  "ka2Ratio": 0.5,
+  "mode": "deconvolve",
+  "points": [
+   {
+    "sampleIntensity": 189.56,
+    "twoTheta": 49.2
+   },
+   {
+    "sampleIntensity": 187.53,
+    "twoTheta": 49.22
+   },
+   {
+    "sampleIntensity": 190.64,
+    "twoTheta": 49.24
+   },
+   {
+    "sampleIntensity": 196.62,
+    "twoTheta": 49.26
+   },
+   {
+    "sampleIntensity": 194.9,
+    "twoTheta": 49.28
+   },
+   {
+    "sampleIntensity": 197.85,
+    "twoTheta": 49.3
+   },
+   {
+    "sampleIntensity": 199.87,
+    "twoTheta": 49.32
+   },
+   {
+    "sampleIntensity": 195.73,
+    "twoTheta": 49.34
+   },
+   {
+    "sampleIntensity": 195.03,
+    "twoTheta": 49.36
+   },
+   {
+    "sampleIntensity": 203.25,
+    "twoTheta": 49.38
+   },
+   {
+    "sampleIntensity": 205.7,
+    "twoTheta": 49.4
+   },
+   {
+    "sampleIntensity": 191.95,
+    "twoTheta": 49.42
+   },
+   {
+    "sampleIntensity": 198.13,
+    "twoTheta": 49.44
+   },
+   {
+    "sampleIntensity": 209.22,
+    "twoTheta": 49.46
+   },
+   {
+    "sampleIntensity": 207.29,
+    "twoTheta": 49.48
+   },
+   {
+    "sampleIntensity": 197.81,
+    "twoTheta": 49.5
+   },
+   {
+    "sampleIntensity": 201.99,
+    "twoTheta": 49.52
+   },
+   {
+    "sampleIntensity": 196.47,
+    "twoTheta": 49.54
+   },
+   {
+    "sampleIntensity": 212.3,
+    "twoTheta": 49.56
+   },
+   {
+    "sampleIntensity": 217.02,
+    "twoTheta": 49.58
+   },
+   {
+    "sampleIntensity": 199.66,
+    "twoTheta": 49.6
+   },
+   {
+    "sampleIntensity": 201.14,
+    "twoTheta": 49.62
+   },
+   {
+    "sampleIntensity": 217.0,
+    "twoTheta": 49.64
+   },
+   {
+    "sampleIntensity": 216.47,
+    "twoTheta": 49.66
+   },
+   {
+    "sampleIntensity": 213.39,
+    "twoTheta": 49.68
+   },
+   {
+    "sampleIntensity": 213.41,
+    "twoTheta": 49.7
+   },
+   {
+    "sampleIntensity": 212.0,
+    "twoTheta": 49.72
+   },
+   {
+    "sampleIntensity": 230.1,
+    "twoTheta": 49.74
+   },
+   {
+    "sampleIntensity": 218.72,
+    "twoTheta": 49.76
+   },
+   {
+    "sampleIntensity": 219.0,
+    "twoTheta": 49.78
+   },
+   {
+    "sampleIntensity": 230.23,
+    "twoTheta": 49.8
+   },
+   {
+    "sampleIntensity": 234.08,
+    "twoTheta": 49.82
+   },
+   {
+    "sampleIntensity": 230.66,
+    "twoTheta": 49.84
+   },
+   {
+    "sampleIntensity": 237.88,
+    "twoTheta": 49.86
+   },
+   {
+    "sampleIntensity": 244.27,
+    "twoTheta": 49.88
+   },
+   {
+    "sampleIntensity": 242.7,
+    "twoTheta": 49.9
+   },
+   {
+    "sampleIntensity": 253.93,
+    "twoTheta": 49.92
+   },
+   {
+    "sampleIntensity": 264.77,
+    "twoTheta": 49.94
+   },
+   {
+    "sampleIntensity": 270.08,
+    "twoTheta": 49.96
+   },
+   {
+    "sampleIntensity": 264.67,
+    "twoTheta": 49.98
+   },
+   {
+    "sampleIntensity": 269.53,
+    "twoTheta": 50.0
+   },
+   {
+    "sampleIntensity": 286.32,
+    "twoTheta": 50.02
+   },
+   {
+    "sampleIntensity": 304.8,
+    "twoTheta": 50.04
+   },
+   {
+    "sampleIntensity": 310.57,
+    "twoTheta": 50.06
+   },
+   {
+    "sampleIntensity": 321.76,
+    "twoTheta": 50.08
+   },
+   {
+    "sampleIntensity": 343.19,
+    "twoTheta": 50.1
+   },
+   {
+    "sampleIntensity": 361.58,
+    "twoTheta": 50.12
+   },
+   {
+    "sampleIntensity": 380.12,
+    "twoTheta": 50.14
+   },
+   {
+    "sampleIntensity": 411.33,
+    "twoTheta": 50.16
+   },
+   {
+    "sampleIntensity": 470.07,
+    "twoTheta": 50.18
+   },
+   {
+    "sampleIntensity": 532.07,
+    "twoTheta": 50.2
+   },
+   {
+    "sampleIntensity": 605.33,
+    "twoTheta": 50.22
+   },
+   {
+    "sampleIntensity": 700.78,
+    "twoTheta": 50.24
+   },
+   {
+    "sampleIntensity": 811.76,
+    "twoTheta": 50.26
+   },
+   {
+    "sampleIntensity": 963.6,
+    "twoTheta": 50.28
+   },
+   {
+    "sampleIntensity": 1140.17,
+    "twoTheta": 50.3
+   },
+   {
+    "sampleIntensity": 1361.59,
+    "twoTheta": 50.32
+   },
+   {
+    "sampleIntensity": 1581.47,
+    "twoTheta": 50.34
+   },
+   {
+    "sampleIntensity": 1840.39,
+    "twoTheta": 50.36
+   },
+   {
+    "sampleIntensity": 2085.56,
+    "twoTheta": 50.38
+   },
+   {
+    "sampleIntensity": 2297.06,
+    "twoTheta": 50.4
+   },
+   {
+    "sampleIntensity": 2462.46,
+    "twoTheta": 50.42
+   },
+   {
+    "sampleIntensity": 2529.92,
+    "twoTheta": 50.44
+   },
+   {
+    "sampleIntensity": 2545.64,
+    "twoTheta": 50.46
+   },
+   {
+    "sampleIntensity": 2493.67,
+    "twoTheta": 50.48
+   },
+   {
+    "sampleIntensity": 2401.23,
+    "twoTheta": 50.5
+   },
+   {
+    "sampleIntensity": 2286.52,
+    "twoTheta": 50.52
+   },
+   {
+    "sampleIntensity": 2150.6,
+    "twoTheta": 50.54
+   },
+   {
+    "sampleIntensity": 1975.75,
+    "twoTheta": 50.56
+   },
+   {
+    "sampleIntensity": 1813.52,
+    "twoTheta": 50.58
+   },
+   {
+    "sampleIntensity": 1630.06,
+    "twoTheta": 50.6
+   },
+   {
+    "sampleIntensity": 1421.61,
+    "twoTheta": 50.62
+   },
+   {
+    "sampleIntensity": 1236.76,
+    "twoTheta": 50.64
+   },
+   {
+    "sampleIntensity": 1067.78,
+    "twoTheta": 50.66
+   },
+   {
+    "sampleIntensity": 914.16,
+    "twoTheta": 50.68
+   },
+   {
+    "sampleIntensity": 800.31,
+    "twoTheta": 50.7
+   },
+   {
+    "sampleIntensity": 678.95,
+    "twoTheta": 50.72
+   },
+   {
+    "sampleIntensity": 605.25,
+    "twoTheta": 50.74
+   },
+   {
+    "sampleIntensity": 521.22,
+    "twoTheta": 50.76
+   },
+   {
+    "sampleIntensity": 470.27,
+    "twoTheta": 50.78
+   },
+   {
+    "sampleIntensity": 415.01,
+    "twoTheta": 50.8
+   },
+   {
+    "sampleIntensity": 381.98,
+    "twoTheta": 50.82
+   },
+   {
+    "sampleIntensity": 359.67,
+    "twoTheta": 50.84
+   },
+   {
+    "sampleIntensity": 326.67,
+    "twoTheta": 50.86
+   },
+   {
+    "sampleIntensity": 316.42,
+    "twoTheta": 50.88
+   },
+   {
+    "sampleIntensity": 305.31,
+    "twoTheta": 50.9
+   },
+   {
+    "sampleIntensity": 298.35,
+    "twoTheta": 50.92
+   },
+   {
+    "sampleIntensity": 277.35,
+    "twoTheta": 50.94
+   },
+   {
+    "sampleIntensity": 268.21,
+    "twoTheta": 50.96
+   },
+   {
+    "sampleIntensity": 259.87,
+    "twoTheta": 50.98
+   },
+   {
+    "sampleIntensity": 262.8,
+    "twoTheta": 51.0
+   },
+   {
+    "sampleIntensity": 244.43,
+    "twoTheta": 51.02
+   },
+   {
+    "sampleIntensity": 241.46,
+    "twoTheta": 51.04
+   },
+   {
+    "sampleIntensity": 249.76,
+    "twoTheta": 51.06
+   },
+   {
+    "sampleIntensity": 236.02,
+    "twoTheta": 51.08
+   },
+   {
+    "sampleIntensity": 242.78,
+    "twoTheta": 51.1
+   },
+   {
+    "sampleIntensity": 230.44,
+    "twoTheta": 51.12
+   },
+   {
+    "sampleIntensity": 230.97,
+    "twoTheta": 51.14
+   },
+   {
+    "sampleIntensity": 225.74,
+    "twoTheta": 51.16
+   },
+   {
+    "sampleIntensity": 213.75,
+    "twoTheta": 51.18
+   },
+   {
+    "sampleIntensity": 218.84,
+    "twoTheta": 51.2
+   },
+   {
+    "sampleIntensity": 215.59,
+    "twoTheta": 51.22
+   },
+   {
+    "sampleIntensity": 208.61,
+    "twoTheta": 51.24
+   },
+   {
+    "sampleIntensity": 207.6,
+    "twoTheta": 51.26
+   },
+   {
+    "sampleIntensity": 207.16,
+    "twoTheta": 51.28
+   },
+   {
+    "sampleIntensity": 213.75,
+    "twoTheta": 51.3
+   },
+   {
+    "sampleIntensity": 205.81,
+    "twoTheta": 51.32
+   },
+   {
+    "sampleIntensity": 211.23,
+    "twoTheta": 51.34
+   },
+   {
+    "sampleIntensity": 211.77,
+    "twoTheta": 51.36
+   },
+   {
+    "sampleIntensity": 208.33,
+    "twoTheta": 51.38
+   },
+   {
+    "sampleIntensity": 200.16,
+    "twoTheta": 51.4
+   },
+   {
+    "sampleIntensity": 195.61,
+    "twoTheta": 51.42
+   },
+   {
+    "sampleIntensity": 203.98,
+    "twoTheta": 51.44
+   },
+   {
+    "sampleIntensity": 194.86,
+    "twoTheta": 51.46
+   },
+   {
+    "sampleIntensity": 200.27,
+    "twoTheta": 51.48
+   },
+   {
+    "sampleIntensity": 191.64,
+    "twoTheta": 51.5
+   },
+   {
+    "sampleIntensity": 190.89,
+    "twoTheta": 51.52
+   },
+   {
+    "sampleIntensity": 190.61,
+    "twoTheta": 51.54
+   },
+   {
+    "sampleIntensity": 188.33,
+    "twoTheta": 51.56
+   },
+   {
+    "sampleIntensity": 193.51,
+    "twoTheta": 51.58
+   },
+   {
+    "sampleIntensity": 189.4,
+    "twoTheta": 51.6
+   },
+   {
+    "sampleIntensity": 187.11,
+    "twoTheta": 51.62
+   },
+   {
+    "sampleIntensity": 198.41,
+    "twoTheta": 51.64
+   },
+   {
+    "sampleIntensity": 199.01,
+    "twoTheta": 51.66
+   },
+   {
+    "sampleIntensity": 195.54,
+    "twoTheta": 51.68
+   },
+   {
+    "sampleIntensity": 190.52,
+    "twoTheta": 51.7
+   },
+   {
+    "sampleIntensity": 182.17,
+    "twoTheta": 51.72
+   },
+   {
+    "sampleIntensity": 186.06,
+    "twoTheta": 51.74
+   },
+   {
+    "sampleIntensity": 180.64,
+    "twoTheta": 51.76
+   },
+   {
+    "sampleIntensity": 184.17,
+    "twoTheta": 51.78
+   },
+   {
+    "sampleIntensity": 188.65,
+    "twoTheta": 51.8
+   }
+  ],
+  "profileType": "pseudo-voigt"
+ },
+ "invocation": "python -B xrd_peak_deconvolution.py < input (cwd python/)",
+ "schema": "phase6a-golden-1",
+ "solver": "xrd_peak_deconvolution",
+ "solverFile": "python/xrd_peak_deconvolution.py",
+ "solverSha256": "673346feebc61894607f2e52d6e3b00bcb90203b5a497fd7efa022c99b02482d",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "git:faa6684",
+ "stdout": {
+  "background": {
+   "intercept": 194.75,
+   "slope": -0.35
+  },
+  "deconvolutionProfile": [
+   {
+    "background": 177.53,
+    "fittedTotal": 191.41,
+    "ka1Deconvoluted": 9.7,
+    "ka2Deconvoluted": 4.19,
+    "rawIntensity": 189.56,
+    "residual": -1.85,
+    "twoTheta": 49.2
+   },
+   {
+    "background": 177.52,
+    "fittedTotal": 191.85,
+    "ka1Deconvoluted": 10.02,
+    "ka2Deconvoluted": 4.31,
+    "rawIntensity": 187.53,
+    "residual": -4.32,
+    "twoTheta": 49.22
+   },
+   {
+    "background": 177.51,
+    "fittedTotal": 192.31,
+    "ka1Deconvoluted": 10.35,
+    "ka2Deconvoluted": 4.44,
+    "rawIntensity": 190.64,
+    "residual": -1.67,
+    "twoTheta": 49.24
+   },
+   {
+    "background": 177.51,
+    "fittedTotal": 192.79,
+    "ka1Deconvoluted": 10.71,
+    "ka2Deconvoluted": 4.58,
+    "rawIntensity": 196.62,
+    "residual": 3.83,
+    "twoTheta": 49.26
+   },
+   {
+    "background": 177.5,
+    "fittedTotal": 193.3,
+    "ka1Deconvoluted": 11.08,
+    "ka2Deconvoluted": 4.72,
+    "rawIntensity": 194.9,
+    "residual": 1.6,
+    "twoTheta": 49.28
+   },
+   {
+    "background": 177.49,
+    "fittedTotal": 193.83,
+    "ka1Deconvoluted": 11.47,
+    "ka2Deconvoluted": 4.87,
+    "rawIntensity": 197.85,
+    "residual": 4.02,
+    "twoTheta": 49.3
+   },
+   {
+    "background": 177.49,
+    "fittedTotal": 194.4,
+    "ka1Deconvoluted": 11.88,
+    "ka2Deconvoluted": 5.03,
+    "rawIntensity": 199.87,
+    "residual": 5.47,
+    "twoTheta": 49.32
+   },
+   {
+    "background": 177.48,
+    "fittedTotal": 194.99,
+    "ka1Deconvoluted": 12.32,
+    "ka2Deconvoluted": 5.19,
+    "rawIntensity": 195.73,
+    "residual": 0.74,
+    "twoTheta": 49.34
+   },
+   {
+    "background": 177.47,
+    "fittedTotal": 195.61,
+    "ka1Deconvoluted": 12.78,
+    "ka2Deconvoluted": 5.36,
+    "rawIntensity": 195.03,
+    "residual": -0.58,
+    "twoTheta": 49.36
+   },
+   {
+    "background": 177.47,
+    "fittedTotal": 196.27,
+    "ka1Deconvoluted": 13.26,
+    "ka2Deconvoluted": 5.54,
+    "rawIntensity": 203.25,
+    "residual": 6.98,
+    "twoTheta": 49.38
+   },
+   {
+    "background": 177.46,
+    "fittedTotal": 196.97,
+    "ka1Deconvoluted": 13.77,
+    "ka2Deconvoluted": 5.73,
+    "rawIntensity": 205.7,
+    "residual": 8.73,
+    "twoTheta": 49.4
+   },
+   {
+    "background": 177.45,
+    "fittedTotal": 197.7,
+    "ka1Deconvoluted": 14.32,
+    "ka2Deconvoluted": 5.93,
+    "rawIntensity": 191.95,
+    "residual": -5.75,
+    "twoTheta": 49.42
+   },
+   {
+    "background": 177.44,
+    "fittedTotal": 198.48,
+    "ka1Deconvoluted": 14.89,
+    "ka2Deconvoluted": 6.14,
+    "rawIntensity": 198.13,
+    "residual": -0.35,
+    "twoTheta": 49.44
+   },
+   {
+    "background": 177.44,
+    "fittedTotal": 199.31,
+    "ka1Deconvoluted": 15.51,
+    "ka2Deconvoluted": 6.37,
+    "rawIntensity": 209.22,
+    "residual": 9.91,
+    "twoTheta": 49.46
+   },
+   {
+    "background": 177.43,
+    "fittedTotal": 200.18,
+    "ka1Deconvoluted": 16.15,
+    "ka2Deconvoluted": 6.6,
+    "rawIntensity": 207.29,
+    "residual": 7.11,
+    "twoTheta": 49.48
+   },
+   {
+    "background": 177.42,
+    "fittedTotal": 201.12,
+    "ka1Deconvoluted": 16.85,
+    "ka2Deconvoluted": 6.85,
+    "rawIntensity": 197.81,
+    "residual": -3.31,
+    "twoTheta": 49.5
+   },
+   {
+    "background": 177.42,
+    "fittedTotal": 202.11,
+    "ka1Deconvoluted": 17.58,
+    "ka2Deconvoluted": 7.11,
+    "rawIntensity": 201.99,
+    "residual": -0.12,
+    "twoTheta": 49.52
+   },
+   {
+    "background": 177.41,
+    "fittedTotal": 203.16,
+    "ka1Deconvoluted": 18.37,
+    "ka2Deconvoluted": 7.38,
+    "rawIntensity": 196.47,
+    "residual": -6.69,
+    "twoTheta": 49.54
+   },
+   {
+    "background": 177.4,
+    "fittedTotal": 204.28,
+    "ka1Deconvoluted": 19.2,
+    "ka2Deconvoluted": 7.68,
+    "rawIntensity": 212.3,
+    "residual": 8.02,
+    "twoTheta": 49.56
+   },
+   {
+    "background": 177.4,
+    "fittedTotal": 205.48,
+    "ka1Deconvoluted": 20.1,
+    "ka2Deconvoluted": 7.99,
+    "rawIntensity": 217.02,
+    "residual": 11.54,
+    "twoTheta": 49.58
+   },
+   {
+    "background": 177.39,
+    "fittedTotal": 206.77,
+    "ka1Deconvoluted": 21.06,
+    "ka2Deconvoluted": 8.32,
+    "rawIntensity": 199.66,
+    "residual": -7.11,
+    "twoTheta": 49.6
+   },
+   {
+    "background": 177.38,
+    "fittedTotal": 208.14,
+    "ka1Deconvoluted": 22.09,
+    "ka2Deconvoluted": 8.67,
+    "rawIntensity": 201.14,
+    "residual": -7.0,
+    "twoTheta": 49.62
+   },
+   {
+    "background": 177.37,
+    "fittedTotal": 209.61,
+    "ka1Deconvoluted": 23.2,
+    "ka2Deconvoluted": 9.04,
+    "rawIntensity": 217.0,
+    "residual": 7.39,
+    "twoTheta": 49.64
+   },
+   {
+    "background": 177.37,
+    "fittedTotal": 211.2,
+    "ka1Deconvoluted": 24.39,
+    "ka2Deconvoluted": 9.44,
+    "rawIntensity": 216.47,
+    "residual": 5.27,
+    "twoTheta": 49.66
+   },
+   {
+    "background": 177.36,
+    "fittedTotal": 212.9,
+    "ka1Deconvoluted": 25.68,
+    "ka2Deconvoluted": 9.86,
+    "rawIntensity": 213.39,
+    "residual": 0.49,
+    "twoTheta": 49.68
+   },
+   {
+    "background": 177.35,
+    "fittedTotal": 214.73,
+    "ka1Deconvoluted": 27.07,
+    "ka2Deconvoluted": 10.31,
+    "rawIntensity": 213.41,
+    "residual": -1.32,
+    "twoTheta": 49.7
+   },
+   {
+    "background": 177.35,
+    "fittedTotal": 216.71,
+    "ka1Deconvoluted": 28.57,
+    "ka2Deconvoluted": 10.8,
+    "rawIntensity": 212.0,
+    "residual": -4.71,
+    "twoTheta": 49.72
+   },
+   {
+    "background": 177.34,
+    "fittedTotal": 218.86,
+    "ka1Deconvoluted": 30.2,
+    "ka2Deconvoluted": 11.31,
+    "rawIntensity": 230.1,
+    "residual": 11.24,
+    "twoTheta": 49.74
+   },
+   {
+    "background": 177.33,
+    "fittedTotal": 221.18,
+    "ka1Deconvoluted": 31.97,
+    "ka2Deconvoluted": 11.87,
+    "rawIntensity": 218.72,
+    "residual": -2.46,
+    "twoTheta": 49.76
+   },
+   {
+    "background": 177.33,
+    "fittedTotal": 223.7,
+    "ka1Deconvoluted": 33.91,
+    "ka2Deconvoluted": 12.47,
+    "rawIntensity": 219.0,
+    "residual": -4.7,
+    "twoTheta": 49.78
+   },
+   {
+    "background": 177.32,
+    "fittedTotal": 226.45,
+    "ka1Deconvoluted": 36.02,
+    "ka2Deconvoluted": 13.11,
+    "rawIntensity": 230.23,
+    "residual": 3.78,
+    "twoTheta": 49.8
+   },
+   {
+    "background": 177.31,
+    "fittedTotal": 229.45,
+    "ka1Deconvoluted": 38.33,
+    "ka2Deconvoluted": 13.81,
+    "rawIntensity": 234.08,
+    "residual": 4.63,
+    "twoTheta": 49.82
+   },
+   {
+    "background": 177.3,
+    "fittedTotal": 232.73,
+    "ka1Deconvoluted": 40.87,
+    "ka2Deconvoluted": 14.56,
+    "rawIntensity": 230.66,
+    "residual": -2.07,
+    "twoTheta": 49.84
+   },
+   {
+    "background": 177.3,
+    "fittedTotal": 236.34,
+    "ka1Deconvoluted": 43.66,
+    "ka2Deconvoluted": 15.38,
+    "rawIntensity": 237.88,
+    "residual": 1.54,
+    "twoTheta": 49.86
+   },
+   {
+    "background": 177.29,
+    "fittedTotal": 240.3,
+    "ka1Deconvoluted": 46.75,
+    "ka2Deconvoluted": 16.26,
+    "rawIntensity": 244.27,
+    "residual": 3.97,
+    "twoTheta": 49.88
+   },
+   {
+    "background": 177.28,
+    "fittedTotal": 244.67,
+    "ka1Deconvoluted": 50.17,
+    "ka2Deconvoluted": 17.22,
+    "rawIntensity": 242.7,
+    "residual": -1.97,
+    "twoTheta": 49.9
+   },
+   {
+    "background": 177.28,
+    "fittedTotal": 249.52,
+    "ka1Deconvoluted": 53.98,
+    "ka2Deconvoluted": 18.27,
+    "rawIntensity": 253.93,
+    "residual": 4.41,
+    "twoTheta": 49.92
+   },
+   {
+    "background": 177.27,
+    "fittedTotal": 254.91,
+    "ka1Deconvoluted": 58.22,
+    "ka2Deconvoluted": 19.41,
+    "rawIntensity": 264.77,
+    "residual": 9.86,
+    "twoTheta": 49.94
+   },
+   {
+    "background": 177.26,
+    "fittedTotal": 260.92,
+    "ka1Deconvoluted": 62.99,
+    "ka2Deconvoluted": 20.67,
+    "rawIntensity": 270.08,
+    "residual": 9.16,
+    "twoTheta": 49.96
+   },
+   {
+    "background": 177.26,
+    "fittedTotal": 267.66,
+    "ka1Deconvoluted": 68.36,
+    "ka2Deconvoluted": 22.05,
+    "rawIntensity": 264.67,
+    "residual": -2.99,
+    "twoTheta": 49.98
+   },
+   {
+    "background": 177.25,
+    "fittedTotal": 275.28,
+    "ka1Deconvoluted": 74.46,
+    "ka2Deconvoluted": 23.56,
+    "rawIntensity": 269.53,
+    "residual": -5.75,
+    "twoTheta": 50.0
+   },
+   {
+    "background": 177.24,
+    "fittedTotal": 283.94,
+    "ka1Deconvoluted": 81.46,
+    "ka2Deconvoluted": 25.24,
+    "rawIntensity": 286.32,
+    "residual": 2.38,
+    "twoTheta": 50.02
+   },
+   {
+    "background": 177.23,
+    "fittedTotal": 293.91,
+    "ka1Deconvoluted": 89.58,
+    "ka2Deconvoluted": 27.1,
+    "rawIntensity": 304.8,
+    "residual": 10.89,
+    "twoTheta": 50.04
+   },
+   {
+    "background": 177.23,
+    "fittedTotal": 305.55,
+    "ka1Deconvoluted": 99.15,
+    "ka2Deconvoluted": 29.18,
+    "rawIntensity": 310.57,
+    "residual": 5.02,
+    "twoTheta": 50.06
+   },
+   {
+    "background": 177.22,
+    "fittedTotal": 319.38,
+    "ka1Deconvoluted": 110.67,
+    "ka2Deconvoluted": 31.49,
+    "rawIntensity": 321.76,
+    "residual": 2.38,
+    "twoTheta": 50.08
+   },
+   {
+    "background": 177.21,
+    "fittedTotal": 336.16,
+    "ka1Deconvoluted": 124.85,
+    "ka2Deconvoluted": 34.09,
+    "rawIntensity": 343.19,
+    "residual": 7.03,
+    "twoTheta": 50.1
+   },
+   {
+    "background": 177.21,
+    "fittedTotal": 356.99,
+    "ka1Deconvoluted": 142.74,
+    "ka2Deconvoluted": 37.04,
+    "rawIntensity": 361.58,
+    "residual": 4.59,
+    "twoTheta": 50.12
+   },
+   {
+    "background": 177.2,
+    "fittedTotal": 383.42,
+    "ka1Deconvoluted": 165.82,
+    "ka2Deconvoluted": 40.4,
+    "rawIntensity": 380.12,
+    "residual": -3.3,
+    "twoTheta": 50.14
+   },
+   {
+    "background": 177.19,
+    "fittedTotal": 417.56,
+    "ka1Deconvoluted": 196.09,
+    "ka2Deconvoluted": 44.28,
+    "rawIntensity": 411.33,
+    "residual": -6.23,
+    "twoTheta": 50.16
+   },
+   {
+    "background": 177.19,
+    "fittedTotal": 462.12,
+    "ka1Deconvoluted": 236.12,
+    "ka2Deconvoluted": 48.82,
+    "rawIntensity": 470.07,
+    "residual": 7.95,
+    "twoTheta": 50.18
+   },
+   {
+    "background": 177.18,
+    "fittedTotal": 520.47,
+    "ka1Deconvoluted": 289.05,
+    "ka2Deconvoluted": 54.24,
+    "rawIntensity": 532.07,
+    "residual": 11.6,
+    "twoTheta": 50.2
+   },
+   {
+    "background": 177.17,
+    "fittedTotal": 596.41,
+    "ka1Deconvoluted": 358.4,
+    "ka2Deconvoluted": 60.84,
+    "rawIntensity": 605.33,
+    "residual": 8.92,
+    "twoTheta": 50.22
+   },
+   {
+    "background": 177.16,
+    "fittedTotal": 694.01,
+    "ka1Deconvoluted": 447.77,
+    "ka2Deconvoluted": 69.08,
+    "rawIntensity": 700.78,
+    "residual": 6.77,
+    "twoTheta": 50.24
+   },
+   {
+    "background": 177.16,
+    "fittedTotal": 817.04,
+    "ka1Deconvoluted": 560.31,
+    "ka2Deconvoluted": 79.57,
+    "rawIntensity": 811.76,
+    "residual": -5.28,
+    "twoTheta": 50.26
+   },
+   {
+    "background": 177.15,
+    "fittedTotal": 968.46,
+    "ka1Deconvoluted": 698.12,
+    "ka2Deconvoluted": 93.18,
+    "rawIntensity": 963.6,
+    "residual": -4.86,
+    "twoTheta": 50.28
+   },
+   {
+    "background": 177.14,
+    "fittedTotal": 1149.58,
+    "ka1Deconvoluted": 861.43,
+    "ka2Deconvoluted": 111.01,
+    "rawIntensity": 1140.17,
+    "residual": -9.41,
+    "twoTheta": 50.3
+   },
+   {
+    "background": 177.14,
+    "fittedTotal": 1359.23,
+    "ka1Deconvoluted": 1047.68,
+    "ka2Deconvoluted": 134.41,
+    "rawIntensity": 1361.59,
+    "residual": 2.36,
+    "twoTheta": 50.32
+   },
+   {
+    "background": 177.13,
+    "fittedTotal": 1592.47,
+    "ka1Deconvoluted": 1250.38,
+    "ka2Deconvoluted": 164.96,
+    "rawIntensity": 1581.47,
+    "residual": -11.0,
+    "twoTheta": 50.34
+   },
+   {
+    "background": 177.12,
+    "fittedTotal": 1839.01,
+    "ka1Deconvoluted": 1457.58,
+    "ka2Deconvoluted": 204.31,
+    "rawIntensity": 1840.39,
+    "residual": 1.38,
+    "twoTheta": 50.36
+   },
+   {
+    "background": 177.12,
+    "fittedTotal": 2081.56,
+    "ka1Deconvoluted": 1650.43,
+    "ka2Deconvoluted": 254.01,
+    "rawIntensity": 2085.56,
+    "residual": 4.0,
+    "twoTheta": 50.38
+   },
+   {
+    "background": 177.11,
+    "fittedTotal": 2295.69,
+    "ka1Deconvoluted": 1803.29,
+    "ka2Deconvoluted": 315.29,
+    "rawIntensity": 2297.06,
+    "residual": 1.37,
+    "twoTheta": 50.4
+   },
+   {
+    "background": 177.1,
+    "fittedTotal": 2454.47,
+    "ka1Deconvoluted": 1888.7,
+    "ka2Deconvoluted": 388.67,
+    "rawIntensity": 2462.46,
+    "residual": 7.99,
+    "twoTheta": 50.42
+   },
+   {
+    "background": 177.09,
+    "fittedTotal": 2538.75,
+    "ka1Deconvoluted": 1888.0,
+    "ka2Deconvoluted": 473.66,
+    "rawIntensity": 2529.92,
+    "residual": -8.83,
+    "twoTheta": 50.44
+   },
+   {
+    "background": 177.09,
+    "fittedTotal": 2546.73,
+    "ka1Deconvoluted": 1801.35,
+    "ka2Deconvoluted": 568.29,
+    "rawIntensity": 2545.64,
+    "residual": -1.09,
+    "twoTheta": 50.46
+   },
+   {
+    "background": 177.08,
+    "fittedTotal": 2493.27,
+    "ka1Deconvoluted": 1647.65,
+    "ka2Deconvoluted": 668.54,
+    "rawIntensity": 2493.67,
+    "residual": 0.4,
+    "twoTheta": 50.48
+   },
+   {
+    "background": 177.07,
+    "fittedTotal": 2399.12,
+    "ka1Deconvoluted": 1454.4,
+    "ka2Deconvoluted": 767.65,
+    "rawIntensity": 2401.23,
+    "residual": 2.11,
+    "twoTheta": 50.5
+   },
+   {
+    "background": 177.07,
+    "fittedTotal": 2279.85,
+    "ka1Deconvoluted": 1247.14,
+    "ka2Deconvoluted": 855.65,
+    "rawIntensity": 2286.52,
+    "residual": 6.67,
+    "twoTheta": 50.52
+   },
+   {
+    "background": 177.06,
+    "fittedTotal": 2141.72,
+    "ka1Deconvoluted": 1044.62,
+    "ka2Deconvoluted": 920.04,
+    "rawIntensity": 2150.6,
+    "residual": 8.88,
+    "twoTheta": 50.54
+   },
+   {
+    "background": 177.05,
+    "fittedTotal": 1984.72,
+    "ka1Deconvoluted": 858.69,
+    "ka2Deconvoluted": 948.97,
+    "rawIntensity": 1975.75,
+    "residual": -8.97,
+    "twoTheta": 50.56
+   },
+   {
+    "background": 177.05,
+    "fittedTotal": 1809.07,
+    "ka1Deconvoluted": 695.77,
+    "ka2Deconvoluted": 936.25,
+    "rawIntensity": 1813.52,
+    "residual": 4.45,
+    "twoTheta": 50.58
+   },
+   {
+    "background": 177.04,
+    "fittedTotal": 1620.06,
+    "ka1Deconvoluted": 558.36,
+    "ka2Deconvoluted": 884.66,
+    "rawIntensity": 1630.06,
+    "residual": 10.0,
+    "twoTheta": 50.6
+   },
+   {
+    "background": 177.03,
+    "fittedTotal": 1427.68,
+    "ka1Deconvoluted": 446.2,
+    "ka2Deconvoluted": 804.45,
+    "rawIntensity": 1421.61,
+    "residual": -6.07,
+    "twoTheta": 50.62
+   },
+   {
+    "background": 177.02,
+    "fittedTotal": 1242.56,
+    "ka1Deconvoluted": 357.17,
+    "ka2Deconvoluted": 708.36,
+    "rawIntensity": 1236.76,
+    "residual": -5.8,
+    "twoTheta": 50.64
+   },
+   {
+    "background": 177.02,
+    "fittedTotal": 1072.7,
+    "ka1Deconvoluted": 288.11,
+    "ka2Deconvoluted": 607.58,
+    "rawIntensity": 1067.78,
+    "residual": -4.92,
+    "twoTheta": 50.66
+   },
+   {
+    "background": 177.01,
+    "fittedTotal": 922.52,
+    "ka1Deconvoluted": 235.4,
+    "ka2Deconvoluted": 510.11,
+    "rawIntensity": 914.16,
+    "residual": -8.36,
+    "twoTheta": 50.68
+   },
+   {
+    "background": 177.0,
+    "fittedTotal": 793.52,
+    "ka1Deconvoluted": 195.55,
+    "ka2Deconvoluted": 420.97,
+    "rawIntensity": 800.31,
+    "residual": 6.79,
+    "twoTheta": 50.7
+   },
+   {
+    "background": 177.0,
+    "fittedTotal": 685.28,
+    "ka1Deconvoluted": 165.41,
+    "ka2Deconvoluted": 342.87,
+    "rawIntensity": 678.95,
+    "residual": -6.33,
+    "twoTheta": 50.72
+   },
+   {
+    "background": 176.99,
+    "fittedTotal": 596.24,
+    "ka1Deconvoluted": 142.43,
+    "ka2Deconvoluted": 276.82,
+    "rawIntensity": 605.25,
+    "residual": 9.01,
+    "twoTheta": 50.74
+   },
+   {
+    "background": 176.98,
+    "fittedTotal": 524.24,
+    "ka1Deconvoluted": 124.6,
+    "ka2Deconvoluted": 222.65,
+    "rawIntensity": 521.22,
+    "residual": -3.02,
+    "twoTheta": 50.76
+   },
+   {
+    "background": 176.98,
+    "fittedTotal": 466.83,
+    "ka1Deconvoluted": 110.47,
+    "ka2Deconvoluted": 179.38,
+    "rawIntensity": 470.27,
+    "residual": 3.44,
+    "twoTheta": 50.78
+   },
+   {
+    "background": 176.97,
+    "fittedTotal": 421.5,
+    "ka1Deconvoluted": 98.99,
+    "ka2Deconvoluted": 145.55,
+    "rawIntensity": 415.01,
+    "residual": -6.49,
+    "twoTheta": 50.8
+   },
+   {
+    "background": 176.96,
+    "fittedTotal": 385.92,
+    "ka1Deconvoluted": 89.44,
+    "ka2Deconvoluted": 119.52,
+    "rawIntensity": 381.98,
+    "residual": -3.94,
+    "twoTheta": 50.82
+   },
+   {
+    "background": 176.95,
+    "fittedTotal": 357.95,
+    "ka1Deconvoluted": 81.34,
+    "ka2Deconvoluted": 99.66,
+    "rawIntensity": 359.67,
+    "residual": 1.72,
+    "twoTheta": 50.84
+   },
+   {
+    "background": 176.95,
+    "fittedTotal": 335.84,
+    "ka1Deconvoluted": 74.36,
+    "ka2Deconvoluted": 84.53,
+    "rawIntensity": 326.67,
+    "residual": -9.17,
+    "twoTheta": 50.86
+   },
+   {
+    "background": 176.94,
+    "fittedTotal": 318.13,
+    "ka1Deconvoluted": 68.27,
+    "ka2Deconvoluted": 72.92,
+    "rawIntensity": 316.42,
+    "residual": -1.71,
+    "twoTheta": 50.88
+   },
+   {
+    "background": 176.93,
+    "fittedTotal": 303.72,
+    "ka1Deconvoluted": 62.91,
+    "ka2Deconvoluted": 63.87,
+    "rawIntensity": 305.31,
+    "residual": 1.59,
+    "twoTheta": 50.9
+   },
+   {
+    "background": 176.93,
+    "fittedTotal": 291.77,
+    "ka1Deconvoluted": 58.15,
+    "ka2Deconvoluted": 56.69,
+    "rawIntensity": 298.35,
+    "residual": 6.58,
+    "twoTheta": 50.92
+   },
+   {
+    "background": 176.92,
+    "fittedTotal": 281.68,
+    "ka1Deconvoluted": 53.91,
+    "ka2Deconvoluted": 50.84,
+    "rawIntensity": 277.35,
+    "residual": -4.33,
+    "twoTheta": 50.94
+   },
+   {
+    "background": 176.91,
+    "fittedTotal": 273.01,
+    "ka1Deconvoluted": 50.11,
+    "ka2Deconvoluted": 45.99,
+    "rawIntensity": 268.21,
+    "residual": -4.8,
+    "twoTheta": 50.96
+   },
+   {
+    "background": 176.91,
+    "fittedTotal": 265.47,
+    "ka1Deconvoluted": 46.7,
+    "ka2Deconvoluted": 41.87,
+    "rawIntensity": 259.87,
+    "residual": -5.6,
+    "twoTheta": 50.98
+   },
+   {
+    "background": 176.9,
+    "fittedTotal": 258.83,
+    "ka1Deconvoluted": 43.62,
+    "ka2Deconvoluted": 38.31,
+    "rawIntensity": 262.8,
+    "residual": 3.97,
+    "twoTheta": 51.0
+   },
+   {
+    "background": 176.89,
+    "fittedTotal": 252.93,
+    "ka1Deconvoluted": 40.83,
+    "ka2Deconvoluted": 35.22,
+    "rawIntensity": 244.43,
+    "residual": -8.5,
+    "twoTheta": 51.02
+   },
+   {
+    "background": 176.88,
+    "fittedTotal": 247.66,
+    "ka1Deconvoluted": 38.29,
+    "ka2Deconvoluted": 32.48,
+    "rawIntensity": 241.46,
+    "residual": -6.2,
+    "twoTheta": 51.04
+   },
+   {
+    "background": 176.88,
+    "fittedTotal": 242.92,
+    "ka1Deconvoluted": 35.98,
+    "ka2Deconvoluted": 30.06,
+    "rawIntensity": 249.76,
+    "residual": 6.84,
+    "twoTheta": 51.06
+   },
+   {
+    "background": 176.87,
+    "fittedTotal": 238.64,
+    "ka1Deconvoluted": 33.88,
+    "ka2Deconvoluted": 27.9,
+    "rawIntensity": 236.02,
+    "residual": -2.62,
+    "twoTheta": 51.08
+   },
+   {
+    "background": 176.86,
+    "fittedTotal": 234.76,
+    "ka1Deconvoluted": 31.95,
+    "ka2Deconvoluted": 25.96,
+    "rawIntensity": 242.78,
+    "residual": 8.02,
+    "twoTheta": 51.1
+   },
+   {
+    "background": 176.86,
+    "fittedTotal": 231.24,
+    "ka1Deconvoluted": 30.17,
+    "ka2Deconvoluted": 24.21,
+    "rawIntensity": 230.44,
+    "residual": -0.8,
+    "twoTheta": 51.12
+   },
+   {
+    "background": 176.85,
+    "fittedTotal": 228.02,
+    "ka1Deconvoluted": 28.55,
+    "ka2Deconvoluted": 22.63,
+    "rawIntensity": 230.97,
+    "residual": 2.95,
+    "twoTheta": 51.14
+   },
+   {
+    "background": 176.84,
+    "fittedTotal": 225.08,
+    "ka1Deconvoluted": 27.04,
+    "ka2Deconvoluted": 21.2,
+    "rawIntensity": 225.74,
+    "residual": 0.66,
+    "twoTheta": 51.16
+   },
+   {
+    "background": 176.84,
+    "fittedTotal": 222.39,
+    "ka1Deconvoluted": 25.66,
+    "ka2Deconvoluted": 19.9,
+    "rawIntensity": 213.75,
+    "residual": -8.64,
+    "twoTheta": 51.18
+   },
+   {
+    "background": 176.83,
+    "fittedTotal": 219.91,
+    "ka1Deconvoluted": 24.37,
+    "ka2Deconvoluted": 18.71,
+    "rawIntensity": 218.84,
+    "residual": -1.07,
+    "twoTheta": 51.2
+   },
+   {
+    "background": 176.82,
+    "fittedTotal": 217.63,
+    "ka1Deconvoluted": 23.18,
+    "ka2Deconvoluted": 17.62,
+    "rawIntensity": 215.59,
+    "residual": -2.04,
+    "twoTheta": 51.22
+   },
+   {
+    "background": 176.81,
+    "fittedTotal": 215.52,
+    "ka1Deconvoluted": 22.08,
+    "ka2Deconvoluted": 16.63,
+    "rawIntensity": 208.61,
+    "residual": -6.91,
+    "twoTheta": 51.24
+   },
+   {
+    "background": 176.81,
+    "fittedTotal": 213.57,
+    "ka1Deconvoluted": 21.05,
+    "ka2Deconvoluted": 15.72,
+    "rawIntensity": 207.6,
+    "residual": -5.97,
+    "twoTheta": 51.26
+   },
+   {
+    "background": 176.8,
+    "fittedTotal": 211.76,
+    "ka1Deconvoluted": 20.09,
+    "ka2Deconvoluted": 14.88,
+    "rawIntensity": 207.16,
+    "residual": -4.6,
+    "twoTheta": 51.28
+   },
+   {
+    "background": 176.79,
+    "fittedTotal": 210.09,
+    "ka1Deconvoluted": 19.19,
+    "ka2Deconvoluted": 14.1,
+    "rawIntensity": 213.75,
+    "residual": 3.66,
+    "twoTheta": 51.3
+   },
+   {
+    "background": 176.79,
+    "fittedTotal": 208.52,
+    "ka1Deconvoluted": 18.35,
+    "ka2Deconvoluted": 13.38,
+    "rawIntensity": 205.81,
+    "residual": -2.71,
+    "twoTheta": 51.32
+   },
+   {
+    "background": 176.78,
+    "fittedTotal": 207.07,
+    "ka1Deconvoluted": 17.57,
+    "ka2Deconvoluted": 12.72,
+    "rawIntensity": 211.23,
+    "residual": 4.16,
+    "twoTheta": 51.34
+   },
+   {
+    "background": 176.77,
+    "fittedTotal": 205.71,
+    "ka1Deconvoluted": 16.83,
+    "ka2Deconvoluted": 12.1,
+    "rawIntensity": 211.77,
+    "residual": 6.06,
+    "twoTheta": 51.36
+   },
+   {
+    "background": 176.77,
+    "fittedTotal": 204.44,
+    "ka1Deconvoluted": 16.14,
+    "ka2Deconvoluted": 11.53,
+    "rawIntensity": 208.33,
+    "residual": 3.89,
+    "twoTheta": 51.38
+   },
+   {
+    "background": 176.76,
+    "fittedTotal": 203.25,
+    "ka1Deconvoluted": 15.5,
+    "ka2Deconvoluted": 11.0,
+    "rawIntensity": 200.16,
+    "residual": -3.09,
+    "twoTheta": 51.4
+   },
+   {
+    "background": 176.75,
+    "fittedTotal": 202.14,
+    "ka1Deconvoluted": 14.88,
+    "ka2Deconvoluted": 10.5,
+    "rawIntensity": 195.61,
+    "residual": -6.53,
+    "twoTheta": 51.42
+   },
+   {
+    "background": 176.74,
+    "fittedTotal": 201.09,
+    "ka1Deconvoluted": 14.31,
+    "ka2Deconvoluted": 10.03,
+    "rawIntensity": 203.98,
+    "residual": 2.89,
+    "twoTheta": 51.44
+   },
+   {
+    "background": 176.74,
+    "fittedTotal": 200.1,
+    "ka1Deconvoluted": 13.77,
+    "ka2Deconvoluted": 9.6,
+    "rawIntensity": 194.86,
+    "residual": -5.24,
+    "twoTheta": 51.46
+   },
+   {
+    "background": 176.73,
+    "fittedTotal": 199.18,
+    "ka1Deconvoluted": 13.25,
+    "ka2Deconvoluted": 9.19,
+    "rawIntensity": 200.27,
+    "residual": 1.09,
+    "twoTheta": 51.48
+   },
+   {
+    "background": 176.72,
+    "fittedTotal": 198.3,
+    "ka1Deconvoluted": 12.77,
+    "ka2Deconvoluted": 8.81,
+    "rawIntensity": 191.64,
+    "residual": -6.66,
+    "twoTheta": 51.5
+   },
+   {
+    "background": 176.72,
+    "fittedTotal": 197.48,
+    "ka1Deconvoluted": 12.31,
+    "ka2Deconvoluted": 8.45,
+    "rawIntensity": 190.89,
+    "residual": -6.59,
+    "twoTheta": 51.52
+   },
+   {
+    "background": 176.71,
+    "fittedTotal": 196.7,
+    "ka1Deconvoluted": 11.88,
+    "ka2Deconvoluted": 8.11,
+    "rawIntensity": 190.61,
+    "residual": -6.09,
+    "twoTheta": 51.54
+   },
+   {
+    "background": 176.7,
+    "fittedTotal": 195.96,
+    "ka1Deconvoluted": 11.46,
+    "ka2Deconvoluted": 7.8,
+    "rawIntensity": 188.33,
+    "residual": -7.63,
+    "twoTheta": 51.56
+   },
+   {
+    "background": 176.7,
+    "fittedTotal": 195.27,
+    "ka1Deconvoluted": 11.07,
+    "ka2Deconvoluted": 7.5,
+    "rawIntensity": 193.51,
+    "residual": -1.76,
+    "twoTheta": 51.58
+   },
+   {
+    "background": 176.69,
+    "fittedTotal": 194.61,
+    "ka1Deconvoluted": 10.7,
+    "ka2Deconvoluted": 7.21,
+    "rawIntensity": 189.4,
+    "residual": -5.21,
+    "twoTheta": 51.6
+   },
+   {
+    "background": 176.68,
+    "fittedTotal": 193.98,
+    "ka1Deconvoluted": 10.35,
+    "ka2Deconvoluted": 6.95,
+    "rawIntensity": 187.11,
+    "residual": -6.87,
+    "twoTheta": 51.62
+   },
+   {
+    "background": 176.67,
+    "fittedTotal": 193.38,
+    "ka1Deconvoluted": 10.01,
+    "ka2Deconvoluted": 6.7,
+    "rawIntensity": 198.41,
+    "residual": 5.03,
+    "twoTheta": 51.64
+   },
+   {
+    "background": 176.67,
+    "fittedTotal": 192.82,
+    "ka1Deconvoluted": 9.69,
+    "ka2Deconvoluted": 6.46,
+    "rawIntensity": 199.01,
+    "residual": 6.19,
+    "twoTheta": 51.66
+   },
+   {
+    "background": 176.66,
+    "fittedTotal": 192.28,
+    "ka1Deconvoluted": 9.39,
+    "ka2Deconvoluted": 6.23,
+    "rawIntensity": 195.54,
+    "residual": 3.26,
+    "twoTheta": 51.68
+   },
+   {
+    "background": 176.65,
+    "fittedTotal": 191.77,
+    "ka1Deconvoluted": 9.1,
+    "ka2Deconvoluted": 6.01,
+    "rawIntensity": 190.52,
+    "residual": -1.25,
+    "twoTheta": 51.7
+   },
+   {
+    "background": 176.65,
+    "fittedTotal": 191.28,
+    "ka1Deconvoluted": 8.82,
+    "ka2Deconvoluted": 5.81,
+    "rawIntensity": 182.17,
+    "residual": -9.11,
+    "twoTheta": 51.72
+   },
+   {
+    "background": 176.64,
+    "fittedTotal": 190.81,
+    "ka1Deconvoluted": 8.55,
+    "ka2Deconvoluted": 5.62,
+    "rawIntensity": 186.06,
+    "residual": -4.75,
+    "twoTheta": 51.74
+   },
+   {
+    "background": 176.63,
+    "fittedTotal": 190.37,
+    "ka1Deconvoluted": 8.3,
+    "ka2Deconvoluted": 5.43,
+    "rawIntensity": 180.64,
+    "residual": -9.73,
+    "twoTheta": 51.76
+   },
+   {
+    "background": 176.63,
+    "fittedTotal": 189.94,
+    "ka1Deconvoluted": 8.06,
+    "ka2Deconvoluted": 5.26,
+    "rawIntensity": 184.17,
+    "residual": -5.77,
+    "twoTheta": 51.78
+   },
+   {
+    "background": 176.62,
+    "fittedTotal": 189.54,
+    "ka1Deconvoluted": 7.83,
+    "ka2Deconvoluted": 5.09,
+    "rawIntensity": 188.65,
+    "residual": -0.89,
+    "twoTheta": 51.8
+   }
+  ],
+  "engine": "MetalliX-Python-HPC-XRD-v3.10",
+  "goodnessOfFit": {
+   "r_wp_pct": 0.72,
+   "residualSumSquares": 4478.48
+  },
+  "ka1Peak": {
+   "fwhm_deg": 0.2402,
+   "fwhm_rad": 0.004192,
+   "integratedArea": 610.5,
+   "intensity": 1899.6,
+   "shapeParameter": 0.541,
+   "twoTheta": 50.4298
+  },
+  "ka2Peak": {
+   "exists": true,
+   "fwhm_deg": 0.2474,
+   "intensity": 949.8,
+   "twoTheta": 50.564
+  },
+  "success": true
+ },
+ "volatileKeysStripped": [
+  "computeTimeMs",
+  "durationMs",
+  "pythonDurationMs",
+  "pythonVersion",
+  "timestamp"
+ ]
+}

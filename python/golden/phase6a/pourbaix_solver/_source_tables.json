@@ -1,0 +1,53 @@
+{
+ "baseRevision": "d33b6f5",
+ "gitHead": "44f717c74baaf74d4aa45943aec09f864adba7d9",
+ "schema": "phase6a-golden-1",
+ "solver": "pourbaix_solver",
+ "solverFile": "python/pourbaix_solver.py",
+ "solverSha256": "47a9535efc946ad478272e3b84665f8eb3a798eb5a4b144ccf3df52a7c47ee9b",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "git:d33b6f5",
+ "table": "POURBAIX_ELEMENT_SYSTEMS",
+ "values": {
+  "Al": {
+   "atomicMass": 26.982,
+   "name": "Aluminum (Al-H₂O Amphoteric System)",
+   "standardE0_V": -1.662
+  },
+  "Cr": {
+   "atomicMass": 51.996,
+   "name": "Chromium (Cr-H₂O System)",
+   "standardE0_V": -0.913
+  },
+  "Cu": {
+   "atomicMass": 63.546,
+   "name": "Copper (Cu-H₂O System)",
+   "standardE0_V": 0.342
+  },
+  "Fe": {
+   "atomicMass": 55.845,
+   "name": "Iron (Fe-H₂O System)",
+   "standardE0_V": -0.44
+  },
+  "Mg": {
+   "atomicMass": 24.305,
+   "name": "Magnesium (Mg-H₂O System)",
+   "standardE0_V": -2.372
+  },
+  "Ni": {
+   "atomicMass": 58.693,
+   "name": "Nickel (Ni-H₂O System)",
+   "standardE0_V": -0.257
+  },
+  "Ti": {
+   "atomicMass": 47.867,
+   "name": "Titanium (Ti-H₂O System)",
+   "standardE0_V": -1.63
+  },
+  "Zn": {
+   "atomicMass": 65.38,
+   "name": "Zinc (Zn-H₂O System Amphoteric)",
+   "standardE0_V": -0.763
+  }
+ }
+}

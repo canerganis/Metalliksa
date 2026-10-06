@@ -1,0 +1,267 @@
+{
+ "baseRevision": "faa6684",
+ "case": "edge_unknown_negative",
+ "exitCode": 0,
+ "gitHead": "faa668432e6ceea2342308c4886b41c38f0e6cd0",
+ "input": {
+  "band_gap": 0.0,
+  "crystal_system": "Klingon",
+  "density": -1.0,
+  "energy_above_hull": 0.0,
+  "formula": "Unobtainium-X",
+  "g_vrh": 0,
+  "k_vrh": -50.0,
+  "molar_mass": 0,
+  "nsites": 0
+ },
+ "invocation": "python -B dft_property_calculator.py < input (cwd python/)",
+ "schema": "phase6a-golden-1",
+ "solver": "dft_property_calculator",
+ "solverFile": "python/dft_property_calculator.py",
+ "solverSha256": "74488827c1aafc8838011fae5786d9995caa752e30875c1be82d4b55de1f9b45",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "git:faa6684",
+ "stdout": {
+  "acousticAndThermalProperties": {
+   "debyeTemperature_K": 1316.2,
+   "gruneisenParameter_gamma": 2.34,
+   "longitudinalSoundVelocity_m_s": 22226.1,
+   "meanSoundVelocity_m_s": 11278.5,
+   "minimumThermalConductivity_W_mK": 3.058,
+   "transverseSoundVelocity_m_s": 10000.0
+  },
+  "bornStability": {
+   "allEigenvaluesGPa": [
+    50.0,
+    50.0,
+    50.0,
+    100.0,
+    100.0,
+    541.0
+   ],
+   "criteriaChecks": [
+    {
+     "formula": "G = C44 > 0",
+     "name": "Positive Shear Modulus",
+     "passed": true,
+     "physicalMeaning": "Material resists shear distortion",
+     "value": 50.0
+    },
+    {
+     "formula": "K = (C11 + 2*C12)/3 > 0",
+     "name": "Positive Bulk Modulus",
+     "passed": true,
+     "physicalMeaning": "Material resists hydrostatic compression",
+     "value": 180.33
+    }
+   ],
+   "isMechanicallyStable": true,
+   "minimumEigenvalueGPa": 50.0,
+   "verdict": "Mechanically Stable (Passes Born Criteria & Positive Definite Energy)"
+  },
+  "directionalYoungsModuli": [
+   {
+    "direction": "[100]",
+    "hkl": [
+     1,
+     0,
+     0
+    ],
+    "ratioToAverage": 1.0,
+    "youngsModulusGPa": 137.31
+   },
+   {
+    "direction": "[110]",
+    "hkl": [
+     1,
+     1,
+     0
+    ],
+    "ratioToAverage": 1.0,
+    "youngsModulusGPa": 137.31
+   },
+   {
+    "direction": "[111]",
+    "hkl": [
+     1,
+     1,
+     1
+    ],
+    "ratioToAverage": 1.0,
+    "youngsModulusGPa": 137.31
+   },
+   {
+    "direction": "[001]",
+    "hkl": [
+     0,
+     0,
+     1
+    ],
+    "ratioToAverage": 1.0,
+    "youngsModulusGPa": 137.31
+   },
+   {
+    "direction": "[210]",
+    "hkl": [
+     2,
+     1,
+     0
+    ],
+    "ratioToAverage": 1.0,
+    "youngsModulusGPa": 137.31
+   },
+   {
+    "direction": "[311]",
+    "hkl": [
+     3,
+     1,
+     1
+    ],
+    "ratioToAverage": 1.0,
+    "youngsModulusGPa": 137.31
+   }
+  ],
+  "elasticComplianceMatrix_Sij_1_over_GPa": [
+   [
+    0.007283,
+    -0.002717,
+    -0.002717,
+    0.0,
+    0.0,
+    0.0
+   ],
+   [
+    -0.002717,
+    0.007283,
+    -0.002717,
+    0.0,
+    0.0,
+    0.0
+   ],
+   [
+    -0.002717,
+    -0.002717,
+    0.007283,
+    0.0,
+    0.0,
+    0.0
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    0.02,
+    0.0,
+    0.0
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.02,
+    0.0
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.02
+   ]
+  ],
+  "elasticStiffnessMatrix_Cij_GPa": [
+   [
+    247.0,
+    147.0,
+    147.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   [
+    147.0,
+    247.0,
+    147.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   [
+    147.0,
+    147.0,
+    247.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    50.0,
+    0.0,
+    0.0
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    50.0,
+    0.0
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    50.0
+   ]
+  ],
+  "engine": "MetalliX-Continuum-Elasticity-Homogenizer-v4.0",
+  "materialInfo": {
+   "band_gap": 0.0,
+   "crystal_system": "Klingon",
+   "density": -1.0,
+   "energy_above_hull": 0.0,
+   "formation_energy_per_atom": -0.45,
+   "formula": "Unobtainium-X",
+   "is_metal": true,
+   "is_stable": true,
+   "material_id": "mp-custom",
+   "space_group": "Pnma"
+  },
+  "mechanicalIntegrityIndices": {
+   "cauchyPressure_C12_minus_C44_GPa": 97.0,
+   "ductilityVerdict": "Ductile (Metallic dislocation slip favored; high shear compliance)",
+   "isIsotropic": true,
+   "pughRatio_B_over_G": 3.607,
+   "universalAnisotropyIndex_AU": 0.0,
+   "zenerAnisotropyFactor_AZ": 1.0
+  },
+  "scientificModel": "Crystal-Symmetry-Governed Voigt-Reuss-Hill Homogenization & Born Mechanical Stability",
+  "sourceNotes": "Authentic DFT Benchmark: Ni (Nickel FCC) (FCC matrix base for nickel superalloys; high ductility.)",
+  "success": true,
+  "voigtReussHillModuli": {
+   "bulkModulus_K_Reuss_GPa": 180.33,
+   "bulkModulus_K_VRH_GPa": 180.33,
+   "bulkModulus_K_Voigt_GPa": 180.33,
+   "pWaveModulus_GPa": 247.0,
+   "poissonsRatio_nu": 0.373,
+   "shearModulus_G_Reuss_GPa": 50.0,
+   "shearModulus_G_VRH_GPa": 50.0,
+   "shearModulus_G_Voigt_GPa": 50.0,
+   "youngsModulus_E_VRH_GPa": 137.31
+  }
+ },
+ "volatileKeysStripped": [
+  "computeTimeMs",
+  "durationMs",
+  "pythonDurationMs",
+  "pythonVersion",
+  "timestamp"
+ ]
+}

@@ -45,7 +45,7 @@ $env:METALLIX_PYTHON = (Resolve-Path .runtime/lpbf-win-py312/Scripts/python.exe)
 # Launch the application from this same shell after its usual Node setup.
 ```
 
-The shared resolver does not automatically select this `.runtime` environment. Existing GPU settings and global Python packages are preserved. When running an additional local server, assign a distinct `PORT` and **`METALLIX_IPC_PORT`**; `METALLIX_IPC_SOCK` is not the Python HTTP-port setting. Identify existing workers before starting another.
+The shared resolver does not automatically select this `.runtime` environment. Existing GPU settings and global Python packages are preserved. When running an additional local server, assign a distinct `PORT`; the Python daemon binds a free port by default (if you set **`METALLIX_IPC_PORT`**, keep it distinct). `METALLIX_IPC_SOCK` is not the Python HTTP-port setting. Identify existing workers before starting another.
 
 ## Lock maintenance
 

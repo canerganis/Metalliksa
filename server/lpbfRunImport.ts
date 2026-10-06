@@ -5,6 +5,13 @@ import path from 'node:path';
 import { artifactDirectory, LpbfArtifactStore, verifyLocalArtifact } from './lpbfArtifactStore';
 import { LpbfSourceRepository } from './lpbfSourceRepository';
 import { LpbfRunRepository, validateRunDocument, type RunCapture, type RunDocument, type RunSourceLink } from './lpbfRunRepository';
+import { localGpuPilotArtifactResolver, storeGpuPilotArtifactResolver } from './lpbfGpuPilotArtifacts';
+import { verifyGpuPilotArchive } from './lpbfGpuRunArchive';
+
+async function verifyGpuRun(document: RunDocument, resolve: Parameters<typeof verifyGpuPilotArchive>[2]) {
+  const result = JSON.parse(document.capture.resultJson);
+  if (document.capture.runKind === 'gpu-thermal-pilot') await verifyGpuPilotArchive(result, document.runId, resolve);
+}
 
 export function runArtifacts(document: RunDocument): { relativePath: string; sha256: string; byteSize: number }[] {
   return JSON.parse(document.capture.resultJson).artifacts.map((a: { path: string; sha256: string; size_bytes: number }) =>
@@ -47,6 +54,7 @@ export async function dryRunRunImport(capture: RunCapture | unknown, links: RunS
     await verifyLocalArtifact(root, ref.relativePath, ref); byteSize += ref.byteSize;
     if (!Number.isSafeInteger(byteSize)) throw new Error('Run artifact size overflow');
   }
+  await verifyGpuRun(document, localGpuPilotArtifactResolver(root));
   return { document, artifactCount: runArtifacts(document).length, byteSize, artifactIntegrity: 'verified-at-dry-run' as const };
 }
 export async function importRun(repository: LpbfRunRepository, store: LpbfArtifactStore,
@@ -56,5 +64,6 @@ export async function importRun(repository: LpbfRunRepository, store: LpbfArtifa
   for (const ref of runArtifacts(preview.document)) await store.verify(ref);
   sourcesExist(preview.document, sources); completeManifest(root, preview.document);
   await verifyResultFile(root, preview.document);
+  await verifyGpuRun(preview.document, storeGpuPilotArtifactResolver(store));
   return repository.save(preview.document);
 }

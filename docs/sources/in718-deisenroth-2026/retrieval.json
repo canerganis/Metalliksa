@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "title": "Illuminating the physics of melting during laser-based manufacturing of IN718 by measuring laser light reflections",
+  "doi": "10.1016/j.addma.2026.105330",
+  "publisherUrl": "https://doi.org/10.1016/j.addma.2026.105330",
+  "recordUrl": "https://www.nist.gov/publications/illuminating-physics-melting-during-laser-based-manufacturing-in718-measuring-laser",
+  "requestedUrl": "https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=962100",
+  "resolvedUrl": "https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=962100",
+  "retrievedAtUtc": "2026-09-27T13:41:03.453495+00:00",
+  "filename": "original.pdf",
+  "byteCount": 12221120,
+  "sha256": "7b2a21b29037108ca8f61297c4f8e5aab4df342b1b6c02353f966b1da8e81128",
+  "contentType": "application/pdf;charset=UTF-8",
+  "pdfPageCount": 31,
+  "client": {
+    "library": "Python urllib.request",
+    "requestHeaders": {
+      "User-Agent": "Mozilla/5.0",
+      "Accept": "application/pdf",
+      "Referer": "https://www.nist.gov/"
+    },
+    "certificateVerification": false,
+    "certificateMethod": "ssl._create_unverified_context applied only to this HTTPS request; no persistent TLS setting changed",
+    "reason": "Default HTTPS attempt failed with SSLCertVerificationError: certificate has expired. A no-header request subsequently returned HTTP 403; standard public browser headers succeeded."
+  },
+  "evidenceScope": "Original source capture only. Byte integrity does not establish experimental validation or benchmark admission. TLS server identity was not cryptographically verified for this retrieval."
+}

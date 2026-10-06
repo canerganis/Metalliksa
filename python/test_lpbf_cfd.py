@@ -15,12 +15,17 @@ import math
 import os
 import tempfile
 import unittest
+from pathlib import Path
+from unittest.mock import patch
 
 from lpbf_cfd import (
     CFD_MODEL_ID,
     CFD_SOLVER_ID,
     MARANGONI_MODEL_ID,
     RECOIL_MODEL_ID,
+    setup_cfd_multiphysics_case,
+)
+from lpbf_cfd_cases import (
     knight_analytical_recoil_pressure,
     read_foam_scalar_field,
     read_foam_vector_field,
@@ -34,6 +39,50 @@ from lpbf_cfd import (
     stefan_analytical_solution,
     verify_cfd_capability,
 )
+
+
+class TestEvaporationMassClosureGate(unittest.TestCase):
+    """Keep unclosed evaporation disabled in production case generation."""
+
+    def test_production_multiphysics_case_disables_evaporation_sources(self):
+        p = {
+            "beamDiameter_um": 20.0,
+            "trackLength_um": 100.0,
+            "tracks": 1,
+            "hatch_um": 80.0,
+            "mesh_um": 20.0,
+            "layers": 1,
+            "layer_um": 40.0,
+            "maxDt_s": 1e-6,
+        }
+        m = {"solidus_K": 1877.0, "liquidus_K": 1928.0,
+             "boiling_K": 3560.0, "absorptivity": 0.4}
+        segment = {
+            "start_s": 0.0, "end_s": 1e-6,
+            "start": (0.0, 0.0), "end": (100e-6, 0.0), "layer": 0,
+        }
+        with tempfile.TemporaryDirectory(prefix="test_cfd_evap_gate_", dir=Path(__file__).parent) as td:
+            with patch("lpbf_simulation.scan_segments", return_value=([segment], 1e-6)), \
+                 patch("powder_packer.generate_powder_bed", return_value=[]), \
+                 patch("powder_packer.compute_powder_bed_statistics", return_value={}):
+                setup_cfd_multiphysics_case(p, m, td)
+            thermal = (Path(td) / "constant" / "thermalProperties").read_text()
+        self.assertIn("active          false;", thermal)
+
+    def test_recoil_formula_verification_fixture_remains_explicitly_enabled(self):
+        with tempfile.TemporaryDirectory(prefix="test_recoil_formula_", dir=Path(__file__).parent) as td:
+            setup_recoil_case(td)
+            thermal = (Path(td) / "constant" / "thermalProperties").read_text()
+        self.assertIn("active          true;", thermal)
+
+    def test_cpp_evaporation_default_is_inactive_and_reports_missing_closure(self):
+        root = Path(__file__).parent
+        model = (root / "openfoam" / "meltPoolFoam" / "evaporationModel.H").read_text()
+        solver = (root / "openfoam" / "meltPoolFoam" / "metalliksaMeltPoolFoam.C").read_text()
+        self.assertIn('lookupOrDefault<bool>("active", false)', model)
+        self.assertIn("evaporativeMassTransferClosure", solver)
+        self.assertIn("evaporativeMassTransferClosureAvailable", solver)
+        self.assertIn("unqualified-mass-transfer-closure-absent", solver)
 
 
 class TestLpbfCfdPhase1(unittest.TestCase):
@@ -416,59 +465,7 @@ class TestLpbfCfdPhase4(unittest.TestCase):
           - Stored energy = sum(rho * cp * (T - T_init) * V).
           - Temperatures along the laser path should be significantly elevated.
         """
-        # Expose setup_laser_case from lpbf_cfd if not exposed
-        from lpbf_cfd import setup_laser_case
-        with tempfile.TemporaryDirectory(prefix="test_laser_") as td:
-            lx = 100e-6
-            ly = 50e-6
-            nx = 20
-            ny = 10
-            laser_power = 200.0
-            dt = 5e-7
-            end_time = 2e-6
-            t_start = 0.0
-            t_end = 2e-6
-            
-            setup_laser_case(
-                td, lx=lx, ly=ly, nx=nx, ny=ny,
-                laser_power=laser_power, laser_radius=20e-6,
-                dt=dt, end_time=end_time,
-                t_start=t_start, t_end=t_end,
-                p_start=(20e-6, 25e-6, 0.0), p_end=(80e-6, 25e-6, 0.0)
-            )
-            res = run_cfd_simulation(td)
-            
-            diag = res.get("diagnostics", {})
-            
-            self.assertEqual(
-                diag.get("laserModel"), "moving-gaussian-surface-flux-v1",
-                f"Expected laserModel=moving-gaussian-surface-flux-v1, got {diag.get('laserModel')}"
-            )
-
-
-class TestLpbfCfdPhase4(unittest.TestCase):
-    """Phase 4 verification: Moving Interface Laser Heating."""
-
-    @classmethod
-    def setUpClass(cls):
-        cls.cap = verify_cfd_capability()
-        if not cls.cap.get("available", False):
-            raise unittest.SkipTest(
-                f"metalliksaMeltPoolFoam / OpenFOAM 14 not available: {cls.cap.get('error', 'unknown error')}"
-            )
-
-    def test_09_moving_laser_surface_heating(self):
-        """Verify moving Gaussian heat source on the interface.
-        
-        Oracle:
-          - A laser beam (power 200W, radius 20um) moves from x=20um to x=80um.
-          - Heating applied at metal-gas interface.
-          - Energy conservation: total input energy = integral(Q) dt = P * (t_end - t_start).
-          - Stored energy = sum(rho * cp * (T - T_init) * V).
-          - Temperatures along the laser path should be significantly elevated.
-        """
-        # Expose setup_laser_case from lpbf_cfd if not exposed
-        from lpbf_cfd import setup_laser_case
+        from lpbf_cfd_cases import setup_laser_case
         with tempfile.TemporaryDirectory(prefix="test_laser_") as td:
             lx = 100e-6
             ly = 50e-6

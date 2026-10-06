@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "capturedAtDate": "2026-09-28",
+  "environment": {
+    "serverOrigin": "http://127.0.0.1:4183",
+    "storageRoot": "C:/Users/can02/AppData/Local/Temp/metalliksa-lpbf-browser-e2e-authorized-20260928-5356a55bf9e043ecbc1ba3258487ee67",
+    "isolated": true,
+    "executionHead": "7e34c9b6fd9992a1a0c6aed6b7274222f70318c4",
+    "implementationFingerprint": "8742af1f5bcea5373a4e81f14bc9a241869561850f541ae20d5e595814dcd3f8"
+  },
+  "source": {
+    "datasetId": "nist-amb2022-03-optical-table4-local-v1",
+    "revision": 1,
+    "documentSha256": "6c9d9f80f8c4eb2b7a6c18bbaab9ed7a993e43f155190dfff49808a4f854aaf0",
+    "artifactBytes": 4321,
+    "artifactSha256": "d1b36dfa2e01a3537093c481e249ce52df6b8879c1c67480ddb9aa10799133da",
+    "uiPreview": "pass",
+    "uiImport": "pass",
+    "artifactByteVerificationAtImport": "pass",
+    "sourceReuseTerms": "unknown"
+  },
+  "runs": [
+    {
+      "jobId": "f54ddb8d534647f1a2a9177c2794fe35",
+      "executionKind": "transient-reference-attempt",
+      "status": "failed",
+      "reason": "Thermal model validity exceeded the IN718 estimated material boiling limit at step 1; fail-closed guard preserved.",
+      "archivedAsCompletedRun": false,
+      "comparisonEligible": false
+    },
+    {
+      "runId": "872dbcdba0d7495d932c535507d5946a",
+      "jobId": "872dbcdba0d7495d932c535507d5946a",
+      "createdAt": "2026-09-28T10:06:06.864Z",
+      "runDocumentSha256": "36d520f36c7dfa260278d6a1b21c01da18624eecd4046898249cae047903e296",
+      "inputSha256": "098ace31826b3de0600047c3ee7c1d2eb1769abddf3f51cccb973ee1d7f88d02",
+      "coreInputSha256": "4b3f64d7262c6b4ca98b4ed9ef66414bb059362c843e7b56f9c7c8b33d6b3518",
+      "materialId": "in718",
+      "materialRevisionSha256": "5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749",
+      "materialAuthorityRevisionSha256": "b7788a745e9fa90bf7af0b2de4516233e33726638a3a06b33268995813db5d1f",
+      "materialQuality": "estimated",
+      "provenanceClass": "estimated-legacy",
+      "runKind": "analytical-screening",
+      "modelId": "analytical-conduction-screening-v1",
+      "solverId": "rosenthal+goldak",
+      "solverVersion": "enthalpy-fv-6",
+      "actualBackend": "analytical",
+      "settings": {
+        "powerW": 280,
+        "speedMmPerS": 940,
+        "beamDiameterUm": 80,
+        "preheatC": 200,
+        "meshUm": 20,
+        "maxDtS": 0.000001,
+        "tracks": 1,
+        "layers": 1,
+        "trackLengthUm": 600
+      },
+      "runtimeSeconds": 1.562999999994645,
+      "analyticalEstimatesUm": {
+        "rosenthal": { "width": 150.0, "depth": 75.0, "length": 1061.666666666667 },
+        "goldak": { "width": 100.0, "depth": 50.0, "length": 524.9999999999999 }
+      },
+      "uiArchive": "pass",
+      "sourceBinding": "exact-revision-bound",
+      "nistCase0Comparison": {
+        "status": "unavailable",
+        "evidenceStatus": "unvalidated",
+        "residuals": null,
+        "reason": "Analytical screening has no transient thermal evolution; the case 0 process vector also differs (285 W / 960 mm/s / 67 um D4sigma versus 280 W / 940 mm/s / 80 um)."
+      }
+    }
+  ],
+  "bundleRoundTrip": {
+    "exportedBundleId": "0ea7644d609c4c19bb6f8f95b61a3e83",
+    "runCount": 1,
+    "runArtifactCount": 2,
+    "sourceLinkCount": 1,
+    "manifestMetadataSha256": "394a5c2999efa1e8f74744c652ac72b3c2dc6d862c57b71144f33aef198454dd",
+    "manifestMetadataBytes": 36864,
+    "tarDownload": {
+      "httpStatus": 200,
+      "contentType": "application/x-tar",
+      "bytes": 73216,
+      "sha256": "8a709c72a1fe528d606d6cf595744fa5085742bb6b19a283e2865cf704d587f5",
+      "retrieval": "same-origin HTTP download route; hidden-tab browser download event was not independently observed"
+    },
+    "uiServerLocalVerify": "pass",
+    "uiServerLocalRestoreId": "917aed95025b4654811d9b28f7bcd63b",
+    "uiFileChooserUploadAndVerify": "pass",
+    "importedManifest": { "runCount": 1, "runArtifactCount": 2, "sourceLinkCount": 1 },
+    "uiImportedRestoreId": "4d4cfcd7a3f54d90b8cf512cf5930e29",
+    "reloadSelectionPersistence": "pass",
+    "restoredRunIdentityAndSourceHash": "pass"
+  },
+  "evidenceBoundary": {
+    "softwareUiApiWorkflow": "pass for the observed isolated analytical-screening flow",
+    "transientThermalSolve": "failed-closed-at-step-1",
+    "numericalConvergence": "not-assessed-by-this-acceptance-run",
+    "cpuGpuParity": "not-assessed-by-this-acceptance-run",
+    "experimentalValidity": "unvalidated",
+    "nistResiduals": null,
+    "bundleIntegrityDoesNotValidateModel": true
+  }
+}

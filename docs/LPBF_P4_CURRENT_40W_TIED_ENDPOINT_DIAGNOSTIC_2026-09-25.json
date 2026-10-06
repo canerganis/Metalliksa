@@ -1,0 +1,499 @@
+{
+  "schemaVersion": 1,
+  "diagnosticId": "p4-tied-peak-endpoint-contour-spread-v1",
+  "scope": "Diagnostic only; not numerical convergence acceptance or experimental validation",
+  "acceptanceStatus": "not-assessed",
+  "frozenReportsUnaffected": true,
+  "scenario": {
+    "mode": "standard",
+    "backend": "reference",
+    "material": "Inconel 718",
+    "power_W": 40,
+    "speed_mm_s": 800,
+    "beamDiameter_um": 80,
+    "preheat_C": 80,
+    "layer_um": 40,
+    "hatch_um": 100,
+    "mesh_um": 5,
+    "maxDt_s": 2.5e-08,
+    "trackLength_um": 200,
+    "tracks": 1,
+    "layers": 1,
+    "dwell_s": 0,
+    "cooling_s": 0.0001,
+    "scanAngle_deg": 0,
+    "layerRotation_deg": 67,
+    "strategy": "meander",
+    "stripeWidth_um": 500,
+    "islandSize_um": 200,
+    "packingFraction": 0.55,
+    "powderConductivityRatio": 0.12,
+    "convection_W_m2K": 20,
+    "timeout_s": 300,
+    "study": "none",
+    "surfaceMode": "powder-layer",
+    "sourcePenetration_um": null,
+    "barePlateGeometry": "square",
+    "powderGridPolicy": "layer-conforming"
+  },
+  "requestedMeshLevels_um": [
+    20.0,
+    10.0,
+    5.0
+  ],
+  "temporalAxis": "not-run",
+  "observationOperator": "peak-liquidus-cell-edge-linear-contour-v1",
+  "temporalSelection": "accepted-step-molten-volume-v1; first maximum state remains the reported state",
+  "oracle": "Separate offline structured-edge traversal over captured tied maximum fields",
+  "runs": [
+    {
+      "requestedMesh_um": 20.0,
+      "actualMesh_m": 1.9999999999999998e-05,
+      "cells": 8228,
+      "steps": 14000,
+      "elapsed_s": 61.8417533999891,
+      "solver": {
+        "id": "enthalpy-fv-6",
+        "version": "enthalpy-fv-6",
+        "openfoam": null
+      },
+      "model": {
+        "schemaVersion": 1,
+        "modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+        "actualBackend": "numpy-reference",
+        "requestedBackend": "reference",
+        "effectiveMode": "standard",
+        "solverId": "enthalpy-fv-6",
+        "inputSha256": "769b4ac31e753e5e03e35a47b43c3d6bd038826f7db8ec92c4b382bb3972fc1f",
+        "materialSha256": "8a8ebcc8ef09d8096bdf052f30de859df8f96932564b2bcf2b2800aa36b05e9d",
+        "units": {
+          "power": "W",
+          "speed": "mm/s",
+          "length": "um",
+          "preheat": "degC",
+          "temperature": "K",
+          "internalLength": "m",
+          "time": "s",
+          "energy": "J",
+          "beamDiameter": "1/e2-intensity"
+        },
+        "resolvedPhysics": {
+          "conduction": true,
+          "transient": true,
+          "latentHeat": true,
+          "momentum": false,
+          "freeSurface": false,
+          "evaporation": false
+        },
+        "evidenceClass": "unvalidated-model"
+      },
+      "materialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06",
+      "peakMeltCellCount": 32,
+      "peakSelection": {
+        "first": {
+          "time_s": 0.00023079999999994644,
+          "step": 9232,
+          "status": "thermal-proxy",
+          "width_um": 72.3674593673221,
+          "depth_um": 29.6104959575283
+        },
+        "last": {
+          "time_s": 0.00029127499999996625,
+          "step": 11651,
+          "status": "thermal-proxy",
+          "width_um": 70.68922206994756,
+          "depth_um": 28.62279903354788
+        },
+        "endpointCount": 2349,
+        "observedContourCount": 2349,
+        "validContourCount": 2349,
+        "invalidContourCount": 0
+      },
+      "productionContourSpread": {
+        "width_um": {
+          "min": 70.68922206994756,
+          "median": 72.24524770394387,
+          "max": 72.4772364593893
+        },
+        "depth_um": {
+          "min": 28.62279903354788,
+          "median": 29.46938712183313,
+          "max": 29.655683879186466
+        }
+      },
+      "independentOfflineOracle": {
+        "width_um": {
+          "min": 70.68922206994756,
+          "median": 72.24524770394387,
+          "max": 72.4772364593893
+        },
+        "depth_um": {
+          "min": 28.62279903354788,
+          "median": 29.46938712183313,
+          "max": 29.655683879186466
+        },
+        "first": {
+          "status": "thermal-proxy",
+          "width_um": 72.3674593673221,
+          "depth_um": 29.6104959575283,
+          "time_s": 0.00023079999999994644,
+          "step": 9232
+        },
+        "last": {
+          "status": "thermal-proxy",
+          "width_um": 70.68922206994756,
+          "depth_um": 28.62279903354788,
+          "time_s": 0.00029127499999996625,
+          "step": 11651
+        }
+      },
+      "oracleAgreement": {
+        "width_um": {
+          "productionTracker": {
+            "min": 70.68922206994756,
+            "median": 72.24524770394387,
+            "max": 72.4772364593893
+          },
+          "independentOfflineOracle": {
+            "min": 70.68922206994756,
+            "median": 72.24524770394387,
+            "max": 72.4772364593893
+          },
+          "agrees": true
+        },
+        "depth_um": {
+          "productionTracker": {
+            "min": 28.62279903354788,
+            "median": 29.46938712183313,
+            "max": 29.655683879186466
+          },
+          "independentOfflineOracle": {
+            "min": 28.62279903354788,
+            "median": 29.46938712183313,
+            "max": 29.655683879186466
+          },
+          "agrees": true
+        }
+      },
+      "discreteFirstEndpoint": {
+        "width_um": 80.00000000000001,
+        "depth_um": 19.99999999999997,
+        "peakTime_s": 0.00023079999999994644,
+        "peakStep": 9232
+      },
+      "matchedFrozenP4EnergyBalance": {
+        "input_J": 0.003799999999999381,
+        "losses_J": 1.2896745805830204e-06,
+        "stored_J": 0.003798710325419418,
+        "relativeError": 1.6308683205074085e-13,
+        "denominator": "input_J",
+        "reference": "initial enthalpy at preheat"
+      }
+    },
+    {
+      "requestedMesh_um": 10.0,
+      "actualMesh_m": 9.999999999999999e-06,
+      "cells": 65824,
+      "steps": 14000,
+      "elapsed_s": 294.6916296999989,
+      "solver": {
+        "id": "enthalpy-fv-6",
+        "version": "enthalpy-fv-6",
+        "openfoam": null
+      },
+      "model": {
+        "schemaVersion": 1,
+        "modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+        "actualBackend": "numpy-reference",
+        "requestedBackend": "reference",
+        "effectiveMode": "standard",
+        "solverId": "enthalpy-fv-6",
+        "inputSha256": "0f5f14c157f997ab5dea8ac6df784111a2c1038feec11215c1c560a3e2d979a0",
+        "materialSha256": "8a8ebcc8ef09d8096bdf052f30de859df8f96932564b2bcf2b2800aa36b05e9d",
+        "units": {
+          "power": "W",
+          "speed": "mm/s",
+          "length": "um",
+          "preheat": "degC",
+          "temperature": "K",
+          "internalLength": "m",
+          "time": "s",
+          "energy": "J",
+          "beamDiameter": "1/e2-intensity"
+        },
+        "resolvedPhysics": {
+          "conduction": true,
+          "transient": true,
+          "latentHeat": true,
+          "momentum": false,
+          "freeSurface": false,
+          "evaporation": false
+        },
+        "evidenceClass": "unvalidated-model"
+      },
+      "materialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06",
+      "peakMeltCellCount": 280,
+      "peakSelection": {
+        "first": {
+          "time_s": 0.0002471999999999413,
+          "step": 9888,
+          "status": "thermal-proxy",
+          "width_um": 74.38855895228527,
+          "depth_um": 33.28006394621963
+        },
+        "last": {
+          "time_s": 0.000259049999999948,
+          "step": 10362,
+          "status": "thermal-proxy",
+          "width_um": 74.51828658740408,
+          "depth_um": 32.81077562095721
+        },
+        "endpointCount": 190,
+        "observedContourCount": 190,
+        "validContourCount": 190,
+        "invalidContourCount": 0
+      },
+      "productionContourSpread": {
+        "width_um": {
+          "min": 74.32839814361857,
+          "median": 74.38764554984544,
+          "max": 74.51844404444519
+        },
+        "depth_um": {
+          "min": 32.81077562095721,
+          "median": 33.14890051509896,
+          "max": 33.33163779556483
+        }
+      },
+      "independentOfflineOracle": {
+        "width_um": {
+          "min": 74.32839814361857,
+          "median": 74.38764554984544,
+          "max": 74.51844404444519
+        },
+        "depth_um": {
+          "min": 32.81077562095721,
+          "median": 33.14890051509896,
+          "max": 33.33163779556483
+        },
+        "first": {
+          "status": "thermal-proxy",
+          "width_um": 74.38855895228527,
+          "depth_um": 33.28006394621963,
+          "time_s": 0.0002471999999999413,
+          "step": 9888
+        },
+        "last": {
+          "status": "thermal-proxy",
+          "width_um": 74.51828658740408,
+          "depth_um": 32.81077562095721,
+          "time_s": 0.000259049999999948,
+          "step": 10362
+        }
+      },
+      "oracleAgreement": {
+        "width_um": {
+          "productionTracker": {
+            "min": 74.32839814361857,
+            "median": 74.38764554984544,
+            "max": 74.51844404444519
+          },
+          "independentOfflineOracle": {
+            "min": 74.32839814361857,
+            "median": 74.38764554984544,
+            "max": 74.51844404444519
+          },
+          "agrees": true
+        },
+        "depth_um": {
+          "productionTracker": {
+            "min": 32.81077562095721,
+            "median": 33.14890051509896,
+            "max": 33.33163779556483
+          },
+          "independentOfflineOracle": {
+            "min": 32.81077562095721,
+            "median": 33.14890051509896,
+            "max": 33.33163779556483
+          },
+          "agrees": true
+        }
+      },
+      "discreteFirstEndpoint": {
+        "width_um": 79.99999999999997,
+        "depth_um": 30.00000000000001,
+        "peakTime_s": 0.0002471999999999413,
+        "peakStep": 9888
+      },
+      "matchedFrozenP4EnergyBalance": {
+        "input_J": 0.003799999999999381,
+        "losses_J": 1.1282380218262212e-06,
+        "stored_J": 0.0037988717619781742,
+        "relativeError": 1.6297270550626869e-13,
+        "denominator": "input_J",
+        "reference": "initial enthalpy at preheat"
+      }
+    },
+    {
+      "requestedMesh_um": 5.0,
+      "actualMesh_m": 4.9999999999999996e-06,
+      "cells": 526592,
+      "steps": 14000,
+      "elapsed_s": 3023.4103277000104,
+      "solver": {
+        "id": "enthalpy-fv-6",
+        "version": "enthalpy-fv-6",
+        "openfoam": null
+      },
+      "model": {
+        "schemaVersion": 1,
+        "modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+        "actualBackend": "numpy-reference",
+        "requestedBackend": "reference",
+        "effectiveMode": "standard",
+        "solverId": "enthalpy-fv-6",
+        "inputSha256": "551f52eeba08ae77d5d26a87217c9a2d9eda4ebcdc99278beb80a75f490e015d",
+        "materialSha256": "8a8ebcc8ef09d8096bdf052f30de859df8f96932564b2bcf2b2800aa36b05e9d",
+        "units": {
+          "power": "W",
+          "speed": "mm/s",
+          "length": "um",
+          "preheat": "degC",
+          "temperature": "K",
+          "internalLength": "m",
+          "time": "s",
+          "energy": "J",
+          "beamDiameter": "1/e2-intensity"
+        },
+        "resolvedPhysics": {
+          "conduction": true,
+          "transient": true,
+          "latentHeat": true,
+          "momentum": false,
+          "freeSurface": false,
+          "evaporation": false
+        },
+        "evidenceClass": "unvalidated-model"
+      },
+      "materialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06",
+      "peakMeltCellCount": 2194,
+      "peakSelection": {
+        "first": {
+          "time_s": 0.0002500999999999429,
+          "step": 10004,
+          "status": "thermal-proxy",
+          "width_um": 77.70362699089321,
+          "depth_um": 34.6963370019652
+        },
+        "last": {
+          "time_s": 0.000250249999999943,
+          "step": 10010,
+          "status": "thermal-proxy",
+          "width_um": 77.706306668294,
+          "depth_um": 34.69291791377116
+        },
+        "endpointCount": 7,
+        "observedContourCount": 7,
+        "validContourCount": 7,
+        "invalidContourCount": 0
+      },
+      "productionContourSpread": {
+        "width_um": {
+          "min": 77.70362699089321,
+          "median": 77.70502704583961,
+          "max": 77.706306668294
+        },
+        "depth_um": {
+          "min": 34.69291791377116,
+          "median": 34.69464042798779,
+          "max": 34.6963370019652
+        }
+      },
+      "independentOfflineOracle": {
+        "width_um": {
+          "min": 77.70362699089321,
+          "median": 77.70502704583961,
+          "max": 77.706306668294
+        },
+        "depth_um": {
+          "min": 34.69291791377116,
+          "median": 34.69464042798779,
+          "max": 34.6963370019652
+        },
+        "first": {
+          "status": "thermal-proxy",
+          "width_um": 77.70362699089321,
+          "depth_um": 34.6963370019652,
+          "time_s": 0.0002500999999999429,
+          "step": 10004
+        },
+        "last": {
+          "status": "thermal-proxy",
+          "width_um": 77.706306668294,
+          "depth_um": 34.69291791377116,
+          "time_s": 0.000250249999999943,
+          "step": 10010
+        }
+      },
+      "oracleAgreement": {
+        "width_um": {
+          "productionTracker": {
+            "min": 77.70362699089321,
+            "median": 77.70502704583961,
+            "max": 77.706306668294
+          },
+          "independentOfflineOracle": {
+            "min": 77.70362699089321,
+            "median": 77.70502704583961,
+            "max": 77.706306668294
+          },
+          "agrees": true
+        },
+        "depth_um": {
+          "productionTracker": {
+            "min": 34.69291791377116,
+            "median": 34.69464042798779,
+            "max": 34.6963370019652
+          },
+          "independentOfflineOracle": {
+            "min": 34.69291791377116,
+            "median": 34.69464042798779,
+            "max": 34.6963370019652
+          },
+          "agrees": true
+        }
+      },
+      "discreteFirstEndpoint": {
+        "width_um": 79.99999999999999,
+        "depth_um": 34.99999999999998,
+        "peakTime_s": 0.0002500999999999429,
+        "peakStep": 10004
+      },
+      "matchedFrozenP4EnergyBalance": {
+        "input_J": 0.003799999999999381,
+        "losses_J": 1.0433534589096932e-06,
+        "stored_J": 0.0037989566465410902,
+        "relativeError": 1.628585789617965e-13,
+        "denominator": "input_J",
+        "reference": "initial enthalpy at preheat"
+      }
+    }
+  ],
+  "limitations": [
+    "A tie is an equal maximum count of liquidus cells, not proof that the physical pool is stationary.",
+    "Contour width/depth are cell-center linear thermal proxies with no surface extrapolation.",
+    "The conduction-only reference model does not resolve melt flow, evaporation, recoil or keyhole physics.",
+    "This diagnostic characterizes endpoint sensitivity and does not change the frozen P4 outcome."
+  ],
+  "scenarioSha256": "2abec47f9d35c02158ea2e06876e3ca06c3ba5ba9243f1ddccaa94ef64752ea6",
+  "protocolId": "lpbf-p4-current-40w-tied-endpoint-diagnostic-v1",
+  "protocolSha256": "c5628e46eed810e6de7638742e2c15f1b94e60f1386df07cf1241c960d5b88ee",
+  "executionEvidence": {
+    "executionHeadAtStart": "476a55e6d53990f84affdf853808359f17edb7af",
+    "protocolRecordedImplementationCommit": "15b4663373ba9700e2c9a8cb9b2169c1a83835b9",
+    "implementationHash": "72520e2a25c5a6b781e2c7a0bb8c501deadfe2d6c15ce73e017bbd22e56459d3",
+    "commitReconciliation": "The execution HEAD was the protocol commit; only STATUS.md and docs/ACTIVE_WORK.md changed between it and the recorded implementation commit. The implementation fingerprint matches the protocol.",
+    "energyLedger": "Copied by requested mesh level from the frozen P4 report for identical inputs; this diagnostic runner did not emit a new energy ledger."
+  },
+  "totalElapsed_s": 3379.9437107999984
+}

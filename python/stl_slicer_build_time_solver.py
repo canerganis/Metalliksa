@@ -343,7 +343,9 @@ def solve_slicer(data):
     start_time = time.time()
     preset = data.get("preset", "bracket")
     material = data.get("material", "Inconel 718")
-    mat_info = slicer_props(material) or SECONDARY_ALLOY_DB.get(material) or slicer_props("Inconel 718")
+    mat_info = data.get("_materialPropertiesSnapshot")
+    if mat_info is None:
+        mat_info = slicer_props(material) or SECONDARY_ALLOY_DB.get(material) or slicer_props("Inconel 718")
 
     laser_power_w = float(data.get("laserPower_W", 285.0))
     scan_speed_mms = float(data.get("scanSpeed_mms", data.get("scanSpeed_mm_s", 960.0)))

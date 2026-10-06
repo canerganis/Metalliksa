@@ -1,0 +1,6 @@
+# CPU source-integration label fix
+
+- Result label now follows `numericalDiagnostics.sourceIntegration`.
+- Adaptive v2 renders as “Adaptive Gauss-Legendre source integration”; verified legacy GL2 renders as “Two-point Gauss-Legendre source integration”. Missing metadata renders “Source integration method unavailable”; an unknown identifier is shown as recorded data. React text rendering escapes identifier content.
+- Validation: focused `npx tsx --test tests/lpbf-physics-diagnostics.test.tsx` passed 7/7; `npm run lint` (`tsc --noEmit`) passed.
+- Browser/keyboard acceptance was not run; it remains pending per task constraints. No solver, schema, defaults, FP path, STATUS, or docs changed.

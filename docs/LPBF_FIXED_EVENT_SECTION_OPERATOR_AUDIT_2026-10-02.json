@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "protocolId": "lpbf-fixed-event-section-operator-mesh-phase-audit-2026-10-02-v1",
+  "status": "diagnostic-only",
+  "convergenceConclusion": "inconclusive",
+  "experimentalValidation": false,
+  "solverRerun": false,
+  "scope": "Offline comparison of hash-pinned 20/10/5 um fixed-event fields at a shared physical X section, section-phase sweeps, and a frozen 5 um field sampled onto coarse coordinates. No NIST raw payload, parameter tuning, or 12.5 ns run.",
+  "inputs": {
+    "sourceReport": {
+      "path": "docs/LPBF_FIXED_EVENT_MESH_REFINEMENT_V2_2026-10-02.json",
+      "sha256": "7f791aebe6a56175e1243882ae4cc95551c3624eb13e2e1617ed65a2a97cdff4"
+    },
+    "fields": [
+      {
+        "mesh_um": 20,
+        "path": "docs/LPBF_FIXED_EVENT_MESH_REFINEMENT_V2_FIELDS_2026-10-02/mesh-20um.npz",
+        "sha256": "b2b66869a0190483479fed1199c5de75a0cd4f394046335882671d93005b26f0"
+      },
+      {
+        "mesh_um": 10,
+        "path": "docs/LPBF_FIXED_EVENT_MESH_REFINEMENT_V2_FIELDS_2026-10-02/mesh-10um.npz",
+        "sha256": "f95494c150f268ba83760fb6e082f1e64ed3f9fab90c2695ed5a0857f8bcce61"
+      },
+      {
+        "mesh_um": 5,
+        "path": "docs/LPBF_FIXED_EVENT_MESH_REFINEMENT_V2_FIELDS_2026-10-02/mesh-05um.npz",
+        "sha256": "0372f6568b5cec8f786c0d9610b5a52e519815c2d1205843877c4e726f1a92ae"
+      }
+    ]
+  },
+  "commonSection": {
+    "eventTime_us": 250,
+    "x_um": 100,
+    "liquidus_K": 1609.15,
+    "xInterpolationFraction": 0.5,
+    "operator": "fixed-event-x-linear-liquidus-section-v1",
+    "acceptedDtReplayMatchedEvent": true,
+    "meshes": [
+      {
+        "mesh_um": 20,
+        "width_um": 43.2918,
+        "substrateDepth_um": 0,
+        "moltenCells": 2,
+        "crossings": 4,
+        "lowestCrossingZ_um": 18.6977,
+        "topSampleZ_um": 30
+      },
+      {
+        "mesh_um": 10,
+        "width_um": 46.1421,
+        "substrateDepth_um": 0,
+        "moltenCells": 8,
+        "crossings": 8,
+        "lowestCrossingZ_um": 16.9842,
+        "topSampleZ_um": 35
+      },
+      {
+        "mesh_um": 5,
+        "width_um": 50.7151,
+        "substrateDepth_um": 0,
+        "moltenCells": 40,
+        "crossings": 20,
+        "lowestCrossingZ_um": 14.6933,
+        "topSampleZ_um": 37.5
+      }
+    ],
+    "allTopBoundaryMolten": true,
+    "allSubstrateLiquidusCells": 0,
+    "cellSupportedWidths_um": [40, 40, 50]
+  },
+  "physicalSectionPhaseSweep": {
+    "x_um": [97.5, 100, 102.5],
+    "widths_um_by_mesh": {
+      "20": [47.5626, 43.2918, 38.3014],
+      "10": [48.346, 46.1421, 42.6867],
+      "5": [53.6634, 50.7151, 44.2715]
+    },
+    "widthSpread_um_by_mesh": {
+      "20": 9.2612,
+      "10": 5.6593,
+      "5": 9.392
+    },
+    "normalizedHalfCellSweepResolvedWidthSpread_um": {
+      "20": 24.9444,
+      "10": 13.3829,
+      "5": 9.392
+    },
+    "mesh20_x110_um": "no-melt; width and depth remain null"
+  },
+  "frozenFineFieldOnCoarseCoordinates": {
+    "fineFieldMesh_um": 5,
+    "interpolation": "trilinear nodal temperature interpolation with bounds_error=true",
+    "x_um": 100,
+    "operator": "fixed-event-x-linear-liquidus-section-v1",
+    "widthUm": {
+      "native5um": 50.7151,
+      "native20um": 43.2918,
+      "fine5umSampledOn20um": 40.855,
+      "native10um": 46.1421,
+      "fine5umSampledOn10um": 50.0305
+    },
+    "decomposition_um": {
+      "identity": "W_coarse-W_fine = (W_coarse-W_fineSampledOnCoarse)+(W_fineSampledOnCoarse-W_fineNative)",
+      "20um": {
+        "nativeCoarseMinusFine": -7.4233,
+        "coarseFieldTerm": 2.4368,
+        "fineRepresentationTerm": -9.86
+      },
+      "10um": {
+        "nativeCoarseMinusFine": -4.573,
+        "coarseFieldTerm": -3.8884,
+        "fineRepresentationTerm": -0.6846
+      }
+    }
+  },
+  "runtimeContext": {
+    "acceptedSteps_20um": 2500,
+    "acceptedSteps_10um": 2500,
+    "acceptedSteps_5um": 2920,
+    "sourceLimitedRetries_20um": 0,
+    "sourceLimitedRetries_10um": 0,
+    "sourceLimitedRetries_5um": 1673
+  },
+  "interpretation": "At the common X=100 um section, width increases from 43.2918 to 50.7151 um but is not converged. All top boundaries remain molten and substrate liquidus cells are zero, so substrate depth=0 is not a melt-pool depth comparison. Cell-supported widths (40/40/50 um) hide part of the change. Moving X changes the physical section, so the phase sweep is not a pure quantization error. Sampling the same fine temperature field onto coarse coordinates shows strong support/representation sensitivity at 20 um and a larger coarse-field term for 10 um under this interpolation choice. Trilinear temperature sampling is not conservative enthalpy transfer, and the 5 um run had 1673 source-limited retries versus zero for the coarser runs; therefore this decomposition is diagnostic, not pure mesh error or physical causality.",
+  "nextStep": "On the same frozen fields, evaluate a conservative enthalpy-volume projection before considering finer transient steps; preserve no-melt nulls and the current inconclusive convergence and unvalidated model labels.",
+  "limits": [
+    "Synthetic diagnostics only; no experimental validation or NIST raw payload.",
+    "The phase sweep changes the physical section plane.",
+    "The fine-field trilinear temperature interpolation is not conservative in enthalpy.",
+    "No solver rerun, no production solver change, and no 12.5 ns campaign."
+  ]
+}

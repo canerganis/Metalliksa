@@ -6,13 +6,48 @@ import path from 'node:path';
 import { test, type TestContext } from 'node:test';
 import { DatabaseSync } from 'node:sqlite';
 import { LpbfRunRepository, validateRunDocument } from '../server/lpbfRunRepository';
+import { LpbfNistProxyCampaignService } from '../server/lpbfNistProxyCampaignService';
 import { dryRunRunImport, importRun } from '../server/lpbfRunImport';
 import { LpbfArtifactStore } from '../server/lpbfArtifactStore';
 import { LpbfSourceRepository } from '../server/lpbfSourceRepository';
+import { canonicalBuildJobIdentity, canonicalBuildJobMaterialSnapshot } from '../src/utils/lpbfBuildJobIdentity';
 
 const sha = (value: string) => createHash('sha256').update(value).digest('hex');
-function capture() {
-  const result = { schemaVersion: 1, requestedMode: 'screening', effectiveMode: 'screening',
+function v2Campaign(runs: Array<{ runId: string; documentSha256: string }>, sourceBinding: any) {
+  const runIds = runs.map(run => run.runId);
+  const runIdentity = (runId: string) => ({ runId, runDocumentSha256: runs.find(run => run.runId === runId)!.documentSha256,
+    resultArtifact: { path: 'capture/result.json', sha256: sha(`result-${runId}`), size_bytes: 100 },
+    inputSha256: sha(`input-${runId}`), executedSettings: { beamDiameter_um: 67 },
+    materialSha256: sha(`material-${runId}`), materialId: 'in718',
+    materialRevisionSha256: sha(`revision-${runId}`),
+    coreContract: { schemaVersion: 1, modelId: 'thermal-v1', solverId: 'solver-v1', actualBackend: 'cpu' } });
+  const tracks = runIds.map(runId => {
+    const identity = runIdentity(runId);
+    const observations = [4.9, 6.0].map((distance, index) => ({ sectionId: ['x-4p9mm', 'x-6p0mm'][index],
+      coordinateFrame: 'scan-start-relative', scanDirection: '+X', distanceFromScanStart_mm: distance,
+      surfaceZ_m: 0, status: 'thermal-proxy', geometry: { width_um: 100, depth_um: 80 },
+      operator: { sectionOperatorId: 'bare-plate-corridor-accepted-peak-x-linear-section-v1',
+        interpolationOperatorId: index ? 'exact-cell-center' : 'linear-interpolation-between-accepted-peak-temperature-planes-v1',
+        contourOperatorId: 'linear-liquidus-crossings-between-cell-centers-v1', evidenceClass: 'thermal-proxy-only' },
+      provenance: { sourceBinding: structuredClone(sourceBinding), runIdentity: structuredClone(identity) } }));
+    return { simulatedTrackId: `sim-${runId}`, experimentalTrackId: null, replicateKind: 'reproducibility-execution',
+      runIdentity: identity, observations };
+  });
+  const campaign = { schemaVersion: 2, kind: 'lpbf-nist-amb2022-03-proxy-campaign', benchmark: 'AMB2022-03-TMPG',
+    campaignId: '', caseNumber: '0', sourceBinding: structuredClone(sourceBinding),
+    beamInputDeclaration: { status: 'published-source-declared', definition: 'D4sigma', value_um: 67,
+      mappingStatus: 'conditional-ideal-Gaussian', measuredProfileMatched: false, sourceBinding: structuredClone(sourceBinding) },
+    claimBoundary: { resultKind: 'thermal-proxy-screening', validationStatus: 'unvalidated',
+      experimentalValidation: false, opticalOperatorMatched: false },
+    samplingPlan: { coordinateFrame: 'scan-start-relative', scanDirection: '+X', sectionPositions_mm: [4.9, 6.0],
+      expectedTrackCount: 3, expectedObservationCount: 6,
+      replicateSemantics: 'reproducibility-evidence-not-independent-replicates' }, tracks };
+  campaign.campaignId = sha(JSON.stringify({ schemaVersion: 2, runIds, caseNumber: '0',
+    revision: sourceBinding.revision, doc: sourceBinding.documentSha256 })).slice(0, 32);
+  return campaign;
+}
+function capture(runKind?: 'analytical-screening' | 'build-screening' | 'transient-thermal') {
+  const result: any = { schemaVersion: 1, requestedMode: 'screening', effectiveMode: 'screening',
     fallbackReason: null, validationStatus: 'unvalidated', productionReady: false, confidence: 'low',
     settings: { backend: 'auto', power_W: 0 }, solver: { id: 'synthetic-contract-test', version: '1' },
     material: { name: 'Synthetic', quality: 'synthetic', source: 'Unit test only' },
@@ -22,9 +57,20 @@ function capture() {
     provenance: { executionRuntime: null },
     artifacts: [{ path: 'case/empty', size_bytes: 0, sha256: sha('') },
       { path: 'peak-field.npz', size_bytes: 3, sha256: sha('abc') }] };
+  if (runKind) {
+    result['runKind'] = runKind;
+    if (runKind === 'build-screening') {
+      result['settings']['jobType'] = 'build-job';
+      result['verdict'] = 'screening-only';
+    }
+    if (runKind === 'analytical-screening') {
+      result['settings']['mode'] = 'screening';
+      result['resolvedPhysics'] = { transient: false };
+    }
+  }
   return { schemaVersion: 1, jobId: 'a'.repeat(32), resultJson: JSON.stringify(result),
     inputJson: JSON.stringify(result.settings), materialJson: JSON.stringify(result.material),
-    contractStatus: 'legacy-unbound' };
+    contractStatus: 'legacy-unbound', ...(runKind ? { runKind } : {}) };
 }
 function fixture(t: TestContext) {
   const root = mkdtempSync(path.join(tmpdir(), 'lpbf-run-test-'));
@@ -53,6 +99,70 @@ test('dry run writes nothing; full import preserves empty/nested bytes and detac
   await assert.rejects(importRun(f.repository, f.store, capture(), [], f.sources, f.job), /conflict/i);
 });
 
+test('classification follows captured result identity through preview and import; old v1 records read as unspecified', async t => {
+  const f = fixture(t), raw = capture('build-screening');
+  writeFileSync(path.join(f.job, 'result.json'), raw.resultJson);
+  const preview = await dryRunRunImport(raw, [], f.sources, f.job);
+  assert.equal(preview.document.capture.runKind, 'build-screening');
+  const saved = await importRun(f.repository, f.store, raw, [], f.sources, f.job);
+  assert.equal(saved.runKind, 'build-screening');
+  assert.equal(f.repository.get(raw.jobId)?.runKind, 'build-screening');
+
+  const analytical = capture('analytical-screening');
+  analytical.jobId = 'd'.repeat(32);
+  writeFileSync(path.join(f.job, 'result.json'), analytical.resultJson);
+  const analyticalPreview = await dryRunRunImport(analytical, [], f.sources, f.job);
+  assert.equal(analyticalPreview.document.capture.runKind, 'analytical-screening');
+  const analyticalSaved = await importRun(f.repository, f.store, analytical, [], f.sources, f.job);
+  assert.equal(analyticalSaved.runKind, 'analytical-screening');
+  assert.equal(f.repository.get(analytical.jobId)?.runKind, 'analytical-screening');
+
+  const misclassified = JSON.parse(analytical.resultJson);
+  misclassified.runKind = 'transient-thermal';
+  assert.throws(() => validateRunDocument({ schemaVersion: 1, runId: 'c'.repeat(32),
+    capture: { ...analytical, jobId: 'c'.repeat(32), resultJson: JSON.stringify(misclassified), runKind: 'transient-thermal' },
+    sources: [] }), /classification/i);
+
+  const legacyCapture = capture();
+  const legacyResult = JSON.parse(legacyCapture.resultJson); delete legacyResult.runKind;
+  legacyCapture.resultJson = JSON.stringify(legacyResult);
+  const oldDocument = { schemaVersion: 1 as const, runId: 'b'.repeat(32),
+    capture: { ...legacyCapture, jobId: 'b'.repeat(32) }, sources: [] };
+  const oldSaved = f.repository.save(oldDocument);
+  assert.equal(oldSaved.runKind, 'legacy-unspecified');
+  assert.equal(Object.hasOwn(oldSaved.document.capture, 'runKind'), false);
+  assert.equal(f.repository.get(oldSaved.document.runId)?.runKind, 'legacy-unspecified');
+});
+
+test('build-job archive verifies Python-compatible material snapshot and identity hashes', () => {
+  const raw = capture('build-screening'), result = JSON.parse(raw.resultJson);
+  Object.assign(result, {
+    alloyId: 'in718', modelId: 'lpbf-build-job-v1', solverRevision: 'solver-v1',
+    materialPropertySchemaVersion: 1, materialPropertyRevision: 'build-job-effective-properties-v1',
+    materialPropertySnapshot: { schemaVersion: 1, alloyId: 'in718',
+      thermal: { base: 'Ni', liquidus_C: 1336.0, thermal_expansion_1_K: 13e-6 },
+      slicer: { density_gcm3: 8.19 } },
+  });
+  result.materialPropertySha256 = sha(canonicalBuildJobMaterialSnapshot(result.materialPropertySnapshot));
+  const identityPayload = { schemaVersion: 1, alloyId: result.alloyId, modelId: result.modelId,
+    solverRevision: result.solverRevision, materialPropertySchemaVersion: result.materialPropertySchemaVersion,
+    materialPropertyRevision: result.materialPropertyRevision, materialPropertySha256: result.materialPropertySha256 };
+  result.buildJobIdentity = { ...identityPayload,
+    sha256: sha(canonicalBuildJobIdentity({ ...identityPayload, sha256: '' })) };
+  raw.resultJson = JSON.stringify(result);
+  const valid = { schemaVersion: 1, runId: raw.jobId, capture: raw, sources: [] };
+  assert.doesNotThrow(() => validateRunDocument(valid));
+
+  result.materialPropertySnapshot.thermal.liquidus_C = 1400.0;
+  raw.resultJson = JSON.stringify(result);
+  assert.throws(() => validateRunDocument(valid), /material snapshot hash binding/i);
+
+  // V1 archives captured before effective-property snapshots remain readable.
+  const legacy = capture('build-screening');
+  assert.doesNotThrow(() => validateRunDocument({ schemaVersion: 1, runId: legacy.jobId,
+    capture: legacy, sources: [] }));
+});
+
 test('reopen and metadata-only restore preserve hashes; tampered rows fail', async t => {
   const f = fixture(t);
   const saved = await importRun(f.repository, f.store, capture(), [], f.sources, f.job);
@@ -65,6 +175,99 @@ test('reopen and metadata-only restore preserve hashes; tampered rows fail', asy
   const db = new DatabaseSync(f.repository.filename);
   db.exec("UPDATE lpbf_runs SET document_json='{}'"); db.close();
   assert.throws(() => f.repository.get(saved.document.runId), /integrity/i);
+});
+
+test('writable v1 database receives the explicit v2 campaign-table migration without changing run rows', t => {
+  const root = mkdtempSync(path.join(tmpdir(), 'lpbf-run-v1-migration-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const filename = path.join(root, 'runs.sqlite'), legacy = new DatabaseSync(filename);
+  legacy.exec(`CREATE TABLE lpbf_runs (run_id TEXT PRIMARY KEY, document_json TEXT NOT NULL,
+    document_sha256 TEXT NOT NULL, created_at TEXT NOT NULL) STRICT;
+    CREATE TABLE lpbf_metadata (kind TEXT PRIMARY KEY) STRICT;
+    INSERT INTO lpbf_metadata VALUES ('metalliksa-lpbf-runs-v1'); PRAGMA user_version=1;`);
+  legacy.close();
+  const repository = new LpbfRunRepository(filename);
+  try {
+    const migrated = new DatabaseSync(filename, { readOnly: true });
+    try { assert.equal(migrated.prepare('PRAGMA user_version').get()!.user_version, 2); }
+    finally { migrated.close(); }
+    assert.deepEqual([...repository.allRuns()], []);
+    assert.deepEqual([...repository.allProxyCampaigns()], []);
+  } finally { repository.close(); }
+});
+
+test('saved proxy campaigns list in creation order and reject broken archived references', async t => {
+  const root = mkdtempSync(path.join(tmpdir(), 'lpbf-campaign-list-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const runRoot = path.join(root, 'runs'); mkdirSync(runRoot);
+  const filename = path.join(runRoot, 'runs.sqlite');
+  const repository = new LpbfRunRepository(filename);
+  const sourceBinding = { datasetId: 'nist-fixture', revision: 1, documentSha256: sha('source') };
+  const v2SourceBinding = { datasetId: 'nist-amb2022-03-optical-table4-local-v1', revision: 1,
+    documentSha256: sha('verified table source'), artifactPath: 'table4-aggregate-v2.json',
+    artifactSha256: 'd1b36dfa2e01a3537093c481e249ce52df6b8879c1c67480ddb9aa10799133da',
+    artifactSizeBytes: 4321, caseNumber: '0' };
+  const runIds = ['a', 'b', 'c'].map(value => value.repeat(32));
+  const runs = runIds.map(id => {
+    const raw = capture('transient-thermal'); raw.jobId = id;
+    return repository.save({ schemaVersion: 1, runId: id, capture: raw, sources: [sourceBinding,
+      { datasetId: v2SourceBinding.datasetId, revision: v2SourceBinding.revision,
+        documentSha256: v2SourceBinding.documentSha256 }] });
+  });
+  const campaign = { schemaVersion: 1, kind: 'lpbf-nist-amb2022-03-proxy-campaign',
+    campaignId: 'e'.repeat(32), sourceBinding,
+    tracks: runs.map(run => ({ runIdentity: { runId: run.document.runId, runDocumentSha256: run.documentSha256 } })) };
+  repository.saveProxyCampaign(campaign);
+  const v2 = v2Campaign(runs.map(run => ({ runId: run.document.runId, documentSha256: run.documentSha256 })), v2SourceBinding);
+  assert.throws(() => repository.saveProxyCampaign(v2), /Table 4 case-0 execution settings/i,
+    'v2 campaign save rejects fabricated identities that do not match captured run evidence');
+  for (const mutate of [
+    (doc: any) => { doc.beamInputDeclaration.value_um = 72; },
+    (doc: any) => { doc.beamInputDeclaration.sourceBinding.documentSha256 = sha('other'); },
+    (doc: any) => { doc.beamInputDeclaration.status = 'measured'; },
+    (doc: any) => { doc.beamInputDeclaration.measuredProfileMatched = true; },
+    (doc: any) => { doc.beamInputDeclaration.clientNote = 'forged'; },
+    (doc: any) => { doc.beamInputDeclaration.definition = 'FWHM'; },
+    (doc: any) => { doc.beamInputDeclaration.mappingStatus = 'measured-profile-matched'; },
+    (doc: any) => { doc.sourceBinding.experimentalTrackIds = ['track-a']; },
+    (doc: any) => { doc.sourceBinding.experimentalTrackIds = ['track-a', 'track-a']; },
+    (doc: any) => { delete doc.beamInputDeclaration; },
+    (doc: any) => { doc.clientNote = 'forged'; },
+    (doc: any) => { doc.claimBoundary.experimentalValidation = true; },
+    (doc: any) => { doc.claimBoundary.validationStatus = 'validated'; },
+    (doc: any) => { doc.samplingPlan.replicateSemantics = 'independent-experimental-replicates'; },
+    (doc: any) => { doc.tracks[0].replicateKind = 'independent-computational-run'; },
+    (doc: any) => { delete doc.tracks[0].observations; },
+    (doc: any) => { doc.tracks[0].observations[0].geometry.clientNote = 'forged'; },
+  ]) {
+    const invalid = structuredClone(v2); mutate(invalid);
+    assert.throws(() => repository.saveProxyCampaign(invalid), /v2 proxy campaign/i);
+  }
+  const independentBinding = structuredClone(v2);
+  assert.notEqual(independentBinding.sourceBinding, independentBinding.beamInputDeclaration.sourceBinding);
+  independentBinding.beamInputDeclaration.sourceBinding.documentSha256 = sha('other');
+  assert.throws(() => repository.saveProxyCampaign(independentBinding), /source binding|beam input declaration/i);
+  const wrongIdentity = structuredClone(v2); wrongIdentity.campaignId = 'a'.repeat(32);
+  assert.throws(() => repository.saveProxyCampaign(wrongIdentity), /v2 proxy campaign identity/i);
+  const wrongLegacyIdentity = structuredClone(v2);
+  wrongLegacyIdentity.campaignId = sha(JSON.stringify({ runIds: runs.map(run => run.document.runId), caseNumber: '0' })).slice(0, 32);
+  assert.throws(() => repository.saveProxyCampaign(wrongLegacyIdentity), /v2 proxy campaign identity/i);
+  assert.throws(() => repository.saveProxyCampaign({ ...campaign, beamInputDeclaration: {} }), /beamInputDeclaration is v2-only/i);
+  repository.close();
+
+  const service = new LpbfNistProxyCampaignService(runRoot, path.join(root, 'sources'));
+  const listed = await service.list();
+  assert.equal(listed.length, 1);
+  assert.deepEqual(new Set(listed.map(item => item.campaignId)), new Set([campaign.campaignId]));
+  assert.equal(listed.find(item => item.campaignId === campaign.campaignId)!.documentSha256, sha(JSON.stringify(campaign)));
+
+  const db = new DatabaseSync(filename);
+  const changed = JSON.parse(String(db.prepare('SELECT document_json FROM lpbf_proxy_campaigns WHERE campaign_id=?').get(campaign.campaignId)!.document_json));
+  changed.tracks[0].runIdentity.runDocumentSha256 = 'f'.repeat(64);
+  const documentJson = JSON.stringify(changed);
+  db.prepare('UPDATE lpbf_proxy_campaigns SET document_json=?, document_sha256=? WHERE campaign_id=?').run(documentJson, sha(documentJson), campaign.campaignId);
+  db.close();
+  await assert.rejects(service.list(), /reference integrity/i);
 });
 
 test('missing/changed bytes and extra files never publish a completed record', async t => {

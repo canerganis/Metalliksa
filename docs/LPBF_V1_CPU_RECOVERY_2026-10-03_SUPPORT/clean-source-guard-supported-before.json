@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "runtimeFilesMatched": 1520,
+  "snapshotSourceManifestSha256": "1570a5186cf02cd3f53d1c96883bce0cb6c2f0495c7da08c83bc8a31aeb180a7",
+  "mismatches": [],
+  "sourceRevision": "33efb32b7d9734587a78d1cb9de8224d7ef2a4ec",
+  "manifestFileCount": 1520
+}

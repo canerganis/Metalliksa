@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useMemo } from "react";
-import * as d3 from "d3";
+import { axisBottom as d3AxisBottom, axisLeft as d3AxisLeft, interpolateInferno as d3InterpolateInferno, interpolatePlasma as d3InterpolatePlasma, interpolateRdYlGn as d3InterpolateRdYlGn, interpolateTurbo as d3InterpolateTurbo, interpolateViridis as d3InterpolateViridis, interpolateYlGnBu as d3InterpolateYlGnBu, max as d3Max, mean as d3Mean, median as d3Median, min as d3Min, pointer as d3Pointer, scaleBand as d3ScaleBand, scaleDiverging as d3ScaleDiverging, scaleLinear as d3ScaleLinear, scaleSequential as d3ScaleSequential, select as d3Select } from "d3";
 import {
   Grid,
   Sparkles,
@@ -148,10 +148,10 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
     const values = displayedMaterials.map((m) => getPropertyValue(m, selectedPropertyKey)).filter((v) => v > 0);
     if (values.length === 0) return null;
 
-    const min = d3.min(values) ?? 0;
-    const max = d3.max(values) ?? 0;
-    const mean = d3.mean(values) ?? 0;
-    const median = d3.median(values) ?? 0;
+    const min = d3Min(values) ?? 0;
+    const max = d3Max(values) ?? 0;
+    const mean = d3Mean(values) ?? 0;
+    const median = d3Median(values) ?? 0;
     const currentProp = HEATMAP_PROPERTIES.find((p) => p.key === selectedPropertyKey);
 
     return {
@@ -198,8 +198,8 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
           return;
         }
 
-        const meanX = d3.mean(pairs, (d: { elemWt: number; propVal: number }) => d.elemWt) ?? 0;
-        const meanY = d3.mean(pairs, (d: { elemWt: number; propVal: number }) => d.propVal) ?? 0;
+        const meanX = d3Mean(pairs, (d: { elemWt: number; propVal: number }) => d.elemWt) ?? 0;
+        const meanY = d3Mean(pairs, (d: { elemWt: number; propVal: number }) => d.propVal) ?? 0;
 
         let num = 0;
         let denX = 0;
@@ -236,9 +236,9 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
     const propValues: number[] = validMats.map((m) => getPropertyValue(m, selectedPropertyKey));
     const elemValues: number[] = validMats.map((m) => getElementWt(m, selectedElement));
 
-    const maxElem = Math.max(1, (d3.max(elemValues) as number | undefined) ?? 10);
-    const maxProp = Math.max(10, (d3.max(propValues) as number | undefined) ?? 1000);
-    const minProp = (d3.min(propValues) as number | undefined) ?? 0;
+    const maxElem = Math.max(1, (d3Max(elemValues) as number | undefined) ?? 10);
+    const maxProp = Math.max(10, (d3Max(propValues) as number | undefined) ?? 1000);
+    const minProp = (d3Min(propValues) as number | undefined) ?? 0;
 
     // Create 8 bins for element wt% and 8 bins for property value
     const numBinsX = 8;
@@ -297,25 +297,24 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
   const getColorScale = (minVal: number, maxVal: number, diverging = false) => {
     if (diverging) {
       // Diverging for correlation: -1 (Rose/Crimson) -> 0 (Dark Slate) -> +1 (Emerald/Cyan)
-      return d3
-        .scaleDiverging<string>()
+      return d3ScaleDiverging<string>()
         .domain([-1, 0, 1])
-        .interpolator(d3.interpolateRdYlGn);
+        .interpolator(d3InterpolateRdYlGn);
     }
 
     if (colorPalette === "viridis") {
-      return d3.scaleSequential(d3.interpolateViridis).domain([minVal, maxVal]);
+      return d3ScaleSequential(d3InterpolateViridis).domain([minVal, maxVal]);
     }
     if (colorPalette === "plasma") {
-      return d3.scaleSequential(d3.interpolatePlasma).domain([minVal, maxVal]);
+      return d3ScaleSequential(d3InterpolatePlasma).domain([minVal, maxVal]);
     }
     if (colorPalette === "turbo") {
-      return d3.scaleSequential(d3.interpolateTurbo).domain([minVal, maxVal]);
+      return d3ScaleSequential(d3InterpolateTurbo).domain([minVal, maxVal]);
     }
     if (colorPalette === "emerald") {
-      return d3.scaleSequential(d3.interpolateYlGnBu).domain([minVal, maxVal]);
+      return d3ScaleSequential(d3InterpolateYlGnBu).domain([minVal, maxVal]);
     }
-    return d3.scaleSequential(d3.interpolateInferno).domain([minVal, maxVal]);
+    return d3ScaleSequential(d3InterpolateInferno).domain([minVal, maxVal]);
   };
 
   // ResizeObserver for fluid responsive D3 rendering
@@ -349,7 +348,7 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
   useEffect(() => {
     if (!svgRef.current || displayedMaterials.length === 0) return;
 
-    const svg = d3.select(svgRef.current);
+    const svg = d3Select(svgRef.current);
     svg.selectAll("*").remove();
 
     const { width, height } = dimensions;
@@ -371,8 +370,8 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
       const xElements = activeElements;
       const yMaterials = displayedMaterials;
 
-      const xScale = d3.scaleBand().domain(xElements).range([0, innerWidth]).padding(0.08);
-      const yScale = d3.scaleBand().domain(yMaterials.map((m) => m.id)).range([0, innerHeight]).padding(0.08);
+      const xScale = d3ScaleBand().domain(xElements).range([0, innerWidth]).padding(0.08);
+      const yScale = d3ScaleBand().domain(yMaterials.map((m) => m.id)).range([0, innerHeight]).padding(0.08);
 
       // Max composition across cells (excluding matrix balance like Fe > 80% to keep contrast vibrant)
       const allCompValues: number[] = yMaterials.flatMap((m) =>
@@ -381,7 +380,7 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
           return el === "Fe" || el === "Ti" || el === "Ni" || el === "Al" || el === "Cu" ? Math.min(25, v) : v;
         })
       );
-      const maxComp = Math.max(5, (d3.max(allCompValues) as number | undefined) ?? 15);
+      const maxComp = Math.max(5, (d3Max(allCompValues) as number | undefined) ?? 15);
       const colorScale = getColorScale(0, maxComp);
 
       // X Axis (Element symbols on top)
@@ -517,8 +516,8 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
               setSelectedElement(elem);
             })
             .on("pointerenter", function (event: MouseEvent) {
-              d3.select(this).attr("stroke", "#ffffff").attr("stroke-width", 1.5);
-              const [mx, my] = d3.pointer(event, svgRef.current);
+              d3Select(this).attr("stroke", "#ffffff").attr("stroke-width", 1.5);
+              const [mx, my] = d3Pointer(event, svgRef.current);
               setHoveredCell({
                 xLabel: `${elem} Content`,
                 yLabel: mat.name,
@@ -531,7 +530,7 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
               });
             })
             .on("pointerleave", function () {
-              d3.select(this).attr("stroke", cellStroke).attr("stroke-width", 0.75);
+              d3Select(this).attr("stroke", cellStroke).attr("stroke-width", 0.75);
               setHoveredCell(null);
             });
 
@@ -569,10 +568,10 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
 
       const { bins, maxElem, minProp, maxProp, numBinsX, numBinsY, elemStep, propStep } = binnedDistributionData;
 
-      const xScale = d3.scaleLinear().domain([0, maxElem]).range([0, innerWidth]);
-      const yScale = d3.scaleLinear().domain([minProp, maxProp]).range([innerHeight, 0]);
+      const xScale = d3ScaleLinear().domain([0, maxElem]).range([0, innerWidth]);
+      const yScale = d3ScaleLinear().domain([minProp, maxProp]).range([innerHeight, 0]);
 
-      const maxBinCount = Math.max(1, (d3.max(bins, (b: { count: number }) => b.count) as number | undefined) ?? 1);
+      const maxBinCount = Math.max(1, (d3Max(bins, (b: { count: number }) => b.count) as number | undefined) ?? 1);
       const colorScale = getColorScale(0, maxBinCount);
 
       // Grid Cells
@@ -604,8 +603,8 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
           })
           .on("pointerenter", function (event: MouseEvent) {
             if (b.count === 0) return;
-            d3.select(this).attr("stroke", "#ffffff").attr("stroke-width", 2);
-            const [mx, my] = d3.pointer(event, svgRef.current);
+            d3Select(this).attr("stroke", "#ffffff").attr("stroke-width", 2);
+            const [mx, my] = d3Pointer(event, svgRef.current);
             const propDef = HEATMAP_PROPERTIES.find((p) => p.key === selectedPropertyKey);
             setHoveredCell({
               xLabel: `${selectedElement}: ${b.elemRange[0]}–${b.elemRange[1]}% wt`,
@@ -617,7 +616,7 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
             });
           })
           .on("pointerleave", function () {
-            d3.select(this).attr("stroke", hasSelectedMat ? "#38bdf8" : b.count > 0 ? "rgba(255,255,255,0.1)" : "#162032").attr("stroke-width", hasSelectedMat ? 2 : 1);
+            d3Select(this).attr("stroke", hasSelectedMat ? "#38bdf8" : b.count > 0 ? "rgba(255,255,255,0.1)" : "#162032").attr("stroke-width", hasSelectedMat ? 2 : 1);
             setHoveredCell(null);
           });
 
@@ -657,7 +656,7 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
       });
 
       // X Axis
-      const xAxis = d3.axisBottom(xScale).ticks(6).tickFormat((d) => `${d}%`);
+      const xAxis = d3AxisBottom(xScale).ticks(6).tickFormat((d) => `${d}%`);
       g.append("g")
         .attr("transform", `translate(0, ${innerHeight})`)
         .call(xAxis)
@@ -678,7 +677,7 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
         .text(`[${selectedElement}] Alloying Element Concentration (% wt)`);
 
       // Y Axis
-      const yAxis = d3.axisLeft(yScale).ticks(6).tickFormat((d) => `${d}`);
+      const yAxis = d3AxisLeft(yScale).ticks(6).tickFormat((d) => `${d}`);
       g.append("g")
         .call(yAxis)
         .selectAll("text")
@@ -719,8 +718,8 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
       const xProps = HEATMAP_PROPERTIES.filter((p) => p.key !== "thermalConductivity");
       const yElements = activeElements;
 
-      const xScale = d3.scaleBand().domain(xProps.map((p) => p.key)).range([0, innerWidth]).padding(0.08);
-      const yScale = d3.scaleBand().domain(yElements).range([0, innerHeight]).padding(0.08);
+      const xScale = d3ScaleBand().domain(xProps.map((p) => p.key)).range([0, innerWidth]).padding(0.08);
+      const yScale = d3ScaleBand().domain(yElements).range([0, innerHeight]).padding(0.08);
 
       const colorDiverging = getColorScale(-1, 1, true);
 
@@ -799,8 +798,8 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
             setSelectedPropertyKey(cell.propertyKey);
           })
           .on("pointerenter", function (event: MouseEvent) {
-            d3.select(this).attr("stroke", "#ffffff").attr("stroke-width", 1.8);
-            const [mx, my] = d3.pointer(event, svgRef.current);
+            d3Select(this).attr("stroke", "#ffffff").attr("stroke-width", 1.8);
+            const [mx, my] = d3Pointer(event, svgRef.current);
             const rDesc =
               cell.r > 0.6
                 ? "Strong Positive Correlation"
@@ -822,7 +821,7 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
             });
           })
           .on("pointerleave", function () {
-            d3.select(this).attr("stroke", "rgba(255,255,255,0.08)").attr("stroke-width", 0.75);
+            d3Select(this).attr("stroke", "rgba(255,255,255,0.08)").attr("stroke-width", 0.75);
             setHoveredCell(null);
           });
 
@@ -937,7 +936,7 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
         {/* Target Property Selector */}
         <div className="md:col-span-4 flex items-center gap-2">
           <span className="text-xs font-mono text-slate-400 whitespace-nowrap">Property:</span>
-          <select
+          <select aria-label="Property"
             value={selectedPropertyKey}
             onChange={(e) => setSelectedPropertyKey(e.target.value)}
             className="w-full bg-[#090e18] border border-[#162032] rounded-lg px-2.5 py-1.5 text-xs text-emerald-400 font-mono focus:outline-none focus:border-sky-400"
@@ -953,7 +952,7 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
         {/* Focused Element Selector (Relevant for Binned mode & sorting) */}
         <div className="md:col-span-3 flex items-center gap-2">
           <span className="text-xs font-mono text-slate-400 whitespace-nowrap">Element:</span>
-          <select
+          <select aria-label="Element"
             value={selectedElement}
             onChange={(e) => setSelectedElement(e.target.value)}
             className="w-full bg-[#090e18] border border-[#162032] rounded-lg px-2.5 py-1.5 text-xs text-sky-400 font-mono focus:outline-none focus:border-sky-400 font-bold"
@@ -970,7 +969,7 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
         {heatmapMode === "alloy-elements" && (
           <div className="md:col-span-3 flex items-center gap-2">
             <span className="text-xs font-mono text-slate-400 whitespace-nowrap">Sort:</span>
-            <select
+            <select aria-label="Sort"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
               className="w-full bg-[#090e18] border border-[#162032] rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:outline-none"
@@ -986,7 +985,7 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
         {/* Color Palette Selector */}
         <div className={`${heatmapMode === "alloy-elements" ? "md:col-span-2" : "md:col-span-5"} flex items-center justify-end gap-2`}>
           <span className="text-xs font-mono text-slate-400 whitespace-nowrap">Theme:</span>
-          <select
+          <select aria-label="Theme"
             value={colorPalette}
             onChange={(e) => setColorPalette(e.target.value as ColorPaletteKey)}
             className="bg-[#090e18] border border-[#162032] rounded-lg px-2 py-1.5 text-xs text-amber-400 font-mono focus:outline-none"

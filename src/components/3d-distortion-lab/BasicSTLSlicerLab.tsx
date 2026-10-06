@@ -1,4 +1,6 @@
 import { useWorkspaceVisible } from '../WorkspaceVisibility';
+import { useDebouncedLatestTask } from "../../hooks/useDebouncedLatestTask";
+import { buildSlicerPayload, slicerRequestSignature } from "../../utils/slicerRequest";
 import { inferSlicerPreset } from "../../utils/lpbfIndustrialDecision";
 import { canonicalLpbfMaterialName, isSupportedSlicerMaterial } from "../../utils/lpbfMaterialIdentity";
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
@@ -303,7 +305,7 @@ export const BasicSTLSlicerLab: React.FC<BasicSTLSlicerLabProps> = ({
   };
 
   // Run CPython 3.10+ Slicer & LPBF Build Time Solver
-  const runPythonSlicer = useCallback(async () => {
+  const runPythonSlicer = useCallback(async (signal?: AbortSignal): Promise<boolean> => {
     const requestSeq = ++pythonRequestSeq.current;
     setPythonExecutionData(null);
     setIsPythonLoading(true);
@@ -320,7 +322,7 @@ export const BasicSTLSlicerLab: React.FC<BasicSTLSlicerLabProps> = ({
         customTriangles = extracted.triangles.length > 0 ? extracted.triangles : null;
       }
 
-      const payload = {
+      const payload = buildSlicerPayload({
         preset: selectedPreset,
         material: selectedMaterial,
         laserPower_W,
@@ -332,10 +334,10 @@ export const BasicSTLSlicerLab: React.FC<BasicSTLSlicerLabProps> = ({
         customTriangles,
         cadAssetName: uploadedFileName || "",
         triangleCountNative: liveMesh?.nativeTriangleCount,
-      };
+      });
 
       const res = await fetch("/api/python/stl-slicer-build-time", {
-        signal: AbortSignal.timeout(25000),
+        signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(25000)]) : AbortSignal.timeout(25000),
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -347,14 +349,16 @@ export const BasicSTLSlicerLab: React.FC<BasicSTLSlicerLabProps> = ({
       }
 
       const result = await res.json();
-      if (pythonRequestSeq.current !== requestSeq) return;
+      if (signal?.aborted || pythonRequestSeq.current !== requestSeq) return false;
       const elapsed = Math.round(performance.now() - startTime);
       setPythonExecutionData(result);
       setPythonExecutionDurationMs(result.pythonDurationMs || elapsed);
+      return true;
     } catch (err: any) {
-      if (pythonRequestSeq.current !== requestSeq) return;
+      if (signal?.aborted || pythonRequestSeq.current !== requestSeq) return false;
       console.warn("Python execution warning:", err);
       setPythonError(err.message || "Failed to execute Python slicer solver");
+      return false;
     } finally {
       if (pythonRequestSeq.current === requestSeq) setIsPythonLoading(false);
     }
@@ -368,14 +372,18 @@ export const BasicSTLSlicerLab: React.FC<BasicSTLSlicerLabProps> = ({
     recoatTimePerLayer_s,
     hatchStrategy,
     customGeometry,
+    uploadedFileName,
+    liveMesh?.nativeTriangleCount,
   ]);
 
   // Debounce process edits; a superseded response cannot overwrite the current geometry/process.
+  // The solve is skipped while hidden, aborted when superseded/hidden, and not repeated for an unchanged input.
+  const slicerInputSignature = slicerRequestSignature({ preset: selectedPreset, material: selectedMaterial, laserPower_W, scanSpeed_mms, layerThickness_um, hatchSpacing_um, recoatTimePerLayer_s, hatchStrategy, cadAssetName: uploadedFileName || "", triangleCountNative: liveMesh?.nativeTriangleCount, geometryId: customGeometry?.uuid ?? null });
   useEffect(() => {
     setPythonExecutionData(null);
-    const timer = setTimeout(() => { void runPythonSlicer(); }, 280);
-    return () => { clearTimeout(timer); pythonRequestSeq.current += 1; };
-  }, [runPythonSlicer]);
+    pythonRequestSeq.current += 1;
+  }, [slicerInputSignature]);
+  const { runNow: runPythonSlicerNow } = useDebouncedLatestTask(slicerInputSignature, (_signature, signal) => runPythonSlicer(signal), 280);
 
   // Auto-play Layer Scrubber Animation
   useEffect(() => {
@@ -437,7 +445,7 @@ export const BasicSTLSlicerLab: React.FC<BasicSTLSlicerLabProps> = ({
     const segments = activeSlice.segments;
     if (segments.length === 0) {
       ctx.fillStyle = "#64748b";
-      ctx.font = "13px JetBrains Mono, monospace";
+      ctx.font = "13px Fira Code, monospace";
       ctx.textAlign = "center";
       ctx.fillText(
         `No cross-sectional geometry intersection at Z = ${currentLayerZ.toFixed(2)} mm (Layer ${activeLayerIndex}/${stackSummary.totalLayers})`,
@@ -545,7 +553,7 @@ export const BasicSTLSlicerLab: React.FC<BasicSTLSlicerLabProps> = ({
       ctx.setLineDash([]);
 
       ctx.fillStyle = "#f59e0b";
-      ctx.font = "9px JetBrains Mono, monospace";
+      ctx.font = "9px Fira Code, monospace";
       ctx.fillText(
         `ΔX: ${(bb.maxX - bb.minX).toFixed(1)} mm × ΔY: ${(bb.maxY - bb.minY).toFixed(1)} mm`,
         bx1,
@@ -565,7 +573,7 @@ export const BasicSTLSlicerLab: React.FC<BasicSTLSlicerLabProps> = ({
       ctx.setLineDash([]);
 
       ctx.fillStyle = "#10b981";
-      ctx.font = "10px JetBrains Mono, monospace";
+      ctx.font = "10px Fira Code, monospace";
       ctx.fillText("⮞ Recoater Wiper Blade Sweep Axis (+X)", 30, 24);
     }
 
@@ -584,7 +592,7 @@ export const BasicSTLSlicerLab: React.FC<BasicSTLSlicerLabProps> = ({
     ctx.stroke();
 
     ctx.fillStyle = "#94a3b8";
-    ctx.font = "9px JetBrains Mono, monospace";
+    ctx.font = "9px Fira Code, monospace";
     ctx.fillText(`${barLength_mm} mm`, 25 + barLength_px / 2 - 12, height - 12);
   }, [
     workspaceVisible,
@@ -1017,7 +1025,7 @@ Generated by MetalliX 2D Layer-by-Layer Slicer & Inherent Strain Engine
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={runPythonSlicer}
+                    onClick={() => runPythonSlicerNow()}
                     disabled={isPythonLoading}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-400/40 text-amber-200 hover:bg-amber-500/30 rounded-xl text-xs font-mono font-bold transition disabled:opacity-50"
                   >
@@ -1377,7 +1385,7 @@ def slice_mesh(stl_path, t_layer=0.040, h_s=0.110, p_laser=285, v_scan=960, t_re
 
               {/* Scrubber Slider */}
               <div className="relative">
-                <input
+                <input aria-label="Layer scrubber"
                   type="range"
                   min={1}
                   max={Math.max(1, stackSummary.totalLayers)}
@@ -1452,7 +1460,7 @@ def slice_mesh(stl_path, t_layer=0.040, h_s=0.110, p_laser=285, v_scan=960, t_re
             {/* Material Selection */}
             <div className="space-y-1.5">
               <label className="text-xs text-slate-400 font-bold">Alloy Material Preset</label>
-              <select
+              <select aria-label="Alloy Material Preset"
                 value=""
                 onChange={(e) => { if (e.target.value) loadSharedPreset(e.target.value); }}
                 className="w-full bg-[#0c1424] border border-[#1e2d46] rounded-xl px-3 py-2 text-xs font-mono text-cyan-300 focus:outline-none focus:border-cyan-400"
@@ -1501,7 +1509,7 @@ def slice_mesh(stl_path, t_layer=0.040, h_s=0.110, p_laser=285, v_scan=960, t_re
                 <span className="text-slate-400">Hatch Spacing (h_s):</span>
                 <span className="text-emerald-300 font-bold font-mono">{hatchSpacing_um} µm</span>
               </div>
-              <input
+              <input aria-label="Hatch Spacing (h_s)"
                 type="range"
                 min={10}
                 max={1000}
@@ -1527,7 +1535,7 @@ def slice_mesh(stl_path, t_layer=0.040, h_s=0.110, p_laser=285, v_scan=960, t_re
                 <span className="text-slate-400">Laser Power (P):</span>
                 <span className="text-amber-300 font-bold font-mono">{laserPower_W} W</span>
               </div>
-              <input
+              <input aria-label="Laser Power (P)"
                 type="range"
                 min={10}
                 max={1500}
@@ -1548,7 +1556,7 @@ def slice_mesh(stl_path, t_layer=0.040, h_s=0.110, p_laser=285, v_scan=960, t_re
                 <span className="text-slate-400">Scan Velocity (v_scan):</span>
                 <span className="text-sky-300 font-bold font-mono">{scanSpeed_mms} mm/s</span>
               </div>
-              <input
+              <input aria-label="Scan Velocity (v_scan)"
                 type="range"
                 min={10}
                 max={10000}
@@ -1569,7 +1577,7 @@ def slice_mesh(stl_path, t_layer=0.040, h_s=0.110, p_laser=285, v_scan=960, t_re
                 <span className="text-slate-400">Recoat Wiper Time / Layer:</span>
                 <span className="text-purple-300 font-bold font-mono">{recoatTimePerLayer_s} s</span>
               </div>
-              <input
+              <input aria-label="Recoat Wiper Time per Layer"
                 type="range"
                 min={5}
                 max={20}

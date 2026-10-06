@@ -56,7 +56,7 @@ const GALVANIC_METALS: GalvanicMetal[] = [
 ];
 
 export function CorrosionEngineeringLab() {
-  const [activeTab, setActiveTab] = useState<"galvanic" | "pren" | "polarization" | "ocp-g59" | "pourbaix" | "corrosion-eis">("corrosion-eis");
+  const [activeTab, setActiveTab] = useState<"galvanic" | "pren" | "polarization" | "pourbaix" | "corrosion-eis">("corrosion-eis");
 
   // Galvanic Simulator State
   const [anodeIdx, setAnodeIdx] = useState<number>(1); // 7075 Al
@@ -142,7 +142,7 @@ export function CorrosionEngineeringLab() {
   return (
     <div className="space-y-6">
       {/* Top Banner Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#090e18] p-5 rounded-2xl border border-[#162032] shadow-sm">
+      <div className="flex flex-col gap-4 bg-[#090e18] p-5 rounded-2xl border border-[#162032] shadow-sm">
         <div className="flex items-center gap-3.5">
           <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-[0_0_16px_rgba(245,158,11,0.25)]">
             <ShieldAlert className="w-6 h-6" />
@@ -162,8 +162,8 @@ export function CorrosionEngineeringLab() {
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex items-center gap-1.5 p-1 bg-[#050810] rounded-xl border border-[#162032] overflow-x-auto">
+        {/* Tab Navigation: its own row and wrapping, so every tab (Pourbaix included) and the active one stay visible. */}
+        <div role="group" aria-label="Corrosion views" className="flex flex-wrap items-center gap-1.5 p-1 bg-[#050810] rounded-xl border border-[#162032]">
           <button
             type="button"
             onClick={() => {
@@ -212,21 +212,6 @@ export function CorrosionEngineeringLab() {
             <span>Tafel / Stern-Geary</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(8);
-              setActiveTab("ocp-g59");
-            }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition whitespace-nowrap flex items-center gap-1.5 ${
-              activeTab === "ocp-g59"
-                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Real-Time OCP &amp; ASTM G59</span>
-          </button>
 
           <button
             type="button"
@@ -241,7 +226,7 @@ export function CorrosionEngineeringLab() {
             }`}
           >
             <Compass className="w-3.5 h-3.5 text-sky-400" />
-            <span>Dynamic Pourbaix (E-pH-T-Salinity)</span>
+            <span>Pourbaix E–pH (25 °C)</span>
           </button>
 
           <button
@@ -291,7 +276,7 @@ export function CorrosionEngineeringLab() {
                       {anodeMetal.e0 > 0 ? `+${anodeMetal.e0}` : anodeMetal.e0} V vs SHE
                     </span>
                   </div>
-                  <select
+                  <select aria-label="ANODE (Corroding Metal)"
                     value={anodeIdx}
                     onChange={(e) => setAnodeIdx(parseInt(e.target.value))}
                     className="w-full bg-[#0c1322] border border-[#1e2d46] rounded-lg p-2 text-xs text-white font-mono focus:outline-none focus:border-red-400"
@@ -307,7 +292,7 @@ export function CorrosionEngineeringLab() {
                   <div className="pt-2 border-t border-[#162032] flex items-center justify-between text-xs font-mono">
                     <span className="text-slate-400">Exposed Anode Area:</span>
                     <div className="flex items-center gap-1">
-                      <input
+                      <input aria-label="Exposed Anode Area (cm²)"
                         type="number"
                         inputMode="decimal"
                         value={anodeArea}
@@ -330,7 +315,7 @@ export function CorrosionEngineeringLab() {
                       {cathodeMetal.e0 > 0 ? `+${cathodeMetal.e0}` : cathodeMetal.e0} V vs SHE
                     </span>
                   </div>
-                  <select
+                  <select aria-label="CATHODE (Protected Metal)"
                     value={cathodeIdx}
                     onChange={(e) => setCathodeIdx(parseInt(e.target.value))}
                     className="w-full bg-[#0c1322] border border-[#1e2d46] rounded-lg p-2 text-xs text-white font-mono focus:outline-none focus:border-sky-400"
@@ -346,7 +331,7 @@ export function CorrosionEngineeringLab() {
                   <div className="pt-2 border-t border-[#162032] flex items-center justify-between text-xs font-mono">
                     <span className="text-slate-400">Exposed Cathode Area:</span>
                     <div className="flex items-center gap-1">
-                      <input
+                      <input aria-label="Exposed Cathode Area (cm²)"
                         type="number"
                         inputMode="decimal"
                         value={cathodeArea}
@@ -363,7 +348,7 @@ export function CorrosionEngineeringLab() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                 <div className="space-y-1.5">
                   <label className="text-xs font-mono text-slate-300">Electrolyte Environment:</label>
-                  <select
+                  <select aria-label="Electrolyte Environment"
                     value={electrolyte}
                     onChange={(e) => setElectrolyte(e.target.value as any)}
                     className="w-full bg-[#0c1322] border border-[#1e2d46] rounded-lg p-2 text-xs text-white font-mono focus:outline-none focus:border-amber-400"
@@ -381,7 +366,7 @@ export function CorrosionEngineeringLab() {
                     <span className="text-slate-300">Uncoupled Base Current Density:</span>
                     <span className="text-amber-400 font-bold">{currentDensity} mA/cm²</span>
                   </div>
-                  <input
+                  <input aria-label="Uncoupled Base Current Density (mA/cm²)"
                     type="range"
                     min="0.1"
                     max="10.0"
@@ -509,7 +494,7 @@ export function CorrosionEngineeringLab() {
                     <span className="text-slate-300">Chromium (%Cr):</span>
                     <span className="text-sky-300 font-bold">{cr.toFixed(1)} wt%</span>
                   </div>
-                  <input
+                  <input aria-label="Chromium (%Cr)"
                     type="range"
                     min="10.0"
                     max="32.0"
@@ -526,7 +511,7 @@ export function CorrosionEngineeringLab() {
                     <span className="text-slate-300">Molybdenum (%Mo):</span>
                     <span className="text-sky-300 font-bold">{mo.toFixed(1)} wt%</span>
                   </div>
-                  <input
+                  <input aria-label="Molybdenum (%Mo)"
                     type="range"
                     min="0.0"
                     max="10.0"
@@ -543,7 +528,7 @@ export function CorrosionEngineeringLab() {
                     <span className="text-slate-300">Tungsten (%W):</span>
                     <span className="text-sky-300 font-bold">{w.toFixed(1)} wt%</span>
                   </div>
-                  <input
+                  <input aria-label="Tungsten (%W)"
                     type="range"
                     min="0.0"
                     max="6.0"
@@ -560,7 +545,7 @@ export function CorrosionEngineeringLab() {
                     <span className="text-slate-300">Nitrogen (%N):</span>
                     <span className="text-sky-300 font-bold">{n.toFixed(2)} wt%</span>
                   </div>
-                  <input
+                  <input aria-label="Nitrogen (%N)"
                     type="range"
                     min="0.0"
                     max="0.60"
@@ -681,16 +666,7 @@ export function CorrosionEngineeringLab() {
       )}
 
       {/* ======================================================== */}
-      {/* 4. REAL-TIME OCP & ASTM G59 LPR TRANSIENT STUDIO        */}
-      {/* ======================================================== */}
-      {activeTab === "ocp-g59" && (
-        <div className="pt-2">
-          
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* 5. DYNAMIC POURBAIX (E-pH-T-SALINITY) PHASE GENERATOR   */}
+      {/* 5. POURBAIX E-pH (25 °C, SINGLE ELEMENT) STUDIO          */}
       {/* ======================================================== */}
       {activeTab === "pourbaix" && (
         <div className="pt-2">

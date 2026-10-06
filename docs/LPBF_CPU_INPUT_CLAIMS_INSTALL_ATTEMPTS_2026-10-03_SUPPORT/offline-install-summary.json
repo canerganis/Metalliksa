@@ -1,0 +1,50 @@
+{
+  "candidate": "ec3a5fcbeb1c5aa1b250ed31a4e812796c5d17ce",
+  "trackedSourceFiles": 1579,
+  "sourceManifestFileSha256": "4573e2295d8d9721700c177adf39826f9a956c24cee3b524a9ce3b8eb3a6c1a2",
+  "sourceHashesBefore": {
+    "files": 1579,
+    "mismatches": 0,
+    "record": ".tmp-lpbf-input-claims-acceptance-20261003/clean-source-before.json"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "npm": "11.19.0",
+    "python": "3.12.10",
+    "numpy": "2.2.6",
+    "pydantic": "2.13.5",
+    "METALLIX_PYTHON": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\lpbf-win-py312\\Scripts\\python.exe",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "temporaryDirectory": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\clean-temp"
+  },
+  "gates": {
+    "npmCi": {
+      "command": "npm ci --offline --no-audit --no-fund",
+      "status": "UNAVAILABLE",
+      "exitCode": 1,
+      "durationSeconds": 141.0748332,
+      "reason": "ENOTCACHED: offline npm cache lacked registry.npmjs.org/yallist; EPERM cleanup warnings",
+      "log": ".tmp-lpbf-input-claims-acceptance-20261003/clean-temp/clean-npm-ci.log",
+      "packagesAdded": "not reported"
+    },
+    "lint": "NOT RUN: npm ci unavailable",
+    "unit": "NOT RUN: npm ci unavailable",
+    "build": "NOT RUN: npm ci unavailable"
+  },
+  "sourceHashesAfter": {
+    "files": 1579,
+    "mismatches": 0,
+    "matchesBefore": true,
+    "record": ".tmp-lpbf-input-claims-acceptance-20261003/clean-source-after.json"
+  },
+  "ignoredOutput": {
+    "nodeModulesExistsAfter": false,
+    "distExistsAfter": false,
+    "cleanup": "not attempted"
+  },
+  "limitations": [
+    "No network fetch or retry after offline ENOTCACHED",
+    "No lint, unit suite, or build ran",
+    "This records the failed clean install attempt; it is not clean-candidate acceptance"
+  ]
+}

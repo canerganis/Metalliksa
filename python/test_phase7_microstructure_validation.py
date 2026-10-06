@@ -63,7 +63,8 @@ class TestPhase7MicrostructureValidation(unittest.TestCase):
         self.assertTrue(res["success"])
         gap = res["calphadVsKineticsGap"]["kineticRealityAtSelectedCooling"]
         self.assertTrue(gap["isSuppressedEquilibrium"])
-        self.assertIn("Full Martensitic", gap["verdict"])
+        # Lane kin-li (Li 1998 model): no diffusional start above Ms; Koistinen-Marburger fraction at 25 C
+        self.assertIn("No diffusional start above Ms", gap["verdict"])
         self.assertGreaterEqual(gap["predictedMartensite_pct"], 90.0)
 
     def test_05_kinetics_slow_cooling(self):
@@ -75,8 +76,9 @@ class TestPhase7MicrostructureValidation(unittest.TestCase):
         )
         gap = res["calphadVsKineticsGap"]["kineticRealityAtSelectedCooling"]
         self.assertFalse(gap["isSuppressedEquilibrium"])
-        self.assertIn("Decomposition", gap["verdict"])
-        self.assertLess(gap["predictedMartensite_pct"], 5.0)
+        # Lane kin-li: a diffusional (ferrite) start is reached; fractions are not computed, so no martensite %
+        self.assertIn("Ferrite start at", gap["verdict"])
+        self.assertIsNone(gap["predictedMartensite_pct"])
 
 if __name__ == '__main__':
     unittest.main()

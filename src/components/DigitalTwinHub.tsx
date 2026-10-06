@@ -174,9 +174,9 @@ export const DigitalTwinHub: React.FC<{ onNavigateToModule?: (tab: string) => vo
       if (content) {
         const success = importTwinFromJSON(content);
         if (success) {
-          alert("Digital Twin imported successfully!");
+          alert("Specimen record imported successfully!");
         } else {
-          alert("Invalid Digital Twin JSON structure.");
+          alert("Invalid specimen record JSON structure.");
         }
       }
     };
@@ -254,7 +254,7 @@ Provide an evidence-gap review:
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="text-xl font-bold tracking-tight text-white">
-                    Sample Digital Twin
+                    Specimen Records
                   </h2>
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/40">
                     Integrated Multi-Scale Data Spine
@@ -531,21 +531,7 @@ Provide an evidence-gap review:
                     className="p-2 rounded-lg bg-slate-950/70 hover:bg-sky-950/30 border border-slate-800 hover:border-sky-500/40 text-left transition-all cursor-pointer flex items-center gap-1.5 text-xs text-sky-300"
                   >
                     <Microscope className="w-3.5 h-3.5" />
-                    <span>Micrograph AI</span>
-                  </button>
-                  <button
-                    onClick={() => onNavigateToModule?.("thermal-scheduler")}
-                    className="p-2 rounded-lg bg-slate-950/70 hover:bg-amber-950/30 border border-slate-800 hover:border-amber-500/40 text-left transition-all cursor-pointer flex items-center gap-1.5 text-xs text-amber-300"
-                  >
-                    <Flame className="w-3.5 h-3.5" />
-                    <span>Heat Treatment</span>
-                  </button>
-                  <button
-                    onClick={() => onNavigateToModule?.("qualification")}
-                    className="p-2 rounded-lg bg-slate-950/70 hover:bg-emerald-950/30 border border-slate-800 hover:border-emerald-500/40 text-left transition-all cursor-pointer flex items-center gap-1.5 text-xs text-emerald-300"
-                  >
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    <span>Qualification Screening</span>
+                    <span>Micrograph Analysis</span>
                   </button>
                 </div>
               </div>
@@ -674,7 +660,7 @@ Provide an evidence-gap review:
                   {Object.entries(activeTwin.chemistry.nominalComposition).map(([el, val]) => (
                     <span key={el} className="px-2.5 py-1 rounded bg-slate-900 border border-slate-700 text-xs font-mono flex items-center gap-1">
                       <strong className="text-sky-400">{el}:</strong>
-                      <input
+                      <input aria-label={`${el} nominal composition`}
                         type="number"
                         step="0.1"
                         min="0"
@@ -1151,7 +1137,7 @@ Provide an evidence-gap review:
             <div>
               <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
                 <FileCode className="w-4 h-4 text-sky-400" />
-                <span>Single Source of Truth (Digital Twin Schema JSON)</span>
+                <span>Specimen Record Schema JSON</span>
               </h3>
               <p className="text-[11px] text-slate-400">Full structured object feeding all modules</p>
             </div>

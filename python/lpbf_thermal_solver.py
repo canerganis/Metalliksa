@@ -23,6 +23,7 @@ import numpy as np
 from eagar_tsai_solver import EagarTsaiField, MODEL_ID as EAGAR_TSAI_MODEL_ID
 from fabbro_keyhole import MODEL_ID as FABBRO_MODEL_ID, fabbro_keyhole_depth_m
 from four_alloy_materials import four_alloy_thermophysical_db, thermal_props
+from in625_thermal_material import LATENT_HEAT_J_KG as IN625_LATENT_HEAT_J_KG
 from goldak_solver import GoldakField, MODEL_ID as GOLDAK_MODEL_ID, seed_goldak_axes
 from solidification_front import MODEL_ID as SOLIDIFICATION_MODEL_ID, evaluate_solidification
 from marangoni_screening import MODEL_ID as MARANGONI_MODEL_ID, marangoni_screening
@@ -42,7 +43,11 @@ SECONDARY_THERMOPHYSICAL_DB = {
         "thermal_conductivity_liquid_W_mK": 30.0,
         "specific_heat_J_kgK": 410.0,
         "specific_heat_liquid_J_kgK": 750.0,
-        "latent_heat_fusion_J_kg": 260000.0,
+        # D5: the Rosenthal / build-job path and the Sabau screening snapshot share 290 kJ/kg
+        # (Sabau et al. 2020, cited in in625_thermal_material); the former 260 kJ/kg literal disagreed.
+        # The Mills-based transient specification (in625_thermal_material.transientSpecification)
+        # keeps its own 227 kJ/kg and is NOT changed here.
+        "latent_heat_fusion_J_kg": IN625_LATENT_HEAT_J_KG,
         "latent_heat_vap_J_kg": 6300000.0,
         "absorptivity_IR": 0.38,
         "absorptivity_Green": 0.58,
@@ -206,12 +211,24 @@ def sample_thermal_slice(eval_T, axis_a, axis_b, na, nb):
 
 
 def _normalize_heat_source(heat_source: str | None) -> str:
-    key = (heat_source or "rosenthal").strip().lower().replace("_", "-")
-    if key in ("eagar-tsai", "eagar-tsai-v1", "et", "eager-tsai"):
+    if heat_source is None or (isinstance(heat_source, str) and not heat_source.strip()):
+        return "rosenthal"
+    if not isinstance(heat_source, str):
+        raise ValueError(f"Unsupported LPBF heat source: {heat_source!r}")
+    key = heat_source.strip().lower().replace("_", "-")
+    if key in ("rosenthal", "rosenthal-screening", "rosenthal-screening-v1"):
+        return "rosenthal"
+    if key in ("eagar-tsai", "eagar-tsai-v2", "et", "eager-tsai"):
         return "eagar-tsai"
-    if key in ("goldak", "goldak-v1", "goldak-double-ellipsoid"):
+    if key in ("goldak", "goldak-double-ellipsoid", "goldak-half-space-v3"):
         return "goldak"
-    return "rosenthal"
+    if key in ("eagar-tsai-v1", "goldak-v1", "goldak-total-power-v2"):
+        # Retired kernel ids are never run silently as the corrected kernel.
+        current = "eagar-tsai-v2" if key.startswith("eagar") else "goldak-half-space-v3"
+        raise ValueError(f"Retired LPBF heat-source id {heat_source!r}: its kernel was replaced by the "
+                         f"corrected {current!r} (planned corrected-physics bump); request {current!r} or the "
+                         f"unversioned name explicitly")
+    raise ValueError(f"Unsupported LPBF heat source: {heat_source!r}")
 
 
 def calculate_meltpool_physics(
@@ -235,18 +252,39 @@ def calculate_meltpool_physics(
     heat_source: "rosenthal" (Build Job default), "eagar-tsai", or "goldak" (Melt Pool lab).
     sulfur_ppm: Heiple–Roper screening only (does not refit W/D or re-score Build Job).
     """
-    base = (
-        thermal_props(material_name)
-        or SECONDARY_THERMOPHYSICAL_DB.get(material_name)
-        or thermal_props("Inconel 718")
-    )
+    if not isinstance(material_name, str) or not material_name.strip():
+        raise ValueError(f"Unsupported LPBF material identity: {material_name!r}")
+    source = _normalize_heat_source(heat_source)
+    base = thermal_props(material_name) or SECONDARY_THERMOPHYSICAL_DB.get(material_name)
+    if base is None:
+        raise ValueError(f"Unsupported LPBF material identity: {material_name!r}")
     props = dict(base)
     if prop_overrides:
         props.update(prop_overrides)
     
-    P_laser = max(10.0, float(laser_power_W))
-    v_scan = max(10.0, float(scan_speed_mm_s)) * 1e-3  # m/s
-    d_beam = max(10.0, float(beam_diameter_um)) * 1e-6  # m
+    process_values = {}
+    for name, value in (
+        ("laser_power_W", laser_power_W),
+        ("scan_speed_mm_s", scan_speed_mm_s),
+        ("beam_diameter_um", beam_diameter_um),
+        ("layer_thickness_um", layer_thickness_um),
+        ("hatch_spacing_um", hatch_spacing_um),
+    ):
+        try:
+            numeric_value = float(value)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"{name} must be finite and positive") from exc
+        if not math.isfinite(numeric_value) or numeric_value <= 0:
+            raise ValueError(f"{name} must be finite and positive")
+        process_values[name] = numeric_value
+
+    P_laser = process_values["laser_power_W"]
+    scan_speed_mm_s = process_values["scan_speed_mm_s"]
+    beam_diameter_um = process_values["beam_diameter_um"]
+    layer_thickness_um = process_values["layer_thickness_um"]
+    hatch_spacing_um = process_values["hatch_spacing_um"]
+    v_scan = scan_speed_mm_s * 1e-3  # m/s
+    d_beam = beam_diameter_um * 1e-6  # m
     r_beam = d_beam / 2.0
     T_preheat = float(preheat_temp_C)
     t_layer_m = float(layer_thickness_um) * 1e-6
@@ -269,8 +307,18 @@ def calculate_meltpool_physics(
     # King ΔH/hs stays on solid props (literature onset ~30 is solid-based).
     alpha_solid = k_s / (rho * cp_s)
 
-    # Base optical absorptivity
-    eta_base_flat = props["absorptivity_Green"] if "Green" in laser_wavelength else props["absorptivity_IR"]
+    # Use only wavelength/property pairs that exist in the material snapshot.
+    wavelength_property = {
+        "IR_1064nm": "absorptivity_IR",
+        "Green_515nm": "absorptivity_Green",
+    }.get(laser_wavelength)
+    if wavelength_property is None:
+        raise ValueError(f"Unsupported LPBF laser wavelength: {laser_wavelength!r}")
+    if wavelength_property not in props:
+        raise ValueError(
+            f"Material {material_name!r} has no absorptivity for {laser_wavelength}"
+        )
+    eta_base_flat = float(props[wavelength_property])
 
     try:
         from powder_bed_raytracer import calculate_powder_bed_absorptivity
@@ -284,14 +332,19 @@ def calculate_meltpool_physics(
         eta_base = eta_base_flat
 
     # 1. Volumetric and Linear Energy Densities
-    ved_J_mm3 = P_laser / (max(1.0, float(scan_speed_mm_s)) * (float(hatch_spacing_um) * 1e-3) * (float(layer_thickness_um) * 1e-3))
-    led_J_m = P_laser / max(1e-4, v_scan)
+    ved_J_mm3 = P_laser / (
+        scan_speed_mm_s
+        * (hatch_spacing_um * 1e-3)
+        * (layer_thickness_um * 1e-3)
+    )
+    led_J_m = P_laser / v_scan
 
     # 2. Normalized Enthalpy (King / Rubenchik) + peak intensity I0 — solid k, Cp
     # ΔH/hs = (η P) / (ρ cp (Tliq-T0) sqrt(π α v r^3))
     enthalpy_denom = rho * cp_s * max(50.0, T_liq - T_preheat) * math.sqrt(math.pi * alpha_solid * v_scan * (r_beam ** 3))
     normalized_enthalpy = (eta_base * P_laser) / max(1e-9, enthalpy_denom)
-    peak_intensity_W_m2 = (4.0 * P_laser) / (math.pi * max(1e-16, d_beam ** 2))
+    # Gaussian 1/e² diameter d=2w: I0 = 2P/(πw²) = 8P/(πd²).
+    peak_intensity_W_m2 = (8.0 * P_laser) / (math.pi * d_beam ** 2)
     peak_intensity_MW_cm2 = peak_intensity_W_m2 * 1e-10
 
     # 3. Multi-reflection absorptivity once a vapor depression can form (ΔH/hs > 15)
@@ -307,7 +360,6 @@ def calculate_meltpool_physics(
     # Latent-heat (Stefan) correction so the liquidus is not an over-hot Rosenthal tail.
     Lf = props["latent_heat_fusion_J_kg"]
     stefan = Lf / max(1.0, cp * max(50.0, T_liq - T_preheat))
-    source = _normalize_heat_source(heat_source)
     # ET/Goldak are conduction fields: Fresnel A only. Fabbro already carries keyhole A(R)
     # (Appl. Sci. 2020 eq. 2). Stacking eta_eff on both double-counts Trapp multiple reflections.
     if source in ("eagar-tsai", "goldak"):
@@ -354,23 +406,48 @@ def calculate_meltpool_physics(
     search_len = max(d_beam * 3.0, w_analytical * 4.5, 80e-6)
     search_depth = max(d_beam * 2.2, w_analytical * 2.0, 40e-6, fabbro["depth_m"] * 1.35)
 
-    if source in ("eagar-tsai", "goldak"):
-        t_peak_C = float(T_field(0.0, 0.0, 0.0))
-    else:
-        t_peak_C = T_preheat + (2.0 * eta_eff * P_laser) / (math.pi * k_th * d_beam * math.sqrt(math.pi))
+    t_peak_C = float(T_field(0.0, 0.0, 0.0))
     # No artificial 3900 °C display ceiling — report the field peak (may exceed boiling).
 
-    # 4. Liquidus extents from the conduction field (Rosenthal or Eagar–Tsai)
-    x_front = _binary_extent(lambda x: T_field(x, 0.0, 0.0) >= T_liq, 0.0, search_len)
-    x_rear = _binary_extent(lambda s: T_field(-s, 0.0, 0.0) >= T_liq, 0.0, search_len * 1.4)
+    # 4. Liquidus extents from the conduction field (Rosenthal or Eagar–Tsai). The search box is a
+    # seed, not a cap: when the isotherm is still liquid at the box edge the box is doubled (up to
+    # 8x); if it is still at the edge after that the status says so instead of calling it computed.
+    extent_flags = []
+
+    def _extent_with_growth(pred, hi, label):
+        bound = hi
+        for _ in range(3):
+            value = _binary_extent(pred, 0.0, bound)
+            if value < bound:
+                return value
+            bound *= 2.0
+        value = _binary_extent(pred, 0.0, bound)
+        if value >= bound:
+            extent_flags.append(label)
+        return value
+
+    x_front = _extent_with_growth(lambda x: T_field(x, 0.0, 0.0) >= T_liq, search_len, "front-search-limit")
+    x_rear = _extent_with_growth(lambda s: T_field(-s, 0.0, 0.0) >= T_liq, search_len * 1.4, "rear-search-limit")
     half_w = 0.0
     for x_probe in (-x_rear * 0.35, -x_rear * 0.15, -x_rear * 0.05, 0.0, x_front * 0.35):
-        half_w = max(half_w, _binary_extent(lambda y: T_field(x_probe, y, 0.0) >= T_liq, 0.0, search_half_w))
+        half_w = max(half_w, _extent_with_growth(lambda y, x_probe=x_probe: T_field(x_probe, y, 0.0) >= T_liq,
+                                                 search_half_w, "width-search-limit"))
     d_iso = 0.0
     for x_probe in (-x_rear * 0.25, -x_rear * 0.1, -x_rear * 0.04, 0.0):
-        d_iso = max(d_iso, _binary_extent(lambda z: T_field(x_probe, 0.0, z) >= T_liq, 0.0, search_depth))
+        d_iso = max(d_iso, _extent_with_growth(lambda z, x_probe=x_probe: T_field(x_probe, 0.0, z) >= T_liq,
+                                               search_depth, "depth-search-limit"))
 
+    # The conduction field did not produce a resolvable liquidus extent (no melt or a pool below the
+    # search resolution): the width/depth below are a HEURISTIC substitute, reported as such in
+    # meltPoolGeometry.extentStatus, never presented as a computed isotherm.
+    extent_status = "computed"
+    extent_note = None
     if half_w < 8e-6 or d_iso < 3e-6:
+        extent_status = "heuristic-width-fallback"
+        extent_note = ("The conduction field has no resolvable liquidus extent at these inputs (half-width "
+                       f"{half_w*1e6:.1f} um, depth {d_iso*1e6:.1f} um before substitution); width/depth/length are "
+                       "the screening heuristic sqrt(w_analytical^2 + (0.65 d_beam)^2) and its depth ratio, not a "
+                       "computed isotherm. Treat this geometry as not resolved.")
         w_fb = math.sqrt(max(1e-12, w_analytical ** 2 + (0.65 * d_beam) ** 2))
         half_w = max(half_w, w_fb / 2.0)
         d_iso = max(d_iso, half_w * (0.38 + 0.10 * min(1.0, normalized_enthalpy / ENTHALPY_TRANSITION)))
@@ -379,6 +456,16 @@ def calculate_meltpool_physics(
         if x_rear < 1e-6:
             x_rear = max(w_fb, half_w * 2.2)
 
+    if extent_status == "computed" and 2.0 * half_w < d_beam * 0.55:
+        extent_status = "width-floor-applied"
+        extent_note = (f"The computed liquidus half-width ({half_w*1e6:.1f} um) is below the screening width floor "
+                       f"0.55 x beam diameter ({0.55*d_beam*1e6:.1f} um); the reported width is the floor, not the "
+                       "computed isotherm. Treat the width as not resolved.")
+    if extent_status == "computed" and extent_flags:
+        extent_status = "search-box-limited"
+        extent_note = ("The liquidus isotherm was still liquid at the edge of the (8x-grown) search box for: "
+                       + ", ".join(sorted(set(extent_flags)))
+                       + "; the reported extent is a lower bound, not a converged isotherm length.")
     w_melt_m = max(2.0 * half_w, d_beam * 0.55)
     d_iso = max(d_iso, 4e-6)
     # Uncapped Rosenthal length (no Peclet fake ceiling). Floor only for numerical sanity.
@@ -683,7 +770,7 @@ def calculate_meltpool_physics(
                 "depth_um": round(d_um, 1)
             })
 
-    return {
+    result = {
         "success": True,
         "engine": "MetalliX-Python-HPC-LPBF-MeltPool-v6.0",
         "modelId": heat_source_id,
@@ -722,6 +809,8 @@ def calculate_meltpool_physics(
             "depthToWidthRatio_D_over_W": round(d_melt_um / max(1.0, w_melt_um), 2),
             "keyholeVaporCavityDepth_um": round(keyhole_depth_um, 1),
             "regime": regime,
+            "extentStatus": extent_status,
+            "extentNote": extent_note,
             "goldakParameters": {
                 "semiAxis_af_front_um": round(goldak_af_um, 1),
                 "semiAxis_ar_rear_um": round(goldak_ar_um, 1),
@@ -814,6 +903,15 @@ def calculate_meltpool_physics(
             "grid": process_map_grid
         }
     }
+    if material_name == "Inconel 625":
+        result["materialEvidence"] = {
+            "propertySource": "lpbf_thermal_solver.SECONDARY_THERMOPHYSICAL_DB.Inconel 625",
+            "provenanceClass": "legacy-estimated-secondary",
+            "validationStatus": "unvalidated",
+            "scope": "direct-meltpool-screening",
+            "usesBoundedIN625Snapshot": False,
+        }
+    return result
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "--status":

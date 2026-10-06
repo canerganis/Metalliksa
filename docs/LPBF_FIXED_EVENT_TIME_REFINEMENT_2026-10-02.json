@@ -1,0 +1,1097 @@
+{
+  "diagnosticOnly": true,
+  "experimentalValidation": false,
+  "solverValidationStatus": "unvalidated",
+  "convergenceStatus": "inconclusive",
+  "convergenceConclusion": "inconclusive",
+  "NIST": "unavailable",
+  "schemaVersion": 1,
+  "protocolId": "lpbf-fixed-event-time-refinement-5um-12_5ns-2026-10-02-v1",
+  "status": "diagnostic-only",
+  "stage": "completed",
+  "scope": "Reuse frozen 5um 50ns and 25ns local histories; compute one 12.5ns case at the same 5um physical domain and first-scan-end event for exact canonical-time local transition comparison; diagnostic only.",
+  "protocolSha256": "9599b5bf434bafa58e7f42764043bdb99e725a8257e37495b52c7f72735f4484",
+  "runnerSha256": "b468612c3225d5246f78d3f8c949be34382bd515f385a527df66a42fbc37c820",
+  "historyHelperSha256": "5a2725b51d03d4717f182913cc4099f9034248b26d99423127ff43267c10440e",
+  "executionHeadCommit": "aacd910b8edd2625353cfbfb20f1f022cce971f6",
+  "implementationFingerprint": "d7e5c4e3d5f0a59c4b955e0e1ca29f624fe6249c4e7cd1522e84ed1a87249315",
+  "historyReportSha256": "b5adeb9582b29b4c2d9def01695ccf780763ef4925032c5d02ee6209babd954b",
+  "historyArchiveSha256ByMaxDt": {
+    "5e-08": "d82faa7c1eaad34600707ca1619fd8848b9223feee55757104be4b7a35ce434b",
+    "2.5e-08": "74a6f40a17e8833ea63e065426807be0ec60184beb75438481c5c95e5b8f05b6"
+  },
+  "priorReportSha256": "a509d8e8e67021956414be013aae54c52569f0c43c0db04dbad17a6423738a4d",
+  "priorImplementationFingerprint": "d5eae56b9bd1ef0ab241153eb44efe7a1652c41f1aa50a7b652ee5a9e11ac2fe",
+  "scenarioSha256": "2abec47f9d35c02158ea2e06876e3ca06c3ba5ba9243f1ddccaa94ef64752ea6",
+  "resolvedInputSha256": "14728b27c42faadecd6beb315b2c20cc473ba7b1e787b18c3cd715910fd7d4fd",
+  "materialRevisionSha256": "5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749",
+  "selectedCells": [
+    {
+      "indices_ijk": [
+        29,
+        43,
+        60
+      ],
+      "coordinate_m": [
+        -7.25e-05,
+        -2.5000000000000066e-06,
+        2.5000000000000066e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        30,
+        42,
+        60
+      ],
+      "coordinate_m": [
+        -6.749999999999999e-05,
+        -7.4999999999999926e-06,
+        2.5000000000000066e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        30,
+        43,
+        59
+      ],
+      "coordinate_m": [
+        -6.749999999999999e-05,
+        -2.5000000000000066e-06,
+        -2.5000000000000066e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        30,
+        43,
+        60
+      ],
+      "coordinate_m": [
+        -6.749999999999999e-05,
+        -2.5000000000000066e-06,
+        2.5000000000000066e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        30,
+        43,
+        61
+      ],
+      "coordinate_m": [
+        -6.749999999999999e-05,
+        -2.5000000000000066e-06,
+        7.50000000000002e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        30,
+        44,
+        60
+      ],
+      "coordinate_m": [
+        -6.749999999999999e-05,
+        2.5000000000000066e-06,
+        2.5000000000000066e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        31,
+        43,
+        60
+      ],
+      "coordinate_m": [
+        -6.25e-05,
+        -2.5000000000000066e-06,
+        2.5000000000000066e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        58,
+        43,
+        61
+      ],
+      "coordinate_m": [
+        7.249999999999997e-05,
+        -2.5000000000000066e-06,
+        7.50000000000002e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        58,
+        44,
+        61
+      ],
+      "coordinate_m": [
+        7.249999999999997e-05,
+        2.5000000000000066e-06,
+        7.50000000000002e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        59,
+        42,
+        61
+      ],
+      "coordinate_m": [
+        7.749999999999999e-05,
+        -7.4999999999999926e-06,
+        7.50000000000002e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        59,
+        43,
+        60
+      ],
+      "coordinate_m": [
+        7.749999999999999e-05,
+        -2.5000000000000066e-06,
+        2.5000000000000066e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        59,
+        43,
+        61
+      ],
+      "coordinate_m": [
+        7.749999999999999e-05,
+        -2.5000000000000066e-06,
+        7.50000000000002e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        59,
+        43,
+        62
+      ],
+      "coordinate_m": [
+        7.749999999999999e-05,
+        -2.5000000000000066e-06,
+        1.2499999999999979e-05
+      ]
+    },
+    {
+      "indices_ijk": [
+        59,
+        44,
+        60
+      ],
+      "coordinate_m": [
+        7.749999999999999e-05,
+        2.5000000000000066e-06,
+        2.5000000000000066e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        59,
+        44,
+        61
+      ],
+      "coordinate_m": [
+        7.749999999999999e-05,
+        2.5000000000000066e-06,
+        7.50000000000002e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        59,
+        44,
+        62
+      ],
+      "coordinate_m": [
+        7.749999999999999e-05,
+        2.5000000000000066e-06,
+        1.2499999999999979e-05
+      ]
+    },
+    {
+      "indices_ijk": [
+        59,
+        45,
+        61
+      ],
+      "coordinate_m": [
+        7.749999999999999e-05,
+        7.4999999999999926e-06,
+        7.50000000000002e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        60,
+        43,
+        61
+      ],
+      "coordinate_m": [
+        8.25e-05,
+        -2.5000000000000066e-06,
+        7.50000000000002e-06
+      ]
+    },
+    {
+      "indices_ijk": [
+        60,
+        44,
+        61
+      ],
+      "coordinate_m": [
+        8.25e-05,
+        2.5000000000000066e-06,
+        7.50000000000002e-06
+      ]
+    }
+  ],
+  "maxDt_s": 1.25e-08,
+  "expectedAcceptedStepsEstimate": 20000,
+  "expectedAcceptedCellStepsEstimate": 10531840000,
+  "expectedWallTimeEstimate_s": 2218.463331600011,
+  "budgetEnforcement": "sampled soft wall/RSS guards; no OS hard kill; accepted cell steps exclude retries",
+  "finalEverCheckStatus": "unavailable",
+  "finalEverCheckReason": "Frozen final_state_observer exposes no independent ever-liquidus mask",
+  "runtimeWork": {
+    "acceptedSteps": 20000,
+    "acceptedCellSteps": 10531840000,
+    "sourceTimestepRetries": 0,
+    "sourceLimitedSteps": 0,
+    "maximumSampledRssBytes": 199204864,
+    "lastTime_s": 0.00024999999999999995,
+    "wallTime_s": 2848.0663607000024,
+    "estimatedSourceAttemptCellSteps": 10531840000
+  },
+  "rows": [
+    {
+      "maxDt_s": 1.25e-08,
+      "acceptedSteps": 20000,
+      "acceptedCellSteps": 10531840000,
+      "resolvedInputSha256": "14728b27c42faadecd6beb315b2c20cc473ba7b1e787b18c3cd715910fd7d4fd",
+      "historyArtifact": {
+        "path": "docs/LPBF_FIXED_EVENT_TIME_REFINEMENT_2026-10-02_FIELDS/history-maxdt-1.2500e-08.npz",
+        "sha256": "899bf8d190d60d6fc46d045cec7704024f2d1b12395a6b549e64f688e494317f",
+        "byteSize": 9348699,
+        "arraySha256": {
+          "time_s": "c9ee35cf314e65e463ad2e64c899b0dd24bea54535be9ea67e9acab5f937b745",
+          "accepted_dt_s": "364eda0f06de56e6332761008008c08230914a1b8741be4787a4c57c43478165",
+          "values": "68c6b32fcba4e99f5b8cd974e83476294db2b857e2cbc0dc58608e4c51ad7a4f",
+          "ever": "e388ed83300e440888355b2d01d648898946f3bbec13de1b06e3ad0c2b355f6e",
+          "cell_indices_ijk": "8af11e56bfea453d7bdd5c0c0f0a691b29fd691f2cd500851533e4f6f22b1c01",
+          "coordinates_m": "18fd8b5f671a526f164a75eb8bb9bb4c134cc771702534e834db91c973a9f287"
+        }
+      },
+      "finalstateArtifact": {
+        "path": "docs/LPBF_FIXED_EVENT_TIME_REFINEMENT_2026-10-02_FIELDS/finalstate-maxdt-1.2500e-08.npz",
+        "sha256": "db7fc10d052764db456f19f7f10c5756f830af6dfa952f99426e27fbce1979d8",
+        "byteSize": 5849343,
+        "arraySha256": {
+          "coordinates_m": "a682f3d8d75f92e126ec109d0d27f442fd1107fb38b195642c6bc270e47e92b6",
+          "temperature_K": "3771dcb0a8de12141ac63b911021928c745b7dc3b00fbd5e20cfc5f5a3efc75f",
+          "enthalpy_J_m3": "032045c0d844c085bbcf4d2d37c7338e93ae0ac93ffc116be05bb1e71000c044",
+          "density_kg_m3": "f71c2a5cf64852685f71396d0dabc728104924a58b1dd47e9e487b4eb7cd875f",
+          "accepted_dt_s": "364eda0f06de56e6332761008008c08230914a1b8741be4787a4c57c43478165",
+          "time_s": "c1ac2acbc3b1aa9c19abc1a2e63532380eef1761265570cd798e4bba36637de0",
+          "local_final_ever_observer_derived": "f84b0dcf77e9c50e8bf56b232a3b6539ae23584cde3e788b7182f8b53ff8ee6d"
+        }
+      }
+    }
+  ],
+  "startedAt": "2026-10-02T16:25:04.449709+00:00",
+  "acceptedTimestepDistribution": {
+    "methodId": "accepted-timestep-distribution-v1",
+    "count": 20000,
+    "total_s": 0.0002499999999999704,
+    "sumSquared_s2": 3.1249999999992614e-12,
+    "mean_s": 1.249999999999852e-08,
+    "minimum_s": 1.2499999970381256e-08,
+    "p50_s": 1.25e-08,
+    "p90_s": 1.25e-08,
+    "p99_s": 1.25e-08,
+    "maximum_s": 1.25e-08,
+    "eulerFirstOrderWeightedDt_s": 1.2499999999998525e-08,
+    "requestedMaxDt_s": 1.25e-08,
+    "requestedMaxDtHitFraction": 0.99995,
+    "sourceLimitedStepCount": 0,
+    "sourceTimestepRetries": 0
+  },
+  "physicalCheckpointComparison": {
+    "diagnosticOnly": true,
+    "experimentalValidation": false,
+    "solverValidationStatus": "unvalidated",
+    "convergenceStatus": "inconclusive",
+    "convergenceConclusion": "inconclusive",
+    "NIST": "unavailable",
+    "comparisonStatus": "comparable",
+    "primaryMetricStatus": "localDiagnosticDecrease",
+    "baselineEverMismatchCheckpointCells": 2695,
+    "refinementEverMismatchCheckpointCells": 0,
+    "baselineEverMismatchFraction": 0.028368421052631577,
+    "refinementEverMismatchFraction": 0.0,
+    "matchedPhysicalCheckpoints": 5000,
+    "possibleCheckpointCellPairs": 95000,
+    "missingCanonicalTimestamp": false,
+    "finalEverMismatchCells": 0,
+    "comparisonRule": "unique monotonic nearest accepted timestamps; atol=1e-14 rtol=0; no interpolation or dropped checkpoints",
+    "transitionComparison": [
+      {
+        "indices_ijk": [
+          29,
+          43,
+          60
+        ],
+        "crossing25ns": {
+          "indices_ijk": [
+            29,
+            43,
+            60
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "crossing12_5ns": {
+          "indices_ijk": [
+            29,
+            43,
+            60
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "status": "both_absent",
+        "timeDelta_s": null
+      },
+      {
+        "indices_ijk": [
+          30,
+          42,
+          60
+        ],
+        "crossing25ns": {
+          "indices_ijk": [
+            30,
+            42,
+            60
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "crossing12_5ns": {
+          "indices_ijk": [
+            30,
+            42,
+            60
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "status": "both_absent",
+        "timeDelta_s": null
+      },
+      {
+        "indices_ijk": [
+          30,
+          43,
+          59
+        ],
+        "crossing25ns": {
+          "indices_ijk": [
+            30,
+            43,
+            59
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "crossing12_5ns": {
+          "indices_ijk": [
+            30,
+            43,
+            59
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "status": "both_absent",
+        "timeDelta_s": null
+      },
+      {
+        "indices_ijk": [
+          30,
+          43,
+          60
+        ],
+        "crossing25ns": {
+          "indices_ijk": [
+            30,
+            43,
+            60
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "crossing12_5ns": {
+          "indices_ijk": [
+            30,
+            43,
+            60
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "status": "both_absent",
+        "timeDelta_s": null
+      },
+      {
+        "indices_ijk": [
+          30,
+          43,
+          61
+        ],
+        "crossing25ns": {
+          "indices_ijk": [
+            30,
+            43,
+            61
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "crossing12_5ns": {
+          "indices_ijk": [
+            30,
+            43,
+            61
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "status": "both_absent",
+        "timeDelta_s": null
+      },
+      {
+        "indices_ijk": [
+          30,
+          44,
+          60
+        ],
+        "crossing25ns": {
+          "indices_ijk": [
+            30,
+            44,
+            60
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "crossing12_5ns": {
+          "indices_ijk": [
+            30,
+            44,
+            60
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "status": "both_absent",
+        "timeDelta_s": null
+      },
+      {
+        "indices_ijk": [
+          31,
+          43,
+          60
+        ],
+        "crossing25ns": {
+          "indices_ijk": [
+            31,
+            43,
+            60
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "crossing12_5ns": {
+          "indices_ijk": [
+            31,
+            43,
+            60
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "status": "both_absent",
+        "timeDelta_s": null
+      },
+      {
+        "indices_ijk": [
+          58,
+          43,
+          61
+        ],
+        "crossing25ns": {
+          "indices_ijk": [
+            58,
+            43,
+            61
+          ],
+          "crossingTime_s": 0.00024374999999993973,
+          "censoredAtEvent": false,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "crossing12_5ns": {
+          "indices_ijk": [
+            58,
+            43,
+            61
+          ],
+          "crossingTime_s": 0.0002437500000000387,
+          "censoredAtEvent": false,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "status": "both_present",
+        "timeDelta_s": 9.896055329361442e-17
+      },
+      {
+        "indices_ijk": [
+          58,
+          44,
+          61
+        ],
+        "crossing25ns": {
+          "indices_ijk": [
+            58,
+            44,
+            61
+          ],
+          "crossingTime_s": 0.00024374999999993973,
+          "censoredAtEvent": false,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "crossing12_5ns": {
+          "indices_ijk": [
+            58,
+            44,
+            61
+          ],
+          "crossingTime_s": 0.0002437500000000387,
+          "censoredAtEvent": false,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "status": "both_present",
+        "timeDelta_s": 9.896055329361442e-17
+      },
+      {
+        "indices_ijk": [
+          59,
+          42,
+          61
+        ],
+        "crossing25ns": {
+          "indices_ijk": [
+            59,
+            42,
+            61
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "crossing12_5ns": {
+          "indices_ijk": [
+            59,
+            42,
+            61
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "status": "both_absent",
+        "timeDelta_s": null
+      },
+      {
+        "indices_ijk": [
+          59,
+          43,
+          60
+        ],
+        "crossing25ns": {
+          "indices_ijk": [
+            59,
+            43,
+            60
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "crossing12_5ns": {
+          "indices_ijk": [
+            59,
+            43,
+            60
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "status": "both_absent",
+        "timeDelta_s": null
+      },
+      {
+        "indices_ijk": [
+          59,
+          43,
+          61
+        ],
+        "crossing25ns": {
+          "indices_ijk": [
+            59,
+            43,
+            61
+          ],
+          "crossingTime_s": 0.00024999999999994287,
+          "censoredAtEvent": false,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "crossing12_5ns": {
+          "indices_ijk": [
+            59,
+            43,
+            61
+          ],
+          "crossingTime_s": 0.00024999999999999995,
+          "censoredAtEvent": false,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "status": "both_present",
+        "timeDelta_s": 5.708324438136181e-17
+      },
+      {
+        "indices_ijk": [
+          59,
+          43,
+          62
+        ],
+        "crossing25ns": {
+          "indices_ijk": [
+            59,
+            43,
+            62
+          ],
+          "crossingTime_s": 0.00023004999999994683,
+          "censoredAtEvent": false,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "crossing12_5ns": {
+          "indices_ijk": [
+            59,
+            43,
+            62
+          ],
+          "crossingTime_s": 0.00023005000000003094,
+          "censoredAtEvent": false,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "status": "both_present",
+        "timeDelta_s": 8.410698353056301e-17
+      },
+      {
+        "indices_ijk": [
+          59,
+          44,
+          60
+        ],
+        "crossing25ns": {
+          "indices_ijk": [
+            59,
+            44,
+            60
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "crossing12_5ns": {
+          "indices_ijk": [
+            59,
+            44,
+            60
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "status": "both_absent",
+        "timeDelta_s": null
+      },
+      {
+        "indices_ijk": [
+          59,
+          44,
+          61
+        ],
+        "crossing25ns": {
+          "indices_ijk": [
+            59,
+            44,
+            61
+          ],
+          "crossingTime_s": 0.00024999999999994287,
+          "censoredAtEvent": false,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "crossing12_5ns": {
+          "indices_ijk": [
+            59,
+            44,
+            61
+          ],
+          "crossingTime_s": 0.00024999999999999995,
+          "censoredAtEvent": false,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "status": "both_present",
+        "timeDelta_s": 5.708324438136181e-17
+      },
+      {
+        "indices_ijk": [
+          59,
+          44,
+          62
+        ],
+        "crossing25ns": {
+          "indices_ijk": [
+            59,
+            44,
+            62
+          ],
+          "crossingTime_s": 0.00023004999999994683,
+          "censoredAtEvent": false,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "crossing12_5ns": {
+          "indices_ijk": [
+            59,
+            44,
+            62
+          ],
+          "crossingTime_s": 0.00023005000000003094,
+          "censoredAtEvent": false,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "status": "both_present",
+        "timeDelta_s": 8.410698353056301e-17
+      },
+      {
+        "indices_ijk": [
+          59,
+          45,
+          61
+        ],
+        "crossing25ns": {
+          "indices_ijk": [
+            59,
+            45,
+            61
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "crossing12_5ns": {
+          "indices_ijk": [
+            59,
+            45,
+            61
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "status": "both_absent",
+        "timeDelta_s": null
+      },
+      {
+        "indices_ijk": [
+          60,
+          43,
+          61
+        ],
+        "crossing25ns": {
+          "indices_ijk": [
+            60,
+            43,
+            61
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "crossing12_5ns": {
+          "indices_ijk": [
+            60,
+            43,
+            61
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "status": "both_absent",
+        "timeDelta_s": null
+      },
+      {
+        "indices_ijk": [
+          60,
+          44,
+          61
+        ],
+        "crossing25ns": {
+          "indices_ijk": [
+            60,
+            44,
+            61
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "crossing12_5ns": {
+          "indices_ijk": [
+            60,
+            44,
+            61
+          ],
+          "crossingTime_s": null,
+          "censoredAtEvent": true,
+          "eventTime_s": 0.00024999999999999995
+        },
+        "status": "both_absent",
+        "timeDelta_s": null
+      }
+    ],
+    "maximumAbsoluteEnthalpyDifference25vs12_5_J_m3": 2154410.40568161,
+    "maximumAbsoluteTemperatureDifference25vs12_5_K": 0.6587415899600728
+  },
+  "primaryMetricStatus": "localDiagnosticDecrease",
+  "transitions": [
+    {
+      "indices_ijk": [
+        29,
+        43,
+        60
+      ],
+      "crossingTime_s": null,
+      "censoredAtEvent": true,
+      "eventTime_s": 0.00024999999999999995
+    },
+    {
+      "indices_ijk": [
+        30,
+        42,
+        60
+      ],
+      "crossingTime_s": null,
+      "censoredAtEvent": true,
+      "eventTime_s": 0.00024999999999999995
+    },
+    {
+      "indices_ijk": [
+        30,
+        43,
+        59
+      ],
+      "crossingTime_s": null,
+      "censoredAtEvent": true,
+      "eventTime_s": 0.00024999999999999995
+    },
+    {
+      "indices_ijk": [
+        30,
+        43,
+        60
+      ],
+      "crossingTime_s": null,
+      "censoredAtEvent": true,
+      "eventTime_s": 0.00024999999999999995
+    },
+    {
+      "indices_ijk": [
+        30,
+        43,
+        61
+      ],
+      "crossingTime_s": null,
+      "censoredAtEvent": true,
+      "eventTime_s": 0.00024999999999999995
+    },
+    {
+      "indices_ijk": [
+        30,
+        44,
+        60
+      ],
+      "crossingTime_s": null,
+      "censoredAtEvent": true,
+      "eventTime_s": 0.00024999999999999995
+    },
+    {
+      "indices_ijk": [
+        31,
+        43,
+        60
+      ],
+      "crossingTime_s": null,
+      "censoredAtEvent": true,
+      "eventTime_s": 0.00024999999999999995
+    },
+    {
+      "indices_ijk": [
+        58,
+        43,
+        61
+      ],
+      "crossingTime_s": 0.0002437500000000387,
+      "censoredAtEvent": false,
+      "eventTime_s": 0.00024999999999999995
+    },
+    {
+      "indices_ijk": [
+        58,
+        44,
+        61
+      ],
+      "crossingTime_s": 0.0002437500000000387,
+      "censoredAtEvent": false,
+      "eventTime_s": 0.00024999999999999995
+    },
+    {
+      "indices_ijk": [
+        59,
+        42,
+        61
+      ],
+      "crossingTime_s": null,
+      "censoredAtEvent": true,
+      "eventTime_s": 0.00024999999999999995
+    },
+    {
+      "indices_ijk": [
+        59,
+        43,
+        60
+      ],
+      "crossingTime_s": null,
+      "censoredAtEvent": true,
+      "eventTime_s": 0.00024999999999999995
+    },
+    {
+      "indices_ijk": [
+        59,
+        43,
+        61
+      ],
+      "crossingTime_s": 0.00024999999999999995,
+      "censoredAtEvent": false,
+      "eventTime_s": 0.00024999999999999995
+    },
+    {
+      "indices_ijk": [
+        59,
+        43,
+        62
+      ],
+      "crossingTime_s": 0.00023005000000003094,
+      "censoredAtEvent": false,
+      "eventTime_s": 0.00024999999999999995
+    },
+    {
+      "indices_ijk": [
+        59,
+        44,
+        60
+      ],
+      "crossingTime_s": null,
+      "censoredAtEvent": true,
+      "eventTime_s": 0.00024999999999999995
+    },
+    {
+      "indices_ijk": [
+        59,
+        44,
+        61
+      ],
+      "crossingTime_s": 0.00024999999999999995,
+      "censoredAtEvent": false,
+      "eventTime_s": 0.00024999999999999995
+    },
+    {
+      "indices_ijk": [
+        59,
+        44,
+        62
+      ],
+      "crossingTime_s": 0.00023005000000003094,
+      "censoredAtEvent": false,
+      "eventTime_s": 0.00024999999999999995
+    },
+    {
+      "indices_ijk": [
+        59,
+        45,
+        61
+      ],
+      "crossingTime_s": null,
+      "censoredAtEvent": true,
+      "eventTime_s": 0.00024999999999999995
+    },
+    {
+      "indices_ijk": [
+        60,
+        43,
+        61
+      ],
+      "crossingTime_s": null,
+      "censoredAtEvent": true,
+      "eventTime_s": 0.00024999999999999995
+    },
+    {
+      "indices_ijk": [
+        60,
+        44,
+        61
+      ],
+      "crossingTime_s": null,
+      "censoredAtEvent": true,
+      "eventTime_s": 0.00024999999999999995
+    }
+  ],
+  "localFinalTemperatureEnthalpyCoordinatesExactMatch": true,
+  "finishedAt": "2026-10-02T17:12:32.525501+00:00"
+}

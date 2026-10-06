@@ -26,17 +26,17 @@ export const METALLURGICAL_STANDARDS: Record<string, StandardDetails> = {
       "ASTM E21 governs elevated temperature tension testing; ASTM E8M standardizes SI metric testing protocols.",
   },
   hardness: {
-    standardCode: "ASTM E140-23",
+    standardCode: "ASTM E140",
     secondaryCodes: ["ISO 18265:2013", "ASTM E18", "ASTM E92", "ASTM E10", "DIN 50150"],
     title: "Standard Hardness Conversion Tables for Metals",
     governingBody: "ASTM Committee E28 / ISO TC 164/SC 3 Hardness Testing",
     methodology:
-      "Statistically calibrated empirical cross-conversion tables between Rockwell C (HRC, 120° diamond spheroconical indenter, 150 kgf load) and Vickers (HV, 136° diamond pyramid indenter, DPH). Computes equivalent Brinell (HBW 10/3000) and approximate tensile strength Rm.",
+      "Linear interpolation between the published conversion numbers of ASTM E140 Table 1 (Rockwell C range) and Table 2 (Rockwell B range) for non-austenitic steels: HRC, HRB, Vickers HV, Brinell HBW (10 mm carbide ball, 3000 kgf, Table 1), Brinell HB(S) (10 mm steel ball, 3000 kgf, Table 2) and Knoop HK (500 gf and over), with HV as the pivot. Tensile strength Rm is estimated from HV by interpolation in ISO 18265 Table A.1 (unalloyed and low-alloy steels). Outside the tabulated range a value is reported as unavailable; nothing is extrapolated or clamped. Converted values (Rockwell included) are reported as whole numbers.",
     equations:
-      "HRC ⇄ HV via ASTM E140 Table 1 regression | Approximate Rm ≈ 3.45 × HBW (for non-austenitic steels)",
-    validRange: "HRC: 20 to 70 HRC | Vickers: 80 to 1050 HV | Brinell: 80 to 650 HBW",
+      "Piecewise-linear interpolation between tabulated rows (no fitted formula) | Rm from HV per ISO 18265 Table A.1",
+    validRange: "HRC 20-68 (HV 238-940) | HRB 55-100 (HV 100-240) | HBW 226-634 (HV 238-674) | HB(S) 100-240 (HV 100-240) | HK 112-920 | Rm: HV 80-650 | Leeb HLD: not converted",
     criticalNotes:
-      "Conversions are fundamentally empirical; ASTM E140 Table 1 is standard for non-austenitic carbon & alloy steels. For austenitic stainless or nickel-base alloys, conversion scatter increases up to ±2 HRC.",
+      "Approximate conversion for non-austenitic steels per ASTM E140 / ISO 18265 tables; not a substitute for direct testing. The tables used here are for non-austenitic steels only; converted values are estimates, not measurements.",
   },
   temperature: {
     standardCode: "ITS-90 / NIST SP 811",
@@ -69,7 +69,7 @@ export const METALLURGICAL_STANDARDS: Record<string, StandardDetails> = {
     governingBody: "ASTM Committee E04 on Metallography / ISO TC 17/SC 7",
     methodology:
       "Standardizes comparison, planimetric (Jeffries), and lineal intercept (Heyn) methods. ASTM micro-grain size number G is defined such that NA = 2^(G-1) grains per square inch at 100× magnification.",
-    equations: "NA = 2^(G-1) grains/in² @ 100× | Mean intercept diameter d̄ = 10 · √(2^(1-G)) mm",
+    equations: "NA = 2^(G-1) grains/in² @ 100× | Planimetric mean diameter d̄ = 0.254 · √(2^(1-G)) mm | Mean lineal intercept ℓ̄ = 10^(-(G + 3.288)/6.643856) mm",
     validRange: "ASTM G: -3 to +16 (Coarse ingot grains to ultra-fine submicron nanocrystals)",
     criticalNotes:
       "ISO 643 grain size index m matches ASTM G within rounding (m = G). Hall-Petch yield strength scales inversely with d^(-1/2).",
@@ -153,7 +153,7 @@ export const METALLURGICAL_STANDARDS: Record<string, StandardDetails> = {
     governingBody: "ASTM Committee E04 / International Metallurgical Societies",
     methodology:
       "Quantifies dislocation pile-up at grain boundaries: σy = σ0 + ky · d^(-1/2), connecting ASTM G grain size directly to yield strength increment.",
-    equations: "σy = σ0 + ky · d^(-1/2) | d = 1000 · (10 · √(2^(1-G))) / 1000 in µm",
+    equations: "σy = σ0 + ky · d^(-1/2) | d = 254 · √(2^(1-G)) µm (ASTM E112 planimetric diameter)",
     validRange: "Grain diameters d: 1 µm to 500 µm (breakdown occurs in sub-15nm nanocrystals)",
     criticalNotes:
       "ky is the Hall-Petch locking parameter (~0.5–0.7 MPa·m^(1/2) for steel, ~0.07 MPa·m^(1/2) for pure Al).",

@@ -1,0 +1,124 @@
+{
+ "schema": "lpbf-parity-golden-1",
+ "case": "g11_build_job_meltpool",
+ "group": "G11",
+ "description": "lpbf_thermal_solver.calculate_meltpool_physics for three fixed payloads",
+ "slow": false,
+ "recordedImplementationHash": "11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359",
+ "recordedVersion": "enthalpy-fv-6",
+ "recordedGitHead": "783c655bfb4fb9781c9e4e8a81a660d43a70fa7d",
+ "recordedEnvironment": {
+  "python": "3.12.10",
+  "numpy": "2.2.6",
+  "platform": "Windows",
+  "runtime": "lpbf-win-py312",
+  "cpu": "AMD Ryzen 7 7840HS w/ Radeon 780M Graphics",
+  "numpyRuntime": {
+   "simdBaseline": [
+    "SSE",
+    "SSE2",
+    "SSE3"
+   ],
+   "simdDispatch": [
+    "SSSE3",
+    "SSE41",
+    "POPCNT",
+    "SSE42",
+    "AVX",
+    "F16C",
+    "FMA3",
+    "AVX2",
+    "AVX512F",
+    "AVX512CD",
+    "AVX512_SKX",
+    "AVX512_CLX",
+    "AVX512_CNL",
+    "AVX512_ICL"
+   ],
+   "simdFound": [
+    "AVX",
+    "AVX2",
+    "AVX512BITALG",
+    "AVX512BW",
+    "AVX512CD",
+    "AVX512DQ",
+    "AVX512F",
+    "AVX512IFMA",
+    "AVX512VBMI",
+    "AVX512VBMI2",
+    "AVX512VL",
+    "AVX512VNNI",
+    "AVX512VPOPCNTDQ",
+    "AVX512_CLX",
+    "AVX512_CNL",
+    "AVX512_ICL",
+    "AVX512_SKX",
+    "F16C",
+    "FMA3",
+    "MMX",
+    "POPCNT",
+    "SSE",
+    "SSE2",
+    "SSE3",
+    "SSE41",
+    "SSE42",
+    "SSSE3"
+   ],
+   "blas": "scipy-openblas 0.3.29"
+  }
+ },
+ "recordedRuns_s": [
+  0.8,
+  0.9
+ ],
+ "recordedTwice": true,
+ "observations": {
+  "meltpool.0.typedSha256": "fe93b2707f9c70c7ac8093f8bc92f9014e1f620501c8874dcbe25537ec29f2eb",
+  "meltpool.0.canonicalSha256": "c6a6013c3c98c9314b90209622dfc3d98b1d78e2fa8bfef4bd78862aae935f94",
+  "meltpool.0.geometry_um": "c6ef3e4fb135f2d5582341240b9a8cd27cfb2efc603f06f3522d28b659ad6ead",
+  "meltpool.0.peakTemperature_C": "a9e27258b9e252e7aa28fbda07565b5b72693666ee46a172a59f63a0e5bb1dc8",
+  "meltpool.1.typedSha256": "9a7a16cd688063e51ceba2d4232faf4fe16845bdc6435b9e32b3943d09c258cf",
+  "meltpool.1.canonicalSha256": "bc97b57dbbe1ef06bfaec2fcc65941092106b5fa27ab3d6664cb47ccefb88daa",
+  "meltpool.1.geometry_um": "5f3eddcaba081639a573844c8c982beae4d0d70a808d9dc34e3fc78954192184",
+  "meltpool.1.peakTemperature_C": "a72db60d805fcc76ad4b4aa582c455eae4af1b0a67ba268c4b68c433e4e0a7ea",
+  "meltpool.2.typedSha256": "159a4431ddb2779e410891e59b9e296334a077d2973b665e390103811fa0d81f",
+  "meltpool.2.canonicalSha256": "78420b31374538bb0eda25a37cda12aea068ac7d0b6bc800ef1385453617c5ad",
+  "meltpool.2.geometry_um": "9310163d850b1473f85693ed2a16ab6483bdee8cefdf0e9af77f62c4643240c8",
+  "meltpool.2.peakTemperature_C": "4811a080aed033e0b1631950cc518662d9a456f97da7c97fc85c8902052a0638",
+  "thermalSolver.THERMOPHYSICAL_DB": "cb66808200e16f120b8da692a885cb18a061f9c92354057c7237ad7e6fbb340c",
+  "thermalSolver.THERMOPHYSICAL_DB.in625.latent_heat_fusion_J_kg": "0af842ac641617fbd4054d29e6f5459eda14ee6e8573c0798f547945146feb85",
+  "thermalSolver.classify_enthalpy_regime": "cd5ef3c4b600fdcde92381596c489baff6cf68eecc1463c3d30e08ac70287298"
+ },
+ "rawValues": {
+  "meltpool.0.geometry_um": [
+   144.3,
+   101.9,
+   755.3,
+   32.5
+  ],
+  "meltpool.0.peakTemperature_C": 2500.2,
+  "meltpool.1.geometry_um": [
+   126.7,
+   124.5,
+   641.9,
+   68.3
+  ],
+  "meltpool.1.peakTemperature_C": 28776.6,
+  "meltpool.2.geometry_um": [
+   168.9,
+   251.6,
+   681.8,
+   169.5
+  ],
+  "meltpool.2.peakTemperature_C": 19247.4,
+  "thermalSolver.THERMOPHYSICAL_DB.in625.latent_heat_fusion_J_kg": 290000.0,
+  "thermalSolver.classify_enthalpy_regime": [
+   "Conduction Mode (Stable)",
+   "Conduction Mode (Stable)",
+   "Transition Mode",
+   "Transition Mode",
+   "Keyhole Mode (Deep Vapor Cavity)",
+   "Keyhole Mode (Deep Vapor Cavity)"
+  ]
+ }
+}

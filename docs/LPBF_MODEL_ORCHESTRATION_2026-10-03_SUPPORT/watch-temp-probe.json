@@ -1,0 +1,30 @@
+{
+  "sourceRevision": "ec3a5fcbeb1c5aa1b250ed31a4e812796c5d17ce",
+  "sourceFiles": 1579,
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-native-20261003\\node_modules\\tsx\\dist\\cli.mjs",
+    "--test",
+    "tests/vite-watch.test.ts"
+  ],
+  "sourceHashesBeforeAndAfterMatch": true,
+  "onlyEnvironmentDifference": "TEMP/TMP roots",
+  "cases": [
+    {
+      "case": "ignored-ancestor",
+      "tempRoot": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\native-temp",
+      "exitCode": 1,
+      "observedCompletionElapsed_s": 6.795999999972992,
+      "log": "watch-probe-ignored-ancestor.log",
+      "logSha256": "1c2c45dae4bbb69d5dc4eeb449312eb9f06f9fbab7f576dcc67c9f9f29bc2abe"
+    },
+    {
+      "case": "neutral",
+      "tempRoot": "C:\\Users\\can02\\AppData\\Local\\Temp\\metalliksa-watch-neutral-vslg9_c9",
+      "exitCode": 0,
+      "observedCompletionElapsed_s": 6.780999999959022,
+      "log": "watch-probe-neutral.log",
+      "logSha256": "38cfd6c36a73e997e8cf1c2a0efd12bbc27bd0f8dcb43f6d68e9e826b7e67f7c"
+    }
+  ]
+}

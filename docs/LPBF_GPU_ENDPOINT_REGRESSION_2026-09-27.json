@@ -1,0 +1,268 @@
+{
+  "schemaVersion": 1,
+  "scope": "Actual CUDA endpoint regression; numerical backend parity only",
+  "inputs": {
+    "mode": "standard",
+    "backend": "reference",
+    "material": "Inconel 718",
+    "power_W": 40.0,
+    "speed_mm_s": 800.0,
+    "beamDiameter_um": 80.0,
+    "preheat_C": 80.0,
+    "layer_um": 40.0,
+    "hatch_um": 100.0,
+    "mesh_um": 40.0,
+    "maxDt_s": 1e-06,
+    "trackLength_um": 600.0,
+    "tracks": 1,
+    "layers": 1,
+    "dwell_s": 0.0002,
+    "cooling_s": 0.0005,
+    "scanAngle_deg": 0.0,
+    "layerRotation_deg": 67.0,
+    "strategy": "stripe",
+    "stripeWidth_um": 500.0,
+    "islandSize_um": 200.0,
+    "packingFraction": 0.55,
+    "powderConductivityRatio": 0.12,
+    "convection_W_m2K": 20.0,
+    "absorptivity": 0.38,
+    "emissivity": 0.35,
+    "study": "none",
+    "surfaceMode": "powder-layer",
+    "powderGridPolicy": "layer-conforming",
+    "barePlateGeometry": "square"
+  },
+  "device": "cuda:0",
+  "result": {
+    "status": "pass",
+    "scope": "same-model CPU/GPU numerical parity only",
+    "experimentalValidation": false,
+    "targets": {
+      "integralRelativeMax": 0.01,
+      "widthDepthAbsoluteCellsMax": 1.0,
+      "fieldRiseL2RelativeMax": 0.01,
+      "fieldRiseMaxRelativeMax": 0.01,
+      "peakMeltVolumeRelativeMax": 0.01,
+      "source": "docs/DIGITAL_TWIN_MASTER_PLAN_2026-09-21.md#11"
+    },
+    "gpu": {
+      "solver": {
+        "id": "enthalpy-fv-6-cuda-pilot-1",
+        "modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+        "actualBackend": "cuda:0",
+        "thermalEvolutionDevice": "cuda:0",
+        "sourceIntegrationDevice": "cpu",
+        "sourceTimestepLimiterDevice": "cpu",
+        "dtype": "float64"
+      },
+      "material": {
+        "name": "Inconel 718",
+        "materialId": "in718",
+        "materialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06",
+        "version": "lpbf-materials-1"
+      },
+      "settings": {
+        "mode": "standard",
+        "material": "Inconel 718",
+        "power_W": 40.0,
+        "speed_mm_s": 800.0,
+        "beamDiameter_um": 80.0,
+        "preheat_C": 80.0,
+        "layer_um": 40.0,
+        "hatch_um": 100.0,
+        "mesh_um": 40.0,
+        "maxDt_s": 1e-06,
+        "trackLength_um": 600.0,
+        "tracks": 1,
+        "layers": 1,
+        "dwell_s": 0.0002,
+        "cooling_s": 0.0005,
+        "scanAngle_deg": 0.0,
+        "layerRotation_deg": 67.0,
+        "strategy": "stripe",
+        "stripeWidth_um": 500.0,
+        "islandSize_um": 200.0,
+        "packingFraction": 0.55,
+        "powderConductivityRatio": 0.12,
+        "convection_W_m2K": 20.0,
+        "timeout_s": 300.0,
+        "study": "none",
+        "backend": "reference",
+        "surfaceMode": "powder-layer",
+        "sourcePenetration_um": null,
+        "barePlateGeometry": "square",
+        "absorptivity": 0.38,
+        "emissivity": 0.35,
+        "powderGridPolicy": "layer-conforming"
+      },
+      "metrics": {
+        "length_um": 119.99999999999999,
+        "width_um": 40.0,
+        "depth_um": 40.0,
+        "volume_um3": 191999.99999999994,
+        "crossSectionArea_um2": 1599.9999999999995,
+        "peakTemperature_K": 2122.7795761916555
+      },
+      "peakExtraction": {
+        "meltPoolExtraction": "accepted-step-molten-volume-v1",
+        "peakMeltTime_s": 0.0001828275931718469,
+        "peakMeltStep": 229,
+        "meltPoolObservedSteps": 1605,
+        "peakMeltCellCount": 3,
+        "equalMaximumEndpointCount": 1,
+        "firstEqualMaximumTime_s": 0.0001828275931718469,
+        "lastEqualMaximumTime_s": 0.0001828275931718469,
+        "sampledPeakMeltVolume_um3": 191999.99999999994,
+        "peakMeltSamplingLossFraction": 0.0,
+        "interpolatedPeakMeltPool": {
+          "status": "thermal-proxy",
+          "operator": "peak-liquidus-cell-edge-linear-contour-v1",
+          "temporalSelection": "accepted-step-molten-volume-v1",
+          "contour": "linear liquidus crossings between neighboring active cell centers",
+          "surfaceTreatment": "No temperature extrapolation to the model surface",
+          "width_um": 37.7548658462846,
+          "depth_um": 32.914342784312666,
+          "evidenceScope": "Numerical thermal proxy; no experimental validation",
+          "sampleCells": 3,
+          "crossingCount": 11
+        }
+      },
+      "energyBalance": {
+        "input_J": 0.011399999999999967,
+        "losses_J": 8.88463710198241e-06,
+        "stored_J": 0.011391115362897988,
+        "relativeError": 3.043374519257565e-16
+      },
+      "discretization": {
+        "cells": 3969,
+        "mesh_m": 3.9999999999999996e-05,
+        "minimumDt_s": 2.672796966872275e-07,
+        "maximumDt_s": 1e-06,
+        "meanDt_s": 9.034267912772585e-07,
+        "steps": 1605
+      },
+      "validationStatus": "unvalidated",
+      "productionReady": false
+    },
+    "cpu": {
+      "solver": {
+        "id": "enthalpy-fv-6",
+        "version": "enthalpy-fv-6",
+        "openfoam": null
+      },
+      "coreContract": {
+        "schemaVersion": 1,
+        "modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+        "actualBackend": "numpy-reference",
+        "requestedBackend": "reference",
+        "effectiveMode": "standard",
+        "solverId": "enthalpy-fv-6",
+        "inputSha256": "b0a92d5275f6aec4b62c1210ec3623588a8e8bbde2451c8b600969ec6d4b7e96",
+        "materialSha256": "8a8ebcc8ef09d8096bdf052f30de859df8f96932564b2bcf2b2800aa36b05e9d",
+        "units": {
+          "power": "W",
+          "speed": "mm/s",
+          "length": "um",
+          "preheat": "degC",
+          "temperature": "K",
+          "internalLength": "m",
+          "time": "s",
+          "energy": "J",
+          "beamDiameter": "1/e2-intensity"
+        },
+        "resolvedPhysics": {
+          "conduction": true,
+          "transient": true,
+          "latentHeat": true,
+          "momentum": false,
+          "freeSurface": false,
+          "evaporation": false
+        },
+        "evidenceClass": "unvalidated-model"
+      },
+      "material": {
+        "name": "Inconel 718",
+        "materialId": "in718",
+        "materialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06",
+        "version": "lpbf-materials-1"
+      },
+      "discretization": {
+        "cells": 3969,
+        "mesh_m": 3.9999999999999996e-05,
+        "minimumDt_s": 2.6727924204146634e-07,
+        "meanDt_s": 9.034267912772585e-07,
+        "steps": 1605
+      }
+    },
+    "comparisons": {
+      "finalSampling": {
+        "status": "pass",
+        "cpuFinalTime_s": 0.00145,
+        "cpuFrameTime_s": 0.00145,
+        "gpuFinalTime_s": 0.00145,
+        "expectedEnd_s": 0.00145,
+        "cpuSteps": 1605,
+        "gpuSteps": 1605,
+        "cellCount": 3969
+      },
+      "finalTemperatureField": {
+        "status": "pass",
+        "relativeRiseL2": 6.760651397343335e-09,
+        "relativeRiseMax": 9.062182562735324e-09,
+        "cpuEncoding": "float64 final recorder sample",
+        "gpuEncoding": "float64 final state"
+      },
+      "peakTemperature_K": {
+        "cpu": 2122.779574303232,
+        "gpu": 2122.7795761916555,
+        "relativeDifference": 8.895993890135778e-10,
+        "status": "pass"
+      },
+      "input_J": {
+        "cpu": 0.011399999999999962,
+        "gpu": 0.011399999999999967,
+        "relativeDifference": 4.56506177888635e-16,
+        "status": "pass"
+      },
+      "losses_J": {
+        "cpu": 8.884637098831819e-06,
+        "gpu": 8.88463710198241e-06,
+        "relativeDifference": 3.546111707555675e-10,
+        "status": "pass"
+      },
+      "stored_J": {
+        "cpu": 0.011391115362901135,
+        "gpu": 0.011391115362897988,
+        "relativeDifference": 2.762493649805765e-13,
+        "status": "pass"
+      },
+      "width_um": {
+        "cpu": 40.0,
+        "gpu": 40.0,
+        "absoluteDifference_um": 0.0,
+        "status": "pass"
+      },
+      "depth_um": {
+        "cpu": 40.0,
+        "gpu": 40.0,
+        "absoluteDifference_um": 0.0,
+        "status": "pass"
+      },
+      "length_um": {
+        "cpu": 119.99999999999999,
+        "gpu": 119.99999999999999,
+        "absoluteDifference_um": 0.0,
+        "status": "pass"
+      },
+      "volume_um3": {
+        "cpu": 191999.99999999994,
+        "gpu": 191999.99999999994,
+        "relativeDifference": 0.0,
+        "status": "pass"
+      }
+    }
+  },
+  "implementationBefore": "e8d5695b39d2d05eb2d17a78fcafcae0b4d6fa13c623752065ea243f95b7ba06",
+  "implementationAfter": "e8d5695b39d2d05eb2d17a78fcafcae0b4d6fa13c623752065ea243f95b7ba06"
+}

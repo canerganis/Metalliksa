@@ -1,0 +1,9 @@
+{
+  "documentSyntax": "PASS",
+  "documentedHashFunctionUnchangedFixture": "PASS",
+  "documentedHashFunctionChangedFixture": "PASS",
+  "frozenSourceFiles": 1520,
+  "frozenSourceStableRead": "PASS",
+  "submodulePointersExcluded": 1,
+  "scope": "Document syntax and hash-function verification only; no new clean install, npm suite, build or browser replay."
+}

@@ -1,0 +1,52 @@
+npm warn deprecated three-mesh-bvh@0.7.8: Deprecated due to three.js version incompatibility. Please use v0.8.0, instead.
+npm warn cleanup Failed to remove some directories [
+npm warn cleanup   [
+npm warn cleanup     '\\\\?\\C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-20261003\\node_modules\\@prisma\\composer\\node_modules\\alchemy\\node_modules\\@alchemy.run',
+npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'C:\Users\can02\Projects\metalliksaa\Metalliksa-1\.runtime\v1-input-claims-20261003\node_modules\@prisma\composer\node_modules\alchemy\node_modules\@alchemy.run\cloudflare-runtime\dist\core\node\packages'] {
+npm warn cleanup       errno: -4048,
+npm warn cleanup       code: 'EPERM',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-20261003\\node_modules\\@prisma\\composer\\node_modules\\alchemy\\node_modules\\@alchemy.run\\cloudflare-runtime\\dist\\core\\node\\packages'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     '\\\\?\\C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-20261003\\node_modules\\@prisma\\composer-cli',
+npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'C:\Users\can02\Projects\metalliksaa\Metalliksa-1\.runtime\v1-input-claims-20261003\node_modules\@prisma\composer-cli\node_modules\alchemy\node_modules\@alchemy.run\cloudflare-runtime\dist\core\node'] {
+npm warn cleanup       errno: -4048,
+npm warn cleanup       code: 'EPERM',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-20261003\\node_modules\\@prisma\\composer-cli\\node_modules\\alchemy\\node_modules\\@alchemy.run\\cloudflare-runtime\\dist\\core\\node'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     '\\\\?\\C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-20261003\\node_modules\\@prisma\\composer\\node_modules',
+npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'C:\Users\can02\Projects\metalliksaa\Metalliksa-1\.runtime\v1-input-claims-20261003\node_modules\@prisma\composer\node_modules\alchemy\node_modules'] {
+npm warn cleanup       errno: -4048,
+npm warn cleanup       code: 'EPERM',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-20261003\\node_modules\\@prisma\\composer\\node_modules\\alchemy\\node_modules'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     '\\\\?\\C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-20261003\\node_modules\\@prisma',
+npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'C:\Users\can02\Projects\metalliksaa\Metalliksa-1\.runtime\v1-input-claims-20261003\node_modules\@prisma\composer-cli\node_modules\alchemy'] {
+npm warn cleanup       errno: -4048,
+npm warn cleanup       code: 'EPERM',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-20261003\\node_modules\\@prisma\\composer-cli\\node_modules\\alchemy'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     '\\\\?\\C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-20261003\\node_modules\\@prisma\\composer',
+npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'C:\Users\can02\Projects\metalliksaa\Metalliksa-1\.runtime\v1-input-claims-20261003\node_modules\@prisma\composer'] {
+npm warn cleanup       errno: -4048,
+npm warn cleanup       code: 'EPERM',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-20261003\\node_modules\\@prisma\\composer'
+npm warn cleanup     }
+npm warn cleanup   ]
+npm warn cleanup ]
+npm error code ENOTCACHED
+npm error request to https://registry.npmjs.org/yallist failed: cache mode is 'only-if-cached' but no cached response is available.
+npm error Log files were not written due to an error writing to the directory: C:\Users\can02\AppData\Local\npm-cache\_logs
+npm error You can rerun the command with `--loglevel=verbose` to see the logs in your terminal

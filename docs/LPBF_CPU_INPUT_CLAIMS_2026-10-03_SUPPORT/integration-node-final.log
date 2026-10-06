@@ -1,0 +1,63 @@
+PASS: LPBF runtime contract rejects invalid, nonfinite and false-validation responses
+✔ tests\lpbf-contract.test.ts (257.649ms)
+✔ fresh computational run record is opt-in and disabled until the exact input has completed (28.4275ms)
+✔ cancelled run explains that no result can be archived or exported (0.5679ms)
+✔ engineering screen keeps the CUDA pilot visibly separate from standard CPU results (26.3392ms)
+✔ material availability does not pass source and uncertainty evidence readiness (10.574ms)
+✔ CUDA device picker uses only the selected runtime inventory and rejects malformed entries (1.7391ms)
+✔ CUDA submit identity rejects a same ordinal that resolves to a changed device (0.3239ms)
+✔ run archive restores only a still-present saved run selection (0.9517ms)
+✔ only a confirmed missing saved CUDA job is forgotten; newer IDs and transient errors are preserved (0.5727ms)
+✔ completed bound GPU jobs expose an archive action for that job only (5.1053ms)
+✔ saved CUDA results show their executed inputs and label changed current controls (3.8985ms)
+✔ custom GPU material provenance is shown from both executed and archived result snapshots (2.7309ms)
+✔ missing or malformed archived material provenance is rendered as not reported (0.7617ms)
+✔ archived build-job provenance renders its captured effective material property snapshot (0.7454ms)
+✔ GPU engine label requires matching outer capture, contract, runtime, settings and solver identities (5.9149ms)
+✔ conditionless replicate stays conditionless in the actual submission builder (2.4067ms)
+✔ all 22 explicitly supplied conditions survive submission exactly (0.5185ms)
+✔ the frontend fixture covers exactly the current backend condition keys (0.8058ms)
+✔ partial or malformed conditions are actionable errors, never filled or dropped (1.3073ms)
+✔ explicit mismatching conditions are preserved for worker rejection (0.2982ms)
+✔ manual dimensions preserve user evidence without inventing conditions (0.2599ms)
+✔ manual values require finite positive dimensions and nonnegative uncertainty (0.351ms)
+✔ replicate dimensions and uncertainty must be supplied as finite JSON numbers (0.9676ms)
+✔ the real component submit path uses the tested builder (1.2328ms)
+✔ unknown replicate fields are rejected with their names rather than dropped (0.894ms)
+✔ uncertainty accepts exactly width and depth and rejects extra field names (0.5549ms)
+✔ supported mixed-condition batches preserve every supplied known value (0.3538ms)
+✔ accepted-step peak provenance preserves zero melt and rejects inconsistent indices (3.6451ms)
+✔ physics diagnostics retain numerical limits and do not claim porosity (33.8556ms)
+✔ LPBF result parsing accepts the versioned adaptive Gaussian source diagnostics (3.4695ms)
+✔ source integration label follows the recorded method and handles absent or unknown identifiers (7.5948ms)
+✔ aggregate geometry presents unknown overlap without fake zero values (1.7398ms)
+✔ invalid source and overlap contracts are rejected before rendering (0.728ms)
+✔ field-resolved inter-track overlap renders correctly and rejects invalid values (3.8328ms)
+PASS: result visibility, progress, cancellation/failure/timeout, cache, stale inputs, calibration and numerical evidence rendering
+✔ tests\lpbf-presentation.test.tsx (1212.5407ms)
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metalliksa.lpbf.workflow.v1', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metalliksa.lpbf.workflow.v1', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metalliksa.lpbf.workflow.v1', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metalliksa.lpbf.workflow.v1', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metalliksa.lpbf.workflow.v1', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metalliksa.lpbf.workflow.v1', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metalliksa.lpbf.workflow.v1', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metalliksa.lpbf.workflow.v1', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metalliksa.lpbf.workflow.v1', the given storage is currently unavailable.
+✔ eight workflow stages share the existing specimen vector without a machine-parameter copy (17.1776ms)
+✔ only recognized material identities normalize; unknown alloys cannot become a surrogate (0.6104ms)
+✔ qualification distinguishes current/executed inputs and never promotes numerical or calibration evidence (2.6154ms)
+✔ worker polling completes without a mounted view and cancelled jobs cannot be resurrected (1330.8937ms)
+✔ app startup restores report evidence without mounting thermal view and preserves current controls (7.8761ms)
+✔ late saved-job response cannot replace a newer submission or a restarted app lifecycle (6.617ms)
+ℹ tests 41
+ℹ suites 0
+ℹ pass 41
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1812.5713

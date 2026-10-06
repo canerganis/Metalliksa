@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from "react";
-import * as d3 from "d3";
+import { axisBottom as d3AxisBottom, axisLeft as d3AxisLeft, curveMonotoneX as d3CurveMonotoneX, extent as d3Extent, line as d3Line, pointer as d3Pointer, scaleLinear as d3ScaleLinear, select as d3Select, zoom as d3Zoom, zoomIdentity as d3ZoomIdentity } from "d3";
+import type { ScaleLinear, ZoomBehavior } from "d3";
 import {
   ZoomIn,
   ZoomOut,
@@ -14,6 +15,13 @@ import {
   Maximize2,
 } from "lucide-react";
 import { TafelDataset, TafelFitResult } from "../types/tafel";
+import {
+  fmtTafelNumber,
+  fmtTafelQuantity,
+  tafelIntersectionAnchors,
+  tafelUnavailableReason,
+  UNAVAILABLE_TEXT,
+} from "../utils/tafelDisplay";
 
 export interface D3TafelPolarizationChartProps {
   dataset: TafelDataset;
@@ -33,7 +41,8 @@ interface HoverState {
   potential: number;
   logI: number;
   linearI_uA: number;
-  overpotential_mV: number;
+  /** null when the Evans intersection (E_corr) is unavailable: no overpotential is invented. */
+  overpotential_mV: number | null;
   isAnodic: boolean;
 }
 
@@ -49,7 +58,7 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
-  const zoomBehaviorRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
+  const zoomBehaviorRef = useRef<ZoomBehavior<SVGSVGElement, unknown> | null>(null);
 
   // Display toggles
   const [orientation, setOrientation] = useState<"evans" | "potentiodynamic">(initialOrientation);
@@ -97,7 +106,7 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
   useEffect(() => {
     if (!svgRef.current || rawPoints.length === 0) return;
 
-    const svg = d3.select(svgRef.current);
+    const svg = d3Select(svgRef.current);
     svg.selectAll("*").remove(); // Clear previous render
 
     // Color definitions
@@ -133,30 +142,35 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
     filter.append("feMerge").selectAll("feMergeNode").data(["blur", "SourceGraphic"]).enter().append("feMergeNode").attr("in", (d) => d);
 
     // Compute Base Domain Extents
-    const potentialExtent = d3.extent(rawPoints, (d: { potential: number }) => d.potential) as [number, number];
-    const logIExtent = d3.extent(rawPoints, (d: { logI: number }) => d.logI) as [number, number];
+    const potentialExtent = d3Extent(rawPoints, (d: { potential: number }) => d.potential) as [number, number];
+    const logIExtent = d3Extent(rawPoints, (d: { logI: number }) => d.logI) as [number, number];
+
+    // E_corr / log(i_corr) are null when the Evans intersection is unavailable (a Tafel branch could not be fitted).
+    // The scales then anchor on the measured current valley, and the intersection markers, zone shading and the
+    // callout are not drawn: no intersection value is invented.
+    const { intersectionKnown, eCorrRef, logIcorrRef } = tafelIntersectionAnchors(fitResult);
 
     // Ensure Ecorr and Icorr fit within domain with margin
-    const eMin = Math.min(potentialExtent[0] ?? -1.0, fitResult.eCorr - 0.25);
-    const eMax = Math.max(potentialExtent[1] ?? 0.5, fitResult.eCorr + 0.25);
+    const eMin = Math.min(potentialExtent[0] ?? -1.0, eCorrRef - 0.25);
+    const eMax = Math.max(potentialExtent[1] ?? 0.5, eCorrRef + 0.25);
     const ePad = (eMax - eMin) * 0.06;
 
-    const logIMin = Math.min(logIExtent[0] ?? -4.0, fitResult.logIcorr - 1.2);
-    const logIMax = Math.max(logIExtent[1] ?? 4.0, fitResult.logIcorr + 1.5);
+    const logIMin = Math.min(logIExtent[0] ?? -4.0, logIcorrRef - 1.2);
+    const logIMax = Math.max(logIExtent[1] ?? 4.0, logIcorrRef + 1.5);
     const logIPad = (logIMax - logIMin) * 0.06;
 
     // Base Scales according to orientation
-    let xScaleBase: d3.ScaleLinear<number, number>;
-    let yScaleBase: d3.ScaleLinear<number, number>;
+    let xScaleBase: ScaleLinear<number, number>;
+    let yScaleBase: ScaleLinear<number, number>;
 
     if (orientation === "evans") {
       // Evans Diagram: X = Log(i), Y = Potential E
-      xScaleBase = d3.scaleLinear().domain([logIMin - logIPad, logIMax + logIPad]).range([0, innerWidth]);
-      yScaleBase = d3.scaleLinear().domain([eMin - ePad, eMax + ePad]).range([innerHeight, 0]);
+      xScaleBase = d3ScaleLinear().domain([logIMin - logIPad, logIMax + logIPad]).range([0, innerWidth]);
+      yScaleBase = d3ScaleLinear().domain([eMin - ePad, eMax + ePad]).range([innerHeight, 0]);
     } else {
       // Potentiodynamic Curve: X = Potential E, Y = Log(i)
-      xScaleBase = d3.scaleLinear().domain([eMin - ePad, eMax + ePad]).range([0, innerWidth]);
-      yScaleBase = d3.scaleLinear().domain([logIMin - logIPad, logIMax + logIPad]).range([innerHeight, 0]);
+      xScaleBase = d3ScaleLinear().domain([eMin - ePad, eMax + ePad]).range([0, innerWidth]);
+      yScaleBase = d3ScaleLinear().domain([logIMin - logIPad, logIMax + logIPad]).range([innerHeight, 0]);
     }
 
     let currentXScale = xScaleBase;
@@ -241,17 +255,15 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
     };
 
     // Line generator for experimental points
-    const expLineGenerator = d3
-      .line<{ potential: number; logI: number }>()
+    const expLineGenerator = d3Line<{ potential: number; logI: number }>()
       .x((d) => getXCoord(d, currentXScale))
       .y((d) => getYCoord(d, currentYScale))
-      .curve(d3.curveMonotoneX);
+      .curve(d3CurveMonotoneX);
 
     // Render Function (Called on initial draw and every zoom/pan event)
     const render = () => {
       // 1. Render Axes
-      const xAxis = d3
-        .axisBottom(currentXScale)
+      const xAxis = d3AxisBottom(currentXScale)
         .ticks(Math.max(5, Math.floor(innerWidth / 90)))
         .tickFormat((d) => {
           const val = typeof d === "number" ? d : Number(d);
@@ -260,8 +272,7 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
             : `${val >= 0 ? "+" : ""}${val.toFixed(2)}V`;
         });
 
-      const yAxis = d3
-        .axisLeft(currentYScale)
+      const yAxis = d3AxisLeft(currentYScale)
         .ticks(Math.max(5, Math.floor(innerHeight / 60)))
         .tickFormat((d) => {
           const val = typeof d === "number" ? d : Number(d);
@@ -311,9 +322,9 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
 
       // 3. Render Domain Shading (Cathodic reduction zone vs Anodic oxidation zone)
       shadingG.selectAll("*").remove();
-      if (showDomainShading) {
+      if (showDomainShading && intersectionKnown) {
         if (orientation === "evans") {
-          const ecorrY = currentYScale(fitResult.eCorr);
+          const ecorrY = currentYScale(eCorrRef);
           // Anodic Zone: above Ecorr (lower Y value)
           shadingG
             .append("rect")
@@ -332,7 +343,7 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
             .attr("height", Math.max(0, innerHeight - ecorrY))
             .attr("fill", colors.zoneCathodic);
         } else {
-          const ecorrX = currentXScale(fitResult.eCorr);
+          const ecorrX = currentXScale(eCorrRef);
           // Cathodic Zone: left of Ecorr
           shadingG
             .append("rect")
@@ -365,8 +376,7 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
           .map((t) => ({ potential: t.potential, logI: t.logI_cathodic! }));
 
         if (anodicPts.length >= 2) {
-          const anodicLineGen = d3
-            .line<{ potential: number; logI: number }>()
+          const anodicLineGen = d3Line<{ potential: number; logI: number }>()
             .x((d) => getXCoord(d, currentXScale))
             .y((d) => getYCoord(d, currentYScale));
 
@@ -381,8 +391,7 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
         }
 
         if (cathodicPts.length >= 2) {
-          const cathodicLineGen = d3
-            .line<{ potential: number; logI: number }>()
+          const cathodicLineGen = d3Line<{ potential: number; logI: number }>()
             .x((d) => getXCoord(d, currentXScale))
             .y((d) => getYCoord(d, currentYScale));
 
@@ -405,11 +414,10 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
           logI: b.logI_model,
         }));
 
-        const bvLineGen = d3
-          .line<{ potential: number; logI: number }>()
+        const bvLineGen = d3Line<{ potential: number; logI: number }>()
           .x((d) => getXCoord(d, currentXScale))
           .y((d) => getYCoord(d, currentYScale))
-          .curve(d3.curveMonotoneX);
+          .curve(d3CurveMonotoneX);
 
         bvG
           .append("path")
@@ -451,237 +459,248 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
       // 8. Render Ecorr & Icorr Highlight Guides & Marker Point
       highlightG.selectAll("*").remove();
 
-      const intersectX =
-        orientation === "evans"
-          ? currentXScale(fitResult.logIcorr)
-          : currentXScale(fitResult.eCorr);
+      if (intersectionKnown) {
+        const intersectX =
+          orientation === "evans"
+            ? currentXScale(logIcorrRef)
+            : currentXScale(eCorrRef);
 
-      const intersectY =
-        orientation === "evans"
-          ? currentYScale(fitResult.eCorr)
-          : currentYScale(fitResult.logIcorr);
+        const intersectY =
+          orientation === "evans"
+            ? currentYScale(eCorrRef)
+            : currentYScale(logIcorrRef);
 
-      // Guidelines
-      if (orientation === "evans") {
-        // Horizontal guideline to Y-axis for Ecorr
+        // Guidelines
+        if (orientation === "evans") {
+          // Horizontal guideline to Y-axis for Ecorr
+          highlightG
+            .append("line")
+            .attr("x1", 0)
+            .attr("x2", innerWidth)
+            .attr("y1", intersectY)
+            .attr("y2", intersectY)
+            .attr("stroke", colors.ecorr)
+            .attr("stroke-width", 1.8)
+            .attr("stroke-dasharray", "4,4")
+            .attr("opacity", 0.9);
+
+          // Vertical guideline to X-axis for log(Icorr)
+          highlightG
+            .append("line")
+            .attr("x1", intersectX)
+            .attr("x2", intersectX)
+            .attr("y1", 0)
+            .attr("y2", innerHeight)
+            .attr("stroke", colors.icorr)
+            .attr("stroke-width", 1.8)
+            .attr("stroke-dasharray", "4,4")
+            .attr("opacity", 0.9);
+
+          // Ecorr badge on Y-axis edge
+          highlightG
+            .append("rect")
+            .attr("x", 4)
+            .attr("y", intersectY - 10)
+            .attr("width", 96)
+            .attr("height", 20)
+            .attr("rx", 4)
+            .attr("fill", "rgba(16, 185, 129, 0.9)")
+            .attr("stroke", "#10b981")
+            .attr("stroke-width", 1);
+
+          highlightG
+            .append("text")
+            .attr("x", 8)
+            .attr("y", intersectY + 4)
+            .attr("fill", "#ffffff")
+            .attr("font-size", "10px")
+            .attr("font-weight", "bold")
+            .attr("font-family", "monospace")
+            .text(`E_corr: ${fitResult.eCorr}V`);
+
+          // Icorr badge on X-axis edge
+          highlightG
+            .append("rect")
+            .attr("x", intersectX - 44)
+            .attr("y", innerHeight - 24)
+            .attr("width", 88)
+            .attr("height", 20)
+            .attr("rx", 4)
+            .attr("fill", "rgba(56, 189, 248, 0.9)")
+            .attr("stroke", "#38bdf8")
+            .attr("stroke-width", 1);
+
+          highlightG
+            .append("text")
+            .attr("x", intersectX)
+            .attr("y", innerHeight - 10)
+            .attr("text-anchor", "middle")
+            .attr("fill", "#040711")
+            .attr("font-size", "10px")
+            .attr("font-weight", "bold")
+            .attr("font-family", "monospace")
+            .text(fmtTafelQuantity(fitResult.iCorr_uA_cm2, "µA/cm²"));
+        } else {
+          // Potentiodynamic Mode guidelines
+          highlightG
+            .append("line")
+            .attr("x1", intersectX)
+            .attr("x2", intersectX)
+            .attr("y1", 0)
+            .attr("y2", innerHeight)
+            .attr("stroke", colors.ecorr)
+            .attr("stroke-width", 1.8)
+            .attr("stroke-dasharray", "4,4")
+            .attr("opacity", 0.9);
+
+          highlightG
+            .append("line")
+            .attr("x1", 0)
+            .attr("x2", innerWidth)
+            .attr("y1", intersectY)
+            .attr("y2", intersectY)
+            .attr("stroke", colors.icorr)
+            .attr("stroke-width", 1.8)
+            .attr("stroke-dasharray", "4,4")
+            .attr("opacity", 0.9);
+        }
+
+        // Outer animated pulsating halo circle at the intersection
         highlightG
-          .append("line")
-          .attr("x1", 0)
-          .attr("x2", innerWidth)
-          .attr("y1", intersectY)
-          .attr("y2", intersectY)
+          .append("circle")
+          .attr("cx", intersectX)
+          .attr("cy", intersectY)
+          .attr("r", 14)
+          .attr("fill", "rgba(16, 185, 129, 0.15)")
           .attr("stroke", colors.ecorr)
-          .attr("stroke-width", 1.8)
-          .attr("stroke-dasharray", "4,4")
-          .attr("opacity", 0.9);
+          .attr("stroke-width", 1.5)
+          .attr("opacity", 0.85);
 
-        // Vertical guideline to X-axis for log(Icorr)
+        // Middle accent ring
+        highlightG
+          .append("circle")
+          .attr("cx", intersectX)
+          .attr("cy", intersectY)
+          .attr("r", 8)
+          .attr("fill", "rgba(56, 189, 248, 0.35)")
+          .attr("stroke", "#ffffff")
+          .attr("stroke-width", 1.5);
+
+        // Core intersection bead
+        highlightG
+          .append("circle")
+          .attr("cx", intersectX)
+          .attr("cy", intersectY)
+          .attr("r", 3.5)
+          .attr("fill", "#ffffff");
+
+        // Floating callout badge anchored near the intersection
+        const calloutWidth = 190;
+        const calloutHeight = 58;
+        // Position callout intelligently to avoid clipping against boundaries
+        let calloutX = intersectX + 18;
+        let calloutY = intersectY - 68;
+
+        if (calloutX + calloutWidth > innerWidth) {
+          calloutX = intersectX - calloutWidth - 18;
+        }
+        if (calloutY < 10) {
+          calloutY = intersectY + 20;
+        }
+
+        const calloutG = highlightG
+          .append("g")
+          .attr("class", "ecorr-callout")
+          .attr("transform", `translate(${calloutX}, ${calloutY})`);
+
+        // Leader pointer line from callout to target
         highlightG
           .append("line")
           .attr("x1", intersectX)
-          .attr("x2", intersectX)
-          .attr("y1", 0)
-          .attr("y2", innerHeight)
-          .attr("stroke", colors.icorr)
-          .attr("stroke-width", 1.8)
-          .attr("stroke-dasharray", "4,4")
-          .attr("opacity", 0.9);
+          .attr("y1", intersectY)
+          .attr(
+            "x2",
+            calloutX > intersectX ? calloutX : calloutX + calloutWidth
+          )
+          .attr("y2", calloutY + calloutHeight / 2)
+          .attr("stroke", colors.ecorr)
+          .attr("stroke-width", 1.2)
+          .attr("stroke-dasharray", "2,2");
 
-        // Ecorr badge on Y-axis edge
-        highlightG
+        // Callout card box
+        calloutG
           .append("rect")
-          .attr("x", 4)
-          .attr("y", intersectY - 10)
-          .attr("width", 96)
-          .attr("height", 20)
-          .attr("rx", 4)
-          .attr("fill", "rgba(16, 185, 129, 0.9)")
+          .attr("width", calloutWidth)
+          .attr("height", calloutHeight)
+          .attr("rx", 6)
+          .attr("fill", "#09101d")
           .attr("stroke", "#10b981")
-          .attr("stroke-width", 1);
+          .attr("stroke-width", 1.5)
+          .attr("filter", "url(#ecorr-glow)");
 
-        highlightG
+        // Callout Header
+        calloutG
           .append("text")
           .attr("x", 8)
-          .attr("y", intersectY + 4)
-          .attr("fill", "#ffffff")
+          .attr("y", 16)
+          .attr("fill", "#34d399")
           .attr("font-size", "10px")
-          .attr("font-weight", "bold")
+          .attr("font-weight", "800")
           .attr("font-family", "monospace")
-          .text(`E_corr: ${fitResult.eCorr}V`);
+          .text(
+            fitResult.isPythonEngine
+              ? "PYTHON 3.10 ASTM G102 FIT"
+              : "EXTRAPOLATED TAFEL FIT"
+          );
 
-        // Icorr badge on X-axis edge
-        highlightG
-          .append("rect")
-          .attr("x", intersectX - 44)
-          .attr("y", innerHeight - 24)
-          .attr("width", 88)
-          .attr("height", 20)
-          .attr("rx", 4)
-          .attr("fill", "rgba(56, 189, 248, 0.9)")
-          .attr("stroke", "#38bdf8")
-          .attr("stroke-width", 1);
+        // Callout Line 1: Ecorr
+        calloutG
+          .append("text")
+          .attr("x", 8)
+          .attr("y", 32)
+          .attr("fill", "#e2e8f0")
+          .attr("font-size", "11px")
+          .attr("font-family", "monospace")
+          .text(`E_corr = `)
+          .append("tspan")
+          .attr("fill", "#34d399")
+          .attr("font-weight", "bold")
+          .text(`${fitResult.eCorr} V`);
 
+        // Callout Line 2: Icorr & CR
+        calloutG
+          .append("text")
+          .attr("x", 8)
+          .attr("y", 48)
+          .attr("fill", "#e2e8f0")
+          .attr("font-size", "11px")
+          .attr("font-family", "monospace")
+          .text(`i_corr = `)
+          .append("tspan")
+          .attr("fill", "#38bdf8")
+          .attr("font-weight", "bold")
+          .text(fmtTafelQuantity(fitResult.iCorr_uA_cm2, "µA/cm²"))
+          .append("tspan")
+          .attr("fill", "#94a3b8")
+          .text(` (${fmtTafelQuantity(fitResult.corrosionRateMmYr, "mm/yr")})`);
+      } else {
         highlightG
           .append("text")
-          .attr("x", intersectX)
-          .attr("y", innerHeight - 10)
-          .attr("text-anchor", "middle")
-          .attr("fill", "#040711")
-          .attr("font-size", "10px")
+          .attr("x", 10)
+          .attr("y", 18)
+          .attr("fill", "#fbbf24")
+          .attr("font-size", "11px")
           .attr("font-weight", "bold")
           .attr("font-family", "monospace")
-          .text(`${fitResult.iCorr_uA_cm2} µA/cm²`);
-      } else {
-        // Potentiodynamic Mode guidelines
-        highlightG
-          .append("line")
-          .attr("x1", intersectX)
-          .attr("x2", intersectX)
-          .attr("y1", 0)
-          .attr("y2", innerHeight)
-          .attr("stroke", colors.ecorr)
-          .attr("stroke-width", 1.8)
-          .attr("stroke-dasharray", "4,4")
-          .attr("opacity", 0.9);
-
-        highlightG
-          .append("line")
-          .attr("x1", 0)
-          .attr("x2", innerWidth)
-          .attr("y1", intersectY)
-          .attr("y2", intersectY)
-          .attr("stroke", colors.icorr)
-          .attr("stroke-width", 1.8)
-          .attr("stroke-dasharray", "4,4")
-          .attr("opacity", 0.9);
+          .text(`Tafel intersection (E_corr / i_corr): ${UNAVAILABLE_TEXT}`);
       }
-
-      // Outer animated pulsating halo circle at the intersection
-      highlightG
-        .append("circle")
-        .attr("cx", intersectX)
-        .attr("cy", intersectY)
-        .attr("r", 14)
-        .attr("fill", "rgba(16, 185, 129, 0.15)")
-        .attr("stroke", colors.ecorr)
-        .attr("stroke-width", 1.5)
-        .attr("opacity", 0.85);
-
-      // Middle accent ring
-      highlightG
-        .append("circle")
-        .attr("cx", intersectX)
-        .attr("cy", intersectY)
-        .attr("r", 8)
-        .attr("fill", "rgba(56, 189, 248, 0.35)")
-        .attr("stroke", "#ffffff")
-        .attr("stroke-width", 1.5);
-
-      // Core intersection bead
-      highlightG
-        .append("circle")
-        .attr("cx", intersectX)
-        .attr("cy", intersectY)
-        .attr("r", 3.5)
-        .attr("fill", "#ffffff");
-
-      // Floating callout badge anchored near the intersection
-      const calloutWidth = 190;
-      const calloutHeight = 58;
-      // Position callout intelligently to avoid clipping against boundaries
-      let calloutX = intersectX + 18;
-      let calloutY = intersectY - 68;
-
-      if (calloutX + calloutWidth > innerWidth) {
-        calloutX = intersectX - calloutWidth - 18;
-      }
-      if (calloutY < 10) {
-        calloutY = intersectY + 20;
-      }
-
-      const calloutG = highlightG
-        .append("g")
-        .attr("class", "ecorr-callout")
-        .attr("transform", `translate(${calloutX}, ${calloutY})`);
-
-      // Leader pointer line from callout to target
-      highlightG
-        .append("line")
-        .attr("x1", intersectX)
-        .attr("y1", intersectY)
-        .attr(
-          "x2",
-          calloutX > intersectX ? calloutX : calloutX + calloutWidth
-        )
-        .attr("y2", calloutY + calloutHeight / 2)
-        .attr("stroke", colors.ecorr)
-        .attr("stroke-width", 1.2)
-        .attr("stroke-dasharray", "2,2");
-
-      // Callout card box
-      calloutG
-        .append("rect")
-        .attr("width", calloutWidth)
-        .attr("height", calloutHeight)
-        .attr("rx", 6)
-        .attr("fill", "#09101d")
-        .attr("stroke", "#10b981")
-        .attr("stroke-width", 1.5)
-        .attr("filter", "url(#ecorr-glow)");
-
-      // Callout Header
-      calloutG
-        .append("text")
-        .attr("x", 8)
-        .attr("y", 16)
-        .attr("fill", "#34d399")
-        .attr("font-size", "10px")
-        .attr("font-weight", "800")
-        .attr("font-family", "monospace")
-        .text(
-          fitResult.isPythonEngine
-            ? "PYTHON 3.10 ASTM G102 FIT"
-            : "EXTRAPOLATED TAFEL FIT"
-        );
-
-      // Callout Line 1: Ecorr
-      calloutG
-        .append("text")
-        .attr("x", 8)
-        .attr("y", 32)
-        .attr("fill", "#e2e8f0")
-        .attr("font-size", "11px")
-        .attr("font-family", "monospace")
-        .text(`E_corr = `)
-        .append("tspan")
-        .attr("fill", "#34d399")
-        .attr("font-weight", "bold")
-        .text(`${fitResult.eCorr} V`);
-
-      // Callout Line 2: Icorr & CR
-      calloutG
-        .append("text")
-        .attr("x", 8)
-        .attr("y", 48)
-        .attr("fill", "#e2e8f0")
-        .attr("font-size", "11px")
-        .attr("font-family", "monospace")
-        .text(`i_corr = `)
-        .append("tspan")
-        .attr("fill", "#38bdf8")
-        .attr("font-weight", "bold")
-        .text(`${fitResult.iCorr_uA_cm2} µA/cm²`)
-        .append("tspan")
-        .attr("fill", "#94a3b8")
-        .text(` (${fitResult.corrosionRateMmYr} mm/yr)`);
     };
 
     // Initial draw
     render();
 
     // 9. D3 Zoom & Pan Setup
-    const zoom = d3
-      .zoom<SVGSVGElement, unknown>()
+    const zoom = d3Zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.6, 25])
       .extent([
         [0, 0],
@@ -727,7 +746,7 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
       .on("mousemove", (event) => {
         if (!showCrosshairs) return;
 
-        const [mouseX, mouseY] = d3.pointer(event, g.node());
+        const [mouseX, mouseY] = d3Pointer(event, g.node());
         if (mouseX < 0 || mouseX > innerWidth || mouseY < 0 || mouseY > innerHeight) {
           setHoverState(null);
           crosshairLineX.attr("opacity", 0);
@@ -762,8 +781,8 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
         }
 
         const linearI = Math.pow(10, inspectedLogI);
-        const overpotential_mV = (inspectedPotential - fitResult.eCorr) * 1000;
-        const isAnodic = inspectedPotential > fitResult.eCorr;
+        const overpotential_mV = fitResult.eCorr === null ? null : (inspectedPotential - fitResult.eCorr) * 1000;
+        const isAnodic = inspectedPotential > eCorrRef;
 
         setHoverState({
           visible: true,
@@ -784,7 +803,7 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
 
     // Double click to reset zoom
     overlay.on("dblclick", () => {
-      svg.transition().duration(500).call(zoom.transform as any, d3.zoomIdentity);
+      svg.transition().duration(500).call(zoom.transform as any, d3ZoomIdentity);
     });
 
   }, [
@@ -805,23 +824,23 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
   // Zoom Button Handlers
   const handleZoomIn = () => {
     if (!svgRef.current || !zoomBehaviorRef.current) return;
-    d3.select(svgRef.current).transition().duration(300).call(zoomBehaviorRef.current.scaleBy as any, 1.35);
+    d3Select(svgRef.current).transition().duration(300).call(zoomBehaviorRef.current.scaleBy as any, 1.35);
   };
 
   const handleZoomOut = () => {
     if (!svgRef.current || !zoomBehaviorRef.current) return;
-    d3.select(svgRef.current).transition().duration(300).call(zoomBehaviorRef.current.scaleBy as any, 0.75);
+    d3Select(svgRef.current).transition().duration(300).call(zoomBehaviorRef.current.scaleBy as any, 0.75);
   };
 
   const handleResetZoom = () => {
     if (!svgRef.current || !zoomBehaviorRef.current) return;
-    d3.select(svgRef.current).transition().duration(400).call(zoomBehaviorRef.current.transform as any, d3.zoomIdentity);
+    d3Select(svgRef.current).transition().duration(400).call(zoomBehaviorRef.current.transform as any, d3ZoomIdentity);
   };
 
   // Center specifically on Ecorr / Icorr
   const handleCenterOnEcorr = () => {
     if (!svgRef.current || !zoomBehaviorRef.current) return;
-    d3.select(svgRef.current).transition().duration(500).call(zoomBehaviorRef.current.transform as any, d3.zoomIdentity);
+    d3Select(svgRef.current).transition().duration(500).call(zoomBehaviorRef.current.transform as any, d3ZoomIdentity);
   };
 
   // Export SVG handler
@@ -866,15 +885,15 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
             </div>
             <p className="text-[11px] text-slate-400 font-mono flex items-center gap-2 mt-0.5">
               <span>
-                Highlighted <strong className="text-emerald-400">E_corr: {fitResult.eCorr} V</strong>
+                Highlighted <strong className="text-emerald-400">E_corr: {fmtTafelQuantity(fitResult.eCorr, "V")}</strong>
               </span>
               <span>•</span>
               <span>
-                <strong className="text-sky-400">i_corr: {fitResult.iCorr_uA_cm2} µA/cm²</strong>
+                <strong className="text-sky-400">i_corr: {fmtTafelQuantity(fitResult.iCorr_uA_cm2, "µA/cm²")}</strong>
               </span>
               <span>•</span>
               <span>
-                CR: <strong className="text-amber-300">{fitResult.corrosionRateMmYr} mm/yr</strong>
+                CR: <strong className="text-amber-300">{fmtTafelQuantity(fitResult.corrosionRateMmYr, "mm/yr")}</strong>
               </span>
             </p>
           </div>
@@ -1062,11 +1081,16 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
                 <span className="text-slate-400">Overpotential η:</span>
                 <span
                   className={
-                    hoverState.overpotential_mV >= 0 ? "text-sky-300" : "text-amber-300"
+                    hoverState.overpotential_mV === null
+                      ? "text-slate-400"
+                      : hoverState.overpotential_mV >= 0
+                      ? "text-sky-300"
+                      : "text-amber-300"
                   }
                 >
-                  {hoverState.overpotential_mV >= 0 ? "+" : ""}
-                  {hoverState.overpotential_mV.toFixed(1)} mV
+                  {hoverState.overpotential_mV === null
+                    ? UNAVAILABLE_TEXT
+                    : `${hoverState.overpotential_mV >= 0 ? "+" : ""}${hoverState.overpotential_mV.toFixed(1)} mV`}
                 </span>
               </div>
             </div>
@@ -1081,11 +1105,11 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-0.5 bg-sky-400 inline-block border-b border-dashed border-sky-400"></span>
-            <span>Anodic Tangent (β_a = {fitResult.betaA_mV_dec} mV)</span>
+            <span>Anodic Tangent (β_a = {fmtTafelQuantity(fitResult.betaA_mV_dec, "mV")})</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-0.5 bg-amber-400 inline-block border-b border-dashed border-amber-400"></span>
-            <span>Cathodic Tangent (β_c = {fitResult.betaC_mV_dec} mV)</span>
+            <span>Cathodic Tangent (β_c = {fmtTafelQuantity(fitResult.betaC_mV_dec, "mV")})</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block shadow-[0_0_6px_#10b981]"></span>
@@ -1107,34 +1131,34 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 text-xs font-mono">
         <div className="bg-[#090e18] p-2.5 rounded-xl border border-emerald-500/30">
           <span className="text-[10px] text-slate-400 block">Corrosion Potential</span>
-          <span className="text-emerald-300 font-extrabold text-sm">{fitResult.eCorr} V</span>
+          <span className="text-emerald-300 font-extrabold text-sm">{fmtTafelQuantity(fitResult.eCorr, "V")}</span>
           <span className="text-[10px] text-slate-500 block">vs {dataset.metadata.referenceElectrode}</span>
         </div>
 
         <div className="bg-[#090e18] p-2.5 rounded-xl border border-sky-500/30">
           <span className="text-[10px] text-slate-400 block">Corrosion Current i_corr</span>
-          <span className="text-sky-300 font-extrabold text-sm">{fitResult.iCorr_uA_cm2} µA/cm²</span>
-          <span className="text-[10px] text-slate-500 block">log₁₀(i) = {fitResult.logIcorr}</span>
+          <span className="text-sky-300 font-extrabold text-sm">{fmtTafelQuantity(fitResult.iCorr_uA_cm2, "µA/cm²")}</span>
+          <span className="text-[10px] text-slate-500 block">log₁₀(i) = {fitResult.logIcorr ?? UNAVAILABLE_TEXT}</span>
         </div>
 
         <div className="bg-[#090e18] p-2.5 rounded-xl border border-amber-500/30">
           <span className="text-[10px] text-slate-400 block">Annual Corrosion Rate</span>
-          <span className="text-amber-300 font-extrabold text-sm">{fitResult.corrosionRateMmYr} mm/yr</span>
-          <span className="text-[10px] text-slate-500 block">{fitResult.corrosionRateMpy} mpy</span>
+          <span className="text-amber-300 font-extrabold text-sm">{fmtTafelQuantity(fitResult.corrosionRateMmYr, "mm/yr")}</span>
+          <span className="text-[10px] text-slate-500 block">{fmtTafelQuantity(fitResult.corrosionRateMpy, "mpy")}</span>
         </div>
 
         <div className="bg-[#090e18] p-2.5 rounded-xl border border-[#162032]">
           <span className="text-[10px] text-slate-400 block">Polarization Resistance</span>
           <span className="text-purple-300 font-extrabold text-sm">
-            {fitResult.rp_ohm_cm2.toLocaleString()} Ω·cm²
+            {fmtTafelQuantity(fitResult.rp_ohm_cm2, "Ω·cm²", { grouped: true })}
           </span>
-          <span className="text-[10px] text-slate-500 block">B = {fitResult.sternGearyB_V.toFixed(3)} V</span>
+          <span className="text-[10px] text-slate-500 block">B = {fmtTafelQuantity(fitResult.sternGearyB_V, "V", { digits: 3 })}</span>
         </div>
 
         <div className="bg-[#090e18] p-2.5 rounded-xl border border-[#162032]">
           <span className="text-[10px] text-slate-400 block">Tafel Slopes (β_a / β_c)</span>
           <span className="text-white font-bold text-xs">
-            {fitResult.betaA_mV_dec} / {fitResult.betaC_mV_dec}
+            {fmtTafelNumber(fitResult.betaA_mV_dec)} / {fmtTafelNumber(fitResult.betaC_mV_dec)}
           </span>
           <span className="text-[10px] text-slate-500 block">mV/decade (ASTM G59)</span>
         </div>
@@ -1143,7 +1167,9 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
           <span className="text-[10px] text-slate-400 block">ASTM G102 Severity</span>
           <span
             className={`font-bold text-xs block truncate ${
-              fitResult.severity === "Immune / Highly Resistant"
+              fitResult.severity === null
+                ? "text-slate-400"
+                : fitResult.severity === "Immune / Highly Resistant"
                 ? "text-emerald-300"
                 : fitResult.severity === "Passivated / Good"
                 ? "text-sky-300"
@@ -1152,9 +1178,9 @@ export const D3TafelPolarizationChart: React.FC<D3TafelPolarizationChartProps> =
                 : "text-rose-400"
             }`}
           >
-            {fitResult.severity}
+            {fitResult.severity ?? UNAVAILABLE_TEXT}
           </span>
-          <span className="text-[10px] text-slate-500 block truncate">
+          <span className="text-[10px] text-slate-500 block truncate" title={tafelUnavailableReason(fitResult) || undefined}>
             {fitResult.isPythonEngine ? "Python Verified" : "Client Engine"}
           </span>
         </div>

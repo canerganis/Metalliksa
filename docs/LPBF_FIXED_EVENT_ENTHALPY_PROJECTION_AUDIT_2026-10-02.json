@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "protocolId": "lpbf-fixed-event-conservative-enthalpy-projection-audit-2026-10-02-v1",
+  "status": "diagnostic-only",
+  "convergenceConclusion": "inconclusive",
+  "experimentalValidation": false,
+  "solverRerun": false,
+  "scope": "Offline conservative volume projection of the hash-pinned 5 um fixed-event field onto 10/20 um control volumes, followed by the same X=100 um liquidus-section operator. No NIST payload, parameter tuning, production change, or finer timestep.",
+  "inputs": {
+    "meshReport": {
+      "path": "docs/LPBF_FIXED_EVENT_MESH_REFINEMENT_V2_2026-10-02.json",
+      "sha256": "7f791aebe6a56175e1243882ae4cc95551c3624eb13e2e1617ed65a2a97cdff4"
+    },
+    "materialRevisionSha256": "5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749",
+    "fineField": {
+      "path": "docs/LPBF_FIXED_EVENT_MESH_REFINEMENT_V2_FIELDS_2026-10-02/mesh-05um.npz",
+      "sha256": "0372f6568b5cec8f786c0d9610b5a52e519815c2d1205843877c4e726f1a92ae"
+    }
+  },
+  "projection": {
+    "volumeEnthalpy": "H_c=sum_f(H_f*V_f)/V_c",
+    "volumeDensity": "rho_c=sum_f(rho_f*V_f)/V_c",
+    "temperatureRecovery": "T_c=h_inverse(H_c/rho_c+h0)",
+    "referenceEnthalpy_h0_J_kg": 35506.587769,
+    "materialHtoTRelationPointCount": 12002,
+    "nativeTemperatureRecovery": "bitwise exact for all three native NPZ fields using material revision 5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749",
+    "fineCellsPerCoarseControlVolume": {
+      "20um": 64,
+      "10um": 8
+    },
+    "completeNestedVolumeCoverage": true,
+    "maximumFacePositionMismatch_m": 5.42e-20,
+    "extrapolationUsed": false
+  },
+  "section": {
+    "eventTime_us": 250,
+    "x_um": 100,
+    "liquidus_K": 1609.15,
+    "operator": "fixed-event-x-linear-liquidus-section-v1",
+    "nativeAndProjectedWidths_um": {
+      "native20um": 43.291791,
+      "fine5umProjectedTo20um": 39.321658,
+      "native10um": 46.142089,
+      "fine5umProjectedTo10um": 49.277542,
+      "native5um": 50.715088
+    },
+    "widthDifferenceDecomposition_um": {
+      "identity": "W_coarseNative-W_fineNative=(W_coarseNative-W_fineProjected)+(W_fineProjected-W_fineNative)",
+      "20um": {
+        "coarseNativeMinusFineNative": -7.423297,
+        "coarseFieldTerm": 3.970134,
+        "fineRepresentationTerm": -11.39343
+      },
+      "10um": {
+        "coarseNativeMinusFineNative": -4.572999,
+        "coarseFieldTerm": -3.135453,
+        "fineRepresentationTerm": -1.437546
+      }
+    },
+    "nativeAndProjectedSubstrateDepth_um": [0, 0],
+    "allTopBoundariesMolten": true,
+    "moltenCellCounts_nativeThenProjected": {
+      "20um": [2, 2],
+      "10um": [8, 8]
+    },
+    "crossingCounts_nativeThenProjected": {
+      "20um": [4, 4],
+      "10um": [8, 8]
+    }
+  },
+  "closure": {
+    "relativeEnergyClosure": {
+      "20um": 1.14e-16,
+      "10um": 0
+    },
+    "massClosure": {
+      "20um": 0,
+      "10um": 0
+    }
+  },
+  "interpretation": "The volume projection conserves stored enthalpy and mass to roundoff and uses the frozen material H-to-T relation without extrapolation. At X=100 um it changes the 20 um width more strongly than the 10 um width under this section operator. Both projected fields still have a molten top boundary and zero substrate penetration, so the result does not provide a physical melt-depth comparison. This is a static projection audit, not a dynamic coarse solve, pure mesh-error estimate, convergence result, or experimental validation.",
+  "nextStep": "Keep 12.5 ns deferred. Use this projection as a diagnostic baseline and decide whether another synthetic transient run would resolve a specific uncertainty; do not alter solver settings or validity labels based on these static section results alone.",
+  "limits": [
+    "Synthetic diagnostic only; no experimental validation or NIST raw payload.",
+    "Projection is performed on stored fields, not during a solver run.",
+    "Liquidus contour width remains operator dependent, and top-boundary melt persists.",
+    "No solver rerun, production solver change, or 12.5 ns campaign."
+  ]
+}

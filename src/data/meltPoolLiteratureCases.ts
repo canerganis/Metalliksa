@@ -1,3 +1,5 @@
+import opticalTable4 from "../../data/benchmark/nist-amb2022-03-optical/table4-aggregate-v2.json";
+
 export type MeltPoolLiteratureKind = "measured" | "asymptotic" | "no-measured-track";
 
 export type MeltPoolLiteratureCase = {
@@ -12,8 +14,13 @@ export type MeltPoolLiteratureCase = {
   hatchSpacing_um: number | null;
   publishedWidth_um: number | null;
   publishedDepth_um: number | null;
+  widthStdDev_um?: number;
+  depthStdDev_um?: number;
+  measurementCount?: number;
   publishedRegime: "Conduction" | "Transition" | "Keyhole" | null;
   kind: MeltPoolLiteratureKind;
+  processScope?: "bare-plate";
+  beamDiameterDefinition?: "D4sigma";
   source: string;
   doi: string;
 };
@@ -26,6 +33,8 @@ function nist718(
   d4sigma: number,
   w: number,
   d: number,
+  wStd: number,
+  dStd: number,
 ): MeltPoolLiteratureCase {
   return {
     id,
@@ -34,15 +43,20 @@ function nist718(
     laserPower_W: power,
     scanSpeed_mm_s: speed,
     beamDiameter_um: d4sigma,
-    preheatTemp_C: 23.5,
-    layerThickness_um: 40,
-    hatchSpacing_um: 110,
+    preheatTemp_C: opticalTable4.experiment.substrateAndChamberTemperature_C,
+    layerThickness_um: null,
+    hatchSpacing_um: null,
     publishedWidth_um: w,
     publishedDepth_um: d,
-    publishedRegime: d / (w / 2) > 1 ? "Keyhole" : "Transition",
+    widthStdDev_um: wStd,
+    depthStdDev_um: dStd,
+    measurementCount: opticalTable4.measurement.countPerCondition,
+    publishedRegime: null,
     kind: "measured",
-    source: "Lane et al., Integr. Mater. Manuf. Innov. (2024) Table 4 — AMMT bare plate",
-    doi: "10.1007/s40192-024-00355-5",
+    processScope: "bare-plate",
+    beamDiameterDefinition: "D4sigma",
+    source: "NIST AMB2022-03 measurement results Table 4 — local transcription of published aggregate measurements; AMMT bare plate; six cross-sections per condition",
+    doi: opticalTable4.doi,
   };
 }
 
@@ -127,13 +141,13 @@ export const MELT_POOL_LITERATURE_CASES: MeltPoolLiteratureCase[] = [
     source: "No isolated single-track P–v–d–T0–W–D table. Sow 2022 hatch/cube melt pools not ingested; Piedra 2026 Table 3 has width without depth.",
     doi: "",
   },
-  nist718("nist-amb2022-03-0", "IN718 NIST AMB2022-03 baseline", 285, 960, 67, 136.3, 139.7),
-  nist718("nist-amb2022-03-1.1", "IN718 NIST spot 49 µm", 285, 960, 49, 106.2, 227.2),
-  nist718("nist-amb2022-03-1.2", "IN718 NIST spot 82 µm", 285, 960, 82, 141.7, 102.4),
-  nist718("nist-amb2022-03-2.1", "IN718 NIST 1200 mm/s", 285, 1200, 67, 112.9, 109.7),
-  nist718("nist-amb2022-03-2.2", "IN718 NIST 800 mm/s", 285, 800, 67, 156.1, 176.5),
-  nist718("nist-amb2022-03-3.1", "IN718 NIST 325 W", 325, 960, 67, 134.3, 166.1),
-  nist718("nist-amb2022-03-3.2", "IN718 NIST 245 W", 245, 960, 67, 129.4, 116.9),
+  ...opticalTable4.cases.map(row => nist718(`nist-amb2022-03-${row.caseNumber}`,
+    ({ "0": "IN718 NIST AMB2022-03 baseline", "1.1": "IN718 NIST spot 49 µm",
+      "1.2": "IN718 NIST spot 82 µm", "2.1": "IN718 NIST 1200 mm/s",
+      "2.2": "IN718 NIST 800 mm/s", "3.1": "IN718 NIST 325 W",
+      "3.2": "IN718 NIST 245 W" } as Record<string, string>)[row.caseNumber],
+    row.laserPower_W, row.scanSpeed_mm_s, row.beamDiameterD4sigma_um,
+    row.widthMean_um, row.depthMean_um, row.widthStdDev_um, row.depthStdDev_um)),
   guo316l("guo-316l-n01", "316L Guo N01 (260 W, 0.52 m/s)", 260, 520, 114, 180, "Keyhole"),
   guo316l("guo-316l-n04", "316L Guo N04 (260 W, 1.47 m/s)", 260, 1470, 94, 61, "Conduction"),
   guo316l("guo-316l-n05", "316L Guo N05 (260 W, 2.20 m/s)", 260, 2200, 83, 41, "Conduction"),
@@ -164,6 +178,7 @@ export function relativeErrorPct(predicted: number, published: number): number {
 
 export function isLoadableLiteratureCase(c: MeltPoolLiteratureCase): boolean {
   return (
+    c.processScope !== "bare-plate" &&
     c.kind !== "no-measured-track" &&
     c.laserPower_W != null &&
     c.scanSpeed_mm_s != null &&
@@ -172,4 +187,25 @@ export function isLoadableLiteratureCase(c: MeltPoolLiteratureCase): boolean {
     c.layerThickness_um != null &&
     c.hatchSpacing_um != null
   );
+}
+
+export function matchesLoadableLiteratureCase(
+  c: MeltPoolLiteratureCase,
+  material: string,
+  process: {
+    laserPower_W: number;
+    scanSpeed_mm_s: number;
+    beamDiameter_um: number;
+    preheatTemp_C: number;
+    layerThickness_um: number;
+    hatchSpacing_um: number;
+  },
+): boolean {
+  return isLoadableLiteratureCase(c) && material === c.material &&
+    Math.abs(process.laserPower_W - c.laserPower_W!) < 1 &&
+    Math.abs(process.scanSpeed_mm_s - c.scanSpeed_mm_s!) < 1 &&
+    Math.abs(process.beamDiameter_um - c.beamDiameter_um!) < 0.1 &&
+    Math.abs(process.preheatTemp_C - c.preheatTemp_C!) < 0.1 &&
+    Math.abs(process.layerThickness_um - c.layerThickness_um!) < 0.1 &&
+    Math.abs(process.hatchSpacing_um - c.hatchSpacing_um!) < 0.1;
 }

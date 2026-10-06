@@ -1,14 +1,17 @@
-import express, { Request, Response, NextFunction } from "express";
+// First import: checks the working directory before any module below starts the Python worker.
+import "./server/startupGuard.ts";
+import express, { Request, Response } from "express";
 import path from "path";
 import dotenv from "dotenv";
-import { createServer as createViteServer } from "vite";
+import { createServer, type Server } from "node:http";
+import { attachDevelopmentMiddleware } from "./server/devMiddleware.ts";
+import { LoginAuth, applySecurity, buildLoginBannerLines, buildTrustProxyWarning, errorHandler, isAuthenticated, resolveBindConfig, resolveTrustProxy } from "./server/security.ts";
 
 import { physicsRouter } from "./routes/physics.ts";
 import { lpbfSimulationRouter } from "./routes/lpbfSimulation.ts";
 import { characterizationRouter } from "./routes/characterization.ts";
 import { copilotRouter } from "./routes/copilot.ts";
 import { researchRouter } from "./routes/research.ts";
-import { orchestratorRouter } from "./routes/orchestrator.ts";
 import { createResearchRegistryRouter } from "./routes/researchRegistry.ts";
 import { createLpbfSourcesRouter } from "./routes/lpbfSources.ts";
 import { createLpbfRunsRouter } from "./routes/lpbfRuns.ts";
@@ -20,6 +23,9 @@ import {
 } from "./server/airgap.ts";
 
 dotenv.config();
+// The Python IPC secret is generated per daemon spawn (server/processOrchestrator.ts); a value from
+// .env loaded just above must not linger in this process's environment or reach ad-hoc spawns.
+delete process.env.METALLIX_IPC_TOKEN;
 
 const AIRGAPPED = isAirgappedFromEnv(process.env);
 
@@ -29,13 +35,43 @@ process.on("unhandledRejection", (reason: any) => {
   console.error("[ProcessGuard] Unhandled Promise Rejection intercepted:", reason?.stack || reason);
 });
 
+// An uncaught exception leaves the process in an undefined state: log, stop accepting
+// connections and exit non-zero (force-exit after 5s if close hangs).
+let activeHttpServer: Server | null = null;
 process.on("uncaughtException", (error: Error) => {
-  console.error("[ProcessGuard] Uncaught Exception intercepted:", error?.stack || error);
+  console.error("[ProcessGuard] Uncaught Exception, shutting down:", error?.stack || error);
+  const forceExit = setTimeout(() => process.exit(1), 5000);
+  forceExit.unref();
+  if (activeHttpServer) {
+    activeHttpServer.close(() => process.exit(1));
+  } else {
+    process.exit(1);
+  }
 });
 
+// Default bind is 127.0.0.1 (no login). A non-loopback METALLIKSA_HOST enables the login flow:
+// METALLIKSA_TOKEN (if set) or a random access code printed at startup.
+let bindConfig: ReturnType<typeof resolveBindConfig>;
+try {
+  bindConfig = resolveBindConfig(process.env);
+} catch (error: any) {
+  console.error(`[MetalliX-Server] ${error?.message || error}`);
+  process.exit(1);
+}
+
 const app = express();
+// Off by default. Behind a TLS reverse proxy set METALLIKSA_TRUST_PROXY so req.secure, req.ip and the
+// same-origin check use the X-Forwarded-* headers.
+const trustProxy = resolveTrustProxy(process.env);
+if (trustProxy !== false) app.set("trust proxy", trustProxy);
 const configuredPort = Number(process.env.PORT ?? 3000);
 const PORT = Number.isInteger(configuredPort) && configuredPort >= 1 && configuredPort <= 65535 ? configuredPort : 3000;
+
+// Login mode: non-loopback bind, or an explicit token. Loopback without a token stays open.
+const loginAuth = bindConfig.token || bindConfig.accessCode ? new LoginAuth({ token: bindConfig.token, accessCode: bindConfig.accessCode }) : null;
+
+// Request id, access log, security headers, rate limit, /login and Bearer/session auth.
+applySecurity(app, bindConfig.token, { auth: loginAuth });
 
 // Registry payloads have a smaller limit and must run before the global parser.
 app.use(createResearchRegistryRouter());
@@ -50,11 +86,11 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(processOrchestrationMiddleware);
 
 // Server & Infrastructure Health Endpoint
-app.get("/api/health", (_req: Request, res: Response) => {
+app.get("/api/health", (req: Request, res: Response) => {
   res.json({
     status: "ok",
     service: "MetalliX-Unified-Server",
-    hasApiKey: AIRGAPPED ? false : !!process.env.GEMINI_API_KEY,
+    hasApiKey: AIRGAPPED ? false : isAuthenticated(req, bindConfig.token, loginAuth) && !!process.env.OPENAI_API_KEY?.trim(),
     airgapped: AIRGAPPED,
     timestamp: new Date().toISOString(),
   });
@@ -81,7 +117,6 @@ app.use(characterizationRouter);
 // 3. AI Copilot, Metallurgy Consultation, Alloy Formulation & Materials Project
 app.use(copilotRouter);
 app.use(researchRouter);
-app.use(orchestratorRouter);
 
 // Explicit JSON 404 for unmatched /api routes (prevents SPA index.html fallback for API calls)
 app.all("/api/*", (req: Request, res: Response) => {
@@ -92,24 +127,16 @@ app.all("/api/*", (req: Request, res: Response) => {
 
 // Global Process-Isolated Error Handling Middleware
 // Prevents unhandled JSON parsing errors or route exceptions from terminating the Node server process
-app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-  console.error("[ServerError] Unhandled Express pipeline error:", err?.stack || err);
-  res.status(err.status || 500).json({
-    error: err.message || "An internal server error occurred.",
-    code: err.code || "INTERNAL_SERVER_ERROR",
-  });
-});
+app.use(errorHandler());
 
 // =========================================================================
 // Vite Middleware & SPA Serving Pipeline
 // =========================================================================
 async function startServer() {
+  const httpServer = createServer(app);
+  activeHttpServer = httpServer;
   if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
+    await attachDevelopmentMiddleware(app, httpServer);
   } else {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
@@ -118,10 +145,16 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`[MetalliX-Server] Modular server running on http://localhost:${PORT}`);
+  httpServer.listen(PORT, bindConfig.host, () => {
+    console.log(`[MetalliX-Server] Modular server running on http://${bindConfig.host}:${PORT}`);
+    if (!bindConfig.loopback) {
+      console.warn(`[MetalliX-Server] Network exposure: host ${bindConfig.host} is not loopback. Prefer HTTPS (reverse proxy) for non-local use.`);
+    }
+    const proxyWarning = buildTrustProxyWarning(bindConfig, trustProxy);
+    if (proxyWarning) console.warn(`[MetalliX-Server] ${proxyWarning}`);
+    for (const line of buildLoginBannerLines(bindConfig, PORT)) console.log(`[MetalliX-Server] ${line}`);
     if (AIRGAPPED) {
-      console.log("[MetalliX-Server] AIRGAPPED=1 — Gemini / NVIDIA / live MP / external pricing disabled; local LPBF open.");
+      console.log("[MetalliX-Server] AIRGAPPED=1 — GPT-6 / NVIDIA / live MP / external pricing disabled; local LPBF open.");
     }
   });
 }

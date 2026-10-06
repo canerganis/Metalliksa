@@ -1,0 +1,27 @@
+{
+ "baseRevision": "d33b6f5",
+ "case": "edge_unknown_action_success_masking",
+ "exitCode": 0,
+ "gitHead": "7f3f80310a94efffd3eb86356edfd5185244e226",
+ "input": {
+  "action": "no_such_action"
+ },
+ "invocation": "python -B battery_corrosion_eis_solver.py < input (cwd python/)",
+ "schema": "phase6a-golden-1",
+ "solver": "battery_corrosion_eis_solver",
+ "solverFile": "python/battery_corrosion_eis_solver.py",
+ "solverSha256": "8736ec244305c351313fb3a83d4dc1e5d26ddda7761bd06509bd622d0302eb78",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "worktree",
+ "stdout": {
+  "error": "Unknown action 'no_such_action'",
+  "success": true
+ },
+ "volatileKeysStripped": [
+  "computeTimeMs",
+  "durationMs",
+  "pythonDurationMs",
+  "pythonVersion",
+  "timestamp"
+ ]
+}

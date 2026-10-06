@@ -5,8 +5,10 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from lpbf_simulation import run
+from lpbf_simulation import run, validate
 from lpbf_evidence import enforce_thermal_balances
+from lpbf_core_contract import build_core_contract
+from lpbf_core_physics import calculate_mesh_domain
 
 
 class CoreContractTests(unittest.TestCase):
@@ -20,7 +22,7 @@ class CoreContractTests(unittest.TestCase):
         self.assertIn('coreContract', self.thermal)
         c = self.thermal['coreContract']
         self.assertEqual(c['actualBackend'], 'numpy-reference')
-        self.assertEqual(c['modelId'], 'stationary-enthalpy-conduction-v1')
+        self.assertEqual(c['modelId'], 'stationary-enthalpy-conduction-layer-conforming-v1')
         self.assertEqual(c['evidenceClass'], 'unvalidated-model')
         self.assertEqual(c['units']['beamDiameter'], '1/e2-intensity')
         self.assertTrue(c['resolvedPhysics']['latentHeat'])
@@ -31,6 +33,75 @@ class CoreContractTests(unittest.TestCase):
         self.assertAlmostEqual(self.thermal['metrics']['peakTemperature_K'], 2119.81011401591, places=8)
         self.assertAlmostEqual(self.thermal['metrics']['volume_um3'], 192000, places=6)
 
+    def test_layer_conforming_grid_has_separate_model_identity(self):
+        settings, material = validate(dict(
+            mode='standard', backend='reference', powderGridPolicy='layer-conforming'))
+        contract = build_core_contract(settings, material, 'enthalpy-fv-6', 'standard')
+        self.assertEqual(contract['modelId'], 'stationary-enthalpy-conduction-layer-conforming-v1')
+
+    def test_standard_reference_powder_default_aligns_each_layer_surface(self):
+        settings, material = validate(dict(mode='standard', backend='reference',
+            layer_um=80, mesh_um=25))
+        self.assertEqual(settings['powderGridPolicy'], 'layer-conforming')
+        domain = calculate_mesh_domain(settings)
+        self.assertAlmostEqual(domain['dx'], 20e-6)
+        self.assertEqual(build_core_contract(settings, material, 'enthalpy-fv-6', 'standard')['modelId'],
+                         'stationary-enthalpy-conduction-layer-conforming-v1')
+
+    def test_standard_openfoam_powder_defaults_to_layer_conforming_model(self):
+        settings, material = validate(dict(mode='standard', backend='openfoam-thermal',
+            surfaceMode='powder-layer', layer_um=80, mesh_um=25))
+        self.assertEqual(settings['powderGridPolicy'], 'layer-conforming')
+        contract = build_core_contract(settings, material,
+                                       'metalliksaThermal-OpenFOAM14-6', 'standard')
+        self.assertEqual(contract['actualBackend'], 'openfoam-thermal')
+        self.assertEqual(contract['modelId'], 'stationary-enthalpy-conduction-layer-conforming-v1')
+
+    def test_legacy_core_identity_remains_available_for_archived_settings(self):
+        settings, material = validate(dict(mode='standard', backend='reference'))
+        settings = dict(settings)
+        settings.pop('powderGridPolicy')
+        contract = build_core_contract(settings, material, 'enthalpy-fv-6', 'standard')
+        self.assertEqual(contract['modelId'], 'stationary-enthalpy-conduction-v1')
+
+    def test_layered_plate_contract_binds_ordered_support_model_and_assumed_beam(self):
+        from lpbf_core_contract import enforce_core_contract
+        from lpbf_material_registry import material
+        from lpbf_ss304_support_material import ss304_support_thermal_snapshot
+
+        settings = dict(
+            mode='standard', backend='reference', surfaceMode='bare-plate', scanAngle_deg=0,
+            layers=1, tracks=1, study='none', thermalModelId='layered-plate-enthalpy-v1',
+            plateThickness_um=3170, supportThickness_um=1000, contactResistance_m2K_W=0,
+            supportBottomBoundary='adiabatic', incidenceAngle_deg=5, incidenceAzimuth_deg=0,
+            beamProfileModelId='assumed-oblique-gaussian-normal-plane-v1', sourcePenetration_um=25,
+        )
+        plate = material('Inconel 718')
+        support = ss304_support_thermal_snapshot()
+        contract = build_core_contract(settings, plate, 'layered-enthalpy-fv-1', 'standard')
+        self.assertEqual(contract['schemaVersion'], 2)
+        self.assertEqual(contract['modelId'], 'layered-plate-enthalpy-v1')
+        self.assertEqual(contract['resolvedPhysics']['supportMaterialRevisionSha256'],
+                         support['materialRevisionSha256'])
+        self.assertEqual(contract['resolvedPhysics']['beamSourceModelId'],
+                         'assumed-oblique-gaussian-normal-plane-v1')
+        self.assertNotEqual(contract['materialSha256'], plate['materialRevisionSha256'])
+
+        result = dict(settings=settings, material=plate,
+                      solver={'id': 'layered-enthalpy-fv-1'}, effectiveMode='standard',
+                      coreContract=contract)
+        enforce_core_contract(result)
+        result['coreContract']['resolvedPhysics']['supportMaterialRevisionSha256'] = '0' * 64
+        with self.assertRaisesRegex(ValueError, 'core contract'):
+            enforce_core_contract(result)
+
+    def test_layered_plate_contract_rejects_mismatched_solver_selection(self):
+        settings, plate = validate({'mode': 'standard', 'backend': 'reference'})
+        settings.update(thermalModelId='layered-plate-enthalpy-v1',
+                        surfaceMode='bare-plate', supportBottomBoundary='adiabatic')
+        with self.assertRaisesRegex(ValueError, 'thermal model'):
+            build_core_contract(settings, plate, 'enthalpy-fv-6', 'standard')
+
     def test_result_boundary_detects_changed_inputs_and_properties(self):
         for kind in ('settings', 'material', 'solver'):
             with self.subTest(kind=kind):
@@ -40,6 +111,22 @@ class CoreContractTests(unittest.TestCase):
                 else: r['solver']['id'] = 'unknown-solver'
                 with self.assertRaisesRegex(ValueError, 'core contract'):
                     enforce_thermal_balances(r)
+
+    def test_material_revision_binding_detects_changed_snapshot(self):
+        r = copy.deepcopy(self.thermal)
+        r['material']['source'] += '; modified after resolution'
+        with self.assertRaisesRegex(ValueError, 'material revision'):
+            enforce_thermal_balances(r)
+
+    def test_legacy_material_without_revision_binding_remains_supported(self):
+        from lpbf_core_contract import build_core_contract
+        r = copy.deepcopy(self.thermal)
+        for key in ('materialId', 'provenanceClass', 'materialIdentitySchemaVersion',
+                    'materialRevisionSha256'):
+            r['material'].pop(key)
+        r['coreContract'] = build_core_contract(r['settings'], r['material'],
+                                                r['solver']['id'], r['effectiveMode'])
+        enforce_thermal_balances(r)
 
     def test_present_invalid_contract_is_not_legacy(self):
         for contract in (None, {}, {'schemaVersion': True}, {'schemaVersion': 999}):
@@ -98,16 +185,17 @@ class CoreContractTests(unittest.TestCase):
         a = build_core_contract(p, m, 'enthalpy-fv-6', 'standard')
         b = build_core_contract(dict(reversed(list(p.items()))), dict(reversed(list(m.items()))), 'enthalpy-fv-6', 'standard')
         self.assertEqual(a, b)
+        legacy = {key: value for key, value in p.items() if key != 'powderGridPolicy'}
         for solver, backend in [('enthalpy-fv-6', 'numpy-reference'),
                                 ('metalliksaThermal-OpenFOAM14-6', 'openfoam-thermal')]:
-            c = build_core_contract({**p, 'backend': 'auto'}, m, solver, 'standard')
+            c = build_core_contract({**legacy, 'backend': 'auto'}, m, solver, 'standard')
             self.assertEqual(c['actualBackend'], backend)
         for solver, mode, requested in [('unknown', 'standard', 'auto'),
                 ('enthalpy-fv-6', 'screening', 'auto'), ('rosenthal+goldak', 'standard', 'auto'),
                 ('enthalpy-fv-6', 'standard', 'openfoam-thermal'),
                 ('metalliksaThermal-OpenFOAM14-6', 'standard', 'reference')]:
             with self.subTest(solver=solver, mode=mode), self.assertRaises(ValueError):
-                build_core_contract({**p, 'backend': requested}, m, solver, mode)
+                build_core_contract({**legacy, 'backend': requested}, m, solver, mode)
 
 
 if __name__ == '__main__':

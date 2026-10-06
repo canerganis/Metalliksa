@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "kind": "local-transcription-of-published-aggregate-measurements",
+  "transcriptionVersion": "1.0.0",
+  "benchmark": "AMB2022-03",
+  "material": "IN718",
+  "doi": "10.18434/mds2-2718",
+  "publishedResults": "https://www.nist.gov/document/am-bench-amb2022-03-measurement-and-result-descriptions-v10",
+  "publishedMethods": "https://www.nist.gov/document/amb2022-03-measurement-and-challenge-descriptions-version-101",
+  "publishedResultsLocation": "Table 4, CHAL-AMB2022-03-TMPG, page 5 (PDF page index 4)",
+  "transcriptionNote": "Locally transcribed published Table 4 aggregate measurements; this JSON is neither a NIST-issued raw data file nor the source PDF. No individual cross-section measurements or images are included.",
+  "measurement": {
+    "method": "Ex-situ dark-field optical cross-section geometry",
+    "quantity": "Single-track melt-pool depth and width",
+    "unit": "um",
+    "countPerCondition": 6,
+    "uncertainty": "Published standard deviation of six measurements per condition; not a calibration uncertainty or model validation interval."
+  },
+  "experiment": {
+    "machine": "NIST Additive Manufacturing Metrology Testbed (AMMT)",
+    "processScope": "bare-plate",
+    "sample": "AMB2022-718-SH1-BP1",
+    "scanDirection": "+X",
+    "trackLength_mm": 10,
+    "beamDiameterDefinition": "D4sigma",
+    "substrateAndChamberTemperature_C": 23.5,
+    "substrateAndChamberTemperatureUncertainty_C": 1,
+    "powderLayerThickness_um": null,
+    "hatchSpacing_um": null,
+    "heatTreatment": null,
+    "heatTreatmentMissingReason": "The cited Table 4 and single-track method description do not establish a matching heat-treatment state for these aggregate values."
+  },
+  "cases": [
+    { "caseNumber": "0", "sampleId": "AMB2022-718-SH1-BP1-L0", "laserPower_W": 285, "scanSpeed_mm_s": 960, "beamDiameterD4sigma_um": 67, "depthMean_um": 139.7, "depthStdDev_um": 1.9, "widthMean_um": 136.3, "widthStdDev_um": 2.9 },
+    { "caseNumber": "1.1", "sampleId": "AMB2022-718-SH1-BP1-L1.1", "laserPower_W": 285, "scanSpeed_mm_s": 960, "beamDiameterD4sigma_um": 49, "depthMean_um": 227.2, "depthStdDev_um": 3.2, "widthMean_um": 106.2, "widthStdDev_um": 3.6 },
+    { "caseNumber": "1.2", "sampleId": "AMB2022-718-SH1-BP1-L1.2", "laserPower_W": 285, "scanSpeed_mm_s": 960, "beamDiameterD4sigma_um": 82, "depthMean_um": 102.4, "depthStdDev_um": 1.1, "widthMean_um": 141.7, "widthStdDev_um": 1.8 },
+    { "caseNumber": "2.1", "sampleId": "AMB2022-718-SH1-BP1-L2.1", "laserPower_W": 285, "scanSpeed_mm_s": 1200, "beamDiameterD4sigma_um": 67, "depthMean_um": 109.7, "depthStdDev_um": 1.7, "widthMean_um": 112.9, "widthStdDev_um": 1.7 },
+    { "caseNumber": "2.2", "sampleId": "AMB2022-718-SH1-BP1-L2.2", "laserPower_W": 285, "scanSpeed_mm_s": 800, "beamDiameterD4sigma_um": 67, "depthMean_um": 176.5, "depthStdDev_um": 2.6, "widthMean_um": 156.1, "widthStdDev_um": 4.9 },
+    { "caseNumber": "3.1", "sampleId": "AMB2022-718-SH1-BP1-L3.1", "laserPower_W": 325, "scanSpeed_mm_s": 960, "beamDiameterD4sigma_um": 67, "depthMean_um": 166.1, "depthStdDev_um": 2.0, "widthMean_um": 134.3, "widthStdDev_um": 2.5 },
+    { "caseNumber": "3.2", "sampleId": "AMB2022-718-SH1-BP1-L3.2", "laserPower_W": 245, "scanSpeed_mm_s": 960, "beamDiameterD4sigma_um": 67, "depthMean_um": 116.9, "depthStdDev_um": 1.2, "widthMean_um": 129.4, "widthStdDev_um": 1.6 }
+  ]
+}

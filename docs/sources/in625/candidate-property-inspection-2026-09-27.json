@@ -1,0 +1,290 @@
+{
+  "schemaVersion": 1,
+  "status": "source-inspected-not-admitted",
+  "experimentalValidation": "unvalidated",
+  "runtimeMaterialChanged": false,
+  "georgiaTech": {
+    "sourceFile": "georgia-tech-inconel625.xlsx",
+    "sourceLocator": "Sheet1!A1:G21",
+    "rowCount": 20,
+    "temperatureRange_C": [
+      260.0,
+      1000.0
+    ],
+    "temperatureRange_K": [
+      533.15,
+      1273.15
+    ],
+    "evidenceType": {
+      "specificHeat": "measurement-derived mean; database method interpolates STA measurements to diffusivity temperature coordinates",
+      "diffusivity": "measurement mean",
+      "conductivity": "derived from diffusivity, specific heat and assumed constant density"
+    },
+    "sourceUnits": {
+      "specificHeat": "J/g-K",
+      "diffusivity": "mm^2/s",
+      "conductivity": "W/m-K",
+      "temperature": "C"
+    },
+    "densityAssumption_kg_m3": 8440,
+    "uncertainty": "Reported 95% confidence uncertainty columns; method assumes negligible density uncertainty. Not a complete uncertainty budget for target-lot transfer.",
+    "specimenMetadata": {
+      "lot": null,
+      "chemistry": null,
+      "heatTreatment": null,
+      "purgeGas": "Argon",
+      "protectiveGas": "Argon",
+      "diffusivityInstrument": "NETZSCH LFA 467 HT HyperFlash",
+      "specificHeatInstrument": "NETZSCH STA 449 F3 Jupiter",
+      "diffusivitySpecimenThickness_mm": [
+        2.44,
+        2.49
+      ],
+      "diffusivitySpecimenDiameter_mm": 10,
+      "specificHeatSpecimenMass_mg": [
+        117,
+        118
+      ]
+    },
+    "conductivityRecalculationMaxAbsoluteDifference_W_mK": 4.973799150320701e-14,
+    "rows": [
+      {
+        "sourceRow": 2,
+        "temperature_C": 260.0,
+        "conductivity_W_mK": 15.6090599650322,
+        "conductivity_U95_W_mK": 1.05109850983307,
+        "specificHeat_J_gK": 0.452253347195962,
+        "specificHeat_U95_J_gK": 0.0276964726249057,
+        "diffusivity_mm2_s": 4.08933333333333,
+        "diffusivity_U95_mm2_s": 0.150583436352687
+      },
+      {
+        "sourceRow": 3,
+        "temperature_C": 300.0,
+        "conductivity_W_mK": 16.2125709594412,
+        "conductivity_U95_W_mK": 1.14580179042197,
+        "specificHeat_J_gK": 0.454907024737514,
+        "specificHeat_U95_J_gK": 0.0297981451719431,
+        "diffusivity_mm2_s": 4.22266666666667,
+        "diffusivity_U95_mm2_s": 0.166674630696992
+      },
+      {
+        "sourceRow": 4,
+        "temperature_C": 340.0,
+        "conductivity_W_mK": 16.9412416346233,
+        "conductivity_U95_W_mK": 1.25799923620032,
+        "specificHeat_J_gK": 0.458347416162209,
+        "specificHeat_U95_J_gK": 0.0321821825244782,
+        "diffusivity_mm2_s": 4.37933333333333,
+        "diffusivity_U95_mm2_s": 0.179291607678435
+      },
+      {
+        "sourceRow": 5,
+        "temperature_C": 380.0,
+        "conductivity_W_mK": 17.6544994265812,
+        "conductivity_U95_W_mK": 1.35310897180239,
+        "specificHeat_J_gK": 0.460944322367338,
+        "specificHeat_U95_J_gK": 0.0340575673149031,
+        "diffusivity_mm2_s": 4.538,
+        "diffusivity_U95_mm2_s": 0.182292539309614
+      },
+      {
+        "sourceRow": 6,
+        "temperature_C": 420.0,
+        "conductivity_W_mK": 18.266383872999,
+        "conductivity_U95_W_mK": 1.46678649549389,
+        "specificHeat_J_gK": 0.463572074552653,
+        "specificHeat_U95_J_gK": 0.0371994485155928,
+        "diffusivity_mm2_s": 4.66866666666667,
+        "diffusivity_U95_mm2_s": 0.158637900242412
+      },
+      {
+        "sourceRow": 7,
+        "temperature_C": 460.0,
+        "conductivity_W_mK": 18.8759704566054,
+        "conductivity_U95_W_mK": 1.59305085550658,
+        "specificHeat_J_gK": 0.46651843775408,
+        "specificHeat_U95_J_gK": 0.0396849123657158,
+        "diffusivity_mm2_s": 4.794,
+        "diffusivity_U95_mm2_s": 0.180040010876915
+      },
+      {
+        "sourceRow": 8,
+        "temperature_C": 500.0,
+        "conductivity_W_mK": 19.5889581166845,
+        "conductivity_U95_W_mK": 1.72119307079571,
+        "specificHeat_J_gK": 0.469356238928798,
+        "specificHeat_U95_J_gK": 0.0420879686657138,
+        "diffusivity_mm2_s": 4.945,
+        "diffusivity_U95_mm2_s": 0.183120751141938
+      },
+      {
+        "sourceRow": 9,
+        "temperature_C": 540.0,
+        "conductivity_W_mK": 20.0930937967557,
+        "conductivity_U95_W_mK": 1.91593059343704,
+        "specificHeat_J_gK": 0.468149905050699,
+        "specificHeat_U95_J_gK": 0.046454877960248,
+        "diffusivity_mm2_s": 5.08533333333333,
+        "diffusivity_U95_mm2_s": 0.184888662406496
+      },
+      {
+        "sourceRow": 10,
+        "temperature_C": 580.0,
+        "conductivity_W_mK": 21.243176553741,
+        "conductivity_U95_W_mK": 2.12628777354917,
+        "specificHeat_J_gK": 0.485244659080736,
+        "specificHeat_U95_J_gK": 0.0510092789202793,
+        "diffusivity_mm2_s": 5.187,
+        "diffusivity_U95_mm2_s": 0.201994182204695
+      },
+      {
+        "sourceRow": 11,
+        "temperature_C": 620.0,
+        "conductivity_W_mK": 24.4599616544626,
+        "conductivity_U95_W_mK": 2.19140782410634,
+        "specificHeat_J_gK": 0.544619090846791,
+        "specificHeat_U95_J_gK": 0.0499682106589475,
+        "diffusivity_mm2_s": 5.32133333333333,
+        "diffusivity_U95_mm2_s": 0.205232548070486
+      },
+      {
+        "sourceRow": 12,
+        "temperature_C": 660.0,
+        "conductivity_W_mK": 25.8012285392685,
+        "conductivity_U95_W_mK": 2.51050143381879,
+        "specificHeat_J_gK": 0.554242629982364,
+        "specificHeat_U95_J_gK": 0.0563016720605147,
+        "diffusivity_mm2_s": 5.51566666666667,
+        "diffusivity_U95_mm2_s": 0.219639166351446
+      },
+      {
+        "sourceRow": 13,
+        "temperature_C": 700.0,
+        "conductivity_W_mK": 26.4215859514762,
+        "conductivity_U95_W_mK": 2.69413878864522,
+        "specificHeat_J_gK": 0.549760521424314,
+        "specificHeat_U95_J_gK": 0.0590788040700376,
+        "diffusivity_mm2_s": 5.69433333333333,
+        "diffusivity_U95_mm2_s": 0.224551741268163
+      },
+      {
+        "sourceRow": 14,
+        "temperature_C": 740.0,
+        "conductivity_W_mK": 26.5116503332711,
+        "conductivity_U95_W_mK": 2.87048089243243,
+        "specificHeat_J_gK": 0.550249468255449,
+        "specificHeat_U95_J_gK": 0.0631645361625401,
+        "diffusivity_mm2_s": 5.70866666666667,
+        "diffusivity_U95_mm2_s": 0.194681333238246
+      },
+      {
+        "sourceRow": 15,
+        "temperature_C": 780.0,
+        "conductivity_W_mK": 25.9865360251452,
+        "conductivity_U95_W_mK": 2.63765466782028,
+        "specificHeat_J_gK": 0.562335345676658,
+        "specificHeat_U95_J_gK": 0.0600929978610283,
+        "diffusivity_mm2_s": 5.47533333333333,
+        "diffusivity_U95_mm2_s": 0.206744638345152
+      },
+      {
+        "sourceRow": 16,
+        "temperature_C": 820.0,
+        "conductivity_W_mK": 25.6691412677424,
+        "conductivity_U95_W_mK": 2.30018302224362,
+        "specificHeat_J_gK": 0.559863922584152,
+        "specificHeat_U95_J_gK": 0.0511043835802371,
+        "diffusivity_mm2_s": 5.43233333333333,
+        "diffusivity_U95_mm2_s": 0.229643447157345
+      },
+      {
+        "sourceRow": 17,
+        "temperature_C": 860.0,
+        "conductivity_W_mK": 26.2678877234933,
+        "conductivity_U95_W_mK": 3.05481291792005,
+        "specificHeat_J_gK": 0.557528328413067,
+        "specificHeat_U95_J_gK": 0.0694536256480193,
+        "diffusivity_mm2_s": 5.58233333333333,
+        "diffusivity_U95_mm2_s": 0.203561279816029
+      },
+      {
+        "sourceRow": 18,
+        "temperature_C": 900.0,
+        "conductivity_W_mK": 27.0634216935638,
+        "conductivity_U95_W_mK": 3.3636488951141,
+        "specificHeat_J_gK": 0.55792249472859,
+        "specificHeat_U95_J_gK": 0.0748891959752748,
+        "diffusivity_mm2_s": 5.74733333333333,
+        "diffusivity_U95_mm2_s": 0.219296195189895
+      },
+      {
+        "sourceRow": 19,
+        "temperature_C": 940.0,
+        "conductivity_W_mK": 27.3591605034492,
+        "conductivity_U95_W_mK": 3.68865647876181,
+        "specificHeat_J_gK": 0.556977095312968,
+        "specificHeat_U95_J_gK": 0.0818546238188714,
+        "diffusivity_mm2_s": 5.82,
+        "diffusivity_U95_mm2_s": 0.24598934911371
+      },
+      {
+        "sourceRow": 20,
+        "temperature_C": 980.0,
+        "conductivity_W_mK": 27.7696502036539,
+        "conductivity_U95_W_mK": 4.05420484928064,
+        "specificHeat_J_gK": 0.551683922723821,
+        "specificHeat_U95_J_gK": 0.088264136315578,
+        "diffusivity_mm2_s": 5.964,
+        "diffusivity_U95_mm2_s": 0.262785275639415
+      },
+      {
+        "sourceRow": 21,
+        "temperature_C": 1000.0,
+        "conductivity_W_mK": 28.0484737350894,
+        "conductivity_U95_W_mK": 4.20203925681142,
+        "specificHeat_J_gK": 0.549696015641797,
+        "specificHeat_U95_J_gK": 0.0907309447428271,
+        "diffusivity_mm2_s": 6.04566666666667,
+        "diffusivity_U95_mm2_s": 0.286807565773934
+      }
+    ]
+  },
+  "nasa": {
+    "sourceFile": "nasa-20240007954-inconel-properties.pptx",
+    "sourceSlides": [
+      4,
+      6,
+      7,
+      8
+    ],
+    "evidenceType": "electrostatic levitation measurements and fitted relations, conference presentation",
+    "specimenIdentity": {
+      "ESPI_IN625_lot": "DK 15344B",
+      "Bohler_IN625_lot": null,
+      "compositionTableLocator": "slide 4",
+      "compositionBasis": "not explicitly established by inspected slide text",
+      "differentVendorFormulations": true,
+      "NistLotEquivalence": null
+    },
+    "reportedLiquidus_K": 1630,
+    "liquidusLocator": "IN625 plots on slides 6-8",
+    "numericRawDataAvailable": false,
+    "embeddedSpreadsheetAvailable": false,
+    "sourceValidityRange_K": null,
+    "uncertaintyCoverageLevel": null,
+    "densityAndSurfaceTensionFitTable": "plus/minus coefficient entries present; coverage factor/confidence and covariance not established",
+    "viscosityFitUncertainty": null,
+    "temperatureCoverage": "Finite plotted near-liquidus intervals, including undercooled density points. Exact measurement endpoints not tabulated; plot axes are not accepted validity bounds.",
+    "criticalCaveat": "Slide 8 displayed Arrhenius equation and coefficients have not been reconciled with plotted viscosity. Do not implement a constitutive law from this transcription.",
+    "unresolved": [
+      "original numeric series and fit conventions",
+      "confidence/coverage and covariance",
+      "exact specimen processing and composition units",
+      "actual measurement atmosphere/pressure rather than equipment capabilities",
+      "match to target material and process",
+      "liquid Cp and k, optical, powder and vapor model requirements"
+    ]
+  },
+  "admissionDecision": "Full-transient/build-job closed. Source-validity range for current runtime snapshot remains null."
+}

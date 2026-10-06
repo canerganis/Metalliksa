@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "datasetId": "nist-amb2022-03-optical-case0-micrographs-v1",
+  "publisherVersion": "1.0.0",
+  "material": "IN718",
+  "processScope": "bare-plate-single-track",
+  "evidenceClass": "experimental-measurements-and-original-micrographs",
+  "citation": "Weaver et al. (2022), AM Bench 2022 Measurement Results Data: Optical Microscopy of Laser-scanned Single Tracks and Pads (AMB2022-03), Version 1.0.0, NIST, DOI 10.18434/mds2-2718 (accessed 2026-09-27).",
+  "publisherReadmeUrl": "https://data.nist.gov/od/ds/mds2-2718/2718_README.txt",
+  "publisherWorkbookPath": "AMB2022-718-SH1-MeltPool_Cross-Section_Measurement_Results.xlsx",
+  "licenseUrl": "https://www.nist.gov/open/license",
+  "checksumAuthority": "NIST-published SHA-256 sidecar for each TIFF; independently recomputed on import.",
+  "measurementMethod": {
+    "imageKind": "original optical micrograph without measurement overlay",
+    "pixelScale_um_per_pixel": 0.069,
+    "publishedObservationOperator": "ImageJ bounding rectangle; top of rectangle corresponds to specimen surface; publisher annotations are in separate *_m.tif images.",
+    "specimen": "NIST AMMT bare IN718 plate BP1; sections P3/P4; one single-track condition Line 0 with three tracks per section."
+  },
+  "processConditions": {
+    "laserPower_W": 285,
+    "scanSpeed_mm_s": 960,
+    "beamDiameterD4sigma_um": 67
+  },
+  "files": [
+    {
+      "path": "single-track-case0/AMB2022-718-SH1-BP1-P3-L0-1.tif",
+      "sourceUrl": "https://data.nist.gov/od/ds/ark:/88434/mds2-2718/Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P3-L0-1.tif",
+      "publisherSha256Sidecar": "single-track-case0/AMB2022-718-SH1-BP1-P3-L0-1.tif.sha256",
+      "bytes": 21097448,
+      "sha256": "deb2cc34e97d2fad6120f9d5f6e59692c52e53601711d83ae580c18683c91720"
+    },
+    {
+      "path": "single-track-case0/AMB2022-718-SH1-BP1-P4-L0-1.tif",
+      "sourceUrl": "https://data.nist.gov/od/ds/ark:/88434/mds2-2718/Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P4-L0-1.tif",
+      "publisherSha256Sidecar": "single-track-case0/AMB2022-718-SH1-BP1-P4-L0-1.tif.sha256",
+      "bytes": 22463090,
+      "sha256": "96d6d81d890c7cc9944aecb9f74c0e5d44eead61d1fcf684dfaca3bbf1a8c747"
+    },
+    {
+      "path": "single-track-case0/AMB2022-718-SH1-BP1-P3-L0-2.tif",
+      "sourceUrl": "https://data.nist.gov/od/ds/ark:/88434/mds2-2718/Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P3-L0-2.tif",
+      "publisherSha256Sidecar": "single-track-case0/AMB2022-718-SH1-BP1-P3-L0-2.tif.sha256",
+      "bytes": 20186450,
+      "sha256": "878c4cb98b2631f2be2f92749db61191973f6f4f88376edf34c6b7bb77398a12"
+    },
+    {
+      "path": "single-track-case0/AMB2022-718-SH1-BP1-P4-L0-2.tif",
+      "sourceUrl": "https://data.nist.gov/od/ds/ark:/88434/mds2-2718/Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P4-L0-2.tif",
+      "publisherSha256Sidecar": "single-track-case0/AMB2022-718-SH1-BP1-P4-L0-2.tif.sha256",
+      "bytes": 20553076,
+      "sha256": "e22eab832ad9e9780d63319d4e9c3670b07c2dc38b23a1c2bbc7af7f4e99d70b"
+    },
+    {
+      "path": "single-track-case0/AMB2022-718-SH1-BP1-P3-L0-3.tif",
+      "sourceUrl": "https://data.nist.gov/od/ds/ark:/88434/mds2-2718/Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P3-L0-3.tif",
+      "publisherSha256Sidecar": "single-track-case0/AMB2022-718-SH1-BP1-P3-L0-3.tif.sha256",
+      "bytes": 19650064,
+      "sha256": "289fe25bccafee3174695e24ae2336650aaf8d797245287efc95246c27067bea"
+    },
+    {
+      "path": "single-track-case0/AMB2022-718-SH1-BP1-P4-L0-3.tif",
+      "sourceUrl": "https://data.nist.gov/od/ds/ark:/88434/mds2-2718/Single_Track_Cross_Sections/AMB2022-718-SH1-BP1-P4-L0-3.tif",
+      "publisherSha256Sidecar": "single-track-case0/AMB2022-718-SH1-BP1-P4-L0-3.tif.sha256",
+      "bytes": 19979454,
+      "sha256": "c03d00680c90d10f9852ae29e4d418b2fb52ab1508299c26378a4b0a9fb04f6d"
+    }
+  ],
+  "measurements": [
+    {
+      "sample": "AMB2022-718-SH1-BP1",
+      "part": "P3",
+      "position_mm": 4.9,
+      "caseAndLine": "Line 0_1",
+      "imagePath": "single-track-case0/AMB2022-718-SH1-BP1-P3-L0-1.tif",
+      "laserPower_W": 285.0,
+      "scanSpeed_mm_s": 960.0,
+      "beamDiameterD4sigma_um": 67.0,
+      "measuredDepth_um": 139.863,
+      "measuredWidth_um": 141.79500000000002
+    },
+    {
+      "sample": "AMB2022-718-SH1-BP1",
+      "part": "P4",
+      "position_mm": 6.0,
+      "caseAndLine": "Line 0_1",
+      "imagePath": "single-track-case0/AMB2022-718-SH1-BP1-P4-L0-1.tif",
+      "laserPower_W": 285.0,
+      "scanSpeed_mm_s": 960.0,
+      "beamDiameterD4sigma_um": 67.0,
+      "measuredDepth_um": 138.483,
+      "measuredWidth_um": 134.619
+    },
+    {
+      "sample": "AMB2022-718-SH1-BP1",
+      "part": "P3",
+      "position_mm": 4.9,
+      "caseAndLine": "Line 0_2",
+      "imagePath": "single-track-case0/AMB2022-718-SH1-BP1-P3-L0-2.tif",
+      "laserPower_W": 285.0,
+      "scanSpeed_mm_s": 960.0,
+      "beamDiameterD4sigma_um": 67.0,
+      "measuredDepth_um": 142.209,
+      "measuredWidth_um": 133.65300000000002
+    },
+    {
+      "sample": "AMB2022-718-SH1-BP1",
+      "part": "P4",
+      "position_mm": 6.0,
+      "caseAndLine": "Line 0_2",
+      "imagePath": "single-track-case0/AMB2022-718-SH1-BP1-P4-L0-2.tif",
+      "laserPower_W": 285.0,
+      "scanSpeed_mm_s": 960.0,
+      "beamDiameterD4sigma_um": 67.0,
+      "measuredDepth_um": 138.138,
+      "measuredWidth_um": 136.482
+    },
+    {
+      "sample": "AMB2022-718-SH1-BP1",
+      "part": "P3",
+      "position_mm": 4.9,
+      "caseAndLine": "Line 0_3",
+      "imagePath": "single-track-case0/AMB2022-718-SH1-BP1-P3-L0-3.tif",
+      "laserPower_W": 285.0,
+      "scanSpeed_mm_s": 960.0,
+      "beamDiameterD4sigma_um": 67.0,
+      "measuredDepth_um": 141.864,
+      "measuredWidth_um": 135.792
+    },
+    {
+      "sample": "AMB2022-718-SH1-BP1",
+      "part": "P4",
+      "position_mm": 6.0,
+      "caseAndLine": "Line 0_3",
+      "imagePath": "single-track-case0/AMB2022-718-SH1-BP1-P4-L0-3.tif",
+      "laserPower_W": 285.0,
+      "scanSpeed_mm_s": 960.0,
+      "beamDiameterD4sigma_um": 67.0,
+      "measuredDepth_um": 137.72400000000002,
+      "measuredWidth_um": 135.37800000000001
+    }
+  ],
+  "limitations": [
+    "Bare plate, not powder bed.",
+    "Three track replicates on each of two sections; not six independent builds.",
+    "Image pixels and the publisher worksheet derive from the same microscopy campaign, so they are not independent experimental sources.",
+    "These measurements do not validate LPBF powder-bed behavior or the solver."
+  ]
+}

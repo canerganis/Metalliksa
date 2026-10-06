@@ -1,0 +1,36 @@
+Implement a small Python 3.12 standard-library script, in one Python code block only.
+No tools, no filesystem access, no repo inspection; output the code for Codex to inspect and execute.
+Task: resume an unchanged clean Node snapshot after a harness-only TEMP/TMP placement failure.
+Verified design from Sol: no application/test code change, timeout increase, skips, watcher-ignore change,
+proxy/config mutation, npm install retry, or restoring source files. Same existing test passed in a neutral
+Windows temp location and failed inside a generated .tmp-lpbf ancestor. Installed Node packages are valid.
+
+Script lives at ROOT/.tmp-lpbf-input-claims-acceptance-20261003/flash_resume_reproduction.py.
+ROOT=Path(__file__).resolve().parents[1], TASK=Path(__file__).resolve().parent.
+Frozen SNAPSHOT=ROOT/'.runtime/v1-input-claims-native-20261003'.
+Manifest TASK/'source-manifest.json' has {revision,fileCount,sha256:{relativeFilePath:hexDigest},snapshot}.
+Its original snapshot field points elsewhere: reuse only the verified source mapping, never relabel it.
+Require revision='ec3a5fcbeb1c5aa1b250ed31a4e812796c5d17ce' and fileCount=1579.
+NODE=Path('C:/Program Files/nodejs/node.exe'); npm CLI=Path('C:/Program Files/nodejs/node_modules/npm/bin/npm-cli.js').
+Locked Python=ROOT/'.runtime/lpbf-win-py312/Scripts/python.exe'.
+Require CODEX_SANDBOX_NETWORK_DISABLED, NPM_CONFIG_OFFLINE, HTTP_PROXY, HTTPS_PROXY, ALL_PROXY,
+NPM_CONFIG_PROXY, NPM_CONFIG_HTTPS_PROXY absent; DO NOT unset them to bypass a control.
+Create one new neutral child TEMP/TMP with tempfile.mkdtemp(prefix='metalliksa-native-neutral-',
+dir=Path(os.environ['LOCALAPPDATA'])/'Temp'). Require no ancestor component named '.runtime' or
+starting '.tmp-lpbf', and preserve this directory (no cleanup).
+Copy environment only to child; set TEMP/TMP neutral root, METALLIX_PYTHON absolute locked executable,
+PYTHONDONTWRITEBYTECODE='1'. Do not change other environment values.
+Before and after every command, recompute all 1579 tracked file SHA-256 values and compare mapping.
+Write exclusive-create UTF-8 LF JSON for every guard, including actual snapshot path, revision, count,
+mismatches, and hashes. On mismatch retain the record and raise; never restore files.
+Run sequentially official NODE+npm CLI: run lint, run test:unit, run build, cwd=SNAPSHOT.
+Logs TASK/'native-neutral-{stage}.log', opened exclusive binary. Popen stdout/stderr combined; print
+stage/PID promptly with flush and wait for actual exit (no arbitrary restart/timeout/kill).
+After each exit, record exitCode, elapsed_s, command and raw log SHA-256 in an exclusive JSON.
+Always run post-command guard even on a command failure; stop further stages when exit is nonzero.
+Write TASK/'native-neutral-run-summary.json' exclusively including records and PASS only if all3
+commands exit0 and all guards match. Include reused existing installed dependency tree and no new
+npm install in this sequence; installation evidence is recorded separately.
+Return nonzero on failure. Keep previous native-* failed records untouched.
+All output names begin native-neutral-, never overwrite anything. Do not run the script yourself.
+

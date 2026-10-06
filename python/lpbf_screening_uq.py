@@ -108,6 +108,7 @@ def run_screening_uq(
     printable = 0
     risky = 0
     dnp = 0
+    inconclusive = 0
 
     z_power: List[float] = []
     z_abs: List[float] = []
@@ -151,6 +152,9 @@ def run_screening_uq(
             printable += 1
         elif v == "do-not-print":
             dnp += 1
+        elif v == "inconclusive":
+            # Melt-pool geometry unresolved (extentStatus != "computed"): not a risky verdict.
+            inconclusive += 1
         else:
             risky += 1
         scores.append(_verdict_score(v))
@@ -178,7 +182,7 @@ def run_screening_uq(
         "bands": dict(UQ_BANDS),
         "calibration": "literature-default",
         "P_printable": round(p_printable, 4),
-        "counts": {"printable": printable, "risky": risky, "do_not_print": dnp},
+        "counts": {"printable": printable, "risky": risky, "do_not_print": dnp, "inconclusive": inconclusive},
         "normalizedEnthalpy": {
             "mean": round(dh_mu, 3),
             "std": round(dh_sigma, 3),

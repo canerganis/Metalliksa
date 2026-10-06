@@ -23,7 +23,13 @@ Standard Alloy Fatigue Properties Database (calibrated from literature):
 from __future__ import annotations
 import math
 from dataclasses import dataclass
-from typing import List, Dict, Any, Optional, Tuple
+from types import MappingProxyType
+from typing import List, Dict, Any, Mapping, Optional, Tuple
+
+import alloy_data_kinetics_uq_fatigue as _fatigue_data
+import alloy_registry
+import input_validation
+import murakami_constants
 
 
 @dataclass
@@ -37,35 +43,33 @@ class AlloyFatigueConstants:
     paris_m: float                      # Paris exponent m
 
 
-ALLOY_FATIGUE_DATABASE: Dict[str, AlloyFatigueConstants] = {
-    "Ti-6Al-4V": AlloyFatigueConstants(
-        name="Ti-6Al-4V", hardness_HV=340.0, smooth_fatigue_limit_MPa=510.0,
-        threshold_stress_intensity_MPa_m=3.2, fracture_toughness_K_IC=55.0,
-        paris_C=1.8e-11, paris_m=3.3
-    ),
-    "316L SS": AlloyFatigueConstants(
-        name="316L SS", hardness_HV=215.0, smooth_fatigue_limit_MPa=240.0,
-        threshold_stress_intensity_MPa_m=4.8, fracture_toughness_K_IC=85.0,
-        paris_C=3.5e-12, paris_m=3.1
-    ),
-    "Inconel 718": AlloyFatigueConstants(
-        name="Inconel 718", hardness_HV=440.0, smooth_fatigue_limit_MPa=620.0,
-        threshold_stress_intensity_MPa_m=4.2, fracture_toughness_K_IC=70.0,
-        paris_C=1.2e-11, paris_m=3.4
-    ),
-    "AlSi10Mg": AlloyFatigueConstants(
-        name="AlSi10Mg", hardness_HV=115.0, smooth_fatigue_limit_MPa=150.0,
-        threshold_stress_intensity_MPa_m=1.8, fracture_toughness_K_IC=32.0,
-        paris_C=2.1e-10, paris_m=3.8
-    ),
-}
+def fatigue_constants(alloy_name: str) -> AlloyFatigueConstants:
+    """Registry-backed constants (domain "fatigue_fracture") for ``alloy_name``.
+
+    Phase 6a structural migration (design step (a)): the values are the former
+    local table, now held by alloy_registry; ``name`` is the legacy table key.
+    Raises input_validation.ValidationError (UNKNOWN_ALLOY) for a name without
+    fatigue data; before the migration such names silently used Ti-6Al-4V.
+    """
+    record = input_validation.require_known_alloy(
+        alloy_name, alloy_registry.DOMAIN_FATIGUE_FRACTURE, field="alloyName")
+    values = {key: record.value(key, alloy_registry.DOMAIN_FATIGUE_FRACTURE)
+              for key in _fatigue_data.FATIGUE_KEYS}
+    return AlloyFatigueConstants(name=_fatigue_data.FATIGUE_LEGACY_NAMES[record.id], **values)
+
+
+# Read-only view keyed by the legacy names (same keys, order and values as before).
+ALLOY_FATIGUE_DATABASE: Mapping[str, AlloyFatigueConstants] = MappingProxyType({
+    legacy: fatigue_constants(legacy) for legacy in _fatigue_data.FATIGUE_LEGACY_NAMES.values()
+})
 
 
 class MurakamiFatigueEngine:
     """Calculates defect-tolerant fatigue endurance limits and crack propagation lifetimes."""
 
     def __init__(self, alloy_name: str = "Ti-6Al-4V", custom_alloy: Optional[AlloyFatigueConstants] = None):
-        self.alloy = custom_alloy or ALLOY_FATIGUE_DATABASE.get(alloy_name, ALLOY_FATIGUE_DATABASE["Ti-6Al-4V"])
+        # A dataclass instance is always truthy, so this equals the old `custom_alloy or ...`.
+        self.alloy = custom_alloy if custom_alloy is not None else fatigue_constants(alloy_name)
 
     def el_haddad_intrinsic_crack_length_um(self) -> float:
         """Calculates El-Haddad intrinsic crack size a0 (in micrometers)."""
@@ -74,14 +78,24 @@ class MurakamiFatigueEngine:
         return a0_m * 1e6  # Convert meters to µm
 
     def murakami_geometric_constant(self, location: str) -> float:
-        """Murakami C factor for surface, sub-surface, or internal defect."""
-        loc = location.lower()
-        if "surface" in loc and "sub" not in loc:
-            return 1.43
-        elif "sub" in loc:
-            return 1.41
-        else:
-            return 1.56
+        """Murakami C factor for surface (1.43), sub-surface (1.41) or internal (1.56) defect.
+
+        Shared with murakami_fatigue_screening via murakami_constants; an unknown
+        location raises input_validation.ValidationError instead of defaulting.
+        """
+        return murakami_constants.murakami_geometric_constant(location)
+
+    @staticmethod
+    def _require_stress_ratio(stress_ratio_R: float) -> float:
+        """Finite R < 1. R = 1 (static load) has no stress range and divides by zero in
+        sigma_max = delta_sigma / (1 - R); it is rejected, not clamped."""
+        r = input_validation.require_finite("stressRatio_R", stress_ratio_R)
+        if r >= 1.0:
+            raise input_validation.ValidationError(
+                input_validation.OUT_OF_RANGE, "stressRatio_R",
+                "must be < 1 (R = sigma_min / sigma_max; R = 1 is a static load)",
+                {"value": r, "hi": 1.0, "hiInclusive": False})
+        return r
 
     def calculate_fatigue_limit(
         self,
@@ -96,18 +110,20 @@ class MurakamiFatigueEngine:
           3. Stress ratio R correction (Murakami-Nisitani power law)
         """
         c_geom = self.murakami_geometric_constant(location)
+        sqrt_area_um = input_validation.require_positive("sqrtArea_um", sqrt_area_um)
+        stress_ratio_R = self._require_stress_ratio(stress_ratio_R)
         hv = self.alloy.hardness_HV
         sigma_e0 = self.alloy.smooth_fatigue_limit_MPa
         a0_um = self.el_haddad_intrinsic_crack_length_um()
 
         # Pure Murakami formula (valid for medium-to-large defects)
         # sigma_w = c * (HV + 120) / (sqrt_area)^(1/6)
-        area_safe = max(sqrt_area_um, 1e-4)
-        murakami_raw = c_geom * (hv + 120.0) / (area_safe ** (1.0 / 6.0))
+        area_safe = sqrt_area_um  # validated finite and > 0 above
+        murakami_raw = murakami_constants.murakami_sqrt_area_limit_MPa(area_safe, hv, location)
 
         # Kitagawa-Takahashi / El-Haddad bounded limit:
         # Scale by geometric location factor ratio (surface vs internal)
-        geom_ratio = c_geom / 1.56
+        geom_ratio = c_geom / murakami_constants.C_INTERNAL
         el_haddad_limit = sigma_e0 * math.sqrt(a0_um / (area_safe + a0_um)) * geom_ratio
 
         # Reconciled limit: Cannot exceed smooth fatigue limit sigma_e0
@@ -164,6 +180,11 @@ class MurakamiFatigueEngine:
         Integrates Paris-Erdogan law da/dN = C * (Delta_K)^m
         Delta_K = Y * Delta_sigma * sqrt(pi * a)
         """
+        initial_defect_sqrt_area_um = input_validation.require_positive(
+            "sqrtArea_um", initial_defect_sqrt_area_um)
+        cyclic_stress_amplitude_MPa = input_validation.require_positive(
+            "stressAmplitude_MPa", cyclic_stress_amplitude_MPa)
+        stress_ratio_R = self._require_stress_ratio(stress_ratio_R)
         # Initial crack half-length in meters: a0 = initial_defect / 2
         a = (initial_defect_sqrt_area_um / 2.0) * 1e-6
         delta_sigma = cyclic_stress_amplitude_MPa * 2.0  # Peak-to-peak stress range

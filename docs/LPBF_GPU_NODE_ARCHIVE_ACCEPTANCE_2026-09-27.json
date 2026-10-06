@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "stage": "completed",
+  "scope": "Persistent historical bound GPU record lifecycle; software acceptance only",
+  "recordedAt": "2026-09-27T17:52:25.151761+00:00",
+  "qaHead": "070aa375ac8451b3891d23b4f28f5b4275465416",
+  "qaSourceState": "Sixteen owned TS/UI/test files uncommitted, exact working-byte hashes below. Numerical run identity is historical, not the current source identity.",
+  "sourceSha256": {
+    "server/lpbfRunRepository.ts": "23d9fbebdb70601f79acd19a5570c865cc44026102abd25eaefaffa51b80bf9b",
+    "server/lpbfRunImport.ts": "d844fc310eeb68417ad1149704f04ce64098d606cd8bc0823fffdd12eaba5305",
+    "server/lpbfRunBundle.ts": "5605db3dadb9e4429196d5d8af35263dbc8d3fd6daf1050884264331e44151a6",
+    "server/lpbfRunArchiveService.ts": "5502801b4fbdb1a79b38db1ca60a0eae929a0e9980526e646466dbee58e694f1",
+    "server/lpbfGpuRunArchive.ts": "b0b282f7b87145b40d916fd4fe6a8ef0f784edd159eba663e5b8721a2cd5849d",
+    "routes/lpbfRuns.ts": "c48b9468a7aad6b030a9b7d71d7a748482a064e7287ac90d513b5bd6c2de6341",
+    "server/lpbfNistComparisonService.ts": "533e2f6c6b38f8200b932d65dad9051d7d5b6f65e271be9ef139b0afbca8e3c1",
+    "server/lpbfNistProxyCampaignService.ts": "ceadc681477ce78b250dc7a207e884a98720864be1b11492df050320beb2b693",
+    "src/types/lpbfRun.ts": "decb91618f2acc3aa58b8bf1ef86e28de296ad43dfe8240a845d22978f564135",
+    "src/services/lpbfRunArchiveClient.ts": "3e6a80f548b3964a95c1c210b177ab83863befebfbf3b28a53e2512672004404",
+    "src/components/LpbfRunArchivePanel.tsx": "af82189cd7ba8bf3eb255427312acaea13ef338d876c27a40a537ad31ace0752",
+    "src/components/LpbfSourceArchivePanel.tsx": "af2e3ed5f4a3367f6744cdda3c64650b4d82286ccf4fed89dbbb460d7615782f",
+    "tests/lpbf-gpu-run-archive.test.ts": "1cd06546a454a2799e842dd41f9a4b95bc3a7fbaf64ba6d8047da16b5b0f3708",
+    "tests/lpbf-source-archive-selection.test.ts": "02cec3ec5a0b475f88c1840a3b83f9f86357b11f1ea3fa769008d9c71dc4769d",
+    "src/components/3d-distortion-lab/LpbfEngineeringSimulation.tsx": "d4db03f5dc3683da816355ee58f676195be3685336944077f153d0592074afb6",
+    "tests/lpbf-gpu-pilot-ui.test.tsx": "fbda01d6c9bc6934a13dc87e32a243729d764de43b23bbcfcf75004ba5491e40"
+  },
+  "runtime": {
+    "httpOrigin": "http://localhost:4176",
+    "sessionId": 32477,
+    "nodePid": 13384,
+    "ipcPort": 5056,
+    "loadedBackendSha256": "487a8df250b2af615afecd4a5e6a9b824dbc1983edb83fcb389b85bb669c1e83",
+    "frontendProductionBuild": "pass",
+    "serverDiskMatchesLoadedBundle": true
+  },
+  "jobId": "2bcb01e5799041ec9458a947506d491f",
+  "runDocumentSha256": "f69853a158e1aca90995ff3f6ff961dc29d801d51722c1366ef64421074113d0",
+  "dataOrigin": "model-prediction",
+  "syntheticFixture": false,
+  "experimentalValidation": false,
+  "overallLpbfGoal": "unvalidated",
+  "cpuSolvesDuringActualArchiveAcceptance": 0,
+  "gpuSolvesDuringActualArchiveAcceptance": 0,
+  "historicalResultSha256": "f3b43be46d04d8a2a78754496d2be0d9e91406bdc6a71bfcdd3e506e46a62923",
+  "historicalInputHash": "333c48bf26dca4b747340ebc6b4d917f55653ae3c0cdf0d74ba2a76aa52346f3",
+  "historicalImplementationHash": "fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c",
+  "captureStatus": "gpu-pilot-v1-bound",
+  "runKind": "gpu-thermal-pilot",
+  "evidenceStatus": "unvalidated-model",
+  "source": {
+    "datasetId": "nist-amb2022-03-optical-xlsx-official-v1",
+    "revision": 1,
+    "documentSha256": "73293ca6c2a1929a2e244f806d6eb5900d4c739716f7f291e74c9bc12dc291b6"
+  },
+  "sourceEvidenceStatus": "unreviewed-source-archive",
+  "sourceDataOrigin": "publisher optical experimental measurements; model applicability unvalidated",
+  "gpuArtifacts": {
+    "count": 12,
+    "byteSize": 135737
+  },
+  "api": {
+    "stepsPath": "docs/LPBF_GPU_NODE_ARCHIVE_API_STEPS_2026-09-27.json",
+    "stepsSha256": "9c9d9122e01f7aeba839a60a5c0d8d2e3be2fc0c2fe4ef3b35e4108327309cf8",
+    "all14HttpStatuses": 200,
+    "exportBundleId": "276a3b15e1cc4218b8f7010fd4827d4f",
+    "restoreId": "0ab712ca7a74453ca077740c8c402444",
+    "portableImportId": "bcb62215c4f24aca8f36fa027e09a3c9",
+    "portableRestoreId": "1fb03edf26ee4259b7e59ab863f500dd",
+    "threeDocumentsAndHashesEqual": true,
+    "nistComparison": "unavailable; GPU kind is not eligible"
+  },
+  "browser": {
+    "keyboardSourceRevisionSelection": "pass",
+    "preview12RefsAndSeparateBoundStatus": "pass",
+    "archiveOwnCompletedGpuJob": "pass",
+    "createdAt": "2026-09-27T17:45:29.844Z",
+    "archivedKindContractUnvalidatedAndNistExclusion": "pass",
+    "bundleVerification2Runs2SourceLinks": "pass",
+    "isolatedRestoreId": "1fe925c0512d49198a81f0505b14ee77",
+    "restoredGpuOpened": "pass",
+    "uiExportBundleId": "5fedf92e20014d8cbfcda9e0bc605989",
+    "uiExportCounts": {
+      "runs": 2,
+      "runArtifacts": 74,
+      "sourceLinks": 2
+    },
+    "reloadRetainsOfficialSourceRevision1": "pass",
+    "reloadRetainsSameGpuRecord": "pass",
+    "restoredArchiveReopenedAfterReload": "pass",
+    "restoredRawDocumentKeyboardReturnAndDomReadback": "pass",
+    "restoredSavedStringsExact": true,
+    "restoredManifestCount": 12,
+    "restoredParity": "pass",
+    "restoredExperimentalValidation": false,
+    "consoleErrorsObserved": [],
+    "sourceBytesAfterReload": "not-checked-in-this-view; stored metadata only"
+  },
+  "softwareTests": {
+    "focusedArchive": {
+      "passed": 24,
+      "skipped": 0
+    },
+    "expandedApiClientBundleNistProxy": {
+      "passed": 48,
+      "skipped": 0
+    },
+    "finalUiContextSource": {
+      "passed": 5,
+      "skipped": 0
+    },
+    "lint": "pass",
+    "productionBuild": "pass",
+    "existingBuildWarning": "greater-than-500kB chunk"
+  },
+  "independentReview": {
+    "integrationMemoryCases": 21,
+    "uiActionCases": 10,
+    "actualLifecycleAudit": "pass"
+  },
+  "retainedFailures": [
+    {
+      "kind": "prototype-sensitive semantic equality",
+      "initialTestResult": "22/24 pass,2fail; closed using strictJsonEqual, exact strings retained"
+    },
+    {
+      "kind": "archive omitted public GPU metadata parser",
+      "evidence": "experimentalValidation=true and detached source device accepted; now rejected before byte reads"
+    },
+    {
+      "kind": "completed GPU UI omitted archive form",
+      "report": "docs/LPBF_GPU_NODE_ARCHIVE_BROWSER_2026-09-27.partial.json",
+      "sha256": "bca47581cfd48cb6f7387d99c9ebca01ccbe65ef98caac475c11acfc529cf12c"
+    },
+    {
+      "kind": "SSR test asserted async loaded option",
+      "initialResult": "4/5pass,1fail; corrected to initial loading state, real loaded combo checked in browser"
+    },
+    {
+      "kind": "Playwright role selector did not identify native details summary",
+      "closure": "fresh AX element and keyboard Return opened the restored payload"
+    }
+  ],
+  "evidenceLevels": {
+    "software": "pass for this lifecycle scope",
+    "cpuTorchFullFieldParity": "pass for the historical pilot; separately recorded numerical model evidence",
+    "meshTimeConvergence": "inconclusive",
+    "experimentalValidity": "unvalidated",
+    "newAlloyFullAdmission": "unvalidated",
+    "performanceImprovement": "unmeasured"
+  },
+  "limits": [
+    "Expanded software tests included one small CPU workflow solve35.614s; not a performance benchmark.",
+    "Historical GPU record reads do not compare against the current registry, CUDA hardware or current implementation.",
+    "Volumetric enthalpy evidence does not independently reconstruct H(T).",
+    "Portable GPU upload was exercised through the API; its browser file chooser was not exercised in this scope.",
+    "Stored GPU numeric values are available in raw document payload; a dedicated archived result summary remains pending."
+  ]
+}

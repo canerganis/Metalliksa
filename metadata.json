@@ -3,6 +3,6 @@
   "description": "Comprehensive AI pocket workstation for metallurgists and material scientists featuring alloy formulation, crystal lattice visualization, phase equilibria, heat treatment simulation, and microscopy diagnostics.",
   "requestFramePermissions": [],
   "majorCapabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+    "MAJOR_CAPABILITY_SERVER_SIDE_OPENAI_API"
   ]
 }

@@ -3,7 +3,6 @@ import {
   Boxes,
   Atom,
   Sliders,
-  Sparkles,
   Plus,
   Trash2,
   RotateCcw,
@@ -22,7 +21,6 @@ import {
 import { useMaterialStore, MATERIAL_PRESETS, BaseMetalType } from "../store/useMaterialStore";
 import { useMaterialSpecimenStore } from "../store/useMaterialSpecimenStore";
 import { MATERIAL_CATEGORIES, normalizeMaterialCategory } from "../utils/materialCategory";
-import { InverseAlloyStudio } from "./InverseAlloyStudio";
 
 interface AlloyBuilderProps {
   onNavigate?: (tabId: string) => void;
@@ -60,7 +58,7 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
     ? MANUFACTURING_ROUTES : [...MANUFACTURING_ROUTES, manufacturingRoute];
 
   // Local UI state for tab switching & element selection dropdown only
-  const [activeSubView, setActiveSubView] = useState<"specimen-studio" | "inverse-pareto">("specimen-studio");
+  const [activeSubView, setActiveSubView] = useState<"specimen-studio">("specimen-studio");
   const [selectedElementToAdd, setSelectedElementToAdd] = useState<string>("Re");
   const [isSavedToast, setIsSavedToast] = useState<boolean>(false);
 
@@ -95,7 +93,7 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-black tracking-tight text-white">
-                    MetalliX Universal Alloy Builder &amp; Specimen Studio
+                    Composition Editor
                   </h1>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
                     Live Shared Store
@@ -122,18 +120,6 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
               <Sliders className="w-3.5 h-3.5" />
               <span>Specimen Formulator</span>
             </button>
-            <button
-              id="tab-inverse-pareto"
-              onClick={() => setActiveSubView("inverse-pareto")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                activeSubView === "inverse-pareto"
-                  ? "bg-emerald-500 text-slate-950 shadow-md font-bold"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Inverse Pareto AI</span>
-            </button>
           </div>
         </div>
 
@@ -151,7 +137,7 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
               Rapid XRD Lab
             </span>
             <span className="px-2 py-0.5 rounded bg-slate-800/90 text-slate-300 font-mono text-[11px] border border-slate-700">
-              Digital Twin Hub
+              Specimen Records
             </span>
           </div>
 
@@ -194,7 +180,7 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
               {/* Specimen Name */}
               <div className="space-y-1.5">
                 <label className="text-slate-400 font-semibold block">Specimen Name</label>
-                <input
+                <input aria-label="Specimen Name"
                   id="input-specimen-name"
                   type="text"
                   value={activeMaterialSpecimen.name}
@@ -207,7 +193,7 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
               {/* Material Category */}
               <div className="space-y-1.5">
                 <label className="text-slate-400 font-semibold block">Material Category</label>
-                <select
+                <select aria-label="Material Category"
                   id="select-specimen-category"
                   value={category}
                   onChange={(e) => updateMetadata({ category: e.target.value })}
@@ -220,7 +206,7 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
               {/* Standard Designation */}
               <div className="space-y-1.5">
                 <label className="text-slate-400 font-semibold block">Standard Designation / Ref</label>
-                <input
+                <input aria-label="Standard Designation / Ref"
                   id="input-specimen-standard"
                   type="text"
                   value={activeMaterialSpecimen.metadata?.standardDesignation || ""}
@@ -233,7 +219,7 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
               {/* Manufacturing Route */}
               <div className="space-y-1.5">
                 <label className="text-slate-400 font-semibold block">Manufacturing Route</label>
-                <select
+                <select aria-label="Manufacturing Route"
                   id="select-specimen-route"
                   value={manufacturingRoute}
                   onChange={(e) => updateMetadata({ manufacturingRoute: e.target.value })}
@@ -299,7 +285,7 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
                   </button>
                 )}
                 <div className="flex items-center gap-1.5">
-                  <select
+                  <select aria-label="Add element"
                     id="select-add-element"
                     value={selectedElementToAdd}
                     onChange={(e) => setSelectedElementToAdd(e.target.value)}
@@ -339,7 +325,7 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
                     </div>
 
                     <div className="flex items-center gap-1">
-                      <input
+                      <input aria-label={`${element} content (${activeMaterialSpecimen.unit === "at_pct" ? "at.%" : "wt.%"})`}
                         type="number"
                         step="0.1"
                         min="0"
@@ -360,7 +346,7 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
                   </div>
 
                   {/* Slider Control */}
-                  <input
+                  <input aria-label={`${element} content slider (${activeMaterialSpecimen.unit === "at_pct" ? "at.%" : "wt.%"})`}
                     type="range"
                     min="0"
                     max={element === activeMaterialSpecimen.metadata?.baseMetal ? 100 : 35}
@@ -437,11 +423,6 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
             </div>
           </div>
         </>
-      )}
-
-      {/* Sub-View: Inverse Pareto Multi-Objective Optimization Studio */}
-      {activeSubView === "inverse-pareto" && (
-        <InverseAlloyStudio onNavigate={onNavigate} />
       )}
     </div>
   );

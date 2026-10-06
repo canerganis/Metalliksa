@@ -1,0 +1,10 @@
+{
+  "_comment": "KB gzip. baseline = ratchet (measured on 95a9e43 + this change, rounded up ~10%); the check FAILS above it. target = aspirational budget, printed only. Lower baselines as bundles shrink.",
+  "*.css": {"baseline": 34, "target": 45},
+  "index-*": {"baseline": 70, "target": 120},
+  "vendor-three-*": {"baseline": 208, "target": 220},
+  "vendor-charts-*": {"baseline": 157, "target": 120},
+  "vendor-pdf-*": {"baseline": 270, "target": 200},
+  "vendor-react-*": {"baseline": 52, "target": null},
+  "*": {"baseline": 68, "target": null}
+}

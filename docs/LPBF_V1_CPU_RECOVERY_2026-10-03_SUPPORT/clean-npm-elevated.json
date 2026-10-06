@@ -1,0 +1,6 @@
+{
+  "durationSeconds": 140.329,
+  "log": "clean-npm-elevated.log",
+  "exitCode": 0,
+  "command": "npm ci --offline --no-audit --no-fund"
+}

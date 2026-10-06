@@ -1,0 +1,472 @@
+{
+  "schemaVersion": 1,
+  "protocolId": "nist-3707-table5-finite-length-locality-20um-v1",
+  "stage": "aborted",
+  "status": "diagnostic-only",
+  "validationStatus": "unvalidated",
+  "experimentalValidation": false,
+  "operatorMismatch": true,
+  "fittingOrTuning": false,
+  "matchedExperimentalResidualAvailable": false,
+  "convergenceConclusion": "not-assessed",
+  "protocolSha256": "84f832f3db01a4b43045aa3de0af8f5753b42ea144b113a05054aa2012051cee",
+  "tableSha256": "3a8c2145e7e067a966b32fcda41ffd964deae5a23fc5899ea3fa164bb7c8601e",
+  "implementationSha256": "d7e5c4e3d5f0a59c4b955e0e1ca29f624fe6249c4e7cd1522e84ed1a87249315",
+  "executionHeadCommit": "ae351295304e5dd414ebc8fc63b1fe5809288bd9",
+  "startedAt": "2026-10-02T02:53:51.613000+00:00",
+  "finiteLengthApproximation": true,
+  "equivalenceToEightMmTrackEstablished": false,
+  "preflight": {
+    "protocolSha256": "84f832f3db01a4b43045aa3de0af8f5753b42ea144b113a05054aa2012051cee",
+    "cases": [
+      {
+        "rawInputs": {
+          "mode": "standard",
+          "backend": "reference",
+          "study": "none",
+          "material": "Inconel 718",
+          "surfaceMode": "bare-plate",
+          "barePlateGeometry": "rectangular-corridor",
+          "power_W": 285.0,
+          "speed_mm_s": 960.0,
+          "beamDiameter_um": 72.0,
+          "trackLength_um": 1004.0,
+          "corridorWidth_um": 432.0,
+          "mesh_um": 20.000000000000004,
+          "maxDt_s": 1e-06,
+          "sourcePenetration_um": 80.0,
+          "absorptivity": 0.35,
+          "preheat_C": 80.0,
+          "cooling_s": 0.0,
+          "dwell_s": 0.0,
+          "tracks": 1,
+          "layers": 1,
+          "scanAngle_deg": 0.0,
+          "timeout_s": 600.0
+        },
+        "settings": {
+          "mode": "standard",
+          "material": "Inconel 718",
+          "power_W": 285.0,
+          "speed_mm_s": 960.0,
+          "beamDiameter_um": 72.0,
+          "preheat_C": 80.0,
+          "layer_um": 40.0,
+          "hatch_um": 100.0,
+          "mesh_um": 20.000000000000004,
+          "maxDt_s": 1e-06,
+          "trackLength_um": 1004.0,
+          "tracks": 1,
+          "layers": 1,
+          "dwell_s": 0.0,
+          "cooling_s": 0.0,
+          "scanAngle_deg": 0.0,
+          "layerRotation_deg": 67.0,
+          "strategy": "meander",
+          "stripeWidth_um": 500.0,
+          "islandSize_um": 200.0,
+          "packingFraction": 0.55,
+          "powderConductivityRatio": 0.12,
+          "convection_W_m2K": 20.0,
+          "timeout_s": 600.0,
+          "study": "none",
+          "backend": "reference",
+          "surfaceMode": "bare-plate",
+          "sourcePenetration_um": 80.0,
+          "barePlateGeometry": "rectangular-corridor",
+          "evaporationModel": false,
+          "marangoniMultiplier": 2.2,
+          "opticalObserver": null,
+          "corridorWidth_um": 432.0,
+          "absorptivity": 0.35,
+          "emissivity": 0.35
+        },
+        "domain": {
+          "radius": 3.6e-05,
+          "span": 0.00122,
+          "span_x": 0.00122,
+          "span_y": 0.000432,
+          "effective_span_y": 0.00045999999999999996,
+          "nx": 61,
+          "ny": 23,
+          "nxy": 61,
+          "nz": 15,
+          "dx": 1.9999999999999998e-05,
+          "substrate_depth": 0.0003
+        },
+        "cells": 21045,
+        "end_s": 0.0010458333333333333,
+        "minimumStepsByMaxDt": 1046,
+        "initialSourceCapEstimatedDt_s": 1.0358773866880556e-07,
+        "heuristicEstimatedSteps": 10097,
+        "heuristicEstimatedCellSteps": 212491365,
+        "initialSourceCaptureFraction": 0.9999999990795645,
+        "beamDiameterCells": 3.6000000000000005,
+        "midpointPlane_m": 0.0,
+        "centreSourceCrossingTime_s": 0.0005229166666666666,
+        "modelMaximumTableDiffusivity_m2_s": 5.332352670773191e-06,
+        "fullRunDiffusionLength_m": 0.00014935531015914538,
+        "startDistanceToCentre_m": 0.000502,
+        "startDistanceOverFullRunDiffusionLength": 3.361112500553843,
+        "diffusionEstimateScope": "sqrt(4*max(table k/rho/cp)*full-run-time); a locality rationale, not an error bound"
+      },
+      {
+        "rawInputs": {
+          "mode": "standard",
+          "backend": "reference",
+          "study": "none",
+          "material": "Inconel 718",
+          "surfaceMode": "bare-plate",
+          "barePlateGeometry": "rectangular-corridor",
+          "power_W": 285.0,
+          "speed_mm_s": 960.0,
+          "beamDiameter_um": 72.0,
+          "trackLength_um": 1604.0,
+          "corridorWidth_um": 432.0,
+          "mesh_um": 20.000000000000004,
+          "maxDt_s": 1e-06,
+          "sourcePenetration_um": 80.0,
+          "absorptivity": 0.35,
+          "preheat_C": 80.0,
+          "cooling_s": 0.0,
+          "dwell_s": 0.0,
+          "tracks": 1,
+          "layers": 1,
+          "scanAngle_deg": 0.0,
+          "timeout_s": 600.0
+        },
+        "settings": {
+          "mode": "standard",
+          "material": "Inconel 718",
+          "power_W": 285.0,
+          "speed_mm_s": 960.0,
+          "beamDiameter_um": 72.0,
+          "preheat_C": 80.0,
+          "layer_um": 40.0,
+          "hatch_um": 100.0,
+          "mesh_um": 20.000000000000004,
+          "maxDt_s": 1e-06,
+          "trackLength_um": 1604.0,
+          "tracks": 1,
+          "layers": 1,
+          "dwell_s": 0.0,
+          "cooling_s": 0.0,
+          "scanAngle_deg": 0.0,
+          "layerRotation_deg": 67.0,
+          "strategy": "meander",
+          "stripeWidth_um": 500.0,
+          "islandSize_um": 200.0,
+          "packingFraction": 0.55,
+          "powderConductivityRatio": 0.12,
+          "convection_W_m2K": 20.0,
+          "timeout_s": 600.0,
+          "study": "none",
+          "backend": "reference",
+          "surfaceMode": "bare-plate",
+          "sourcePenetration_um": 80.0,
+          "barePlateGeometry": "rectangular-corridor",
+          "evaporationModel": false,
+          "marangoniMultiplier": 2.2,
+          "opticalObserver": null,
+          "corridorWidth_um": 432.0,
+          "absorptivity": 0.35,
+          "emissivity": 0.35
+        },
+        "domain": {
+          "radius": 3.6e-05,
+          "span": 0.00182,
+          "span_x": 0.00182,
+          "span_y": 0.000432,
+          "effective_span_y": 0.00046,
+          "nx": 91,
+          "ny": 23,
+          "nxy": 91,
+          "nz": 15,
+          "dx": 2e-05,
+          "substrate_depth": 0.00030000000000000003
+        },
+        "cells": 31395,
+        "end_s": 0.0016708333333333334,
+        "minimumStepsByMaxDt": 1671,
+        "initialSourceCapEstimatedDt_s": 1.0358773866880553e-07,
+        "heuristicEstimatedSteps": 16130,
+        "heuristicEstimatedCellSteps": 506401350,
+        "initialSourceCaptureFraction": 0.9999999990795647,
+        "beamDiameterCells": 3.5999999999999996,
+        "midpointPlane_m": 1.0842021724855044e-19,
+        "centreSourceCrossingTime_s": 0.0008354166666666667,
+        "modelMaximumTableDiffusivity_m2_s": 5.332352670773191e-06,
+        "fullRunDiffusionLength_m": 0.00018878000516386127,
+        "startDistanceToCentre_m": 0.000802,
+        "startDistanceOverFullRunDiffusionLength": 4.248331274828937,
+        "diffusionEstimateScope": "sqrt(4*max(table k/rho/cp)*full-run-time); a locality rationale, not an error bound"
+      }
+    ],
+    "totalHeuristicEstimatedSteps": 26227,
+    "totalHeuristicEstimatedCellSteps": 718892715,
+    "estimatedFullArrayBytes": 25116000,
+    "heuristicWallTimeRange_s": [
+      89.861589375,
+      239.630905
+    ],
+    "runtimeEstimateAssumption": "3 to 8 million cellsteps/s; not a measured runtime for these cases",
+    "executionEligible": true,
+    "executionDenialReasons": [],
+    "resourceEstimateIsGuaranteed": false,
+    "assumptions": {
+      "absorptivity": {
+        "value": 0.35,
+        "basis": "Explicit nominal model assumption, not measured NIST absorptivity; not fitted."
+      },
+      "sourcePenetration_um": {
+        "value": 80.0,
+        "basis": "Explicit nominal volumetric deposition assumption, not an optical or measured NIST penetration depth; not fitted."
+      },
+      "preheat_C": {
+        "value": 80.0,
+        "basis": "Application nominal default, explicit model assumption. Table 5 does not state preheat/ambient temperature. Table 6 pad 22 C is not applied to Table 5."
+      },
+      "beamMapping": "Published 2D Gaussian regression diameter 72 um is mapped to ideal Gaussian 1/e2 diameter; actual measured profile is unavailable.",
+      "plateAndBoundaries": "Model depth about 320 um vs published plate 3170 um; fixed preheat base and insulated sides. Full plate/support geometry is not represented.",
+      "operator": "Single nearest-midpoint accepted-max liquidus thermal contour vs six etched/solidified SAM-segmented measurements from three tracks. Bead, area, and surface deformation are not reproduced.",
+      "numerics": "Two finite-length locality cases, common 20 um effective dx and exact centre cell to roundoff. mesh_um request is nextafter(20,+infinity) to avoid an extra cell from floating ceil. No mesh/time convergence or 8 mm equivalence.",
+      "locality": "Compare central accepted-max liquidus W/D for two truncated tracks with source crossing at each track midpoint. Start distances are several sqrt(4*alpha_max*full_run_time) lengths, using model table diffusivity. This rationale is not a truncation-error bound; transverse, bottom, source-history and etched-operator mismatches persist.",
+      "localLengthThreshold": "Both absolute W/D differences must be at most one effective mesh h; otherwise inconclusive. Passing this sensitivity criterion establishes no equivalence to 8 mm NIST geometry."
+    },
+    "publishedSummary": {
+      "mean": {
+        "width_um": 137.4,
+        "total_height_um": 135.5,
+        "bead_height_um": 10.6,
+        "depth_um": 124.9,
+        "area_um2": 12946
+      },
+      "sample_standard_deviation": {
+        "width_um": 1.6,
+        "total_height_um": 1.8,
+        "bead_height_um": 0.6,
+        "depth_um": 1.5,
+        "area_um2": 193
+      },
+      "expanded_uncertainty_k2": null
+    },
+    "priorFullLengthPreflight": {
+      "schemaVersion": 1,
+      "protocolId": "nist-3707-table5-single-baseline-20um-thermal-proxy-v1",
+      "stage": "preflight-denied",
+      "status": "diagnostic-only",
+      "validationStatus": "unvalidated",
+      "experimentalValidation": false,
+      "operatorMismatch": true,
+      "fittingOrTuning": false,
+      "matchedExperimentalResidualAvailable": false,
+      "convergenceConclusion": "not-assessed",
+      "protocolSha256": "806ce946f54ebdcd05267aa3484ace926877a1de6443c5dc2ce93976520817ac",
+      "tableSha256": "3a8c2145e7e067a966b32fcda41ffd964deae5a23fc5899ea3fa164bb7c8601e",
+      "implementationSha256": "d7e5c4e3d5f0a59c4b955e0e1ca29f624fe6249c4e7cd1522e84ed1a87249315",
+      "executionHeadCommit": "ae351295304e5dd414ebc8fc63b1fe5809288bd9",
+      "startedAt": "2026-10-02T02:38:52.809974+00:00",
+      "preflight": {
+        "protocolSha256": "806ce946f54ebdcd05267aa3484ace926877a1de6443c5dc2ce93976520817ac",
+        "domain": {
+          "radius": 3.6e-05,
+          "span": 0.008216,
+          "span_x": 0.008216,
+          "span_y": 0.000432,
+          "effective_span_y": 0.00045977615571776156,
+          "nx": 411,
+          "ny": 23,
+          "nxy": 411,
+          "nz": 16,
+          "dx": 1.9990267639902675e-05,
+          "substrate_depth": 0.0003198442822384428
+        },
+        "cells": 151248,
+        "end_s": 0.008333333333333333,
+        "minimumStepsByMaxDt": 8334,
+        "initialSourceCapEstimatedDt_s": 1.035507396240921e-07,
+        "heuristicEstimatedSteps": 80476,
+        "heuristicEstimatedCellSteps": 12171834048,
+        "estimatedFullArrayBytes": 120998400,
+        "heuristicWallTimeRange_s": [
+          1521.479256,
+          4057.278016
+        ],
+        "runtimeEstimateAssumption": "3 to 8 million cellsteps/s; not a measured runtime for this case",
+        "executionEligible": false,
+        "executionDenialReasons": [
+          "Initial-source heuristic exceeds maximumSteps: 80476 > 75000",
+          "Initial-source heuristic exceeds maximumCellSteps: 12171834048 > 1359600000",
+          "Fast end of the heuristic 3 to 8 million cellsteps/s range exceeds wall-time cap"
+        ],
+        "initialSourceCaptureFraction": 0.9999999990796241,
+        "resourceEstimateIsGuaranteed": false,
+        "beamDiameterCells": 3.601752677702045,
+        "assumptions": {
+          "absorptivity": {
+            "value": 0.35,
+            "basis": "Explicit nominal model assumption, not measured NIST absorptivity; not fitted."
+          },
+          "sourcePenetration_um": {
+            "value": 80.0,
+            "basis": "Explicit nominal volumetric deposition assumption, not an optical or measured NIST penetration depth; not fitted."
+          },
+          "preheat_C": {
+            "value": 80.0,
+            "basis": "Application nominal default, explicit model assumption. Table 5 does not state preheat/ambient temperature. Table 6 pad 22 C is not applied to Table 5."
+          },
+          "beamMapping": "Published 2D Gaussian regression diameter 72 um is mapped to ideal Gaussian 1/e2 diameter; actual measured profile is unavailable.",
+          "plateAndBoundaries": "Model depth about 320 um vs published plate 3170 um; fixed preheat base and insulated sides. Full plate/support geometry is not represented.",
+          "operator": "Single nearest-midpoint accepted-max liquidus thermal contour vs six etched/solidified SAM-segmented measurements from three tracks. Bead, area, and surface deformation are not reproduced.",
+          "numerics": "Single 20 um baseline, no mesh/time convergence; no surrogate coarse run."
+        },
+        "publishedSummary": {
+          "mean": {
+            "width_um": 137.4,
+            "total_height_um": 135.5,
+            "bead_height_um": 10.6,
+            "depth_um": 124.9,
+            "area_um2": 12946
+          },
+          "sample_standard_deviation": {
+            "width_um": 1.6,
+            "total_height_um": 1.8,
+            "bead_height_um": 0.6,
+            "depth_um": 1.5,
+            "area_um2": 193
+          },
+          "expanded_uncertainty_k2": null
+        }
+      },
+      "assumptions": {
+        "absorptivity": {
+          "value": 0.35,
+          "basis": "Explicit nominal model assumption, not measured NIST absorptivity; not fitted."
+        },
+        "sourcePenetration_um": {
+          "value": 80.0,
+          "basis": "Explicit nominal volumetric deposition assumption, not an optical or measured NIST penetration depth; not fitted."
+        },
+        "preheat_C": {
+          "value": 80.0,
+          "basis": "Application nominal default, explicit model assumption. Table 5 does not state preheat/ambient temperature. Table 6 pad 22 C is not applied to Table 5."
+        },
+        "beamMapping": "Published 2D Gaussian regression diameter 72 um is mapped to ideal Gaussian 1/e2 diameter; actual measured profile is unavailable.",
+        "plateAndBoundaries": "Model depth about 320 um vs published plate 3170 um; fixed preheat base and insulated sides. Full plate/support geometry is not represented.",
+        "operator": "Single nearest-midpoint accepted-max liquidus thermal contour vs six etched/solidified SAM-segmented measurements from three tracks. Bead, area, and surface deformation are not reproduced.",
+        "numerics": "Single 20 um baseline, no mesh/time convergence; no surrogate coarse run."
+      },
+      "resolvedSettings": {
+        "mode": "standard",
+        "material": "Inconel 718",
+        "power_W": 285.0,
+        "speed_mm_s": 960.0,
+        "beamDiameter_um": 72.0,
+        "preheat_C": 80.0,
+        "layer_um": 40.0,
+        "hatch_um": 100.0,
+        "mesh_um": 20.0,
+        "maxDt_s": 1e-06,
+        "trackLength_um": 8000.0,
+        "tracks": 1,
+        "layers": 1,
+        "dwell_s": 0.0,
+        "cooling_s": 0.0,
+        "scanAngle_deg": 0.0,
+        "layerRotation_deg": 67.0,
+        "strategy": "meander",
+        "stripeWidth_um": 500.0,
+        "islandSize_um": 200.0,
+        "packingFraction": 0.55,
+        "powderConductivityRatio": 0.12,
+        "convection_W_m2K": 20.0,
+        "timeout_s": 600.0,
+        "study": "none",
+        "backend": "reference",
+        "surfaceMode": "bare-plate",
+        "sourcePenetration_um": 80.0,
+        "barePlateGeometry": "rectangular-corridor",
+        "evaporationModel": false,
+        "marangoniMultiplier": 2.2,
+        "opticalObserver": null,
+        "corridorWidth_um": 432.0,
+        "absorptivity": 0.35,
+        "emissivity": 0.35
+      },
+      "limits": {
+        "maximumCells": 200000,
+        "maximumSteps": 75000,
+        "maximumCellSteps": 1359600000,
+        "maximumRssBytes": 536870912,
+        "maximumWallTime_s": 600.0,
+        "maximumReportBytes": 2000000
+      },
+      "runtimeWork": {
+        "attemptedSteps": 0,
+        "attemptedCellSteps": 0,
+        "maximumSampledRssBytes": 0,
+        "wallTime_s": 0.0
+      },
+      "error": {
+        "type": "RuntimeError",
+        "message": "Preflight execution denied: Initial-source heuristic exceeds maximumSteps: 80476 > 75000; Initial-source heuristic exceeds maximumCellSteps: 12171834048 > 1359600000; Fast end of the heuristic 3 to 8 million cellsteps/s range exceeds wall-time cap"
+      },
+      "diagnosticGeometryDifferences": null,
+      "wallTime_s": 1.4699995517730713e-05,
+      "endedAt": "2026-10-02T02:38:52.809974+00:00"
+    }
+  },
+  "assumptions": {
+    "absorptivity": {
+      "value": 0.35,
+      "basis": "Explicit nominal model assumption, not measured NIST absorptivity; not fitted."
+    },
+    "sourcePenetration_um": {
+      "value": 80.0,
+      "basis": "Explicit nominal volumetric deposition assumption, not an optical or measured NIST penetration depth; not fitted."
+    },
+    "preheat_C": {
+      "value": 80.0,
+      "basis": "Application nominal default, explicit model assumption. Table 5 does not state preheat/ambient temperature. Table 6 pad 22 C is not applied to Table 5."
+    },
+    "beamMapping": "Published 2D Gaussian regression diameter 72 um is mapped to ideal Gaussian 1/e2 diameter; actual measured profile is unavailable.",
+    "plateAndBoundaries": "Model depth about 320 um vs published plate 3170 um; fixed preheat base and insulated sides. Full plate/support geometry is not represented.",
+    "operator": "Single nearest-midpoint accepted-max liquidus thermal contour vs six etched/solidified SAM-segmented measurements from three tracks. Bead, area, and surface deformation are not reproduced.",
+    "numerics": "Two finite-length locality cases, common 20 um effective dx and exact centre cell to roundoff. mesh_um request is nextafter(20,+infinity) to avoid an extra cell from floating ceil. No mesh/time convergence or 8 mm equivalence.",
+    "locality": "Compare central accepted-max liquidus W/D for two truncated tracks with source crossing at each track midpoint. Start distances are several sqrt(4*alpha_max*full_run_time) lengths, using model table diffusivity. This rationale is not a truncation-error bound; transverse, bottom, source-history and etched-operator mismatches persist.",
+    "localLengthThreshold": "Both absolute W/D differences must be at most one effective mesh h; otherwise inconclusive. Passing this sensitivity criterion establishes no equivalence to 8 mm NIST geometry."
+  },
+  "cases": [],
+  "limits": {
+    "maximumCells": 200000,
+    "maximumSteps": 75000,
+    "maximumCellSteps": 1359600000,
+    "maximumRssBytes": 536870912,
+    "maximumWallTime_s": 600.0,
+    "maximumReportBytes": 2000000
+  },
+  "runtimeWork": {
+    "attemptedSteps": 153,
+    "attemptedCellSteps": 3219885,
+    "maximumSampledRssBytes": 104497152,
+    "wallTime_s": 0.7122926999873016
+  },
+  "error": {
+    "type": "ValueError",
+    "message": "Thermal model validity exceeded at or above the material boiling limit (specific enthalpy 2154529.17 J/kg; limit 2153440 J/kg at 3123.15 K; cell=(np.int64(6), np.int64(11), np.int64(14)), previous T=3106.85 K, previous specific enthalpy=2141538.68 J/kg, dt=2.15573771e-07 s, source rate=8.10792145e+14 W/m³, net rate=4.90859947e+14 W/m³); evaporation/free-surface CFD required"
+  },
+  "diagnosticGeometryDifferences": null,
+  "wallTime_s": 0.7179807999928016,
+  "endedAt": "2026-10-02T02:53:52.331306+00:00",
+  "workCountSemantics": "Attempted steps count conduction assemblies; a failing final assembly may not be accepted. Accepted counts are exact only for completed cases. Source-internal retries are reported by completed solver results.",
+  "failedCase": {
+    "trackLength_um": 1004.0,
+    "attemptedSteps": 153,
+    "attemptedCellSteps": 3219885,
+    "acceptedSteps": null,
+    "reason": "Failure occurred before a complete solver result was available"
+  },
+  "unexecutedTrackLengths_um": [
+    1604.0
+  ]
+}

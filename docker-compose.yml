@@ -1,0 +1,41 @@
+# `docker compose up -d app` was run locally on 2026-10-04 (container healthy; /api/health 200, unauthenticated /api 401);
+# not run in CI. See docs/APPLICATION_PACKAGING_NOTES.md, "Docker verification".
+services:
+  app:
+    build:
+      context: .
+      target: runtime
+    # Published on host loopback only by default. To expose it on the network, use "3000:3000" (or
+    # "<host-ip>:3000:3000") and put a TLS reverse proxy in front (then set METALLIKSA_TRUST_PROXY).
+    ports:
+      - "127.0.0.1:3000:3000"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      # Bind all container interfaces so the published port is reachable (the image default too). This turns the
+      # login flow ON: open the one-time link from `docker compose logs app` (replace its port with the host port),
+      # or set METALLIKSA_TOKEN. Every /api route except /api/health needs login.
+      METALLIKSA_HOST: "0.0.0.0"
+      AIRGAPPED: "1"
+      METALLIKSA_LPBF_SOURCE_ROOT: /data/lpbf-sources
+      METALLIKSA_LPBF_RUN_ROOT: /data/lpbf-runs
+      METALLIKSA_LPBF_BUNDLE_ROOT: /data/lpbf-run-bundles
+      METALLIKSA_JOB_ROOT: /data/lpbf-jobs
+      RESEARCH_REGISTRY_DIR: /data/research-registry
+    volumes:
+      - metalliksa-data:/data
+    # No healthcheck override: the image's HEALTHCHECK calls the unauthenticated /api/health on $PORT.
+    restart: unless-stopped
+
+  # Verification run (lint, unit tests, build, CPU meltpool tests):
+  #   docker compose --profile repro build repro
+  repro:
+    profiles: ["repro"]
+    build:
+      context: .
+      target: verify
+
+volumes:
+  metalliksa-data:

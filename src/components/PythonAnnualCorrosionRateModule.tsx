@@ -27,6 +27,9 @@ import {
   TafelDataset,
 } from "../types/tafel";
 import { calculatePythonTafelCorrosionRate } from "../services/pythonComputationService";
+import { fmtTafelNumber, fmtTafelQuantity, tafelUnavailableReason, UNAVAILABLE_TEXT } from "../utils/tafelDisplay";
+import { isPythonValidationError } from "../utils/pythonValidationError";
+import { COMMON_ALLOYS } from "../utils/tafelParser";
 
 interface Props {
   tafelFit?: TafelFitResult | null;
@@ -35,17 +38,25 @@ interface Props {
   onNavigateToTafel?: () => void;
 }
 
-const ALLOY_PRESETS = [
-  { id: "steel-316l", name: "AISI 316L Stainless Steel", density: 7.98, ew: 25.68, category: "Stainless" },
-  { id: "steel-304", name: "AISI 304 Stainless Steel", density: 7.93, ew: 25.12, category: "Stainless" },
-  { id: "steel-1018", name: "Carbon Steel (AISI 1018)", density: 7.87, ew: 27.92, category: "Carbon Steel" },
-  { id: "ti-6al-4v", name: "Titanium Ti-6Al-4V (Grade 5)", density: 4.43, ew: 11.97, category: "Titanium" },
-  { id: "al-7075", name: "Aerospace Al 7075-T6", density: 2.81, ew: 9.15, category: "Aluminum" },
-  { id: "al-6061", name: "Structural Al 6061-T6", density: 2.70, ew: 9.02, category: "Aluminum" },
-  { id: "cu-c110", name: "Pure Copper (ETP C11000)", density: 8.94, ew: 31.77, category: "Copper" },
-  { id: "inconel-718", name: "Inconel 718 Superalloy", density: 8.19, ew: 26.45, category: "Nickel" },
-  { id: "az31b", name: "Magnesium Alloy AZ31B", density: 1.77, ew: 12.28, category: "Magnesium" },
+// density and EW come from src/utils/tafelParser.ts COMMON_ALLOYS, which mirrors
+// python/alloy_registry.py (one source; python/test_phase6a_migration.py checks it).
+// "common" names the COMMON_ALLOYS row for each solver alloy id sent to Python.
+const ALLOY_PRESET_IDS = [
+  { id: "steel-316l", common: "ss316l", name: "AISI 316L Stainless Steel", category: "Stainless" },
+  { id: "steel-304", common: "ss304", name: "AISI 304 Stainless Steel", category: "Stainless" },
+  { id: "steel-1018", common: "steel1018", name: "Carbon Steel (AISI 1018)", category: "Carbon Steel" },
+  { id: "ti-6al-4v", common: "ti64", name: "Titanium Ti-6Al-4V (Grade 5)", category: "Titanium" },
+  { id: "al-7075", common: "al7075", name: "Aerospace Al 7075-T6", category: "Aluminum" },
+  { id: "al-6061", common: "al6061", name: "Structural Al 6061-T6", category: "Aluminum" },
+  { id: "cu-c110", common: "cu_c110", name: "Pure Copper (ETP C11000)", category: "Copper" },
+  { id: "inconel-718", common: "inconel718", name: "Inconel 718 Superalloy", category: "Nickel" },
+  { id: "az31b", common: "az31b", name: "Magnesium Alloy AZ31B", category: "Magnesium" },
 ];
+const ALLOY_PRESETS = ALLOY_PRESET_IDS.map((p) => {
+  const row = COMMON_ALLOYS.find((a) => a.id === p.common);
+  if (!row) throw new Error(`COMMON_ALLOYS has no row ${p.common}`);
+  return { id: p.id, name: p.name, density: row.density, ew: row.equivalentWeight, category: p.category };
+});
 
 export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
   tafelFit,
@@ -55,17 +66,21 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
 }) => {
   // Input parameters state, initialized from tafelFit and dataset if available
   const [alloyId, setAlloyId] = useState<string>("steel-316l");
-  const [customDensity, setCustomDensity] = useState<number>(7.98);
-  const [customEw, setCustomEw] = useState<number>(25.68);
+  const [customDensity, setCustomDensity] = useState<number>(ALLOY_PRESETS[0].density);
+  const [customEw, setCustomEw] = useState<number>(ALLOY_PRESETS[0].ew);
   const [initialThicknessMm, setInitialThicknessMm] = useState<number>(5.0);
   const [allowableLossMm, setAllowableLossMm] = useState<number>(1.5);
   const [temperatureC, setTemperatureC] = useState<number>(25.0);
-  const [manualIcorr, setManualIcorr] = useState<number>(1.25);
+  // No default current density: without a Tafel fit or an entered value the rate is unavailable (null = not entered).
+  const [manualIcorr, setManualIcorr] = useState<number | null>(null);
   const [overrideIcorr, setOverrideIcorr] = useState<boolean>(false);
 
   // Python Calculation State
   const [loading, setLoading] = useState<boolean>(false);
   const [result, setResult] = useState<TafelPythonCorrosionRateResult | null>(null);
+  // Set when the engine reports the rate as unavailable (no corrosion current density): the reason is shown instead.
+  const [unavailableRate, setUnavailableRate] = useState<TafelPythonCorrosionRateResult | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"summary" | "timeline" | "temperature" | "pythonCode">("summary");
   const [copiedCode, setCopiedCode] = useState<boolean>(false);
 
@@ -85,17 +100,19 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
   }, [dataset]);
 
   // Determine active Icorr value: either manual override or from Tafel fit
-  const activeIcorr = useMemo(() => {
+  const activeIcorr = useMemo((): number | null => {
     if (overrideIcorr) return manualIcorr;
     if (tafelFit?.iCorr_uA_cm2 && tafelFit.iCorr_uA_cm2 > 0) {
       return tafelFit.iCorr_uA_cm2;
     }
-    return manualIcorr;
+    return null;
   }, [overrideIcorr, manualIcorr, tafelFit]);
 
-  const activeEcorr = tafelFit?.eCorr ?? -0.35;
-  const activeBetaA = tafelFit?.betaA_V_dec ?? 0.12;
-  const activeBetaC = tafelFit?.betaC_V_dec ?? 0.10;
+  // Nothing is assumed: a missing Ecorr / Tafel slope is sent as null (the engine then leaves Stern-Geary B and Rp
+  // unavailable; the Faraday rate does not need them).
+  const activeEcorr = tafelFit?.eCorr ?? null;
+  const activeBetaA = tafelFit?.betaA_V_dec ?? null;
+  const activeBetaC = tafelFit?.betaC_V_dec ?? null;
   const activeArea = dataset?.metadata.electrodeAreaCm2 ?? 1.0;
 
   // Handler to update preset selection
@@ -129,8 +146,22 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
 
     try {
       const res = await calculatePythonTafelCorrosionRate(inputPayload);
-      setResult(res);
+      if (res.status === "unavailable") {
+        // Nothing can be computed: do not keep showing a result computed for other inputs.
+        setResult(null);
+        setUnavailableRate(res);
+      } else {
+        setResult(res);
+        setUnavailableRate(null);
+      }
+      setValidationError(null);
     } catch (err) {
+      if (isPythonValidationError(err)) {
+        // Rejected input: do not keep showing a result computed for other inputs.
+        setResult(null);
+        setUnavailableRate(null);
+        setValidationError(err.message);
+      }
       console.error("Failed to calculate annual corrosion rate in Python:", err);
     } finally {
       setLoading(false);
@@ -227,20 +258,31 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
 
       {/* Main Container Layout */}
       <div className="p-5 space-y-6">
+        {validationError && (
+          <div role="alert" className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-700 dark:text-rose-300 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>{validationError}</span>
+          </div>
+        )}
         {/* Source Icorr Banner */}
         <div className="p-3.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-slate-700 dark:text-slate-300">Tafel Fit Coupling:</span>
-            {tafelFit ? (
+            {tafelFit && tafelFit.iCorr_uA_cm2 !== null ? (
               <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                Active fit available (Ecorr = {tafelFit.eCorr.toFixed(3)} V, Icorr ={" "}
-                {tafelFit.iCorr_uA_cm2.toFixed(4)} μA/cm²)
+                Active fit available (Ecorr = {fmtTafelQuantity(tafelFit.eCorr, "V", { digits: 3 })}, Icorr ={" "}
+                {fmtTafelQuantity(tafelFit.iCorr_uA_cm2, "μA/cm²", { digits: 4 })})
+              </span>
+            ) : tafelFit ? (
+              <span className="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                <Info className="w-3.5 h-3.5" />
+                Tafel fit {UNAVAILABLE_TEXT}: {tafelUnavailableReason(tafelFit) || "no corrosion current density"}
               </span>
             ) : (
               <span className="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
                 <Info className="w-3.5 h-3.5" />
-                No active fit loaded yet (using benchmark reference values)
+                No active fit loaded yet; load a polarization file or enter a manual Icorr (no default value is used)
               </span>
             )}
           </div>
@@ -266,6 +308,21 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
           </div>
         </div>
 
+        {unavailableRate && (
+          <div role="status" className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>
+              <strong>{UNAVAILABLE_TEXT}.</strong> {unavailableRate.unavailableReason}
+            </span>
+          </div>
+        )}
+        {result?.status === "partial" && (
+          <div role="status" className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{result.unavailableReason}</span>
+          </div>
+        )}
+
         {/* Primary Hero Metrics Card */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           {/* Hero Annual Rate Metric */}
@@ -287,7 +344,7 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
 
             <div className="mt-3 flex items-baseline gap-2">
               <span className="text-4xl sm:text-5xl font-extrabold tracking-tight font-mono text-slate-900 dark:text-slate-100">
-                {result ? result.corrosionRateMmYr.toFixed(5) : "—"}
+                {result ? fmtTafelNumber(result.corrosionRateMmYr, { digits: 5 }) : unavailableRate ? UNAVAILABLE_TEXT : "—"}
               </span>
               <span className="text-base font-semibold text-slate-600 dark:text-slate-400">mm / year</span>
             </div>
@@ -297,19 +354,19 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
               <div>
                 <span className="text-slate-500 dark:text-slate-400 block">Mils / Year (mpy)</span>
                 <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-sm">
-                  {result ? result.corrosionRateMpy.toFixed(3) : "—"}
+                  {result ? fmtTafelNumber(result.corrosionRateMpy, { digits: 3 }) : unavailableRate ? UNAVAILABLE_TEXT : "—"}
                 </span>
               </div>
               <div>
                 <span className="text-slate-500 dark:text-slate-400 block">Penetration (μm/yr)</span>
                 <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-sm">
-                  {result ? result.corrosionRateUmYr.toFixed(2) : "—"}
+                  {result ? fmtTafelNumber(result.corrosionRateUmYr, { digits: 2 }) : unavailableRate ? UNAVAILABLE_TEXT : "—"}
                 </span>
               </div>
               <div>
                 <span className="text-slate-500 dark:text-slate-400 block">Mass Loss (g/m²·day)</span>
                 <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-sm">
-                  {result ? result.massLoss_g_m2_day.toFixed(4) : "—"}
+                  {result ? fmtTafelNumber(result.massLoss_g_m2_day, { digits: 4 }) : unavailableRate ? UNAVAILABLE_TEXT : "—"}
                 </span>
               </div>
             </div>
@@ -330,7 +387,7 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
                   Electrochemical Kinetic Factors
                 </span>
                 <span className="text-xs font-mono text-slate-600 dark:text-slate-400">
-                  i_corr = {activeIcorr.toFixed(4)} μA/cm²
+                  i_corr = {fmtTafelQuantity(activeIcorr, "μA/cm²", { digits: 4 })}
                 </span>
               </div>
 
@@ -338,13 +395,13 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
                 <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
                   <span className="text-slate-500 dark:text-slate-400 block">Polarization Resistance (Rp)</span>
                   <span className="text-sm font-mono font-bold text-slate-900 dark:text-slate-100">
-                    {result ? result.rp_ohm_cm2.toLocaleString() : "—"} Ω·cm²
+                    {result ? fmtTafelQuantity(result.rp_ohm_cm2, "Ω·cm²", { grouped: true }) : unavailableRate ? UNAVAILABLE_TEXT : "—"}
                   </span>
                 </div>
                 <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
                   <span className="text-slate-500 dark:text-slate-400 block">Stern-Geary B Constant</span>
                   <span className="text-sm font-mono font-bold text-slate-900 dark:text-slate-100">
-                    {result ? result.sternGearyB_V.toFixed(4) : "—"} V
+                    {result ? fmtTafelQuantity(result.sternGearyB_V, "V", { digits: 4 }) : unavailableRate ? UNAVAILABLE_TEXT : "—"}
                   </span>
                 </div>
                 <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
@@ -369,7 +426,7 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
                 <span>RUL Uniform ({allowableLossMm} mm allowance):</span>
               </div>
               <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400 text-sm">
-                {result?.rulUniformYears !== undefined ? `${result.rulUniformYears} Years` : "—"}
+                {result && result.rulUniformYears !== null ? `${result.rulUniformYears} Years` : unavailableRate ? UNAVAILABLE_TEXT : "—"}
               </span>
             </div>
           </div>
@@ -393,7 +450,7 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
               <label className="block text-slate-600 dark:text-slate-400 mb-1 font-medium">
                 Alloy Substrate
               </label>
-              <select
+              <select aria-label="Alloy Substrate"
                 value={alloyId}
                 onChange={(e) => handleAlloyChange(e.target.value)}
                 className="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-medium"
@@ -412,19 +469,19 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
                 Density (g/cm³) / EW (g/eq)
               </label>
               <div className="grid grid-cols-2 gap-1.5">
-                <input
+                <input aria-label="Density (g/cm³)"
                   type="number"
                   step="0.01"
                   value={customDensity}
-                  onChange={(e) => setCustomDensity(parseFloat(e.target.value) || 7.98)}
+                  onChange={(e) => setCustomDensity(parseFloat(e.target.value) || ALLOY_PRESETS[0].density)}
                   className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-mono text-xs"
                   placeholder="Density"
                 />
-                <input
+                <input aria-label="EW (g/eq)"
                   type="number"
                   step="0.01"
                   value={customEw}
-                  onChange={(e) => setCustomEw(parseFloat(e.target.value) || 25.68)}
+                  onChange={(e) => setCustomEw(parseFloat(e.target.value) || ALLOY_PRESETS[0].ew)}
                   className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-mono text-xs"
                   placeholder="EW"
                 />
@@ -437,7 +494,7 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
                 Thickness / Allowance (mm)
               </label>
               <div className="grid grid-cols-2 gap-1.5">
-                <input
+                <input aria-label="Thickness (mm)"
                   type="number"
                   step="0.1"
                   value={initialThicknessMm}
@@ -445,7 +502,7 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
                   className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-mono text-xs"
                   placeholder="Thickness"
                 />
-                <input
+                <input aria-label="Allowance (mm)"
                   type="number"
                   step="0.1"
                   value={allowableLossMm}
@@ -462,7 +519,7 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
                 Temperature (°C) {overrideIcorr ? "| Icorr (μA/cm²)" : ""}
               </label>
               <div className="grid grid-cols-2 gap-1.5">
-                <input
+                <input aria-label="Temperature (°C)"
                   type="number"
                   step="1"
                   value={temperatureC}
@@ -470,12 +527,15 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
                   className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-mono text-xs"
                   placeholder="Temp °C"
                 />
-                <input
+                <input aria-label="Icorr (μA/cm²)"
                   type="number"
                   step="0.01"
                   disabled={!overrideIcorr}
-                  value={overrideIcorr ? manualIcorr : +activeIcorr.toFixed(4)}
-                  onChange={(e) => setManualIcorr(parseFloat(e.target.value) || 1.0)}
+                  value={overrideIcorr ? (manualIcorr ?? "") : activeIcorr === null ? "" : +activeIcorr.toFixed(4)}
+                  onChange={(e) => {
+                    const parsed = parseFloat(e.target.value);
+                    setManualIcorr(Number.isFinite(parsed) ? parsed : null);
+                  }}
                   className={`w-full px-2 py-1.5 rounded-lg border font-mono text-xs ${
                     overrideIcorr
                       ? "bg-white dark:bg-slate-900 border-indigo-400 text-slate-900 dark:text-slate-100"
@@ -551,7 +611,7 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
                   </p>
                   <ul className="space-y-1.5 text-slate-600 dark:text-slate-400">
                     <li>• <span className="font-mono font-medium">K1</span> = 3.27 × 10⁻³ mm·g / (μA·cm·year)</li>
-                    <li>• <span className="font-mono font-medium">i_corr</span> = {activeIcorr.toFixed(4)} μA/cm² (Extrapolated Tafel current density)</li>
+                    <li>• <span className="font-mono font-medium">i_corr</span> = {fmtTafelQuantity(activeIcorr, "μA/cm²", { digits: 4 })} (Extrapolated Tafel current density)</li>
                     <li>• <span className="font-mono font-medium">EW</span> = {customEw.toFixed(2)} g/equivalent (Equivalent weight of {ALLOY_PRESETS.find(p => p.id === alloyId)?.name})</li>
                     <li>• <span className="font-mono font-medium">ρ</span> = {customDensity.toFixed(2)} g/cm³ (Alloy bulk density)</li>
                   </ul>
@@ -563,12 +623,12 @@ export const PythonAnnualCorrosionRateModule: React.FC<Props> = ({
                     Industrial Recommendation & Mitigations
                   </h4>
                   <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300">
-                    <p className="font-medium">{result?.severity.recommendation}</p>
+                    <p className="font-medium">{result?.severity?.recommendation ?? UNAVAILABLE_TEXT}</p>
                   </div>
                   <div className="space-y-1 text-slate-600 dark:text-slate-400">
-                    <div>• Uniform Remaining Useful Life: <strong className="text-slate-900 dark:text-slate-100 font-mono">{result?.rulUniformYears} years</strong></div>
-                    <div>• Localized Pitting Risk Lifespan: <strong className="text-slate-900 dark:text-slate-100 font-mono">{result?.rulPittingYears} years</strong></div>
-                    <div>• Mass loss rate: <strong className="text-slate-900 dark:text-slate-100 font-mono">{result?.massLoss_mdd} mg/(dm²·day)</strong></div>
+                    <div>• Uniform Remaining Useful Life: <strong className="text-slate-900 dark:text-slate-100 font-mono">{result ? fmtTafelNumber(result.rulUniformYears) : UNAVAILABLE_TEXT} years</strong></div>
+                    <div>• Localized Pitting Risk Lifespan: <strong className="text-slate-900 dark:text-slate-100 font-mono">{result ? fmtTafelNumber(result.rulPittingYears) : UNAVAILABLE_TEXT} years</strong></div>
+                    <div>• Mass loss rate: <strong className="text-slate-900 dark:text-slate-100 font-mono">{result ? fmtTafelNumber(result.massLoss_mdd) : UNAVAILABLE_TEXT} mg/(dm²·day)</strong></div>
                   </div>
                 </div>
               </div>

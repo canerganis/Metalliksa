@@ -1,0 +1,25 @@
+{
+  "sourceRevision": "ec3a5fcbeb1c5aa1b250ed31a4e812796c5d17ce",
+  "snapshot": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-native-20261003",
+  "environmentFlags": {
+    "CODEX_SANDBOX_NETWORK_DISABLED": null,
+    "NPM_CONFIG_OFFLINE": null,
+    "HTTP_PROXY": null,
+    "HTTPS_PROXY": null,
+    "ALL_PROXY": null,
+    "NPM_CONFIG_PROXY": null,
+    "NPM_CONFIG_HTTPS_PROXY": null
+  },
+  "globalOrProxyConfigurationChanged": false,
+  "environmentOverrides": {
+    "METALLIX_PYTHON": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\lpbf-win-py312\\Scripts\\python.exe",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TEMP": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\native-temp",
+    "TMP": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\native-temp"
+  },
+  "node": "v24.20.0",
+  "npm": "11.19.0",
+  "ignoreScripts": "false",
+  "allowScripts": "",
+  "packageLockSha256": "6a8d67d1eb3a10d89272bfd9ca49089c2b9a090c0ffd5e56a89de3d02ebd1ff6"
+}

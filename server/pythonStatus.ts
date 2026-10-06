@@ -6,6 +6,10 @@ export class PythonReadiness {
   warmModules: string[] = [];
   unixActive = false;
   httpActive = false;
+  // Actual channel addresses announced by the daemon (ephemeral port, private socket directory).
+  httpPort: number | null = null;
+  unixSocketPath: string | null = null;
+  private announced = false;
 
   reset() {
     this.buffer = "";
@@ -14,6 +18,9 @@ export class PythonReadiness {
     this.warmModules = [];
     this.unixActive = false;
     this.httpActive = false;
+    this.httpPort = null;
+    this.unixSocketPath = null;
+    this.announced = false;
   }
 
   consume(chunk: string): boolean {
@@ -26,6 +33,12 @@ export class PythonReadiness {
       try {
         const message = JSON.parse(line);
         if (message?.status !== "ready") continue;
+        // Only the first ready message of a spawn counts: later lines cannot redirect the channels.
+        if (this.announced) continue;
+        this.announced = true;
+        this.httpPort = Number.isInteger(message.httpPort) && message.httpPort > 0 && message.httpPort <= 65535
+          ? message.httpPort : null;
+        this.unixSocketPath = typeof message.unixSocket === "string" && message.unixSocket ? message.unixSocket : null;
         this.unixActive = message.unixSocketActive === true;
         this.httpActive = message.httpActive === true;
         this.ready = this.unixActive || this.httpActive;

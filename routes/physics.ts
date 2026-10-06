@@ -1,12 +1,16 @@
 import { pythonStatusResponse } from "../server/pythonStatus.ts";
 import { Router, Request, Response } from "express";
 import { runPythonScript, pythonIPCSupervisor } from "../server/processOrchestrator.ts";
+import { pythonDispatchStatus } from "../server/pythonDispatchStatus.ts";
 
 export const physicsRouter = Router();
 
+// Overridable runner so route tests can exercise the status mapping without spawning Python.
+export const physicsDeps = { runPythonScript };
+
 async function handlePythonDispatch(scriptPath: string, payload: any, res: Response, timeoutMs: number = 25000) {
   try {
-    const pyRes = await runPythonScript(scriptPath, payload, [], timeoutMs);
+    const pyRes = await physicsDeps.runPythonScript(scriptPath, payload, [], timeoutMs);
     if (!pyRes.stdout && pyRes.stderr) {
       console.warn(`[Python stderr: ${scriptPath}]`, pyRes.stderr);
     }
@@ -24,7 +28,7 @@ async function handlePythonDispatch(scriptPath: string, payload: any, res: Respo
     } catch {
       parsed = { rawOutput: pyRes.stdout, stderr: pyRes.stderr, durationMs: pyRes.durationMs };
     }
-    return res.json(parsed);
+    return res.status(pythonDispatchStatus(parsed)).json(parsed);
   } catch (err: any) {
     console.error(`[Python error: ${scriptPath}]`, err);
     return res.status(500).json({
@@ -64,17 +68,9 @@ physicsRouter.post("/api/python/dft-properties", (req: Request, res: Response) =
   return handlePythonDispatch("python/dft_property_calculator.py", req.body, res);
 });
 
-// LPBF 3D Thermal Solvers
-physicsRouter.post("/api/python/lpbf-thermal", (req: Request, res: Response) => {
-  return handlePythonDispatch("python/lpbf_thermal_solver.py", req.body, res);
-});
-
+// LPBF 3D Thermal Solver
 physicsRouter.post("/api/python/lpbf-thermal-solver", (req: Request, res: Response) => {
   return handlePythonDispatch("python/lpbf_thermal_solver.py", req.body, res);
-});
-
-physicsRouter.post("/api/python/marangoni-pore-instability", (req: Request, res: Response) => {
-  return handlePythonDispatch("python/marangoni_pore_instability_solver.py", req.body, res);
 });
 
 physicsRouter.post("/api/python/stl-slicer-build-time", (req: Request, res: Response) => {
@@ -86,15 +82,6 @@ physicsRouter.post("/api/python/stl-slicer-build-time", (req: Request, res: Resp
 // Phase 6: Bayesian Process Window Optimization
 physicsRouter.post("/api/python/lpbf-bayesian-optimize", (req: Request, res: Response) => {
   return handlePythonDispatch("python/lpbf_bayesian_optimizer.py", req.body, res, 120000);
-});
-
-physicsRouter.post("/api/python/part-scale-inherent-strain", (req: Request, res: Response) => {
-  return handlePythonDispatch("python/part_scale_inherent_strain_solver.py", req.body, res);
-});
-
-// Inverse Alloy Optimizer
-physicsRouter.post("/api/python/inverse-alloy-optimize", (req: Request, res: Response) => {
-  return handlePythonDispatch("python/inverse_alloy_optimizer.py", req.body, res);
 });
 
 // Pourbaix Diagram
@@ -115,4 +102,16 @@ physicsRouter.post("/api/python/icme-multiscale-pipeline", (req: Request, res: R
 // Stochastic UQ MMPDS
 physicsRouter.post("/api/python/stochastic-uq-mmpds", (req: Request, res: Response) => {
   return handlePythonDispatch("python/stochastic_uq_mmpds_solver.py", req.body, res);
+});
+
+// Micrograph measurement (python/micrograph_measure.py). Runs in the Python IPC process pool (or an ad-hoc
+// process), not in the serial LPBF worker, so a large image neither hits the worker's 1 MB RPC line limit nor
+// holds up LPBF job calls. A 4096 x 4096 8-bit image is 22.4 MB as base64 JSON; the authority enforces 4096 px.
+export const MICROGRAPH_MAX_BODY_BYTES = 24_000_000;
+export const MICROGRAPH_TIMEOUT_MS = 60_000;
+physicsRouter.post("/api/python/micrograph-measure", (req: Request, res: Response) => {
+  if (Buffer.byteLength(JSON.stringify(req.body ?? null)) > MICROGRAPH_MAX_BODY_BYTES) {
+    return res.status(413).json({ error: "Micrograph image too large (at most 4096 x 4096 pixels, 8-bit)." });
+  }
+  return handlePythonDispatch("python/micrograph_measure.py", req.body, res, MICROGRAPH_TIMEOUT_MS);
 });

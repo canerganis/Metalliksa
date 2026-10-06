@@ -1,10 +1,13 @@
 import { createHash } from 'node:crypto';
+import { in625GeorgiaTechPropertyCatalogEntry, in625NasaPropertyCatalogEntry } from './lpbfPropertySourceCatalog';
 import { lstatSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { artifactDirectory, LpbfArtifactStore } from './lpbfArtifactStore';
 import { LpbfSourceRepository, validateSourceDocument } from './lpbfSourceRepository';
 import { dryRunSourceImport, importSource } from './lpbfSourceImport';
-import { nistIn718CatalogEntry, cmuTi64CatalogEntry, type LpbfSourceCatalogEntry } from './lpbfSourceCatalog';
+import { nistIn718CatalogEntry, cmuTi64CatalogEntry, nistOpticalTable4CatalogEntry, nistOpticalOfficialWorkbookCatalogEntry,
+  nistSupplementalIn718CatalogEntry, nistOpticalCase0MicrographsCatalogEntry, in625BareplateScreeningCatalogEntry,
+  type LpbfSourceCatalogEntry } from './lpbfSourceCatalog';
 
 export class LpbfSourceArchiveError extends Error {
   constructor(readonly status: number, message: string) { super(message); }
@@ -14,7 +17,10 @@ const digest = (document: unknown) => createHash('sha256').update(JSON.stringify
 export class LpbfSourceArchiveService {
   private busy = false;
   constructor(private readonly storageRoot = path.resolve(process.env.METALLIKSA_LPBF_SOURCE_ROOT || '.lpbf-sources'),
-    private readonly entries: LpbfSourceCatalogEntry[] = [nistIn718CatalogEntry(), cmuTi64CatalogEntry()]) {}
+    private readonly entries: LpbfSourceCatalogEntry[] = [nistIn718CatalogEntry(), cmuTi64CatalogEntry(), nistOpticalTable4CatalogEntry(),
+      nistOpticalOfficialWorkbookCatalogEntry(), nistSupplementalIn718CatalogEntry(),
+      nistOpticalCase0MicrographsCatalogEntry(), in625BareplateScreeningCatalogEntry(),
+      in625GeorgiaTechPropertyCatalogEntry(), in625NasaPropertyCatalogEntry()]) {}
 
   catalog() { return { sources: this.entries.map(({ datasetId, title }) => ({ datasetId, title })) }; }
 
@@ -50,6 +56,34 @@ export class LpbfSourceArchiveService {
     const repository = this.repository(true);
     try { return { current: repository?.current(datasetId) ?? null }; }
     finally { repository?.close(); }
+  }
+
+  revisions(datasetId: string, offset = 0, limit = 100) {
+    this.entry(datasetId);
+    if (!Number.isSafeInteger(offset) || offset < 0 || !Number.isSafeInteger(limit) || limit < 1 || limit > 100) {
+      throw new LpbfSourceArchiveError(400, 'Invalid source revision history pagination.');
+    }
+    const repository = this.repository(true);
+    try {
+      const records = repository?.history(datasetId, offset, limit) ?? [];
+      const latest = repository?.current(datasetId)?.revision ?? 0;
+      const revisions = records.map(({ revision, createdAt, documentSha256, evidenceStatus, artifactIntegrity, document }) => ({
+        revision, createdAt, documentSha256, evidenceStatus, artifactIntegrity,
+        materialId: document.materialId, processScope: document.processScope,
+      }));
+      return { datasetId, offset, limit, revisions, hasMore: offset + revisions.length < latest };
+    } finally { repository?.close(); }
+  }
+
+  revision(datasetId: string, revision: number) {
+    this.entry(datasetId);
+    if (!Number.isSafeInteger(revision) || revision < 1) throw new LpbfSourceArchiveError(400, 'Invalid source revision.');
+    const repository = this.repository(true);
+    try {
+      const value = repository?.revision(datasetId, revision) ?? null;
+      if (!value) throw new LpbfSourceArchiveError(404, 'Source revision was not found.');
+      return { datasetId, revision: value };
+    } finally { repository?.close(); }
   }
 
   private async exclusive<T>(action: () => Promise<T>): Promise<T> {

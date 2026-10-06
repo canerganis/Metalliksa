@@ -1,0 +1,32 @@
+# Backend measurement contract review — 2026-10-03
+
+Read-only review of Sol's measurement submission change against the current Python backend. No production source, tests, STATUS, or index files were changed.
+
+## Backend contract
+
+`python/lpbf_evidence.py:8-11` declares exactly 22 `PROCESS_KEYS`: `material`, `power_W`, `speed_mm_s`, `beamDiameter_um`, `preheat_C`, `layer_um`, `hatch_um`, `tracks`, `layers`, `trackLength_um`, `strategy`, `scanAngle_deg`, `layerRotation_deg`, `dwell_s`, `packingFraction`, `stripeWidth_um`, `islandSize_um`, `absorptivity`, `emissivity`, `powderConductivityRatio`, `convection_W_m2K`, and `cooling_s`.
+
+`measurement_evidence` at `python/lpbf_evidence.py:23-52` requires positive finite numeric `width_um` and `depth_um`, a nonempty source, and rejects unknown row fields. Python checks `type(value) in (int, float)` for dimensions and uncertainty, so booleans and JSON numeric strings are rejected; uncertainty must contain exactly `width_um` and `depth_um`, both finite and nonnegative. `processVector` must be an object with exactly all 22 keys. Bool values are explicitly rejected and other values must equal the resolved process input; numeric strings therefore fail equality with numeric controls. Missing `processVector` is accepted only as `sameProcessVector="unverified"`.
+
+`python/lpbf_simulation.py:243-247` resolves material `absorptivity`/`emissivity` into `p` before validating measurements. Exact process-vector matching is thus against normalized worker inputs. In `python/lpbf_simulation.py:1102-1113`, comparison metrics are computed from supplied dimensions, then every calibration factor is nulled when any evidence row lacks a match. This is comparison metadata only, not solver correction or experimental validation.
+
+## Frontend review
+
+`src/components/3d-distortion-lab/LpbfEngineeringSimulation.tsx` now declares the exact 22-key vector; its test reads backend `PROCESS_KEYS` and compares the key sets. Valid supplied vectors are copied as-is. A missing vector remains absent and increments the unknown-condition count; malformed/partial vectors return an error instead of being filled from controls. Manual measurements contain only the entered dimensions/source and optional user-entered uncertainty/holdout; they do not synthesize a process vector. Parsed JSON dimensions and uncertainty use strict `typeof number` plus finite/range checks, rejecting booleans and numeric strings.
+
+The frontend tests in `tests/lpbf-measurement-submission.test.ts` cover these cases, including no vector for conditionless/manual evidence, preservation of all 22 supplied fields, exact backend key-set parity, malformed/partial vector rejection, and raw JSON boolean/string dimension and uncertainty rejection. No new frontend tests were run as part of this backend review; their assertions were inspected only.
+
+One narrow contract difference: the frontend reconstructs each replicate from recognized fields, so an unrecognized top-level replicate property is silently omitted before submission; direct backend input rejects such unknown fields. This does not alter or synthesize any of the required 22 process conditions, but the UI does not surface that extra property as an error.
+
+## Bounded verification
+
+Locked interpreter: `.runtime/lpbf-win-py312/Scripts/python.exe`, with `-B`, `PYTHONDONTWRITEBYTECODE=1`, and TMP/TEMP/TMPDIR pointed to this review's isolated scratch directory.
+
+1. `python -B -m unittest test_lpbf_engineering.Verification.test_nested_schema_and_measurement_evidence` — **1 test, PASS** (4.411 s). This existing fixture exercises a matching full vector with uncertainty and a CPU reference run, then a missing-vector CPU reference run whose calibration factor is withheld; it also checks boolean dimensions and process-vector mismatch rejection. The fixed case is 40 W, 40 µm mesh, 200 µm track length; no GPU or large solve was requested or run.
+2. Inline locked-Python `measurement_evidence` contract assertions — **PASS**: 22-key complete vector accepted, absent vector classified `unverified`, and **8/8** malformed cases rejected (boolean/string dimensions; boolean/string uncertainty; partial vector; boolean/string vector values).
+
+Logs: `luna-backend-unit.log`, `luna-backend-validator.log` in this directory. Graft lookups were first: measurement validator/source links, existing calibration test locations, and current backend process-key/normalization spans. Graft reported approximately 177.510 tokens saved over three lookups.
+
+## Limits
+
+Fixtures are synthetic schema evidence; passing validation and withheld-factor behavior do not establish numerical agreement, calibration validity, or experimental accuracy. Real-browser/keyboard reproduction remains incomplete because browser acceptance was denied earlier. No browser, GPU, new physics run, source edit, or test-source edit was performed here.

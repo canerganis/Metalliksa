@@ -23,7 +23,10 @@ def convergence(values, spacings):
     if r <= 1 or abs(spacings[1]/spacings[2]-r) > 0.02*r:
         return {"status": "inconclusive", "reason": "A constant refinement ratio > 1 is required"}
     a, b = values[0]-values[1], values[1]-values[2]
-    if a*b <= 0 or abs(a) <= abs(b):
+    # Cell extents can differ by a few ULPs after grid-coordinate arithmetic.
+    # Such differences cannot support an observed order or a GCI estimate.
+    roundoff = 32*math.ulp(max(values))
+    if abs(a) <= roundoff or abs(b) <= roundoff or a*b <= 0 or abs(a) <= abs(b):
         return {"status": "inconclusive", "reason": "Non-monotonic, unresolved or identical discrete geometry"}
     order = math.log(abs(a/b))/math.log(r)
     gci = 1.25*abs(b/values[2])/(r**order-1)

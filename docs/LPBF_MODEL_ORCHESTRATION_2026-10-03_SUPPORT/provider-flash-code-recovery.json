@@ -1,0 +1,17 @@
+{
+  "conversationId": "45cbb235-a646-469b-bace-471de17a1906",
+  "ownedPromptMatched": true,
+  "followupCliExecSession": 60929,
+  "followupCliExitCode": 0,
+  "messageIndex": 4,
+  "messageType": 15,
+  "messageStatus": 3,
+  "source": "completed CLI follow-up response; code fence recovered from its own read-only conversation cache",
+  "code": "provider-flash-code-recovered.py",
+  "codeSha256": "edbd890bd139fb33269851b82e99798eeeaa49bd640f0557f29b8bd985ae7e69",
+  "publicCodeReply": "provider-flash-followup-assistant.txt",
+  "publicCodeReplySha256": "0d0f0d0ae00cb05fb2397052d8fcc891438c046e28185fd9084184432c11aeb1",
+  "messagePayloadSha256": "24dee49aefc0fcdd3cd4096e8346eb6dc645a75c30a288a336fd4e6f41f87d8d",
+  "hiddenReasoningExported": false,
+  "originalPrintTimeoutPreserved": true
+}

@@ -33,7 +33,10 @@ export function resolvePythonCommand(options: PythonResolutionOptions): PythonCo
     }
   }
   candidates.push(...(platform === "win32"
-    ? [{ cmd: "py", prefix: ["-3"] }, { cmd: "python", prefix: [] }, { cmd: "python3", prefix: [] }]
+    // The supported interpreters (3.12, then 3.11) come before "any Python 3": `py -3` selects the newest install,
+    // which can be an unsupported 3.14 without numpy/scipy/warp while the supported one has them.
+    ? [{ cmd: "py", prefix: ["-3.12"] }, { cmd: "py", prefix: ["-3.11"] }, { cmd: "py", prefix: ["-3"] },
+      { cmd: "python", prefix: [] }, { cmd: "python3", prefix: [] }]
     : [{ cmd: "python3", prefix: [] }, { cmd: "python", prefix: [] }]));
   for (const command of candidates) if (probe(command)) return command;
   throw new Error("No working host Python found. Configure METALLIX_PYTHON or a project .venv / active VIRTUAL_ENV.");
@@ -76,14 +79,33 @@ export const getHostPython = createPythonRuntime({
   exists: existsSync, probe: probePythonCommand,
 }, loadPythonEnvironment);
 
+/** Environment for a WSL worker when METALLIKSA_JOB_ROOT is configured. Windows variables reach a wsl.exe
+ * child only when WSLENV lists them; without this the WSL worker silently ignored the configured root and used
+ * the checkout's .lpbf-jobs. '/p' translates the drive path to /mnt/<drive>/..., which WSL can do only for a
+ * drive-letter path, so UNC and \\wsl$ roots are rejected loudly. Returns a new object; never mutates env. */
+function wslJobRootEnvironment(env: Record<string, string | undefined>): Record<string, string | undefined> | undefined {
+  const configured = env.METALLIKSA_JOB_ROOT;
+  if (!configured) return undefined;
+  // A leading slash or backslash (UNC, \\wsl$, a Linux path, a root-relative path) would otherwise resolve
+  // silently onto the current drive, so it is rejected before resolving; a relative path resolves against cwd.
+  const resolved = /^[\\/]/.test(configured) ? configured : path.win32.resolve(configured);
+  if (!/^[A-Za-z]:[\\/]/.test(resolved)) {
+    throw new Error(`METALLIKSA_JOB_ROOT must be a drive-letter path (for example C:\\lpbf-jobs) for the WSL LPBF worker; UNC, \\\\wsl$ and Linux paths cannot be forwarded: ${configured}`);
+  }
+  const forwarded = (env.WSLENV ?? "").split(":").filter(entry => entry && entry.split("/")[0] !== "METALLIKSA_JOB_ROOT");
+  return { ...env, METALLIKSA_JOB_ROOT: resolved, WSLENV: [...forwarded, "METALLIKSA_JOB_ROOT/p"].join(":") };
+}
+
 /** An explicit host executable takes precedence; otherwise keep WSL first on Windows. */
 export function lpbfWorkerCommand(options: {
   platform: string; file: string; localFallback: boolean;
   env: Record<string, string | undefined>; hostPython: () => PythonCommand;
-}): { cmd: string; args: string[] } {
+}): { cmd: string; args: string[]; env?: Record<string, string | undefined> } {
   if (options.platform === "win32" && !options.localFallback && !options.env.METALLIX_PYTHON) {
     const linuxPath = options.file.replace(/^([A-Za-z]):/, (_, drive: string) => `/mnt/${drive.toLowerCase()}`).replaceAll("\\", "/");
-    return { cmd: "wsl.exe", args: ["-d", options.env.METALLIKSA_WSL_DISTRO || "Ubuntu-22.04", "--", "python3", "-u", linuxPath] };
+    const command = { cmd: "wsl.exe", args: ["-d", options.env.METALLIKSA_WSL_DISTRO || "Ubuntu-22.04", "--", "python3", "-u", linuxPath] };
+    const env = wslJobRootEnvironment(options.env);
+    return env ? { ...command, env } : command;
   }
   const python = options.hostPython();
   return { cmd: python.cmd, args: [...python.prefix, "-u", options.file] };

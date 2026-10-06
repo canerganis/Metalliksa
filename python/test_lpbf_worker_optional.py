@@ -21,9 +21,8 @@ class OptionalBackends(unittest.TestCase):
         messages = [
             {"id": 1, "method": "capabilities", "payload": None},
             {"id": 2, "method": "keyhole-raytracing", "payload": {}},
-            {"id": 3, "method": "modulus-fno", "payload": {}},
-            {"id": 4, "method": "transient-3d-gpu", "payload": {}},
-            {"id": 5, "method": "estimate", "payload": {"mode": "standard", "backend": "reference"}},
+            # modulus-fno (torch) and transient-3d-gpu (warp) RPCs were deleted on 2026-10-04.
+            {"id": 3, "method": "estimate", "payload": {"mode": "standard", "backend": "reference"}},
         ]
         with tempfile.TemporaryDirectory() as root:
             result = subprocess.run(
@@ -34,14 +33,19 @@ class OptionalBackends(unittest.TestCase):
             )
         self.assertEqual(result.returncode, 0, result.stderr)
         replies = [json.loads(line) for line in result.stdout.splitlines()]
-        self.assertEqual([reply["id"] for reply in replies], [1, 2, 3, 4, 5])
+        self.assertEqual([reply["id"] for reply in replies], [1, 2, 3])
         self.assertTrue(replies[0]["data"]["thermalSolver"])
-        for reply, dependency in zip(replies[1:4], ("warp", "torch", "warp")):
+        inventories = replies[0]["data"]["gpuDevices"]
+        self.assertEqual(set(inventories), {"torch", "warp"})
+        for inventory in inventories.values():
+            self.assertFalse(inventory["runtimeAvailable"])
+            self.assertEqual(inventory["devices"], [])
+        for reply, dependency in zip(replies[1:2], ("warp",)):
             self.assertNotIn("data", reply)
             self.assertIn(dependency, reply["error"])
-        self.assertNotIn("error", replies[4])
-        self.assertIsInstance(replies[4]["data"], dict)
-        self.assertTrue(replies[4]["data"])
+        self.assertNotIn("error", replies[2])
+        self.assertIsInstance(replies[2]["data"], dict)
+        self.assertTrue(replies[2]["data"])
 
 
 if __name__ == "__main__":

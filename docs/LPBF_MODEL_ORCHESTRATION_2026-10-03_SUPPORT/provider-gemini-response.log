@@ -1,0 +1,14 @@
+**Sentetik Operatör Kanıtının Değerlendirilmesi:**
+Mevcut sentetik operatör kanıtı (Coupled dx/dt diffusion RMS hatalarındaki azalma ve 1.993/1.998 mertebesindeki yakınsama sırası), matematiksel çözücünün temel difüzyon denklemleri için sentetik/üretilmiş problemlerde doğru ve istikrarlı çalıştığını *açıklar*. Ancak bu kanıt, gerçek LPBF (Lazer Toz Yatağı Füzyonu) sürecindeki karmaşık ısı transferini, gerçekçi mesh/zaman ölçeklerini ve malzeme dinamiklerini *açıklamaz*. Gerçek LPBF ağ/zaman sonuçları şu an belirsizdir ve deneysel geçerlilik henüz kanıtlanmamıştır. 
+
+**V1'i Kapatmak İçin Eksik Kanıt ve Kabul Dili:**
+*   **V1 İçin Gerekli Sayısal/Sistemsel Kanıt:** Çözücünün matematiksel doğruluğu (hata metrikleri) sağlandığı için V1 kapsamında çekirdek algoritma sayısal olarak yeterlidir. Şu an V1'i kapatmak için eksik olan temel metrik/kanıt; "Tam Node clean install/type/unit/build" süreçlerinin başarıyla kapandığını gösteren entegrasyon kanıtı ve tarayıcı izni sonrası alınacak "yeni commit için canlı UI kabulü"dür.
+*   **Kabul Dili Kısıtı:** "Sistem, sentetik uzay/zaman difüzyon testlerinde ikinci mertebeden sayısal yakınsama kanıtı sunmaktadır. Ancak bu matematiksel başarı, sistem NIST veya eşdeğer geçerli deneysel verilerle doğrulanana kadar gerçek fiziksel LPBF doğruluğu veya operasyonel kalibrasyon geçerliliği anlamına gelmez."
+
+**Sonraki Kontrollü Araştırma Tasarımı:**
+Fiziksel yakınsama ve doğrulama süreçleri, ancak V1'in kapatılıp "yeni fizik fazı" kilidi açıldıktan sonra başlamalıdır. Bu araştırma tasarımı; sentetik operatörden gerçek LPBF mesh/zaman koşullarına kontrollü geçişi, dış (NIST) referans verilerinin sisteme entegrasyonunu ve doğrulanmamış/manuel ölçümlerin güvenilir kalibrasyon faktörlerine dönüştürülmesi için gerekli deney senaryolarını içermelidir.
+
+**Öncelikli Üç Karar:**
+1.  **Fiziksel Başarı İddiasının Sınırlandırılması:** Sentetik difüzyon başarısının, gerçek LPBF fizik doğruluğunu kanıtladığı varsayımı reddedilmeli ve yeni fizik fazı V1 tamamen kabul edilene kadar dondurulmuş halde tutulmalıdır.
+2.  **Kalan V1 Sistem Testlerine Odaklanma:** Çözücü testleri (27 CPU testi) başarılı olduğundan, efor tamamen henüz kapanmamış olan Node clean install/build süreçlerinin tamamlanmasına ve kullanıcıdan tarayıcı izni geldiğinde gerçek canlı UI testinin (22 koşulun 7'ye indirilmesi işleminin onaylanması) yapılmasına yönlendirilmelidir.
+3.  **Sıkı Veri Güvenliği Politikalarının Korunması:** Backend'in bozuk JSON, bilinmeyen alanlar, yanlış veri tipleri (boolean/string sayılar) ve eksik/kısmi vektörleri reddeden katı yapısı korunmalı; doğrulanmamış koşulsuz ölçümlere kesinlikle kalibrasyon faktörü verilmemelidir.

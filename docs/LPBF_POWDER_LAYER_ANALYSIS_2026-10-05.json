@@ -1,0 +1,2990 @@
+{
+ "datasets": [
+  {
+   "citation": "Hofmann et al., melt-pool geometry data for 316L single tracks (Aconity Midi), Zenodo 10.5281/zenodo.16979848 (v1, 2025-08-28); associated paper Materials & Design 262 (2026) 115459, doi:10.1016/j.matdes.2026.115459.",
+   "doi": "10.5281/zenodo.16979848",
+   "id": "hofmann-316l-2026",
+   "license": "CC BY 4.0",
+   "materialKey": "316L Stainless Steel",
+   "notes": [
+    "Measured cross-sections from micrographs; the uncertainty budget is not stated in the files read.",
+    "The d_laser column is the laser spot DIAMETER in mm; the diameter definition (1/e^2 or other) is not stated on the Zenodo record and was not confirmed from the paper: treated as 1/e^2 by assumption.",
+    "Absorptivity is not measured; the comparison uses the repo's estimated 316L absorptivity.",
+    "Build-plate temperature is not given: 20 C is an assumption.",
+    "t_powder = 0 rows are bare plate; t_powder 30/60 um are powder layers (the packing is not stated).",
+    "The CSV header calls the area column 'um' although the values are um^2 (width x depth scale confirms).",
+    "677 rows contain repeated parameter sets (623 distinct) -- replicates are kept as separate rows.",
+    "Where the width/depth are taken along the track and whether the section is at steady state is not stated in the files read.",
+    "316L thermophysical properties used by the models are estimated, not measured."
+   ],
+   "rows": 677,
+   "sha256": "d4bbc7a60b536118586f44b64beb0fa20f94133f6d1a8d0fdcf726003720c3d8",
+   "source": {
+    "raw_bytes": 29660,
+    "raw_file": "MeltpoolGeometryData.csv",
+    "raw_md5": "2c107f3ac12cd38a0f1eb9f75a469000",
+    "raw_sha256": "5dd0629b3add839997fd54c3e4d89f90c1f2e4e5e717bede2c72e0c58cefd417"
+   },
+   "url": "https://zenodo.org/records/16979848"
+  }
+ ],
+ "generatedAt": "2026-10-05",
+ "honesty": {
+  "experimentalValidation": false,
+  "statement": "analysis of published single-track measurements and of model sensitivity; not experimental validation; no fitted constants; estimated material laws; the powder packing of the measurements is not stated"
+ },
+ "implementationHash": "11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359",
+ "kernelSensitivity": {
+  "cases": [
+   {
+    "beamDiameter_um": 110.0,
+    "byLayer_um": {
+     "10": {
+      "depth_um": 170.6,
+      "length_um": 1750.6,
+      "width_um": 220.3
+     },
+     "30": {
+      "depth_um": 170.6,
+      "length_um": 1750.6,
+      "width_um": 220.3
+     },
+     "60": {
+      "depth_um": 170.6,
+      "length_um": 1750.6,
+      "width_um": 220.3
+     }
+    },
+    "kernel": "rosenthal",
+    "maxRelativeDifference": 0.0,
+    "power_W": 500.0,
+    "rowId": "hofmann-0001",
+    "speed_mm_s": 900.0
+   },
+   {
+    "beamDiameter_um": 110.0,
+    "byLayer_um": {
+     "10": {
+      "depth_um": 119.6,
+      "length_um": 901.1,
+      "width_um": 171.0
+     },
+     "30": {
+      "depth_um": 119.6,
+      "length_um": 901.1,
+      "width_um": 171.0
+     },
+     "60": {
+      "depth_um": 119.6,
+      "length_um": 901.1,
+      "width_um": 171.0
+     }
+    },
+    "kernel": "eagar-tsai",
+    "maxRelativeDifference": 0.0,
+    "power_W": 500.0,
+    "rowId": "hofmann-0001",
+    "speed_mm_s": 900.0
+   },
+   {
+    "beamDiameter_um": 110.0,
+    "byLayer_um": {
+     "10": {
+      "depth_um": 119.6,
+      "length_um": 879.8,
+      "width_um": 161.3
+     },
+     "30": {
+      "depth_um": 119.6,
+      "length_um": 879.8,
+      "width_um": 161.3
+     },
+     "60": {
+      "depth_um": 119.6,
+      "length_um": 879.8,
+      "width_um": 161.3
+     }
+    },
+    "kernel": "goldak",
+    "maxRelativeDifference": 0.0,
+    "power_W": 500.0,
+    "rowId": "hofmann-0001",
+    "speed_mm_s": 900.0
+   },
+   {
+    "beamDiameter_um": 140.0,
+    "byLayer_um": {
+     "10": {
+      "depth_um": 35.5,
+      "length_um": 202.6,
+      "width_um": 155.5
+     },
+     "30": {
+      "depth_um": 35.5,
+      "length_um": 202.6,
+      "width_um": 155.5
+     },
+     "60": {
+      "depth_um": 35.5,
+      "length_um": 202.6,
+      "width_um": 155.5
+     }
+    },
+    "kernel": "rosenthal",
+    "maxRelativeDifference": 0.0,
+    "power_W": 300.0,
+    "rowId": "hofmann-0121",
+    "speed_mm_s": 900.0
+   },
+   {
+    "beamDiameter_um": 140.0,
+    "byLayer_um": {
+     "10": {
+      "depth_um": 50.6,
+      "length_um": 531.9,
+      "width_um": 155.4
+     },
+     "30": {
+      "depth_um": 50.6,
+      "length_um": 531.9,
+      "width_um": 155.4
+     },
+     "60": {
+      "depth_um": 50.6,
+      "length_um": 531.9,
+      "width_um": 155.4
+     }
+    },
+    "kernel": "eagar-tsai",
+    "maxRelativeDifference": 0.0,
+    "power_W": 300.0,
+    "rowId": "hofmann-0121",
+    "speed_mm_s": 900.0
+   },
+   {
+    "beamDiameter_um": 140.0,
+    "byLayer_um": {
+     "10": {
+      "depth_um": 61.1,
+      "length_um": 493.2,
+      "width_um": 123.0
+     },
+     "30": {
+      "depth_um": 61.1,
+      "length_um": 493.2,
+      "width_um": 123.0
+     },
+     "60": {
+      "depth_um": 61.1,
+      "length_um": 493.2,
+      "width_um": 123.0
+     }
+    },
+    "kernel": "goldak",
+    "maxRelativeDifference": 0.0,
+    "power_W": 300.0,
+    "rowId": "hofmann-0121",
+    "speed_mm_s": 900.0
+   },
+   {
+    "beamDiameter_um": 110.0,
+    "byLayer_um": {
+     "10": {
+      "depth_um": 313.3,
+      "length_um": 1895.1,
+      "width_um": 327.5
+     },
+     "30": {
+      "depth_um": 313.3,
+      "length_um": 1895.1,
+      "width_um": 327.5
+     },
+     "60": {
+      "depth_um": 313.3,
+      "length_um": 1895.1,
+      "width_um": 327.5
+     }
+    },
+    "kernel": "rosenthal",
+    "maxRelativeDifference": 0.0,
+    "power_W": 475.0,
+    "rowId": "hofmann-0261",
+    "speed_mm_s": 450.0
+   },
+   {
+    "beamDiameter_um": 110.0,
+    "byLayer_um": {
+     "10": {
+      "depth_um": 249.5,
+      "length_um": 881.8,
+      "width_um": 227.9
+     },
+     "30": {
+      "depth_um": 249.5,
+      "length_um": 881.8,
+      "width_um": 227.9
+     },
+     "60": {
+      "depth_um": 249.5,
+      "length_um": 881.8,
+      "width_um": 227.9
+     }
+    },
+    "kernel": "eagar-tsai",
+    "maxRelativeDifference": 0.0,
+    "power_W": 475.0,
+    "rowId": "hofmann-0261",
+    "speed_mm_s": 450.0
+   },
+   {
+    "beamDiameter_um": 110.0,
+    "byLayer_um": {
+     "10": {
+      "depth_um": 249.5,
+      "length_um": 871.7,
+      "width_um": 220.4
+     },
+     "30": {
+      "depth_um": 249.5,
+      "length_um": 871.7,
+      "width_um": 220.4
+     },
+     "60": {
+      "depth_um": 249.5,
+      "length_um": 871.7,
+      "width_um": 220.4
+     }
+    },
+    "kernel": "goldak",
+    "maxRelativeDifference": 0.0,
+    "power_W": 475.0,
+    "rowId": "hofmann-0261",
+    "speed_mm_s": 450.0
+   },
+   {
+    "beamDiameter_um": 140.0,
+    "byLayer_um": {
+     "10": {
+      "depth_um": 38.4,
+      "length_um": 216.1,
+      "width_um": 167.8
+     },
+     "30": {
+      "depth_um": 38.4,
+      "length_um": 216.1,
+      "width_um": 167.8
+     },
+     "60": {
+      "depth_um": 38.4,
+      "length_um": 216.1,
+      "width_um": 167.8
+     }
+    },
+    "kernel": "rosenthal",
+    "maxRelativeDifference": 0.0,
+    "power_W": 250.0,
+    "rowId": "hofmann-0401",
+    "speed_mm_s": 600.0
+   },
+   {
+    "beamDiameter_um": 140.0,
+    "byLayer_um": {
+     "10": {
+      "depth_um": 57.3,
+      "length_um": 464.2,
+      "width_um": 164.0
+     },
+     "30": {
+      "depth_um": 57.3,
+      "length_um": 464.2,
+      "width_um": 164.0
+     },
+     "60": {
+      "depth_um": 57.3,
+      "length_um": 464.2,
+      "width_um": 164.0
+     }
+    },
+    "kernel": "eagar-tsai",
+    "maxRelativeDifference": 0.0,
+    "power_W": 250.0,
+    "rowId": "hofmann-0401",
+    "speed_mm_s": 600.0
+   },
+   {
+    "beamDiameter_um": 140.0,
+    "byLayer_um": {
+     "10": {
+      "depth_um": 66.8,
+      "length_um": 438.0,
+      "width_um": 135.9
+     },
+     "30": {
+      "depth_um": 66.8,
+      "length_um": 438.0,
+      "width_um": 135.9
+     },
+     "60": {
+      "depth_um": 66.8,
+      "length_um": 438.0,
+      "width_um": 135.9
+     }
+    },
+    "kernel": "goldak",
+    "maxRelativeDifference": 0.0,
+    "power_W": 250.0,
+    "rowId": "hofmann-0401",
+    "speed_mm_s": 600.0
+   },
+   {
+    "beamDiameter_um": 110.0,
+    "byLayer_um": {
+     "10": {
+      "depth_um": 28.2,
+      "length_um": 159.7,
+      "width_um": 122.7
+     },
+     "30": {
+      "depth_um": 28.2,
+      "length_um": 159.7,
+      "width_um": 122.7
+     },
+     "60": {
+      "depth_um": 28.2,
+      "length_um": 159.7,
+      "width_um": 122.7
+     }
+    },
+    "kernel": "rosenthal",
+    "maxRelativeDifference": 0.0,
+    "power_W": 250.0,
+    "rowId": "hofmann-0601",
+    "speed_mm_s": 1200.0
+   },
+   {
+    "beamDiameter_um": 110.0,
+    "byLayer_um": {
+     "10": {
+      "depth_um": 40.3,
+      "length_um": 441.2,
+      "width_um": 123.0
+     },
+     "30": {
+      "depth_um": 40.3,
+      "length_um": 441.2,
+      "width_um": 123.0
+     },
+     "60": {
+      "depth_um": 40.3,
+      "length_um": 441.2,
+      "width_um": 123.0
+     }
+    },
+    "kernel": "eagar-tsai",
+    "maxRelativeDifference": 0.0,
+    "power_W": 250.0,
+    "rowId": "hofmann-0601",
+    "speed_mm_s": 1200.0
+   },
+   {
+    "beamDiameter_um": 110.0,
+    "byLayer_um": {
+     "10": {
+      "depth_um": 48.5,
+      "length_um": 409.7,
+      "width_um": 97.5
+     },
+     "30": {
+      "depth_um": 48.5,
+      "length_um": 409.7,
+      "width_um": 97.5
+     },
+     "60": {
+      "depth_um": 48.5,
+      "length_um": 409.7,
+      "width_um": 97.5
+     }
+    },
+    "kernel": "goldak",
+    "maxRelativeDifference": 0.0,
+    "power_W": 250.0,
+    "rowId": "hofmann-0601",
+    "speed_mm_s": 1200.0
+   }
+  ],
+  "fallbackWarnings": 45,
+  "kernels": [
+   "rosenthal",
+   "eagar-tsai",
+   "goldak"
+  ],
+  "layerIgnored": true,
+  "layers_um": [
+   10.0,
+   30.0,
+   60.0
+  ],
+  "maxRelativeDifference": 0.0,
+  "method": "calculate_meltpool_physics at layer 10/30/60 um, hatch 100 um, preheat 20 C, flat-plate pin (sys.modules['powder_bed_raytracer'] = None); relative difference = |x(layer) - x(10)| / x(10)",
+  "solverCalls": 45
+ },
+ "limits": [
+  "Replicates: 677 rows contain 623 distinct (P, v, d, t) cells; replicates are averaged per set and level, the scatter between replicates is not propagated separately.",
+  "The spot-diameter definition of d_laser is unknown (1/e^2 assumed); 'spot' splits are by the stated value.",
+  "Where along the track and at what steady-state criterion width/depth were measured is unknown; the depth reference surface (substrate vs powder surface) is also not stated, which matters for the powder-vs-bare depth difference.",
+  "No uncertainty budget for the measurements: the bootstrap CI covers parameter-set sampling only, not measurement error or confounding.",
+  "Single material (316L, one machine): nothing here transfers to other alloys.",
+  "Balling-flagged rows are kept (their share per thickness level is reported); regime labels are an inputs-only screening classifier, not the paper's definition.",
+  "The powder packing, particle size distribution and layer deposition of the measurements are not stated by Hofmann; a model packing of 0.55 is not a measured value.",
+  "Thickness is not randomised within a set: differences between levels can include run-order, plate or re-coating effects, so the ratios are descriptive, not causal.",
+  "The kernel sensitivity is a check of the code path (the layer argument is ignored), not of physics.",
+  "The reference-transient block is bounded (<= 6 cases) at a coarse 20 um mesh; layer 0 uses a different surface mode and an arbitrary source penetration, so it is not a clean powder-on/off contrast.",
+  "Literature: only the published Zehner-Schlunder gas-only form was computed; Sih-Barlow, Yagi-Kunii and Gusarov ratios are `unsourced`."
+ ],
+ "literature": {
+  "codeValue": {
+   "packingFraction": 0.55,
+   "powderConductivityRatio": 0.12,
+   "source": "none cited (lpbf_simulation.py DEFAULTS line 86; applied at line 575; bounds line 98)"
+  },
+  "laws": [
+   {
+    "citation": "Zehner & Schlunder (1970), Chem. Ing. Tech. 42(14), 933-941",
+    "computed": true,
+    "equationSource": "VDI Heat Atlas form reproduced as Eq. 7 in Particle-Resolved Computational Fluid Dynamics as the Basis for Thermal Process Intensification of Fixed-Bed Reactors on Multiple Scales (2021), https://www.mdpi.com/1996-1073/14/10/2913",
+    "form": "gas-conduction-only stagnant bed of spheres; published VDI Heat Atlas form with kappa = k_solid/k_gas, N = 1 - B/kappa and the logarithmic term denominator N^2; B = C ((1-porosity)/porosity)^(10/9), C = 1.25. The expression is checked by a separate transcription of the same published formula and phase-fraction/equal-conductivity regression tests; this is not independent physical validation.",
+    "name": "Zehner-Schlunder"
+   },
+   {
+    "citation": "Sih & Barlow (2004), Particulate Sci. Technol. 22(3), 427-440",
+    "computed": false,
+    "form": "ZS-type bed model extended with radiation and a particle emissivity model, up to high temperature",
+    "name": "Sih & Barlow",
+    "ratio": "unsourced",
+    "reason": "formula not retrieved or verified in this run; no number is quoted"
+   },
+   {
+    "citation": "Yagi & Kunii (1957), AIChE J. 3(3), 373-381",
+    "computed": false,
+    "form": "stagnant bed with gas, contact and radiation paths in series/parallel",
+    "name": "Yagi-Kunii",
+    "ratio": "unsourced",
+    "reason": "needs void-structure constants (phi, beta, gamma) and radiation coefficients that were not retrieved or verified in this run; no number is quoted"
+   },
+   {
+    "citation": "Gusarov, Laoui, Froyen, Titov (2003), Int. J. Heat Mass Transfer 46(6), 1103-1109",
+    "computed": false,
+    "form": "contact (neck) conductivity of a sintered/packed powder bed, gas conduction treated as secondary at ambient pressure",
+    "name": "Gusarov et al.",
+    "ratio": "unsourced",
+    "reason": "the contact-conductivity expression and the neck-size input are not available here; the page read in this run states the qualitative conclusion only; no number is quoted"
+   }
+  ],
+  "measuredSnippet": {
+   "source": "PMC7448231 (laser-flash inverse study of IN625 powder)",
+   "value": "powder conductivity 0.65-1.02 W/m/K reported for IN625 (other alloy; solid conductivity and conditions unsourced here, so no ratio is computed)"
+  },
+  "proposal": "A later reviewed change may replace the uncited 0.12 by a `literature`-tagged temperature-dependent law (Zehner-Schlunder/Sih-Barlow with radiation and contact terms from their cited sources) and report the delta in the validity envelope; that needs the unsourced inputs above to be sourced first. This record changes no code and no default.",
+  "status": "PROPOSAL for a reviewed `literature`-tagged law; nothing in the model was changed",
+  "zehnerSchlunderComputed": {
+   "cases": [
+    {
+     "B": 1.5622,
+     "k_eff_W_mK": 0.2188,
+     "k_eff_over_k_solid": 0.01342,
+     "k_gas_W_mK": 0.0177,
+     "k_solidSource": "repo estimated 316L k_solid (room-temperature value)",
+     "k_solid_W_mK": 16.3,
+     "kappa": 920.9,
+     "packing": 0.55,
+     "porosity": 0.45,
+     "ratioVsCode0p12": 0.112,
+     "shapeFactorC": 1.25
+    },
+    {
+     "B": 1.9614,
+     "k_eff_W_mK": 0.2694,
+     "k_eff_over_k_solid": 0.01653,
+     "k_gas_W_mK": 0.0177,
+     "k_solidSource": "repo estimated 316L k_solid (room-temperature value)",
+     "k_solid_W_mK": 16.3,
+     "kappa": 920.9,
+     "packing": 0.6,
+     "porosity": 0.4,
+     "ratioVsCode0p12": 0.138,
+     "shapeFactorC": 1.25
+    }
+   ],
+   "inputs": {
+    "contactConduction": "not included",
+    "gas": "argon, 1 bar, about 300 K",
+    "k_gasSource": "unsourced (handbook value recalled, not looked up in this run)",
+    "k_gas_W_mK": 0.0177,
+    "k_solidSource": "repo estimated 316L value (four_alloy_materials.thermal_props), not measured",
+    "k_solid_W_mK": 16.3,
+    "radiation": "not included",
+    "temperature": "about 300 K; the bed conductivity at melt-relevant temperature is unsourced"
+   },
+   "k_gasSensitivity_packing_0p55": [
+    {
+     "k_eff_over_k_solid": 0.0106,
+     "k_gas_W_mK": 0.01328,
+     "note": "symmetric +/-25 % on k_gas, ILLUSTRATIVE sensitivity only, not an uncertainty"
+    },
+    {
+     "k_eff_over_k_solid": 0.01609,
+     "k_gas_W_mK": 0.02212,
+     "note": "symmetric +/-25 % on k_gas, ILLUSTRATIVE sensitivity only, not an uncertainty"
+    }
+   ],
+   "reading": "The computed gas-conduction-only ratios are 0.01342-0.01653 (0.112-0.138 times the uncited code value 0.12) for these two room-temperature inputs. Contact conduction and radiation are excluded, so this calculation is not a complete packed-bed estimate and does not establish the suitability of 0.12. These inputs are illustrative; the gas conductivity is unsourced and the solid conductivity is a repository estimate."
+  }
+ },
+ "matchedSets": {
+  "all": {
+   "ballingFractionByLevel": {
+    "0": {
+     "ballingFlagged": 33,
+     "fraction": 0.20122,
+     "rows": 164
+    },
+    "30": {
+     "ballingFlagged": 73,
+     "fraction": 0.44242,
+     "rows": 165
+    },
+    "60": {
+     "ballingFlagged": 60,
+     "fraction": 0.4878,
+     "rows": 123
+    }
+   },
+   "nRows": 452,
+   "nSets": 172,
+   "pairs": {
+    "30_vs_0": {
+     "depthDiff_um": {
+      "ci95": [
+       -6.103,
+       5.1075
+      ],
+      "fractionPositive": 0.45714,
+      "iqr": [
+       -12.85925,
+       29.2
+      ],
+      "median": -0.8285
+     },
+     "depthRatio": {
+      "ci95": [
+       0.89083,
+       1.04416
+      ],
+      "fractionAbove1": 0.45714,
+      "iqr": [
+       0.72251,
+       1.29902
+      ],
+      "median": 0.98354
+     },
+     "levelIqr_um": {
+      "depth": {
+       "0": [
+        45.255,
+        100.9
+       ],
+       "30": [
+        37.52725,
+        113.6
+       ]
+      },
+      "width": {
+       "0": [
+        128.975,
+        197.86025
+       ],
+       "30": [
+        116.3125,
+        178.16825
+       ]
+      }
+     },
+     "levelMedians_um": {
+      "depth": {
+       "0": 63.963,
+       "30": 63.8585
+      },
+      "width": {
+       "0": 155.4655,
+       "30": 152.831
+      }
+     },
+     "lowN": false,
+     "nRowsHigh": 152,
+     "nRowsLow": 143,
+     "nSets": 140,
+     "pair": "30 vs 0",
+     "widthDiff_um": {
+      "ci95": [
+       -9.19,
+       -0.25392
+      ],
+      "fractionPositive": 0.40714,
+      "iqr": [
+       -23.3425,
+       7.74025
+      ],
+      "median": -5.52
+     },
+     "widthRatio": {
+      "ci95": [
+       0.93968,
+       0.99856
+      ],
+      "fractionAbove1": 0.40714,
+      "iqr": [
+       0.85664,
+       1.06511
+      ],
+      "median": 0.96704
+     }
+    },
+    "60_vs_0": {
+     "depthDiff_um": {
+      "ci95": [
+       -8.128,
+       4.018
+      ],
+      "fractionPositive": 0.44086,
+      "iqr": [
+       -23.527,
+       19.9975
+      ],
+      "median": -3.3045
+     },
+     "depthRatio": {
+      "ci95": [
+       0.86317,
+       1.0456
+      ],
+      "fractionAbove1": 0.44086,
+      "iqr": [
+       0.68633,
+       1.18393
+      ],
+      "median": 0.96483
+     },
+     "levelIqr_um": {
+      "depth": {
+       "0": [
+        60.351,
+        129.1
+       ],
+       "60": [
+        44.795,
+        112.3
+       ]
+      },
+      "width": {
+       "0": [
+        132.2405,
+        207.6
+       ],
+       "60": [
+        122.6,
+        199.2
+       ]
+      }
+     },
+     "levelMedians_um": {
+      "depth": {
+       "0": 83.293,
+       "60": 76.8405
+      },
+      "width": {
+       "0": 163.209,
+       "60": 158.78
+      }
+     },
+     "lowN": false,
+     "nRowsHigh": 110,
+     "nRowsLow": 96,
+     "nSets": 93,
+     "pair": "60 vs 0",
+     "widthDiff_um": {
+      "ci95": [
+       -13.769,
+       -1.19
+      ],
+      "fractionPositive": 0.39785,
+      "iqr": [
+       -26.354,
+       10.199
+      ],
+      "median": -7.314
+     },
+     "widthRatio": {
+      "ci95": [
+       0.92583,
+       0.99249
+      ],
+      "fractionAbove1": 0.39785,
+      "iqr": [
+       0.83864,
+       1.07481
+      ],
+      "median": 0.9476
+     }
+    },
+    "60_vs_30": {
+     "depthDiff_um": {
+      "ci95": [
+       -22.122,
+       -2.37
+      ],
+      "fractionPositive": 0.34118,
+      "iqr": [
+       -42.61,
+       6.14
+      ],
+      "median": -10.681
+     },
+     "depthRatio": {
+      "ci95": [
+       0.79131,
+       0.96527
+      ],
+      "fractionAbove1": 0.34118,
+      "iqr": [
+       0.66198,
+       1.0991
+      ],
+      "median": 0.8881
+     },
+     "levelIqr_um": {
+      "depth": {
+       "30": [
+        52.704,
+        172.0
+       ],
+       "60": [
+        44.795,
+        107.139
+       ]
+      },
+      "width": {
+       "30": [
+        126.319,
+        200.435
+       ],
+       "60": [
+        126.48,
+        209.595
+       ]
+      }
+     },
+     "levelMedians_um": {
+      "depth": {
+       "30": 80.07,
+       "60": 76.8405
+      },
+      "width": {
+       "30": 162.351,
+       "60": 161.166
+      }
+     },
+     "lowN": false,
+     "nRowsHigh": 102,
+     "nRowsLow": 96,
+     "nSets": 85,
+     "pair": "60 vs 30",
+     "widthDiff_um": {
+      "ci95": [
+       -8.671,
+       4.389
+      ],
+      "fractionPositive": 0.44706,
+      "iqr": [
+       -16.88,
+       14.49
+      ],
+      "median": -4.2155
+     },
+     "widthRatio": {
+      "ci95": [
+       0.9495,
+       1.02966
+      ],
+      "fractionAbove1": 0.44706,
+      "iqr": [
+       0.89689,
+       1.0915
+      ],
+      "median": 0.97187
+     }
+    }
+   }
+  },
+  "ballingFractionByLevelAllRows": {
+   "0": {
+    "ballingFlagged": 38,
+    "fraction": 0.18095,
+    "rows": 210
+   },
+   "30": {
+    "ballingFlagged": 91,
+    "fraction": 0.39224,
+    "rows": 232
+   },
+   "60": {
+    "ballingFlagged": 87,
+    "fraction": 0.37021,
+    "rows": 235
+   }
+  },
+  "byRegime": {
+   "conduction": {
+    "ballingFractionByLevel": {
+     "0": {
+      "ballingFlagged": 1,
+      "fraction": 0.02439,
+      "rows": 41
+     },
+     "30": {
+      "ballingFlagged": 18,
+      "fraction": 0.40909,
+      "rows": 44
+     },
+     "60": {
+      "ballingFlagged": 6,
+      "fraction": 0.5,
+      "rows": 12
+     }
+    },
+    "nRows": 97,
+    "nSets": 41,
+    "pairs": {
+     "30_vs_0": {
+      "depthDiff_um": {
+       "ci95": [
+        -17.034,
+        -9.5
+       ],
+       "fractionPositive": 0.10256,
+       "iqr": [
+        -18.24,
+        -6.546
+       ],
+       "median": -12.061
+      },
+      "depthRatio": {
+       "ci95": [
+        0.59646,
+        0.77485
+       ],
+       "fractionAbove1": 0.10256,
+       "iqr": [
+        0.56976,
+        0.8528
+       ],
+       "median": 0.70379
+      },
+      "levelIqr_um": {
+       "depth": {
+        "0": [
+         35.483,
+         49.771
+        ],
+        "30": [
+         23.4335,
+         42.076
+        ]
+       },
+       "width": {
+        "0": [
+         127.2455,
+         176.801
+        ],
+        "30": [
+         121.644,
+         170.9365
+        ]
+       }
+      },
+      "levelMedians_um": {
+       "depth": {
+        "0": 41.707,
+        "30": 30.289
+       },
+       "width": {
+        "0": 156.4,
+        "30": 155.55
+       }
+      },
+      "lowN": false,
+      "nRowsHigh": 43,
+      "nRowsLow": 40,
+      "nSets": 39,
+      "pair": "30 vs 0",
+      "widthDiff_um": {
+       "ci95": [
+        -13.599,
+        1.2
+       ],
+       "fractionPositive": 0.38462,
+       "iqr": [
+        -20.7395,
+        11.392
+       ],
+       "median": -7.99
+      },
+      "widthRatio": {
+       "ci95": [
+        0.9028,
+        1.00815
+       ],
+       "fractionAbove1": 0.38462,
+       "iqr": [
+        0.84432,
+        1.08655
+       ],
+       "median": 0.95664
+      }
+     },
+     "60_vs_0": {
+      "depthDiff_um": {
+       "ci95": [
+        -23.068,
+        5.348
+       ],
+       "fractionPositive": 0.42857,
+       "iqr": [
+        -21.374,
+        4.5335
+       ],
+       "median": -18.5165
+      },
+      "depthRatio": {
+       "ci95": [
+        0.60458,
+        1.08587
+       ],
+       "fractionAbove1": 0.42857,
+       "iqr": [
+        0.64546,
+        1.06986
+       ],
+       "median": 0.71125
+      },
+      "levelIqr_um": {
+       "depth": {
+        "0": [
+         57.577,
+         63.434
+        ],
+        "60": [
+         35.4,
+         56.61975
+        ]
+       },
+       "width": {
+        "0": [
+         174.2605,
+         232.058
+        ],
+        "60": [
+         161.0385,
+         191.506
+        ]
+       }
+      },
+      "levelMedians_um": {
+       "depth": {
+        "0": 62.282,
+        "60": 43.062
+       },
+       "width": {
+        "0": 206.557,
+        "60": 170.003
+       }
+      },
+      "lowN": true,
+      "nRowsHigh": 10,
+      "nRowsLow": 7,
+      "nSets": 7,
+      "pair": "60 vs 0",
+      "widthDiff_um": {
+       "ci95": [
+        -55.587,
+        -6.977
+       ],
+       "fractionPositive": 0.0,
+       "iqr": [
+        -41.496,
+        -14.961
+       ],
+       "median": -25.331
+      },
+      "widthRatio": {
+       "ci95": [
+        0.7647,
+        0.96622
+       ],
+       "fractionAbove1": 0.0,
+       "iqr": [
+        0.79864,
+        0.92566
+       ],
+       "median": 0.87537
+      }
+     },
+     "60_vs_30": {
+      "depthDiff_um": {
+       "ci95": [
+        -9.8185,
+        10.2805
+       ],
+       "fractionPositive": 0.57143,
+       "iqr": [
+        -5.89725,
+        10.03925
+       ],
+       "median": 1.461
+      },
+      "depthRatio": {
+       "ci95": [
+        0.78349,
+        1.2946
+       ],
+       "fractionAbove1": 0.57143,
+       "iqr": [
+        0.86981,
+        1.2928
+       ],
+       "median": 1.04321
+      },
+      "levelIqr_um": {
+       "depth": {
+        "30": [
+         34.569,
+         47.29925
+        ],
+        "60": [
+         35.4,
+         44.33575
+        ]
+       },
+       "width": {
+        "30": [
+         167.1115,
+         189.8215
+        ],
+        "60": [
+         161.668,
+         191.506
+        ]
+       }
+      },
+      "levelMedians_um": {
+       "depth": {
+        "30": 45.038,
+        "60": 38.983
+       },
+       "width": {
+        "30": 172.721,
+        "60": 170.003
+       }
+      },
+      "lowN": true,
+      "nRowsHigh": 10,
+      "nRowsLow": 9,
+      "nSets": 7,
+      "pair": "60 vs 30",
+      "widthDiff_um": {
+       "ci95": [
+        -18.535,
+        26.859
+       ],
+       "fractionPositive": 0.28571,
+       "iqr": [
+        -14.42975,
+        12.837
+       ],
+       "median": -7.673
+      },
+      "widthRatio": {
+       "ci95": [
+        0.90823,
+        1.15551
+       ],
+       "fractionAbove1": 0.28571,
+       "iqr": [
+        0.9308,
+        1.0741
+       ],
+       "median": 0.95681
+      }
+     }
+    }
+   },
+   "keyhole": {
+    "ballingFractionByLevel": {
+     "0": {
+      "ballingFlagged": 15,
+      "fraction": 0.28302,
+      "rows": 53
+     },
+     "30": {
+      "ballingFlagged": 26,
+      "fraction": 0.54167,
+      "rows": 48
+     },
+     "60": {
+      "ballingFlagged": 21,
+      "fraction": 0.4375,
+      "rows": 48
+     }
+    },
+    "nRows": 149,
+    "nSets": 56,
+    "pairs": {
+     "30_vs_0": {
+      "depthDiff_um": {
+       "ci95": [
+        6.63375,
+        52.7275
+       ],
+       "fractionPositive": 0.71429,
+       "iqr": [
+        -6.5875,
+        71.25
+       ],
+       "median": 35.15
+      },
+      "depthRatio": {
+       "ci95": [
+        1.06176,
+        1.3298
+       ],
+       "fractionAbove1": 0.71429,
+       "iqr": [
+        0.93371,
+        1.5303
+       ],
+       "median": 1.2298
+      },
+      "levelIqr_um": {
+       "depth": {
+        "0": [
+         90.7655,
+         173.35
+        ],
+        "30": [
+         85.98562,
+         236.225
+        ]
+       },
+       "width": {
+        "0": [
+         131.788,
+         190.5
+        ],
+        "30": [
+         113.94425,
+         184.03925
+        ]
+       }
+      },
+      "levelMedians_um": {
+       "depth": {
+        "0": 110.3385,
+        "30": 147.6
+       },
+       "width": {
+        "0": 143.42,
+        "30": 133.7815
+       }
+      },
+      "lowN": false,
+      "nRowsHigh": 44,
+      "nRowsLow": 43,
+      "nSets": 42,
+      "pair": "30 vs 0",
+      "widthDiff_um": {
+       "ci95": [
+        -18.024,
+        -5.6755
+       ],
+       "fractionPositive": 0.28571,
+       "iqr": [
+        -32.525,
+        3.9085
+       ],
+       "median": -11.6
+      },
+      "widthRatio": {
+       "ci95": [
+        0.88111,
+        0.96622
+       ],
+       "fractionAbove1": 0.28571,
+       "iqr": [
+        0.85121,
+        1.03684
+       ],
+       "median": 0.93929
+      }
+     },
+     "60_vs_0": {
+      "depthDiff_um": {
+       "ci95": [
+        -6.6755,
+        27.07316
+       ],
+       "fractionPositive": 0.525,
+       "iqr": [
+        -40.8635,
+        44.325
+       ],
+       "median": 5.2475
+      },
+      "depthRatio": {
+       "ci95": [
+        0.89698,
+        1.11467
+       ],
+       "fractionAbove1": 0.525,
+       "iqr": [
+        0.69257,
+        1.22472
+       ],
+       "median": 1.0302
+      },
+      "levelIqr_um": {
+       "depth": {
+        "0": [
+         94.60312,
+         228.925
+        ],
+        "60": [
+         75.3045,
+         207.475
+        ]
+       },
+       "width": {
+        "0": [
+         133.69825,
+         219.325
+        ],
+        "60": [
+         125.51,
+         207.2575
+        ]
+       }
+      },
+      "levelMedians_um": {
+       "depth": {
+        "0": 134.35,
+        "60": 116.546
+       },
+       "width": {
+        "0": 154.358,
+        "60": 163.5405
+       }
+      },
+      "lowN": false,
+      "nRowsHigh": 44,
+      "nRowsLow": 41,
+      "nSets": 40,
+      "pair": "60 vs 0",
+      "widthDiff_um": {
+       "ci95": [
+        -14.363,
+        0.871
+       ],
+       "fractionPositive": 0.425,
+       "iqr": [
+        -24.239,
+        7.1125
+       ],
+       "median": -4.907
+      },
+      "widthRatio": {
+       "ci95": [
+        0.92583,
+        1.00597
+       ],
+       "fractionAbove1": 0.425,
+       "iqr": [
+        0.84394,
+        1.03913
+       ],
+       "median": 0.97561
+      }
+     },
+     "60_vs_30": {
+      "depthDiff_um": {
+       "ci95": [
+        -46.8935,
+        -2.937
+       ],
+       "fractionPositive": 0.32353,
+       "iqr": [
+        -58.11138,
+        5.14075
+       ],
+       "median": -33.5985
+      },
+      "depthRatio": {
+       "ci95": [
+        0.65043,
+        0.97205
+       ],
+       "fractionAbove1": 0.32353,
+       "iqr": [
+        0.59713,
+        1.0597
+       ],
+       "median": 0.8651
+      },
+      "levelIqr_um": {
+       "depth": {
+        "30": [
+         77.00775,
+         244.7
+        ],
+        "60": [
+         71.4875,
+         185.825
+        ]
+       },
+       "width": {
+        "30": [
+         118.35,
+         188.575
+        ],
+        "60": [
+         123.57,
+         204.9325
+        ]
+       }
+      },
+      "levelMedians_um": {
+       "depth": {
+        "30": 132.9965,
+        "60": 101.45025
+       },
+       "width": {
+        "30": 147.649,
+        "60": 151.735
+       }
+      },
+      "lowN": false,
+      "nRowsHigh": 38,
+      "nRowsLow": 36,
+      "nSets": 34,
+      "pair": "60 vs 30",
+      "widthDiff_um": {
+       "ci95": [
+        -6.29,
+        15.1
+       ],
+       "fractionPositive": 0.5,
+       "iqr": [
+        -15.42825,
+        19.325
+       ],
+       "median": -0.1715
+      },
+      "widthRatio": {
+       "ci95": [
+        0.94345,
+        1.09873
+       ],
+       "fractionAbove1": 0.5,
+       "iqr": [
+        0.93008,
+        1.11367
+       ],
+       "median": 0.99916
+      }
+     }
+    }
+   },
+   "transition": {
+    "ballingFractionByLevel": {
+     "0": {
+      "ballingFlagged": 17,
+      "fraction": 0.24286,
+      "rows": 70
+     },
+     "30": {
+      "ballingFlagged": 29,
+      "fraction": 0.39726,
+      "rows": 73
+     },
+     "60": {
+      "ballingFlagged": 33,
+      "fraction": 0.52381,
+      "rows": 63
+     }
+    },
+    "nRows": 206,
+    "nSets": 75,
+    "pairs": {
+     "30_vs_0": {
+      "depthDiff_um": {
+       "ci95": [
+        -5.267,
+        13.6
+       ],
+       "fractionPositive": 0.50847,
+       "iqr": [
+        -10.3395,
+        24.2
+       ],
+       "median": 0.204
+      },
+      "depthRatio": {
+       "ci95": [
+        0.93613,
+        1.14966
+       ],
+       "fractionAbove1": 0.50847,
+       "iqr": [
+        0.81768,
+        1.33545
+       ],
+       "median": 1.00273
+      },
+      "levelIqr_um": {
+       "depth": {
+        "0": [
+         53.359,
+         82.4915
+        ],
+        "30": [
+         50.6195,
+         101.281
+        ]
+       },
+       "width": {
+        "0": [
+         124.965,
+         203.9245
+        ],
+        "30": [
+         116.536,
+         194.901
+        ]
+       }
+      },
+      "levelMedians_um": {
+       "depth": {
+        "0": 64.724,
+        "30": 67.25
+       },
+       "width": {
+        "0": 168.131,
+        "30": 158.6
+       }
+      },
+      "lowN": false,
+      "nRowsHigh": 65,
+      "nRowsLow": 60,
+      "nSets": 59,
+      "pair": "30 vs 0",
+      "widthDiff_um": {
+       "ci95": [
+        -5.13027,
+        4.59
+       ],
+       "fractionPositive": 0.50847,
+       "iqr": [
+        -19.84675,
+        8.5305
+       ],
+       "median": 1.352
+      },
+      "widthRatio": {
+       "ci95": [
+        0.96954,
+        1.02915
+       ],
+       "fractionAbove1": 0.50847,
+       "iqr": [
+        0.89012,
+        1.06864
+       ],
+       "median": 1.00828
+      }
+     },
+     "60_vs_0": {
+      "depthDiff_um": {
+       "ci95": [
+        -12.807,
+        0.19559
+       ],
+       "fractionPositive": 0.36957,
+       "iqr": [
+        -21.938,
+        8.223
+       ],
+       "median": -4.9745
+      },
+      "depthRatio": {
+       "ci95": [
+        0.78779,
+        1.00139
+       ],
+       "fractionAbove1": 0.36957,
+       "iqr": [
+        0.69801,
+        1.14433
+       ],
+       "median": 0.90071
+      },
+      "levelIqr_um": {
+       "depth": {
+        "0": [
+         53.457,
+         82.89225
+        ],
+        "60": [
+         40.57575,
+         82.017
+        ]
+       },
+       "width": {
+        "0": [
+         122.4975,
+         203.45425
+        ],
+        "60": [
+         117.72,
+         189.17625
+        ]
+       }
+      },
+      "levelMedians_um": {
+       "depth": {
+        "0": 62.1685,
+        "60": 58.5375
+       },
+       "width": {
+        "0": 165.67,
+        "60": 151.1965
+       }
+      },
+      "lowN": false,
+      "nRowsHigh": 56,
+      "nRowsLow": 48,
+      "nSets": 46,
+      "pair": "60 vs 0",
+      "widthDiff_um": {
+       "ci95": [
+        -14.88275,
+        5.87744
+       ],
+       "fractionPositive": 0.43478,
+       "iqr": [
+        -28.145,
+        11.988
+       ],
+       "median": -8.2515
+      },
+      "widthRatio": {
+       "ci95": [
+        0.91311,
+        1.03583
+       ],
+       "fractionAbove1": 0.43478,
+       "iqr": [
+        0.83395,
+        1.10678
+       ],
+       "median": 0.94579
+      }
+     },
+     "60_vs_30": {
+      "depthDiff_um": {
+       "ci95": [
+        -20.52926,
+        -1.019
+       ],
+       "fractionPositive": 0.31818,
+       "iqr": [
+        -30.9535,
+        4.975
+       ],
+       "median": -8.3535
+      },
+      "depthRatio": {
+       "ci95": [
+        0.74253,
+        0.97371
+       ],
+       "fractionAbove1": 0.31818,
+       "iqr": [
+        0.71422,
+        1.09068
+       ],
+       "median": 0.86995
+      },
+      "levelIqr_um": {
+       "depth": {
+        "30": [
+         49.7085,
+         101.3965
+        ],
+        "60": [
+         42.46125,
+         88.65062
+        ]
+       },
+       "width": {
+        "30": [
+         126.793,
+         222.72538
+        ],
+        "60": [
+         125.92862,
+         210.36825
+        ]
+       }
+      },
+      "levelMedians_um": {
+       "depth": {
+        "30": 67.0185,
+        "60": 69.0775
+       },
+       "width": {
+        "30": 166.7715,
+        "60": 167.50925
+       }
+      },
+      "lowN": false,
+      "nRowsHigh": 54,
+      "nRowsLow": 51,
+      "nSets": 44,
+      "pair": "60 vs 30",
+      "widthDiff_um": {
+       "ci95": [
+        -12.6675,
+        5.001
+       ],
+       "fractionPositive": 0.43182,
+       "iqr": [
+        -19.7915,
+        10.51325
+       ],
+       "median": -5.524
+      },
+      "widthRatio": {
+       "ci95": [
+        0.9275,
+        1.0398
+       ],
+       "fractionAbove1": 0.43182,
+       "iqr": [
+        0.88523,
+        1.06212
+       ],
+       "median": 0.96583
+      }
+     }
+    }
+   }
+  },
+  "bySpot_um": {
+   "110": {
+    "ballingFractionByLevel": {
+     "0": {
+      "ballingFlagged": 9,
+      "fraction": 0.2093,
+      "rows": 43
+     },
+     "30": {
+      "ballingFlagged": 20,
+      "fraction": 0.44444,
+      "rows": 45
+     },
+     "60": {
+      "ballingFlagged": 13,
+      "fraction": 0.5,
+      "rows": 26
+     }
+    },
+    "nRows": 114,
+    "nSets": 47,
+    "pairs": {
+     "30_vs_0": {
+      "depthDiff_um": {
+       "ci95": [
+        -9.5,
+        16.3045
+       ],
+       "fractionPositive": 0.475,
+       "iqr": [
+        -11.8015,
+        30.775
+       ],
+       "median": -0.421
+      },
+      "depthRatio": {
+       "ci95": [
+        0.82145,
+        1.19912
+       ],
+       "fractionAbove1": 0.475,
+       "iqr": [
+        0.70347,
+        1.32066
+       ],
+       "median": 0.99295
+      },
+      "levelIqr_um": {
+       "depth": {
+        "0": [
+         44.864,
+         94.76075
+        ],
+        "30": [
+         32.78575,
+         120.3
+        ]
+       },
+       "width": {
+        "0": [
+         153.596,
+         207.6355
+        ],
+        "30": [
+         150.19,
+         199.925
+        ]
+       }
+      },
+      "levelMedians_um": {
+       "depth": {
+        "0": 61.875,
+        "30": 60.0255
+       },
+       "width": {
+        "0": 173.8155,
+        "30": 166.2605
+       }
+      },
+      "lowN": false,
+      "nRowsHigh": 41,
+      "nRowsLow": 40,
+      "nSets": 40,
+      "pair": "30 vs 0",
+      "widthDiff_um": {
+       "ci95": [
+        -11.645,
+        2.15
+       ],
+       "fractionPositive": 0.425,
+       "iqr": [
+        -19.59225,
+        8.52725
+       ],
+       "median": -4.7615
+      },
+      "widthRatio": {
+       "ci95": [
+        0.92124,
+        1.01169
+       ],
+       "fractionAbove1": 0.425,
+       "iqr": [
+        0.8748,
+        1.0456
+       ],
+       "median": 0.97358
+      }
+     },
+     "60_vs_0": {
+      "depthDiff_um": {
+       "ci95": [
+        -8.612,
+        9.124
+       ],
+       "fractionPositive": 0.52941,
+       "iqr": [
+        -8.612,
+        9.124
+       ],
+       "median": 0.18
+      },
+      "depthRatio": {
+       "ci95": [
+        0.83875,
+        1.15098
+       ],
+       "fractionAbove1": 0.52941,
+       "iqr": [
+        0.83875,
+        1.15098
+       ],
+       "median": 1.00139
+      },
+      "levelIqr_um": {
+       "depth": {
+        "0": [
+         60.431,
+         100.4
+        ],
+        "60": [
+         40.501,
+         108.4
+        ]
+       },
+       "width": {
+        "0": [
+         164.41,
+         222.711
+        ],
+        "60": [
+         160.911,
+         217.783
+        ]
+       }
+      },
+      "levelMedians_um": {
+       "depth": {
+        "0": 68.2,
+        "60": 72.77
+       },
+       "width": {
+        "0": 196.525,
+        "60": 182.92
+       }
+      },
+      "lowN": false,
+      "nRowsHigh": 21,
+      "nRowsLow": 17,
+      "nSets": 17,
+      "pair": "60 vs 0",
+      "widthDiff_um": {
+       "ci95": [
+        -33.66,
+        -1.68
+       ],
+       "fractionPositive": 0.23529,
+       "iqr": [
+        -33.66,
+        -1.68
+       ],
+       "median": -14.125
+      },
+      "widthRatio": {
+       "ci95": [
+        0.83863,
+        0.99249
+       ],
+       "fractionAbove1": 0.23529,
+       "iqr": [
+        0.83258,
+        0.99249
+       ],
+       "median": 0.92813
+      }
+     },
+     "60_vs_30": {
+      "depthDiff_um": {
+       "ci95": [
+        -40.059,
+        1.001
+       ],
+       "fractionPositive": 0.33333,
+       "iqr": [
+        -40.2085,
+        1.346
+       ],
+       "median": -12.604
+      },
+      "depthRatio": {
+       "ci95": [
+        0.66155,
+        1.00932
+       ],
+       "fractionAbove1": 0.33333,
+       "iqr": [
+        0.63684,
+        1.03474
+       ],
+       "median": 0.86669
+      },
+      "levelIqr_um": {
+       "depth": {
+        "30": [
+         51.96875,
+         134.32475
+        ],
+        "60": [
+         41.5745,
+         90.77187
+        ]
+       },
+       "width": {
+        "30": [
+         163.4135,
+         236.85
+        ],
+        "60": [
+         162.89575,
+         215.6905
+        ]
+       }
+      },
+      "levelMedians_um": {
+       "depth": {
+        "30": 73.622,
+        "60": 74.1915
+       },
+       "width": {
+        "30": 189.366,
+        "60": 184.196
+       }
+      },
+      "lowN": false,
+      "nRowsHigh": 22,
+      "nRowsLow": 19,
+      "nSets": 18,
+      "pair": "60 vs 30",
+      "widthDiff_um": {
+       "ci95": [
+        -21.557,
+        6.181
+       ],
+       "fractionPositive": 0.27778,
+       "iqr": [
+        -23.366,
+        9.761
+       ],
+       "median": -8.1535
+      },
+      "widthRatio": {
+       "ci95": [
+        0.88449,
+        1.02547
+       ],
+       "fractionAbove1": 0.27778,
+       "iqr": [
+        0.87453,
+        1.04056
+       ],
+       "median": 0.95718
+      }
+     }
+    }
+   },
+   "140": {
+    "ballingFractionByLevel": {
+     "0": {
+      "ballingFlagged": 2,
+      "fraction": 0.06897,
+      "rows": 29
+     },
+     "30": {
+      "ballingFlagged": 15,
+      "fraction": 0.40541,
+      "rows": 37
+     },
+     "60": {
+      "ballingFlagged": 12,
+      "fraction": 0.57143,
+      "rows": 21
+     }
+    },
+    "nRows": 87,
+    "nSets": 32,
+    "pairs": {
+     "30_vs_0": {
+      "depthDiff_um": {
+       "ci95": [
+        -16.236,
+        -4.977
+       ],
+       "fractionPositive": 0.2,
+       "iqr": [
+        -17.034,
+        -0.492
+       ],
+       "median": -10.042
+      },
+      "depthRatio": {
+       "ci95": [
+        0.71783,
+        0.93613
+       ],
+       "fractionAbove1": 0.2,
+       "iqr": [
+        0.70657,
+        0.98136
+       ],
+       "median": 0.83877
+      },
+      "levelIqr_um": {
+       "depth": {
+        "0": [
+         41.851,
+         64.126
+        ],
+        "30": [
+         31.425,
+         62.058
+        ]
+       },
+       "width": {
+        "0": [
+         169.491,
+         224.402
+        ],
+        "30": [
+         162.351,
+         219.4005
+        ]
+       }
+      },
+      "levelMedians_um": {
+       "depth": {
+        "0": 53.77,
+        "30": 44.792
+       },
+       "width": {
+        "0": 204.349,
+        "30": 177.991
+       }
+      },
+      "lowN": false,
+      "nRowsHigh": 31,
+      "nRowsLow": 26,
+      "nSets": 25,
+      "pair": "30 vs 0",
+      "widthDiff_um": {
+       "ci95": [
+        -36.21,
+        -0.341
+       ],
+       "fractionPositive": 0.28,
+       "iqr": [
+        -37.906,
+        3.227
+       ],
+       "median": -17.0805
+      },
+      "widthRatio": {
+       "ci95": [
+        0.83619,
+        0.99833
+       ],
+       "fractionAbove1": 0.28,
+       "iqr": [
+        0.81267,
+        1.01579
+       ],
+       "median": 0.92839
+      }
+     },
+     "60_vs_0": {
+      "depthDiff_um": {
+       "ci95": [
+        -23.763,
+        5.348
+       ],
+       "fractionPositive": 0.28571,
+       "iqr": [
+        -23.00825,
+        1.4905
+       ],
+       "median": -18.83775
+      },
+      "depthRatio": {
+       "ci95": [
+        0.68633,
+        1.08587
+       ],
+       "fractionAbove1": 0.28571,
+       "iqr": [
+        0.68915,
+        1.03606
+       ],
+       "median": 0.74647
+      },
+      "levelIqr_um": {
+       "depth": {
+        "0": [
+         62.397,
+         101.757
+        ],
+        "60": [
+         46.09313,
+         78.66925
+        ]
+       },
+       "width": {
+        "0": [
+         206.6405,
+         239.83
+        ],
+        "60": [
+         186.87275,
+         239.867
+        ]
+       }
+      },
+      "levelMedians_um": {
+       "depth": {
+        "0": 71.7825,
+        "60": 61.4025
+       },
+       "width": {
+        "0": 221.852,
+        "60": 205.09
+       }
+      },
+      "lowN": false,
+      "nRowsHigh": 16,
+      "nRowsLow": 15,
+      "nSets": 14,
+      "pair": "60 vs 0",
+      "widthDiff_um": {
+       "ci95": [
+        -52.11418,
+        9.83
+       ],
+       "fractionPositive": 0.28571,
+       "iqr": [
+        -53.84525,
+        5.62825
+       ],
+       "median": -25.175
+      },
+      "widthRatio": {
+       "ci95": [
+        0.83093,
+        1.04896
+       ],
+       "fractionAbove1": 0.28571,
+       "iqr": [
+        0.82971,
+        1.02828
+       ],
+       "median": 0.88024
+      }
+     },
+     "60_vs_30": {
+      "depthDiff_um": {
+       "ci95": [
+        -26.703,
+        10.2805
+       ],
+       "fractionPositive": 0.29412,
+       "iqr": [
+        -26.703,
+        10.2805
+       ],
+       "median": -8.389
+      },
+      "depthRatio": {
+       "ci95": [
+        0.7153,
+        1.1082
+       ],
+       "fractionAbove1": 0.29412,
+       "iqr": [
+        0.7153,
+        1.1082
+       ],
+       "median": 0.85179
+      },
+      "levelIqr_um": {
+       "depth": {
+        "30": [
+         52.24,
+         167.1
+        ],
+        "60": [
+         47.544,
+         98.9
+        ]
+       },
+       "width": {
+        "30": [
+         200.435,
+         249.56
+        ],
+        "60": [
+         191.081,
+         222.368
+        ]
+       }
+      },
+      "levelMedians_um": {
+       "depth": {
+        "30": 73.872,
+        "60": 78.1
+       },
+       "width": {
+        "30": 221.4455,
+        "60": 210.6
+       }
+      },
+      "lowN": false,
+      "nRowsHigh": 19,
+      "nRowsLow": 23,
+      "nSets": 17,
+      "pair": "60 vs 30",
+      "widthDiff_um": {
+       "ci95": [
+        -18.535,
+        5.38
+       ],
+       "fractionPositive": 0.35294,
+       "iqr": [
+        -18.535,
+        5.38
+       ],
+       "median": -10.3245
+      },
+      "widthRatio": {
+       "ci95": [
+        0.92051,
+        1.01892
+       ],
+       "fractionAbove1": 0.35294,
+       "iqr": [
+        0.92051,
+        1.01892
+       ],
+       "median": 0.95338
+      }
+     }
+    }
+   },
+   "50": {
+    "ballingFractionByLevel": {
+     "0": {
+      "ballingFlagged": 11,
+      "fraction": 0.26829,
+      "rows": 41
+     },
+     "30": {
+      "ballingFlagged": 20,
+      "fraction": 0.51282,
+      "rows": 39
+     },
+     "60": {
+      "ballingFlagged": 18,
+      "fraction": 0.54545,
+      "rows": 33
+     }
+    },
+    "nRows": 113,
+    "nSets": 42,
+    "pairs": {
+     "30_vs_0": {
+      "depthDiff_um": {
+       "ci95": [
+        -2.5375,
+        36.0
+       ],
+       "fractionPositive": 0.61111,
+       "iqr": [
+        -7.03675,
+        46.35
+       ],
+       "median": 14.6705
+      },
+      "depthRatio": {
+       "ci95": [
+        0.96545,
+        1.33062
+       ],
+       "fractionAbove1": 0.61111,
+       "iqr": [
+        0.8371,
+        1.52274
+       ],
+       "median": 1.13168
+      },
+      "levelIqr_um": {
+       "depth": {
+        "0": [
+         50.56575,
+         117.7835
+        ],
+        "30": [
+         52.6,
+         173.95
+        ]
+       },
+       "width": {
+        "0": [
+         99.45,
+         136.5025
+        ],
+        "30": [
+         93.79275,
+         121.5
+        ]
+       }
+      },
+      "levelMedians_um": {
+       "depth": {
+        "0": 82.962,
+        "30": 94.529
+       },
+       "width": {
+        "0": 127.45,
+        "30": 112.05
+       }
+      },
+      "lowN": false,
+      "nRowsHigh": 37,
+      "nRowsLow": 37,
+      "nSets": 36,
+      "pair": "30 vs 0",
+      "widthDiff_um": {
+       "ci95": [
+        -14.0,
+        4.59
+       ],
+       "fractionPositive": 0.41667,
+       "iqr": [
+        -20.368,
+        6.337
+       ],
+       "median": -6.7795
+      },
+      "widthRatio": {
+       "ci95": [
+        0.88522,
+        1.05261
+       ],
+       "fractionAbove1": 0.41667,
+       "iqr": [
+        0.85199,
+        1.06304
+       ],
+       "median": 0.94847
+      }
+     },
+     "60_vs_0": {
+      "depthDiff_um": {
+       "ci95": [
+        -27.84,
+        4.326
+       ],
+       "fractionPositive": 0.33333,
+       "iqr": [
+        -43.129,
+        7.273
+       ],
+       "median": -3.487
+      },
+      "depthRatio": {
+       "ci95": [
+        0.71041,
+        1.02468
+       ],
+       "fractionAbove1": 0.33333,
+       "iqr": [
+        0.65292,
+        1.07225
+       ],
+       "median": 0.96483
+      },
+      "levelIqr_um": {
+       "depth": {
+        "0": [
+         60.7725,
+         162.35
+        ],
+        "60": [
+         47.523,
+         107.221
+        ]
+       },
+       "width": {
+        "0": [
+         102.426,
+         137.185
+        ],
+        "60": [
+         104.4735,
+         133.7175
+        ]
+       }
+      },
+      "levelMedians_um": {
+       "depth": {
+        "0": 103.474,
+        "60": 69.579
+       },
+       "width": {
+        "0": 129.4,
+        "60": 117.98
+       }
+      },
+      "lowN": false,
+      "nRowsHigh": 31,
+      "nRowsLow": 28,
+      "nSets": 27,
+      "pair": "60 vs 0",
+      "widthDiff_um": {
+       "ci95": [
+        -8.5,
+        12.084
+       ],
+       "fractionPositive": 0.59259,
+       "iqr": [
+        -11.313,
+        14.1295
+       ],
+       "median": 4.93
+      },
+      "widthRatio": {
+       "ci95": [
+        0.93516,
+        1.12991
+       ],
+       "fractionAbove1": 0.59259,
+       "iqr": [
+        0.91979,
+        1.14195
+       ],
+       "median": 1.03258
+      }
+     },
+     "60_vs_30": {
+      "depthDiff_um": {
+       "ci95": [
+        -34.901,
+        6.14
+       ],
+       "fractionPositive": 0.4,
+       "iqr": [
+        -35.733,
+        8.164
+       ],
+       "median": -6.7
+      },
+      "depthRatio": {
+       "ci95": [
+        0.72506,
+        1.0991
+       ],
+       "fractionAbove1": 0.4,
+       "iqr": [
+        0.65043,
+        1.14229
+       ],
+       "median": 0.96527
+      },
+      "levelIqr_um": {
+       "depth": {
+        "30": [
+         53.361,
+         192.9
+        ],
+        "60": [
+         47.406,
+         102.142
+        ]
+       },
+       "width": {
+        "30": [
+         98.777,
+         128.52
+        ],
+        "60": [
+         104.735,
+         145.35
+        ]
+       }
+      },
+      "levelMedians_um": {
+       "depth": {
+        "30": 89.217,
+        "60": 69.579
+       },
+       "width": {
+        "30": 113.732,
+        "60": 121.721
+       }
+      },
+      "lowN": false,
+      "nRowsHigh": 29,
+      "nRowsLow": 26,
+      "nSets": 25,
+      "pair": "60 vs 30",
+      "widthDiff_um": {
+       "ci95": [
+        -9.1,
+        14.49
+       ],
+       "fractionPositive": 0.56,
+       "iqr": [
+        -15.639,
+        15.1
+       ],
+       "median": 4.389
+      },
+      "widthRatio": {
+       "ci95": [
+        0.92815,
+        1.10559
+       ],
+       "fractionAbove1": 0.56,
+       "iqr": [
+        0.89305,
+        1.11636
+       ],
+       "median": 1.04111
+      }
+     }
+    }
+   },
+   "80": {
+    "ballingFractionByLevel": {
+     "0": {
+      "ballingFlagged": 11,
+      "fraction": 0.21569,
+      "rows": 51
+     },
+     "30": {
+      "ballingFlagged": 18,
+      "fraction": 0.40909,
+      "rows": 44
+     },
+     "60": {
+      "ballingFlagged": 17,
+      "fraction": 0.39535,
+      "rows": 43
+     }
+    },
+    "nRows": 138,
+    "nSets": 51,
+    "pairs": {
+     "30_vs_0": {
+      "depthDiff_um": {
+       "ci95": [
+        -10.644,
+        10.7
+       ],
+       "fractionPositive": 0.46154,
+       "iqr": [
+        -14.783,
+        40.0995
+       ],
+       "median": -5.267
+      },
+      "depthRatio": {
+       "ci95": [
+        0.78523,
+        1.14966
+       ],
+       "fractionAbove1": 0.46154,
+       "iqr": [
+        0.73445,
+        1.31108
+       ],
+       "median": 0.94024
+      },
+      "levelIqr_um": {
+       "depth": {
+        "0": [
+         50.3845,
+         104.291
+        ],
+        "30": [
+         41.7365,
+         116.75
+        ]
+       },
+       "width": {
+        "0": [
+         121.805,
+         178.75
+        ],
+        "30": [
+         116.536,
+         177.65
+        ]
+       }
+      },
+      "levelMedians_um": {
+       "depth": {
+        "0": 78.7,
+        "30": 75.659
+       },
+       "width": {
+        "0": 142.29,
+        "30": 150.623
+       }
+      },
+      "lowN": false,
+      "nRowsHigh": 43,
+      "nRowsLow": 40,
+      "nSets": 39,
+      "pair": "30 vs 0",
+      "widthDiff_um": {
+       "ci95": [
+        -9.18,
+        4.939
+       ],
+       "fractionPositive": 0.46154,
+       "iqr": [
+        -12.2915,
+        14.25
+       ],
+       "median": -0.56
+      },
+      "widthRatio": {
+       "ci95": [
+        0.94255,
+        1.04069
+       ],
+       "fractionAbove1": 0.46154,
+       "iqr": [
+        0.90394,
+        1.10428
+       ],
+       "median": 0.99577
+      }
+     },
+     "60_vs_0": {
+      "depthDiff_um": {
+       "ci95": [
+        -10.313,
+        24.4
+       ],
+       "fractionPositive": 0.54286,
+       "iqr": [
+        -20.4645,
+        32.7305
+       ],
+       "median": 6.169
+      },
+      "depthRatio": {
+       "ci95": [
+        0.83227,
+        1.28762
+       ],
+       "fractionAbove1": 0.54286,
+       "iqr": [
+        0.72021,
+        1.38056
+       ],
+       "median": 1.05439
+      },
+      "levelIqr_um": {
+       "depth": {
+        "0": [
+         58.751,
+         138.4
+        ],
+        "60": [
+         46.8485,
+         192.5165
+        ]
+       },
+       "width": {
+        "0": [
+         138.637,
+         200.35
+        ],
+        "60": [
+         131.5165,
+         194.843
+        ]
+       }
+      },
+      "levelMedians_um": {
+       "depth": {
+        "0": 83.293,
+        "60": 81.408
+       },
+       "width": {
+        "0": 175.95,
+        "60": 153.17
+       }
+      },
+      "lowN": false,
+      "nRowsHigh": 42,
+      "nRowsLow": 36,
+      "nSets": 35,
+      "pair": "60 vs 0",
+      "widthDiff_um": {
+       "ci95": [
+        -17.3,
+        0.871
+       ],
+       "fractionPositive": 0.37143,
+       "iqr": [
+        -26.3505,
+        5.67275
+       ],
+       "median": -8.671
+      },
+      "widthRatio": {
+       "ci95": [
+        0.89958,
+        1.00407
+       ],
+       "fractionAbove1": 0.37143,
+       "iqr": [
+        0.84846,
+        1.03538
+       ],
+       "median": 0.93655
+      }
+     },
+     "60_vs_30": {
+      "depthDiff_um": {
+       "ci95": [
+        -46.665,
+        2.18
+       ],
+       "fractionPositive": 0.32,
+       "iqr": [
+        -46.713,
+        4.568
+       ],
+       "median": -22.122
+      },
+      "depthRatio": {
+       "ci95": [
+        0.73986,
+        1.05255
+       ],
+       "fractionAbove1": 0.32,
+       "iqr": [
+        0.648,
+        1.06336
+       ],
+       "median": 0.86133
+      },
+      "levelIqr_um": {
+       "depth": {
+        "30": [
+         59.125,
+         199.7
+        ],
+        "60": [
+         43.665,
+         111.261
+        ]
+       },
+       "width": {
+        "30": [
+         131.6805,
+         188.2
+        ],
+        "60": [
+         137.373,
+         190.486
+        ]
+       }
+      },
+      "levelMedians_um": {
+       "depth": {
+        "30": 81.656,
+        "60": 77.213
+       },
+       "width": {
+        "30": 159.631,
+        "60": 153.17
+       }
+      },
+      "lowN": false,
+      "nRowsHigh": 32,
+      "nRowsLow": 28,
+      "nSets": 25,
+      "pair": "60 vs 30",
+      "widthDiff_um": {
+       "ci95": [
+        -8.671,
+        12.754
+       ],
+       "fractionPositive": 0.52,
+       "iqr": [
+        -12.919,
+        19.1
+       ],
+       "median": 0.677
+      },
+      "widthRatio": {
+       "ci95": [
+        0.92565,
+        1.0915
+       ],
+       "fractionAbove1": 0.52,
+       "iqr": [
+        0.91028,
+        1.09873
+       ],
+       "median": 1.00493
+      }
+     }
+    }
+   }
+  },
+  "datasetTotals": {
+   "levels": {
+    "0": {
+     "rows": 210,
+     "sets": 202
+    },
+    "30": {
+     "rows": 232,
+     "sets": 214
+    },
+    "60": {
+     "rows": 235,
+     "sets": 207
+    }
+   },
+   "matchedSets": 172,
+   "rows": 677,
+   "sets": 378,
+   "setsWithAllThreeLevels": 73
+  },
+  "grouping": "rows grouped by (power_W, speed_mm_s, d_laser_um); a set is 'matched' if it has >= 2 of the thickness levels 0/30/60 um",
+  "regimeLabel": "inputs-only screening label (classify_regime with balling = 0), so a set keeps one label across thickness levels; balling flags are reported separately, per level",
+  "statistic": "per set and level: mean over replicate rows; per pair: ratio = high/low and difference = high - low per matched set; across sets: median, IQR (25/75 %, linear interpolation), cluster-bootstrap 95 % CI of the median (sets resampled, random.Random(0), 1000 reps); lowN = true when fewer than 8 sets"
+ },
+ "referenceTransient": {
+  "counts": {
+   "boilingStop": 5,
+   "cases": 6,
+   "completed": 1,
+   "notRun": 0,
+   "otherError": 0
+  },
+  "note": "layer 0 differs from 30/60 not only by the powder layer but also by the surface mode and the arbitrary bare-plate sourcePenetration_um; 20 um mesh is coarse: any completed case with depth < 2.5 cells is meshLimited (cell-quantised). completed/boiling-stop is the reference transient's own validity stop, not loosened; a boiling stop on powder is a finding about the homogenised powder model, not a failure of this analysis. Not validation.",
+  "powderCasesCompleted": 0,
+  "reusedFrom": {
+   "datasetSha256": "d4bbc7a60b536118586f44b64beb0fa20f94133f6d1a8d0fdcf726003720c3d8",
+   "file": "LPBF_POWDER_LAYER_ANALYSIS_2026-10-05.json",
+   "implementationHash": "11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359",
+   "schema": "lpbf-powder-layer-analysis-1",
+   "settings": {
+    "backend": "reference",
+    "layer_um 0": "bare-plate, square, sourcePenetration_um 40 (as lpbf_dataset_comparison.py)",
+    "layer_um 30/60": "powder-layer, packingFraction 0.55, powderConductivityRatio 0.12 (DEFAULTS), sourcePenetration_um default",
+    "material": "316L Stainless Steel",
+    "mesh_um": 20.0,
+    "mode": "standard",
+    "perCaseBudget_s": 240.0,
+    "preheat_C": 20.0,
+    "totalBudget_s": 900.0,
+    "trackLength_um": 600.0
+   }
+  },
+  "rows": [
+   {
+    "beamDiameter_um": 80.0,
+    "depth_um": 40.0,
+    "layer_um": 0.0,
+    "length_um": 180.0,
+    "measured": {
+     "depth_um": 30.303,
+     "rows": 1,
+     "width_um": 87.551
+    },
+    "meshLimited": true,
+    "peakTemperature_K": 2913.90095,
+    "power_W": 100.0,
+    "speed_mm_s": 900.0,
+    "status": "completed",
+    "wall_s": 10.3,
+    "width_um": 80.0
+   },
+   {
+    "beamDiameter_um": 80.0,
+    "layer_um": 30.0,
+    "measured": {
+     "depth_um": 12.5,
+     "rows": 1,
+     "width_um": 115.9
+    },
+    "message": "Thermal model validity exceeded at or above the material boiling limit (specific enthalpy 2269583.93 J/kg; limit 2268920 J/kg at 3087.15 K; cell=(np.int64(8), np.int64(27), np.int64(21)), previous T=3071.47 K, previous specific enthalpy=2256691.74 J/kg, dt=1.49857718e-07 s, source rate=6.2467184e+14 W/m³, net rate=3.77374023e+14 W/m³); evaporation/free-surface CFD required",
+    "power_W": 100.0,
+    "speed_mm_s": 900.0,
+    "status": "boiling-stop",
+    "wall_s": 3.2
+   },
+   {
+    "beamDiameter_um": 80.0,
+    "layer_um": 60.0,
+    "measured": null,
+    "message": "Thermal model validity exceeded at or above the material boiling limit (specific enthalpy 2270682.58 J/kg; limit 2268920 J/kg at 3087.15 K; cell=(np.int64(7), np.int64(20), np.int64(17)), previous T=3082.16 K, previous specific enthalpy=2265027.74 J/kg, dt=2.20965015e-07 s, source rate=3.21954528e+14 W/m³, net rate=1.12258954e+14 W/m³); evaporation/free-surface CFD required",
+    "power_W": 100.0,
+    "speed_mm_s": 900.0,
+    "status": "boiling-stop",
+    "wall_s": 2.6
+   },
+   {
+    "beamDiameter_um": 50.0,
+    "layer_um": 0.0,
+    "measured": {
+     "depth_um": 33.4,
+     "rows": 1,
+     "width_um": 80.75
+    },
+    "message": "Thermal model validity exceeded at or above the material boiling limit (specific enthalpy 2272249.2 J/kg; limit 2268920 J/kg at 3087.15 K; cell=(np.int64(5), np.int64(19), np.int64(15)), previous T=3082.1 K, previous specific enthalpy=2264983.12 J/kg, dt=7.6189272e-07 s, source rate=4.54646435e+14 W/m³, net rate=7.60620352e+13 W/m³); evaporation/free-surface CFD required",
+    "power_W": 50.0,
+    "speed_mm_s": 300.0,
+    "status": "boiling-stop",
+    "wall_s": 1.3
+   },
+   {
+    "beamDiameter_um": 50.0,
+    "layer_um": 30.0,
+    "measured": {
+     "depth_um": 20.666,
+     "rows": 1,
+     "width_um": 79.733
+    },
+    "message": "Thermal model validity exceeded at or above the material boiling limit (specific enthalpy 2286638.6 J/kg; limit 2268920 J/kg at 3087.15 K; cell=(np.int64(5), np.int64(24), np.int64(21)), previous T=3086.17 K, previous specific enthalpy=2268158.9 J/kg, dt=1.50145658e-07 s, source rate=7.24044245e+14 W/m³, net rate=5.39891911e+14 W/m³); evaporation/free-surface CFD required",
+    "power_W": 50.0,
+    "speed_mm_s": 300.0,
+    "status": "boiling-stop",
+    "wall_s": 2.4
+   },
+   {
+    "beamDiameter_um": 50.0,
+    "layer_um": 60.0,
+    "measured": {
+     "depth_um": 28.83,
+     "rows": 1,
+     "width_um": 95.711
+    },
+    "message": "Thermal model validity exceeded at or above the material boiling limit (specific enthalpy 2283938.39 J/kg; limit 2268920 J/kg at 3087.15 K; cell=(np.int64(4), np.int64(18), np.int64(17)), previous T=3085.78 K, previous specific enthalpy=2267851.04 J/kg, dt=4.257927e-07 s, source rate=3.29430521e+14 W/m³, net rate=1.65733728e+14 W/m³); evaporation/free-surface CFD required",
+    "power_W": 50.0,
+    "speed_mm_s": 300.0,
+    "status": "boiling-stop",
+    "wall_s": 2.0
+   }
+  ],
+  "selection": "2 Hofmann parameter sets with P <= 100 W that have a bare-plate row and whose bare-plate row completed (100 W, 900 mm/s, 80 um) or hit the boiling stop (50 W, 300 mm/s, 50 um, three thickness levels in the data) in lpbf_dataset_comparison; x layer 0/30/60 um.",
+  "settings": {
+   "backend": "reference",
+   "layer_um 0": "bare-plate, square, sourcePenetration_um 40 (as lpbf_dataset_comparison.py)",
+   "layer_um 30/60": "powder-layer, packingFraction 0.55, powderConductivityRatio 0.12 (DEFAULTS), sourcePenetration_um default",
+   "material": "316L Stainless Steel",
+   "mesh_um": 20.0,
+   "mode": "standard",
+   "perCaseBudget_s": 240.0,
+   "preheat_C": 20.0,
+   "totalBudget_s": 900.0,
+   "trackLength_um": 600.0
+  }
+ },
+ "schema": "lpbf-powder-layer-analysis-1"
+}

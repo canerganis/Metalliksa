@@ -1,0 +1,49 @@
+npm warn cleanup Failed to remove some directories [
+npm warn cleanup   [
+npm warn cleanup     '\\\\?\\C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-online-20261003\\node_modules',
+npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'C:\Users\can02\Projects\metalliksaa\Metalliksa-1\.runtime\v1-input-claims-online-20261003\node_modules\@babel\traverse'] {
+npm warn cleanup       errno: -4048,
+npm warn cleanup       code: 'EPERM',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-online-20261003\\node_modules\\@babel\\traverse'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     '\\\\?\\C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-online-20261003\\node_modules\\@types',
+npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'C:\Users\can02\Projects\metalliksaa\Metalliksa-1\.runtime\v1-input-claims-online-20261003\node_modules\@types\express-serve-static-core\node_modules\@types'] {
+npm warn cleanup       errno: -4048,
+npm warn cleanup       code: 'EPERM',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-online-20261003\\node_modules\\@types\\express-serve-static-core\\node_modules\\@types'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     '\\\\?\\C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-online-20261003\\node_modules\\@types\\connect',
+npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'C:\Users\can02\Projects\metalliksaa\Metalliksa-1\.runtime\v1-input-claims-online-20261003\node_modules\@types\connect'] {
+npm warn cleanup       errno: -4048,
+npm warn cleanup       code: 'EPERM',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-online-20261003\\node_modules\\@types\\connect'
+npm warn cleanup     }
+npm warn cleanup   ]
+npm warn cleanup ]
+npm error code ECONNREFUSED
+npm error syscall connect
+npm error errno ECONNREFUSED
+npm error FetchError: request to https://registry.npmjs.org/zustand/-/zustand-5.0.15.tgz failed, reason: connect ECONNREFUSED 127.0.0.1:9
+npm error     at ClientRequest.<anonymous> (C:\Program Files\nodejs\node_modules\npm\node_modules\minipass-fetch\lib\index.js:130:14)
+npm error     at ClientRequest.emit (node:events:514:28)
+npm error     at emitErrorEvent (node:_http_client:114:11)
+npm error     at _destroy (node:_http_client:1167:9)
+npm error     at onSocketNT (node:_http_client:1188:5)
+npm error     at process.processTicksAndRejections (node:internal/process/task_queues:91:21) {
+npm error   code: 'ECONNREFUSED',
+npm error   errno: 'ECONNREFUSED',
+npm error   syscall: 'connect',
+npm error   address: '127.0.0.1',
+npm error   port: 9,
+npm error   type: 'system'
+npm error }
+npm error
+npm error If you are behind a proxy, please make sure that the 'proxy' config is set properly.  See: 'npm help config'
+npm error A complete log of this run can be found in: C:\Users\can02\Projects\metalliksaa\Metalliksa-1\.npm-cache\_logs\2026-10-03T09_38_39_279Z-debug-0.log

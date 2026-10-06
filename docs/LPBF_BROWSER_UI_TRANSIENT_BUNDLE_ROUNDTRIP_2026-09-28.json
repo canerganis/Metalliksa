@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "evidenceClass": "isolated-live-lpbf-ui-workflow",
+  "status": "PASS",
+  "validationStatus": "unvalidated-model",
+  "experimentalValidation": false,
+  "numericalConvergenceStatus": "not-established",
+  "observedAt": "2026-09-28",
+  "repository": {
+    "branch": "codex/lpbf-buildjob-material-identity",
+    "head": "3271eb63f8a15265a5692f3f71b8fae03ccb5a58",
+    "implementationFingerprint": "8742af1f5bcea5373a4e81f14bc9a241869561850f541ae20d5e595814dcd3f8"
+  },
+  "environment": {
+    "serverUrl": "http://127.0.0.1:4195",
+    "serverRoot": "%TEMP%\\metalliksa-lpbf-e2e-20260928-153000",
+    "python": "3.12.10",
+    "deviceUsed": "CPU reference",
+    "userServerOrTabModified": false
+  },
+  "source": {
+    "datasetId": "nist-amb2022-03-optical-table4-local-v1",
+    "revision": 1,
+    "documentSha256": "6c9d9f80f8c4eb2b7a6c18bbaab9ed7a993e43f155190dfff49808a4f854aaf0",
+    "sourceScope": "local transcription of published aggregate Table 4 measurements",
+    "termsStatus": "unknown",
+    "archivedBeforeThisTransientRunInSameIsolatedStore": true,
+    "bindingToRun": "exact-revision-bound"
+  },
+  "run": {
+    "jobId": "b7c7bf40e9c3479d96ef9c522995f42e",
+    "runId": "b7c7bf40e9c3479d96ef9c522995f42e",
+    "runKind": "transient-thermal",
+    "createdAt": "2026-09-28T12:50:44.932Z",
+    "documentSha256": "82ad65dafc46d94cb9472c455aab1e6384e3debea0030a3804ab55f7732ea3fe",
+    "archiveListStatus": "unvalidated-model",
+    "sourceBindingStatus": "exact-revision-bound",
+    "modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+    "solverId": "enthalpy-fv-6",
+    "backend": "reference",
+    "mode": "standard",
+    "inputHash": "ca8ce2ebbe2a52e411297e050608d417b4018858f997d9a0a2301763953bbdf4",
+    "executionInputHash": "fdebb0486e30f1744fc83cfd4451fa8544879f395861d5a57990d1f07012dc67",
+    "settings": {
+      "power_W": 60,
+      "speed_mm_s": 1200,
+      "beamDiameter_um": 80,
+      "preheat_C": 200,
+      "mesh_um": 20,
+      "maxDt_s": 0.000001,
+      "trackLength_um": 600,
+      "tracks": 1,
+      "layers": 1,
+      "surfaceMode": "powder-layer",
+      "barePlateGeometry": "square"
+    },
+    "material": {
+      "materialId": "in718",
+      "quality": "estimated",
+      "provenanceClass": "estimated-legacy",
+      "materialRevisionSha256": "5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749",
+      "authorityRevisionSha256": "b7788a745e9fa90bf7af0b2de4516233e33726638a3a06b33268995813db5d1f",
+      "propertyUncertainty": "not quantified"
+    },
+    "solverMeasurements": {
+      "preflightEstimatedSteps": 1201,
+      "acceptedSteps": 2421,
+      "cells": 29988,
+      "wallSeconds": 16.829,
+      "wallScope": "solver execution reported by the worker; excludes full queue/API/archive/UI end-to-end timing",
+      "simulatedFinalTime_s": 0.0012
+    },
+    "metrics": {
+      "length_um": 240,
+      "width_um": 80,
+      "depth_um": 40,
+      "peakTemperature_K": 3023.88104541019,
+      "interpretation": "Grid-resolved model outputs only; not an experimental result or physical accuracy claim."
+    },
+    "energyBalance": {
+      "input_J": 0.0114,
+      "stored_J": 0.0113903710878375,
+      "losses_J": 0.00000962891216251173,
+      "relativeError": 2.13036216348029e-15,
+      "interpretation": "Numerical accounting closure for this run; not convergence or model validation."
+    }
+  },
+  "comparison": {
+    "selectedCase": "NIST Table 4 case 0 · 285 W · 960 mm/s · D4σ 67 µm",
+    "status": "unavailable",
+    "validationStatus": "unvalidated",
+    "comparisonResiduals": null,
+    "tableBindingVerified": true,
+    "reasons": [
+      "Executed model/core identity does not match the NIST comparison allowlisted transient core.",
+      "The run is a 600 µm square-domain powder-layer scan; the observed source case is a continuous 10 mm +X bare-plate track.",
+      "Power, speed, beam diameter, and substrate temperature do not match the selected case.",
+      "A measured beam-profile artifact and D4σ-to-model mapping are unavailable.",
+      "The six-section optical observation operator and matched section locations are not implemented in the comparison path.",
+      "Independent mesh and timestep convergence levels are missing."
+    ]
+  },
+  "bundleRoundTrip": {
+    "bundleId": "312df457fe504cf4a1c8b3fd241b9ced",
+    "runCount": 1,
+    "runArtifactCount": 69,
+    "sourceLinkCount": 1,
+    "browserDownloadEventObserved": true,
+    "downloadFileName": "metalliksa-lpbf-run-bundle-312df457fe504cf4a1c8b3fd241b9ced.tar",
+    "downloadBytes": 8087552,
+    "downloadSha256": "7bcda7d04d405b5cac2f8144d24c346729ca564064de1327d0663909310c6c8f",
+    "portableUploadAndVerification": "PASS",
+    "restoredRunCount": 1,
+    "restoredSourceLinkCount": 1,
+    "restoreId": "ff2d0dda7269436c84aad122a1841156",
+    "restoredDocumentSha256": "82ad65dafc46d94cb9472c455aab1e6384e3debea0030a3804ab55f7732ea3fe",
+    "restoredDocumentHashMatches": true,
+    "pageRefreshRetainedRestoreRunSourceAndMaterialIdentity": true,
+    "restoredComparisonStatus": "unavailable",
+    "restoredComparisonValidationStatus": "unvalidated",
+    "restoredComparisonResiduals": null
+  },
+  "limitations": [
+    "The NIST values are literature measurements stored in a local aggregate transcription; no measurements were generated by this application run.",
+    "The transient result uses estimated-legacy IN718 material data with unquantified property uncertainty.",
+    "This is software workflow, archive integrity and fail-closed comparison evidence. It does not prove scientific correctness, mesh/time convergence, independent experimental validity, or backend parity.",
+    "Performance records only the worker-reported solver interval. Queue wait, process startup, capture, artifact persistence, API and full UI wall time were not separated.",
+    "The source revision had been imported and hash-verified earlier in this same preserved isolated store; this acceptance turn selected and re-verified that revision before archiving the new run."
+  ]
+}

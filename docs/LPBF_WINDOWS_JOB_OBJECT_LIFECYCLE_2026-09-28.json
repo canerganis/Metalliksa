@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "evidenceClass": "software-process-lifecycle-verification",
+  "status": "PASS",
+  "validationStatus": "not-applicable-to-physical-model",
+  "observedAt": "2026-09-28",
+  "repository": {
+    "branch": "codex/lpbf-buildjob-material-identity",
+    "head": "a54c5f6"
+  },
+  "environment": {
+    "platform": "Windows",
+    "testRoot": "fresh isolated writable directory under %TEMP%",
+    "testRootWasProvided": true
+  },
+  "runs": [
+    {
+      "command": "python -m unittest test_lpbf_worker_lifecycle.QueueLifecycle.test_abrupt_parent_death_kills_execute_child_and_prevents_publication -v",
+      "result": "1 test passed",
+      "elapsedSeconds": 1.201
+    },
+    {
+      "command": "python -m unittest test_lpbf_worker_lifecycle -v",
+      "result": "16 tests passed, 0 skipped",
+      "elapsedSeconds": 2.217
+    },
+    {
+      "command": "& .\\node_modules\\.bin\\tsx.cmd --test tests/lpbf-worker-delete-integration.test.ts",
+      "result": "1 test passed, 0 skipped",
+      "elapsedSeconds": 10.261
+    }
+  ],
+  "currentHeadRerun": {
+    "repository": {
+      "branch": "codex/lpbf-buildjob-material-identity",
+      "head": "3271eb63f8a15265a5692f3f71b8fae03ccb5a58"
+    },
+    "runtime": {
+      "executable": "C:\\Users\\can02\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+      "version": "3.12.10",
+      "platform": "Windows"
+    },
+    "testRoot": "%TEMP%\\metalliksa-jobobject-3271eb6-20260928",
+    "command": "python -m unittest test_lpbf_worker_lifecycle -v",
+    "result": "19 tests passed, 0 skipped",
+    "elapsedSeconds": 2.337,
+    "testOutput": {
+      "path": "%TEMP%\\metalliksa-jobobject-3271eb6-20260928\\lifecycle-unittest.log",
+      "sha256": "80e40cecbf9d168b7ca4d0e28ad28bb5ef3892527203615974f44638399e072b"
+    },
+    "pyCompile": {
+      "command": "python -m py_compile lpbf_worker.py test_lpbf_worker_lifecycle.py",
+      "result": "PASS"
+    },
+    "sourceSha256": {
+      "python/lpbf_worker.py": "1f30c0c2ef7de4d253f448a766e8cc5714ac746481c501e351a2aba8c3802357",
+      "python/test_lpbf_worker_lifecycle.py": "8a25e8f8a6d38de9c86fa297515e7a736df11238282c1034a73185e5cc5cad0e"
+    },
+    "parentDeathAcceptance": "PASS: the execution child and grandchild handles were observed unsignaled before owner termination and signaled after; queue recovery marked the stale run failed; result.json and delayed orphan artifact were absent; child handles were signaled during test cleanup.",
+    "limitations": [
+      "This is software process-lifecycle evidence, not LPBF physics or experimental validation.",
+      "WinAPI fault cases use controlled mocks; this run does not induce kernel-level API faults.",
+      "The full browser UI cancellation/refresh/restore journey is covered by separate evidence, not this run."
+    ]
+  },
+  "testedBehaviors": [
+    "Suspended child process assigned to a kill-on-job-close Job Object before resume.",
+    "Parent-death integration observes the execute child and its descendant terminate; reopening the queue marks the stale run failed and exposes no result or orphan artifact.",
+    "Queue close does not publish terminal state or artifacts before a live child is confirmed reaped.",
+    "Controlled ResumeThread, TerminateJobObject, WaitForSingleObject, and CloseHandle failures preserve live/owned-handle state until cleanup can be retried.",
+    "Queued/running cancel, forced timeout, access-denied, worker restart, terminal race, and partial-artifact isolation cases pass.",
+    "Express HTTP DELETE → worker RPC integration waits for the execution child to exit/reap before 200/cancelled; the test fixture's descendant exits and its delayed artifact stays absent."
+  ],
+  "sourceSha256": {
+    "worker": "5d63c2f985e383dac2bac3019afbf62f18f3829148973706477d5cd50c4d7990",
+    "lifecycleTests": "b3fe06866804c176e1eac1fd7ceea59ba3baae438660cb73919432990b547f88"
+  },
+  "limitations": [
+    "Parent-death, child, and descendant behavior was exercised in this native Windows run; the injected WinAPI error cases use controlled mocks rather than inducing kernel API faults.",
+    "Queue.close has a bounded six-second join; these passing tests establish no premature terminal/artifact publication, not that close always returns only after every possible cleanup failure has resolved.",
+    "This suite does not exercise the full browser UI click-to-cancel-to-refresh-to-restore journey."
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "dataset_id": "in625-bareplate-screening-local-v1",
+  "source_version": "1.0.0",
+  "provenance_class": "derived-local-transcription-of-literature-model-and-separate-supplier-assumption",
+  "evidence_status": "unreviewed-source-archive",
+  "experiment": {
+    "material": "IN625",
+    "process_scope": "bare-plate-screening-inputs",
+    "experimental_dataset": false,
+    "experimental_validation": false
+  },
+  "thermal_model": {
+    "artifact_path": "in625-thermal-snapshot-v1.json",
+    "source_url": "https://doi.org/10.1007/s11663-020-01808-w",
+    "source_locator": "Sabau et al. (2020), Appendix B, JMatPro-calculated solid Cp/conductivity equations and assumed liquid constants; “Setup of STLF Simulation Model and Material Properties” for phase interval and latent heat",
+    "artifact_is_raw_publisher_data": false,
+    "material_revision_sha256": "f47b07e4c8288b8c7177001f069a254be3410bace43ad5ea2f73168ac4466f07",
+    "validation_status": "unvalidated-literature-model-screening",
+    "scope_limit": "Source-bounded bare-plate screening input snapshot; not P7 full-transient admission, build-job support, experimental validation, or general alloy qualification."
+  },
+  "density_assumption": {
+    "artifact_path": "density-assumption-v1.json",
+    "source_url": "https://www.specialmetals.com/documents/technical-bulletins/inconel/inconel-alloy-625.pdf",
+    "source_locator": "Special Metals, INCONEL alloy 625 technical bulletin (2013), Table 2, page 2",
+    "density_kg_m3": 8440,
+    "fixed": true,
+    "lot_matched": false,
+    "measured_for_this_model": false
+  },
+  "unresolved": [
+    "Thermal properties include JMatPro-calculated constitutive fits and assumed liquid constants; no quantified uncertainty or independent property validation is supplied.",
+    "Density is a fixed supplier-bulletin assumption and is not lot-matched.",
+    "This archive is not raw source data and does not establish experimental validity, full-transient admission, build-job support, or general alloy qualification."
+  ]
+}

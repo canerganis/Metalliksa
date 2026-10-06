@@ -1,5 +1,6 @@
 import type { ActiveSpecimenState } from '../store/useMaterialSpecimenStore';
 import type { ModuleId } from '../data/workspaces';
+import { formatDisplayNumber } from './numberFormat';
 
 export interface ScientificContext {
   title: string;
@@ -10,9 +11,28 @@ export interface ScientificContext {
   limitation: string;
 }
 
-const format = (value: number, digits = 1) => value.toLocaleString(undefined, { maximumFractionDigits: digits });
+// Browser-locale formatting showed "1.200 mm/s" and "31,25 J/mm³" in a Turkish browser; same rounding, fixed locale.
+const format = formatDisplayNumber;
 
 export function buildScientificContext(moduleId: ModuleId, specimen: ActiveSpecimenState): ScientificContext {
+  if (moduleId === 'materials-project') return {
+    title: 'Elastic Constants input context',
+    observation: 'This engine uses only the form inputs: user-supplied C_ij or isotropic K/G. Shared specimen values and process parameters are not automatically filled into the form or used by this engine.',
+    mechanism: 'Voigt-Reuss-Hill homogenisation derives aggregate elastic moduli from the supplied stiffness tensor. Born criteria describe mechanical stability against infinitesimal strain, not thermodynamic phase stability.',
+    variables: ['Form C_ij (GPa) with crystal symmetry, or isotropic K/G (GPa)', 'Optional user density (g/cm³) and composition or paired molar mass / atoms per formula unit for acoustic and Debye properties'],
+    interpretation: 'Before selecting Calculate Elasticity, no computed result is available. Missing density or composition can leave dependent properties unavailable even when an elastic tensor is available.',
+    limitation: 'User inputs and computed elasticity are not a measurement or a validation claim. Shared specimen composition, density, and LPBF settings do not establish the inputs or evidence for this calculation.',
+  };
+
+  if (moduleId === 'alloy-builder') return {
+    title: 'Composition editor and estimate context',
+    observation: 'This editor uses element percentages in the displayed wt.% or at.% unit. Normalize Composition is an explicit action; edits do not automatically make the total 100%.',
+    mechanism: 'For weight-percent compositions, browser rules estimate density and selected properties using composition and material-family assumptions. No CALPHAD, DFT or LPBF simulation runs here.',
+    variables: ['Element content: 0–100%, finite values', 'Displayed estimates: density g/cm³, temperatures °C, strength MPa', 'Composition-derived LPBF starting estimates: W and mm/s'],
+    interpretation: 'Composition-derived starting estimates are separate from the current shared process settings, which are retained. Atomic-percent edits preserve their unit and do not recompute weight-percent property estimates.',
+    limitation: 'These estimates are unvalidated and may include fallback values. Displayed or retained values are not measurements, phase-equilibrium results or qualified process settings. Retained values are not newly computed properties of an atomic-percent composition. Hardness can remain unavailable.',
+  };
+
   const { lpbf } = specimen;
   const ved = lpbf.laserPower_W / ((lpbf.scanSpeed_mms || 1) * (lpbf.hatch_um / 1000) * (lpbf.layer_um / 1000));
   const shared = `Active specimen ${specimen.name}; ${format(lpbf.laserPower_W)} W, ${format(lpbf.scanSpeed_mms)} mm/s, ${format(lpbf.hatch_um)} µm hatch, ${format(lpbf.layer_um)} µm layer.`;
@@ -21,12 +41,14 @@ export function buildScientificContext(moduleId: ModuleId, specimen: ActiveSpeci
     title: 'LPBF process physics',
     observation: `${shared} These inputs mainly control deposited energy and inter-layer heat transport.`,
     mechanism: 'The moving laser creates a melt pool that solidifies as thermal gradients, latent heat, and constrained contraction evolve. Too little energy raises lack-of-fusion risk; too much energy increases keyhole porosity, recoil, and residual stress tendency.',
-    variables: [`Computed VED: ${format(ved, 2)} J/mm³`, `Thermal conductivity: ${format(lpbf.thermalConductivity_k_WmK)} W/m·K`, `Preheat: ${format(lpbf.preheatTemp_C)} °C`, `Material family: ${specimen.baseMetal}, ${specimen.xrd.crystalSystem}`],
+    variables: [`Computed VED: ${format(ved, 2)} J/mm³`, 'Thermal conductivity is temperature-dependent; inspect the executed material table for values used.', `Preheat: ${format(lpbf.preheatTemp_C)} °C`, `Material family: ${specimen.baseMetal}, ${specimen.xrd.crystalSystem}`],
     interpretation: 'VED is a first-order signal only. A physically grounded readout should also include beam profile, absorption behavior, scan pattern, shielding quality, and heat accumulation trend.',
     limitation: 'This panel explains process physics only; it does not by itself prove density, strength, or certification readiness.',
   };
 
-  if (moduleId === 'phase-diagram' || moduleId === 'ttt-cct-kinetics' || moduleId) return {
+  // Only the phase-equilibrium and transformation-kinetics views get the microstructure text; a trailing
+  // `|| moduleId` used to route every other module (corrosion, EIS, databases...) here as well.
+  if (moduleId === 'phase-diagram' || moduleId === 'ttt-cct-kinetics') return {
     title: 'How thermal history changes microstructure',
     observation: `${shared} This module checks temperature-time path, phase equilibrium, or kinetic transformation behavior.`,
     mechanism: 'Phase stability follows Gibbs free-energy balance; transformation rates follow diffusion and nucleation kinetics. Fast cooling can shift behavior away from equilibrium; soak steps increase diffusion-controlled growth.',
@@ -44,7 +66,7 @@ export function buildScientificContext(moduleId: ModuleId, specimen: ActiveSpeci
     limitation: 'Imported or synthetic records are not automatically equivalent to measured sample evidence.',
   };
 
-  if (moduleId === 'research-hub' || moduleId === 'experimental-data' || moduleId === 'digital-twin' || moduleId === 'uq-lab' || moduleId === 'qualification' || moduleId === 'traceability') return {
+  if (moduleId === 'research-hub' || moduleId === 'experimental-data' || moduleId === 'digital-twin' || moduleId === 'uq-lab' || moduleId === 'traceability') return {
     title: 'Evidence chain for any claim',
     observation: `${shared} Here the goal is traceability: which data supports a claim, under which conditions, with what uncertainty.`,
     mechanism: 'Scientific confidence is built through claim → method → data → condition match → uncertainty characterization → independent validation. Solver convergence supports numerical robustness; external comparison supports real-world confidence.',

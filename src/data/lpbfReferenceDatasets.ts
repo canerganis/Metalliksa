@@ -4,7 +4,6 @@ import {
   calculateArealEnergyDensity,
   calculateVolumetricEnergyDensity,
   calculatePeakLaserIntensity,
-  calculateNormalizedEnthalpy,
   classifyProcessRegime,
   LPBFAlloyId,
 } from "../types/lpbfDataFoundation";
@@ -70,13 +69,6 @@ function createTraceableRecord(params: {
   const aed = calculateArealEnergyDensity(params.laserPower_W, params.scanSpeed_mm_s, params.hatchSpacing_um);
   const ved = calculateVolumetricEnergyDensity(params.laserPower_W, params.scanSpeed_mm_s, params.hatchSpacing_um, params.layerThickness_um);
   const intensity = calculatePeakLaserIntensity(params.laserPower_W, params.beamSpotDiameter_um);
-  const normalizedEnthalpy = calculateNormalizedEnthalpy(
-    params.laserPower_W,
-    params.scanSpeed_mm_s,
-    params.beamSpotDiameter_um,
-    params.alloyId,
-    params.opticalAbsorptivity
-  );
   const regime = classifyProcessRegime(ved, params.laserPower_W, params.scanSpeed_mm_s, params.alloyId);
 
   return {
@@ -111,7 +103,7 @@ function createTraceableRecord(params: {
         arealEnergyDensity_J_mm2: aed,
         volumetricEnergyDensity_J_mm3: ved,
         peakLaserIntensity_MW_cm2: intensity,
-        normalizedEnthalpy_dH_hs: normalizedEnthalpy,
+        // normalizedEnthalpy_dH_hs is not computed in the UI: ΔH/h_s comes from Python only (B5 step 1).
         predictedRegime: regime,
       },
     },
@@ -1488,6 +1480,7 @@ export const MASTER_LPBF_REFERENCE_DATASETS: Record<LPBFAlloyId, TraceableLPBFRe
   ss316l: SS316L_REFERENCE_DATASET,
   alsi10mg: ALSI10MG_REFERENCE_DATASET,
   in718: IN718_REFERENCE_DATASET,
+  in625: [],
 };
 
 /**

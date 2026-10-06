@@ -1,0 +1,49 @@
+{
+  "description": "Phase 7 slice 1 (base 464806f). tests/route-authority.test.ts: 'unbound' lists routes/*.ts handlers that no registry operation route names, each with a reason; 'cannedBaseline' is the ratcheted list of handlers that answer with literal numbers/booleans without calling an authority. Both lists may only shrink; stale entries fail the test. 'unclassified' keys of use mounts carry their site (file#ordinal of that path's mounts in the file); the ceiling caps them by path and by site count per path. Route behaviour is unchanged.",
+  "unbound": {
+    "GET /api/health": "Infrastructure (server.ts): liveness and API-key presence flag.",
+    "GET /api/runtime-config": "Infrastructure (server.ts): air-gap configuration for the UI banner.",
+    "ALL /api/*": "Infrastructure (server.ts): explicit JSON 404 for unmatched /api routes.",
+    "GET /api/python/status": "Infrastructure: engine availability for the App.tsx status dialog.",
+    "GET /api/python/ipc-status": "Infrastructure: persistent IPC supervisor diagnostics.",
+    "POST /api/python/ipc-warmup": "Infrastructure: IPC readiness probe.",
+    "POST /api/calphad/minimize": "Alias of POST /api/python/calphad-minimize (phase-diagram calphad-minimize operation).",
+    "GET /api/calphad/databases": "Alias of GET /api/python/calphad-databases (phase-diagram calphad-databases operation).",
+    "POST /api/python/xrd-deconvolve": "Python XRD route; the service method has no caller in src/.",
+    "GET /api/research/registry/history": "Research registry sub-resource of the research-hub research-registry operation.",
+    "GET /api/research/registry/revisions/:revision": "Research registry sub-resource of the research-hub research-registry operation.",
+    "GET /api/lpbf/sources/:datasetId": "LPBF source catalog sub-resource (src/services/lpbfSourceService.ts, 3d-distortion-lab lpbf-source-catalog).",
+    "GET /api/lpbf/sources/:datasetId/revisions": "LPBF source catalog sub-resource (lpbfSourceService).",
+    "GET /api/lpbf/sources/:datasetId/revisions/:revision": "LPBF source catalog sub-resource (lpbfSourceService).",
+    "POST /api/lpbf/sources/:datasetId/preview": "LPBF source catalog sub-resource (lpbfSourceService).",
+    "POST /api/lpbf/sources/:datasetId/import": "LPBF source catalog sub-resource (lpbfSourceService).",
+    "POST /api/lpbf/sources/:datasetId/verify": "LPBF source catalog sub-resource (lpbfSourceService).",
+    "GET /api/lpbf/runs/:runId": "LPBF run archive sub-resource (src/services/lpbfRunArchiveClient.ts, 3d-distortion-lab lpbf-run-archive).",
+    "GET /api/lpbf/runs/proxy-campaigns": "LPBF run archive sub-resource (lpbfRunArchiveClient).",
+    "POST /api/lpbf/runs/proxy-campaigns": "LPBF run archive sub-resource (lpbfRunArchiveClient).",
+    "POST /api/lpbf/runs/proxy-campaigns/preview": "LPBF run archive sub-resource (lpbfRunArchiveClient).",
+    "POST /api/lpbf/runs/preview": "LPBF run archive sub-resource (lpbfRunArchiveClient).",
+    "POST /api/lpbf/runs/import": "LPBF run archive sub-resource (lpbfRunArchiveClient).",
+    "POST /api/lpbf/runs/:runId/nist-comparison": "LPBF run archive NIST comparison (node service over archived runs).",
+    "POST /api/lpbf/runs/bundles/export": "LPBF run bundle sub-resource (lpbfRunArchiveClient).",
+    "POST /api/lpbf/runs/bundles/import": "LPBF run bundle sub-resource (lpbfRunArchiveClient).",
+    "GET /api/lpbf/runs/bundles/:bundleId/download": "LPBF run bundle sub-resource (lpbfRunArchiveClient).",
+    "POST /api/lpbf/runs/bundles/:bundleId/verify": "LPBF run bundle sub-resource (lpbfRunArchiveClient).",
+    "POST /api/lpbf/runs/bundles/:bundleId/restore": "LPBF run bundle sub-resource (lpbfRunArchiveClient).",
+    "POST /api/lpbf/runs/bundles/imports/:bundleId/restore": "LPBF run bundle sub-resource (lpbfRunArchiveClient).",
+    "GET /api/lpbf/runs/bundles/restores/:restoreId/runs": "LPBF run bundle sub-resource (lpbfRunArchiveClient).",
+    "GET /api/lpbf/runs/bundles/restores/:restoreId/runs/:runId": "LPBF run bundle sub-resource (lpbfRunArchiveClient).",
+    "POST /api/lpbf/runs/bundles/restores/:restoreId/runs/:runId/nist-comparison": "LPBF run bundle NIST comparison (node service over restored runs)."
+  },
+  "unclassified": {
+    "USE /api/lpbf (routes/lpbfSimulation.ts#1)": "routes/lpbfSimulation.ts same-origin guard middleware for /api/lpbf; calls next(), answers only 403 error envelopes.",
+    "USE /api/lpbf/sources (routes/lpbfSources.ts#1)": "routes/lpbfSources.ts guard (no-store, read-only/origin/content-type checks); calls next() or answers error envelopes; no result payload.",
+    "USE /api/lpbf/sources (routes/lpbfSources.ts#2)": "routes/lpbfSources.ts body-size/JSON error handler (bodyError); answers 413/400 error envelopes only.",
+    "USE /api/lpbf/runs (routes/lpbfRuns.ts#1)": "routes/lpbfRuns.ts no-store/guard middleware; calls next() or answers error envelopes; no result payload.",
+    "USE /api/lpbf/runs (routes/lpbfRuns.ts#2)": "routes/lpbfRuns.ts body-size/JSON error handler (bodyError); answers 413/400 error envelopes only.",
+    "USE /api/research/registry (routes/researchRegistry.ts#1)": "routes/researchRegistry.ts no-store header, same-origin guard and JSON parser mount; no result payload."
+  },
+  "cannedBaseline": {
+    "GET /api/health": "server.ts liveness: 'hasApiKey: AIRGAPPED ? false : <runtime check>' trips the ternary-of-literals rule. Transport metadata, not a result; heuristic false positive kept visible."
+  }
+}

@@ -1,0 +1,46 @@
+$ErrorActionPreference = 'Stop'
+$taskRoot = $PSScriptRoot
+$repoRoot = Split-Path -Parent $taskRoot
+$document = Get-Content -LiteralPath (Join-Path $repoRoot 'docs/APPLICATION_REPRODUCTION.md') -Raw
+$fence = [regex]::Match($document, '(?s)```powershell\s*\r?\n(.*?)```')
+if (-not $fence.Success) { throw 'Reproduction code block missing' }
+$tokens = $null
+$parseErrors = $null
+$ast = [Management.Automation.Language.Parser]::ParseInput($fence.Groups[1].Value, [ref]$tokens, [ref]$parseErrors)
+if ($parseErrors.Count -gt 0) { throw ($parseErrors | Out-String) }
+$functionAst = $ast.Find({param($node) $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'Get-LpbfSnapshotHashes'}, $true)
+if ($null -eq $functionAst) { throw 'Documented hash function missing' }
+# Evaluate only the owned document's hash-function definition, never its npm/server commands.
+. ([scriptblock]::Create($functionAst.Extent.Text))
+$fixtureRoot = Join-Path $taskRoot 'source-guard-fixture-v2'
+if (Test-Path -LiteralPath $fixtureRoot) { throw 'Fresh fixture required' }
+New-Item -ItemType Directory -Path $fixtureRoot | Out-Null
+Set-Content -LiteralPath (Join-Path $fixtureRoot 'sample.txt') -Value 'before' -NoNewline
+$before = Get-LpbfSnapshotHashes $fixtureRoot @('sample.txt')
+$unchanged = Get-LpbfSnapshotHashes $fixtureRoot @('sample.txt')
+if ($before -cne $unchanged) { throw 'Unchanged fixture mismatched' }
+Set-Content -LiteralPath (Join-Path $fixtureRoot 'sample.txt') -Value 'after' -NoNewline
+$changed = Get-LpbfSnapshotHashes $fixtureRoot @('sample.txt')
+if ($before -ceq $changed) { throw 'Changed fixture was not detected' }
+$revision = '33efb32b7d9734587a78d1cb9de8224d7ef2a4ec'
+$sourceEntries = @(git -C $repoRoot -c core.quotepath=false ls-tree -r $revision)
+if ($LASTEXITCODE -ne 0) { throw 'Frozen source enumeration failed' }
+$sourcePaths = @($sourceEntries | Where-Object { $_ -match '^\d{6} blob ' } | ForEach-Object { ($_ -split "`t", 2)[1] })
+if ($sourcePaths.Count -ne 1520) { throw 'Frozen source enumeration mismatch' }
+$snapshotRoot = Join-Path $repoRoot '.runtime/v1-recovery-acceptance-20261003'
+$frozenBefore = Get-LpbfSnapshotHashes $snapshotRoot $sourcePaths
+$frozenAfter = Get-LpbfSnapshotHashes $snapshotRoot $sourcePaths
+if ($frozenBefore -cne $frozenAfter) { throw 'Frozen source inventory changed' }
+$result = [ordered]@{
+  documentSyntax = 'PASS'
+  documentedHashFunctionUnchangedFixture = 'PASS'
+  documentedHashFunctionChangedFixture = 'PASS'
+  frozenSourceFiles = $sourcePaths.Count
+  frozenSourceStableRead = 'PASS'
+  submodulePointersExcluded = @($sourceEntries | Where-Object { $_ -match '^160000 commit ' }).Count
+  scope = 'Document syntax and hash-function verification only; no new clean install, npm suite, build or browser replay.'
+}
+$output = Join-Path $taskRoot 'reproduction-check.json'
+if (Test-Path -LiteralPath $output) { throw 'Fresh evidence required' }
+$result | ConvertTo-Json | Set-Content -LiteralPath $output -Encoding utf8
+$result | ConvertTo-Json -Compress

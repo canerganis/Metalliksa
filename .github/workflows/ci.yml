@@ -1,0 +1,151 @@
+name: CI
+
+# DRAFT / UNVERIFIED: this workflow has never run on GitHub.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  node:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc # node:sqlite tests need Node >= 22.13 without flags
+          cache: npm
+      # Several tests shell out to `python` (stdlib-only modules, plus numpy for the
+      # GPU artifact cross-language test), so the CPU baseline pins are installed.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r python/requirements-lpbf.in
+      - run: npm ci
+      - run: npm run lint
+      - name: Unit tests (exclusions listed in scripts/ci-unit-tests.txt)
+        shell: bash
+        run: |
+          set -euo pipefail
+          excluded="$(grep -v '^#' scripts/ci-unit-tests.txt | grep -v '^$' || true)"
+          files="$(ls tests/*.test.ts tests/*.test.tsx | { grep -vxF "$excluded" || true; })"
+          # Guard (same as the Dockerfile verify stage): every listed exclusion must be one of the unit-test glob's files and absent
+          # from the run list. A CRLF copy of the list makes the grep above exclude nothing; this re-reads the list with
+          # CRs stripped and fails instead. Here-strings, not pipes: with pipefail a grep -q that exits early could
+          # SIGPIPE its writer and turn a match into a false negative.
+          all="$(ls tests/*.test.ts tests/*.test.tsx)"
+          for ex in $(grep -v '^#' scripts/ci-unit-tests.txt | tr -d '\r' | grep -v '^$' || true); do
+            grep -qxF -- "$ex" <<<"$all" \
+              || { echo "scripts/ci-unit-tests.txt lists a file outside the unit test glob (missing or renamed): $ex" >&2; exit 1; }
+            if grep -qxF -- "$ex" <<<"$files"; then echo "scripts/ci-unit-tests.txt exclusion not applied: $ex" >&2; exit 1; fi
+          done
+          echo "Running $(echo "$files" | wc -l) test files"
+          node_modules/.bin/tsx --test $files
+      - run: npm run build
+      # Gzip ratchet on the built assets (scripts/bundle-budgets.json); reuses the dist/ from build.
+      - run: node scripts/check-bundle-size.mjs
+
+  python:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history: the Phase 6a old-blob tests read d33b6f5 / 7f3f803 with
+          # `git show`, and with CI set they fail (not skip) when a revision is missing.
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      # CPU baseline pins only. Never install python/requirements.txt (pulls torch).
+      - run: pip install -r python/requirements-lpbf.in
+      - name: Meltpool solver tests
+        run: npm run test:meltpool
+        # These npm scripts only call python, so node_modules is not needed.
+      - name: Phase 6a materials tests (golden, migrations, registry, constants)
+        working-directory: python
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: >-
+          python -B -m unittest
+          test_phase6a_golden test_phase6a_migration
+          test_phase6a_t2a_migration test_phase6a_t2b_golden test_phase6a_t2b_migration
+          test_phase6a_leaf_modules test_phase6a_test_support
+          test_physical_constants test_alloy_registry test_input_validation
+          test_alloy_data_calphad_battery_icme test_alloy_data_kinetics_uq_fatigue
+          test_lpbf_worker_validation_error
+          test_lpbf_material_authority_json
+          test_module_contract test_module_warm_parity test_allowlist_ceilings
+          test_module_contract_structured_transport
+          test_module_contract_selected_units
+          test_module_contract_dataset_view test_module_contract_composition
+          test_module_contract_eds test_module_contract_elasticity
+          test_module_contract_database test_module_contract_calphad test_module_contract_evidence
+          test_module_contract_copilot test_module_contract_lpbf_secondary test_module_contract_calculators
+          test_module_contract_research
+          test_module_contract_experimental_validation
+          test_contract_keyhole_raytracing test_contract_uq_lab
+          test_contract_ttt_cct_kinetics test_contract_icme_motor test_contract_murakami_fatigue
+          test_contract_toolpath_studio test_contract_adaptive_mitigation
+          test_contract_micrograph test_micrograph_measure test_lpbf_worker_dispatch
+          test_phase6b_vector_parity test_stochastic_uq_evidence test_stochastic_uq_vectorized_parity
+          test_persistent_ipc_security
+          test_murakami_constants test_xrd_formulas test_cnls_validation
+          test_electrochem_fallbacks test_elasticity_oracle test_icme_illustrative
+          test_kinetics_fx test_kinetics_li1998 test_calphad_honesty test_calphad_model_cache
+          test_lpbf_validity_envelope test_phase8_microstructure_contract
+          test_lpbf_solidification_microstructure_rpc
+          test_pourbaix_equilibrium test_pourbaix_ts_fixture
+          test_lpbf_process_map test_lpbf_powder_layer_analysis test_lpbf_additional_datasets test_pourbaix_ticrmo
+          test_goldak_power_normalization test_lpbf_boiling_cap
+          test_lpbf_meltpool_consumer_pins
+          test_lpbf_public_datasets test_lpbf_process_map test_lpbf_powder_layer_analysis
+          test_phase7 test_phase8 test_keyhole_contract
+          test_lpbf_transient_3d_gpu test_lpbf_phase22_energy_ledger test_lpbf_phase22_full_field_cuda_parity
+          test_lpbf_phase22_multistep_cuda_parity test_lpbf_phase22_manufactured_thermal test_lpbf_phase22_cuda_manufactured_pressure
+      # LPBF implementation identity (design 5c stage P): the fingerprint pin, the
+      # package-aware manifest import closure and the canonical-v3 framing vectors. The
+      # canonical identity normalises CRLF, so these are checkout-newline independent.
+      # The bit-exact parity goldens (test_lpbf_parity_golden) stay OUT of CI: they are
+      # valid only on the recorded reference machine.
+      - name: LPBF implementation fingerprint pin and source identity
+        working-directory: python
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: >-
+          python -B -m unittest
+          test_lpbf_implementation_fingerprint_pin test_lpbf_implementation_fingerprint
+          test_lpbf_source_identity
+      # Runs the BASE revision's copy of the checker, so a change cannot weaken the check that
+      # reviews it; .github/CODEOWNERS (enforced by branch protection) covers the same paths.
+      - name: Allowlist ceilings and guard files change only with a 'Ceiling-Review:' commit trailer
+        shell: bash
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BASE//0/}" ]; then BASE="$(git rev-parse HEAD^)"; fi
+          # Bootstrap: when the base revision predates the checker there is no reviewed baseline to
+          # compare against (the first change that introduces this guard). Once the checker is on the
+          # base branch, every later run uses the base copy as intended.
+          if ! git cat-file -e "$BASE:scripts/check_ceiling_review.py" 2>/dev/null; then
+            echo "::notice::Base revision has no ceiling checker (this change introduces it); nothing to compare against, skipping."
+            exit 0
+          fi
+          git show "$BASE:scripts/check_ceiling_review.py" | python - "$BASE"
+      - name: LPBF engineering tests (non-blocking until proven green on Linux)
+        run: npm run test:lpbf:engineering
+        continue-on-error: true

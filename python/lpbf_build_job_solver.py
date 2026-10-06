@@ -3,22 +3,35 @@
 Single LPBF Build Job engine: Rosenthal melt-pool screening + STL slicer + print verdict.
 
 The industrial UI must display this verdict. TypeScript must not re-decide printability.
-Melt-pool geometry for the verdict is regularized Rosenthal. Eagar–Tsai (`eagar-tsai-v1`) is opt-in on the thermal / Melt Pool 3D lab only — it does not change this verdict.
+Melt-pool geometry for the verdict is regularized Rosenthal. Eagar–Tsai (`eagar-tsai-v2`) is opt-in on the thermal / Melt Pool 3D lab only — it does not change this verdict.
 """
 
 import json
+import math
 import sys
 import time
 
 from four_alloy_materials import (
     ALLOY_MATERIALS,
     LITERATURE_PV_WINDOWS,
+    canonical_material_source,
     evaluate_literature_pv,
     resolve_alloy_id,
-    thermal_props,
 )
 from lpbf_build_job_schema import LpbfBuildJobRequest
-from lpbf_job_cache import build_cache_key, cache_get, cache_put
+from lpbf_build_job_material_snapshot import (
+    MATERIAL_PROPERTY_REVISION,
+    build_ambench_material_property_snapshot,
+    build_build_job_identity,
+    build_material_property_snapshot,
+)
+from lpbf_job_cache import (
+    BUILD_JOB_MODEL_ID,
+    BUILD_JOB_SOLVER_REVISION,
+    build_cache_key,
+    cache_get,
+    cache_put,
+)
 from lpbf_screening_uq import apply_uq_prop_scales, run_screening_uq
 from lpbf_thermal_solver import calculate_meltpool_physics
 from murakami_fatigue_screening import (
@@ -26,12 +39,17 @@ from murakami_fatigue_screening import (
     evaluate_murakami_block,
     parse_defect_sqrt_areas_text,
 )
-from nist_ambench_2018_02 import coverage_for_alloy, run_ambench_validation
+from nist_ambench_2018_02 import (
+    IN625_VALIDATION_PROPS,
+    coverage_for_alloy,
+    run_ambench_validation,
+)
 from stl_slicer_build_time_solver import solve_slicer
 from lpbf_part_porosity_aggregator import aggregate_part_porosity
 from lpbf_scanner_kinematics import calculate_scanner_kinematics
-from lpbf_solidification_microstructure import compute_solidification_microstructure
-from kinetics_ttt_cct_solver import solve_phase_transformation_kinetics
+from lpbf_solidification_microstructure import project_build_job_microstructure
+import alloy_registry
+from kinetics_ttt_cct_solver import STEEL_ONLY_REASON, resolve_kinetics_alloy, solve_phase_transformation_kinetics
 
 # Hatch/layer used with literature-box mid P–v when LoF is the dominant gate.
 # Matches src/utils/lpbfDemoVectors.ts printable demos (inputs only).
@@ -43,6 +61,165 @@ _LOF_HT = {
 }
 
 DEFAULT_PROCESS_SEED = 42
+
+# Build-job alloy id -> phase-transformation kinetics model (kinetics_ttt_cct_solver,
+# alloy_registry DOMAIN_KINETICS) of the SAME alloy. The kinetics registry has no model for
+# 316L (austenitic stainless) or AlSi10Mg (Al-Si-Mg); AISI 4140 and Al 7075 are different
+# alloys, so those build jobs carry an explicit unavailable kinetics block, never a
+# substituted alloy's result.
+BUILD_JOB_KINETICS_ALLOY = {"in718": "Inconel 718", "ti6al4v": "Ti-6Al-4V"}
+BUILD_JOB_KINETICS_COOLING_RATE_SOURCE = "thermal.solidificationKinetics.coolingRate_K_s"
+# solidification_front.py clamps the front's median cooling rate to max(1.0, median) K/s when the
+# front is degenerate (median 0). A reported rate at or below this floor is that clamp, not a
+# computed build rate, wherever it was produced; the kinetics block is then unavailable.
+SOLIDIFICATION_FRONT_COOLING_RATE_FLOOR_K_S = 1.0
+DEGENERATE_FRONT_REASON = (
+    "cooling rate is the 1 K/s floor of a degenerate solidification front, not a computed build rate"
+)
+
+
+def _finite_number(value):
+    """float(value) for a finite int/float (bool excluded), else None."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    out = float(value)
+    return out if math.isfinite(out) else None
+
+
+def format_cooling_rate(rate):
+    """Exact text for a rate in a reason: 1089047.0 -> "1089047", 2000.0000001 -> "2000.0000001"."""
+    return str(int(rate)) if float(rate).is_integer() else repr(float(rate))
+
+
+def _reported_cooling_rate(thermal):
+    """The reported cooling rate (K/s, numerically equal to °C/s) if finite, else None."""
+    return _finite_number((thermal.get("solidificationKinetics") or {}).get("coolingRate_K_s"))
+
+
+def build_cooling_rate_cct_row(cct_map, rate):
+    """Select the CCT map row nearest (log10) to the build cooling rate; never extrapolate.
+
+    A rate that is not a finite positive number, or lies outside the tabulated CCT cooling rates,
+    gives status "unavailable" with the reason (the exact comparison for the range case), so a
+    slow-cooling row is never reported for a much faster LPBF cool. At an exact log-midpoint tie
+    the first row in map order wins; the solver's map is ascending, so that is the slower rate.
+    """
+    usable = []
+    for i, row in enumerate(cct_map or []):
+        r = _finite_number(row.get("coolingRate_C_s")) if isinstance(row, dict) else None
+        if r is not None and r > 0.0:
+            usable.append((i, r))
+    rate = _finite_number(rate)
+    out = {
+        "selection": "nearest-log10-cooling-rate-within-map-range",
+        "buildCoolingRate_C_s": rate,
+        "mapRange_C_s": [min(r for _, r in usable), max(r for _, r in usable)] if usable else None,
+        "rowIndex": None,
+        "rowCoolingRate_C_s": None,
+    }
+    if rate is None or rate <= 0.0 or not usable:
+        out.update(status="unavailable",
+                   reason="no finite positive build cooling rate or no CCT map rows to select from")
+        return out
+    lo, hi = out["mapRange_C_s"]
+    if rate > hi:
+        out.update(status="unavailable",
+                   reason=f"build cooling rate {format_cooling_rate(rate)} °C/s is above the CCT map "
+                          f"maximum {format_cooling_rate(hi)} °C/s; no row is extrapolated")
+        return out
+    if rate < lo:
+        out.update(status="unavailable",
+                   reason=f"build cooling rate {format_cooling_rate(rate)} °C/s is below the CCT map "
+                          f"minimum {format_cooling_rate(lo)} °C/s; no row is extrapolated")
+        return out
+    index, row_rate = min(usable, key=lambda item: abs(math.log10(item[1]) - math.log10(rate)))
+    out.update(status="selected", reason=None, rowIndex=index, rowCoolingRate_C_s=row_rate)
+    return out
+
+
+def build_rate_martensite(registry_id, alloy_name, gap, cct_row):
+    """Martensite fraction and verdict at the build rate, or unavailable with the reason.
+
+    Withheld when the alloy's registry Ms is a non-physical placeholder (alloy_registry
+    KINETICS_PLACEHOLDERS), when no CCT row was selected for the build rate (the CCT map is not
+    extrapolated), and when the kinetics result has no martensite fraction: the Li (1998) model
+    gives one (Koistinen-Marburger at 25 C) only when no diffusional start is reached above Ms.
+    """
+    reality = (gap or {}).get("kineticRealityAtSelectedCooling") or {}
+    out = {"status": "unavailable", "reason": None, "predictedMartensite_pct": None, "verdict": None,
+           "coolingRate_C_s": _finite_number(reality.get("coolingRate_C_s"))}
+    if (registry_id, "Ms_C") in alloy_registry.KINETICS_PLACEHOLDERS:
+        out["reason"] = (f"the kinetics registry Ms of {alloy_name} is a non-physical placeholder (the alloy "
+                         "does not form martensite on quenching); no martensite fraction or "
+                         "martensite-based verdict is reported")
+        return out
+    if (cct_row or {}).get("status") != "selected":
+        out["reason"] = (f"{(cct_row or {}).get('reason') or 'no CCT row selected'}; the steel-type "
+                         "martensite fraction and verdict are not reported at this rate either")
+        return out
+    pct = _finite_number(reality.get("predictedMartensite_pct"))
+    if pct is None:
+        out["reason"] = "the kinetics result has no finite martensite fraction"
+        return out
+    out.update(status="available", predictedMartensite_pct=pct, verdict=reality.get("verdict"))
+    return out
+
+
+def _unavailable_kinetics_block(alloy_id, reason, reported, degenerate):
+    return {
+        "success": False,  # legacy envelope shape; "status" is authoritative
+        "status": "unavailable",
+        "reason": reason,
+        "alloyId": alloy_id,
+        "alloy": None,
+        "buildCoolingRate_C_s": None if degenerate else reported,
+        "reportedCoolingRate_K_s": reported,
+        "coolingRateSource": BUILD_JOB_KINETICS_COOLING_RATE_SOURCE,
+        "cctContinuousCoolingMap": None,
+        "calphadVsKineticsGap": None,
+        "buildCoolingRateCctRow": None,
+        "buildRateMartensite": None,
+    }
+
+
+def build_job_kinetics(alloy_id, thermal):
+    """Kinetics block for a build job; unavailable (with reason) instead of a substitute alloy.
+
+    ``status`` ("available" / "unavailable") is the field to trust. ``success: False`` on the
+    unavailable block only keeps the solver-envelope shape; it does not mean the build job failed.
+    The kinetics model is steel-only (kinetics_ttt_cct_solver, ``kineticsModel``): for an alloy whose
+    solver result is not available (all four build-job alloys: none is a steel) the block is
+    unavailable with the solver's reason, never a steel-template result.
+    """
+    reported = _reported_cooling_rate(thermal)
+    kinetics_alloy = BUILD_JOB_KINETICS_ALLOY.get(alloy_id)
+    degenerate = reported is not None and reported <= SOLIDIFICATION_FRONT_COOLING_RATE_FLOOR_K_S
+    if kinetics_alloy is None or reported is None or degenerate:
+        alloy_name = ALLOY_MATERIALS[alloy_id]["thermal"] if alloy_id in ALLOY_MATERIALS else str(alloy_id)
+        if kinetics_alloy is None:
+            reason = f"no kinetics model for {alloy_name}"
+        elif reported is None:
+            reason = "the build thermal result reports no finite cooling rate"
+        else:
+            reason = DEGENERATE_FRONT_REASON
+        return _unavailable_kinetics_block(alloy_id, reason, reported, degenerate)
+    registry_id = resolve_kinetics_alloy(kinetics_alloy)[0]
+    block = solve_phase_transformation_kinetics(alloy_name=kinetics_alloy, cooling_rate_c_s=reported)
+    model = block.get("kineticsModel") or {}
+    if model.get("status") != "available":
+        # e.g. "kinetics model is steel-only: Inconel 718 is not a steel"
+        why = model.get("reason") or "the kinetics model has no result for this alloy"
+        suffix = f": {kinetics_alloy} is not a steel" if why == STEEL_ONLY_REASON else ""
+        return _unavailable_kinetics_block(alloy_id, why + suffix, reported, False)
+    block["status"] = "available"
+    block["alloyId"] = alloy_id
+    block["buildCoolingRate_C_s"] = reported
+    block["reportedCoolingRate_K_s"] = reported
+    block["coolingRateSource"] = BUILD_JOB_KINETICS_COOLING_RATE_SOURCE
+    block["buildCoolingRateCctRow"] = build_cooling_rate_cct_row(block.get("cctContinuousCoolingMap"), reported)
+    block["buildRateMartensite"] = build_rate_martensite(
+        registry_id, kinetics_alloy, block.get("calphadVsKineticsGap"), block["buildCoolingRateCctRow"])
+    return block
 
 
 def _gate(gid, status, measured, required, unit, note):
@@ -92,8 +269,24 @@ def _suggested_patch(thermal, alloy_id, dominant_gate, verdict):
     }
 
 
+# Gates whose result is a function of the melt-pool W/D/L extent. When the thermal solver
+# reports ``extentStatus != "computed"`` (heuristic fallback, width floor, search-box limit)
+# these are unavailable: a verdict must not be built from screening-heuristic numbers.
+GEOMETRY_DEPENDENT_GATES = ("lof_tang", "lof_wh", "lof_dt", "balling")
+
+
 def compose_verdict(thermal, alloy_id, extras=None):
     extras = extras or {}
+    geometry = thermal["meltPoolGeometry"]
+    extent_status = str(geometry.get("extentStatus") or "not-reported")
+    extent_note = geometry.get("extentNote")
+    geometry_resolved = extent_status == "computed"
+    geometry_reason = None
+    if not geometry_resolved:
+        geometry_reason = (
+            f"melt-pool geometry not resolved ({extent_status}): "
+            f"{extent_note if extent_note else 'no extentNote reported'}"
+        )
     W = float(thermal["meltPoolGeometry"]["width_um"])
     D = float(thermal["meltPoolGeometry"]["depth_um"])
     h = float(thermal["processParameters"]["hatchSpacing_um"])
@@ -131,7 +324,18 @@ def compose_verdict(thermal, alloy_id, extras=None):
         elif float(downskin_angle) > 45.0:
             downskin_warn = True
 
+    if not geometry_resolved:
+        # Geometry-derived flags are heuristic here: neutralise them so no reason, verdict or
+        # dominant gate is built from screening-substitute W/D/L numbers.
+        lof_fail = lof_warn = balling_high = False
+
     reasons = []
+    if not geometry_resolved:
+        reasons.append(
+            f"Lack-of-fusion (Tang h/W, t/D, W/h, D/t) and balling (L/W) gates unavailable: "
+            f"{geometry_reason.rstrip('.')}. "
+            "No print / do-not-print verdict is issued from heuristic geometry."
+        )
     if lof_fail:
         reasons.append(
             f"Lack of fusion (Tang): (h/W)²+(t/D)² = {tang:.3f} (need ≤1.0); "
@@ -171,6 +375,8 @@ def compose_verdict(thermal, alloy_id, extras=None):
         verdict = "do-not-print"
     elif lof_warn or keyhole_high or recoater_high or distortion_high or downskin_warn or (not win["inside"]):
         verdict = "risky"
+    if not geometry_resolved:
+        verdict = "inconclusive"
 
     if not reasons:
         reasons.append(
@@ -182,6 +388,7 @@ def compose_verdict(thermal, alloy_id, extras=None):
         "printable": "Printable — stay in the conduction window",
         "risky": "Risky — qualify with coupon builds before flight hardware",
         "do-not-print": "Do not print — change P, v, h, or t before a build",
+        "inconclusive": f"Inconclusive — melt-pool geometry not resolved ({extent_status}); see reasons",
     }[verdict]
 
     lw = round(width_over_hatch, 3)
@@ -270,6 +477,23 @@ def compose_verdict(thermal, alloy_id, extras=None):
             "Overhang from vertical: >45° warn, >55° fail. Omitted angle → pass.",
         ),
     ]
+    unavailable_gates = []
+    if not geometry_resolved:
+        for g in gates:
+            if g["id"] in GEOMETRY_DEPENDENT_GATES:
+                g["status"] = "unavailable"
+                g["measured"] = None
+                g["reason"] = geometry_reason
+                unavailable_gates.append(g["id"])
+    geometry_independent_fail_gates = (
+        [g["id"] for g in gates if g["status"] == "fail"] if not geometry_resolved else []
+    )
+    if geometry_independent_fail_gates:
+        reasons.append(
+            "Geometry-independent gate(s) already failing: "
+            + ", ".join(geometry_independent_fail_gates)
+            + " (these do not depend on the unresolved melt-pool extent)."
+        )
     dominant = "none"
     for g in gates:
         if g["status"] == "fail":
@@ -296,6 +520,12 @@ def compose_verdict(thermal, alloy_id, extras=None):
         "gates": gates,
         "dominantGate": dominant,
         "suggestedPatch": _suggested_patch(thermal, alloy_id, dominant, verdict),
+        "geometryResolved": geometry_resolved,
+        "extentStatus": extent_status,
+        "extentNote": extent_note,
+        "verdictReason": geometry_reason,
+        "unavailableGates": unavailable_gates,
+        "geometryIndependentFailGates": geometry_independent_fail_gates,
     }
 
 
@@ -323,24 +553,98 @@ def solve_lpbf_build_job(data):
 
     # Normalize paste → defect list before cache key.
     if not data.get("defectSqrtAreas_um") and data.get("defectSqrtAreasPaste"):
-        parsed = parse_defect_sqrt_areas_text(data.get("defectSqrtAreasPaste"))
+        try:
+            parsed = parse_defect_sqrt_areas_text(data.get("defectSqrtAreasPaste"))
+        except ValueError as e:  # input_validation.ValidationError (inf / nan token)
+            return {"success": False, "error": f"Invalid LPBF build-job payload: {e}"}
         if parsed:
             data["defectSqrtAreas_um"] = parsed
 
+    requested_alloy = data.get("alloyId")
+    if requested_alloy is None or not str(requested_alloy).strip():
+        alloy_id = "in718"
+    else:
+        alloy_id = resolve_alloy_id(requested_alloy)
+        if alloy_id is None:
+            return {
+                "success": False,
+                "error": (
+                    f"Unsupported LPBF alloy identity: {requested_alloy!r}. "
+                    "No surrogate alloy was submitted."
+                ),
+            }
+    mats = ALLOY_MATERIALS[alloy_id]
+    for field, canonical_name in (
+        ("thermalMaterial", mats["thermal"]),
+        ("slicerMaterial", mats["slicer"]),
+    ):
+        override = data.get(field)
+        if override is None or not str(override).strip():
+            continue
+        override_alloy = resolve_alloy_id(override)
+        if override_alloy != alloy_id:
+            return {
+                "success": False,
+                "error": (
+                    f"{field} {override!r} does not match requested LPBF alloy "
+                    f"{alloy_id!r}; expected an alias of {canonical_name!r}."
+                ),
+            }
+
+    # Aliases are accepted only as identity assertions; always pass the mapped
+    # canonical name to the underlying solver so the requested alloy controls it.
+    thermal_mat = mats["thermal"]
+    slicer_mat = mats["slicer"]
+    try:
+        material_snapshot, material_property_sha256 = build_material_property_snapshot(
+            alloy_id, thermal_mat, slicer_mat
+        )
+        material_authority_snapshot, material_authority_revision_sha256 = canonical_material_source(alloy_id)
+        build_job_identity = build_build_job_identity(
+            alloy_id,
+            BUILD_JOB_MODEL_ID,
+            BUILD_JOB_SOLVER_REVISION,
+            material_property_sha256,
+            material_snapshot["schemaVersion"],
+        )
+        ambench_snapshot, ambench_property_sha256 = (
+            build_ambench_material_property_snapshot(IN625_VALIDATION_PROPS)
+            if data.get("includeAmbench", False) else (None, None)
+        )
+    except (KeyError, TypeError, ValueError) as e:
+        return {"success": False, "error": f"Invalid LPBF material properties: {e}"}
+
     bypass_cache = bool(data.get("bypassCache", False))
-    cache_key = build_cache_key(data)
+    cache_data = dict(data)
+    cache_data["alloyId"] = alloy_id
+    cache_data["thermalMaterial"] = thermal_mat
+    cache_data["slicerMaterial"] = slicer_mat
+    cache_data["materialPropertySha256"] = material_property_sha256
+    cache_data["materialAuthorityRevisionSha256"] = material_authority_revision_sha256
+    cache_data["buildJobIdentity"] = build_job_identity
+    cache_data["amBenchMaterialPropertySha256"] = ambench_property_sha256
+    try:
+        cache_key = build_cache_key(cache_data)
+    except (TypeError, ValueError) as e:
+        return {"success": False, "error": f"Invalid LPBF build-job cache input: {e}"}
     if not bypass_cache:
         cached = cache_get(cache_key)
-        if cached is not None:
+        if (
+            cached is not None
+            and cached.get("success") is True
+            and cached.get("solverRevision") == BUILD_JOB_SOLVER_REVISION
+            and cached.get("buildJobIdentity") == build_job_identity
+            and cached.get("alloyId") == alloy_id
+            and cached.get("materialPropertySha256") == material_property_sha256
+            and cached.get("materialAuthorityRevisionSha256") == material_authority_revision_sha256
+            and cached.get("materialPropertySnapshot") == material_snapshot
+            and cached.get("amBenchMaterialPropertySha256") == ambench_property_sha256
+            and cached.get("amBenchMaterialPropertySnapshot") == ambench_snapshot
+        ):
             cached["computeTimeMs"] = round((time.time() - t0) * 1000.0, 1)
             if cached.get("thermal"):
                 cached["thermal"]["computeTimeMs"] = cached["computeTimeMs"]
             return cached
-
-    alloy_id = resolve_alloy_id(data.get("alloyId") or "in718") or "in718"
-    mats = ALLOY_MATERIALS[alloy_id]
-    thermal_mat = data.get("thermalMaterial") or mats["thermal"]
-    slicer_mat = data.get("slicerMaterial") or mats["slicer"]
 
     power = float(data.get("laserPower_W", 285.0))
     speed = float(data.get("scanSpeed_mm_s", data.get("scanSpeed_mms", 960.0)))
@@ -373,11 +677,13 @@ def solve_lpbf_build_job(data):
         wavelength,
         incline_angle_deg=incline_deg,
         process_seed=process_seed,
+        prop_overrides=material_snapshot["thermal"],
     )
     slicer = solve_slicer(
         {
             "preset": data.get("preset", "nozzle"),
             "material": slicer_mat,
+            "_materialPropertiesSnapshot": material_snapshot["slicer"],
             "laserPower_W": power,
             "scanSpeed_mms": speed,
             "layerThickness_um": layer,
@@ -404,7 +710,7 @@ def solve_lpbf_build_job(data):
     enable_uq = bool(data.get("enableUq", False))
     uq_n = int(data.get("uqSamples", 96))
     if enable_uq:
-        base_props = thermal_props(thermal_mat) or {}
+        base_props = material_snapshot["thermal"]
 
         def _thermal_runner(p_w, beam_um, scale_overrides):
             concrete = apply_uq_prop_scales(base_props, scale_overrides)
@@ -419,7 +725,7 @@ def solve_lpbf_build_job(data):
                 wavelength,
                 incline_angle_deg=incline_deg,
                 process_seed=process_seed,
-                prop_overrides=concrete or None,
+                prop_overrides={**base_props, **concrete},
             )
 
         def _verdict_runner(th):
@@ -459,7 +765,9 @@ def solve_lpbf_build_job(data):
                 prop_overrides=overrides,
             )
 
-        ambench = run_ambench_validation(_amb_thermal)
+        ambench = run_ambench_validation(
+            _amb_thermal, material_props=ambench_snapshot["thermal"]
+        )
         ambench["alloyCoverage"] = coverage_for_alloy(alloy_id)
 
     # --- Faz 4b/c: Murakami + qualification template ---
@@ -521,9 +829,19 @@ def solve_lpbf_build_job(data):
     result = {
         "success": True,
         "engine": "lpbf_build_job",
-        "modelId": "rosenthal-screening-v1",
+        "modelId": BUILD_JOB_MODEL_ID,
+        "solverRevision": BUILD_JOB_SOLVER_REVISION,
+        "buildJobIdentity": build_job_identity,
         "assumptions": assumptions,
         "alloyId": alloy_id,
+        "materialPropertySchemaVersion": material_snapshot["schemaVersion"],
+        "materialPropertyRevision": MATERIAL_PROPERTY_REVISION,
+        "materialPropertySha256": material_property_sha256,
+        "materialPropertySnapshot": material_snapshot,
+        "materialAuthority": material_authority_snapshot["authority"],
+        "materialAuthorityRevisionSha256": material_authority_revision_sha256,
+        "amBenchMaterialPropertySha256": ambench_property_sha256,
+        "amBenchMaterialPropertySnapshot": ambench_snapshot,
         "processSeed": process_seed,
         "scanStrategy": {
             "id": scan_strategy,
@@ -535,11 +853,8 @@ def solve_lpbf_build_job(data):
         "thermal": thermal,
         "slicer": slicer,
         "kinematics": calculate_scanner_kinematics(speed, max(50.0, float(stripe_width_mm * 1000.0))),
-        "microstructure": compute_solidification_microstructure(data, data.get("material", {}), None),
-        "kinetics": solve_phase_transformation_kinetics(
-            alloy_name={"in718": "Inconel 718", "ti6al4v": "Ti-6Al-4V"}.get(alloy_id, "AISI 4140"),
-            cooling_rate_c_s=thermal.get("solidificationKinetics", {}).get("coolingRate_K_s", 1e5)
-        ),
+        "microstructure": project_build_job_microstructure(thermal),
+        "kinetics": build_job_kinetics(alloy_id, thermal),
         "porosity": aggregate_part_porosity(
             uq_block.pop("defectSamples", []) if uq_block else [thermal.get("geometricDefectScreen", {})]
         ),

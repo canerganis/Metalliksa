@@ -5,6 +5,7 @@ import path from 'node:path';
 import { test, type TestContext } from 'node:test';
 import { DatabaseSync } from 'node:sqlite';
 import { LpbfSourceRepository } from '../server/lpbfSourceRepository';
+import type { LpbfSourceDocument } from '../src/types/lpbfSource';
 
 const document = () => ({
   schemaVersion: 1 as const, datasetId: 'synthetic-test', materialId: 'in718' as const,
@@ -45,6 +46,16 @@ test('source archive retains immutable history and null/zero across reopen', t =
   assert.deepEqual(reopened.history('synthetic-test').map(r => r.revision), [1, 2]);
 });
 
+test('IN625 screening source identity is retained as an unreviewed source archive', t => {
+  const { store } = fixture(t);
+  const input = document() as Omit<ReturnType<typeof document>, 'materialId'> & { materialId: LpbfSourceDocument['materialId'] }; input.datasetId = 'in625-bareplate-screening-local-v1'; input.materialId = 'in625';
+  const saved = store.save(input, 0);
+  assert.equal(saved.document.materialId, 'in625');
+  assert.equal(saved.evidenceStatus, 'unreviewed-source-archive');
+  assert.equal(saved.artifactIntegrity, 'not-verified');
+  assert.equal(store.current(input.datasetId)?.document.materialId, 'in625');
+});
+
 test('stale writer conflicts without replacing current or historical source metadata', t => {
   const { store, filename, stores } = fixture(t);
   const other = new LpbfSourceRepository(filename); stores.push(other);
@@ -60,6 +71,7 @@ test('invalid source metadata cannot create a revision or claim measured evidenc
   const { store } = fixture(t);
   for (const mutate of [
     d => { d.materialId = 'unknown'; },
+    d => { d.materialId = 'in718x'; },
     d => { d.source.termsMissingReason = null; },
     d => { d.artifacts[0].relativePath = '../outside'; },
     d => { d.artifacts[0].relativePath = 'C:/outside'; },

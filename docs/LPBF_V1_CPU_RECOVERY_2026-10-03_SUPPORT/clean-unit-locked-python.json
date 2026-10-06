@@ -1,0 +1,7 @@
+{
+  "log": "clean-unit-locked-python.log",
+  "exitCode": 0,
+  "pythonVersion": "2.13.5 pydantic (per probe)",
+  "durationSeconds": 52.265,
+  "command": "METALLIX_PYTHON=<locked lpbf-win-py312> npm run test:unit"
+}

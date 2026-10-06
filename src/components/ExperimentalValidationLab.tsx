@@ -31,13 +31,13 @@ export const ExperimentalValidationLab: React.FC = () => {
       <div className="flex items-center gap-3 bg-cyan-950/40 p-4 rounded-xl border border-cyan-800/50">
         <FlaskConical aria-hidden="true" className="w-8 h-8 text-cyan-400 shrink-0" />
         <div>
-          <h2 id="lpbf-experiment-heading" className="text-lg font-bold text-white">LPBF Experimental Comparison</h2>
+          <h2 id="lpbf-experiment-heading" className="text-lg font-bold text-white">Melt Pool vs Measurements</h2>
           <p className="text-sm text-cyan-100">Compare traceable measurements with an identified simulation.</p>
         </div>
       </div>
       
       <div className="bg-slate-900/80 p-5 rounded-xl border border-slate-700 space-y-4">
-        <h3 className="text-base font-semibold text-white">CMU Ti-6Al-4V Meltpool Validation (Power: 370 W)</h3>
+        <h3 className="text-base font-semibold text-white">CMU Ti-6Al-4V Meltpool Comparison (Power: 370 W)</h3>
         {error ? (
           <p className="text-rose-400">Failed to load experimental data: {error}</p>
         ) : data.length === 0 ? (

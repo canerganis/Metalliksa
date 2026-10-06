@@ -34,8 +34,17 @@ export function createLpbfSourcesRouter(service = new LpbfSourceArchiveService()
       throw new LpbfSourceArchiveError(400, 'Unexpected source archive request fields.');
     }
   }
+  const decimalInteger = (value: unknown, fallback: number) => value === undefined ? fallback
+    : typeof value === 'string' && /^(0|[1-9]\d*)$/.test(value) ? Number(value) : Number.NaN;
   router.get(prefix, handle(() => service.catalog()));
   router.get(`${prefix}/:datasetId`, handle(req => service.current(req.params.datasetId)));
+  router.get(`${prefix}/:datasetId/revisions`, handle(req => {
+    const offset = decimalInteger(req.query.offset, 0);
+    const limit = decimalInteger(req.query.limit, 100);
+    return service.revisions(req.params.datasetId, offset, limit);
+  }));
+  router.get(`${prefix}/:datasetId/revisions/:revision`, handle(req =>
+    service.revision(req.params.datasetId, decimalInteger(req.params.revision, Number.NaN))));
   router.post(`${prefix}/:datasetId/preview`, handle(req => { body(req, []); return service.preview(req.params.datasetId); }));
   router.post(`${prefix}/:datasetId/import`, handle(req => {
     body(req, ['expectedRevision', 'documentSha256']);

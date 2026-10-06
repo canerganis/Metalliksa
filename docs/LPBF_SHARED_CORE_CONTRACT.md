@@ -87,9 +87,52 @@ compare operator/units/model identity. Do not replace analytical specialist laws
 with transient laws under an unchanged model ID. Their material adapters may
 reuse data while keeping explicit property temperature/optical conventions.
 
+Extraction checkpoint (2026-09-23): `lpbf_core_physics.py` exposes shared
+material interpolation, enthalpy, mesh-domain, scan-schedule, and cell-integrated
+Gaussian source APIs. `lpbf_simulation.scan_segments` and the old
+`lpbf_heat_source` names remain import-compatible; timestep limiting and the
+conduction operator remain in `lpbf_heat_source`. Solver diagnostics use the
+shared `cell-integrated-gaussian-gl2-v1` identity. Both extractions moved existing
+implementations without equation, timing, unit, or quadrature changes.
+Verification after the source extraction: core-contract, engineering and
+heat-source suites passed 40 of 42 tests on Windows Python3.12; two
+OpenFOAM/Linux-only cases were skipped there. OpenFOAM 14 reference parity and
+all eight heat-source tests passed on Ubuntu 22.04 WSL with the compiled worker.
+
+Material snapshots now add `materialId`, `provenanceClass`,
+`materialIdentitySchemaVersion`, and `materialRevisionSha256`. The revision
+digest covers the complete normalized material snapshot before the digest field
+is added. `coreContract.materialSha256` continues to bind that complete object.
+Supplied property objects have their identity metadata discarded and recomputed
+for the requested alloy. Legacy snapshots without a revision digest remain
+accepted. These hashes identify content; they do not establish source integrity,
+experimental provenance, or scientific validation. Legacy estimates are marked
+`estimated-legacy`; supplied tables are `user-supplied-unverified`; the result
+contract remains `evidenceClass='unvalidated-model'`.
+
+The reference transient solver and thermal OpenFOAM adapter now share
+`thermal_si_inputs(p, material)` for preheat K, layer m, scan speed m/s, and
+absorbed power W. The analytical screening route retains its own assumptions;
+the separate free-surface CFD route is outside this conversion seam. The
+conversion-only change preserves the existing solver equations and model IDs.
+
 GPU candidate is a thermal-only implementation of the same stationary reference
 contract. Require explicit device, no silent fallback, equal scenario/material/
 source/boundaries, timestep/mesh studies, energy closure and CPU comparisons
 before speed claims. The existing Warp flow prototype does not satisfy this
 contract and remains isolated. Calibration ambiguity does not block these
 independent numerical tasks. No temperature conversion is guessed for NIST.
+
+## Build-job alloy identity boundary
+
+The build-job route accepts only the four locked alloy identities through an
+exact normalized alias allowlist and checks that the specimen base metal agrees.
+Unsupported, contradictory, or compound specimen identities do not submit a
+surrogate. Python validates explicit thermal and slicer material names against
+the resolved alloy before cache lookup, then passes canonical names to both
+solvers and canonicalizes those fields in the cache key. For backward
+compatibility, an omitted or blank `alloyId` still
+defaults to IN718. This is an identity-consistency guard; it does not yet bind
+the worker result to a complete resolved thermal/slicer property snapshot or
+establish scientific provenance. The shared thermal-registry revision digest
+does not apply to build-job properties.

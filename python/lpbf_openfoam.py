@@ -6,7 +6,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import numpy as np
-from lpbf_material_registry import enthalpy_table, property_at
+from lpbf_core_physics import enthalpy_table, property_at, calculate_mesh_domain, thermal_si_inputs, SOURCE_INTEGRATION
 from lpbf_evidence import thermal_audits
 from lpbf_peak import PeakMeltTracker, PEAK_EXTRACTION
 
@@ -19,12 +19,21 @@ def generate_case(p, m, folder):
     folder = Path(folder); (folder/"system").mkdir(parents=True, exist_ok=True)
     (folder/"constant").mkdir(exist_ok=True)
     segments, end = scan_segments(p)
-    from lpbf_core_physics import calculate_mesh_domain
+    thermal_inputs = thermal_si_inputs(p, m)
     domain = calculate_mesh_domain(p)
     radius, span, nxy, nz, dx, bottom = domain["radius"], domain["span"], domain["nxy"], domain["nz"], domain["dx"], -domain["substrate_depth"]
+    if p["mode"] == "standard" and p["surfaceMode"] == "powder-layer":
+        if p.get("powderGridPolicy") != "layer-conforming":
+            raise ValueError("Standard OpenFOAM powder runs require a layer-conforming grid")
+        layer_m = thermal_inputs["layer_m"]
+        layer_cells = layer_m/dx
+        base_face = (0.0-bottom)/dx
+        if (not math.isclose(layer_cells, round(layer_cells), rel_tol=0, abs_tol=1e-10)
+                or not math.isclose(base_face, round(base_face), rel_tol=0, abs_tol=1e-10)):
+            raise ValueError("OpenFOAM powder grid does not align layer surfaces with cell faces")
     if nxy*nxy*nz > 600000: raise ValueError("OpenFOAM thermal cell budget exceeded")
     z = bottom+(np.arange(nz)+.5)*dx
-    counts = [int(np.sum(z < layer*p["layer_um"]*1e-6)) for layer in range(int(p["layers"])+1)]
+    counts = [int(np.sum(z < layer*thermal_inputs["layer_m"])) for layer in range(int(p["layers"])+1)]
     if any(b <= a for a,b in zip(counts,counts[1:])):
         raise ValueError("Mesh cannot resolve each powder layer; reduce mesh spacing below layer thickness")
     top = bottom+nz*dx
@@ -43,15 +52,15 @@ mergePatchPairs ();
     (folder/"system/fvSolution").write_text(HEADER % "fvSolution"+"solvers {}\n")
     tt, hh = enthalpy_table(m)
     table = np.column_stack([tt, hh, *[property_at(m, tt, i) for i in (1, 2, 3, 4)]])
-    config = [end, p["maxDt_s"], p["preheat_C"]+273.15, m["solidus_K"], m["liquidus_K"], m["boiling_K"],
-              p["power_W"]*m["absorptivity"], radius, p["layer_um"]*1e-6,
-              p["packingFraction"], p["powderConductivityRatio"], p["convection_W_m2K"], m["emissivity"], dx, p["speed_mm_s"]*1e-3]
+    config = [end, p["maxDt_s"], thermal_inputs["preheat_K"], m["solidus_K"], m["liquidus_K"], m["boiling_K"],
+              thermal_inputs["absorbed_power_W"], radius, thermal_inputs["layer_m"],
+              p["packingFraction"], p["powderConductivityRatio"], p["convection_W_m2K"], m["emissivity"], dx, thermal_inputs["speed_m_s"]]
     with (folder/"thermalInput.dat").open("w") as stream:
         stream.write(" ".join(map(str, config))+"\n"+str(len(table))+"\n")
         np.savetxt(stream, table, fmt="%.17g")
         stream.write(str(len(segments))+"\n")
         for s in segments:
-            stream.write(" ".join(map(str, [s["start_s"], s["end_s"], *s["start"], *s["end"], (s["layer"]+1)*p["layer_um"]*1e-6, s["track"], s["layer"]]))+"\n")
+            stream.write(" ".join(map(str, [s["start_s"], s["end_s"], *s["start"], *s["end"], (s["layer"]+1)*thermal_inputs["layer_m"], s["track"], s["layer"]]))+"\n")
     return dx, segments
 
 
@@ -81,11 +90,19 @@ def thermal(p, m, report=lambda *args: None, artifact_dir=None):
         child.stdout.close()
     if code:
         raise ValueError("OpenFOAM thermal failed: "+(folder/"solver.log").read_text()[-2500:])
-    from lpbf_heat_source import SOURCE_INTEGRATION
     from lpbf_overlap import FieldOverlapTracker, OVERLAP_MODEL_ID
     if not diagnostic_path.is_file():
         raise ValueError("OpenFOAM binary is outdated: rebuild metalliksaThermal for cell-integrated heating")
     diagnostics = json.loads(diagnostic_path.read_text())
+    if p.get("powderGridPolicy") == "layer-conforming":
+        surface_offset_um = diagnostics.get("maximumSurfaceOffset_um")
+        if (isinstance(surface_offset_um, bool) or not isinstance(surface_offset_um, (int, float))
+                or not math.isfinite(surface_offset_um) or abs(surface_offset_um) > 1e-6):
+            raise ValueError("OpenFOAM layer-conforming surface alignment check failed; rebuild solver")
+    minimum_capture = diagnostics.get("minimumCapturedSourceFraction")
+    if (isinstance(minimum_capture, bool) or not isinstance(minimum_capture, (int, float))
+            or not math.isfinite(minimum_capture) or minimum_capture < 1/1.01):
+        raise ValueError("OpenFOAM Gaussian source capture is below the 1/1.01 minimum; rebuild solver")
     if diagnostics.get("sourceIntegration") != SOURCE_INTEGRATION:
         raise ValueError("OpenFOAM source integration contract mismatch; rebuild solver")
     if diagnostics.get("solidificationExtraction") != "linear-liquidus-crossing-v1":

@@ -1,42 +1,50 @@
-# Metalliksa product roadmap
+# Metalliksa roadmap
 
-**Updated: 27 September 2026**
+> **Single active plan:** this document governs current Metalliksa work. The only active release objective is the V1 Research Workstation below; historical solver phases and the A01–H02 / K0–K4 engineering ledger are reference records, not parallel active plans or V1 acceptance gates. The in-app ledger is a deferred qualification backlog and cannot imply industrial, customer-pilot, or commercial readiness.
 
-Metalliksa is a traceable research workstation for metal additive manufacturing. It helps materials and process engineers review LPBF inputs and bounded analyses alongside material context and source-linked evidence.
+## Current position
 
-The product goal is to make technical investigations easier to inspect and reproduce. Customer demand, measurable operational benefits, and willingness to pay remain hypotheses until validated with users and pilot data.
+- **V1 acceptance status (2026-10-04, `10e3005`):** every V1 exit evidence item was recorded on this single revision — numerical-oracle suite on Windows and Linux locked CPython 3.12 (fresh hashed-lock venv), clean `git archive` install / type check / 740-test suite / build / bundle check, replay of the archived workflow case with byte-identical `inputJson`/`materialJson` and a `resultJson` that differs only in `provenance.createdAt` and `runtime_s`, a real-browser archive round trip (archive, bundle, verify, restore, portable import, isolated restore, reload), and the error/recovery paths (running cancel, stale input, malformed bundles, crash + restart, non-completed archive refusal, login mode on a 0.0.0.0 bind, exercised from loopback). The V1 **software** exit is **accepted at `10e3005`** with recorded scope notes: Docker verify and GitHub CI not run (the Docker engine was not running at run time; it was started later and Docker verification is recorded separately), Table 4 case 0 is not a V1 requirement (fails closed at the boiling limit), the UI file picker and download button were not driven (the same HTTP endpoints were exercised), and the isolated restore ran on the same server, the browser round trip ran on the dev server (the documented `NODE_ENV=production npm start` path and the vite build output were not exercised in the browser), the keyboard-only tour and the numerical-convergence re-capture were not repeated, the conduction and layered suites ran on Windows only, and the claim review covered the result card's DOM text only (not a visual audit of every panel). Acceptance is bound to `10e3005`; the app branch had advanced 44 commits at the time of writing, and any later release must re-run all five exit gates plus the claim review on the new SHA. See the V1 acceptance record at the top of `STATUS.md`. Scientific status is unchanged: NIST optical residual `unavailable` (null), scenario convergence `inconclusive`, experimental validation `unvalidated` (`experimentalValidation=false`, `opticalOperatorMatched=false`); software checks are not scientific validation. The 19 `todo` tests are known, named product bugs outside the V1 scope (17 `BLOCKED by BUG 1` + BUG 1 + BUG 2: `src/utils/tafelParser.ts` import-time throw in `createBenchmarkDataset`); a later branch may fix BUG 1, which is not claimed here.
+- **Latest implementation milestone:** V1 Research Workstation hardening; code fixes through `6b2bded` (contract v2, bare-plate archive acceptance, browser sign-in, stale-result display, archive error codes, pinned Tailwind sources); older milestones: fail-closed NIST 3707 Table 5 proxy preflight (`f06359a`), archived proxy section metadata validation (`c38f933`), fail-closed optical geometry guard (`f46dc8c`); the V1 software exit is accepted at `10e3005` (see above); later merges do not inherit that acceptance automatically.
+- **Active goal:** V1 Research Workstation (see below) — exit accepted at `10e3005`; the freeze on new physics phases is lifted only through a bounded new contract per the working order below, and GPU-accelerated 3D transient enthalpy work stays optional and unscheduled.
+- **Application surface:** the current workspace inventory marks modules as Research or Preview; none is labelled Production.
+- **Evidence boundary:** the application is a traceable engineering research workstation. Solver outputs remain screening results unless the matching evidence is recorded in `PROOF.md`.
+- **Plan authority:** this ROADMAP owns sequencing and acceptance. `STATUS.md` records the latest verified state; `docs/ACTIVE_WORK.md` and the in-app engineering ledger preserve dated history/deferred qualification work.
+- **Historical plan:** the previous six-phase roadmap is preserved at [`docs/archive/ROADMAP_LEGACY_PHASES.md`](docs/archive/ROADMAP_LEGACY_PHASES.md).
 
-## Product position
+## Active release goal — V1 Research Workstation
 
-- The application supports research and engineering screening. It does not issue production release decisions, certified material allowables, or standards qualification.
-- Numerical verification, calibrated simulation, and independent experimental validation are separate evidence states.
-- CPU, PyTorch CUDA, and Warp CUDA results are comparable only when inputs, material law, mesh, boundary conditions, time-step policy, and observation method match.
-- Selected same-input CPU/Torch and CPU/Warp checks pass. A native Warp queue run also passed its bounded capture and artifact-integrity checks; this does not establish general product archive support.
-- A real browser GPU run still failed its parity gate because the GPU endpoint sampling differed from the CPU reference. Keep the issue open until the same run passes without loosening the frozen criteria.
-- The fine-grid/time convergence result remains inconclusive. Available IN718 measurement candidates are not admitted for experimental validation; IN625 remains screening-only.
-- The local shared engineering checkout is ahead of its remote branch and is not a release. Confirm the live Git state before describing local work as available on `main`.
+Bring one bounded CPU LPBF workflow to a reproducible, honest, release-ready research tool. V1 does not mean industrial qualification: unsupported comparisons stay unavailable, solver limits remain visible, and other workspaces stay Research/Preview. Freeze new physics phases until this exit path is accepted.
 
-## Work priorities
+1. **Close claim and provenance gaps.** Do not emit a six-section NIST observation unless each section is tied to an independently simulated track field; do not turn missing melt geometry into a positive measurement. Keep NIST residuals unavailable until the observer and its artifact bindings are implemented and tested.
+2. **Freeze separate workflow and numerical references.** Use the archived IN718 `standard/reference` 60 W / 1200 mm/s / 80 µm / 200 °C / 20 µm / 600 µm single-track, single-layer powder-bed case to replay the user path; bind resolved inputs, material revision and solver fingerprint. It is not a numerical-convergence oracle and does not match NIST Table 4. For numerical acceptance, use the existing manufactured-source and mixed-boundary diffusion tests separately: record the uniform/nonuniform manufactured final-temperature absolute-error bound `1e-7 K`, the all-case relative energy-error bound `1e-10`, distinct realized step counts, and the diffusion test's monotonically decreasing RMS error and observed order >1. The `1e-7 K` bound is not a diffusion RMS or piecewise sampled-temperature bound. These verify solver operators, not physical IN718 accuracy. Keep real moving-source mesh/time convergence a separate gate; unresolved trends stay `inconclusive` and experimental validity stays `unvalidated`.
+3. **Keep one complete user path trustworthy.** Configure → run → inspect provenance and limitations → archive → export → restore → reload. Retain separate acceptance for cancellation, stale inputs, malformed bundles and recovery; record the result against the exact release revision.
+4. **Make the research release reproducible.** Verify clean installation, locked dependencies, supported CPU runtime, visible failure states and traceable report/manifest using [application reproduction](docs/APPLICATION_REPRODUCTION.md) and [CPU LPBF reproduction](docs/LPBF_CPU_REPRODUCTION.md); follow the release/rollback checklist below.
 
-| Priority | Workstream | Exit condition |
-| --- | --- | --- |
-| 1 | Same-run identity and evidence continuity | Inputs, material revision, solver/backend identity, source bytes, and result artifacts stay bound through execution, capture, archive, export, and restore. |
-| 2 | Browser and API workflow | A user can run, inspect, archive, export, restore, reload, and compare the same saved case. Each path reports missing evidence and preserves failures. |
-| 3 | CPU/GPU numerical parity | CPU, PyTorch CUDA, and Warp CUDA pass predeclared same-input field, energy, accepted-step, and melt-geometry criteria. The actual execution mode is recorded. |
-| 4 | Convergence and performance evidence | Frozen mesh/time criteria are resolved without post-hoc threshold changes. Representative alternating timings and profiler attribution separate queue, transfer, compute, and archive costs. |
-| 5 | Experimental and alloy admission | A reference matches regime, geometry, scan history, observation method, and uncertainty. New alloys enter broader models only with source-backed properties and declared applicability. |
-| 6 | Intended-use readiness | Packaging, failure behavior, reproducibility, evidence, and independent review are complete for a defined use; remaining scientific limits stay visible. |
+**V1 exit evidence:** the same release revision passes the separate numerical-oracle suite, clean-install reproduction, replay of the archived workflow case, one end-to-end browser/archive round trip and critical error/recovery paths; every displayed scientific claim maps to recorded evidence. Report operator-level software checks, scenario-level convergence and experimental validity as separate statuses. NIST residuals, customer pilot, commercial launch, ML performance, GPU speed advantage and production labels are not V1 requirements.
 
-## Current sequence
+## Release and rollback checklist
 
-1. Fix the GPU endpoint-sampling mismatch against the existing CPU reference rule; preserve the frozen parity limits.
-2. Integrate Warp v2 identity and artifacts into the durable application archive path, or keep it explicitly diagnostic-only until that contract passes.
-3. Complete same-run API/browser export, restore, reload, and comparison checks for CPU, Torch, and Warp paths.
-4. Retain the inconclusive fine-grid/time result until its predeclared assessment is complete; profile matched backends before proposing performance changes.
-5. Keep IN718 experimental comparison unvalidated and IN625 screening-only until their separate evidence gates pass.
+Before accepting a V1 release, record the exact Git revision and confirm that a clean tracked-source archive passes locked dependency installation, type checking, the full unit suite and production build. Run the documented CPU runtime smoke check and one browser workflow through archive, portable `.tar` download, upload/import, integrity verification, isolated restore and reload. Record run/source IDs, archive SHA-256, test counts, skipped checks and scientific limitations in `STATUS.md`; an unavailable or skipped scientific comparison must stay unavailable, not count as validation.
 
-Dated observations belong in [PROOF.md](PROOF.md) and the [session log](sonkayıtlar/LOG.md). The short current snapshot is [STATUS.md](STATUS.md); coordination details are in [docs/ACTIVE_WORK.md](docs/ACTIVE_WORK.md). Superseded plans and dated audits are indexed in [the archive](docs/archive/).
+For rollback, stop writes and stop only the service processes started for the failed release. Preserve the failed release, logs, and every configured run/source/bundle root identified by `METALLIKSA_LPBF_*_ROOT`. Select the last recorded known-good revision and its matching locked runtime. Before reconnecting persistent stores, verify their compatibility with that revision or restore a pre-release backup into an isolated location and verify its integrity there. Re-run the documented health and archived-run read checks before reopening writes. If compatibility or integrity is uncertain, keep writes disabled and retain the stores for recovery; do not overwrite or delete them during rollback.
 
-## Deferred scope
+The A01–H02 / K0–K4 matrix in `src/data/engineeringRoadmap.ts` is a deferred qualification backlog. It becomes active only through an explicit later scope decision; its customer discovery and external validation gates are never inferred from internal software tests.
 
-Do not expand into unrelated EIS/EDS or add another physics workflow while the parity, archive, convergence, and evidence gates above remain open. Candidate scientific questions are collected in the [research vision](docs/SCIENTIFIC_RESEARCH_VISION.md); they are not current product commitments.
+## Implemented milestones
+
+Phases 1–6 established the data, standards, thermal, optics, powder, and CFD foundations. Phases 7–11 added plume/shielding, solidification microstructure, thermomechanics, experimental traceability, and GPU/optimization workflows. Phases 12–16 added toolpath kinematics, fatigue/fracture screening, spatial defect twin, adaptive feed-forward mitigation, and multi-laser/plume coordination. Phases 17–21 added thermal accumulation, powder-bed compaction, optical tomography/NETD, support optimization, and transient latent-heat phase change.
+
+Each milestone must remain backed by its focused tests and a dated entry in [`PROOF.md`](PROOF.md).
+
+## Remaining product gaps
+
+1. **End-to-end CAD/process contract:** preserve CAD geometry, powder state, machine profile, layer plan, and scan strategy as one versioned process vector.
+2. **Baseline comparison:** establish a reproducible GO-MELT or equivalent baseline with declared inputs, mesh/time-step policy, error norms, and wall-clock measurements.
+3. **Part-level validation:** separate calibration from holdout validation using measured melt pools and XCT/Archimedes evidence.
+4. **Physics maturity:** keep the current analytical and screening models distinct from a fully coupled free-surface, evaporation, recoil, Marangoni, and stress solver.
+5. **Production readiness:** move modules from Research/Preview only after runtime, evidence, packaging, and failure-state gates are satisfied.
+
+## Working order
+
+Follow the active V1 release goal above. Start with the observer/provenance correction, then freeze the CPU reference case and release acceptance. Do not add another physics phase until V1 is accepted or a measured research need justifies a bounded new contract.

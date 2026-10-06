@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "dataset_id": "nist-amb2022-03-optical-xlsx-official-v1",
+  "version": "1.0.0",
+  "material": "IN718",
+  "process_scope": "bare-plate",
+  "artifact_kind": "publisher-optical-cross-section-measurements",
+  "citation": "NIST AM Bench 2022, AMB2022-03, AMB2022-718-SH1 MeltPool Cross-Section Measurement Results; DOI 10.18434/mds2-2718. Publisher XLSX and publisher SHA-256 sidecar.",
+  "checksum_authority": "NIST-published SHA-256 sidecar for the publisher XLSX",
+  "files": [
+    {
+      "path": "AMB2022-718-SH1-MeltPool_Cross-Section_Measurement_Results.xlsx",
+      "source_url": "https://data.nist.gov/od/ds/ark:/88434/mds2-2718/AMB2022-718-SH1-MeltPool_Cross-Section_Measurement_Results.xlsx",
+      "bytes": 25811,
+      "sha256": "2cfaac96aaca3dabb77b7029f842cdcc7e75c5a2cf3577d0734823246364a931"
+    },
+    {
+      "path": "AMB2022-718-SH1-MeltPool_Cross-Section_Measurement_Results.xlsx.sha256",
+      "source_url": "https://data.nist.gov/od/ds/ark:/88434/mds2-2718/AMB2022-718-SH1-MeltPool_Cross-Section_Measurement_Results.xlsx.sha256",
+      "bytes": 64,
+      "sha256": "770c0826e53e42c242110e69c032f2cbc74f6183048c43a530c5b62e746ae09b"
+    }
+  ]
+}

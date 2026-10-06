@@ -1,4 +1,6 @@
+import { contractById } from '../modules/registry';
 import React, { useState } from "react";
+import { AccessibleModal } from "./AccessibleModal";
 import {
   Zap,
   Flame,
@@ -22,6 +24,7 @@ import {
   ModuleTargetId,
   setActivePipelineMaterial,
   dispatchNavigateToTab,
+  pipelineHardnessText,
 } from "../utils/materialDataPipeline";
 
 interface SendToModuleModalProps {
@@ -56,65 +59,19 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
     }, 350);
   };
 
+  const hardnessText = pipelineHardnessText(payload.hardnessHV, payload.hardnessHVSource, payload.hardness);
+
   const targets = [
     {
-      id: "thermal-scheduler" as ModuleTargetId,
-      name: "Thermal Cycle Scheduler & Kinetics Engine",
-      category: "Heat Treatment & Grain Coarsening",
-      icon: Flame,
-      color: "text-amber-400",
-      borderColor: "border-amber-500/30 hover:border-amber-400/70",
-      bgColor: "bg-amber-500/10",
-      badge: "Kinetics / ASTM E112",
-      description: `Pipes solvus temperature (${payload.kineticProfile.solvusTemp_C}°C), activation energy Q (${payload.kineticProfile.activationEnergy_kJ_mol} kJ/mol), solidus (${payload.kineticProfile.solidusTemp_C}°C), and pre-exponential k₀ for continuous grain growth & Zener pinning prediction.`,
-      highlights: [
-        `Solvus: ${payload.kineticProfile.solvusTemp_C}°C`,
-        `Q: ${payload.kineticProfile.activationEnergy_kJ_mol} kJ/mol`,
-        `Initial D₀: ${payload.kineticProfile.initialGrainSize_um} µm`,
-      ],
-    },
-    {
-      id: "xrd-lab" as ModuleTargetId,
-      name: "Rapid XRD Phase Identifier & Diffraction Lab",
-      category: "Crystallography & Phase Identification",
-      icon: Atom,
-      color: "text-sky-400",
-      borderColor: "border-sky-500/30 hover:border-sky-400/70",
-      bgColor: "bg-sky-500/10",
-      badge: "Cu-Kα / 2θ Peaks",
-      description: `Loads ${payload.xrdProfile.crystalSystem} space group (${payload.xrdProfile.spaceGroup}), lattice parameter a = ${payload.xrdProfile.latticeA_A} Å, and ${payload.xrdProfile.peaks.length} characteristic Bragg diffraction peaks for Rietveld matching.`,
-      highlights: [
-        `${payload.xrdProfile.crystalSystem.split(" ")[0]} Structure`,
-        `a = ${payload.xrdProfile.latticeA_A} Å`,
-        `${payload.xrdProfile.primaryPhases[0]}`,
-      ],
-    },
-    {
-      id: "hardness-tensile" as ModuleTargetId,
-      name: "Micro-Mechanical Hardness-to-Tensile Lab",
-      category: "Constitutive Modeling & Stress-Strain",
-      icon: Gauge,
-      color: "text-emerald-400",
-      borderColor: "border-emerald-500/30 hover:border-emerald-400/70",
-      bgColor: "bg-emerald-500/10",
-      badge: "ASTM E140 / Tabor",
-      description: `Transfers Vickers hardness (${payload.hardnessHV} HV), elastic modulus E = ${payload.youngsModulus} GPa, and Hollomon parameters (n = ${payload.hardnessProfile.workHardeningExponent_n}, K = ${payload.hardnessProfile.strengthCoefficient_K_MPa} MPa) to simulate complete tensile σ-ε curves.`,
-      highlights: [
-        `Hardness: ${payload.hardnessHV} HV`,
-        `E: ${payload.youngsModulus} GPa`,
-        `Tabor c = ${payload.hardnessProfile.taborConstraintFactor_c}`,
-      ],
-    },
-    {
       id: "alloy-builder" as ModuleTargetId,
-      name: "Alloy Formulator & Inverse Design Studio",
-      category: "Alloy Synthesis & Optimization",
+      name: contractById("alloy-builder").label,
+      category: "Composition & Specimen",
       icon: FlaskConical,
       color: "text-purple-400",
       borderColor: "border-purple-500/30 hover:border-purple-400/70",
       bgColor: "bg-purple-500/10",
-      badge: "Inverse CALPHAD",
-      description: `Loads this composition as active reference baseline for Pareto multi-objective optimization, Hume-Rothery solubility checks, and micro-alloying additions.`,
+      badge: "Active specimen",
+      description: `Loads this composition into the Alloy Builder as the shared active specimen for editing.`,
       highlights: [
         `Base: ${payload.baseMetal}-Matrix`,
         `σy: ${payload.yieldStrength} MPa`,
@@ -123,7 +80,7 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
     },
     {
       id: "icme-motor" as ModuleTargetId,
-      name: "Multi-Scale ICME Alloy Engine",
+      name: contractById("icme-motor").label,
       category: "Solidification & CALPHAD Microsegregation",
       icon: Cpu,
       color: "text-cyan-400",
@@ -139,7 +96,7 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
     },
     {
       id: "3d-distortion-lab" as ModuleTargetId,
-      name: "Additive LPBF Process Job",
+      name: contractById("3d-distortion-lab").label,
       category: "Laser Powder Bed Fusion",
       icon: Box,
       color: "text-cyan-300",
@@ -155,7 +112,7 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
     },
     {
       id: "phase-diagram" as ModuleTargetId,
-      name: "Fe-C Phase Diagram Explorer",
+      name: contractById("phase-diagram").label,
       category: "Equilibrium Thermodynamics",
       icon: Compass,
       color: "text-indigo-400",
@@ -172,8 +129,13 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-[#090e18] border border-[#162032] rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-[0_12px_45px_rgba(0,0,0,0.85)] overflow-hidden animate-in zoom-in-95 duration-200">
+    <AccessibleModal
+      open
+      onClose={onClose}
+      label="Cross-module data pipeline"
+      overlayClassName="bg-black/80 backdrop-blur-md p-4"
+      panelClassName="bg-[#090e18] border border-[#162032] rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-[0_12px_45px_rgba(0,0,0,0.85)] overflow-hidden animate-in zoom-in-95 duration-200"
+    >
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-[#162032] bg-[#0c1322]">
           <div className="flex items-center gap-3">
@@ -197,6 +159,7 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
           <button
             type="button"
             onClick={onClose}
+            aria-label="Close dialog"
             className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition"
           >
             <X className="w-5 h-5" />
@@ -235,7 +198,7 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
               </div>
               <div className="text-right">
                 <span className="text-[10px] text-slate-500 block uppercase">Hardness</span>
-                <span className="text-amber-400 font-bold">{payload.hardnessHV} HV</span>
+                <span className="text-amber-400 font-bold">{hardnessText}</span>
               </div>
             </div>
           </div>
@@ -340,7 +303,6 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
             Close
           </button>
         </div>
-      </div>
-    </div>
+    </AccessibleModal>
   );
 };

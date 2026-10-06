@@ -1,0 +1,12 @@
+{
+  "stage": "lint",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js",
+    "run",
+    "lint"
+  ],
+  "exitCode": 0,
+  "elapsed_s": 23.14100000000326,
+  "logSha256": "7a9f755a382a4ee111eda93f908328d996638dd4b13e8b1230e68c9a2f4525e2"
+}

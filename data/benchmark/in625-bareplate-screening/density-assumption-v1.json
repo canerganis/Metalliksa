@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "kind": "fixed-supplier-bulletin-density-assumption",
+  "material": "IN625",
+  "density_kg_m3": 8440,
+  "density_g_cm3": 8.44,
+  "source": "https://www.specialmetals.com/documents/technical-bulletins/inconel/inconel-alloy-625.pdf",
+  "sourceLocator": "Special Metals, INCONEL alloy 625 technical bulletin (2013), Table 2, page 2",
+  "assumption": "Fixed supplier-bulletin density used by the bare-plate screening model; not measured on, or matched to, a material lot.",
+  "validationStatus": "unvalidated-source-archive"
+}

@@ -25,4 +25,8 @@ export const LPBF_DEMO_VECTORS: Record<
     printable: { laserPower_W: 190, scanSpeed_mms: 900, hatch_um: 90, layer_um: 30, beamDiameter_um: 80 },
     lof: { laserPower_W: 90, scanSpeed_mms: 1400, hatch_um: 140, layer_um: 50, beamDiameter_um: 80 },
   },
+  in625: {
+    printable: { laserPower_W: 220, scanSpeed_mms: 950, hatch_um: 100, layer_um: 30, beamDiameter_um: 80 },
+    lof: { laserPower_W: 100, scanSpeed_mms: 1500, hatch_um: 150, layer_um: 50, beamDiameter_um: 80 },
+  },
 };

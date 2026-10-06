@@ -53,17 +53,16 @@ def measurement_evidence(rows, p):
 
 
 def resource_estimate(p, m):
-    radius = p["beamDiameter_um"]*.5e-6
-    span = (p["trackLength_um"]+(p["tracks"]-1)*p["hatch_um"])*1e-6+6*radius
-    nxy = math.ceil(span/(p["mesh_um"]*1e-6)); dx = span/nxy
-    nz = math.ceil((math.ceil(max(300e-6, 4*radius)/dx)*dx+p["layers"]*p["layer_um"]*1e-6)/dx)
+    from lpbf_core_physics import calculate_mesh_domain
+    domain = calculate_mesh_domain(p)
+    radius, dx, nx, ny, nz = (domain[k] for k in ("radius", "dx", "nx", "ny", "nz"))
     from lpbf_simulation import scan_segments
     _, duration = scan_segments(p)
     # Conservative estimate before temperature-dependent source limiting; not a wall-time benchmark.
     alpha = max(row[2]/(row[1]*row[3]*p["packingFraction"]) for row in m["table"])
     dt = min(p["maxDt_s"], .12*dx*dx/alpha, radius/(4*p["speed_mm_s"]*.001))
-    cells = nxy*nxy*nz
-    return dict(cells=cells, spacing_m=dx, shape=[nxy,nxy,nz], duration_s=duration,
+    cells = nx*ny*nz
+    return dict(cells=cells, spacing_m=dx, shape=[nx,ny,nz], duration_s=duration,
                 minimumEstimatedSteps=math.ceil(duration/dt), workingMemoryEstimate_MB=cells*200/1e6,
                 minimumRequiredSteps=math.ceil(duration/p["maxDt_s"]), stepBudget=250000,
                 exceedsStepBudget=math.ceil(duration/p["maxDt_s"])>250000,
@@ -74,7 +73,7 @@ def resource_estimate(p, m):
 
 def thermal_audits(coords, volumes, p, m, liquid_fraction):
     import numpy as np
-    from lpbf_material_registry import property_at
+    from lpbf_core_physics import property_at
     if (not np.isfinite(coords).all() or not np.isfinite(volumes).all()
             or np.any(volumes <= 0) or not np.isfinite(liquid_fraction).all()
             or np.any(liquid_fraction < 0) or np.any(liquid_fraction > 1)):

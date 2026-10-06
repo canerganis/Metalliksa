@@ -1,0 +1,14 @@
+{
+  "stage": "npm-ci",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js",
+    "ci",
+    "--offline=false",
+    "--no-audit",
+    "--no-fund"
+  ],
+  "exitCode": 0,
+  "elapsed_s": 135.03100000001723,
+  "logSha256": "e185991a859e14890168bedffd960f876f326b42c5952122bb8f0ae887be85c2"
+}

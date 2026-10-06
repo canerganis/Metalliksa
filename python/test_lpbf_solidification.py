@@ -9,12 +9,49 @@ from types import SimpleNamespace
 from unittest.mock import patch
 import numpy as np
 from lpbf_simulation import liquidus_crossing_sums
+from solidification_front import map_solidification_front
 
 
 class CrossingVerification(unittest.TestCase):
     def setUp(self):
         self.x, self.y, self.z = np.meshgrid(np.arange(-1., 2.), np.arange(-1., 2.), np.arange(-1., 2.), indexing="ij")
         self.active = np.ones_like(self.x, dtype=bool)
+
+    def test_front_is_unavailable_when_liquidus_crossing_is_beyond_search_depth(self):
+        liquidus = 1700.0
+
+        def superheated_domain(x, _y, z):
+            return liquidus + 100.0 + 1.0e6 * x - 1.0e5 * z
+
+        self.assertGreater(superheated_domain(-4e-6, 0.0, 8e-6), liquidus)
+        self.assertIsNone(map_solidification_front(
+            superheated_domain,
+            liquidus,
+            v_scan=1.0,
+            x_rear=20e-6,
+            search_depth=8e-6,
+            h_m=0.5e-6,
+            n_samples=9,
+        ))
+
+    def test_liquidus_crossing_at_search_boundary_remains_valid(self):
+        liquidus = 1700.0
+
+        def boundary_crossing(_x, _y, z):
+            return liquidus + 1.0 - 125000.0 * z
+
+        mapped = map_solidification_front(
+            boundary_crossing,
+            liquidus,
+            v_scan=1.0,
+            x_rear=20e-6,
+            search_depth=8e-6,
+            h_m=0.5e-6,
+            n_samples=9,
+        )
+        self.assertIsNotNone(mapped)
+        self.assertEqual(mapped["nPoints"], 9)
+        self.assertTrue(all(abs(sample["z_um"] - 8.0) <= 0.1 for sample in mapped["samples"]))
 
     def rotating(self, t):
         # A static z gradient separates planes. Multiple cells cross; compare

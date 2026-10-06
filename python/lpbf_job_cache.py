@@ -2,7 +2,7 @@
 """
 In-process hash cache for LPBF build-job results.
 
-Same alloy + P/v/h/t/d + seed + strategy + mesh fingerprint + flags → hit.
+Same effective material + process + complete mesh + flags → hit.
 Survives across IPC calls within one Python worker process.
 """
 
@@ -19,6 +19,11 @@ _CACHE: Dict[str, Tuple[float, Dict[str, Any]]] = {}
 _HITS = 0
 _MISSES = 0
 _MAX_ENTRIES = 64
+
+# Increment when build-job solver behavior changes so a warm worker cannot
+# return results produced by an earlier implementation for identical inputs.
+BUILD_JOB_SOLVER_REVISION = "lpbf-build-job-kinetics-li1998-extent-v8"
+BUILD_JOB_MODEL_ID = "rosenthal-screening-v1"
 
 
 def cache_stats() -> Dict[str, Any]:
@@ -46,11 +51,10 @@ def mesh_fingerprint(triangles: Any, cad_name: str = "", native_count: Any = Non
     if native_count is not None:
         h.update(str(native_count).encode("utf-8"))
     h.update((cad_name or "").encode("utf-8"))
-    # Sample corners — full mesh hash is too heavy for every request.
-    idxs = sorted({0, n // 4, n // 2, (3 * n) // 4, n - 1})
-    for i in idxs:
-        h.update(json.dumps(triangles[i], separators=(",", ":"), ensure_ascii=False).encode("utf-8"))
-    return h.hexdigest()[:24]
+    # Every effective triangle matters: interior-only edits can change slices.
+    for tri in triangles:
+        h.update(json.dumps(tri, separators=(",", ":"), ensure_ascii=False, allow_nan=False).encode("utf-8"))
+    return h.hexdigest()
 
 
 def build_cache_key(data: Dict[str, Any]) -> str:
@@ -62,10 +66,18 @@ def build_cache_key(data: Dict[str, Any]) -> str:
         defects_norm = [round(float(x), 6) for x in defects]
     else:
         defects_norm = None
+    build_job_identity = data.get("buildJobIdentity")
+    build_job_identity_sha256 = (
+        build_job_identity.get("sha256") if isinstance(build_job_identity, dict) else None
+    )
     payload = {
         "alloyId": data.get("alloyId") or "in718",
         "thermalMaterial": data.get("thermalMaterial"),
         "slicerMaterial": data.get("slicerMaterial"),
+        "materialPropertySha256": data.get("materialPropertySha256"),
+        "materialAuthorityRevisionSha256": data.get("materialAuthorityRevisionSha256"),
+        "buildJobIdentitySha256": build_job_identity_sha256,
+        "amBenchMaterialPropertySha256": data.get("amBenchMaterialPropertySha256") if include_amb else None,
         "P": round(float(data.get("laserPower_W", 0)), 6),
         "v": round(float(data.get("scanSpeed_mm_s", data.get("scanSpeed_mms", 0))), 6),
         "h": round(float(data.get("hatchSpacing_um", 0)), 6),
@@ -88,12 +100,15 @@ def build_cache_key(data: Dict[str, Any]) -> str:
             data.get("triangleCountNative"),
         ),
         "maxTris": int(data.get("maxTriangles") or 12000),
+        "recoatTimePerLayer_s": data.get("recoatTimePerLayer_s", 9.0),
         "enableUq": enable_uq,
         "uqSamples": int(data.get("uqSamples", 64)) if enable_uq else 0,
         "includeAmbench": include_amb,
         "defects": defects_norm,
         "hv": data.get("hardness_HV"),
         "ctThresh": data.get("ctDetectionThreshold_um"),
+        "gitSha": data.get("gitSha"),
+        "solverRevision": BUILD_JOB_SOLVER_REVISION,
     }
     raw = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()

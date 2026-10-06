@@ -14,17 +14,87 @@ const FALLBACK: RuntimeConfig = {
 };
 
 let cached: RuntimeConfig | null = null;
+let accessRequired = false;
+let lastFailure: string | null = null;
+const accessListeners = new Set<(v: boolean) => void>();
+let nativeFetch: typeof fetch | null = null;
 
-export async function fetchRuntimeConfig(): Promise<RuntimeConfig> {
-  if (cached) return cached;
+function setAccessRequired(v: boolean) {
+  if (accessRequired === v) return;
+  accessRequired = v;
+  accessListeners.forEach((l) => l(v));
+}
+
+let inflight: Promise<RuntimeConfig> | null = null;
+
+/** Non-forced callers share one in-flight request (banner, boot check and telemetry start together). */
+export function fetchRuntimeConfig(force = false): Promise<RuntimeConfig> {
+  if (cached && !force) return Promise.resolve(cached);
+  if (inflight && !force) return inflight;
+  const request = requestRuntimeConfig().finally(() => {
+    if (inflight === request) inflight = null;
+  });
+  inflight = request;
+  return request;
+}
+
+async function requestRuntimeConfig(): Promise<RuntimeConfig> {
   try {
-    const res = await fetch("/api/runtime-config");
-    if (!res.ok) return FALLBACK;
+    const res = await (nativeFetch ?? fetch)("/api/runtime-config");
+    setAccessRequired(res.status === 401);
+    if (!res.ok) {
+      lastFailure = `HTTP ${res.status}`;
+      return cached ?? FALLBACK;
+    }
     cached = (await res.json()) as RuntimeConfig;
+    lastFailure = null;
     return cached;
-  } catch {
-    return FALLBACK;
+  } catch (error) {
+    lastFailure = error instanceof Error && error.message ? error.message : "request failed";
+    return cached ?? FALLBACK;
   }
+}
+
+/** What the last runtime-config request established (read-only; FALLBACK values are never reported as loaded). */
+export function runtimeConfigProbe(): { loaded: boolean; accessRequired: boolean; failure: string | null } {
+  return { loaded: cached !== null, accessRequired, failure: lastFailure };
+}
+
+/** Re-check access after any /api call returned 401 (expired session, server restart). */
+let recheckPending = false;
+function onApiUnauthorized() {
+  if (recheckPending) return;
+  recheckPending = true;
+  void fetchRuntimeConfig(true).finally(() => {
+    recheckPending = false;
+  });
+}
+
+/** True for same-origin /api/ requests other than /api/runtime-config (the only ones that trigger a re-check). */
+export function isWatchedApiRequest(input: unknown, origin: string): boolean {
+  try {
+    const raw = typeof input === "string" ? input : input instanceof URL ? input.href : (input as Request).url;
+    const u = new URL(raw, origin);
+    if (u.origin !== origin) return false;
+    const p = u.pathname.toLowerCase();
+    return p.startsWith("/api/") && p !== "/api/runtime-config";
+  } catch {
+    return false;
+  }
+}
+
+let installed = false;
+/** Wrap window.fetch so a 401 from a same-origin /api call re-checks access. Call once from the app entry. */
+export function installApiUnauthorizedWatcher(): void {
+  if (installed || typeof window === "undefined" || !window.fetch) return;
+  installed = true;
+  const original = window.fetch.bind(window);
+  nativeFetch = original;
+  window.fetch = async (...args: Parameters<typeof fetch>) => {
+    const res = await original(...args);
+    if (res.status === 401 && isWatchedApiRequest(args[0], window.location.origin)) onApiUnauthorized();
+    return res;
+  };
 }
 
 export function useRuntimeConfig(): RuntimeConfig {
@@ -35,10 +105,30 @@ export function useRuntimeConfig(): RuntimeConfig {
   return cfg;
 }
 
+export function useAccessRequired(): boolean {
+  const [required, setRequired] = useState(accessRequired);
+  useEffect(() => {
+    accessListeners.add(setRequired);
+    setRequired(accessRequired);
+    return () => {
+      accessListeners.delete(setRequired);
+    };
+  }, []);
+  return required;
+}
+
 /** Honest banner when AIRGAPPED=1 — lists which cloud services are cut. */
 export const AirgapBanner: React.FC = () => {
   const cfg = useRuntimeConfig();
+  const required = useAccessRequired();
   const [open, setOpen] = useState(false);
+  if (required) {
+    return (
+      <div role="alert" className="border-b border-red-500/40 bg-red-500/10 text-red-100 px-3 py-2 text-xs font-mono">
+        Sign-in required: <a href="/login" className="underline">open the sign-in page</a>, or use the one-time login link printed in the server console.
+      </div>
+    );
+  }
   if (!cfg.airgapped) return null;
 
   return (
@@ -67,7 +157,7 @@ export const AirgapBanner: React.FC = () => {
               <div>
                 <div className="text-amber-200/70 uppercase mb-0.5">Blocked</div>
                 <ul className="list-disc pl-4 space-y-0.5">
-                  {(cfg.blockedServices.length ? cfg.blockedServices : ["Gemini", "NVIDIA", "Materials Project live", "External pricing"]).map(
+                  {(cfg.blockedServices.length ? cfg.blockedServices : ["GPT-6", "NVIDIA", "Materials Project live", "External pricing"]).map(
                     (s) => (
                       <li key={s}>{s}</li>
                     )

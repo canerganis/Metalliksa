@@ -1,0 +1,45 @@
+# V1 claim audit — Sol — 2026-10-03
+
+Scope: read-only scientific/claim audit of frozen candidate `33efb32b7d9734587a78d1cb9de8224d7ef2a4ec`, `.runtime/v1-recovery-acceptance-20261003`. No tests rerun; no production source, docs, index, process or archive mutation. Only this fresh scratch note was created. Root-reported acceptance results are not independent reruns by this reviewer.
+
+## Release decision
+
+No active production path publishing an invalid NIST residual was found in the inspected scope. One concrete documentation blocker remains for ROADMAP's claim-mapping gate: the first PROOF entry claims a six-section production observer and official residuals that the frozen candidate explicitly disables. V1 can keep NIST `unavailable`, real moving-source convergence `inconclusive`, and experimental validity `unvalidated`; none of those scientific outcomes alone blocks the bounded research release.
+
+## Blocking claim discrepancy
+
+- Frozen `PROOF.md:21-26` says `opticalObserver="nist-six-section"` emits `sixSectionObservation`, that the comparison restriction was removed, and that official NIST residuals were produced. The entry is at the top, dated 2026-09-29, and has no superseded/unsupported label.
+- Frozen `python/lpbf_nist_in718_comparison.py:242-246` unconditionally adds: the six-section comparison is disabled because each section is not bound to an independent simulated track field. `257-283` returns `status=unavailable`, `validationStatus=unvalidated`, `errors=None` whenever any reason exists. The residual branch `284-293` cannot be reached by this implementation.
+- Frozen `python/lpbf_simulation.py:91,147` accepts the observer input, but the only other relevant production outputs are midpoint thermal proxies (`781`, `1071-1082`); exhaustive literal search found no six-section emission. Graph callers of `build_nist_six_section_observation` are only two test methods.
+- Recommended closure: preserve the dated historical entry, explicitly mark its observer/residual assertions superseded and unsupported by the release candidate, then state current behavior and its source spans. Do not claim the old test counts establish current behavior or rewrite old immutable artifacts.
+
+## Correct scientific boundaries in current code
+
+- Bare plate versus powder: comparator `python/lpbf_nist_in718_comparison.py:174-197` requires one uninterrupted +X 10 mm bare track, case-matched power/speed and 23.5 +/- 1 C substrate temperature. The V1 60 W / 1200 mm/s / 80 um / 200 C / 600 um powder case in `ROADMAP.md:19` is a workflow fixture, not NIST Table 4 validation. Linking its official bare-plate workbook proves provenance only.
+- Beam/geometry: comparator `198-207` requires verified measured profile and D4sigma mapping. Server `server/lpbfNistComparisonService.ts:127-138` verifies archived output bytes and requires the claimed beam SHA in those artifacts. The current contour is not established as an etched optical boundary.
+- Six sections: aggregator `python/lpbf_nist_optical_operator.py:97-135` only checks list length, calculates means/SD, and labels the object optical matched. It does not verify track/section identities, independent fields, provenance or artifact bindings. This is a dormant helper risk; unconditional comparator disable prevents it from enabling residuals today. Never enable residuals by merely removing that disable.
+- No melt: active midpoint extractor `python/lpbf_peak.py:28-39` returns `status=no-melt`, zero dimensions and zero sample cells without inventing positive geometry. Interpolated extractor `43-109` starts dimensions null and returns no-melt/inconclusive for missing/boundary/unresolved contours; only resolved positive dimensions become thermal-proxy.
+- Status separation: simulation `python/lpbf_simulation.py:900-902` marks the model unvalidated and productionReady false; refinement `1046-1057` keeps unresolved trends inconclusive. Archive UI `src/components/LpbfRunArchivePanel.tsx:623-640` explicitly renders unavailable/comparable screening with unvalidated. These statuses refer to distinct evidence classes.
+- Official workbook loader `server/lpbfSourceCatalog.ts:152-204` verifies fixed XLSX/sidecar hashes and labels the source bare-plate optical measurements. It explicitly records no model optical operator/validation. It does not represent newly acquired AMB2025 bytes.
+
+## Historical/dormant risks, not observed runtime release defects
+
+- `python/test_lpbf_280w_simulation.py:36-75` still expects opticalObserver to generate six sections from a single 500 um track. This conflicts with current production and the newer no-repeated-field regression. It is outside the specifically reported acceptance suites; no execution or PASS/FAIL inference was made here. It must not support an all-Python-tests-pass or NIST observer claim.
+- `python/lpbf_nist_optical_operator.py:1-7` describes a physically matched etched observer and exact boundary coordinates, but its implementation is a liquidus contour helper. Its depth fallback `57-60` is unreachable inside `range(nz-1)` and `valid=True` is unconditional after detecting any molten cell (`89-94`), even if crossings are absent. Dormant helper; not connected to current transient output. Future optical implementation must resolve this explicitly.
+- Generic experimentalComparison reason `python/lpbf_simulation.py:1079-1082` says the bounded mesh cannot solve full-length midpoint even though opt-in corridor inputs can represent long tracks. This does not open comparison or publish a residual, but future text cleanup should describe the actual missing operator/beam/convergence gates instead of a universal feasibility claim.
+
+## Remaining evidence and next focused work
+
+`ROADMAP.md:18-27` requires exact-candidate cancellation, stale-input, malformed-bundle, recovery and complete claim recording as separate gates. Root reports clean install/unit/type/build, archive 25/25, CPU 24/24, manufactured 4/4, real owner-only crash/replacement run and portable browser restore complete. Root was still completing cancellation/stale/browser recording at dispatch; this audit does not certify those unreviewed artifacts or close the full release gate.
+
+Immediate highest-value work: close the PROOF discrepancy and root's remaining exact-candidate error-path records, then map each release claim to the saved evidence without relabelling old revisions.
+
+Next synthetic physics work after V1 closure: a small bounded real-moving-source convergence protocol with fixed physical observation time, separate mesh and time refinements, independently bound fields/operator/material/input identities, and an explicit resource preflight. Keep thermal-proxy, inconclusive and unvalidated statuses until the stated gates are met. Do not launch another large 5 um case or introduce a new optical contract to finish V1.
+
+Do not repeat the old GL2 limitation as current: frozen `python/lpbf_core_physics.py:22-42,113-164` already uses travel/radius dependent Gauss order and N-versus-2N refinement above four radii. `python/test_lpbf_heat_source.py:211-232` and `python/test_lpbf_gpu_thermal.py:69-98` contain high-order oracle/parity checks at .5,1,2,4,8 radii. This is source presence, not a fresh test result from this audit.
+
+## Graph/source confidence
+
+Explicit workspace Graft CLI map/ask/grep/callers/skeleton used first. Map: 622 indexed files, 4397 symbols, 12248 edges; refresh was skipped with EPERM on an old temporary owner-crash directory. Latest graph fingerprint cache is dated 2026-10-03 00:27. Fingerprint hashes matched current bytes for the central comparison, operator, simulation, service and core source files. Exact frozen-source ranges were read for decisive claims. All 13 relevant working/frozen files checked were equal after CRLF-to-LF normalization; raw hash differences therefore were not treated as source edits. Unrelated dirty checkout changes were preserved. This is a scoped audit, not an exhaustive application claim inventory.
+
+Memory used only for earlier evidence boundaries; current source supersedes the historical GL2-only note. Reference: MEMORY.md:43-53, rollout 01a0f98a-d4fc-7833-9b4f-7747ec3366c0.

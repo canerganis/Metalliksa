@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "scope": "Exploratory single 5 um CPU reference solve appended to the surface-aligned 80 W IN718 mesh observations; not a replacement for the frozen 3+3 acceptance report",
+  "referenceReport": "docs/LPBF_CPU_SURFACE_ALIGNED_80W_2026-09-24.json",
+  "referenceReportSha256": "33dde8637cb90e7445cbf5bef364c8b5e8922adfcd0baa3ac423e0d36f9b84a2",
+  "scenarioOverride": { "mesh_um": 5, "maxDt_s": 1e-7 },
+  "run": {
+    "status": "completed",
+    "backend": "numpy-reference",
+    "elapsed_s": 375.0547066,
+    "cells": 588544,
+    "actualMesh_m": 4.9999999999999996e-6,
+    "minimumDt_s": 1.5293485098303748e-8,
+    "meanDt_s": 9.150326797385621e-8,
+    "steps": 2040,
+    "peakTemperature_K": 2355.09729914509,
+    "discreteWidth_um": 60.00000000000001,
+    "discreteDepth_um": 54.99999999999997,
+    "energyRelativeError": 1.1127338086035406e-14,
+    "interpolatedPeak": {
+      "operator": "peak-liquidus-cell-edge-linear-contour-v1",
+      "temporalSelection": "accepted-step-molten-volume-v1",
+      "width_um": 64.41714839589659,
+      "depth_um": 55.590489091619,
+      "sampleCells": 3436,
+      "crossingCount": 1380,
+      "surfaceTreatment": "No temperature extrapolation to the model surface"
+    }
+  },
+  "meshObservation_20_10_5_um": {
+    "discreteWidth_um": [40.0, 60.00000000000002, 60.00000000000001],
+    "discreteDepth_um": [40.00000000000002, 50.00000000000001, 54.99999999999997],
+    "discreteFinestDepthChange_pct": 9.090909090909026,
+    "interpolatedWidth_um": [56.75571446240298, 63.59858431636454, 64.41714839589659],
+    "interpolatedDepth_um": [48.661037598951495, 53.53099661394532, 55.590489091619],
+    "interpolatedWidthObservedOrder": 3.0634342441819746,
+    "interpolatedWidthFineChange_pct": 1.2707238676591206,
+    "interpolatedWidthGCI_pct": 0.2158275476082346,
+    "interpolatedDepthObservedOrder": 1.241620774054667,
+    "interpolatedDepthFineChange_pct": 3.704756895157763,
+    "interpolatedDepthGCI_pct": 3.393528643674245
+  },
+  "acceptance": {
+    "originalFrozenStatus": "failed",
+    "newGateStatus": "not-established",
+    "reason": "The 5 um point is exploratory and uses no independent three-timestep axis. The interpolated contour was supplementary in the frozen gate."
+  },
+  "experimentalValidation": false
+}

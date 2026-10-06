@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "evidenceType": "software-workflow-acceptance",
+  "observedAt": "2026-09-28T15:24:00+03:00",
+  "repository": {
+    "branch": "codex/lpbf-buildjob-material-identity",
+    "head": "e327458",
+    "workingTreeWasDirty": true
+  },
+  "runtime": {
+    "serverUrl": "http://127.0.0.1:4191/?lpbfStage=thermal",
+    "serverPid": 24388,
+    "serverStoppedAfterAcceptance": true,
+    "isolatedRoot": "%TEMP%/metalliksa-lpbf-partials-20260928-151941",
+    "isolatedJobRoot": "%TEMP%/metalliksa-lpbf-partials-20260928-151941/jobs",
+    "isolatedRunRoot": "%TEMP%/metalliksa-lpbf-partials-20260928-151941/runs",
+    "isolatedSourceRoot": "%TEMP%/metalliksa-lpbf-partials-20260928-151941/sources",
+    "isolatedBundleRoot": "%TEMP%/metalliksa-lpbf-partials-20260928-151941/bundles",
+    "isolatedIpcPort": 5191,
+    "python": "3.12.10",
+    "userTab4179Touched": false
+  },
+  "cancelledJob": {
+    "jobId": "4c984a3fd1f446018dc6c4965b65316d",
+    "inputSha256": "22545da52c562e4beda7ba51ca88c451517befbac87a5f172751d10f1ace3fda",
+    "input": {
+      "material": "Inconel 718",
+      "power_W": 60,
+      "speed_mm_s": 1200,
+      "beamDiameter_um": 80,
+      "preheat_C": 200,
+      "layer_um": 40,
+      "hatch_um": 100,
+      "mesh_um": 20
+    },
+    "uiTransitions": ["running", "cancelled", "reloaded", "cancelled"],
+    "lastReportedProgress": 0.11762669433919329,
+    "apiStatusAfterRefresh": "cancelled",
+    "apiPartialArtifacts": {
+      "status": "retained-unverified",
+      "fileCount": 9,
+      "totalBytes": 1319472
+    },
+    "resultJsonPresent": false,
+    "completedResult": false,
+    "partialFiles": [
+      {"path": "field-coordinates.bin", "sizeBytes": 359856, "sha256": "99A585A3C18CEC9BA3ED9869944CAB47FD8C71F2EA44670D79C612788EBB3B48"},
+      {"path": "field-frame-000.bin", "sizeBytes": 119952, "sha256": "5787CCCF066C3BAC38F6E517B0FF0C187F0F282BEFE1D24EEE5FDBC5C6CAB95E"},
+      {"path": "field-frame-001.bin", "sizeBytes": 119952, "sha256": "FA93E5BDC5302270B14D0BC741285C1ECB8BE779C8B7148B34BB79666496A7D9"},
+      {"path": "field-frame-002.bin", "sizeBytes": 119952, "sha256": "53A52A91845F9BBEC0D0F0728BA2765A389744481B08CE59DE0C2D8BA4C8BEF9"},
+      {"path": "field-frame-003.bin", "sizeBytes": 119952, "sha256": "F7FCC319400269229BC165E46E95D19F83777A703A936E6E17E811B07F0840D1"},
+      {"path": "field-frame-004.bin", "sizeBytes": 119952, "sha256": "BBC08C0B26BFC81DC08FCDB298FA9FB93F429AFEFFF7853AC5DA64F7155C9DB1"},
+      {"path": "field-frame-005.bin", "sizeBytes": 119952, "sha256": "EA6F90D4AA626A6BDB3182DE8689EA10A4897896BE0CEABC6F5624A892B6E495"},
+      {"path": "field-frame-006.bin", "sizeBytes": 119952, "sha256": "F93FB324D07CF282BE99789B5218C15EA775A1F4931DF1BF6D838EFA5649B349"},
+      {"path": "field-frame-007.bin", "sizeBytes": 119952, "sha256": "FAA0E55BBDD913491EC38971E6CAD812586216040163ADBACF0708CD5286A8DB"}
+    ],
+    "hashStabilityAcrossTwoReads": true,
+    "hashStabilityIntervalSeconds": 2,
+    "materialDataQuality": "estimated-legacy",
+    "experimentalValidation": "unvalidated"
+  },
+  "uiAcceptance": {
+    "cancelledRunHasNoResultPanelValues": true,
+    "partialArtifactDisclosureVisible": true,
+    "completedArchiveExposure": false,
+    "warning": "Integrity not verified; partial files are unavailable as a result/download and excluded from completed-run archives."
+  },
+  "verification": {
+    "pythonLifecycleSuite": "19/19 PASS in authorized Windows runner; sandbox attempt failed before suite setup because temporary path/SQLite access was denied",
+    "pythonPyCompile": "PASS",
+    "typescriptNoEmit": "PASS",
+    "targetedFrontendTests": "2/2 PASS",
+    "diffCheck": "PASS for scoped source files"
+  },
+  "sourceSha256": {
+    "python/lpbf_worker.py": "1F30C0C0EF7DE4D253F448A766E8CC5714AC746481C501E351A2ABA8C3802357",
+    "python/test_lpbf_worker_lifecycle.py": "8A25E8F8A6D38DE9C86FA297515E7A736DF11238282C1034A73185E5CC5CAD0E",
+    "src/services/lpbfSimulationService.ts": "6D84CA16EEF6589A870B5AF97CA8E6B3B4820DCD1DC9E16F37F48A72F53DC942",
+    "src/components/3d-distortion-lab/LpbfResultPresentation.tsx": "6B67319CA43877FED1F73EF917B11FBCE2A4A7C7D9C2571CD27B2D1D4D7E40BB",
+    "tests/lpbf-contract.test.ts": "E3122B91B19099A2FC140216045458D8352633A2419BBBFF0D83A848FEFAA87F",
+    "tests/lpbf-presentation.test.tsx": "7B5C1AC9EBD619040AE6B5D7DFC40A50D7B63BAF97D8FA1E708EECA444DF1AA0",
+    "docs/LPBF_SHARED_THERMAL_SCIENCE_CROSSWALK.md": "1F7D6F26D1E3E930442FBBF1CAEB94144CF7CD7614AA6790737411683A153DDC"
+  },
+  "scopeLimitations": [
+    "The retained-file hashes are a post-cancel stability observation, not a completion/integrity attestation or result artifact.",
+    "The isolated temporary evidence root is preserved locally and is not a portable completed-run archive.",
+    "The estimate/legacy IN718 properties make no experimental-validity claim.",
+    "The isolated SQLite record was not independently queried after this run; API and refreshed UI status were observed."
+  ]
+}

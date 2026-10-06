@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "status": "failed-model-validity-stop-before-full-track",
+  "attemptedAt": "2026-09-24",
+  "scope": "One preregistered 10 mm IN718 bare-plate CPU reference case. This is a numerical model-validity stop, not an experimental comparison or P5 pass.",
+  "preregistration": {
+    "path": "docs/p5_case0_corridor_width_sensitivity_preregistered.json",
+    "caseNumber": "0",
+    "corridorWidth_um": 480,
+    "inputSha256": "8a5c4465b17aa5570030936ba562cd4d5036247f5204d29acfda4cfd10a6264d"
+  },
+  "solver": {
+    "solverId": "enthalpy-fv-6",
+    "backend": "numpy-reference",
+    "materialId": "in718",
+    "repositoryHeadAtAttempt": "a065b77f992dead6435d0bbcfb5185ef9391865e",
+    "referenceInputRevision": "46b9be63fb82252573169d8e93f93187341089c0",
+    "device": "cpu"
+  },
+  "attempt": {
+    "wallTime_s": 7.2321815000032075,
+    "sourceStepEvaluations": 133,
+    "timeAtFailingStepStart_s": 0.000010691231663326355,
+    "failingStepDt_s": 0.00000010061271168996845,
+    "lastStepSourceCaptureFraction": 0.9999999999813348,
+    "lastStepSourceRetries": 1,
+    "scanDuration_s": 0.010436666666666667,
+    "fractionOfScanDurationReached": 0.001024382395114336
+  },
+  "failure": {
+    "exception": "ValueError",
+    "message": "Thermal model validity exceeded (boiling or nonphysical enthalpy); evaporation/free-surface CFD required",
+    "interpretation": "The fixed-material reference solver intentionally stops at its boiling enthalpy bound. It has no evaporation mass/energy sink or moving free surface. The stop occurred near the beginning of the requested scan; no full-track output was produced.",
+    "solverResultProduced": false,
+    "energyBalance": null,
+    "sectionResults": null,
+    "comparisonResiduals": null,
+    "p5Status": "unavailable"
+  },
+  "evidenceLimits": [
+    "The last-step source capture does not describe minimum capture across a completed run.",
+    "No width/depth thermal proxy, full-track energy closure, GPU result, or NIST residual is available from this failed attempt.",
+    "NIST reports a measured nominal 67 um Gaussian Dg diameter with 5.2% combined standard uncertainty, but no downloadable raw 2D irradiance artifact. This run used an ideal-Gaussian 1/e2 screening input; its mapping to the Table 4 nominal D4sigma value was not source-byte-bound."
+  ]
+}

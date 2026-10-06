@@ -1,0 +1,137 @@
+{
+  "case": {
+    "backend": "reference",
+    "cooling_s": 2e-05,
+    "dwell_s": 0,
+    "layer_um": 80,
+    "material": "Inconel 718",
+    "maxDt_s": 2e-07,
+    "mesh_um": 10,
+    "mode": "standard",
+    "powderGridPolicy": "layer-conforming",
+    "power_W": 60,
+    "speed_mm_s": 1200,
+    "trackLength_um": 200
+  },
+  "caseSha256": "cf2692fc4f4f06edf95ac6e4906b804d67ea1f71ec01901efbc6e9e489f3ee73",
+  "comparisons": {
+    "depth_um": {
+      "absoluteDifference_um": 0.0,
+      "cpu": 39.999999999999986,
+      "gpu": 39.999999999999986,
+      "status": "pass"
+    },
+    "finalSampling": {
+      "cellCount": 73568,
+      "cpuFinalTime_s": 0.00018666666666666666,
+      "cpuFrameTime_s": 0.00018666666666666666,
+      "cpuSteps": 934,
+      "expectedEnd_s": 0.00018666666666666666,
+      "gpuFinalTime_s": 0.00018666666666666666,
+      "gpuSteps": 934,
+      "status": "pass"
+    },
+    "finalTemperatureField": {
+      "cpuEncoding": "float64 final state observer",
+      "gpuEncoding": "float64 final state",
+      "relativeRiseL2": 2.6000802971244283e-09,
+      "relativeRiseMax": 7.2758182617918055e-09,
+      "status": "pass"
+    },
+    "input_J": {
+      "cpu": 0.003799999999999877,
+      "gpu": 0.003799999999999877,
+      "relativeDifference": 0.0,
+      "status": "pass"
+    },
+    "length_um": {
+      "absoluteDifference_um": 0.0,
+      "cpu": 160.0,
+      "gpu": 160.0,
+      "status": "pass"
+    },
+    "losses_J": {
+      "cpu": 2.5862915264562516e-07,
+      "gpu": 2.586291533563086e-07,
+      "relativeDifference": 2.7478861235344044e-09,
+      "status": "pass"
+    },
+    "peakTemperature_K": {
+      "cpu": 1970.7413975644372,
+      "gpu": 1970.7413992342188,
+      "relativeDifference": 8.472859859690828e-10,
+      "status": "pass"
+    },
+    "stored_J": {
+      "cpu": 0.0037997413708473005,
+      "gpu": 0.0037997413708465897,
+      "relativeDifference": 1.8706613816797629e-13,
+      "status": "pass"
+    },
+    "volume_um3": {
+      "cpu": 195999.99999999994,
+      "gpu": 195999.99999999994,
+      "relativeDifference": 0.0,
+      "status": "pass"
+    },
+    "width_um": {
+      "absoluteDifference_um": 0.0,
+      "cpu": 39.99999999999997,
+      "gpu": 39.99999999999997,
+      "status": "pass"
+    }
+  },
+  "createdAtUtc": "2026-09-27T18:26:56.369992+00:00",
+  "device": {
+    "cudaRuntime": "12.6",
+    "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "torch": "2.14.0+cu126"
+  },
+  "discretization": {
+    "cpu": {
+      "cells": 73568,
+      "meanDt_s": 1.9985724482512492e-07,
+      "mesh_m": 9.999999999999999e-06,
+      "minimumDt_s": 6.666666666429208e-08,
+      "steps": 934
+    },
+    "gpu": {
+      "cells": 73568,
+      "maximumDt_s": 2e-07,
+      "meanDt_s": 1.9985724482512492e-07,
+      "mesh_m": 9.999999999999999e-06,
+      "minimumDt_s": 6.666666666429208e-08,
+      "steps": 934
+    }
+  },
+  "evidenceClass": "model-output-and-software-numerical-check",
+  "experimentalValidation": false,
+  "kind": "lpbf-torch-cuda-source-cpu-parity",
+  "limitations": [
+    "One CPU/GPU pair; not a performance benchmark.",
+    "Numerical output is a model prediction, not experimental measurement/validation."
+  ],
+  "schemaVersion": 1,
+  "solverDevices": {
+    "sourceIntegration": "cuda:0",
+    "sourceTimestepLimiter": "cuda:0",
+    "thermalEvolution": "cuda:0"
+  },
+  "sources": {
+    "cpuModelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+    "cpuObserverSha256": "fd54a47e00b9f85d4192134db1cff5d1e747db7916df67de070626d226e890c7",
+    "cpuThermalCoreSha256": "4d20c3ad5d3f0253ad87ef9121e7b5ad1c720284a6d8f6d6ad191b3561272879",
+    "gpuModelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+    "sharedMaterialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06",
+    "torchSolverSha256": "fd54a47e00b9f85d4192134db1cff5d1e747db7916df67de070626d226e890c7"
+  },
+  "status": "pass",
+  "targets": {
+    "fieldRiseL2RelativeMax": 0.01,
+    "fieldRiseMaxRelativeMax": 0.01,
+    "integralRelativeMax": 0.01,
+    "peakMeltVolumeRelativeMax": 0.01,
+    "source": "docs/DIGITAL_TWIN_MASTER_PLAN_2026-09-21.md#11",
+    "widthDepthAbsoluteCellsMax": 1.0
+  }
+}

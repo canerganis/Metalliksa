@@ -78,8 +78,8 @@ export const KeyholeRaytracingLab: React.FC = () => {
   );
 
   return (
-    <div className="grid min-h-[700px] grid-cols-1 bg-gray-950 text-white lg:grid-cols-[340px_1fr]">
-      <section className="space-y-4 p-5" aria-label="Keyhole optics controls and results">
+    <div className="grid min-h-[700px] grid-cols-1 gap-4 lg:grid-cols-[340px_1fr]">
+      <section className="mk-plate space-y-4 p-5" aria-label="Keyhole optics controls and results">
         <h1 className="text-xl font-semibold">Keyhole Ray Tracing</h1>
         <p className="text-sm text-gray-400">Prescribed cavity optics. Power and beam diameter use the shared LPBF process.</p>
         <div className="grid grid-cols-2 gap-3">
@@ -113,17 +113,18 @@ export const KeyholeRaytracingLab: React.FC = () => {
           <ul className="list-disc space-y-1 pl-4 text-xs text-amber-300">{result.limitations.map(limit => <li key={limit}>{limit}</li>)}</ul>
         </>}
       </section>
-      <div className="min-h-[500px]" aria-label="Computed ray paths and prescribed cavity">
+      <div className="mk-labglass mk-hud min-h-[500px]" aria-label="Computed ray paths and prescribed cavity">
         <Canvas camera={{ position: [0.0003, 0.0003, 0.0002], fov: 45, near: 0.000001, far: 0.01 }}>
-          <color attach="background" args={['#030712']} />
+          {/* Light lab-glass viewport (porcelain): pearl background, graphite grid, cobalt cavity, laser-orange rays. */}
+          <color attach="background" args={['#eef0f3']} />
           <ambientLight intensity={0.8} />
           <directionalLight position={[1, 1, 1]} intensity={1.5} />
           <OrbitControls target={[0, 0, -0.00005]} makeDefault />
-          {geometry && <mesh geometry={geometry}><meshStandardMaterial color="#3b82f6" transparent opacity={0.8} roughness={0.4} side={THREE.DoubleSide} /></mesh>}
+          {geometry && <mesh geometry={geometry}><meshStandardMaterial color="#2346b0" transparent opacity={0.55} roughness={0.35} metalness={0.2} side={THREE.DoubleSide} /></mesh>}
           {result?.ray_paths.filter(path => path.points.length > 1).map((path, index) => (
-            <Line key={index} points={path.points} color="#fde68a" lineWidth={1} transparent opacity={0.5} />
+            <Line key={index} points={path.points} color="#ff5b1f" lineWidth={1} transparent opacity={0.55} />
           ))}
-          <gridHelper args={[0.001, 20, '#1f2937', '#111827']} rotation={[Math.PI / 2, 0, 0]} />
+          <gridHelper args={[0.001, 20, '#9aa1ab', '#c9ced6']} rotation={[Math.PI / 2, 0, 0]} />
         </Canvas>
       </div>
     </div>

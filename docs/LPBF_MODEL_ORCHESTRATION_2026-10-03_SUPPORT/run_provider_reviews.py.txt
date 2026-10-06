@@ -1,0 +1,69 @@
+"""Ask three explicitly requested models bounded questions without exposing repository files."""
+import hashlib
+import json
+from pathlib import Path
+import subprocess
+import tempfile
+import time
+
+TASK = Path(__file__).resolve().parent
+AGY = Path("C:/Users/can02/AppData/Local/agy/bin/agy.exe")
+CONTEXT = """Metalliksa LPBF research workstation için sınırlı bağımsız inceleme yapıyoruz.
+Doğrulanmış özet: Arayüzün 22 işlem koşulunu 7'ye kırpan ölçüm gönderimi düzeltildi;
+backend zaten eksik vektörü reddediyordu, başarılı sahte kalibrasyon gözlenmedi.
+Manual veya koşulsuz ölçüm unverified kalır ve calibration factor verilmez; bozuk JSON,
+bilinmeyen alanlar, boolean/string sayılar ve kısmi vektörler reddedilir.
+Kaynak entegrasyonu etiketi adaptive GL v2/legacy GL2 kayıt kimliğine bağlıdır.
+Aynı commit arşivinde 1579 kaynak hash'i değişmeden 27 sınırlı CPU testi geçti;
+4 manufactured/diffusion testi bu 27'nin içindedir, ayrı tanı koşusunda da geçti.
+Coupled dx/dt diffusion RMS 5.656e-4,1.421e-4,3.556e-5 K; order 1.993/1.998.
+Bu sentetik operatör kanıtıdır. Gerçek LPBF mesh/time inconclusive, NIST unavailable,
+deneysel validity unvalidated. Tam Node clean install/type/unit/build henüz kapanmadı.
+Önceki adayın gerçek archive/restore/crash kanıtı yeni commit'in canlı UI kabulü değildir.
+Yeni fizik fazı V1 kabulüne kadar donduruldu. Önceki tarayıcı erişimi kullanıcı tarafından
+reddedildi; yeniden izin gelmeden gerçek UI çalıştırılamaz.
+Yalnız bu özetten akıl yürüt; repo/dosya/komut/web araçları kullanma, veri değiştirme.
+Eksik repo yeteneği, yeni materyal değeri, deneysel ölçüm veya test başarısı uydurma.
+Varsayımları gerçeklerden ayır. Türkçe, en çok 500 kelime cevap ver.
+"""
+QUESTIONS = [
+    ("gemini", "gemini-3.1-pro-high", "V1 sonrası fiziksel yakınsama sorusuna dönmek için mevcut sentetik operatör kanıtının tam olarak neyi açıklayıp açıklamadığını değerlendir. Mevcut V1'i kapatmak için şimdi gerekli tek sayısal eksik kanıt varsa belirt; coupled space/time testi yerine fiziksel LPBF doğruluğu iddiasını engelleyecek somut kabul dili ve sonraki kontrollü araştırma tasarımını ayrı tut. Yeni büyük solve veya scope değişikliği önermeden üç öncelikli karar ver."),
+    ("sonnet", "claude-sonnet-5-5-medium", "Ölçüm gönderimi düzeltmesinin gerçek UI/klavye kabulü için en etkili adversarial senaryoları seç. Manual, conditionless JSON, tam22 alan, malformed, bilinmeyen alan, strict numeric type, değişen input/stale/cancel/reload ayrı olsun. Kaynakta olmayan yeni kontrol veya API varsayma. Dört completed run ve ayrı cancel üst sınırı içinde test sırasını ve her adımın somut beklenen kullanıcı davranışını öner."),
+    ("opus", "claude-opus-5-5-high", "V1 research-release tamamlandı iddiasını bağımsız ve eleştirel değerlendir. Aynı commit için source hashes, dar CPU testleri, full clean install/type/unit/build, gerçek configure→run→archive→export→restore→reload ve critical error/recovery kanıtlarının nerede birbirinin yerini tutamayacağını belirt. En fazla beş completion blocker ve her biri için doğrudan kabul kanıtı ver. NIST/experimental unvalidated kalması otomatik release blocker mı, scope içindeki doğru ayrımı yap.")]
+
+
+def main():
+    assert AGY.is_file()
+    records = []
+    handles = []
+    for label, model, question in QUESTIONS:
+        cwd = Path(tempfile.mkdtemp(prefix=f"metalliksa-{label}-review-"))
+        prompt = CONTEXT + "\nGörev: " + question
+        prompt_path = TASK / f"provider-{label}-prompt.txt"
+        with prompt_path.open("x", encoding="utf-8", newline="\n") as stream:
+            stream.write(prompt + "\n")
+        output = TASK / f"provider-{label}-response.log"
+        log = output.open("xb")
+        command = [str(AGY), "--model", model, "--mode", "plan", "--output-format", "text", "--print-timeout", "120s", "-p", prompt]
+        started = time.monotonic()
+        proc = subprocess.Popen(command, cwd=cwd, stdout=log, stderr=subprocess.STDOUT)
+        record = {"label": label, "requestedModel": model, "cwd": str(cwd), "pid": proc.pid,
+                  "prompt": prompt_path.name, "response": output.name, "sourceFilesShared": False,
+                  "skipPermissions": False, "mode": "plan"}
+        handles.append((proc, log, started, output, record))
+        print(json.dumps({"label": label, "requestedModel": model, "pid": proc.pid, "log": str(output)}), flush=True)
+    for proc, log, started, output, record in handles:
+        code = proc.wait()
+        log.close()
+        record.update(exitCode=code, elapsed_s=time.monotonic()-started,
+                      responseSha256=hashlib.sha256(output.read_bytes()).hexdigest(), responseBytes=output.stat().st_size)
+        records.append(record)
+        print(json.dumps(record), flush=True)
+    with (TASK / "provider-review-runs.json").open("x", encoding="utf-8", newline="\n") as stream:
+        json.dump({"schemaVersion": 1, "records": records, "responsesNeedSourceAudit": True}, stream, indent=2)
+        stream.write("\n")
+    return 0 if all(record["exitCode"] == 0 for record in records) else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,826 @@
+{
+ "baseRevision": "d33b6f5",
+ "case": "fit_curve_synthetic_bv",
+ "exitCode": 0,
+ "gitHead": "44f717c74baaf74d4aa45943aec09f864adba7d9",
+ "input": {
+  "action": "fit_curve",
+  "alloyId": "al-6061",
+  "electrodeAreaCm2": 1.0,
+  "points": [
+   {
+    "currentDensity_uA_cm2": 242.305032,
+    "potential": -0.55
+   },
+   {
+    "currentDensity_uA_cm2": 190.631227,
+    "potential": -0.5375
+   },
+   {
+    "currentDensity_uA_cm2": 149.976762,
+    "potential": -0.525
+   },
+   {
+    "currentDensity_uA_cm2": 117.991512,
+    "potential": -0.5125
+   },
+   {
+    "currentDensity_uA_cm2": 92.826452,
+    "potential": -0.5
+   },
+   {
+    "currentDensity_uA_cm2": 73.026762,
+    "potential": -0.4875
+   },
+   {
+    "currentDensity_uA_cm2": 57.447709,
+    "potential": -0.475
+   },
+   {
+    "currentDensity_uA_cm2": 45.188449,
+    "potential": -0.4625
+   },
+   {
+    "currentDensity_uA_cm2": 35.539918,
+    "potential": -0.45
+   },
+   {
+    "currentDensity_uA_cm2": 27.943787,
+    "potential": -0.4375
+   },
+   {
+    "currentDensity_uA_cm2": 21.960115,
+    "potential": -0.425
+   },
+   {
+    "currentDensity_uA_cm2": 17.241803,
+    "potential": -0.4125
+   },
+   {
+    "currentDensity_uA_cm2": 13.514373,
+    "potential": -0.4
+   },
+   {
+    "currentDensity_uA_cm2": 10.559878,
+    "potential": -0.3875
+   },
+   {
+    "currentDensity_uA_cm2": 8.203974,
+    "potential": -0.375
+   },
+   {
+    "currentDensity_uA_cm2": 6.305379,
+    "potential": -0.3625
+   },
+   {
+    "currentDensity_uA_cm2": 4.74704,
+    "potential": -0.35
+   },
+   {
+    "currentDensity_uA_cm2": 3.428408,
+    "potential": -0.3375
+   },
+   {
+    "currentDensity_uA_cm2": 2.258261,
+    "potential": -0.325
+   },
+   {
+    "currentDensity_uA_cm2": 1.147462,
+    "potential": -0.3125
+   },
+   {
+    "currentDensity_uA_cm2": 0.001,
+    "potential": -0.3
+   },
+   {
+    "currentDensity_uA_cm2": 1.293538,
+    "potential": -0.2875
+   },
+   {
+    "currentDensity_uA_cm2": 2.870118,
+    "potential": -0.275
+   },
+   {
+    "currentDensity_uA_cm2": 4.912519,
+    "potential": -0.2625
+   },
+   {
+    "currentDensity_uA_cm2": 7.668693,
+    "potential": -0.25
+   },
+   {
+    "currentDensity_uA_cm2": 11.484095,
+    "potential": -0.2375
+   },
+   {
+    "currentDensity_uA_cm2": 16.846012,
+    "potential": -0.225
+   },
+   {
+    "currentDensity_uA_cm2": 24.446622,
+    "potential": -0.2125
+   },
+   {
+    "currentDensity_uA_cm2": 35.273028,
+    "potential": -0.2
+   },
+   {
+    "currentDensity_uA_cm2": 50.735979,
+    "potential": -0.1875
+   },
+   {
+    "currentDensity_uA_cm2": 72.854122,
+    "potential": -0.175
+   },
+   {
+    "currentDensity_uA_cm2": 104.517869,
+    "potential": -0.1625
+   },
+   {
+    "currentDensity_uA_cm2": 149.867374,
+    "potential": -0.15
+   },
+   {
+    "currentDensity_uA_cm2": 214.834082,
+    "potential": -0.1375
+   },
+   {
+    "currentDensity_uA_cm2": 307.916691,
+    "potential": -0.125
+   },
+   {
+    "currentDensity_uA_cm2": 441.293045,
+    "potential": -0.1125
+   },
+   {
+    "currentDensity_uA_cm2": 632.413443,
+    "potential": -0.1
+   },
+   {
+    "currentDensity_uA_cm2": 906.283828,
+    "potential": -0.0875
+   },
+   {
+    "currentDensity_uA_cm2": 1298.737593,
+    "potential": -0.075
+   },
+   {
+    "currentDensity_uA_cm2": 1861.124099,
+    "potential": -0.0625
+   },
+   {
+    "currentDensity_uA_cm2": 2667.027356,
+    "potential": -0.05
+   }
+  ]
+ },
+ "invocation": "python -B tafel_corrosion_rate_solver.py < input (cwd python/)",
+ "schema": "phase6a-golden-1",
+ "solver": "tafel_corrosion_rate_solver",
+ "solverFile": "python/tafel_corrosion_rate_solver.py",
+ "solverSha256": "43a45856fb5967398d8a78cf9539a5670209f054347a0c8f88bb3dfa2fc5a4af",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "git:d33b6f5",
+ "stdout": {
+  "alloyId": "al-6061",
+  "alloyName": "Structural Aluminum 6061-T6",
+  "anodicR2": 0.9999,
+  "anodicRange": [
+   -0.25,
+   -0.08
+  ],
+  "anodicSlope_dLogI_dE": 12.6682,
+  "betaA_V_dec": 0.0789,
+  "betaA_mV_dec": 78.94,
+  "betaC_V_dec": 0.1191,
+  "betaC_mV_dec": 119.09,
+  "cathodicR2": 1.0,
+  "cathodicRange": [
+   -0.52,
+   -0.37
+  ],
+  "cathodicSlope_dLogI_dE": -8.3972,
+  "corrosionRateMmYr": 0.02096,
+  "corrosionRateMpy": 0.825,
+  "corrosionRateUmYr": 20.96,
+  "density_g_cm3": 2.7,
+  "eCorr": -0.2992,
+  "equivalentWeight": 9.02,
+  "fittedButlerVolmer": [
+   {
+    "logI_model": 3.2218,
+    "potential": -0.6492
+   },
+   {
+    "logI_model": 3.1367,
+    "potential": -0.639
+   },
+   {
+    "logI_model": 3.0515,
+    "potential": -0.6289
+   },
+   {
+    "logI_model": 2.9663,
+    "potential": -0.6188
+   },
+   {
+    "logI_model": 2.8811,
+    "potential": -0.6086
+   },
+   {
+    "logI_model": 2.7959,
+    "potential": -0.5985
+   },
+   {
+    "logI_model": 2.7107,
+    "potential": -0.5883
+   },
+   {
+    "logI_model": 2.6255,
+    "potential": -0.5782
+   },
+   {
+    "logI_model": 2.5403,
+    "potential": -0.568
+   },
+   {
+    "logI_model": 2.4551,
+    "potential": -0.5579
+   },
+   {
+    "logI_model": 2.37,
+    "potential": -0.5477
+   },
+   {
+    "logI_model": 2.2848,
+    "potential": -0.5376
+   },
+   {
+    "logI_model": 2.1996,
+    "potential": -0.5274
+   },
+   {
+    "logI_model": 2.1144,
+    "potential": -0.5173
+   },
+   {
+    "logI_model": 2.0292,
+    "potential": -0.5072
+   },
+   {
+    "logI_model": 1.944,
+    "potential": -0.497
+   },
+   {
+    "logI_model": 1.8588,
+    "potential": -0.4869
+   },
+   {
+    "logI_model": 1.7736,
+    "potential": -0.4767
+   },
+   {
+    "logI_model": 1.6883,
+    "potential": -0.4666
+   },
+   {
+    "logI_model": 1.603,
+    "potential": -0.4564
+   },
+   {
+    "logI_model": 1.5177,
+    "potential": -0.4463
+   },
+   {
+    "logI_model": 1.4323,
+    "potential": -0.4361
+   },
+   {
+    "logI_model": 1.3468,
+    "potential": -0.426
+   },
+   {
+    "logI_model": 1.261,
+    "potential": -0.4159
+   },
+   {
+    "logI_model": 1.1748,
+    "potential": -0.4057
+   },
+   {
+    "logI_model": 1.0881,
+    "potential": -0.3956
+   },
+   {
+    "logI_model": 1.0003,
+    "potential": -0.3854
+   },
+   {
+    "logI_model": 0.9108,
+    "potential": -0.3753
+   },
+   {
+    "logI_model": 0.8185,
+    "potential": -0.3651
+   },
+   {
+    "logI_model": 0.7214,
+    "potential": -0.355
+   },
+   {
+    "logI_model": 0.6159,
+    "potential": -0.3448
+   },
+   {
+    "logI_model": 0.4955,
+    "potential": -0.3347
+   },
+   {
+    "logI_model": 0.3457,
+    "potential": -0.3245
+   },
+   {
+    "logI_model": 0.1283,
+    "potential": -0.3144
+   },
+   {
+    "logI_model": -0.3359,
+    "potential": -0.3043
+   },
+   {
+    "logI_model": -0.3142,
+    "potential": -0.2941
+   },
+   {
+    "logI_model": 0.1933,
+    "potential": -0.284
+   },
+   {
+    "logI_model": 0.454,
+    "potential": -0.2738
+   },
+   {
+    "logI_model": 0.6472,
+    "potential": -0.2637
+   },
+   {
+    "logI_model": 0.8109,
+    "potential": -0.2535
+   },
+   {
+    "logI_model": 0.9597,
+    "potential": -0.2434
+   },
+   {
+    "logI_model": 1.1001,
+    "potential": -0.2332
+   },
+   {
+    "logI_model": 1.2357,
+    "potential": -0.2231
+   },
+   {
+    "logI_model": 1.3686,
+    "potential": -0.213
+   },
+   {
+    "logI_model": 1.4997,
+    "potential": -0.2028
+   },
+   {
+    "logI_model": 1.6298,
+    "potential": -0.1927
+   },
+   {
+    "logI_model": 1.7593,
+    "potential": -0.1825
+   },
+   {
+    "logI_model": 1.8884,
+    "potential": -0.1724
+   },
+   {
+    "logI_model": 2.0173,
+    "potential": -0.1622
+   },
+   {
+    "logI_model": 2.146,
+    "potential": -0.1521
+   },
+   {
+    "logI_model": 2.2746,
+    "potential": -0.1419
+   },
+   {
+    "logI_model": 2.4032,
+    "potential": -0.1318
+   },
+   {
+    "logI_model": 2.5318,
+    "potential": -0.1217
+   },
+   {
+    "logI_model": 2.6604,
+    "potential": -0.1115
+   },
+   {
+    "logI_model": 2.7889,
+    "potential": -0.1014
+   },
+   {
+    "logI_model": 2.9174,
+    "potential": -0.0912
+   },
+   {
+    "logI_model": 3.046,
+    "potential": -0.0811
+   },
+   {
+    "logI_model": 3.1745,
+    "potential": -0.0709
+   },
+   {
+    "logI_model": 3.303,
+    "potential": -0.0608
+   },
+   {
+    "logI_model": 3.4315,
+    "potential": -0.0506
+   },
+   {
+    "logI_model": 3.56,
+    "potential": -0.0405
+   },
+   {
+    "logI_model": 3.6886,
+    "potential": -0.0303
+   },
+   {
+    "logI_model": 3.8171,
+    "potential": -0.0202
+   },
+   {
+    "logI_model": 3.9456,
+    "potential": -0.0101
+   },
+   {
+    "logI_model": 4.0741,
+    "potential": 0.0001
+   },
+   {
+    "logI_model": 4.2026,
+    "potential": 0.0102
+   },
+   {
+    "logI_model": 4.3311,
+    "potential": 0.0204
+   },
+   {
+    "logI_model": 4.4597,
+    "potential": 0.0305
+   },
+   {
+    "logI_model": 4.5882,
+    "potential": 0.0407
+   },
+   {
+    "logI_model": 4.7167,
+    "potential": 0.0508
+   }
+  ],
+  "iCorr_uA_cm2": 1.9179,
+  "isPythonEngine": true,
+  "logIcorr": 0.2828,
+  "massLoss_g_m2_day": 0.1549,
+  "maxScanE": -0.05,
+  "minScanE": -0.55,
+  "pointsCount": 41,
+  "rawEcorrValley": -0.3,
+  "rawIcorrValley": 0.001,
+  "rp_ohm_cm2": 10749.4,
+  "severity": {
+   "code": "EXCELLENT",
+   "color": "sky",
+   "description": "Very low corrosion rate. Highly reliable for marine subsea hulls, offshore piping, and structural load-bearing airframes.",
+   "level": "Excellent",
+   "recommendation": "Periodic 5-year ultrasonic wall gauge inspection; minimal sacrificial allowance."
+  },
+  "solverMethod": "ASTM G102 / G59 CPython 3.10 Linear Least-Squares Evans Optimization",
+  "specimenAreaCm2": 1.0,
+  "sternGearyB_V": 0.02062,
+  "success": true,
+  "tangentLines": [
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 3.2218,
+    "potential": -0.6492
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 3.1239,
+    "potential": -0.6375
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 3.0259,
+    "potential": -0.6259
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 2.9279,
+    "potential": -0.6142
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 2.83,
+    "potential": -0.6025
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 2.732,
+    "potential": -0.5909
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 2.634,
+    "potential": -0.5792
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 2.5361,
+    "potential": -0.5675
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 2.4381,
+    "potential": -0.5559
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 2.3401,
+    "potential": -0.5442
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 2.2422,
+    "potential": -0.5325
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 2.1442,
+    "potential": -0.5209
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 2.0462,
+    "potential": -0.5092
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 1.9483,
+    "potential": -0.4975
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 1.8503,
+    "potential": -0.4859
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 1.7523,
+    "potential": -0.4742
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 1.6544,
+    "potential": -0.4625
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 1.5564,
+    "potential": -0.4509
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 1.4584,
+    "potential": -0.4392
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 1.3605,
+    "potential": -0.4275
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 1.2625,
+    "potential": -0.4159
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 1.1645,
+    "potential": -0.4042
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 1.0666,
+    "potential": -0.3925
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 0.9686,
+    "potential": -0.3809
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 0.8706,
+    "potential": -0.3692
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 0.7727,
+    "potential": -0.3575
+   },
+   {
+    "logI_anodic": null,
+    "logI_cathodic": 0.6747,
+    "potential": -0.3459
+   },
+   {
+    "logI_anodic": -0.1606,
+    "logI_cathodic": 0.5767,
+    "potential": -0.3342
+   },
+   {
+    "logI_anodic": -0.0128,
+    "logI_cathodic": 0.4788,
+    "potential": -0.3225
+   },
+   {
+    "logI_anodic": 0.135,
+    "logI_cathodic": 0.3808,
+    "potential": -0.3109
+   },
+   {
+    "logI_anodic": 0.2828,
+    "logI_cathodic": 0.2828,
+    "potential": -0.2992
+   },
+   {
+    "logI_anodic": 0.4306,
+    "logI_cathodic": 0.1849,
+    "potential": -0.2875
+   },
+   {
+    "logI_anodic": 0.5784,
+    "logI_cathodic": 0.0869,
+    "potential": -0.2759
+   },
+   {
+    "logI_anodic": 0.7262,
+    "logI_cathodic": -0.0111,
+    "potential": -0.2642
+   },
+   {
+    "logI_anodic": 0.874,
+    "logI_cathodic": null,
+    "potential": -0.2525
+   },
+   {
+    "logI_anodic": 1.0218,
+    "logI_cathodic": null,
+    "potential": -0.2409
+   },
+   {
+    "logI_anodic": 1.1696,
+    "logI_cathodic": null,
+    "potential": -0.2292
+   },
+   {
+    "logI_anodic": 1.3174,
+    "logI_cathodic": null,
+    "potential": -0.2175
+   },
+   {
+    "logI_anodic": 1.4652,
+    "logI_cathodic": null,
+    "potential": -0.2059
+   },
+   {
+    "logI_anodic": 1.613,
+    "logI_cathodic": null,
+    "potential": -0.1942
+   },
+   {
+    "logI_anodic": 1.7608,
+    "logI_cathodic": null,
+    "potential": -0.1825
+   },
+   {
+    "logI_anodic": 1.9086,
+    "logI_cathodic": null,
+    "potential": -0.1709
+   },
+   {
+    "logI_anodic": 2.0564,
+    "logI_cathodic": null,
+    "potential": -0.1592
+   },
+   {
+    "logI_anodic": 2.2042,
+    "logI_cathodic": null,
+    "potential": -0.1475
+   },
+   {
+    "logI_anodic": 2.352,
+    "logI_cathodic": null,
+    "potential": -0.1359
+   },
+   {
+    "logI_anodic": 2.4998,
+    "logI_cathodic": null,
+    "potential": -0.1242
+   },
+   {
+    "logI_anodic": 2.6476,
+    "logI_cathodic": null,
+    "potential": -0.1125
+   },
+   {
+    "logI_anodic": 2.7954,
+    "logI_cathodic": null,
+    "potential": -0.1009
+   },
+   {
+    "logI_anodic": 2.9431,
+    "logI_cathodic": null,
+    "potential": -0.0892
+   },
+   {
+    "logI_anodic": 3.0909,
+    "logI_cathodic": null,
+    "potential": -0.0775
+   },
+   {
+    "logI_anodic": 3.2387,
+    "logI_cathodic": null,
+    "potential": -0.0659
+   },
+   {
+    "logI_anodic": 3.3865,
+    "logI_cathodic": null,
+    "potential": -0.0542
+   },
+   {
+    "logI_anodic": 3.5343,
+    "logI_cathodic": null,
+    "potential": -0.0425
+   },
+   {
+    "logI_anodic": 3.6821,
+    "logI_cathodic": null,
+    "potential": -0.0309
+   },
+   {
+    "logI_anodic": 3.8299,
+    "logI_cathodic": null,
+    "potential": -0.0192
+   },
+   {
+    "logI_anodic": 3.9777,
+    "logI_cathodic": null,
+    "potential": -0.0075
+   },
+   {
+    "logI_anodic": 4.1255,
+    "logI_cathodic": null,
+    "potential": 0.0041
+   },
+   {
+    "logI_anodic": 4.2733,
+    "logI_cathodic": null,
+    "potential": 0.0158
+   },
+   {
+    "logI_anodic": 4.4211,
+    "logI_cathodic": null,
+    "potential": 0.0275
+   },
+   {
+    "logI_anodic": 4.5689,
+    "logI_cathodic": null,
+    "potential": 0.0391
+   },
+   {
+    "logI_anodic": 4.7167,
+    "logI_cathodic": null,
+    "potential": 0.0508
+   }
+  ]
+ },
+ "volatileKeysStripped": [
+  "computeTimeMs",
+  "durationMs",
+  "pythonVersion",
+  "timestamp"
+ ]
+}

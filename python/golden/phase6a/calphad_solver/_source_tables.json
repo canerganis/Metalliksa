@@ -1,0 +1,43 @@
+{
+ "baseRevision": "d33b6f5",
+ "gitHead": "7f3f80310a94efffd3eb86356edfd5185244e226",
+ "schema": "phase6a-golden-1",
+ "solver": "calphad_solver",
+ "solverFile": "python/calphad_solver.py",
+ "solverSha256": "d54acda6ad93212367de84fd759d1e5df992730f0d47d26189de363683fd8a24",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "worktree",
+ "table": "ATOMIC_WEIGHTS",
+ "values": {
+  "ATOMIC_WEIGHTS": {
+   "Al": 26.982,
+   "Au": 196.97,
+   "B": 10.81,
+   "C": 12.011,
+   "Co": 58.933,
+   "Cr": 51.996,
+   "Cu": 63.546,
+   "Fe": 55.845,
+   "H": 1.008,
+   "Hf": 178.49,
+   "Mg": 24.305,
+   "Mn": 54.938,
+   "Mo": 95.95,
+   "N": 14.007,
+   "Nb": 92.906,
+   "Ni": 58.693,
+   "O": 15.999,
+   "Pt": 195.08,
+   "Re": 186.21,
+   "Ru": 101.07,
+   "Si": 28.085,
+   "Ta": 180.95,
+   "Ti": 47.867,
+   "V": 50.942,
+   "W": 183.84,
+   "Y": 88.906,
+   "Zn": 65.38,
+   "Zr": 91.224
+  }
+ }
+}

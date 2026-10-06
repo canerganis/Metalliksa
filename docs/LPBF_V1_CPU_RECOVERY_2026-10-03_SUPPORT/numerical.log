@@ -1,0 +1,13 @@
+test_nonuniform_enthalpy_solution_matches_independent_production_operator (test_lpbf_production_transient_manufactured.ProductionTransientManufactured.test_nonuniform_enthalpy_solution_matches_independent_production_operator)
+Compare production passive flux with an independent face-flux oracle. ... ok
+test_piecewise_enthalpy_ramp_crosses_mushy_interval_with_refinement (test_lpbf_production_transient_manufactured.ProductionTransientManufactured.test_piecewise_enthalpy_ramp_crosses_mushy_interval_with_refinement)
+Check phase-change enthalpy inversion against an analytic H(T) law. ... ok
+test_uniform_enthalpy_ramp_is_time_step_independent_and_conservative (test_lpbf_production_transient_manufactured.ProductionTransientManufactured.test_uniform_enthalpy_ramp_is_time_step_independent_and_conservative)
+A manufactured volumetric source exactly drives a uniform T(t) ramp. ... ok
+test_mixed_boundary_eigenmode_converges_on_three_fixed_levels (test_lpbf_production_transient_manufactured.ProductionTransientManufacturedDiffusion.test_mixed_boundary_eigenmode_converges_on_three_fixed_levels) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 12.985s
+
+OK
+{"output": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-recovery-acceptance-20261003\\numerical_diagnostics.json", "status": "PASS", "testsRun": 4, "sha256": "5367f314786cf5b8ed88141d4ed1cbbc4f853be3ae45895ffde1ebaee48b5723"}

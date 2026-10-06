@@ -1,0 +1,32 @@
+{
+  "name": "recovery",
+  "pid": 22812,
+  "creationDate": "2026-10-03T11:08:38.9152380Z",
+  "executable": "C:\\Program Files\\nodejs\\node.exe",
+  "commandLine": "\"C:\\Program Files\\nodejs\\node.exe\" dist/server.cjs",
+  "parentProcessId": 39020,
+  "sourceRevision": "ec3a5fcbeb1c5aa1b250ed31a4e812796c5d17ce",
+  "snapshot": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-native-20261003",
+  "buildEntrySha256": "5f6c96bbf2b9429e533772b0d6a689d6d7f8bf81ac87309ec021a8ef87b9f535",
+  "configuredEnvironment": {
+    "NODE_ENV": "production",
+    "AIRGAPPED": "1",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PORT": "3032",
+    "METALLIX_IPC_HOST": "127.0.0.1",
+    "METALLIX_IPC_PORT": "5072",
+    "METALLIX_IPC_SOCK": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\live-recovery\\ipc.sock",
+    "METALLIX_PYTHON": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\lpbf-win-py312\\Scripts\\python.exe",
+    "METALLIKSA_JOB_ROOT": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\live-recovery\\jobs",
+    "METALLIKSA_LPBF_RUN_ROOT": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\live-recovery\\runs",
+    "METALLIKSA_LPBF_SOURCE_ROOT": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\live-recovery\\sources",
+    "METALLIKSA_LPBF_BUNDLE_ROOT": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\live-recovery\\bundles",
+    "RESEARCH_REGISTRY_DIR": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\live-recovery\\registry",
+    "TEMP": "C:\\Users\\can02\\AppData\\Local\\Temp\\metalliksa-native-neutral-0kiizzyn",
+    "TMP": "C:\\Users\\can02\\AppData\\Local\\Temp\\metalliksa-native-neutral-0kiizzyn"
+  },
+  "appBind": "0.0.0.0 (hardcoded exact candidate)",
+  "clientBaseUrl": "http://127.0.0.1:3032",
+  "purpose": "genuine isolated service recovery acceptance; no browser emulation",
+  "startedUtc": "2026-10-03T11:08:39.2728052Z"
+}

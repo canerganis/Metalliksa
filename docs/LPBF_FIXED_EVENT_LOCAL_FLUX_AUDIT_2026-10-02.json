@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "protocolId": "lpbf-fixed-event-local-flux-audit-5um-50vs25ns-2026-10-02-v1",
+  "status": "diagnostic-only",
+  "stage": "completed",
+  "convergenceConclusion": "inconclusive",
+  "experimentalValidation": false,
+  "solverRerun": false,
+  "scope": "Offline audit of three complete seven-cell stars in the hash-pinned 5 um local-history fields. Reconstruct local conduction flux at common pre-step physical times and symmetrically split neighbor ever-state from temperature/conductivity feedback; no NIST payload, parameter tuning, or 12.5 ns run.",
+  "inputs": {
+    "historyReport": {
+      "path": "docs/LPBF_FIXED_EVENT_TIME_HISTORY_2026-10-02.json",
+      "sha256": "b5adeb9582b29b4c2d9def01695ccf780763ef4925032c5d02ee6209babd954b"
+    },
+    "historyProtocolSha256": "fd5e20e0f64efebfaa7aa257bef61bff4e778dddb1ef014ae5fb968cd860aa9b",
+    "fields": [
+      {
+        "path": "docs/LPBF_FIXED_EVENT_TIME_HISTORY_FIELDS_2026-10-02/maxdt-5.0000e-08.npz",
+        "sha256": "d82faa7c1eaad34600707ca1619fd8848b9223feee55757104be4b7a35ce434b"
+      },
+      {
+        "path": "docs/LPBF_FIXED_EVENT_TIME_HISTORY_FIELDS_2026-10-02/maxdt-2.5000e-08.npz",
+        "sha256": "74a6f40a17e8833ea63e065426807be0ec60184beb75438481c5c95e5b8f05b6"
+      }
+    ]
+  },
+  "method": {
+    "timeAlignment": "Pair common pre-step physical times, not step indices; maximum alignment residual 6.595e-17 s. Coarse dt minus the two fine dt sum differs by at most 2.520e-18 s.",
+    "flux": "F(T,E)=sum_faces[(2*k_c*k_j)/(k_c+k_j)]*(T_j-T_c)/h^2; k_i=k_table(T_i)*(0.12 for powder cells above z=0 with everLiquidus=false, otherwise 1).",
+    "symmetricEverContribution": "C_E=0.5*[F(T_A,E_A)-F(T_A,E_B)+F(T_B,E_A)-F(T_B,E_B)].",
+    "symmetricTemperatureFeedback": "C_T=0.5*[F(T_A,E_A)-F(T_B,E_A)+F(T_A,E_B)-F(T_B,E_B)].",
+    "closure": "C_E+C_T=F_A-F_B. Accumulated enthalpy contributions additionally include the two-fine-step Euler half-step, source term, and small dt/passive-rate roundoff terms."
+  },
+  "centers": [
+    {
+      "indices_ijk": [30, 43, 60],
+      "coordinates_um": [-67.5, -2.5, 2.5],
+      "maxAbsTemperatureDifferenceTime_us": 186.85,
+      "temperatureDifference50minus25_K": 73.5994,
+      "accumulatedEnthalpyDifference_MJ_m3": 203.208746,
+      "neighborEverContribution_MJ_m3": 2519.262589,
+      "temperatureConductivityFeedback_MJ_m3": -2316.081297,
+      "eulerHalfStep_MJ_m3": 0.027454,
+      "sourceContribution_J_m3": 0.00000303,
+      "finalEnthalpyDifference_MJ_m3": 174.498107
+    },
+    {
+      "indices_ijk": [59, 43, 61],
+      "coordinates_um": [77.5, -2.5, 7.5],
+      "maxAbsTemperatureDifferenceTime_us": 231.2,
+      "temperatureDifference50minus25_K": -0.949734,
+      "accumulatedEnthalpyDifference_MJ_m3": -2.899921,
+      "neighborEverContribution_MJ_m3": -1.171503,
+      "temperatureConductivityFeedback_MJ_m3": -1.483278,
+      "eulerHalfStep_MJ_m3": -0.24514,
+      "sourceContribution_J_m3": 0.002105,
+      "finalEnthalpyDifference_MJ_m3": -2.597321
+    },
+    {
+      "indices_ijk": [59, 44, 61],
+      "coordinates_um": [77.5, 2.5, 7.5],
+      "maxAbsTemperatureDifferenceTime_us": 231.2,
+      "temperatureDifference50minus25_K": -0.949734,
+      "accumulatedEnthalpyDifference_MJ_m3": -2.899921,
+      "neighborEverContribution_MJ_m3": -1.171503,
+      "temperatureConductivityFeedback_MJ_m3": -1.483278,
+      "eulerHalfStep_MJ_m3": -0.24514,
+      "sourceContribution_J_m3": 0.002105,
+      "finalEnthalpyDifference_MJ_m3": -2.597321
+    }
+  ],
+  "checks": {
+    "recordedFluxReconstructionScaledErrorRange": [6.61e-16, 1.27e-15],
+    "maximumAccumulatedDeltaHClosureError_J_m3": 1.422e-5,
+    "firstNeighborEverContributionTimes_us": [115.6, 230.05, 230.05],
+    "centerEverFlagsDifferAtCommonPreStep": false
+  },
+  "interpretation": "Neighbor ever-state changes directly contribute to local flux differences. At the cell with the largest temperature difference, the large positive ever term is nearly canceled by negative temperature/conductivity feedback; the terms are not independent global causal percentages. This audit does not show that 25 ns is more accurate and does not establish mesh or time convergence.",
+  "nextStep": "Offline compare the hash-pinned 20/10/5 um fixed-event fields at one common physical X plane using one contour operator, then vary only section sampling phase on the same fields to isolate measurement-operator sensitivity.",
+  "limits": [
+    "Synthetic local diagnostic only; no experimental validation or NIST raw payload.",
+    "Only three local seven-cell stars are analyzed; no global causal inference.",
+    "No 12.5 ns solver run and no production solver change."
+  ]
+}

@@ -1,0 +1,166 @@
+{
+  "schemaVersion": 1,
+  "status": "deferred-cost-gate-no-solves-started",
+  "preregisteredAt": "2026-09-24",
+  "scope": "Exploratory numerical bare-plate thermal-proxy sensitivity to transverse corridor width. This is not an experimental validation, NIST comparison, or P5 qualification.",
+  "caseProvenance": {
+    "benchmark": "NIST AMB2022-03 optical Table 4",
+    "sourceDoi": "10.18434/mds2-2718",
+    "sampleId": "AMB2022-718-SH1-BP1-L0",
+    "caseNumber": "0",
+    "sourceKind": "local-transcription-of-published-aggregate-measurements",
+    "transcriptionVersion": "1.0.0",
+    "aggregateOnly": true,
+    "caseProcess": {
+      "laserPower_W": 285,
+      "scanSpeed_mm_s": 960,
+      "beamDiameterD4sigma_um": 67
+    },
+    "tableArtifact": {
+      "path": "data/benchmark/nist-amb2022-03-optical/table4-aggregate-v1.json",
+      "sha256": "dcefd9c8c998e516eb81769cbe7b13014dfcb1c38e69c838a62475e79beac518"
+    },
+    "manifest": {
+      "path": "data/benchmark/nist-amb2022-03-optical/manifest.json",
+      "sha256": "e7914a655368fa135942a324242a1ecbc11812a1372c84601cf020717b14e781"
+    },
+    "beamMapping": "NIST reports a measured nominal 67 um Gaussian Dg diameter with 5.2% combined standard uncertainty, but no downloadable raw 2D irradiance artifact. The solver input beamDiameter_um=67 is an ideal-Gaussian 1/e2 screening proxy; mapping it to the Table 4 nominal D4sigma value is conditional and not source-byte-bound."
+  },
+  "solverProvenance": {
+    "repositoryRevisionBeforeReportCommit": "46b9be63fb82252573169d8e93f93187341089c0",
+    "solverId": "enthalpy-fv-6",
+    "backend": "numpy-reference",
+    "materialId": "in718",
+    "materialVersion": "lpbf-materials-1",
+    "materialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa088e7f9ff37b17235",
+    "implementationFiles": {
+      "python/lpbf_simulation.py": "0f067910576408c1c69bdc6c6f8383e6a926ebe670e7d938473e66d3c8aebe44",
+      "python/lpbf_core_physics.py": "d390578b7bbf6189b53563641f45d50ef95464ce4e8baab467e7f9ff37b17235",
+      "python/lpbf_peak.py": "e3b5f11f92d5596f0d1c845c5beb3baa84a67eefde4df41c31a77bc1c984a4d4",
+      "python/lpbf_evidence.py": "2b06ea4763b58775ba6ab8bd6fd18182806d753c27f6abfc624b0d991db83fa7"
+    }
+  },
+  "fixedResolvedInputsExceptCorridorWidth": {
+    "mode": "standard",
+    "backend": "reference",
+    "surfaceMode": "bare-plate",
+    "barePlateGeometry": "rectangular-corridor",
+    "material": "Inconel 718",
+    "power_W": 285,
+    "speed_mm_s": 960,
+    "beamDiameter_um": 67,
+    "preheat_C": 80,
+    "sourcePenetration_um": 40,
+    "mesh_um": 20,
+    "maxDt_s": 2e-7,
+    "trackLength_um": 10000,
+    "tracks": 1,
+    "layers": 1,
+    "scanAngle_deg": 0,
+    "measurements": [],
+    "cooling_s": 2e-5,
+    "dwell_s": 0,
+    "study": "none",
+    "timeout_s": 300,
+    "absorptivity": 0.38,
+    "emissivity": 0.35,
+    "hatch_um": 100,
+    "layer_um": 40,
+    "packingFraction": 0.55,
+    "powderConductivityRatio": 0.12,
+    "convection_W_m2K": 20
+  },
+  "fixedInputProvenance": {
+    "sourcePenetration_um": "40 µm retained from the immediately preceding bounded bare-plate benchmark setup; this value is not supplied by NIST Table 4.",
+    "otherInputs": "Unchanged from the validated 1 mm reference-run setup except for the requested Table 4 power, speed, nominal beam input, 10 mm track, and the three corridor widths."
+  },
+  "plannedCases": [
+    {
+      "corridorWidth_um": 320,
+      "inputSha256": "03d0577e2393bcceda847fa6d725b2fce418ac9fec80f227bb93fe13f64adbce",
+      "shape_nx_ny_nz": [511, 17, 16],
+      "cells": 138992,
+      "requestedWidth_um": 320,
+      "effectiveGridWidth_um": 339.36790606653625,
+      "scanDuration_s": 0.010436666666666667,
+      "minimumEstimatedSteps": 52184,
+      "minimumRequiredSteps": 52184,
+      "stepBudget": 250000,
+      "exceedsStepBudget": false,
+      "cellBudget": 600000,
+      "exceedsCellBudget": false,
+      "workingMemoryEstimate_MB": 27.7984,
+      "benchmarkScaledWallEstimate_s": 1650.6320592772902,
+      "solverRun": "not-started-cost-gate"
+    },
+    {
+      "corridorWidth_um": 480,
+      "inputSha256": "8a5c4465b17aa5570030936ba562cd4d5036247f5204d29acfda4cfd10a6264d",
+      "shape_nx_ny_nz": [511, 25, 16],
+      "cells": 204400,
+      "requestedWidth_um": 480,
+      "effectiveGridWidth_um": 499.07045009784736,
+      "scanDuration_s": 0.010436666666666667,
+      "minimumEstimatedSteps": 52184,
+      "minimumRequiredSteps": 52184,
+      "stepBudget": 250000,
+      "exceedsStepBudget": false,
+      "cellBudget": 600000,
+      "exceedsCellBudget": false,
+      "workingMemoryEstimate_MB": 40.88,
+      "benchmarkScaledWallEstimate_s": 2427.4000871724857,
+      "solverRun": "not-started-cost-gate"
+    },
+    {
+      "corridorWidth_um": 640,
+      "inputSha256": "f588267b35ab6e58b05415fbcbe1e5d9e54b7a616a79ebe65511e91488cc95f6",
+      "shape_nx_ny_nz": [511, 33, 16],
+      "cells": 269808,
+      "requestedWidth_um": 640,
+      "effectiveGridWidth_um": 658.7729941291585,
+      "scanDuration_s": 0.010436666666666667,
+      "minimumEstimatedSteps": 52184,
+      "minimumRequiredSteps": 52184,
+      "stepBudget": 250000,
+      "exceedsStepBudget": false,
+      "cellBudget": 600000,
+      "exceedsCellBudget": false,
+      "workingMemoryEstimate_MB": 53.9616,
+      "benchmarkScaledWallEstimate_s": 3204.1681150676814,
+      "solverRun": "not-started-cost-gate"
+    }
+  ],
+  "wallTimeEstimateMethod": {
+    "baseline": {
+      "elapsed_s": 24.470694199997524,
+      "cells": 25200,
+      "steps": 4267,
+      "cellSteps": 107528400,
+      "input": "1 mm, 20 µm mesh, default 480 µm corridor, 80 W, 1200 mm/s, 80 µm beam input, 40 µm source penetration, maxDt 2e-7 s"
+    },
+    "formula": "baseline elapsed multiplied by (planned cells × resource_estimate minimumEstimatedSteps) / baseline cellSteps",
+    "limitations": "This simple cell-step scaling is not calibrated. It assumes similar per-cell update cost and is not a wall-time guarantee. Source limiting can increase step counts; the reference worker timeout is 300 s per job."
+  },
+  "preregisteredObservationPlan": {
+    "sections_mm_from_positive_x_scan_start": [4.9, 6.0],
+    "scope": "Each output represents one simulated +X line at that x-location; it is not three line repeats or six experimental sections.",
+    "requiredOutputsIfRun": [
+      "solver id/revision, resolved settings and input hash",
+      "requested and effective corridor width, mesh shape and cell count",
+      "accepted solver steps, elapsed wall time, minimum captured source fraction and source retries",
+      "energy input/loss/stored terms and relative closure error",
+      "separate section records with interpolation operator, source planes, width/depth thermal proxies and unsupported reason if any"
+    ],
+    "comparisonResiduals": "prohibited for this exploratory sensitivity report"
+  },
+  "costGateDecision": {
+    "referenceWorkerTimeout_s": 300,
+    "allThreeEstimatedRunsExceedTimeout": true,
+    "estimatedCombinedWallTime_s": 7282.200261517457,
+    "decision": "Do not start the three 10 mm CPU solves. Estimates are about 5.5×, 8.1× and 10.7× the per-job timeout, even before any source-limited timestep increase.",
+    "sectionResults": "not-produced; no 10 mm solve was started",
+    "sourceCaptureAndEnergy": "not-measured; no 10 mm solve was started",
+    "p5Status": "unavailable",
+    "cheaperAlternative": "A future three-width 1 mm run can cheaply smoke-test that the parameter changes the thermal field, but its 4.9/6.0 mm section records are unsupported and it cannot replace this requested 10 mm sensitivity. For the requested section evidence, first reduce reference-solver cost or provide a verified accelerated backend, then rerun this frozen protocol."
+  }
+}

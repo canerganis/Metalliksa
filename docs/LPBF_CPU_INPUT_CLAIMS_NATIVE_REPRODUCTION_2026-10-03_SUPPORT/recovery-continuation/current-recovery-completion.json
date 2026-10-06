@@ -1,0 +1,277 @@
+{
+  "schemaVersion": 1,
+  "candidate": "ec3a5fcbeb1c5aa1b250ed31a4e812796c5d17ce",
+  "purpose": "service-level completed-only artifact/capture and fresh execution after owner-only recovery",
+  "nodePid": 22812,
+  "nodeIdentity": {
+    "pid": 22812,
+    "ppid": 39020,
+    "created": 1791025718.9152389,
+    "exe": "C:\\Program Files\\nodejs\\node.exe",
+    "cmdline": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "dist/server.cjs"
+    ],
+    "cwd": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\v1-input-claims-native-20261003",
+    "port": 3032,
+    "listenerCount": 1,
+    "configuredEnvironmentMatched": true
+  },
+  "preflightGuard": {
+    "sourceFiles": 1579,
+    "buildFiles": 126,
+    "allMatched": true,
+    "serverEntrySha256": "5f6c96bbf2b9429e533772b0d6a689d6d7f8bf81ac87309ec021a8ef87b9f535"
+  },
+  "baselineJobId": "682b6e94e1874174b2e08ab14f4713b9",
+  "interruptedJobId": "28a998c4c3464ae583f884decd20dffe",
+  "preflightQueue": {
+    "28a998c4c3464ae583f884decd20dffe": "failed",
+    "682b6e94e1874174b2e08ab14f4713b9": "completed"
+  },
+  "preflightByteMaps": {
+    "baselineJobFiles": 71,
+    "runArchiveFiles": 72,
+    "sourceArchiveFiles": 5
+  },
+  "requests": {
+    "interruptedArtifact": {
+      "httpStatus": 400,
+      "bytes": 32,
+      "sha256": "683b9b0f96f47973ba0fb0d59a844fed886b1f87b2596918235dcbd3bceb9a97",
+      "body": {
+        "error": "Artifact unavailable"
+      }
+    },
+    "baselinePreview": {
+      "httpStatus": 200,
+      "bytes": 40187,
+      "sha256": "1ad97ef8d0129ee558dcba331638bfb8286f2d29d3642fd611519914565d2c70",
+      "body": {
+        "sourceBindingStatus": "exact-revision-bound",
+        "artifactIntegrity": "verified-at-dry-run",
+        "artifactCount": 69,
+        "byteSize": 7932369
+      }
+    },
+    "interruptedPreview": {
+      "httpStatus": 503,
+      "bytes": 62,
+      "sha256": "26d15cc09b09731d17c14613b0a48ebe66cb6f88960f4f856840a3581125ac00",
+      "body": {
+        "httpError": "Run archive unavailable or integrity check failed.",
+        "captureGateMessage": "Only completed jobs can be captured",
+        "stderrPath": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.tmp-lpbf-input-claims-acceptance-20261003\\live-recovery\\server-stderr.log",
+        "stderrOffsetBefore": 0,
+        "stderrOffsetAfter": 765,
+        "stderrSegmentSha256": "2e86927803d8419432b155aad90a3571eceb338d6caa1485f4f5558f182005d2",
+        "stderrSegmentBytes": 765
+      }
+    },
+    "baselineArtifact": {
+      "httpStatus": 200,
+      "bytes": 119952,
+      "sha256": "5787cccf066c3bac38f6e517b0ff0c187f0f282befe1d24eee5fdbc5c6cab95e"
+    },
+    "freshSubmit": {
+      "httpStatus": 202,
+      "bytes": 316,
+      "sha256": "68104b4f1fa1630736f016a142017a251b8d310c764a0aa2b699cc4a73b0535f",
+      "body": {
+        "id": "98257075f4684b42af289cda687443f3",
+        "status": "queued",
+        "cacheHit": false
+      }
+    }
+  },
+  "stage": "recovery-service-gates-passed",
+  "freshJobId": "98257075f4684b42af289cda687443f3",
+  "polls": [
+    {
+      "number": 1,
+      "status": "running",
+      "progress": 0,
+      "error": null,
+      "elapsed_s": null
+    },
+    {
+      "number": 2,
+      "status": "running",
+      "progress": 0,
+      "error": null,
+      "elapsed_s": null
+    },
+    {
+      "number": 3,
+      "status": "running",
+      "progress": 0,
+      "error": null,
+      "elapsed_s": null
+    },
+    {
+      "number": 4,
+      "status": "running",
+      "progress": 0.00018343334847125312,
+      "error": null,
+      "elapsed_s": null
+    },
+    {
+      "number": 5,
+      "status": "running",
+      "progress": 0.033649179974700745,
+      "error": null,
+      "elapsed_s": null
+    },
+    {
+      "number": 6,
+      "status": "running",
+      "progress": 0.06715794994023794,
+      "error": null,
+      "elapsed_s": null
+    },
+    {
+      "number": 7,
+      "status": "running",
+      "progress": 0.10082923467879874,
+      "error": null,
+      "elapsed_s": null
+    },
+    {
+      "number": 8,
+      "status": "running",
+      "progress": 0.13446031457540764,
+      "error": null,
+      "elapsed_s": null
+    },
+    {
+      "number": 9,
+      "status": "running",
+      "progress": 0.16800466638033007,
+      "error": null,
+      "elapsed_s": null
+    },
+    {
+      "number": 10,
+      "status": "running",
+      "progress": 0.2015033290604945,
+      "error": null,
+      "elapsed_s": null
+    },
+    {
+      "number": 11,
+      "status": "running",
+      "progress": 0.23497668024380827,
+      "error": null,
+      "elapsed_s": null
+    },
+    {
+      "number": 12,
+      "status": "running",
+      "progress": 0.26855215874643157,
+      "error": null,
+      "elapsed_s": null
+    },
+    {
+      "number": 13,
+      "status": "running",
+      "progress": 0.3190500496851351,
+      "error": null,
+      "elapsed_s": null
+    },
+    {
+      "number": 14,
+      "status": "running",
+      "progress": 0.3357361905896118,
+      "error": null,
+      "elapsed_s": null
+    },
+    {
+      "number": 15,
+      "status": "running",
+      "progress": 0.3859625633598569,
+      "error": null,
+      "elapsed_s": null
+    },
+    {
+      "number": 16,
+      "status": "running",
+      "progress": 0.40282556188280255,
+      "error": null,
+      "elapsed_s": null
+    },
+    {
+      "number": 17,
+      "status": "running",
+      "progress": 0.5870886149218585,
+      "error": null,
+      "elapsed_s": null
+    },
+    {
+      "number": 18,
+      "status": "running",
+      "progress": 0.7370886149218622,
+      "error": null,
+      "elapsed_s": null
+    },
+    {
+      "number": 19,
+      "status": "running",
+      "progress": 0.8912552815885242,
+      "error": null,
+      "elapsed_s": null
+    },
+    {
+      "number": 20,
+      "status": "running",
+      "progress": 0.99,
+      "error": null,
+      "elapsed_s": null
+    },
+    {
+      "number": 21,
+      "status": "completed",
+      "progress": 1,
+      "error": null,
+      "elapsed_s": 19.03100000001723
+    }
+  ],
+  "freshResult": {
+    "jobId": "98257075f4684b42af289cda687443f3",
+    "responseSha256": "dfd5042565f404ba2e9d0a1204681762673b0aa409b55a88584779fc5db6e660",
+    "responseBytes": 40370,
+    "diskResultSha256": "4f87aa95072ccdec26e7f76845d1708fcdee7b40554072b45feb763e61648303",
+    "cacheHit": null,
+    "settingsMatchCompletedBaseline": true,
+    "solverMatchCompletedBaseline": true,
+    "provenanceMatchCompletedBaseline": true,
+    "runtime_s": 19.03100000001723,
+    "steps": 2421,
+    "cells": 29988,
+    "energyRelativeError": 1.9781934375174158e-15,
+    "validationStatus": "unvalidated",
+    "productionReady": false,
+    "confidence": "low"
+  },
+  "postflightByteMaps": {
+    "baselineJobFiles": 71,
+    "runArchiveFiles": 72,
+    "sourceArchiveFiles": 5,
+    "baselineJobUnchanged": true,
+    "runArchiveUnchanged": true,
+    "sourceArchiveUnchanged": true,
+    "crashPartialsUnchanged": 6,
+    "crashPartialBytes": 959616,
+    "crashResultFilesAbsent": true
+  },
+  "queueStatusesReadOnly": {
+    "28a998c4c3464ae583f884decd20dffe": "failed",
+    "682b6e94e1874174b2e08ab14f4713b9": "completed",
+    "98257075f4684b42af289cda687443f3": "completed"
+  },
+  "postflightGuard": {
+    "sourceFiles": 1579,
+    "buildFiles": 126,
+    "allMatched": true,
+    "serverEntrySha256": "5f6c96bbf2b9429e533772b0d6a689d6d7f8bf81ac87309ec021a8ef87b9f535"
+  }
+}

@@ -1,0 +1,170 @@
+{
+ "baseRevision": "d33b6f5",
+ "gitHead": "7f3f80310a94efffd3eb86356edfd5185244e226",
+ "schema": "phase6a-golden-1",
+ "solver": "kinetics_ttt_cct_solver",
+ "solverFile": "python/kinetics_ttt_cct_solver.py",
+ "solverSha256": "40b74c3de5dbe3ca5e6281ca135297d418dcccb54aa5386cc413d552a014c593",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "worktree",
+ "table": "ALLOY_KINETICS_DB",
+ "values": {
+  "AISI 4140": {
+   "Ae1_C": 725.0,
+   "Ae3_C": 780.0,
+   "Mf_C": 180.0,
+   "Ms_C": 330.0,
+   "Q_diff_kJ_mol": 240.0,
+   "aust_temp_C_default": 860.0,
+   "composition_wt": {
+    "C": 0.4,
+    "Cr": 1.0,
+    "Fe": 96.8,
+    "Mn": 0.85,
+    "Mo": 0.2,
+    "Si": 0.25
+   },
+   "critical_cooling_rate_C_s": 45.0,
+   "description": "Medium-carbon Cr-Mo through-hardening alloy steel for shafts and landing gears.",
+   "grain_size_d_um_default": 25.0,
+   "phases": [
+    "Ferrite",
+    "Pearlite",
+    "Bainite",
+    "Martensite"
+   ],
+   "type": "Low-Alloy Steel"
+  },
+  "AISI 4340": {
+   "Ae1_C": 710.0,
+   "Ae3_C": 765.0,
+   "Mf_C": 140.0,
+   "Ms_C": 290.0,
+   "Q_diff_kJ_mol": 265.0,
+   "aust_temp_C_default": 845.0,
+   "composition_wt": {
+    "C": 0.4,
+    "Cr": 0.8,
+    "Fe": 95.7,
+    "Mn": 0.7,
+    "Mo": 0.25,
+    "Ni": 1.85,
+    "Si": 0.3
+   },
+   "critical_cooling_rate_C_s": 8.5,
+   "description": "Ultra-high strength structural steel with high hardenability and fracture toughness.",
+   "grain_size_d_um_default": 20.0,
+   "phases": [
+    "Ferrite",
+    "Pearlite",
+    "Bainite",
+    "Martensite"
+   ],
+   "type": "High-Strength Ni-Cr-Mo Steel"
+  },
+  "AISI D2": {
+   "Ae1_C": 800.0,
+   "Ae3_C": 860.0,
+   "Mf_C": 40.0,
+   "Ms_C": 210.0,
+   "Q_diff_kJ_mol": 310.0,
+   "aust_temp_C_default": 1020.0,
+   "composition_wt": {
+    "C": 1.55,
+    "Cr": 12.0,
+    "Fe": 82.5,
+    "Mn": 0.35,
+    "Mo": 0.9,
+    "Si": 0.4,
+    "V": 0.8
+   },
+   "critical_cooling_rate_C_s": 2.2,
+   "description": "High wear-resistant ledeburitic tool steel with M7C3 carbides.",
+   "grain_size_d_um_default": 15.0,
+   "phases": [
+    "Proeutectoid Carbides",
+    "Pearlite",
+    "Bainite",
+    "Martensite",
+    "Retained Austenite"
+   ],
+   "type": "Cold-Work High-Carbon High-Cr Tool Steel"
+  },
+  "Al 7075": {
+   "Ae1_C": 100.0,
+   "Ae3_C": 480.0,
+   "Mf_C": -273.0,
+   "Ms_C": -200.0,
+   "Q_diff_kJ_mol": 130.0,
+   "aust_temp_C_default": 475.0,
+   "composition_wt": {
+    "Al": 90.0,
+    "Cr": 0.23,
+    "Cu": 1.6,
+    "Mg": 2.5,
+    "Zn": 5.6
+   },
+   "critical_cooling_rate_C_s": 250.0,
+   "description": "Ultra-high strength aerospace aluminum susceptible to quench-sensitivity and stress corrosion.",
+   "grain_size_d_um_default": 20.0,
+   "phases": [
+    "GP Zones",
+    "Eta-Prime (MgZn2)",
+    "Eta Equilibrium (MgZn2)"
+   ],
+   "type": "Precipitation-Hardenable Al-Zn-Mg-Cu Alloy"
+  },
+  "Inconel 718": {
+   "Ae1_C": 620.0,
+   "Ae3_C": 1020.0,
+   "Mf_C": -100.0,
+   "Ms_C": -50.0,
+   "Q_diff_kJ_mol": 285.0,
+   "aust_temp_C_default": 980.0,
+   "composition_wt": {
+    "Al": 0.55,
+    "C": 0.04,
+    "Cr": 19.0,
+    "Fe": 18.5,
+    "Mo": 3.05,
+    "Nb": 5.1,
+    "Ni": 52.5,
+    "Ti": 0.9
+   },
+   "critical_cooling_rate_C_s": 150.0,
+   "description": "Aerospace superalloy hardened by coherent metastable gamma double prime (bct-DO22).",
+   "grain_size_d_um_default": 35.0,
+   "phases": [
+    "Gamma Prime (Ni3Al,Ti)",
+    "Gamma Double Prime (Ni3Nb)",
+    "Delta (Ni3Nb orthorhombic)",
+    "Laves TCP"
+   ],
+   "type": "Precipitation-Hardenable Ni-Fe Superalloy"
+  },
+  "Ti-6Al-4V": {
+   "Ae1_C": 700.0,
+   "Ae3_C": 995.0,
+   "Mf_C": 650.0,
+   "Ms_C": 800.0,
+   "Q_diff_kJ_mol": 220.0,
+   "aust_temp_C_default": 1050.0,
+   "composition_wt": {
+    "Al": 6.0,
+    "Fe": 0.25,
+    "O": 0.18,
+    "Ti": 90.0,
+    "V": 4.0
+   },
+   "critical_cooling_rate_C_s": 410.0,
+   "description": "Workhorse titanium alloy; transformation kinetics govern lamellar vs equiaxed microstructure.",
+   "grain_size_d_um_default": 50.0,
+   "phases": [
+    "Equiaxed Alpha",
+    "Lamellar Alpha+Beta (Widmanstatten)",
+    "Alpha-Prime Martensite (HCP)"
+   ],
+   "type": "Alpha-Beta Titanium Alloy"
+  }
+ }
+}

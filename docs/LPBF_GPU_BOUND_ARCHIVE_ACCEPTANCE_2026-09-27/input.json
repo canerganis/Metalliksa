@@ -1,0 +1,15 @@
+{
+  "jobType": "gpu-thermal-pilot",
+  "mode": "standard",
+  "backend": "cuda:0",
+  "material": "Inconel 718",
+  "power_W": 60,
+  "speed_mm_s": 1200,
+  "mesh_um": 40,
+  "maxDt_s": 2e-07,
+  "preheat_C": 80,
+  "layer_um": 80,
+  "trackLength_um": 200,
+  "cooling_s": 2e-05,
+  "dwell_s": 0
+}

@@ -7,7 +7,12 @@ Do not copy k, ρ, Cp, or P–v boxes into other Python modules.
 Secondary alloys (CoCrMo, Scalmalloy, Cu, Hastelloy) stay local to those solvers.
 """
 
+import hashlib
+import json
+
 FOUR_ALLOY_IDS = ("ti6al4v", "ss316l", "alsi10mg", "in718")
+MATERIAL_AUTHORITY = "four_alloy_materials.py"
+MATERIAL_AUTHORITY_SCHEMA_VERSION = 1
 
 # Canonical display names used by the Rosenthal thermal solver.
 THERMAL_NAME = {
@@ -285,6 +290,22 @@ def thermal_props(name):
     return _THERMAL[aid]
 
 
+def canonical_material_source(alloy_id):
+    """Return the locked source snapshot and digest shared by LPBF model routes."""
+    aid = resolve_alloy_id(alloy_id)
+    if aid is None:
+        raise ValueError(f"Unsupported LPBF alloy identity: {alloy_id!r}")
+    snapshot = {
+        "schemaVersion": MATERIAL_AUTHORITY_SCHEMA_VERSION,
+        "authority": MATERIAL_AUTHORITY,
+        "alloyId": aid,
+        "thermal": dict(_THERMAL[aid]),
+    }
+    payload = json.dumps(snapshot, sort_keys=True, separators=(",", ":"),
+                         ensure_ascii=False, allow_nan=False).encode("utf-8")
+    return snapshot, hashlib.sha256(payload).hexdigest()
+
+
 def four_alloy_thermophysical_db():
     db = {}
     for aid in FOUR_ALLOY_IDS:
@@ -351,7 +372,10 @@ def inherent_strain_props(name):
 
 
 def evaluate_literature_pv(alloy_id, power_W, speed_mm_s):
-    aid = resolve_alloy_id(alloy_id) or "in718"
+    aid = resolve_alloy_id(alloy_id)
+    if aid is None:
+        # D8: no silent IN718 fallback for an unknown alloy identity.
+        raise ValueError(f"Unsupported LPBF alloy identity: {alloy_id!r}")
     box = LITERATURE_PV_WINDOWS[aid]
     inside = (
         box["powerMin_W"] <= power_W <= box["powerMax_W"]
@@ -367,3 +391,54 @@ def regime_family(regime):
     if "transition" in r:
         return "Transition"
     return "Conduction"
+
+
+# Temperature-dependent U95 relative uncertainties (expanded k=2, 95% confidence):
+# Derived from published thermophysical uncertainty budgets (e.g. Mills 2002,
+# NIST Table 4, Touloukian 1970).
+FOUR_ALLOY_U95_BUDGET = {
+    "in718": {
+        "solid": {"k_u95_rel": 0.05, "cp_u95_rel": 0.04, "rho_u95_rel": 0.015},
+        "mushy": {"k_u95_rel": 0.12, "cp_u95_rel": 0.10, "rho_u95_rel": 0.03, "latent_u95_rel": 0.10},
+        "liquid": {"k_u95_rel": 0.10, "cp_u95_rel": 0.08, "rho_u95_rel": 0.035, "viscosity_u95_rel": 0.15},
+    },
+    "ti6al4v": {
+        "solid": {"k_u95_rel": 0.06, "cp_u95_rel": 0.04, "rho_u95_rel": 0.012},
+        "mushy": {"k_u95_rel": 0.15, "cp_u95_rel": 0.12, "rho_u95_rel": 0.03, "latent_u95_rel": 0.10},
+        "liquid": {"k_u95_rel": 0.12, "cp_u95_rel": 0.10, "rho_u95_rel": 0.04, "viscosity_u95_rel": 0.20},
+    },
+    "ss316l": {
+        "solid": {"k_u95_rel": 0.05, "cp_u95_rel": 0.04, "rho_u95_rel": 0.015},
+        "mushy": {"k_u95_rel": 0.10, "cp_u95_rel": 0.08, "rho_u95_rel": 0.025, "latent_u95_rel": 0.08},
+        "liquid": {"k_u95_rel": 0.08, "cp_u95_rel": 0.06, "rho_u95_rel": 0.03, "viscosity_u95_rel": 0.15},
+    },
+    "alsi10mg": {
+        "solid": {"k_u95_rel": 0.05, "cp_u95_rel": 0.05, "rho_u95_rel": 0.010},
+        "mushy": {"k_u95_rel": 0.12, "cp_u95_rel": 0.10, "rho_u95_rel": 0.025, "latent_u95_rel": 0.08},
+        "liquid": {"k_u95_rel": 0.10, "cp_u95_rel": 0.08, "rho_u95_rel": 0.035, "viscosity_u95_rel": 0.18},
+    },
+}
+
+
+def four_alloy_u95_at_temperature(alloy_id, property_name, temperature_k):
+    """Return temperature-dependent U95 relative uncertainty for locked 4 alloys."""
+    aid = resolve_alloy_id(alloy_id)
+    if aid is None or aid not in FOUR_ALLOY_U95_BUDGET:
+        raise ValueError(f"Unknown alloy identity for U95 budget: {alloy_id}")
+    t_props = _THERMAL[aid]
+    t_sol_k = t_props["solidus_C"] + 273.15
+    t_liq_k = t_props["liquidus_C"] + 273.15
+    budget = FOUR_ALLOY_U95_BUDGET[aid]
+    if temperature_k <= t_sol_k:
+        regime = "solid"
+    elif temperature_k <= t_liq_k:
+        regime = "mushy"
+    else:
+        regime = "liquid"
+    key = f"{property_name}_u95_rel"
+    regime_dict = budget[regime]
+    if key not in regime_dict:
+        if key in budget["solid"]:
+            return budget["solid"][key]
+        raise ValueError(f"Property {property_name} has no U95 specification in {regime} regime")
+    return regime_dict[key]

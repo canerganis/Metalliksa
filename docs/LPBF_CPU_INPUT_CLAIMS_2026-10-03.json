@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-03",
+  "recordType": "precommit-bounded-integration-evidence",
+  "baseRevision": "bd979c715cd774aa2f4585b641177f5dc55e4e4e",
+  "historicalFrozenRevision": "33efb32b7d9734587a78d1cb9de8224d7ef2a4ec",
+  "newCandidateAccepted": false,
+  "scope": [
+    "CPU measurement evidence submit contract",
+    "source integration method UI labels",
+    "legacy 280 W single-track optical observer test correction",
+    "application reproduction Python environment and source guard instructions"
+  ],
+  "measurementEvidence": {
+    "requiredBackendProcessFields": 22,
+    "completeExplicitVectorPreserved": true,
+    "conditionlessOrManualVectorInvented": false,
+    "missingVectorStatus": "unverified",
+    "calibrationFactorWithheldForUnverifiedEvidence": true,
+    "malformedAndPartialVectorsRejected": true,
+    "booleanAndNumericStringMeasurementsRejected": true,
+    "falseMatchedSuccessfulCalibrationDemonstrated": false,
+    "focusedFrontendSuite": "12/12 PASS",
+    "boundedBackendMeasurementFixture": "1 PASS",
+    "malformedNumericAndVectorFixtures": "8/8 rejected"
+  },
+  "sourceIntegrationLabel": {
+    "adaptiveMethod": "cell-integrated-gaussian-adaptive-gl-v2",
+    "adaptiveLabel": "Adaptive Gauss-Legendre source integration",
+    "legacyMethod": "cell-integrated-gaussian-gl2-v1",
+    "legacyLabel": "Two-point Gauss-Legendre source integration",
+    "unknownAndMissingComponentFallback": true,
+    "unknownTextReactEscaped": true,
+    "serviceParserAcceptsUnknownOrMissingMethod": false,
+    "focusedSuite": "7/7 PASS"
+  },
+  "legacyOpticalTest": {
+    "fixture": "280 W / 960 mm/s / 500 um / one track",
+    "obsoleteSixSectionExpectationReproducedFailure": true,
+    "correctedTargetedFileSuite": "2 PASS / 0 FAIL / 0 SKIP in 5.598 s",
+    "completedRunAndEnergyAssertionsRetained": true,
+    "noEvaporationBoilingFailClosedAssertionRetained": true,
+    "sixSectionObservationRequired": false,
+    "comparatorErrors": null,
+    "solverChanged": false
+  },
+  "rootIntegration": {
+    "node": "41 PASS / 0 SKIP / 0 FAIL in 1.8125713 s",
+    "python": "3 PASS / 0 SKIP / 0 FAIL in 11.910 s",
+    "typecheck": "PASS",
+    "nodeLogPersistenceWarnings": "Zustand storage unavailable warnings emitted in test environment; browser persistence not established"
+  },
+  "runtimeAndReproduction": {
+    "python": "3.12.10",
+    "numpy": "2.2.6",
+    "pydantic": "2.13.5",
+    "pipCheck": "PASS on reused locked CPU venv; not a fresh venv install",
+    "docSyntax": "PASS",
+    "unchangedHashFixture": "PASS",
+    "changedHashFixture": "PASS",
+    "frozenSourceFiles": 1520,
+    "frozenSourceStableRead": "PASS",
+    "frozenSourceExactCheck": "1520 matched / 0 mismatches",
+    "submodulePointerExcluded": 1,
+    "initialHelperAttempt": "failed expected count 1520 vs git ls-tree 1521 due one gitlink; corrected helper enumerates blobs"
+  },
+  "acceptanceLimits": {
+    "cleanNodeInstall": "not run for this new candidate",
+    "cleanBuild": "pending",
+    "fullPythonSuite": "not run",
+    "gpuSuite": "not run",
+    "newSolverStudy": false,
+    "newNistDownload": false,
+    "browserKeyboardStaleCancellation": "pending; prior access denial not retried",
+    "nistComparison": "unavailable / unvalidated",
+    "physicalMovingSourceConvergence": "inconclusive",
+    "experimentalValidation": "unvalidated",
+    "productionReady": false
+  },
+  "supportDirectory": "LPBF_CPU_INPUT_CLAIMS_2026-10-03_SUPPORT"
+}

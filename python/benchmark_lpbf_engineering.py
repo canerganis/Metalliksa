@@ -3,7 +3,7 @@ import argparse
 import json
 import time
 from pathlib import Path
-from lpbf_simulation import validate, transient, fingerprint
+from lpbf_simulation import validate, transient, implementation_fingerprint
 from lpbf_openfoam import thermal
 from lpbf_worker import capabilities
 
@@ -23,7 +23,7 @@ def main():
         p,m = validate({**base,**patch})
         started=time.perf_counter(); reference=transient(p,m); reference_time=time.perf_counter()-started
         started=time.perf_counter(); foam=thermal(p,m); foam_time=time.perf_counter()-started
-        results.append(dict(name=name,input=p,implementationHash=fingerprint(p,m),
+        results.append(dict(name=name,input=p,implementationHash=implementation_fingerprint(),
             reference=dict(metrics=reference["metrics"],energy=reference["energyBalance"],wallTime_s=reference_time),
             openfoam=dict(metrics=foam["metrics"],energy=foam["energyBalance"],mass=foam["massBalance"],phase=foam["phaseAudit"],mesh=foam["discretization"],wallTime_s=foam_time),
             peakDifference_pct=100*(foam["metrics"]["peakTemperature_K"]-reference["metrics"]["peakTemperature_K"])/reference["metrics"]["peakTemperature_K"]))

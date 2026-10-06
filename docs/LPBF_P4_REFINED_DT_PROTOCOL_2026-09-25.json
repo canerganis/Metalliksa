@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "protocolId": "lpbf-p4-current-40w-refined-accepted-dt-v1",
+  "status": "frozen-before-execution",
+  "scope": "Supplementary fixed 5 um IN718 CPU temporal diagnostic at one new 12.5 ns level; numerical thermal proxy only",
+  "experimentalValidation": false,
+  "baselineReportFile": "docs/LPBF_P4_CURRENT_40W_FINGERPRINT_DIAGNOSTIC_2026-09-25.json",
+  "baselineProtocolSha256": "db0a85e22a75709fcabb3f3bee9e7c0d44213a081881f6a076ee5de6820274df",
+  "scenarioFile": "docs/LPBF_P4_CURRENT_MODEL_40W_SCENARIO_2026-09-25.json",
+  "scenarioDocumentProtocolId": "lpbf-p4-current-layer-conforming-40w-2026-09-25-v1",
+  "runnerFile": "python/run_lpbf_p4_refined_dt_diagnostic.py",
+  "runnerSha256": "400a89ebc54cf3625029092dc0a8cfd37aa472febad43b7fd9e2bc4c5ae9c324",
+  "assessmentFiles": [
+    "python/lpbf_convergence_study.py",
+    "python/lpbf_contour_convergence_study.py",
+    "python/lpbf_verification.py"
+  ],
+  "frozenFileSha256": {
+    "docs/LPBF_P4_CURRENT_40W_FINGERPRINT_DIAGNOSTIC_2026-09-25.json": "726cad9aa1d4f2b7dc3009b8b10ed1a7db08b49ba1f9bc9e4b872f662054b558",
+    "docs/LPBF_P4_CURRENT_MODEL_40W_SCENARIO_2026-09-25.json": "2abec47f9d35c02158ea2e06876e3ca06c3ba5ba9243f1ddccaa94ef64752ea6",
+    "python/lpbf_convergence_study.py": "62e04531004b6d57b30890bdc0568dc46a420a52ee8af5b75fa4436b03931d50",
+    "python/lpbf_contour_convergence_study.py": "79fd4c2bdd4ef76aa66d0c5a001c3ad6db29ce5f96f68f6a46ea42a724a33f60",
+    "python/lpbf_verification.py": "c3d7d0f43bcddc1858543737c71d1a4f90be62543dc58d94f71a9dddf3e467b7"
+  },
+  "implementationFingerprint": "8302df5a8237b0a84b9b6e467b37421a7627f831611f9c992d037f3ac1189489",
+  "expectedModelMaterialIdentity": [
+    "stationary-enthalpy-conduction-layer-conforming-v1",
+    "numpy-reference",
+    "enthalpy-fv-6",
+    "in718",
+    "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06"
+  ],
+  "fixedMesh_um": 5,
+  "requestedMaxDt_s": [5e-8, 2.5e-8, 1.25e-8],
+  "reusedBaselineRequestedMaxDt_s": [5e-8, 2.5e-8],
+  "newSolverRuns": 1,
+  "actualAcceptedMeanDtTargetRatios": [2, 2],
+  "factorTwoRelativeTolerance": 0.02,
+  "energyRelativeErrorMax": 0.01,
+  "cellExtentAssessment": "existing lpbf_convergence_study._axis with actualMeanDt_s; unchanged frozen 5 percent finest-pair and energy gates",
+  "continuousContourAssessment": "existing lpbf_contour_convergence_study._contour_axis with actualMeanDt_s and predeclared liquidus contour operator",
+  "interpretation": "Cell extent and continuous contour are separate numerical assessments. A pass is not experimental validation; nonmonotonic, identical or unresolved geometry remains inconclusive under existing convergence logic.",
+  "priorFrozenP4Status": "failed",
+  "priorFingerprintDiagnosticStatus": "inconclusive",
+  "outputFile": "docs/LPBF_P4_REFINED_DT_DIAGNOSTIC_2026-09-25.json",
+  "partialFile": "docs/LPBF_P4_REFINED_DT_DIAGNOSTIC_2026-09-25.partial.json"
+}

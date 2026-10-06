@@ -1,0 +1,14 @@
+# Unit test files excluded from CI and the Docker verify target.
+# One path per line, relative to the repo root. Lines starting with # are comments.
+# Everything else matched by tests/*.test.ts and tests/*.test.tsx (the same glob as
+# `npm run test:unit`) runs. As of 2026-10-04: 117 files, 1 excluded (116 run).
+# This file must stay LF (.gitattributes): with CRLF the `grep -vxF` match fails and nothing is excluded.
+#
+# Reason: starts the real python/lpbf_worker.py and relies on POSIX process-tree reaping
+# of an execution child plus a grandchild. The worker's import closure (beyond numpy,
+# scipy and pydantic) and the reaping behaviour on Linux have not been verified, so this
+# test would be an unproven signal on a first CI run. Re-include it once it has been
+# run successfully on Linux with the CPU lock environment. (It passed once in the Docker
+# verify stage on 2026-10-04 when a CRLF copy of this list failed to exclude it; one
+# accidental pass is not treated as enough.)
+tests/lpbf-worker-delete-integration.test.ts

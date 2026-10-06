@@ -1,0 +1,729 @@
+{
+  "schema": "lpbf-dataset-comparison-1",
+  "generatedAt": "2026-10-05T00:00:00Z",
+  "implementationHash": "FIXTURE-NOT-A-REAL-HASH",
+  "datasets": [
+    {
+      "id": "hofmann-2026-316l",
+      "doi": "10.5281/zenodo.16979848",
+      "license": "CC BY 4.0",
+      "url": "https://zenodo.org/records/16979848",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "rows": 677,
+      "citation": "FIXTURE: Hofmann et al. 2026, 316L single-track dataset (sample rows only; values are synthetic test data).",
+      "notes": [
+        "Fixture sample: 7 of 677 rows, synthetic numbers for tests."
+      ]
+    },
+    {
+      "id": "totis-2021-ti64",
+      "doi": "10.17632/s9438vb5xd.1",
+      "license": "CC BY 4.0",
+      "url": "https://data.mendeley.com/datasets/s9438vb5xd",
+      "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "rows": 80,
+      "citation": "FIXTURE: Totis/Vaglio 2021, Ti-6Al-4V single-track dataset (sample rows only; values are synthetic test data).",
+      "notes": [
+        "Fixture sample: 5 of 80 rows, synthetic numbers for tests.",
+        "The workbook does not state the depth reference line (original substrate surface vs powder surface): depth is used 'as found'."
+      ]
+    }
+  ],
+  "regimeFilter": {
+    "rule": "conduction: no balling flag, D/W <= 0.8, below keyhole normalised-enthalpy onset (fixture text)",
+    "parameters": {
+      "dOverWMax": 0.8
+    }
+  },
+  "kernels": [
+    "rosenthal",
+    "eagar-tsai",
+    "goldak"
+  ],
+  "rows": [
+    {
+      "dataset": "hofmann-2026-316l",
+      "rowId": "H-001",
+      "inputs": {
+        "material": "ss316l",
+        "power_W": 100,
+        "speed_mm_s": 800,
+        "beamDiameter_um": 80,
+        "layer_um": 0,
+        "preheat_C": 25
+      },
+      "measured": {
+        "width_um": 118,
+        "depth_um": 52,
+        "balling": false
+      },
+      "regime": {
+        "label": "conduction",
+        "normalizedEnthalpy": 6.1,
+        "dOverW": 0.44
+      },
+      "predictions": {
+        "rosenthal": {
+          "width_um": 104,
+          "depth_um": 38,
+          "length_um": 190,
+          "extentStatus": "computed",
+          "included": true
+        },
+        "eagar-tsai": {
+          "width_um": 112,
+          "depth_um": 44,
+          "length_um": 210,
+          "extentStatus": "computed",
+          "included": true
+        },
+        "goldak": {
+          "width_um": 121,
+          "depth_um": 55,
+          "length_um": 230,
+          "extentStatus": "computed",
+          "included": true
+        }
+      }
+    },
+    {
+      "dataset": "hofmann-2026-316l",
+      "rowId": "H-002",
+      "inputs": {
+        "material": "ss316l",
+        "power_W": 150,
+        "speed_mm_s": 800,
+        "beamDiameter_um": 80,
+        "layer_um": 0,
+        "preheat_C": 25
+      },
+      "measured": {
+        "width_um": 141,
+        "depth_um": 78,
+        "balling": false
+      },
+      "regime": {
+        "label": "conduction",
+        "normalizedEnthalpy": 9,
+        "dOverW": 0.55
+      },
+      "predictions": {
+        "rosenthal": {
+          "width_um": 128,
+          "depth_um": 57,
+          "length_um": 240,
+          "extentStatus": "computed",
+          "included": true
+        },
+        "eagar-tsai": {
+          "width_um": 139,
+          "depth_um": 70,
+          "length_um": 262,
+          "extentStatus": "computed",
+          "included": true
+        },
+        "goldak": {
+          "width_um": 149,
+          "depth_um": 83,
+          "length_um": 285,
+          "extentStatus": "computed",
+          "included": true
+        }
+      }
+    },
+    {
+      "dataset": "hofmann-2026-316l",
+      "rowId": "H-003",
+      "inputs": {
+        "material": "ss316l",
+        "power_W": 200,
+        "speed_mm_s": 600,
+        "beamDiameter_um": 80,
+        "layer_um": 30,
+        "preheat_C": 25
+      },
+      "measured": {
+        "width_um": 176,
+        "depth_um": 95,
+        "balling": false
+      },
+      "regime": {
+        "label": "conduction",
+        "normalizedEnthalpy": 14.2,
+        "dOverW": 0.54
+      },
+      "predictions": {
+        "rosenthal": {
+          "width_um": 181,
+          "depth_um": 92,
+          "length_um": 350,
+          "extentStatus": "computed",
+          "included": true
+        },
+        "eagar-tsai": {
+          "width_um": 190,
+          "depth_um": 101,
+          "length_um": 372,
+          "extentStatus": "computed",
+          "included": true
+        },
+        "goldak": {
+          "width_um": 168,
+          "depth_um": 88,
+          "length_um": 330,
+          "extentStatus": "computed",
+          "included": true
+        }
+      }
+    },
+    {
+      "dataset": "hofmann-2026-316l",
+      "rowId": "H-004",
+      "inputs": {
+        "material": "ss316l",
+        "power_W": 300,
+        "speed_mm_s": 500,
+        "beamDiameter_um": 100,
+        "layer_um": 30,
+        "preheat_C": 25
+      },
+      "measured": {
+        "width_um": 232,
+        "depth_um": 168,
+        "balling": false
+      },
+      "regime": {
+        "label": "transition",
+        "normalizedEnthalpy": 23.5,
+        "dOverW": 0.72
+      },
+      "predictions": {
+        "rosenthal": {
+          "width_um": 260,
+          "depth_um": 148,
+          "length_um": 520,
+          "extentStatus": "computed",
+          "included": true
+        },
+        "eagar-tsai": {
+          "width_um": 246,
+          "depth_um": 160,
+          "length_um": 500,
+          "extentStatus": "computed",
+          "included": true
+        },
+        "goldak": {
+          "width_um": 238,
+          "depth_um": 171,
+          "length_um": 490,
+          "extentStatus": "computed",
+          "included": true
+        }
+      }
+    },
+    {
+      "dataset": "hofmann-2026-316l",
+      "rowId": "H-005",
+      "inputs": {
+        "material": "ss316l",
+        "power_W": 400,
+        "speed_mm_s": 300,
+        "beamDiameter_um": 100,
+        "layer_um": 60,
+        "preheat_C": 25
+      },
+      "measured": {
+        "width_um": 301,
+        "depth_um": 291,
+        "balling": false
+      },
+      "regime": {
+        "label": "transition",
+        "normalizedEnthalpy": 44,
+        "dOverW": 0.97
+      },
+      "predictions": {
+        "rosenthal": {
+          "width_um": 352,
+          "depth_um": 205,
+          "length_um": 800,
+          "extentStatus": "computed",
+          "included": true
+        },
+        "eagar-tsai": {
+          "width_um": 330,
+          "depth_um": 240,
+          "length_um": 760,
+          "extentStatus": "computed",
+          "included": true
+        },
+        "goldak": {
+          "width_um": 322,
+          "depth_um": 262,
+          "length_um": 745,
+          "extentStatus": "computed",
+          "included": true
+        }
+      }
+    },
+    {
+      "dataset": "hofmann-2026-316l",
+      "rowId": "H-006",
+      "inputs": {
+        "material": "ss316l",
+        "power_W": 500,
+        "speed_mm_s": 225,
+        "beamDiameter_um": 140,
+        "layer_um": 60,
+        "preheat_C": 25
+      },
+      "measured": {
+        "width_um": 382,
+        "depth_um": 402,
+        "balling": false
+      },
+      "regime": {
+        "label": "transition",
+        "normalizedEnthalpy": 60.3,
+        "dOverW": 1.05
+      },
+      "predictions": {
+        "rosenthal": {
+          "width_um": null,
+          "depth_um": null,
+          "length_um": null,
+          "extentStatus": "heuristic-fallback",
+          "included": false,
+          "extentNote": "Kernel returned a screening-fallback extent, not a computed melt-pool boundary."
+        },
+        "eagar-tsai": {
+          "width_um": 470,
+          "depth_um": 310,
+          "length_um": 990,
+          "extentStatus": "computed",
+          "included": true
+        },
+        "goldak": {
+          "width_um": 455,
+          "depth_um": 365,
+          "length_um": 960,
+          "extentStatus": "computed",
+          "included": true
+        }
+      }
+    },
+    {
+      "dataset": "hofmann-2026-316l",
+      "rowId": "H-007",
+      "inputs": {
+        "material": "ss316l",
+        "power_W": 250,
+        "speed_mm_s": 1500,
+        "beamDiameter_um": 50,
+        "layer_um": 0,
+        "preheat_C": 25
+      },
+      "measured": {
+        "width_um": 98,
+        "depth_um": 41,
+        "balling": false
+      },
+      "regime": {
+        "label": "conduction",
+        "normalizedEnthalpy": 9.4,
+        "dOverW": 0.42
+      },
+      "predictions": {
+        "rosenthal": {
+          "width_um": 85,
+          "depth_um": 30,
+          "length_um": 170,
+          "extentStatus": "degenerate-floor",
+          "included": false,
+          "extentNote": "Extent clipped to the numerical floor; not a computed width."
+        },
+        "eagar-tsai": {
+          "width_um": 92,
+          "depth_um": 36,
+          "length_um": 190,
+          "extentStatus": "computed",
+          "included": true
+        },
+        "goldak": {
+          "width_um": 101,
+          "depth_um": 44,
+          "length_um": 205,
+          "extentStatus": "computed",
+          "included": true
+        }
+      }
+    },
+    {
+      "dataset": "totis-2021-ti64",
+      "rowId": "T-001",
+      "inputs": {
+        "material": "ti6al4v",
+        "power_W": 100,
+        "speed_mm_s": 500,
+        "beamDiameter_um": 50,
+        "layer_um": 25,
+        "preheat_C": 25
+      },
+      "measured": {
+        "width_um": 92,
+        "depth_um": 38,
+        "balling": false
+      },
+      "regime": {
+        "label": "conduction",
+        "normalizedEnthalpy": 8.2,
+        "dOverW": 0.41
+      },
+      "predictions": {
+        "rosenthal": {
+          "width_um": 88,
+          "depth_um": 34,
+          "length_um": 180,
+          "extentStatus": "computed",
+          "included": true
+        },
+        "eagar-tsai": {
+          "width_um": 96,
+          "depth_um": 40,
+          "length_um": 196,
+          "extentStatus": "computed",
+          "included": true
+        },
+        "goldak": {
+          "width_um": 99,
+          "depth_um": 43,
+          "length_um": 205,
+          "extentStatus": "computed",
+          "included": true
+        }
+      }
+    },
+    {
+      "dataset": "totis-2021-ti64",
+      "rowId": "T-002",
+      "inputs": {
+        "material": "ti6al4v",
+        "power_W": 200,
+        "speed_mm_s": 1000,
+        "beamDiameter_um": 50,
+        "layer_um": 25,
+        "preheat_C": 25
+      },
+      "measured": {
+        "width_um": 118,
+        "depth_um": 60,
+        "balling": false
+      },
+      "regime": {
+        "label": "conduction",
+        "normalizedEnthalpy": 9.8,
+        "dOverW": 0.51
+      },
+      "predictions": {
+        "rosenthal": {
+          "width_um": 108,
+          "depth_um": 49,
+          "length_um": 260,
+          "extentStatus": "computed",
+          "included": true
+        },
+        "eagar-tsai": {
+          "width_um": 122,
+          "depth_um": 62,
+          "length_um": 280,
+          "extentStatus": "computed",
+          "included": true
+        },
+        "goldak": {
+          "width_um": 127,
+          "depth_um": 67,
+          "length_um": 295,
+          "extentStatus": "computed",
+          "included": true
+        }
+      }
+    },
+    {
+      "dataset": "totis-2021-ti64",
+      "rowId": "T-003",
+      "inputs": {
+        "material": "ti6al4v",
+        "power_W": 300,
+        "speed_mm_s": 500,
+        "beamDiameter_um": 50,
+        "layer_um": 25,
+        "preheat_C": 25
+      },
+      "measured": {
+        "width_um": 171,
+        "depth_um": 121,
+        "balling": false
+      },
+      "regime": {
+        "label": "transition",
+        "normalizedEnthalpy": 24.9,
+        "dOverW": 0.71
+      },
+      "predictions": {
+        "rosenthal": {
+          "width_um": 205,
+          "depth_um": 118,
+          "length_um": 420,
+          "extentStatus": "computed",
+          "included": true
+        },
+        "eagar-tsai": {
+          "width_um": 190,
+          "depth_um": 125,
+          "length_um": 400,
+          "extentStatus": "computed",
+          "included": true
+        },
+        "goldak": {
+          "width_um": 183,
+          "depth_um": 131,
+          "length_um": 390,
+          "extentStatus": "computed",
+          "included": true
+        }
+      }
+    },
+    {
+      "dataset": "totis-2021-ti64",
+      "rowId": "T-004",
+      "inputs": {
+        "material": "ti6al4v",
+        "power_W": 400,
+        "speed_mm_s": 250,
+        "beamDiameter_um": 50,
+        "layer_um": 25,
+        "preheat_C": 25
+      },
+      "measured": {
+        "width_um": 238,
+        "depth_um": 236,
+        "balling": false
+      },
+      "regime": {
+        "label": "transition",
+        "normalizedEnthalpy": 50.5,
+        "dOverW": 0.99
+      },
+      "predictions": {
+        "rosenthal": {
+          "width_um": 310,
+          "depth_um": 190,
+          "length_um": 680,
+          "extentStatus": "computed",
+          "included": true
+        },
+        "eagar-tsai": {
+          "width_um": 285,
+          "depth_um": 214,
+          "length_um": 640,
+          "extentStatus": "computed",
+          "included": true
+        },
+        "goldak": {
+          "width_um": 274,
+          "depth_um": 229,
+          "length_um": 622,
+          "extentStatus": "computed",
+          "included": true
+        }
+      }
+    },
+    {
+      "dataset": "totis-2021-ti64",
+      "rowId": "T-005",
+      "inputs": {
+        "material": "ti6al4v",
+        "power_W": 50,
+        "speed_mm_s": 2500,
+        "beamDiameter_um": 50,
+        "layer_um": 25,
+        "preheat_C": 25
+      },
+      "measured": {
+        "width_um": 60,
+        "depth_um": 18,
+        "balling": false
+      },
+      "regime": {
+        "label": "conduction",
+        "normalizedEnthalpy": 2.1,
+        "dOverW": 0.3
+      },
+      "predictions": {
+        "rosenthal": {
+          "width_um": 41,
+          "depth_um": 15,
+          "length_um": 120,
+          "extentStatus": "degenerate-floor",
+          "included": false,
+          "extentNote": "Extent clipped to the numerical floor; not a computed width."
+        },
+        "eagar-tsai": {
+          "width_um": null,
+          "depth_um": null,
+          "length_um": null,
+          "extentStatus": "heuristic-fallback",
+          "included": false,
+          "extentNote": "Kernel returned a screening-fallback extent, not a computed melt-pool boundary."
+        },
+        "goldak": {
+          "width_um": 55,
+          "depth_um": 19,
+          "length_um": 140,
+          "extentStatus": "computed",
+          "included": true
+        }
+      }
+    }
+  ],
+  "summary": {
+    "rosenthal": {
+      "conduction": {
+        "n": 5,
+        "nExcluded": 2,
+        "width": {
+          "bias_pct": -6.21,
+          "mape_pct": 7.35,
+          "rmse_um": 10.06,
+          "within30pct": 1.0
+        },
+        "depth": {
+          "bias_pct": -17.17,
+          "mape_pct": 17.17,
+          "rmse_um": 12.51,
+          "within30pct": 1.0
+        }
+      },
+      "transition": {
+        "n": 4,
+        "nExcluded": 1,
+        "width": {
+          "bias_pct": 19.79,
+          "mape_pct": 19.79,
+          "rmse_um": 49.31,
+          "within30pct": 0.75
+        },
+        "depth": {
+          "bias_pct": -15.86,
+          "mape_pct": 15.86,
+          "rmse_um": 49.8,
+          "within30pct": 1.0
+        }
+      }
+    },
+    "eagar-tsai": {
+      "conduction": {
+        "n": 6,
+        "nExcluded": 1,
+        "width": {
+          "bias_pct": 0.51,
+          "mape_pct": 4.72,
+          "rmse_um": 7.12,
+          "within30pct": 1.0
+        },
+        "depth": {
+          "bias_pct": -3.82,
+          "mape_pct": 8.79,
+          "rmse_um": 5.73,
+          "within30pct": 1.0
+        }
+      },
+      "transition": {
+        "n": 5,
+        "nExcluded": 0,
+        "width": {
+          "bias_pct": 13.91,
+          "mape_pct": 13.91,
+          "rmse_um": 47.65,
+          "within30pct": 1.0
+        },
+        "depth": {
+          "bias_pct": -10.24,
+          "mape_pct": 11.56,
+          "rmse_um": 48.23,
+          "within30pct": 1.0
+        }
+      }
+    },
+    "goldak": {
+      "conduction": {
+        "n": 7,
+        "nExcluded": 0,
+        "width": {
+          "bias_pct": 1.95,
+          "mape_pct": 5.63,
+          "rmse_um": 6.56,
+          "within30pct": 1.0
+        },
+        "depth": {
+          "bias_pct": 6.07,
+          "mape_pct": 8.18,
+          "rmse_um": 4.88,
+          "within30pct": 1.0
+        }
+      },
+      "transition": {
+        "n": 5,
+        "nExcluded": 0,
+        "width": {
+          "bias_pct": 10.16,
+          "mape_pct": 10.16,
+          "rmse_um": 38.07,
+          "within30pct": 1.0
+        },
+        "depth": {
+          "bias_pct": -2.42,
+          "mape_pct": 6.44,
+          "rmse_um": 21.76,
+          "within30pct": 1.0
+        }
+      }
+    }
+  },
+  "absorptivitySensitivity": {
+    "values": [
+      0.3,
+      0.4,
+      0.5,
+      0.6
+    ],
+    "rosenthal": {
+      "width_mape_pct_by_value": [
+        18.2,
+        12.4,
+        9.1,
+        14.7
+      ]
+    },
+    "eagar-tsai": {
+      "width_mape_pct_by_value": [
+        20.1,
+        11,
+        8.3,
+        12.9
+      ]
+    },
+    "goldak": {
+      "width_mape_pct_by_value": [
+        22.5,
+        13.3,
+        10.2,
+        13.8
+      ]
+    }
+  },
+  "honesty": {
+    "statement": "comparison, not validation; screening kernels; estimated material laws",
+    "experimentalValidation": false
+  }
+}

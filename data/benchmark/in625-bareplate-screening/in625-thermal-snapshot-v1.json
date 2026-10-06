@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "materialId": "in625",
+  "name": "Inconel 625",
+  "capability": "bounded-fusion-enthalpy-screening",
+  "validationStatus": "unvalidated-literature-model-screening",
+  "provenanceClass": "literature-constitutive-model",
+  "source": "https://doi.org/10.1007/s11663-020-01808-w",
+  "sourceLocators": {
+    "solidCpAndConductivity": "Appendix B, JMatPro-calculated equations",
+    "liquidCpAndConductivity": "Appendix B, liquid-phase constants",
+    "phaseAndLatent": "Setup of STLF Simulation Model and Material Properties"
+  },
+  "temperatureCoverage_K": [
+    273.15,
+    1623.15
+  ],
+  "solidus_K": 1563.15,
+  "liquidus_K": 1623.15,
+  "latentHeat_J_kg": 290000.0,
+  "solidCpPolynomial_J_kgK": [
+    362.0,
+    0.125,
+    0.0001741,
+    -7.527126e-08
+  ],
+  "solidConductivityLinear_W_mK": [
+    4.93,
+    0.01575
+  ],
+  "liquidCp_J_kgK": 700.0,
+  "liquidConductivity_W_mK": 30.0,
+  "phaseInterpolation": "linear solid-to-liquid fraction over 1290..1350 C",
+  "uncertaintyNote": "JMatPro/model-based inputs; no quantified property uncertainty or independent validation. Mushy heat capacity and conductivity are explicit linear screening interpolations. No powder, vapor, optical, volumetric-density or above-liquidus prediction.",
+  "materialRevisionSha256": "f47b07e4c8288b8c7177001f069a254be3410bace43ad5ea2f73168ac4466f07"
+}

@@ -1,0 +1,295 @@
+{
+  "schemaVersion": 1,
+  "protocolId": "lpbf-p4-current-40w-accepted-dt-diagnostic-v1",
+  "protocolSha256": "2f9fbea438a1b9c22aa7124a72550a354bf4b7b6df2a82a908449302d591d1a4",
+  "scenarioFile": "docs/LPBF_P4_CURRENT_MODEL_40W_SCENARIO_2026-09-25.json",
+  "scenarioSha256": "2abec47f9d35c02158ea2e06876e3ca06c3ba5ba9243f1ddccaa94ef64752ea6",
+  "executionHeadCommit": "549deee520615d25556a87199071704f8b632559",
+  "scope": "Repeated frozen 5 um CPU temporal axis with accepted timestep distribution diagnostics",
+  "experimentalValidation": false,
+  "priorFrozenP4Status": "failed",
+  "startedAt": "2026-09-25T15:38:13.137252+00:00",
+  "fixedMesh_um": 5.0,
+  "requestedMaxDt_s": [
+    1e-07,
+    5e-08,
+    2.5e-08
+  ],
+  "acceptance": {
+    "source": "docs/DIGITAL_TWIN_MASTER_PLAN_2026-09-21.md#11",
+    "energyRelativeErrorMax": 0.01,
+    "finestPairWidthDepthRelativeChangeMax": 0.05,
+    "minimumLevelsPerAxis": 3,
+    "maximumLevelsPerAxis": 6,
+    "trend": "three finest levels must satisfy lpbf_verification.convergence using actual spacings"
+  },
+  "rows": [
+    {
+      "requested": 1e-07,
+      "status": "completed",
+      "actualMesh_m": 4.9999999999999996e-06,
+      "cells": 526592,
+      "actualMeanDt_s": 8.921743563599285e-08,
+      "actualMinimumDt_s": 3.094219787780784e-09,
+      "acceptedTimestepDistribution": {
+        "methodId": "accepted-timestep-distribution-v1",
+        "count": 3923,
+        "total_s": 0.0003499999999999951,
+        "sumSquared_s2": 3.2021806719390104e-11,
+        "mean_s": 8.921743563599162e-08,
+        "minimum_s": 3.094219787780784e-09,
+        "p50_s": 1e-07,
+        "p90_s": 1e-07,
+        "p99_s": 1e-07,
+        "maximum_s": 1e-07,
+        "eulerFirstOrderWeightedDt_s": 9.149087634111586e-08,
+        "requestedMaxDt_s": 1e-07,
+        "requestedMaxDtHitFraction": 0.5707366811113943,
+        "sourceLimitedStepCount": 1682,
+        "sourceTimestepRetries": 1682
+      },
+      "steps": 3923,
+      "width_um": 79.99999999999999,
+      "depth_um": 34.99999999999998,
+      "volume_um3": 274249.99999999994,
+      "peakTemperature_K": 2568.79256170347,
+      "peakSelection": {
+        "meltPoolExtraction": "accepted-step-molten-volume-v1",
+        "peakMeltTime_s": 0.0002501989533553503,
+        "peakMeltStep": 2923,
+        "peakMeltCellCount": 2194,
+        "equalMaximumEndpointCount": 1,
+        "firstEqualMaximumTime_s": 0.0002501989533553503,
+        "lastEqualMaximumTime_s": 0.0002501989533553503
+      },
+      "interpolatedMidTrackCrossSection": null,
+      "interpolatedPeakMeltPool": {
+        "status": "thermal-proxy",
+        "operator": "peak-liquidus-cell-edge-linear-contour-v1",
+        "temporalSelection": "accepted-step-molten-volume-v1",
+        "contour": "linear liquidus crossings between neighboring active cell centers",
+        "surfaceTreatment": "No temperature extrapolation to the model surface",
+        "width_um": 77.70786194247214,
+        "depth_um": 34.69555850704083,
+        "evidenceScope": "Numerical thermal proxy; no experimental validation",
+        "sampleCells": 2194,
+        "crossingCount": 1014
+      },
+      "energyBalance": {
+        "input_J": 0.003800000000000015,
+        "losses_J": 1.04333191881852e-06,
+        "stored_J": 0.0037989566680811443,
+        "relativeError": 1.3809311881131106e-14,
+        "denominator": "input_J",
+        "reference": "initial enthalpy at preheat"
+      },
+      "solver": {
+        "id": "enthalpy-fv-6",
+        "version": "enthalpy-fv-6",
+        "openfoam": null
+      },
+      "model": {
+        "modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+        "actualBackend": "numpy-reference",
+        "solverId": "enthalpy-fv-6"
+      },
+      "material": {
+        "name": "Inconel 718",
+        "materialId": "in718",
+        "materialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06",
+        "version": "lpbf-materials-1"
+      },
+      "provenance": {
+        "inputHash": "959db26477bd3800cbb4c1fe5cce4fb073d0806274289b1489ec2785f35a834a",
+        "implementationHash": "2811e312c83f1f32d4b13ea34b42ff9fcb3642a54e9408e01e1320e6c27d0a5e"
+      }
+    },
+    {
+      "requested": 5e-08,
+      "status": "completed",
+      "actualMesh_m": 4.9999999999999996e-06,
+      "cells": 526592,
+      "actualMeanDt_s": 4.999999999999999e-08,
+      "actualMinimumDt_s": 4.9999999997480445e-08,
+      "acceptedTimestepDistribution": {
+        "methodId": "accepted-timestep-distribution-v1",
+        "count": 7000,
+        "total_s": 0.00034999999999999745,
+        "sumSquared_s2": 1.7499999999999742e-11,
+        "mean_s": 4.9999999999999634e-08,
+        "minimum_s": 4.9999999997480445e-08,
+        "p50_s": 5e-08,
+        "p90_s": 5e-08,
+        "p99_s": 5e-08,
+        "maximum_s": 5e-08,
+        "eulerFirstOrderWeightedDt_s": 4.999999999999963e-08,
+        "requestedMaxDt_s": 5e-08,
+        "requestedMaxDtHitFraction": 0.9998571428571429,
+        "sourceLimitedStepCount": 0,
+        "sourceTimestepRetries": 0
+      },
+      "steps": 7000,
+      "width_um": 79.99999999999999,
+      "depth_um": 34.99999999999998,
+      "volume_um3": 274249.99999999994,
+      "peakTemperature_K": 2568.5430289764568,
+      "peakSelection": {
+        "meltPoolExtraction": "accepted-step-molten-volume-v1",
+        "peakMeltTime_s": 0.0002501499999999999,
+        "peakMeltStep": 5003,
+        "peakMeltCellCount": 2194,
+        "equalMaximumEndpointCount": 2,
+        "firstEqualMaximumTime_s": 0.0002501499999999999,
+        "lastEqualMaximumTime_s": 0.00025019999999999985
+      },
+      "interpolatedMidTrackCrossSection": null,
+      "interpolatedPeakMeltPool": {
+        "status": "thermal-proxy",
+        "operator": "peak-liquidus-cell-edge-linear-contour-v1",
+        "temporalSelection": "accepted-step-molten-volume-v1",
+        "contour": "linear liquidus crossings between neighboring active cell centers",
+        "surfaceTreatment": "No temperature extrapolation to the model surface",
+        "width_um": 77.70527640646276,
+        "depth_um": 34.695477121174946,
+        "evidenceScope": "Numerical thermal proxy; no experimental validation",
+        "sampleCells": 2194,
+        "crossingCount": 1014
+      },
+      "energyBalance": {
+        "input_J": 0.003799999999999607,
+        "losses_J": 1.0432357294098078e-06,
+        "stored_J": 0.0037989567642705514,
+        "relativeError": 9.324138683376302e-14,
+        "denominator": "input_J",
+        "reference": "initial enthalpy at preheat"
+      },
+      "solver": {
+        "id": "enthalpy-fv-6",
+        "version": "enthalpy-fv-6",
+        "openfoam": null
+      },
+      "model": {
+        "modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+        "actualBackend": "numpy-reference",
+        "solverId": "enthalpy-fv-6"
+      },
+      "material": {
+        "name": "Inconel 718",
+        "materialId": "in718",
+        "materialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06",
+        "version": "lpbf-materials-1"
+      },
+      "provenance": {
+        "inputHash": "41ec735d7e3e6622a0304675f28877ad3a9e1e4f67da9c7fd209d83cd1e67278",
+        "implementationHash": "2ca635100bfb33fa26c847049cf366fd26bdbd4776bf1b0efc39b2a71338a43f"
+      }
+    },
+    {
+      "requested": 2.5e-08,
+      "status": "completed",
+      "actualMesh_m": 4.9999999999999996e-06,
+      "cells": 526592,
+      "actualMeanDt_s": 2.4999999999999996e-08,
+      "actualMinimumDt_s": 2.5e-08,
+      "acceptedTimestepDistribution": {
+        "methodId": "accepted-timestep-distribution-v1",
+        "count": 14000,
+        "total_s": 0.00034999999999999994,
+        "sumSquared_s2": 8.750000000000004e-12,
+        "mean_s": 2.4999999999999996e-08,
+        "minimum_s": 2.5e-08,
+        "p50_s": 2.5e-08,
+        "p90_s": 2.5e-08,
+        "p99_s": 2.5e-08,
+        "maximum_s": 2.5e-08,
+        "eulerFirstOrderWeightedDt_s": 2.5000000000000015e-08,
+        "requestedMaxDt_s": 2.5e-08,
+        "requestedMaxDtHitFraction": 1.0,
+        "sourceLimitedStepCount": 0,
+        "sourceTimestepRetries": 0
+      },
+      "steps": 14000,
+      "width_um": 79.99999999999999,
+      "depth_um": 34.99999999999998,
+      "volume_um3": 274249.99999999994,
+      "peakTemperature_K": 2568.23934979565,
+      "peakSelection": {
+        "meltPoolExtraction": "accepted-step-molten-volume-v1",
+        "peakMeltTime_s": 0.0002500999999999429,
+        "peakMeltStep": 10004,
+        "peakMeltCellCount": 2194,
+        "equalMaximumEndpointCount": 7,
+        "firstEqualMaximumTime_s": 0.0002500999999999429,
+        "lastEqualMaximumTime_s": 0.000250249999999943
+      },
+      "interpolatedMidTrackCrossSection": null,
+      "interpolatedPeakMeltPool": {
+        "status": "thermal-proxy",
+        "operator": "peak-liquidus-cell-edge-linear-contour-v1",
+        "temporalSelection": "accepted-step-molten-volume-v1",
+        "contour": "linear liquidus crossings between neighboring active cell centers",
+        "surfaceTreatment": "No temperature extrapolation to the model surface",
+        "width_um": 77.70362699089321,
+        "depth_um": 34.6963370019652,
+        "evidenceScope": "Numerical thermal proxy; no experimental validation",
+        "sampleCells": 2194,
+        "crossingCount": 1014
+      },
+      "energyBalance": {
+        "input_J": 0.003799999999999381,
+        "losses_J": 1.043353458909693e-06,
+        "stored_J": 0.0037989566465410902,
+        "relativeError": 1.628585789617965e-13,
+        "denominator": "input_J",
+        "reference": "initial enthalpy at preheat"
+      },
+      "solver": {
+        "id": "enthalpy-fv-6",
+        "version": "enthalpy-fv-6",
+        "openfoam": null
+      },
+      "model": {
+        "modelId": "stationary-enthalpy-conduction-layer-conforming-v1",
+        "actualBackend": "numpy-reference",
+        "solverId": "enthalpy-fv-6"
+      },
+      "material": {
+        "name": "Inconel 718",
+        "materialId": "in718",
+        "materialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06",
+        "version": "lpbf-materials-1"
+      },
+      "provenance": {
+        "inputHash": "e2199adbb8618f94625980ebdb78ddb73ca4813c32658b5957288b3e3cb23110",
+        "implementationHash": "c099e4f9c7c4650e74d7df31ed32884a1c6077c9b85f3a57d69fa3ec57f0fe5c"
+      }
+    }
+  ],
+  "stage": "completed",
+  "assessment": {
+    "status": "inconclusive",
+    "energyStatus": "pass",
+    "maximumEnergyRelativeError": 1.628585789617965e-13,
+    "metrics": {
+      "width_um": {
+        "status": "inconclusive",
+        "finestPairRelativeChange": 0.0,
+        "convergence": {
+          "status": "inconclusive",
+          "reason": "A constant refinement ratio > 1 is required"
+        },
+        "reason": "A constant refinement ratio > 1 is required"
+      },
+      "depth_um": {
+        "status": "inconclusive",
+        "finestPairRelativeChange": 0.0,
+        "convergence": {
+          "status": "inconclusive",
+          "reason": "A constant refinement ratio > 1 is required"
+        },
+        "reason": "A constant refinement ratio > 1 is required"
+      }
+    }
+  },
+  "completedAt": "2026-09-25T16:35:42.582775+00:00"
+}

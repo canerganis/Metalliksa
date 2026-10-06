@@ -86,9 +86,12 @@ export function parseEBSDOrGrainFile(content: string, filename: string): EbsdPar
   const sumAspect = grains.reduce((acc, g) => acc + g.aspectRatio, 0);
   const meanAspectRatio = +(sumAspect / grains.length).toFixed(2);
 
-  // ASTM G = -3.3219 * log10(d_mm) - 3.288
-  const d_mm = meanDiameter_um / 1000;
-  const astm_G = +(-3.3219 * Math.log10(d_mm) - 3.288).toFixed(2);
+  // ASTM E112 planimetric grain size number from the mean grain AREA (N_A = 1 / mean area, grains per mm^2 at 1x;
+  // N_AE = 2^(G-1) per in^2 at 100x, 1 in^2 = 645.16 mm^2):  G = -3.321928 * log10(meanArea_mm2) - 2.954.
+  // (Until 2026-10 this was -3.3219 * log10(meanDiameter_mm) - 3.288: an area coefficient applied to a length,
+  // with the intercept constant.)
+  const meanArea_mm2 = grains.reduce((acc, g) => acc + g.area_um2, 0) / grains.length / 1e6;
+  const astm_G = +(-3.321928 * Math.log10(meanArea_mm2) - 2.954).toFixed(2);
 
   // Build histogram
   const minSize = Math.max(0.2, Math.min(...grains.map((g) => g.equivalentDiameter_um)));

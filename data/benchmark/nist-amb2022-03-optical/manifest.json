@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "dataset_id": "nist-amb2022-03-optical-table4-local-v1",
+  "version": "1.1.0",
+  "material": "IN718",
+  "process_scope": "bare-plate",
+  "artifact_kind": "local-transcription-of-published-aggregate-measurements",
+  "citation": "NIST AM Bench 2022, AMB2022-03 Benchmark Measurements and Challenge Results, Table 4; DOI 10.18434/mds2-2718. Locally transcribed aggregate values, not NIST raw data or PDF.",
+  "checksum_authority": "SHA-256 of this repository's local transcription bytes; not a NIST-issued checksum",
+  "files": [
+    {
+      "path": "table4-aggregate-v2.json",
+      "source_url": "https://www.nist.gov/document/am-bench-amb2022-03-measurement-and-result-descriptions-v10",
+      "bytes": 4321,
+      "sha256": "d1b36dfa2e01a3537093c481e249ce52df6b8879c1c67480ddb9aa10799133da"
+    }
+  ]
+}

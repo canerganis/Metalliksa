@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { create } from "zustand";
 import { simulationApi, type SimulationInput, type SimulationJob, type SimulationMode } from "../services/lpbfSimulationService";
+import { resultSignatureOnPoll, resultSignatureOnRestore } from "../utils/lpbfResultStaleness";
 
 export const LPBF_ENGINEERING_DEFAULTS: Partial<SimulationInput> = { stripeWidth_um:500,islandSize_um:200,mesh_um:20,maxDt_s:1e-6,tracks:1,layers:1,trackLength_um:600,dwell_s:.0002,cooling_s:.0005,packingFraction:.55,powderConductivityRatio:.12,convection_W_m2K:20,timeout_s:300,scanAngle_deg:0,layerRotation_deg:67,study:"none",backend:"auto" };
 export interface LpbfEngineeringState {
@@ -32,6 +33,9 @@ export const useLpbfEngineeringStore = create<LpbfEngineeringState>(() => ({
 }));
 
 export const LPBF_ENGINEERING_JOB_STORAGE_KEY = "metalliksa.lpbf.engineering.job.v2";
+/** Per-viewer convenience: the thermal backend select only. Results and evidence are never stored here. */
+export const LPBF_BACKEND_PREFERENCE_KEY = "metalliksa.lpbf.thermal.backend.v1";
+const BACKENDS: SimulationInput["backend"][] = ["auto", "reference", "openfoam-thermal"];
 
 /** Restore evidence at app startup, including direct report/comparison routes. */
 export function startEngineeringJobPersistence(storage?: Pick<Storage, "getItem" | "setItem">): () => void {
@@ -47,6 +51,13 @@ export function startEngineeringJobPersistence(storage?: Pick<Storage, "getItem"
       saved = {id:value.id, signature:typeof value.signature === "string" ? value.signature : "", cacheHit:typeof value.cacheHit === "boolean" ? value.cacheHit : undefined, input:validInput ? input : undefined};
     }
   } catch { /* Invalid or disabled storage must not block a new simulation. */ }
+  try {
+    // Remembered backend select (unknown values ignored), restored when App starts this persistence (an App effect,
+    // so after App's first render). Views and the report read the store reactively and follow the restored value.
+    // A job restored below keeps its executed backend.
+    const backend = storage?.getItem(LPBF_BACKEND_PREFERENCE_KEY) as SimulationInput["backend"];
+    if (backend && BACKENDS.includes(backend) && backend !== useLpbfEngineeringStore.getState().settings.backend) useLpbfEngineeringStore.setState(s => ({settings: {...s.settings, backend}}));
+  } catch { /* Disabled storage: nothing is remembered. */ }
   const persist = (state: LpbfEngineeringState) => {
     if (!state.job) return;
     try {
@@ -54,6 +65,7 @@ export function startEngineeringJobPersistence(storage?: Pick<Storage, "getItem"
     } catch { /* The server job and in-memory evidence remain available. */ }
   };
   const unsubscribe = useLpbfEngineeringStore.subscribe((state, previous) => {
+    if (state.settings.backend !== previous.settings.backend && state.settings.backend) try { storage?.setItem(LPBF_BACKEND_PREFERENCE_KEY, state.settings.backend); } catch { /* Still applies for this page view. */ }
     if (state.job !== previous.job || state.submittedInput !== previous.submittedInput || state.submittedSignature !== previous.submittedSignature || state.busy) superseded = true;
     if (state.job !== previous.job || state.submittedInput !== previous.submittedInput || state.submittedSignature !== previous.submittedSignature) persist(state);
   });
@@ -64,7 +76,7 @@ export function startEngineeringJobPersistence(storage?: Pick<Storage, "getItem"
     simulationApi.get(snapshot.id).then(job => {
       if (!live || superseded || useLpbfEngineeringStore.getState().job || useLpbfEngineeringStore.getState().busy) return;
       // Keep current controls intact. A different executed signature remains stale.
-      useLpbfEngineeringStore.setState({job:{...job,cacheHit:snapshot.cacheHit}, submittedInput:snapshot.input ?? job.result?.settings, submittedSignature:snapshot.signature || "", resultSignature:job.status === "completed" ? snapshot.signature || "" : "", error:""});
+      useLpbfEngineeringStore.setState({job:{...job,cacheHit:snapshot.cacheHit}, submittedInput:snapshot.input ?? job.result?.settings, submittedSignature:snapshot.signature || "", resultSignature:resultSignatureOnRestore(job.status, snapshot.signature), error:""});
       resumeEngineeringJob();
     }).catch(error => {
       if (live && !superseded && !useLpbfEngineeringStore.getState().job && !useLpbfEngineeringStore.getState().busy) useLpbfEngineeringStore.setState({error:`Saved job unavailable: ${error instanceof Error ? error.message : "Worker connection failed"}`});
@@ -100,7 +112,8 @@ export function resumeEngineeringJob(): void {
       const next = await simulationApi.get(id);
       const current = useLpbfEngineeringStore.getState();
       if (current.job?.id !== id || !["queued", "running"].includes(current.job.status)) {if (pollingId === id) pollingId = undefined;return;}
-      useLpbfEngineeringStore.setState({ job: {...next, cacheHit: current.job.cacheHit, deduplicated: current.job.deduplicated}, error: "", ...(next.status === "completed" ? {resultSignature: current.submittedSignature} : {}) });
+      const ownedSignature = resultSignatureOnPoll(next.status, current.submittedSignature);
+      useLpbfEngineeringStore.setState({ job: {...next, cacheHit: current.job.cacheHit, deduplicated: current.job.deduplicated}, error: "", ...(ownedSignature !== undefined ? {resultSignature: ownedSignature} : {}) });
     } catch (error) {
       if (useLpbfEngineeringStore.getState().job?.id === id) useLpbfEngineeringStore.setState({error: error instanceof Error ? error.message : "Worker connection failed"});
     }
@@ -111,6 +124,8 @@ export function resumeEngineeringJob(): void {
   setTimeout(poll, 500);
 }
 
-export function engineeringSignature(input: SimulationInput, state: LpbfEngineeringState, strategy: string): string {
+/** Signature of the draft inputs; the engineering view and the qualification report both build it here. */
+export type EngineeringSignatureFields = Pick<LpbfEngineeringState, "settings" | "mode" | "material" | "properties" | "measurements" | "width" | "depth" | "source" | "specimen" | "uncertainty" | "holdout">;
+export function engineeringSignature(input: SimulationInput, state: EngineeringSignatureFields, strategy: string): string {
   return JSON.stringify([input,state.settings,state.mode,state.material,state.properties,state.measurements,state.width,state.depth,state.source,state.specimen,state.uncertainty,state.holdout,strategy]);
 }

@@ -1,0 +1,501 @@
+
+> metallix-pocket-model@1.0.0 test:unit
+> tsx --test tests/*.test.ts tests/*.test.tsx
+
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix-material-specimen-store', the given storage is currently unavailable.
+✔ builder renders the selected steel family and distinguishes screening estimate from active process (67.5535ms)
+✔ candidate transfer preserves supplied identity, chemistry and properties, including zero (6.1147ms)
+✔ candidate transfer rejects absent or nonfinite properties instead of inventing defaults (1.0107ms)
+✔ new twins start with missing quantities and no inherited specimen or qualification claims (5.3605ms)
+✔ seeded and restored demo records remain synthetic and cannot grant qualification (0.7041ms)
+✔ supplied values are preserved without upgrading supplied certification claims (0.5554ms)
+✔ original reported status, inspections and qualification survive repeated labeling and JSON export (1.0976ms)
+✔ physical validation has no score or capacitance before a backend result (20.2942ms)
+✔ generated example spectra are identified as synthetic in both studios (18.4018ms)
+✔ upload report export is disabled before a computed result (4.8074ms)
+✔ customer and commercial gates cannot bypass any unaccepted K2 module (6.1675ms)
+✔ weighted earned work and accepted scope stay separate (3.2696ms)
+✔ out-of-order, duplicate, unproven or invalid evidence cannot earn credit (0.8195ms)
+✔ real roadmap and UI expose all 20 packages, gates, evidence limits and remaining work (11.9445ms)
+✔ GPT-6 Sol sends a Responses request with supported reasoning parameters (38.505ms)
+✔ GPT-6 Astra sends a micrograph as an image input (1.3949ms)
+✔ GPT-6 Luna uses low reasoning and incomplete output fails (3.7297ms)
+✔ missing OpenAI key fails before any API call (1.0065ms)
+✔ consultation route returns GPT-6 Sol text using its existing response contract (1.8831ms)
+✔ micrograph route rejects unsupported SVG before calling GPT-6 (1.2005ms)
+✔ dataset planner routes its five stages through GPT-6 tiers (7.3087ms)
+✔ heat treatment cannot publish strength and porosity predictions before the missing precipitate input is supplied (19.7338ms)
+✔ same-host absolute roots and shared WSL drives map explicitly (1.858ms)
+✔ ambiguous or non-shared roots fail instead of reading another folder (0.8938ms)
+✔ concurrent duplicate ingestion publishes one verified immutable object (105.1053ms)
+✔ hash and size mismatch never publish and cleanup preserves other staging files (112.402ms)
+✔ corrupted existing object is rejected without overwriting its bytes (152.3451ms)
+✔ traversal, device names, alternate streams and directory junctions are rejected (86.4416ms)
+✔ multi-chunk binary input is copied independently without truncation (191.8422ms)
+✔ an object directory junction cannot redirect publication outside the store (43.2803ms)
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+✔ build-job snapshot canonical JSON preserves Python float bytes (27.1537ms)
+✔ resetting the shared specimen selects an admitted LPBF alloy (1.2925ms)
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+✔ identical fast requests reuse the result; changed CT threshold recomputes (28.758ms)
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+✔ same-input results from a prior solver revision are recomputed (14.9982ms)
+✔ a backend result from a different solver revision is rejected (1.7189ms)
+✔ successful results require a consistent material and model identity (1.4596ms)
+✔ successful backend results require the top-level material revision (1.0406ms)
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+✔ successful backend results reject changed material snapshots and identity hashes (16.008ms)
+✔ backend failures without a solver revision preserve their error (1.3988ms)
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+✔ defect records differing beyond their first 80 characters cannot collide (9.2716ms)
+✔ different geometry with identical filename and triangle counts recomputes (23.9599ms)
+✔ UQ sample count remains aligned and evidence is retained only for the same process (20.2425ms)
+✔ a slower superseded job cannot overwrite a newer process result (10.8701ms)
+✔ unsupported alloy identity refuses computation and clears a previous supported result (6.7952ms)
+✔ build-job material mapping accepts only its four canonical solver alloys (0.8582ms)
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+✔ returning to a supported alloy cannot reuse a request superseded by an unsupported identity (12.4972ms)
+PASS: LPBF runtime contract rejects invalid, nonfinite and false-validation responses
+✔ tests\lpbf-contract.test.ts (587.8666ms)
+✔ fresh computational run record is opt-in and disabled until the exact input has completed (39.1251ms)
+✔ cancelled run explains that no result can be archived or exported (1.1097ms)
+✔ repeat endpoint opts into a fresh execution without modifying submitted physics input (460.1373ms)
+✔ simulation client keeps ordinary caching by default and exposes explicit repeat scope (48.0384ms)
+PASS: ExperimentalValidationLab renders correctly
+✔ tests\lpbf-experimental-evidence.test.tsx (20060.5358ms)
+Resolved field contract: passed
+Manufactured liquidus contour and shared palette: passed
+✔ tests\lpbf-fields.test.ts (1002.7046ms)
+✔ GPU field descriptor retains both unmatched states without declaring parity (2.1587ms)
+✔ GPU field descriptor rejects mismatched quantities, units, shape, resource bounds and paths (2.2738ms)
+✔ GPU artifact reader preserves f64 values and differing accepted step sequences (244.9325ms)
+✔ GPU artifact reader rejects corrupted bytes and invalid numeric payloads even with matching hashes (153.0008ms)
+✔ GPU artifact reader rejects a final time detached from accepted timesteps (206.5308ms)
+✔ GPU artifact decoding rejects a file that grows after initial verification (85.7389ms)
+✔ GPU artifacts reject positive steps that cannot advance the unfinished clock (183.117ms)
+✔ Python writes deterministic f64 artifacts that TypeScript decodes without precision or clock loss (2308.2924ms)
+✔ bounded JSON rejects duplicates, non-finite values, excessive depth, and noncanonical Python tokens (6.9803ms)
+✔ actual bound GPU result retains exact strings and validates historical CPU/material core hashes (22.3457ms)
+✔ Warp v2 has an explicit solver/runtime identity and keeps the CPU core nested (15.96ms)
+✔ actual manifest accepts additional captured files but rejects field path case mismatch (133.7011ms)
+✔ actual bound GPU byte fields recompute parity summaries without changing stored threshold decisions (153.4957ms)
+✔ numeric helper reports grid mismatch without norms, leaves timestep order to the reader, and checks cancellation safely (123.8279ms)
+✔ stored norm thresholds are exact while recomputed norms use only an integrity envelope (94.6822ms)
+✔ different valid accepted step counts remain a failed, norm-free parity result (82.9775ms)
+✔ different cell counts and final observer times become failed results without fabricated norms (137.8871ms)
+✔ boolean numeric impostors and malformed scalar reports fail even on an archived failed run (75.2558ms)
+✔ one-cell geometry threshold is inclusive and signed-zero dimensions are inconclusive (65.3831ms)
+✔ expected end includes every segment dwell and final cooling for meander and island grids (0.6742ms)
+✔ existing job API forwards explicit CUDA pilot selection and exposes unavailable device (469.3801ms)
+✔ CUDA pilot request includes only CPU validator fields and preserves the shared process (2.5052ms)
+✔ GPU pilot has its own parser and cannot be presented as standard LPBF evidence (5.5634ms)
+✔ GPU client accepts the versioned bound archive while keeping its CPU core nested (4.4756ms)
+✔ GPU client rejects partial, malformed, or detached bound archive metadata (7.4175ms)
+✔ GPU pilot parser binds CPU or selected CUDA source and limiter devices (1.3546ms)
+✔ GPU pilot rejects parity scalars detached from the displayed result (1.5961ms)
+✔ GPU pilot requires usable implementation and runtime provenance (1.7099ms)
+✔ GPU pilot client uses the existing job API and preserves explicit CUDA errors (45.3673ms)
+✔ engineering screen keeps the CUDA pilot visibly separate from standard CPU results (41.7373ms)
+✔ material availability does not pass source and uncertainty evidence readiness (14.2349ms)
+✔ CUDA device picker uses only the selected runtime inventory and rejects malformed entries (2.2253ms)
+✔ CUDA submit identity rejects a same ordinal that resolves to a changed device (2.2831ms)
+✔ run archive restores only a still-present saved run selection (1.2901ms)
+✔ only a confirmed missing saved CUDA job is forgotten; newer IDs and transient errors are preserved (0.8986ms)
+✔ completed bound GPU jobs expose an archive action for that job only (6.9144ms)
+✔ saved CUDA results show their executed inputs and label changed current controls (5.6962ms)
+✔ custom GPU material provenance is shown from both executed and archived result snapshots (3.0076ms)
+✔ missing or malformed archived material provenance is rendered as not reported (1.3644ms)
+✔ archived build-job provenance renders its captured effective material property snapshot (1.2556ms)
+✔ GPU engine label requires matching outer capture, contract, runtime, settings and solver identities (10.9089ms)
+✔ actual bound GPU run imports only after full bytes and numerical evidence, then rechecks on read and bundle restore (2832.4027ms)
+✔ Warp v2 archive status survives the same import, verified read, bundle export and restore lifecycle (3249.8ms)
+✔ GPU archive metadata cannot borrow a top-level CPU core contract or CPU capture status (121.8416ms)
+✔ GPU archive capture status must match the inner v1 or Warp v2 contract in both directions (213.9468ms)
+✔ GPU field corruption is rejected before archive import (176.7873ms)
+✔ IN625 panel builds only the explicit worker fields even if restored config has stale extras (2.7769ms)
+✔ IN625 bare-plate uses a distinct parser and validates model, material, device and field identity (5.6126ms)
+✔ IN625 bare-plate API sends only its explicit contract and preserves unavailable-CUDA errors (41.9843ms)
+✔ IN625 field download verifies manifest bytes and decodes little-endian temperatures (17.0412ms)
+✔ IN625 bare-plate screen states its limited scope and offers explicit CPU and CUDA runs (19.7892ms)
+✔ IN625 downloaded CPU/CUDA fields produce visible comparison metrics (1.1484ms)
+✔ keyhole API forwards bounded solver inputs and preserves backend failure (461.9138ms)
+✔ NIST optical HTTP gate uses archived exact source and verified bytes, and withholds pilot errors (3790.4583ms)
+✔ calculates Gaussian peak irradiance from a 1/e2 beam diameter (1.3136ms)
+﹣ Phase 4: Uçtan Uca Test - Calisma Secimi -> Is Calistirma -> Karsilastirma -> Export/Import (2.4202ms) # Optional CMU source payload is not restored: STMeasurements.csv, MTMeasurements.csv, README.txt
+✔ Phase 5: Defect Diagnostics & Porosity Aggregation (278.8187ms)
+✔ accepted-step peak provenance preserves zero melt and rejects inconsistent indices (4.7056ms)
+✔ physics diagnostics retain numerical limits and do not claim porosity (38.1035ms)
+✔ LPBF result parsing accepts the versioned adaptive Gaussian source diagnostics (0.4753ms)
+✔ aggregate geometry presents unknown overlap without fake zero values (3.6299ms)
+✔ invalid source and overlap contracts are rejected before rendering (1.2679ms)
+✔ field-resolved inter-track overlap renders correctly and rejects invalid values (4.5275ms)
+PASS: result visibility, progress, cancellation/failure/timeout, cache, stale inputs, calibration and numerical evidence rendering
+✔ tests\lpbf-presentation.test.tsx (17936.606ms)
+✔ run HTTP archive resolves exact source and preserves analytical screening classification (929.0383ms)
+✔ IN625 worker capture shape round-trips through source-bound run preview (215.5465ms)
+✔ HTTP export, verify and isolated restore preserve live bytes and historical links (1682.6198ms)
+✔ portable tar round-trip verifies, restores in isolation, and exposes restored run records (1992.6249ms)
+✔ HTTP rejects corrupted bundles before restore and accepts no filesystem path (787.3163ms)
+✔ generated ID collisions cannot overwrite a bundle or restored copy (1337.8046ms)
+✔ bundle API retains router write guards and disjoint storage roots (234.6703ms)
+✔ portable import rejects an unreferenced allowed artifact and removes its isolated import directory (403.2649ms)
+✔ portable bundle extractor rejects traversal, links, and duplicate files without leaving a target (27.4316ms)
+✔ portable bundle picker is visible and gates upload until a file is selected (7.7895ms)
+✔ a new portable bundle selection invalidates prior import state even when file metadata collides (0.2902ms)
+✔ a restored bundle run selection survives reload and is scoped to its verified restore (0.6575ms)
+✔ full bundle independently restores exact run and historical source revision with all bytes (839.8404ms)
+✔ bundle snapshots and restores immutable six-proxy campaign run references (994.827ms)
+✔ missing or corrupted run/source objects prevent restore before destination creation (2454.9563ms)
+✔ backup failures leave no top-level completion and preserve live data (1091.8474ms)
+✔ both SQLite snapshots reject sidecars; metadata and completion hashes/counts are checked (6321.9805ms)
+✔ linked roots and nested source directories are rejected (697.384ms)
+✔ run snapshot precedes source snapshot; later runs stay out and historical links stay exact (535.3541ms)
+✔ bundle verification rejects every unreferenced file before restore creates a destination (1770.9949ms)
+✔ all frozen source revisions retain their objects even when a run links an older revision (1037.4781ms)
+✔ legacy v1 completion remains readable without changing archived record bytes (795.0888ms)
+✔ unreferenced linked directories are rejected by the complete inventory (442.3415ms)
+✔ run endpoints accept the server capture identity and unvalidated model status (32.3939ms)
+✔ run client accepts and preserves analytical screening kind (0.8791ms)
+✔ run client rejects stale document identity (1.3476ms)
+✔ run client rejects a claimed validation status (0.7858ms)
+✔ run client rejects a source binding status inconsistent with its document (0.8109ms)
+✔ run client preserves unresolved source links without claiming a verified revision (0.9551ms)
+✔ run list accepts current server rows (0.9395ms)
+✔ run list requires the server evidence status (0.742ms)
+✔ run list requires a recognized source binding status (0.9921ms)
+✔ preview and import match the requested job and archive contract (1.5746ms)
+✔ import cannot report success for a different job (0.5346ms)
+✔ preview rejects a response bound to another source revision (0.3568ms)
+✔ bundle export, verify and isolated restore use empty JSON bodies and exact IDs (1.4604ms)
+✔ bundle client accepts v2 manifests with campaign counts while retaining v1 support (0.858ms)
+✔ bundle client rejects malformed manifest, false verification and a different bundle ID (0.9425ms)
+✔ bundle integrity failure exposes HTTP status and does not report success (0.8135ms)
+✔ bundle client rejects invalid IDs before a network request (0.4194ms)
+✔ NIST client posts only a case number and binds the reply to the selected run and revision (0.6527ms)
+✔ NIST client selects the isolated restored run endpoint and rejects invalid restore identity (0.4487ms)
+✔ NIST client rejects stale case, source binding and numeric unavailable output (2.7428ms)
+✔ NIST client accepts only finite, consistent unvalidated screening errors (0.6308ms)
+✔ NIST run controls expose seven keyboard-selectable cases and exact archived binding (8.3477ms)
+✔ unavailable optical comparison renders reasons without error numbers (0.8686ms)
+✔ comparable optical screening shows signed errors and published SD as unvalidated (0.6172ms)
+✔ proxy campaign API derives evidence server-side and rejects client measurements (274.2944ms)
+✔ proxy campaign preview sends only three archived IDs and case and accepts no residual output (42.8935ms)
+✔ proxy campaign save requires exact preview hash and immutable record identity (2.4092ms)
+✔ proxy campaign client rejects residuals, validation claims, and untrusted measurements (4.436ms)
+✔ unavailable proxy campaign retains reasons and disables the create contract (1.4119ms)
+✔ saved proxy campaign list preserves exact run, source and unvalidated record identity (2.7067ms)
+✔ proxy campaign UI collects exactly three archived runs and a case without measurement fields (13.0498ms)
+✔ proxy campaign UI requests three archived transient runs before enabling its flow (0.9734ms)
+✔ dry run writes nothing; full import preserves empty/nested bytes and detached legacy snapshots (301.3584ms)
+✔ classification follows captured result identity through preview and import; old v1 records read as unspecified (299.3514ms)
+✔ build-job archive verifies Python-compatible material snapshot and identity hashes (2.7712ms)
+✔ reopen and metadata-only restore preserve hashes; tampered rows fail (213.4639ms)
+✔ writable v1 database receives the explicit v2 campaign-table migration without changing run rows (43.7566ms)
+✔ saved proxy campaigns list in creation order and reject broken archived references (53.1599ms)
+✔ missing/changed bytes and extra files never publish a completed record (104.5516ms)
+✔ exact historical source links survive newer revisions; missing or changed hash fails (167.6664ms)
+✔ invalid snapshots, duplicate paths, false bound status and nonfinite values fail (1.8854ms)
+✔ bound snapshots hash Python number spelling verbatim and reject rewritten bytes (1.4965ms)
+✔ result file drift after capture is rejected before import (83.2731ms)
+✖ LPBF source select, CPU compute, unvalidated compare, export and restore preserve identities and bytes (36824.0468ms)
+[LPBF source archive] Error: Artifact integrity check failed
+    at transfer (C:\Users\can02\Projects\metalliksaa\Metalliksa-1\.runtime\v1-recovery-acceptance-20261003\server\lpbfArtifactStore.ts:82:15)
+    at async <anonymous> (C:\Users\can02\Projects\metalliksaa\Metalliksa-1\.runtime\v1-recovery-acceptance-20261003\server\lpbfSourceArchiveService.ts:131:53)
+    at async LpbfSourceArchiveService.exclusive (C:\Users\can02\Projects\metalliksaa\Metalliksa-1\.runtime\v1-recovery-acceptance-20261003\server\lpbfSourceArchiveService.ts:92:18)
+    at async <anonymous> (C:\Users\can02\Projects\metalliksaa\Metalliksa-1\.runtime\v1-recovery-acceptance-20261003\routes\lpbfSources.ts:24:20)
+✔ source API previews without storage writes then imports a hash-bound source revision (430.7325ms)
+✔ source API lists retained revisions and resolves an exact historical revision (386.8414ms)
+[LPBF source archive] Error: Artifact integrity check failed
+    at transfer (C:\Users\can02\Projects\metalliksaa\Metalliksa-1\.runtime\v1-recovery-acceptance-20261003\server\lpbfArtifactStore.ts:82:15)
+    at async dryRunSourceImport (C:\Users\can02\Projects\metalliksaa\Metalliksa-1\.runtime\v1-recovery-acceptance-20261003\server\lpbfSourceImport.ts:8:5)
+    at async <anonymous> (C:\Users\can02\Projects\metalliksaa\Metalliksa-1\.runtime\v1-recovery-acceptance-20261003\server\lpbfSourceArchiveService.ts:115:7)
+    at async LpbfSourceArchiveService.exclusive (C:\Users\can02\Projects\metalliksaa\Metalliksa-1\.runtime\v1-recovery-acceptance-20261003\server\lpbfSourceArchiveService.ts:92:18)
+    at async <anonymous> (C:\Users\can02\Projects\metalliksaa\Metalliksa-1\.runtime\v1-recovery-acceptance-20261003\routes\lpbfSources.ts:24:20)
+✔ changed source metadata and changed input bytes invalidate preview before import (60.5722ms)
+✔ source routes reject unknown IDs, client paths, cross-origin requests and oversized bodies (90.7576ms)
+✔ overlapping archive work is refused while one operation owns the service (32.7515ms)
+✔ NIST catalog adapter preserves unknown measurements and rejects mismatched README context (20.1271ms)
+✔ NIST catalog binds HDF5 review to every reviewed source fingerprint (21.9867ms)
+✔ source archive restores a saved selection only while the catalog still contains that source (1.8659ms)
+✔ an empty source catalog does not erase the last persisted source selection (0.5039ms)
+✔ source archive restores exact retained revision and never silently substitutes a different identity (0.4914ms)
+✔ bundle restores all immutable revisions and independent bytes into a new directory (466.8368ms)
+✔ missing or corrupt bundle bytes prevent restore before destination is created (253.091ms)
+✔ metadata corruption and incomplete backup cannot be opened as a valid bundle (285.019ms)
+✔ a bundle cannot acquire unchecksummed SQLite sidecar state (215.0395ms)
+✔ import sends only preview identity and preserves unknown measurement values (44.6069ms)
+✔ fresh verification is rejected when current revision changes before refresh (1.9769ms)
+✔ preview is invalidated by concurrent metadata revision (1.8478ms)
+✔ IN625 screening source preview is accepted without upgrading its evidence status (2.2452ms)
+✔ HTTP failure exposes actionable status and never returns cached success (1.1283ms)
+✔ wrong dataset and invalid integrity claims cannot become success (1.013ms)
+✔ source revision history is paginated and every exact document hash is checked (2.413ms)
+✔ all retained source revisions are collected and a corrupt history identity fails closed (2.6559ms)
+✔ dry run validates all bytes without publishing metadata or objects (71.0143ms)
+✔ a corrupt last input prevents metadata publication and a prior dry run is not trusted (67.7806ms)
+✔ successful import retains nulls and source evidence while checking stored bytes (225.256ms)
+✔ invalid metadata is rejected before any file is stored (37.2625ms)
+✔ IN625 catalog pins exact generated thermal snapshot and separate fixed density assumption (250.6172ms)
+✔ IN625 catalog rejects modified artifact bytes, changed revision and inflated admission claims (45.9752ms)
+✔ IN625 screening source previews, imports and verifies as an unreviewed revision (463.7881ms)
+✔ NIST mds2-2923 IN718 supplemental source preserves measurement uncertainty and conduction limits (17.5467ms)
+✔ NIST supplemental source rejects a changed local measurement transcription (15.6899ms)
+✔ NIST supplemental source previews, imports and verifies in the persistent source API (448.3878ms)
+✔ optical Table 4 catalog identifies local transcription, six-measurement SD and exact artifact bytes (9.2198ms)
+✔ optical catalog refuses changed transcription bytes or an unpinned manifest (47.4035ms)
+✔ optical Table 4 source previews and imports as a versioned unreviewed revision over HTTP (224.0802ms)
+✔ official optical workbook is a distinct publisher source with pinned workbook and checksum bytes (15.5389ms)
+✔ official optical workbook rejects changed publisher bytes and manifest identity (44.642ms)
+✔ official workbook independently previews, imports and verifies over HTTP (238.1321ms)
+✔ NIST case 0 original micrographs are a distinct source with mapped measurements and publisher sidecars (198.7744ms)
+✔ NIST case 0 micrograph source previews, imports and verifies through the persistent source API (2751.3908ms)
+✔ property catalogs bind original bytes and distinguish evidence from material admission (114.0489ms)
+✔ property catalog rejects replaced bytes even when a local manifest claims the new hash (28.1741ms)
+✔ real property sources round-trip through client, HTTP API, revision store and source bundle (2241.6072ms)
+✔ property source UI shows property provenance and missing ranges without camera or optical claims (87.1069ms)
+✔ source archive retains immutable history and null/zero across reopen (37.4258ms)
+✔ IN625 screening source identity is retained as an unreviewed source archive (18.7041ms)
+✔ stale writer conflicts without replacing current or historical source metadata (27.3739ms)
+✔ invalid source metadata cannot create a revision or claim measured evidence (17.1862ms)
+✔ modified stored JSON fails integrity checks instead of returning a trusted record (25.0352ms)
+✔ metadata backup opens independently and refuses an existing destination (61.9272ms)
+✔ an unrelated existing database is rejected without adding application tables (21.1886ms)
+✔ SQLite trial: failed linked write rolls back and revision CAS rejects a stale writer (20.85ms)
+✔ SQLite trial: a second connection cannot write through an active transaction (124.7761ms)
+✔ SQLite trial: online backup restores committed WAL state and excludes later writes (41.0219ms)
+✔ HTTP DELETE waits for the real worker RPC to terminate and reap its execution child (7050.3554ms)
+✔ concurrent cold requests wait for one readiness handshake before sending RPCs (329.9478ms)
+✔ slow readiness returns recoverable HTTP503 and later uses the same healthy process (584.4765ms)
+✔ explicit native startup exit rejects all waiters without retrying the same command (142.5793ms)
+✔ failed native spawn is reported without duplicate launch or retained pending request (199.9706ms)
+✔ a failed actual WSL command falls back once to the host command (341.4875ms)
+✔ bounded background readiness failure can be retried by a later caller (732.3358ms)
+✔ exit after readiness rejects pending RPCs and a subsequent request starts a new process (504.0376ms)
+✔ closing during WSL readiness does not launch an unsolicited fallback (27.423ms)
+✔ stdin EPIPE becomes a recoverable HTTP503, kills the unhealthy child, and waits before restart (481.0579ms)
+✔ a request invalidated by close cannot be sent to the replacement worker (345.752ms)
+✔ a retry waits for terminal child exit and close invalidates waiters before replacement launch (1625.1328ms)
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metalliksa.lpbf.workflow.v1', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metalliksa.lpbf.workflow.v1', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metalliksa.lpbf.workflow.v1', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metalliksa.lpbf.workflow.v1', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metalliksa.lpbf.workflow.v1', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metalliksa.lpbf.workflow.v1', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metalliksa.lpbf.workflow.v1', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metalliksa.lpbf.workflow.v1', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metalliksa.lpbf.workflow.v1', the given storage is currently unavailable.
+✔ eight workflow stages share the existing specimen vector without a machine-parameter copy (30.2174ms)
+✔ only recognized material identities normalize; unknown alloys cannot become a surrogate (0.8028ms)
+✔ qualification distinguishes current/executed inputs and never promotes numerical or calibration evidence (3.0466ms)
+✔ worker polling completes without a mounted view and cancelled jobs cannot be resurrected (1316.4205ms)
+✔ app startup restores report evidence without mounting thermal view and preserves current controls (4.1891ms)
+✔ late saved-job response cannot replace a newer submission or a restarted app lifecycle (25.9202ms)
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix-material-specimen-store', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix-material-specimen-store', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix-material-specimen-store', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix-material-specimen-store', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix-material-specimen-store', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'metallix_active_material_specimen_v2', the given storage is currently unavailable.
+✔ startup mirrors authoritative shared material into builder without applying stale legacy material (30.0244ms)
+✔ all shared base families have selectable categories and legacy persisted labels normalize without losing metadata (12.9619ms)
+✔ builder composition edits propagate stable material identity and preserve every process setting (2.6008ms)
+✔ pipeline identity transfer synchronizes both views, declares nominal midpoints and ignores confidence upgrades (0.7126ms)
+✔ atomic-percent and missing-unit transfers cannot overwrite or reinterpret the shared wt% specimen (1.2229ms)
+✔ shared preset changes refresh builder, while process edits do not overwrite builder metadata (1.3447ms)
+✔ live Send to Module events reach shared context without recursive pipeline publication (0.9203ms)
+✔ NIST AMB2022-03 bare-plate measurements cannot be loaded as powder-layer cases (3.2935ms)
+✔ a loadable measurement matches all six process inputs (0.4921ms)
+✔ evidence inventory covers each registered module exactly once with all contract columns (3.4692ms)
+✔ cited repository files exist so source moves cannot silently invalidate the inventory (19.3744ms)
+✔ runtime requirements explicitly cover all modules without claiming universal availability (0.8241ms)
+✔ analysis rejects HTTP and solver errors without fabricating results (39.2396ms)
+✔ cancelled old reply is rejected even if transport ignores abort (1.2364ms)
+✔ actual zero metrics are preserved (1.423ms)
+✔ fitted topology used by preview and Apply contains returned values without mutating initial input (3.0064ms)
+✔ Python CNLS normalization preserves zero metrics, calculates RMSE and does not invent convergence (0.4119ms)
+✔ incomplete Python CNLS response is rejected, not repaired with plausible metrics (1.0203ms)
+✔ explicitly unavailable uncertainty and K-K assessment survive normalization (0.3898ms)
+✔ missing, duplicate and mismatched rows cannot become a current CNLS fit (0.5813ms)
+✔ async Python autofit rejects HTTP and partial reports instead of falling back (42.6684ms)
+✔ win32: explicit executable with spaces remains one argument (3.6496ms)
+✔ win32: invalid explicit selection never falls back (1.0613ms)
+✔ linux: explicit executable with spaces remains one argument (0.2758ms)
+✔ linux: invalid explicit selection never falls back (0.2482ms)
+✔ win32: project venv precedes active venv, then system (0.502ms)
+✔ linux: project venv precedes active venv, then system (0.2563ms)
+✔ missing venvs are skipped; Windows launcher keeps -3 prefix (0.4063ms)
+✔ Unix system preference and complete failure (0.433ms)
+✔ runtime is lazy, loads environment before selection and caches successful result (0.4909ms)
+✔ WSL remains first and never resolves host Python (0.5804ms)
+✔ explicit host Python also controls the first LPBF worker launch (0.2868ms)
+✔ preexisting process override wins over dotenv values (0.3679ms)
+✔ LPBF Windows host fallback and Unix host use exact shared command (0.3823ms)
+✔ LPBF propagates invalid host configuration (0.3428ms)
+✔ version probe is bounded, hidden, shell-free, and requires Python 3 (0.6541ms)
+✔ readiness survives split stdout chunks and ignores informational output (3.1708ms)
+✔ worker exit clears version, imports, channels and partial messages (0.4433ms)
+✔ ready text without a bound channel does not declare online or invent imports (0.2996ms)
+✔ public status describes actual HTTP channel without solver availability claims (0.4042ms)
+✔ literature API handles metadata, validation, provider errors and offline policy (183.661ms)
+Research multi-tab persistence: recovery drafts, atomic conflict refusal, quota guard, foreign raw preservation and server-base write guard passed.
+✔ tests\research-multitab.test.ts (592.8617ms)
+Research persistence: clean first launch, reload, per-source draft isolation and corrupt-storage preservation passed.
+✔ tests\research-persistence.test.ts (533.1695ms)
+✔ server registry persists identity, immutable versions and history across router restarts (619.9096ms)
+✔ separate registry instances serialize concurrent writers and reject stale identities (393.6914ms)
+✔ registry validates body, source integrity and browser mutation origin without modifying saved data (469.7519ms)
+✔ corrupt or missing versions fail closed for read and write, preserving original bytes (234.3202ms)
+[ResearchRegistry] Storage operation failed: Error: EEXIST: file already exists, mkdir 'C:\Users\can02\AppData\Local\Temp\research-registry-failure-lZCPLU\not-a-directory'
+    at async mkdir (node:internal/fs/promises:1564:10)
+    at async ResearchEvidenceRegistry.locked (C:\Users\can02\Projects\metalliksaa\Metalliksa-1\.runtime\v1-recovery-acceptance-20261003\server\researchEvidenceRegistry.ts:32:5)
+    at async <anonymous> (C:\Users\can02\Projects\metalliksaa\Metalliksa-1\.runtime\v1-recovery-acceptance-20261003\routes\researchRegistry.ts:19:20) {
+  errno: -4075,
+  code: 'EEXIST',
+  syscall: 'mkdir',
+  path: 'C:\\Users\\can02\\AppData\\Local\\Temp\\research-registry-failure-lZCPLU\\not-a-directory'
+}
+✔ abandoned locks, interrupted initialization and filesystem failures are explicit and never reset (221.0621ms)
+Research registry: provenance, review, conflict withdrawal, feedback, import integrity, scope and numeric guards passed.
+✔ tests\research-registry.test.ts (564.9649ms)
+✔ check, save and fresh controller restore the persisted server baseline (80.5878ms)
+✔ save acknowledges exactly the submitted snapshot and preserves browser edits made in flight (3.3499ms)
+✔ stale server 409 preserves browser records and blocks another save until a check (2.6238ms)
+✔ timeout after server commit recovers a lost acknowledgment by checking without duplicate write (21.3392ms)
+✔ three-way reconciliation uses historical baseline and combines disjoint edits only after apply (7.0999ms)
+✔ conflicting record versions stay available and browser remains unchanged until every choice is explicit (3.973ms)
+✔ apply refuses to overwrite local edits made after a merge plan was reviewed (3.5158ms)
+✔ combining a source correction with a review of the old source withdraws review and integration (3.7701ms)
+✔ malformed server envelopes and mismatched history preserve browser records and baseline (3.2468ms)
+✔ canonical key ordering allows identical imports and avoids false merge conflicts (3.2969ms)
+✔ incorrect save acknowledgments never advance baseline or replace local records (3.206ms)
+✔ a contradiction merged from another revision withdraws a review that never considered it (2.394ms)
+✔ delete-versus-edit is an explicit conflict and either choice preserves its intended meaning (1.8412ms)
+✔ a server link cannot survive when a browser extraction revision is merged as draft (5.2678ms)
+✔ one trusted review must cover the entire merged contradiction set (4.3385ms)
+✔ LPBF context does not present heuristic conductivity as a solver input (41.8081ms)
+✔ two development instances serve HMR on their own HTTP ports (515.0659ms)
+✔ DISABLE_HMR keeps the HTTP server free of websocket upgrade handlers (68.7753ms)
+✔ synthetic dataset records seed and config without invented measurement conditions (6.2773ms)
+✔ missing recovery is unavailable, never ground truth, NaN or arbitrary failure score (5.9223ms)
+✔ unvalidated synchronous solver and client KK cannot claim scientific results (0.9305ms)
+✔ observed recovery preserves actual errors, undefined percentages and unavailable uncertainty (1.4726ms)
+✔ an already invalidated noise sweep starts no Python computation (0.8856ms)
+✔ autofit sends the exact displayed spectrum with configured options and abort signal (54.5316ms)
+✔ noise sweep rejects a failed Python fit without a client success fallback (1.0924ms)
+✔ CSV with explicit properties keeps missing metadata unresolved (5.8258ms)
+✔ CSV roundtrip preserves quotes, commas, multiline metadata, zero and missing values (3.3857ms)
+✔ synthetic coupon export/reupload cannot become a measured dataset (2.2449ms)
+✔ missing property columns, missing values and unlabelled or conflicting units are rejected (1.2295ms)
+✔ a later invalid row fails the entire import instead of silently dropping coupons (1.5716ms)
+✔ optional numeric values and orientation are validated rather than replaced (0.6939ms)
+✔ formula-like text is protected and reversibly escaped, without stripping external apostrophes (1.5713ms)
+✔ legacy leading metadata and BOM are accepted but embedded comment rows never disappear (0.7341ms)
+✔ CSV imports are bounded in text size, cell size and coupon count (10.2556ms)
+✔ Natrella approximation reproduces the NIST worked examples, without claiming the exact method (1.9203ms)
+✔ unsupported tolerance inputs produce no arbitrary factor or asymptotic fallback (0.4214ms)
+✔ known sample statistics use sample variance, adjusted moments and one-sided Cpl (1.59ms)
+✔ normality and unsupported uncertainty intervals remain untested instead of fabricated (0.591ms)
+✔ empty, singleton, two-point and zero-variance sets withhold unsupported inference (0.562ms)
+✔ invalid values, specifications and inconsistent lots reject the whole input (0.5124ms)
+✔ histograms conserve every observation with ordered bins for constant and tiny ranges (1.2989ms)
+✔ statistics retain precision and arithmetic overflow is explicit (0.4785ms)
+✔ worksheet uses every actual coupon property and preserves its unit and unverified scope (19.1327ms)
+✔ empty and constant coupons never render passing evidence or a manufactured process index (4.1812ms)
+✔ late UQ success and failure cannot overwrite a newer run or its loading state (1.1329ms)
+✔ dependency scanning follows application imports without crawling unrelated HTML documents (3577.3414ms)
+✔ Vite watches application edits without reacting to generated LPBF evidence (3873.4132ms)
+✔ nested stage visibility cannot reactivate a hidden workspace (9.6471ms)
+✔ hidden chart bodies are not rendered while surrounding form content remains (2.0271ms)
+✔ visible charts retain Recharts dimensions and children (4.2055ms)
+✔ reselecting a material retains identity while chemistry changes invalidate it (27.1305ms)
+✔ every module has one workspace, a valid next action and a round-trip route (2.1461ms)
+✔ literature query is bounded and cannot select an arbitrary upstream host (0.9552ms)
+✔ metadata normalization keeps unknowns unknown and does not create findings (2.8197ms)
+ℹ tests 359
+ℹ suites 0
+ℹ pass 357
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 47192.752
+
+✖ failing tests:
+
+test at tests\lpbf-run-workflow-roundtrip.test.ts:36:1
+✖ LPBF source select, CPU compute, unvalidated compare, export and restore preserve identities and bytes (36824.0468ms)
+  AssertionError [ERR_ASSERTION]: No module named 'pydantic'
+  
+  + actual - expected
+  
+  + 'failed'
+  - 'completed'
+  
+      at TestContext.<anonymous> (C:\Users\can02\Projects\metalliksaa\Metalliksa-1\.runtime\v1-recovery-acceptance-20261003\tests\lpbf-run-workflow-roundtrip.test.ts:155:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'failed',
+    expected: 'completed',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

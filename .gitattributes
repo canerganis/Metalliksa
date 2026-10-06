@@ -1,0 +1,112 @@
+/data/benchmark/** -text
+/data/benchmark/nist-mds2-2923-in718/official/2923_README.txt -text whitespace=-blank-at-eol,-blank-at-eof
+/data/benchmark/nist-mds2-2923-in718/official/manifest.json -text
+/docs/LPBF_GPU_BOUND_ARCHIVE_ACCEPTANCE_2026-09-27/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_GPU_NATIVE_WORKER_ACCEPTANCE_2026-09-27/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_GPU_NATIVE_WORKER_ACCEPTANCE_RETRY_2026-09-27/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_P4_FIXED_SCAN_END_OBSERVATION_CHECK_FIELDS_2026-09-27/*.npz binary
+*.f64le.bin binary
+/docs/LPBF_P4_FIXED_SCAN_END_CONVERGENCE_PROTOCOL_2026-09-27.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_P4_FIXED_SCAN_END_OBSERVATION_CHECK_2026-09-27.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_P4_FIXED_SCAN_END_REUSE_ADDENDUM_2026-09-27.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_P4_FIXED_SCAN_END_CONTINUATION_2026-09-27*.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_P4_FIXED_SCAN_END_CONTINUATION_FIELDS_2026-09-27/*.npz binary
+/python/run_lpbf_fixed_scan_end_convergence.py -text
+/python/run_lpbf_fixed_scan_end_continuation.py -text
+/python/lpbf_fixed_scan_end_observation.py -text
+/python/lpbf_convergence_study.py -text
+/python/lpbf_peak.py -text
+/docs/LPBF_P4_CURRENT_MODEL_40W_SCENARIO_2026-09-25.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_GPU_BOUND_ARCHIVE_ACCEPTANCE_2026-09-27.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_GPU_NATIVE_WORKER_ACCEPTANCE_2026-09-27.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_GPU_NATIVE_WORKER_ACCEPTANCE_RETRY_2026-09-27.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_GPU_BOUND_BROWSER_ACCEPTANCE_2026-09-27.partial.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_GPU_BOUND_BROWSER_INPUT_ACCEPTANCE_2026-09-27.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_CPU_PROFILE_DIAGNOSTIC_2026-09-27.json -text
+/docs/LPBF_GPU_RUN_API_BASELINE_2026-09-27.json -text
+/docs/LPBF_GPU_NODE_FOUNDATION_ACCEPTANCE_2026-09-27.json -text
+/docs/LPBF_P4_FIXED_SCAN_END_CONTINUATION_TWO_ROW_SNAPSHOT_2026-09-27.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_P4_FIXED_SCAN_END_TWO_ROW_AUDIT_2026-09-27.json -text
+/docs/LPBF_P4_FIXED_SCAN_END_FINAL_AUDIT_2026-09-27.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_GPU_NODE_ARCHIVE_BROWSER_2026-09-27.partial.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_WARP_CPU_NUMERICAL_COMPARISON_2026-09-27.json -text
+/docs/LPBF_GPU_NODE_ARCHIVE_ACCEPTANCE_2026-09-27.json -text
+/docs/LPBF_GPU_BACKEND_ALTERNATING_BENCHMARK_2026-09-27.json -text
+/docs/LPBF_TORCH_CPU_NUMERICAL_COMPARISON_2026-09-27.json -text
+/docs/LPBF_TORCH_SOURCE_INTEGRATION_ALTERNATING_BENCHMARK_2026-09-27.json -text
+/docs/LPBF_TORCH_PROFILER_DIAGNOSTIC_2026-09-27.json -text
+/docs/LPBF_TORCH_CUDA_SOURCE_CPU_PARITY_2026-09-27.json -text
+/docs/LPBF_GPU_NODE_ARCHIVE_API_STEPS_2026-09-27.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_P4_REFINED_DT_DIAGNOSTIC_2026-09-25.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_P4_REFINED_DT_DIAGNOSTIC_2026-09-25.partial.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+# Preserve the exact bytes bound by the synthetic refinement protocol.
+/docs/LPBF_FIXED_EVENT_TIME_REFINEMENT_2026-10-02*.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_FIXED_EVENT_TIME_REFINEMENT_2026-10-02_AUDIT.py -text
+/docs/LPBF_FIXED_EVENT_TIME_REFINEMENT_2026-10-02_FIELDS/*.npz binary
+/python/run_lpbf_fixed_event_time_refinement_probe.py -text
+/python/test_lpbf_fixed_event_time_refinement_probe.py -text
+
+# Keep the recorded CPU progress sources and archive-analysis bytes unchanged.
+/python/lpbf_simulation.py -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/python/lpbf_heat_source.py -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/python/lpbf_run_progress.py -text
+/python/analyze_lpbf_fixed_event_transitions.py -text
+/docs/LPBF_FIXED_EVENT_TRANSITIONS_2026-10-02.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/LPBF_FIXED_EVENT_TRANSITIONS_2026-10-02.md -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/python/lpbf_source_identity.py -text
+/docs/LPBF_SOURCE_IDENTITY_2026-10-02.json -text
+/docs/LPBF_PUBLIC_RUN_PROGRESS_2026-10-02.json -text
+
+# Preserve the byte-pinned V1 CPU workflow and observational evidence.
+/docs/LPBF_V1_CPU_WORKFLOW_2026-10-03.json -text
+/docs/LPBF_V1_CPU_NUMERICAL_2026-10-03.json -text
+/docs/LPBF_V1_CPU_WORKFLOW_2026-10-03_SUPPORT/snapshot-source.json -text
+/docs/LPBF_V1_CPU_WORKFLOW_2026-10-03_SUPPORT/numerical_diagnostics.py.txt -text
+/docs/LPBF_WORKER_FAILURE_MESSAGE_2026-10-03.json -text
+/docs/LPBF_V1_CPU_WORKFLOW_2026-10-03_SUPPORT/failed-job.json -text
+
+# Preserve the byte-pinned recovery acceptance records and support inventory.
+/docs/LPBF_V1_CPU_RECOVERY_2026-10-03.json -text
+/docs/LPBF_V1_CPU_RECOVERY_2026-10-03_SUPPORT/* -text
+# Raw runner logs retain their original spacing as hash-verified evidence.
+/docs/LPBF_V1_CPU_RECOVERY_2026-10-03_SUPPORT/*.log -whitespace
+
+# Keep the input-contract evidence and original runner logs byte-exact.
+/docs/LPBF_CPU_INPUT_CLAIMS_2026-10-03.json -text
+/docs/LPBF_CPU_INPUT_CLAIMS_2026-10-03_SUPPORT/* -text
+/docs/LPBF_CPU_INPUT_CLAIMS_2026-10-03_SUPPORT/*.log -whitespace
+
+# Preserve the exact-candidate CPU numerical records and original logs.
+/docs/LPBF_CPU_INPUT_CLAIMS_NUMERICAL_2026-10-03.json -text
+/docs/LPBF_CPU_INPUT_CLAIMS_NUMERICAL_2026-10-03_SUPPORT/* -text
+/docs/LPBF_CPU_INPUT_CLAIMS_NUMERICAL_2026-10-03_SUPPORT/*.log -whitespace
+
+# Preserve native reproduction and provider consultation evidence bytes.
+/docs/LPBF_CPU_INPUT_CLAIMS_INSTALL_ATTEMPTS_2026-10-03.json -text whitespace=cr-at-eol
+/docs/LPBF_CPU_INPUT_CLAIMS_INSTALL_ATTEMPTS_2026-10-03_SUPPORT/* -text -whitespace
+/docs/LPBF_CPU_INPUT_CLAIMS_INSTALL_ATTEMPTS_2026-10-03_SUPPORT/*.log -whitespace
+/docs/LPBF_CPU_INPUT_CLAIMS_NATIVE_REPRODUCTION_2026-10-03.json -text whitespace=cr-at-eol
+/docs/LPBF_CPU_INPUT_CLAIMS_NATIVE_REPRODUCTION_2026-10-03_SUPPORT/* -text -whitespace
+/docs/LPBF_CPU_INPUT_CLAIMS_NATIVE_REPRODUCTION_2026-10-03_SUPPORT/*.log -whitespace
+/docs/LPBF_MODEL_ORCHESTRATION_2026-10-03.json -text whitespace=cr-at-eol
+/docs/LPBF_MODEL_ORCHESTRATION_2026-10-03_SUPPORT/* -text -whitespace
+/docs/LPBF_MODEL_ORCHESTRATION_2026-10-03_SUPPORT/*.log -whitespace
+
+# Docker build inputs: the heredoc RUN in Dockerfile and the exclusion list parsed by it must stay LF on Windows checkouts.
+/Dockerfile text eol=lf
+/.dockerignore text eol=lf
+/scripts/ci-unit-tests.txt text eol=lf
+
+# LPBF 5c implementation pin and parity goldens: identical LF bytes on every checkout.
+/python/lpbf_implementation_fingerprint.expected text eol=lf
+/python/golden/lpbf_parity/** text eol=lf
+
+# Generated UI projection of the Python LPBF material authority: byte-pinned by its equality tests.
+/src/generated/lpbfMaterialAuthority.json text eol=lf
+# Pourbaix 25 C species table emitted by python/pourbaix_species_25c.py: identical LF bytes on every checkout.
+/src/generated/pourbaixSpecies25C.json text eol=lf
+/tests/fixtures/pourbaix-grid-200x200.json text eol=lf
+
+# Validity-envelope sweep output: written LF by python/tools/lpbf_validity_envelope.py.
+/docs/LPBF_VALIDITY_ENVELOPE_2026-10-04.json text eol=lf

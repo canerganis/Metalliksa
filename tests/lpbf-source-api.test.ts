@@ -50,6 +50,30 @@ test('source API previews without storage writes then imports a hash-bound sourc
   assert.doesNotMatch(JSON.stringify(await failed.json()), /[A-Z]:\\/);
 });
 
+test('source API lists retained revisions and resolves an exact historical revision', async t => {
+  const f = await fixture(t);
+  const firstPreview = await (await f.post('/synthetic/preview')).json();
+  const first = await (await f.post('/synthetic/import', { expectedRevision: 0, documentSha256: firstPreview.documentSha256 })).json();
+  f.document.source.version = '2'; writeFileSync(f.documentFile, JSON.stringify(f.document));
+  const secondPreview = await (await f.post('/synthetic/preview')).json();
+  const second = await (await f.post('/synthetic/import', { expectedRevision: 1, documentSha256: secondPreview.documentSha256 })).json();
+
+  const page = await (await fetch(`${f.base}/synthetic/revisions?offset=0&limit=1`)).json();
+  assert.equal(page.datasetId, 'synthetic'); assert.equal(page.offset, 0); assert.equal(page.limit, 1);
+  assert.equal(page.hasMore, true); assert.equal(page.revisions.length, 1);
+  assert.equal(page.revisions[0].revision, 1); assert.equal(page.revisions[0].documentSha256, first.revision.documentSha256);
+  assert.equal(page.revisions[0].materialId, 'in718'); assert.equal('document' in page.revisions[0], false);
+  const exact = await (await fetch(`${f.base}/synthetic/revisions/1`)).json();
+  assert.equal(exact.revision.document.source.version, '1');
+  assert.equal(exact.revision.documentSha256, first.revision.documentSha256);
+  const latest = await (await fetch(`${f.base}/synthetic/revisions?offset=1&limit=1`)).json();
+  assert.equal(latest.hasMore, false); assert.equal(latest.revisions[0].revision, second.revision.revision);
+  assert.equal((await fetch(`${f.base}/synthetic/revisions/3`)).status, 404);
+  assert.equal((await fetch(`${f.base}/synthetic/revisions/0`)).status, 400);
+  assert.equal((await fetch(`${f.base}/synthetic/revisions?offset=-1`)).status, 400);
+  assert.equal((await fetch(`${f.base}/synthetic`)).status, 200, 'legacy current endpoint remains available');
+});
+
 test('changed source metadata and changed input bytes invalidate preview before import', async t => {
   const f = await fixture(t);
   const preview = await (await f.post('/synthetic/preview')).json();

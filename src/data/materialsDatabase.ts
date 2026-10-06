@@ -796,7 +796,10 @@ export const MATERIALS_DATABASE: MaterialSpec[] = [
     name: "Tungsten Carbide - 6% Cobalt (Cemented Carbide)",
     category: "Ceramic & Carbide",
     standard: "ISO K10-K20 / ASTM B777 / ANSI C-2",
-    composition: { WC: 94.0, Co: 6.0 },
+    // 94 wt% WC written as its elements (stoichiometric WC, W 183.84 / C 12.011 g/mol,
+    // W mass fraction 0.93867): W 88.235 + C 5.765 = 94.0 wt%. "WC" is a compound, not an
+    // element symbol, so the CALPHAD solver refuses it (UNKNOWN_ELEMENT).
+    composition: { W: 88.235, C: 5.765, Co: 6.0 },
     yieldStrength: 3500, // compressive
     tensileStrength: 1800, // transverse rupture strength (TRS)
     elongation: 0.2,

@@ -30,9 +30,20 @@ import {
   calculateSchaeffler,
   calculateTransformationTemps,
   calculateXrdPeaks,
-  convertHardness,
   simulateCarburizingDiffusion,
 } from "../utils/metallurgyCalculations";
+import {
+  HARDNESS_CONVERSION_DISCLAIMER,
+  HARDNESS_MATERIAL_CLASSES,
+  HARDNESS_VERIFIED_RANGES,
+  HardnessMaterialClass,
+  BRINELL_NOTE,
+  TENSILE_ESTIMATE_NOTE,
+  UNAVAILABLE_TEXT,
+  convertHardness,
+  hardnessInputForScale,
+} from "../utils/hardnessConversion";
+import { HARDNESS_PRESETS, HardnessPreset } from "../utils/hardnessPresets";
 import { useMaterialStore } from "../store/useMaterialStore";
 import { MetallurgicalUnitConverter } from "./MetallurgicalUnitConverter";
 import { MetallurgicalQuickConversionsGrid } from "./MetallurgicalQuickConversionsGrid";
@@ -55,10 +66,12 @@ export const PocketCalculators: React.FC = () => {
 
   // 1. Hardness State
   const [hardnessVal, setHardnessVal] = useState<number>(30);
-  const [hardnessScale, setHardnessScale] = useState<"HRC" | "HV" | "HRB" | "HBW">("HRC");
+  const [hardnessScale, setHardnessScale] = useState<"HRC" | "HV" | "HRB" | "HBW" | "HBS">("HRC");
+  // Conversion tables exist only for non-austenitic steels; other classes keep the measured value only.
+  const [hardnessClass, setHardnessClass] = useState<HardnessMaterialClass>("non-austenitic-steel");
   const hardnessResult = useMemo(
-    () => convertHardness(hardnessVal, hardnessScale),
-    [hardnessVal, hardnessScale]
+    () => convertHardness(hardnessVal, hardnessScale, hardnessClass),
+    [hardnessVal, hardnessScale, hardnessClass]
   );
 
   // 2. Weldability & CE State
@@ -294,19 +307,17 @@ export const PocketCalculators: React.FC = () => {
               </div>
               <h3 className="text-sm font-bold text-white mt-0.5">Select Scale & Value</h3>
               <p className="text-xs text-slate-400 mt-0.5">
-                Calibrated cross-conversion for structural, tooling, and aerospace alloys.
+                {HARDNESS_CONVERSION_DISCLAIMER}
               </p>
             </div>
 
-            <div className="grid grid-cols-4 gap-2">
-              {(["HRC", "HV", "HRB", "HBW"] as const).map((s) => (
+            <div className="grid grid-cols-5 gap-2">
+              {(["HRC", "HV", "HRB", "HBW", "HBS"] as const).map((s) => (
                 <button
                   key={s}
                   onClick={() => {
                     setHardnessScale(s);
-                    if (s === "HRC" && hardnessVal > 70) setHardnessVal(32);
-                    if (s === "HRB" && hardnessVal > 105) setHardnessVal(85);
-                    if (s === "HV" && hardnessVal < 100) setHardnessVal(320);
+                    setHardnessVal(hardnessInputForScale(hardnessVal, s));
                   }}
                   className={`py-1.5 text-xs font-mono font-bold rounded border transition ${
                     hardnessScale === s
@@ -319,11 +330,28 @@ export const PocketCalculators: React.FC = () => {
               ))}
             </div>
 
+            {/* Alloy class: only non-austenitic steels are converted */}
+            <div className="flex justify-between items-center gap-2 text-xs text-slate-300 font-medium">
+              <span>Alloy class</span>
+              <select
+                aria-label="Alloy class"
+                value={hardnessClass}
+                onChange={(e) => setHardnessClass(e.target.value as HardnessMaterialClass)}
+                className="px-2 py-1 bg-[#0c1322] border border-[#1e2d46] rounded font-mono text-[11px] text-sky-300 focus:outline-none focus:border-sky-400"
+              >
+                {HARDNESS_MATERIAL_CLASSES.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* Slider and Number Input */}
             <div className="space-y-2">
               <div className="flex justify-between items-center text-xs text-slate-300 font-medium">
                 <span>Value in {hardnessScale}</span>
-                <input
+                <input aria-label={`Value in ${hardnessScale}`}
                   type="number"
                   inputMode="decimal"
                   value={hardnessVal}
@@ -332,10 +360,10 @@ export const PocketCalculators: React.FC = () => {
                 />
               </div>
 
-              <input
+              <input aria-label={`Value in ${hardnessScale} slider`}
                 type="range"
-                min={hardnessScale === "HRC" ? 20 : hardnessScale === "HRB" ? 40 : 100}
-                max={hardnessScale === "HRC" ? 68 : hardnessScale === "HRB" ? 100 : 1000}
+                min={HARDNESS_VERIFIED_RANGES[hardnessScale]?.min}
+                max={HARDNESS_VERIFIED_RANGES[hardnessScale]?.max}
                 step={hardnessScale === "HRC" || hardnessScale === "HRB" ? 0.5 : 5}
                 value={hardnessVal}
                 onChange={(e) => setHardnessVal(parseFloat(e.target.value))}
@@ -347,25 +375,22 @@ export const PocketCalculators: React.FC = () => {
             <div>
               <span className="text-[10px] text-slate-400 font-mono tracking-wider block mb-2 uppercase">Aerospace & Metallurgy Presets:</span>
               <div className="grid grid-cols-2 gap-2 text-xs">
-                {[
-                  { name: "Annealed Ti-6Al-4V", val: 34, scale: "HRC" as const },
-                  { name: "Inconel 718 Aged", val: 44, scale: "HRC" as const },
-                  { name: "Austenitic 316L", val: 80, scale: "HRB" as const },
-                  { name: "AerMet 100 Ultra-High", val: 55, scale: "HRC" as const },
-                  { name: "Nitrided Bearing Case", val: 880, scale: "HV" as const },
-                  { name: "Tungsten Carbide WC", val: 1550, scale: "HV" as const },
-                ].map((p, idx) => (
+                {HARDNESS_PRESETS.filter(
+                  (p): p is HardnessPreset & { scale: "HRC" | "HV" | "HRB" | "HBW" } =>
+                    p.scale === "HRC" || p.scale === "HV" || p.scale === "HRB" || p.scale === "HBW"
+                ).map((p, idx) => (
                   <button
                     key={idx}
                     onClick={() => {
                       setHardnessScale(p.scale);
-                      setHardnessVal(p.val);
+                      setHardnessVal(p.value);
+                      setHardnessClass(p.cls);
                     }}
                     className="p-2 text-left bg-[#0c1322] border border-[#162032] hover:border-sky-400/40 rounded transition text-slate-300 hover:text-sky-300"
                   >
                     <div className="font-medium truncate text-xs">{p.name}</div>
                     <div className="font-mono text-[10px] text-slate-500">
-                      {p.val} {p.scale}
+                      {p.value} {p.scale}
                     </div>
                   </button>
                 ))}
@@ -375,11 +400,18 @@ export const PocketCalculators: React.FC = () => {
 
           {/* Results Display */}
           <div className="lg:col-span-7 space-y-3">
+            <div className="text-[11px] font-mono text-slate-300">
+              Measured: <span className="font-bold text-white">{hardnessVal} {hardnessScale}</span>
+              <span className="text-slate-500"> - other scales are table estimates (converted), not measurements.</span>
+            </div>
+            {hardnessClass !== "non-austenitic-steel" && (
+              <div className="text-[11px] font-mono text-amber-300">{hardnessResult.validRangeNote}</div>
+            )}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <div className="p-3.5 rounded-xl bg-[#090e18] border border-[#162032] relative overflow-hidden">
                 <span className="text-xs text-slate-400 font-mono">Vickers (HV)</span>
                 <div className="text-2xl font-black font-mono text-cyan-400 mt-1">
-                  {hardnessResult.vickers} <span className="text-xs font-normal text-slate-500">HV</span>
+                  {hardnessResult.HV ?? UNAVAILABLE_TEXT} <span className="text-xs font-normal text-slate-500">HV</span>
                 </div>
                 <div className="text-[10px] text-slate-500 mt-0.5">Diamond 136° indenter</div>
               </div>
@@ -387,7 +419,7 @@ export const PocketCalculators: React.FC = () => {
               <div className="p-3.5 rounded-xl bg-[#090e18] border border-[#162032] relative overflow-hidden">
                 <span className="text-xs text-slate-400 font-mono">Rockwell C (HRC)</span>
                 <div className="text-2xl font-black font-mono text-sky-400 mt-1">
-                  {hardnessResult.rockwellC !== undefined ? hardnessResult.rockwellC : "N/A"}{" "}
+                  {hardnessResult.HRC ?? UNAVAILABLE_TEXT}{" "}
                   <span className="text-xs font-normal text-slate-500">HRC</span>
                 </div>
                 <div className="text-[10px] text-slate-500 mt-0.5">120° Brale Diamond Cone</div>
@@ -396,16 +428,19 @@ export const PocketCalculators: React.FC = () => {
               <div className="p-3.5 rounded-xl bg-[#090e18] border border-[#162032] relative overflow-hidden">
                 <span className="text-xs text-slate-400 font-mono">Brinell (HBW)</span>
                 <div className="text-2xl font-black font-mono text-emerald-400 mt-1">
-                  {hardnessResult.brinell} <span className="text-xs font-normal text-slate-500">HBW</span>
+                  {hardnessResult.HBW ?? UNAVAILABLE_TEXT} <span className="text-xs font-normal text-slate-500">HBW</span>
                 </div>
-                <div className="text-[10px] text-slate-500 mt-0.5">10mm WC Ball (3000kgf)</div>
+                <div className="text-[10px] text-slate-500 mt-0.5">10 mm carbide ball, 3000 kgf (E140 Table 1)</div>
+                <div className="text-[10px] text-slate-400 mt-0.5 font-mono">
+                  HB(S), E140 Table 2 (steel ball): {hardnessResult.HBS ?? UNAVAILABLE_TEXT}
+                </div>
               </div>
 
               <div className="p-3.5 rounded-xl bg-[#090e18] border border-[#162032] relative overflow-hidden">
                 <span className="text-xs text-slate-400 font-mono">Rockwell B (HRB)</span>
                 <div className="text-2xl font-black font-mono text-indigo-300 mt-1">
-                  {hardnessResult.rockwellB !== undefined ? hardnessResult.rockwellB : "Exceeds"}{" "}
-                  <span className="text-xs font-normal text-slate-500">{hardnessResult.rockwellB ? "HRB" : ""}</span>
+                  {hardnessResult.HRB ?? UNAVAILABLE_TEXT}{" "}
+                  <span className="text-xs font-normal text-slate-500">HRB</span>
                 </div>
                 <div className="text-[10px] text-slate-500 mt-0.5">1/16" ball (100kgf)</div>
               </div>
@@ -413,19 +448,26 @@ export const PocketCalculators: React.FC = () => {
               <div className="p-3.5 rounded-xl bg-[#090e18] border border-[#162032] relative overflow-hidden col-span-2 sm:col-span-2">
                 <div className="flex justify-between items-start">
                   <div>
-                    <span className="text-xs text-slate-400 font-mono">Ultimate Tensile Strength (Rm)</span>
+                    <span className="text-xs text-slate-400 font-mono">Estimated Tensile Strength (Rm)</span>
                     <div className="text-2xl font-black font-mono text-white mt-0.5">
-                      {hardnessResult.tensileMpa} <span className="text-xs font-normal text-slate-400">MPa</span>
-                      <span className="text-sm font-mono text-slate-400 ml-2">({hardnessResult.tensileKsi} ksi)</span>
+                      {hardnessResult.tensileRm_MPa === null ? (
+                        <span className="text-sm font-mono text-slate-500">{UNAVAILABLE_TEXT} ({hardnessResult.unavailable.Rm})</span>
+                      ) : (
+                        <>
+                          ≈ {hardnessResult.tensileRm_MPa} <span className="text-xs font-normal text-slate-400">MPa</span>
+                          <span className="text-sm font-mono text-slate-400 ml-2">({hardnessResult.tensileRm_ksi} ksi)</span>
+                        </>
+                      )}
                     </div>
                   </div>
                   <span className="px-2 py-0.5 bg-sky-500/10 text-sky-300 border border-sky-400/30 text-[11px] rounded font-mono font-semibold">
-                    Rm ≈ 3.25 × HV
+                    ISO 18265 Table A.1
                   </span>
                 </div>
                 <div className="text-[10px] text-slate-400 mt-1.5">
-                  Calibrated steel & titanium empirical conversion model.
+                  {TENSILE_ESTIMATE_NOTE}
                 </div>
+                <div className="text-[10px] text-slate-500 mt-1">{BRINELL_NOTE}</div>
               </div>
             </div>
 
@@ -489,7 +531,7 @@ export const PocketCalculators: React.FC = () => {
                 <div key={el} className="p-2 bg-[#0c1322] rounded border border-[#162032]">
                   <div className="flex justify-between items-center mb-1">
                     <span className="font-bold text-white font-mono">{el}</span>
-                    <input
+                    <input aria-label={`${el} content`}
                       type="number"
                       inputMode="decimal"
                       step={el === "B" ? "0.0001" : "0.01"}
@@ -500,7 +542,7 @@ export const PocketCalculators: React.FC = () => {
                       className="w-14 text-right font-mono font-bold text-sky-400 bg-transparent border-b border-[#1e2d46] focus:outline-none focus:border-sky-400"
                     />
                   </div>
-                  <input
+                  <input aria-label={`${el} content slider`}
                     type="range"
                     min="0"
                     max={el === "C" ? 1.0 : el === "Mn" ? 2.5 : el === "Cr" || el === "Ni" ? 5.0 : el === "B" ? 0.005 : 1.5}
@@ -521,7 +563,7 @@ export const PocketCalculators: React.FC = () => {
                 <span>Joint Plate Thickness (t):</span>
                 <span className="font-mono font-bold text-sky-400">{plateThickness} mm</span>
               </div>
-              <input
+              <input aria-label="Joint Plate Thickness (t) (mm)"
                 type="range"
                 min="5"
                 max="100"
@@ -628,7 +670,7 @@ export const PocketCalculators: React.FC = () => {
                 <span>Furnace Temperature (T):</span>
                 <span className="font-mono font-bold text-sky-400">{carbTemp} °C</span>
               </div>
-              <input
+              <input aria-label="Furnace Temperature (T) (°C)"
                 type="range"
                 min="840"
                 max="1020"
@@ -645,7 +687,7 @@ export const PocketCalculators: React.FC = () => {
                 <span>Soak Time at Temp (t):</span>
                 <span className="font-mono font-bold text-sky-400">{carbTime} Hours</span>
               </div>
-              <input
+              <input aria-label="Soak Time at Temp (t) (Hours)"
                 type="range"
                 min="1"
                 max="24"
@@ -662,7 +704,7 @@ export const PocketCalculators: React.FC = () => {
                 <span>Surface Carbon Potential (Cs):</span>
                 <span className="font-mono font-bold text-cyan-400">{carbSurfaceC.toFixed(2)} % C</span>
               </div>
-              <input
+              <input aria-label="Surface Carbon Potential (Cs) (% C)"
                 type="range"
                 min="0.70"
                 max="1.30"
@@ -679,7 +721,7 @@ export const PocketCalculators: React.FC = () => {
                 <span>Base Alloy Core Carbon (C₀):</span>
                 <span className="font-mono font-bold text-slate-300">{carbCoreC.toFixed(2)} % C</span>
               </div>
-              <input
+              <input aria-label="Base Alloy Core Carbon (C₀) (% C)"
                 type="range"
                 min="0.10"
                 max="0.35"
@@ -777,7 +819,7 @@ export const PocketCalculators: React.FC = () => {
                 <div key={el} className="p-2 bg-[#0c1322] rounded border border-[#162032]">
                   <div className="flex justify-between items-center mb-1">
                     <span className="font-bold text-white font-mono">{el}</span>
-                    <input
+                    <input aria-label={`${el} content`}
                       type="number"
                       inputMode="decimal"
                       step={el === "C" || el === "N" ? "0.005" : "0.1"}
@@ -788,7 +830,7 @@ export const PocketCalculators: React.FC = () => {
                       className="w-14 text-right font-mono font-bold text-sky-400 bg-transparent border-b border-[#1e2d46] focus:outline-none"
                     />
                   </div>
-                  <input
+                  <input aria-label={`${el} content slider`}
                     type="range"
                     min="0"
                     max={el === "Cr" ? 30 : el === "Ni" ? 25 : el === "C" || el === "N" ? 0.3 : 5.0}
@@ -872,7 +914,7 @@ export const PocketCalculators: React.FC = () => {
                       <g>
                         <circle cx={cx} cy={cy} r="10" fill="rgba(56, 189, 248, 0.3)" className="animate-ping" />
                         <circle cx={cx} cy={cy} r="5" fill="#38bdf8" stroke="#ffffff" strokeWidth="1.5" />
-                        <text x={cx + 8} y={cy - 5} fill="#bae6fd" fontSize="10" fontWeight="bold" fontFamily="JetBrains Mono">
+                        <text x={cx + 8} y={cy - 5} fill="#bae6fd" fontSize="10" fontWeight="bold" fontFamily="Fira Code">
                           Alloy ({schaefflerResult.primaryPhase})
                         </text>
                       </g>
@@ -973,7 +1015,7 @@ export const PocketCalculators: React.FC = () => {
             <div className="space-y-1">
               <div className="flex justify-between text-xs text-slate-300 font-medium">
                 <span>Lattice Parameter a (Å):</span>
-                <input
+                <input aria-label="Lattice Parameter a (Å)"
                   type="number"
                   inputMode="decimal"
                   step="0.01"
@@ -982,7 +1024,7 @@ export const PocketCalculators: React.FC = () => {
                   className="w-20 px-2 py-0.5 bg-[#0c1322] border border-[#1e2d46] rounded text-right font-mono font-bold text-sky-400"
                 />
               </div>
-              <input
+              <input aria-label="Lattice Parameter a (Å) slider"
                 type="range"
                 min="2.5"
                 max="5.0"
@@ -1071,10 +1113,10 @@ export const PocketCalculators: React.FC = () => {
             {/* Grain Size Slider */}
             <div className="space-y-1">
               <div className="flex justify-between text-xs text-slate-300 font-medium">
-                <span>Average Grain Diameter (d):</span>
+                <span>Average Grain Diameter (d, planimetric):</span>
                 <span className="font-mono font-bold text-sky-400">{grainSize} µm</span>
               </div>
-              <input
+              <input aria-label="Average Grain Diameter (d, planimetric) (µm)"
                 type="range"
                 min="0.5"
                 max="100"
@@ -1091,7 +1133,7 @@ export const PocketCalculators: React.FC = () => {
                 <span>Lattice Friction Stress (σ₀):</span>
                 <span className="font-mono font-bold text-slate-300">{sigma0} MPa</span>
               </div>
-              <input
+              <input aria-label="Lattice Friction Stress (σ₀) (MPa)"
                 type="range"
                 min="20"
                 max="200"
@@ -1108,7 +1150,7 @@ export const PocketCalculators: React.FC = () => {
                 <span>Hall-Petch Slope (k_y):</span>
                 <span className="font-mono font-bold text-cyan-400">{ky} MPa·mm^(1/2)</span>
               </div>
-              <input
+              <input aria-label="Hall-Petch Slope (k_y) (MPa·mm^(1/2))"
                 type="range"
                 min="5"
                 max="30"
@@ -1173,7 +1215,7 @@ export const PocketCalculators: React.FC = () => {
                 <div key={el} className="p-2 bg-[#0c1322] rounded border border-[#162032]">
                   <div className="flex justify-between items-center mb-1">
                     <span className="font-bold text-white font-mono">{el}</span>
-                    <input
+                    <input aria-label={`${el} content`}
                       type="number"
                       inputMode="decimal"
                       step="0.01"
@@ -1184,7 +1226,7 @@ export const PocketCalculators: React.FC = () => {
                       className="w-14 text-right font-mono font-bold text-sky-400 bg-transparent border-b border-[#1e2d46] focus:outline-none"
                     />
                   </div>
-                  <input
+                  <input aria-label={`${el} content slider`}
                     type="range"
                     min="0"
                     max={el === "C" ? 1.2 : el === "Cr" || el === "Ni" ? 5.0 : 2.0}

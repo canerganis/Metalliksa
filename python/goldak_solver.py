@@ -16,15 +16,41 @@ import math
 
 import numpy as np
 from numpy.polynomial.legendre import leggauss
+from scipy.special import erf as _erf  # vectorised; the frompyfunc(math.erf) wrapper cost 2.6-3.9x in screening()
 
-_erf_ufunc = np.frompyfunc(math.erf, 1, 1)
+MODEL_ID = "goldak-half-space-v3"
+# Time quadrature in u = sqrt(tau): a first panel [0, u0], geometric panels (x2) while their width
+# stays below the wake-pulse scale du = KAPPA * sqrt(alpha/2) / v, then uniform panels of width du
+# up to u_max = sqrt(tau_end). The wake pulse of a point x < 0 sits at tau = |x|/v with standard
+# deviation sqrt(sf/6)/v in tau, i.e. about sqrt(alpha/2)/v in u at every speed, so uniform-in-u
+# panels resolve it at any Peclet number. A single Gauss-Legendre rule on [0, tau_max] (the v2
+# kernel) truncated or under-resolved the wake by up to 100 % for v <= 0.2 or >= 1.5 m/s.
+_GL_GEOMETRIC_N = 12
+_GL_UNIFORM_N = 8
+_PULSE_PANEL_SIGMAS = 3.0
+# Wake window (laser frame, x < 0) the quadrature is sized for; temperature_C widens it on demand.
+WAKE_LENGTH_M = 3.0e-3
+# exp(-E_CUT) truncation level of the advective Gaussian tail beyond the wake window.
+_E_CUT = 40.0
 
-def _erf(arr):
-    return np.asarray(_erf_ufunc(arr), dtype=np.float64)
 
-MODEL_ID = "goldak-v1"
-_GL_N = 56
-_GL_XI, _GL_W = leggauss(_GL_N)
+def _u_panels(u0: float, du: float, u_max: float):
+    xi_g, w_g = leggauss(_GL_GEOMETRIC_N)
+    xi_u, w_u = leggauss(_GL_UNIFORM_N)
+    edges = [0.0, u0]
+    while edges[-1] < du and edges[-1] * 2.0 < u_max:
+        edges.append(edges[-1] * 2.0)
+    us, ws = [], []
+    for lo, hi in zip(edges[:-1], edges[1:]):
+        us.append(0.5 * (hi - lo) * (xi_g + 1.0) + lo)
+        ws.append(w_g * (0.5 * (hi - lo)))
+    lo = edges[-1]
+    while lo < u_max:
+        hi = lo + du if lo + du < u_max else u_max
+        us.append(0.5 * (hi - lo) * (xi_u + 1.0) + lo)
+        ws.append(w_u * (0.5 * (hi - lo)))
+        lo = hi
+    return np.concatenate(us), np.concatenate(ws)
 
 
 def goldak_fractions(af_m: float, ar_m: float) -> tuple[float, float]:
@@ -34,6 +60,20 @@ def goldak_fractions(af_m: float, ar_m: float) -> tuple[float, float]:
     ff = 2.0 * af / (af + ar)
     fr = 2.0 - ff
     return ff, fr
+
+
+def goldak_q_parameter_W(total_power_W: float) -> float:
+    """Return Goldak's Q coefficient for the power absorbed by the body.
+
+    Q is the power deposited in the half-space body z >= 0 (Goldak 1984): with the
+    6√3 prefactor and ff + fr = 2, each half-ellipsoid integrates to f_i·Q/2 over
+    z >= 0, so the two together give exactly Q. Integrating the same q over all z
+    gives 2Q, but that doubling is the image source that makes z = 0 adiabatic
+    (Fachinotti Remark II): the analytic full-space field IS the half-space solution
+    for a body receiving Q. Q must therefore NOT be halved; the far field tends to
+    Rosenthal(P_absorbed). (goldak-total-power-v2 halved it: a factor-2 power error.)
+    """
+    return float(total_power_W)
 
 
 def seed_goldak_axes(r0_m: float) -> dict:
@@ -61,7 +101,9 @@ class GoldakField:
         c_m: float,
     ):
         self.T0_C = float(T0_C)
-        self.Q_W = float(Q_W)
+        # Public input is the absorbed power deposited in the half-space body;
+        # see goldak_q_parameter_W (no halving; the full-space 2Q is the image source).
+        self.Q_W = goldak_q_parameter_W(Q_W)
         self.rho_cp = max(1.0, float(rho) * float(cp))
         self.alpha = max(1e-12, float(alpha_th))
         self.af = max(4e-6, float(af_m))
@@ -77,12 +119,27 @@ class GoldakField:
 
     def bind_speed(self, v_scan_m_s: float) -> "GoldakField":
         self.v = max(1e-6, float(v_scan_m_s))
-        tau_max = max(8.0 * max(self.ar, self.af) / self.v, 12.0 * (self.b ** 2) / self.alpha, 2e-3)
-        self._tau = 0.5 * tau_max * (_GL_XI + 1.0)
-        self._w = _GL_W * (0.5 * tau_max)
-        # Avoid τ=0 singularity in erf argument.
-        self._tau = np.maximum(self._tau, 1e-10)
+        self._build(WAKE_LENGTH_M)
         return self
+
+    def _build(self, wake_m: float) -> None:
+        """Quadrature nodes for points down to x = -wake_m behind the source (see module header)."""
+        v, alpha = self.v, self.alpha
+        a_min = min(self.af, self.ar, self.b, self.c)
+        a_max = max(self.af, self.ar, self.b, self.c)
+        # Near-source scales: diffusion over the source (a^2/12 alpha) and advection over it (a/v).
+        u0 = 0.1 * math.sqrt(min(a_min * a_min / (12.0 * alpha), a_min / v))
+        # tau_end: the advective Gaussian exp(-3 (x + v tau)^2 / sf) of the farthest wake point has
+        # decayed by exp(-E_CUT), and the near-field diffusive tail exp(-v^2 tau / 4 alpha) likewise.
+        tau_wake = wake_m / v
+        tau_end = max((wake_m + math.sqrt(4.0 * _E_CUT * alpha * tau_wake + _E_CUT * a_max * a_max / 3.0)) / v,
+                      4.0 * _E_CUT * alpha / (v * v))
+        du = _PULSE_PANEL_SIGMAS * math.sqrt(alpha / 2.0) / v
+        u, w = _u_panels(u0, du, math.sqrt(tau_end))
+        # tau = u^2, dtau = 2 u du; u > 0 at every node (no tau = 0 singularity in the erf argument).
+        self._tau = np.maximum(u * u, 1e-10)
+        self._w = w * 2.0 * u
+        self._wake_m = wake_m
 
     def temperature_C(self, x_m, y_m, z_m):
         if self._tau is None:
@@ -96,6 +153,11 @@ class GoldakField:
         x = x.reshape(-1)
         y = y.reshape(-1)
         z = z.reshape(-1)
+        x_min = float(x.min())
+        if -x_min > self._wake_m:
+            # Adaptive wake window: a point farther behind the source than the quadrature was sized
+            # for gets a wider quadrature (never a silently truncated one); the window only grows.
+            self._build(1.25 * -x_min)
 
         tau = self._tau[:, None]
         w = self._w[:, None]

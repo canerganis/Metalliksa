@@ -35,6 +35,28 @@ test("ready text without a bound channel does not declare online or invent impor
   assert.deepEqual(state.warmModules, []);
 });
 
+test("readiness records the announced channel addresses and only the first ready message of a spawn", () => {
+  const state = new PythonReadiness();
+  const first = JSON.stringify({ status: "ready", httpActive: true, httpPort: 61234, unixSocketActive: true,
+    unixSocket: "/run/user/1000/metallix-ipc-abc/ipc.sock", warmModules: [] });
+  assert.equal(state.consume(first + "\n"), true);
+  assert.equal(state.httpPort, 61234);
+  assert.equal(state.unixSocketPath, "/run/user/1000/metallix-ipc-abc/ipc.sock");
+  // A later line (e.g. printed by solver code) cannot redirect the channels.
+  const hijack = JSON.stringify({ status: "ready", httpActive: true, httpPort: 5055, unixSocketActive: true, unixSocket: "/tmp/evil.sock" });
+  assert.equal(state.consume(hijack + "\n"), false);
+  assert.equal(state.httpPort, 61234);
+  assert.equal(state.unixSocketPath, "/run/user/1000/metallix-ipc-abc/ipc.sock");
+  state.reset();
+  assert.equal(state.httpPort, null);
+  assert.equal(state.unixSocketPath, null);
+  for (const port of [0, -1, 70000, "5055", 1.5, null]) {
+    const s = new PythonReadiness();
+    s.consume(JSON.stringify({ status: "ready", httpActive: true, httpPort: port }) + "\n");
+    assert.equal(s.httpPort, null, String(port));
+  }
+});
+
 test("public status describes actual HTTP channel without solver availability claims", () => {
   const ipc = { status: "online", pythonVersion: "3.12.10", warmModulesCount: 2,
     channels: { unixSocket: { active: false }, httpMicroservice: { active: true } } };

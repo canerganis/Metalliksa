@@ -5,8 +5,7 @@
 - Yetkilendirilmiş işi inceleme, uygulama ve doğrulama ile tamamla.
 - Küçük işlerde kısa ilerle; önemli değişikliklerde plan ve kabul ölçütleri oluştur.
 - Kullanıcıyla Türkçe konuş; ürün dili, kayıt ve teslim için [RULES.md](RULES.md) dosyasını izle.
-- Oturum/compaction sonrası ../STATUS.md, aktif plan, git status ve son commit'i kontrol et. Tamamlanmış işleri tekrarlama.
-- Agent Memory'de ilgili kararları kısa ve hedefli recall ile bul; güncel kaynak ve testlerle doğrula.
+- Oturum veya compaction sonrası, devam notlarını ve çalışma ağacını gerekiyorsa kontrol et; tamamlanmış işleri tekrarlama.
 
 ## Kod keşfi
 
@@ -63,3 +62,7 @@
 - Aktif plan: öncelikler, bağımlılıklar ve kabul kapıları.
 
 Bütün belgeleri her oturumda yükleme. Değişken deney sonuçlarını burada tekrarlama.
+
+## Optional Graft context graph
+
+Graft is available as a context source when its repository graph is useful. Direct source and documentation review, text search, and other tools are equally valid; no task requires Graft or a fixed tool order.

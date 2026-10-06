@@ -1,0 +1,8 @@
+{
+  "description": "Immutable initial allowance pinned at Phase 7 slice 1 (base 464806f) for WARM_MODULE_NAMES entries with no registry operation behind them. test_module_warm_parity.WARM_WITHOUT_REGISTRY_OPERATION must be a subset of this set. Removing entries is allowed; adding here needs explicit maintainer review. Review rule: any change to an existing ceiling needs a commit trailer 'Ceiling-Review: <reason>' (CI: scripts/check_ceiling_review.py), and entries may never exceed the original content pinned in python/test_allowlist_ceilings.py plus its explicit DELIBERATE_DELTA.",
+  "names": [
+    "cnls_fitting_solver",
+    "lpbf_build_job_solver",
+    "xrd_peak_deconvolution"
+  ]
+}

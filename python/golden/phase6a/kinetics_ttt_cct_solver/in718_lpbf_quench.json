@@ -1,0 +1,511 @@
+{
+ "baseRevision": "d33b6f5",
+ "case": "in718_lpbf_quench",
+ "exitCode": 0,
+ "gitHead": "7f3f80310a94efffd3eb86356edfd5185244e226",
+ "input": {
+  "agingTemp_C": 720.0,
+  "agingTime_h": 8.0,
+  "alloy": "Inconel 718",
+  "austTemp_C": 980.0,
+  "coolingRate_C_s": 1000.0,
+  "grainSize_um": 35.0
+ },
+ "invocation": "python -B kinetics_ttt_cct_solver.py < input (cwd python/)",
+ "schema": "phase6a-golden-1",
+ "solver": "kinetics_ttt_cct_solver",
+ "solverFile": "python/kinetics_ttt_cct_solver.py",
+ "solverSha256": "40b74c3de5dbe3ca5e6281ca135297d418dcccb54aa5386cc413d552a014c593",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "worktree",
+ "stdout": {
+  "alloy": "Inconel 718",
+  "alloyMetadata": {
+   "Ae1_C": 620.0,
+   "Ae3_C": 1020.0,
+   "Mf_C": -100.0,
+   "Ms_C": -50.0,
+   "Q_diff_kJ_mol": 285.0,
+   "aust_temp_C_default": 980.0,
+   "composition_wt": {
+    "Al": 0.55,
+    "C": 0.04,
+    "Cr": 19.0,
+    "Fe": 18.5,
+    "Mo": 3.05,
+    "Nb": 5.1,
+    "Ni": 52.5,
+    "Ti": 0.9
+   },
+   "critical_cooling_rate_C_s": 150.0,
+   "description": "Aerospace superalloy hardened by coherent metastable gamma double prime (bct-DO22).",
+   "grain_size_d_um_default": 35.0,
+   "phases": [
+    "Gamma Prime (Ni3Al,Ti)",
+    "Gamma Double Prime (Ni3Nb)",
+    "Delta (Ni3Nb orthorhombic)",
+    "Laves TCP"
+   ],
+   "type": "Precipitation-Hardenable Ni-Fe Superalloy"
+  },
+  "calphadVsKineticsGap": {
+   "equilibriumPrediction": {
+    "martensiteFraction": "0.0% (Thermodynamically Forbidden in Equilibrium)",
+    "soluteSupersaturation": "Near Zero (<0.01 wt% C in ferrite)",
+    "stablePhasesAtRT": "Ferrite + Cementite / Equilibrium intermetallics"
+   },
+   "kineticRealityAtSelectedCooling": {
+    "coolingRate_C_s": 1000.0,
+    "criticalCoolingRate_C_s": 150.0,
+    "diffusionSuppressionIndex": 1.0,
+    "isSuppressedEquilibrium": true,
+    "predictedMartensite_pct": 0.0,
+    "verdict": "Full Martensitic / Metastable Quench"
+   }
+  },
+  "cctContinuousCoolingMap": [
+   {
+    "coolingRate_C_s": 0.05,
+    "phaseFractions": {
+     "Bainite_pct": 0.0,
+     "Martensite_pct": 0.0,
+     "Pearlite_Ferrite_pct": 98.5,
+     "RetainedAustenite_pct": 1.5
+    },
+    "predictedHardness_HRC": 18.0,
+    "predictedHardness_HV": 229.0,
+    "primaryMicrostructure": "Pearlite",
+    "transformedStartTemp_C": 980.0,
+    "transformedStartTime_s": 0.1
+   },
+   {
+    "coolingRate_C_s": 0.2,
+    "phaseFractions": {
+     "Bainite_pct": 0.0,
+     "Martensite_pct": 0.0,
+     "Pearlite_Ferrite_pct": 98.5,
+     "RetainedAustenite_pct": 1.5
+    },
+    "predictedHardness_HRC": 18.0,
+    "predictedHardness_HV": 229.0,
+    "primaryMicrostructure": "Pearlite",
+    "transformedStartTemp_C": 980.0,
+    "transformedStartTime_s": 0.1
+   },
+   {
+    "coolingRate_C_s": 1.0,
+    "phaseFractions": {
+     "Bainite_pct": 20.0,
+     "Martensite_pct": 0.0,
+     "Pearlite_Ferrite_pct": 78.0,
+     "RetainedAustenite_pct": 2.0
+    },
+    "predictedHardness_HRC": 28.0,
+    "predictedHardness_HV": 334.0,
+    "primaryMicrostructure": "Pearlite",
+    "transformedStartTemp_C": 979.9,
+    "transformedStartTime_s": 0.1
+   },
+   {
+    "coolingRate_C_s": 5.0,
+    "phaseFractions": {
+     "Bainite_pct": 20.0,
+     "Martensite_pct": 0.0,
+     "Pearlite_Ferrite_pct": 78.0,
+     "RetainedAustenite_pct": 2.0
+    },
+    "predictedHardness_HRC": 28.0,
+    "predictedHardness_HV": 334.0,
+    "primaryMicrostructure": "Pearlite",
+    "transformedStartTemp_C": 979.5,
+    "transformedStartTime_s": 0.1
+   },
+   {
+    "coolingRate_C_s": 10.0,
+    "phaseFractions": {
+     "Bainite_pct": 20.0,
+     "Martensite_pct": 0.0,
+     "Pearlite_Ferrite_pct": 78.0,
+     "RetainedAustenite_pct": 2.0
+    },
+    "predictedHardness_HRC": 28.0,
+    "predictedHardness_HV": 334.0,
+    "primaryMicrostructure": "Pearlite",
+    "transformedStartTemp_C": 979.0,
+    "transformedStartTime_s": 0.1
+   },
+   {
+    "coolingRate_C_s": 25.0,
+    "phaseFractions": {
+     "Bainite_pct": 55.0,
+     "Martensite_pct": 25.0,
+     "Pearlite_Ferrite_pct": 18.0,
+     "RetainedAustenite_pct": 2.0
+    },
+    "predictedHardness_HRC": 42.0,
+    "predictedHardness_HV": 481.0,
+    "primaryMicrostructure": "Pearlite",
+    "transformedStartTemp_C": 977.5,
+    "transformedStartTime_s": 0.1
+   },
+   {
+    "coolingRate_C_s": 50.0,
+    "phaseFractions": {
+     "Bainite_pct": 55.0,
+     "Martensite_pct": 25.0,
+     "Pearlite_Ferrite_pct": 18.0,
+     "RetainedAustenite_pct": 2.0
+    },
+    "predictedHardness_HRC": 42.0,
+    "predictedHardness_HV": 481.0,
+    "primaryMicrostructure": "Pearlite",
+    "transformedStartTemp_C": 975.0,
+    "transformedStartTime_s": 0.1
+   },
+   {
+    "coolingRate_C_s": 100.0,
+    "phaseFractions": {
+     "Bainite_pct": 55.0,
+     "Martensite_pct": 25.0,
+     "Pearlite_Ferrite_pct": 18.0,
+     "RetainedAustenite_pct": 2.0
+    },
+    "predictedHardness_HRC": 42.0,
+    "predictedHardness_HV": 481.0,
+    "primaryMicrostructure": "Pearlite",
+    "transformedStartTemp_C": 970.0,
+    "transformedStartTime_s": 0.1
+   },
+   {
+    "coolingRate_C_s": 500.0,
+    "phaseFractions": {
+     "Bainite_pct": 1.0,
+     "Martensite_pct": 98.0,
+     "Pearlite_Ferrite_pct": 0.5,
+     "RetainedAustenite_pct": 0.5
+    },
+    "predictedHardness_HRC": 64.0,
+    "predictedHardness_HV": 712.0,
+    "primaryMicrostructure": "Pearlite",
+    "transformedStartTemp_C": 960.0,
+    "transformedStartTime_s": 0.04
+   },
+   {
+    "coolingRate_C_s": 2000.0,
+    "phaseFractions": {
+     "Bainite_pct": 1.0,
+     "Martensite_pct": 98.0,
+     "Pearlite_Ferrite_pct": 0.5,
+     "RetainedAustenite_pct": 0.5
+    },
+    "predictedHardness_HRC": 64.0,
+    "predictedHardness_HV": 712.0,
+    "primaryMicrostructure": "Pearlite",
+    "transformedStartTemp_C": 940.0,
+    "transformedStartTime_s": 0.02
+   }
+  ],
+  "criticalTransformationTemperatures": {
+   "Ae1_C": 620.0,
+   "Ae3_BetaTransus_GammaSolvus_C": 1020.0,
+   "CriticalCoolingRate_CCR_C_s": 150.0,
+   "Mf_C": -100.0,
+   "Ms_C": -50.0
+  },
+  "engine": "MetalliX-Python-HPC-JMAK-Kinetics-v3.10",
+  "inputParameters": {
+   "agingTemp_C": 720.0,
+   "agingTime_h": 8.0,
+   "austSolutionTemp_C": 980.0,
+   "priorGrainSize_um": 35.0,
+   "selectedCoolingRate_C_s": 1000.0
+  },
+  "lswPrecipitateCoarsening": [
+   {
+    "agingTime_h": 0.1,
+    "meanRadius_nm": 1.5,
+    "precipitationHardening_MPa": 114.3,
+    "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
+   },
+   {
+    "agingTime_h": 0.5,
+    "meanRadius_nm": 1.5,
+    "precipitationHardening_MPa": 114.3,
+    "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
+   },
+   {
+    "agingTime_h": 1.0,
+    "meanRadius_nm": 1.5,
+    "precipitationHardening_MPa": 114.3,
+    "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
+   },
+   {
+    "agingTime_h": 2.0,
+    "meanRadius_nm": 1.5,
+    "precipitationHardening_MPa": 114.3,
+    "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
+   },
+   {
+    "agingTime_h": 4.0,
+    "meanRadius_nm": 1.5,
+    "precipitationHardening_MPa": 114.3,
+    "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
+   },
+   {
+    "agingTime_h": 8.0,
+    "meanRadius_nm": 1.5,
+    "precipitationHardening_MPa": 114.4,
+    "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
+   },
+   {
+    "agingTime_h": 16.0,
+    "meanRadius_nm": 1.5,
+    "precipitationHardening_MPa": 114.4,
+    "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
+   },
+   {
+    "agingTime_h": 24.0,
+    "meanRadius_nm": 1.5,
+    "precipitationHardening_MPa": 114.4,
+    "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
+   },
+   {
+    "agingTime_h": 48.0,
+    "meanRadius_nm": 1.51,
+    "precipitationHardening_MPa": 114.6,
+    "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
+   },
+   {
+    "agingTime_h": 100.0,
+    "meanRadius_nm": 1.51,
+    "precipitationHardening_MPa": 114.9,
+    "strengtheningMechanism": "Weak-Pair / Strong-Pair Cutting"
+   }
+  ],
+  "success": true,
+  "tttIsothermalCurves": [
+   {
+    "avramiExponent_n": 1.5,
+    "drivingForce_DeltaT_C": 269.7,
+    "phase": "Gamma Prime",
+    "t50_s": 11360175.8631,
+    "tFinish_s": 40148119.068,
+    "tStart_s": 675494.4687,
+    "temperature_C": 500.3333333333333
+   },
+   {
+    "avramiExponent_n": 1.5,
+    "drivingForce_DeltaT_C": 248.2,
+    "phase": "Gamma Prime",
+    "t50_s": 919038.5005,
+    "tFinish_s": 3247983.7981,
+    "tStart_s": 54647.5188,
+    "temperature_C": 521.7777777777778
+   },
+   {
+    "avramiExponent_n": 1.5,
+    "drivingForce_DeltaT_C": 226.8,
+    "phase": "Gamma Prime",
+    "t50_s": 90729.6893,
+    "tFinish_s": 320648.7659,
+    "tStart_s": 5394.9344,
+    "temperature_C": 543.2222222222222
+   },
+   {
+    "avramiExponent_n": 1.5,
+    "drivingForce_DeltaT_C": 205.3,
+    "phase": "Gamma Prime",
+    "t50_s": 10897.1869,
+    "tFinish_s": 38511.865,
+    "tStart_s": 647.9644,
+    "temperature_C": 564.6666666666666
+   },
+   {
+    "avramiExponent_n": 1.5,
+    "drivingForce_DeltaT_C": 183.9,
+    "phase": "Gamma Prime",
+    "t50_s": 1589.1966,
+    "tFinish_s": 5616.3965,
+    "tStart_s": 94.4962,
+    "temperature_C": 586.1111111111111
+   },
+   {
+    "avramiExponent_n": 1.5,
+    "drivingForce_DeltaT_C": 412.4,
+    "phase": "Equiaxed Alpha",
+    "t50_s": 91.9316,
+    "tFinish_s": 324.8966,
+    "tStart_s": 5.4664,
+    "temperature_C": 607.5555555555555
+   },
+   {
+    "avramiExponent_n": 1.5,
+    "drivingForce_DeltaT_C": 391.0,
+    "phase": "Equiaxed Alpha",
+    "t50_s": 17.7784,
+    "tFinish_s": 62.8307,
+    "tStart_s": 1.0571,
+    "temperature_C": 629.0
+   },
+   {
+    "avramiExponent_n": 1.5,
+    "drivingForce_DeltaT_C": 369.6,
+    "phase": "Equiaxed Alpha",
+    "t50_s": 4.091,
+    "tFinish_s": 14.4581,
+    "tStart_s": 0.2433,
+    "temperature_C": 650.4444444444445
+   },
+   {
+    "avramiExponent_n": 1.5,
+    "drivingForce_DeltaT_C": 348.1,
+    "phase": "Equiaxed Alpha",
+    "t50_s": 1.1174,
+    "tFinish_s": 3.949,
+    "tStart_s": 0.0664,
+    "temperature_C": 671.8888888888889
+   },
+   {
+    "avramiExponent_n": 1.5,
+    "drivingForce_DeltaT_C": 326.7,
+    "phase": "Equiaxed Alpha",
+    "t50_s": 0.3615,
+    "tFinish_s": 1.2775,
+    "tStart_s": 0.0215,
+    "temperature_C": 693.3333333333333
+   },
+   {
+    "avramiExponent_n": 1.5,
+    "drivingForce_DeltaT_C": 305.2,
+    "phase": "Equiaxed Alpha",
+    "t50_s": 0.1382,
+    "tFinish_s": 0.4886,
+    "tStart_s": 0.0082,
+    "temperature_C": 714.7777777777778
+   },
+   {
+    "avramiExponent_n": 1.5,
+    "drivingForce_DeltaT_C": 283.8,
+    "phase": "Equiaxed Alpha",
+    "t50_s": 0.0624,
+    "tFinish_s": 0.2206,
+    "tStart_s": 0.0037,
+    "temperature_C": 736.2222222222223
+   },
+   {
+    "avramiExponent_n": 1.5,
+    "drivingForce_DeltaT_C": 262.3,
+    "phase": "Equiaxed Alpha",
+    "t50_s": 0.0332,
+    "tFinish_s": 0.1174,
+    "tStart_s": 0.002,
+    "temperature_C": 757.6666666666666
+   },
+   {
+    "avramiExponent_n": 1.5,
+    "drivingForce_DeltaT_C": 240.9,
+    "phase": "Equiaxed Alpha",
+    "t50_s": 0.0208,
+    "tFinish_s": 0.0737,
+    "tStart_s": 0.0012,
+    "temperature_C": 779.1111111111111
+   },
+   {
+    "avramiExponent_n": 1.5,
+    "drivingForce_DeltaT_C": 219.4,
+    "phase": "Equiaxed Alpha",
+    "t50_s": 0.0168,
+    "tFinish_s": 0.0594,
+    "tStart_s": 0.001,
+    "temperature_C": 800.5555555555555
+   },
+   {
+    "avramiExponent_n": 1.5,
+    "drivingForce_DeltaT_C": 198.0,
+    "phase": "Equiaxed Alpha",
+    "t50_s": 0.0168,
+    "tFinish_s": 0.0594,
+    "tStart_s": 0.001,
+    "temperature_C": 822.0
+   },
+   {
+    "avramiExponent_n": 1.5,
+    "drivingForce_DeltaT_C": 176.6,
+    "phase": "Equiaxed Alpha",
+    "t50_s": 0.0168,
+    "tFinish_s": 0.0594,
+    "tStart_s": 0.001,
+    "temperature_C": 843.4444444444445
+   },
+   {
+    "avramiExponent_n": 1.5,
+    "drivingForce_DeltaT_C": 155.1,
+    "phase": "Equiaxed Alpha",
+    "t50_s": 0.0168,
+    "tFinish_s": 0.0594,
+    "tStart_s": 0.001,
+    "temperature_C": 864.8888888888889
+   },
+   {
+    "avramiExponent_n": 1.5,
+    "drivingForce_DeltaT_C": 133.7,
+    "phase": "Equiaxed Alpha",
+    "t50_s": 0.0242,
+    "tFinish_s": 0.0856,
+    "tStart_s": 0.0014,
+    "temperature_C": 886.3333333333334
+   },
+   {
+    "avramiExponent_n": 1.5,
+    "drivingForce_DeltaT_C": 112.2,
+    "phase": "Equiaxed Alpha",
+    "t50_s": 0.0418,
+    "tFinish_s": 0.1477,
+    "tStart_s": 0.0025,
+    "temperature_C": 907.7777777777777
+   },
+   {
+    "avramiExponent_n": 1.5,
+    "drivingForce_DeltaT_C": 90.8,
+    "phase": "Equiaxed Alpha",
+    "t50_s": 0.0873,
+    "tFinish_s": 0.3086,
+    "tStart_s": 0.0052,
+    "temperature_C": 929.2222222222222
+   },
+   {
+    "avramiExponent_n": 1.5,
+    "drivingForce_DeltaT_C": 69.3,
+    "phase": "Equiaxed Alpha",
+    "t50_s": 0.2261,
+    "tFinish_s": 0.7992,
+    "tStart_s": 0.0134,
+    "temperature_C": 950.6666666666666
+   },
+   {
+    "avramiExponent_n": 1.5,
+    "drivingForce_DeltaT_C": 47.9,
+    "phase": "Equiaxed Alpha",
+    "t50_s": 0.7633,
+    "tFinish_s": 2.6975,
+    "tStart_s": 0.0454,
+    "temperature_C": 972.1111111111112
+   },
+   {
+    "avramiExponent_n": 1.5,
+    "drivingForce_DeltaT_C": 26.4,
+    "phase": "Equiaxed Alpha",
+    "t50_s": 3.8907,
+    "tFinish_s": 13.7501,
+    "tStart_s": 0.2313,
+    "temperature_C": 993.5555555555555
+   }
+  ]
+ },
+ "volatileKeysStripped": [
+  "computeTimeMs",
+  "durationMs",
+  "pythonVersion",
+  "timestamp"
+ ]
+}

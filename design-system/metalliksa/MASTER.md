@@ -1,214 +1,150 @@
-# Design System Master File
+# Metalliksa Design System — Master
 
-> **LOGIC:** When building a specific page, first check `design-system/pages/[page-name].md`.
-> If that file exists, its rules **override** this Master file.
-> If not, strictly follow the rules below.
+> Page files in `design-system/metalliksa/pages/` override this file for their page only.
+> Source of truth for values: `src/index.css` (base palette), `src/styles/tokens.css` (token layer) and
+> `src/styles/theme-porcelain.css` (Tailwind ramp mapping).
+> Contrast gate: `tests/design-tokens-contrast.test.ts`.
 
----
-
-**Project:** Metalliksa
-**Generated:** 2026-09-15 20:29:57
-**Category:** Analytics Dashboard
+**Identity:** Porcelain. A light, sci-fi luxury instrument: white titanium and graphite surfaces, one cobalt accent for interaction, and an incandescent laser line used only as ornament.
+**Rule zero:** motion and light decorate real state. They never replace, delay or de-emphasize an evidence label.
 
 ---
 
-## Global Rules
+## 1. Principles
 
-### Color Palette
+1. **Honest telemetry.** Every number on screen traces to an API response, the bundled registry or a user input. No placeholder values, ticking clocks or fake progress. Missing data reads "unavailable".
+2. **Calm luxury.** Porcelain surfaces, hairlines and generous space; hierarchy comes from type weight and spacing before colour.
+3. **The laser is ornament.** `--mk-laser` marks the brand (logo, filament, active nav spot, boot emblem). It is never a status colour and never text.
+4. **Evidence first.** Labels such as `unavailable`, `inconclusive` and `unvalidated` always render at full text contrast. No opacity, blur, glow, truncation or reduced size may hide them; entrance animations move content (transform) and never fade labels in.
 
-| Role | Hex | CSS Variable |
-|------|-----|--------------|
-| Primary | `#1E40AF` | `--color-primary` |
-| On Primary | `#FFFFFF` | `--color-on-primary` |
-| Secondary | `#3B82F6` | `--color-secondary` |
-| On Secondary | `#000000` | `--color-on-secondary` |
-| Accent/CTA | `#D97706` | `--color-accent` |
-| On Accent/CTA | `#000000` | `--color-on-accent` |
-| Background | `#F8FAFC` | `--color-background` |
-| Foreground | `#1E3A8A` | `--color-foreground` |
-| Card | `#FFFFFF` | `--color-card` |
-| Card Foreground | `#1E3A8A` | `--color-card-foreground` |
-| Muted | `#E9EEF6` | `--color-muted` |
-| Muted Foreground | `#475569` | `--color-muted-foreground` |
-| Border | `#DBEAFE` | `--color-border` |
-| Destructive | `#DC2626` | `--color-destructive` |
-| On Destructive | `#FFFFFF` | `--color-on-destructive` |
-| Ring | `#1E40AF` | `--color-ring` |
+## 2. Air-gap and fonts
 
-**Color Notes:** Blue data + amber highlights [Accent adjusted from #F59E0B]
+- No external URLs in CSS, HTML or docs snippets. No Google Fonts or CDN imports.
+- Fonts are self-hosted with `@fontsource/fira-sans` (300-800) and `@fontsource/fira-code`, **latin + latin-ext subsets only**, imported in `src/main.tsx`.
+- Display titles use Fira Sans 300; HUD labels use Fira Code uppercase.
 
-### Typography
+## 3. Color tokens
 
-- **Heading Font:** Fira Code
-- **Body Font:** Fira Sans
-- **Mood:** dashboard, data, analytics, code, technical, precise
-- **Google Fonts:** [Fira Code + Fira Sans](https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap)
+### Base palette (`src/index.css`)
 
-**CSS Import:**
-```css
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
-```
+| Token | Value | Role |
+|---|---|---|
+| `--mk-bg` | `#eceef1` | Page (pearl) |
+| `--mk-surface` | `#f5f6f8` | Panels |
+| `--mk-surface-raised` | `#ffffff` | Cards, popovers |
+| `--mk-border` | `rgba(17,22,31,.10)` | Hairlines |
+| `--mk-border-bright` | `rgba(17,22,31,.26)` | Pill and input borders |
+| `--mk-ice` | `#2346b0` | Cobalt accent, kickers, links |
+| `--mk-plasma` | `#0b5f9a` | Secondary accent |
+| `--mk-amber` | `#8f4300` | Limitation text, warm notices |
+| `--mk-text` | `#0e1116` | Primary text (graphite) |
+| `--mk-muted` | `#444b55` | Secondary text |
 
-### Spacing Variables
+### Token layer (`src/styles/tokens.css`)
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--space-xs` | `4px` / `0.25rem` | Tight gaps |
-| `--space-sm` | `8px` / `0.5rem` | Icon gaps, inline spacing |
-| `--space-md` | `16px` / `1rem` | Standard padding |
-| `--space-lg` | `24px` / `1.5rem` | Section padding |
-| `--space-xl` | `32px` / `2rem` | Large gaps |
-| `--space-2xl` | `48px` / `3rem` | Section margins |
-| `--space-3xl` | `64px` / `4rem` | Hero padding |
+| Token | Value | Role |
+|---|---|---|
+| `--mk-text-strong` … `--mk-text-faint` | `#0e1116` → `#545b66` | Graphite text ramp (all AA) |
+| `--mk-paper`, `--mk-paper-2`, `--mk-well` | `#fff`, `#f7f8fa`, `#f1f3f6` | Card, raised inner, inset well |
+| `--mk-hover`, `--mk-hover-2`, `--mk-hair`, `--mk-hair-2` | light greys | Hover fills and hairlines |
+| `--mk-chart-axis` | `#8a919c` | SVG axis strokes |
+| `--mk-laser`, `--mk-laser-soft` | `#ff5b1f`, `#ffb27a` | Ornament only |
+| `--mk-border-strong` | `#78808b` | Component boundaries (≥3:1) |
+| `--mk-focus-color` | `#2346b0` | Focus ring |
 
-### Shadow Depths
+### Status and evidence
 
-| Level | Value | Usage |
-|-------|-------|-------|
-| `--shadow-sm` | `0 1px 2px rgba(0,0,0,0.05)` | Subtle lift |
-| `--shadow-md` | `0 4px 6px rgba(0,0,0,0.1)` | Cards, buttons |
-| `--shadow-lg` | `0 10px 15px rgba(0,0,0,0.1)` | Modals, dropdowns |
-| `--shadow-xl` | `0 20px 25px rgba(0,0,0,0.15)` | Hero images, featured cards |
+| Token | Value | Meaning |
+|---|---|---|
+| `--mk-signal-ok` | `#0a6b4b` | Check passed / online |
+| `--mk-signal-warn` | `#8a4600` | Degraded, limited mode, air-gap notice (not an error) |
+| `--mk-signal-fail` | `#b4232f` | Failed, unavailable, timed out |
+| `--mk-evidence-unvalidated` | `#8b1d9c` | Not experimentally validated, preview scope, illustrative |
 
----
+Status colour is never the only signal: always pair it with a text label and, where useful, a glyph.
 
-## Component Specs
+### Module palette mapping (`src/styles/theme-porcelain.css`)
 
-### Buttons
+Module bodies were authored for a dark UI. The Tailwind ramps are re-pointed instead of editing modules:
+- neutral and chromatic ramps are inverted; text steps 200-400 are pushed until they reach 4.6:1 on `#e6e8ec`, step 500 reaches 3:1;
+- dark literal surfaces (`bg-[#090e18]` and friends) map to paper / well / hover tokens; dark SVG presentation colours used by D3 and Recharts map to light tokens;
+- a solid `bg-white` card gets Tailwind's own ramps back inside it;
+- canvas and WebGL views keep their own dark backgrounds (instrument screens).
 
-```css
-/* Primary Button */
-.btn-primary {
-  background: #D97706;
-  color: white;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 200ms ease;
-  cursor: pointer;
-}
+### Contrast rules
 
-.btn-primary:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
+- Text tokens: **≥4.5:1** on `--mk-bg`, `--mk-surface`, `--mk-surface-raised`, `--mk-glass-bg`, `--mk-fill-panel`, `--mk-fill-deep`.
+- UI tokens (`--mk-border-strong`, `--mk-focus-color`): **≥3:1** on the same backgrounds.
+- Enforced by `npx tsx --test tests/design-tokens-contrast.test.ts` and `tests/boot-telemetry-a11y.test.ts`.
 
-/* Secondary Button */
-.btn-secondary {
-  background: transparent;
-  color: #1E40AF;
-  border: 2px solid #1E40AF;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 200ms ease;
-  cursor: pointer;
-}
-```
+## 4. Typography
 
-### Cards
+| Token | Size | Use |
+|---|---|---|
+| `--mk-fs-2xs` | 11px | Uppercase HUD labels |
+| `--mk-fs-xs` | 12px | Captions, table meta |
+| `--mk-fs-sm` | 14px | Dense UI body |
+| `--mk-fs-md` | 16px | Body, inputs |
+| `--mk-fs-lg` | 20px | Section titles |
+| `--mk-fs-xl` | 28px | Page titles |
+| `--mk-fs-2xl` | 40px | Boot / hero only |
 
-```css
-.card {
-  background: #F8FAFC;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: var(--shadow-md);
-  transition: all 200ms ease;
-  cursor: pointer;
-}
+- Module titles: `clamp(1.7rem, …, 2.5rem)`, weight 300. Atrium wordmark: up to 5.4rem, weight 300, tracking 0.16em.
+- Numbers and units: `--mk-font-mono` with `tabular-nums`.
+- Tracking: body 0; HUD labels 0.16–0.24em; wordmarks 0.36–0.52em (decorative display only).
 
-.card:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
-}
-```
+## 5. Spacing
 
-### Inputs
+`--mk-space-1..7` = 4 / 8 / 12 / 16 / 24 / 32 / 48 px.
 
-```css
-.input {
-  padding: 12px 16px;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
-  font-size: 16px;
-  transition: border-color 200ms ease;
-}
+## 6. Glass, ornament, elevation
 
-.input:focus {
-  border-color: #1E40AF;
-  outline: none;
-  box-shadow: 0 0 0 3px #1E40AF20;
-}
-```
+- **Glass:** `--mk-glass-bg` `rgba(250,251,252,.76)` + blur on shell chrome only (header, sidebar, telemetry, plates). Never behind charts or data marks.
+- **HUD brackets:** `.mk-hud` draws four corner marks as background layers (no DOM). Used on the dossier, boot frame and atrium plates.
+- **Elevation:** hairline + soft porcelain shadow (`--mk-elev-1..3`), no stacked blur.
 
-### Modals
+## 7. Motion
 
-```css
-.modal-overlay {
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-}
+| Token | Value | Use |
+|---|---|---|
+| `--mk-dur-fast` | 120ms | Hover, press |
+| `--mk-dur-base` | 200ms | Panels, toggles |
+| `--mk-dur-slow` | 420ms | Enter/exit of large surfaces, boot fade |
+| `--mk-ease-out` | `cubic-bezier(.16,1,.3,1)` | Entering |
+| `--mk-ease-inout` | `cubic-bezier(.65,0,.35,1)` | Sweeps, loops |
 
-.modal {
-  background: white;
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: var(--shadow-xl);
-  max-width: 500px;
-  width: 90%;
-}
-```
+- `prefers-reduced-motion: reduce` collapses animation and transition (global rule) and the atrium/boot render their static final drawings.
+- Entrances use transform only; no label is faded in.
+- Progress is a discrete k/N from backend checks, never a percent tween. The boot intro may hold the overlay up to 2.8 s on the first animated start in a tab; the checks and their labels are on screen from the first frame.
 
----
+## 8. Focus
 
-## Style Guidelines
+- `outline: 2px solid var(--mk-focus-color)` (cobalt), `outline-offset: 3px`, optional halo `--mk-focus-halo`.
+- The focus ring never animates or transitions.
 
-**Style:** Data-Dense Dashboard
+## 8b. Artwork provenance (public/images/metalliksa-melt-pool.svg)
 
-**Keywords:** Multiple charts/widgets, data tables, KPI cards, minimal padding, grid layout, space-efficient, maximum data visibility
+- **Origin:** original work, composed in code for Metalliksa on 2026-10-05 (orchestra lane hero-opus, Claude Opus 5.5). It is a plain vector SVG: gradients, circles, paths and SVG filters only. It contains no raster image, font, text or third-party asset, and was not traced or derived from any existing picture. The SVG file itself is the source.
+- **Subject:** a laser melt pool on a metal powder bed in perspective, with solidified scan tracks converging to the horizon and the polished cut face of earlier layers showing melt-pool boundaries. Silver, white and grey; only the laser is warm.
+- **Status:** decorative illustration, not a simulation result and not data. Geometry, particle sizes and colours are artistic choices, not measurements.
+- **Live layers:** FoundryStage places the beam, bloom, ripples and sparks on the melt pool at 67.7% / 54.7% of the 3:2 frame (`--hx`/`--hy` in `src/styles/foundry.css`, `HIT_X`/`HIT_Y` in `src/components/BootHero.tsx`); keep those in step if the picture changes.
+- **Replaced:** the earlier raster `metalliksa-foundry-art.webp` (creator and licence never recorded) was removed in the same change.
+- **Captions:** no default caption (maintainer decision 2026-10-05); module mastheads do not use the picture.
 
-**Best For:** Business intelligence dashboards, financial analytics, enterprise reporting, operational dashboards, data warehousing
+## 9. Brand mark
 
-**Key Effects:** Hover tooltips, chart zoom on click, row highlighting on hover, smooth filter animations, data loading spinners
+A world built additively: a globe grown bottom-up from graphite layers, meridians cut through the finished layers, the unbuilt cap drawn as a hairline graticule, and a laser from above finishing the current layer. Same drawing in the header (CSS, `.mk-brand-mark`), the boot emblem (SVG, animated) and `public/icon.svg`.
 
-### Page Pattern
+## 10. Shell (summary)
 
-**Pattern Name:** Enterprise Gateway
+Frosted header with a laser filament; sidebar with numbered workspace headings (CSS counter), a white active plate with a laser spot and a tick rail; module masthead (kicker, light display title, maturity and evidence badges, reticle ornament); scientific-context dossier; atrium start page (`#/home`) with workspace plates; telemetry footer.
 
-- **Conversion Strategy:** Path selection (I am a...). Mega menu navigation. Trust signals prominent. Provide pause/stop for video and rotating logos; stop on focus and reduced motion. Logo carousel controls must be keyboard operable; pause moving media offscreen/hidden and render a static final state under reduced motion.
-- **CTA Placement:** Contact Sales (Primary) + Login (Secondary)
-- **Section Order:** Hero (Video/Mission) > Solutions by Industry > Solutions by Role > Client Logos > Contact Sales
+## 11. QA gates
 
----
-
-## Anti-Patterns (Do NOT Use)
-
-- ❌ Ornate design
-- ❌ No filtering
-
-### Additional Forbidden Patterns
-
-- ❌ **Emojis as icons** — Use SVG icons (Heroicons, Lucide, Simple Icons)
-- ❌ **Missing cursor:pointer** — All clickable elements must have cursor:pointer
-- ❌ **Layout-shifting hovers** — Avoid scale transforms that shift layout
-- ❌ **Low contrast text** — Maintain 4.5:1 minimum contrast ratio
-- ❌ **Instant state changes** — Always use transitions (150-300ms)
-- ❌ **Invisible focus states** — Focus states must be visible for a11y
-
----
-
-## Pre-Delivery Checklist
-
-Before delivering any UI code, verify:
-
-- [ ] No emojis used as icons (use SVG instead)
-- [ ] All icons from consistent icon set (Heroicons/Lucide)
-- [ ] `cursor-pointer` on all clickable elements
-- [ ] Hover states with smooth transitions (150-300ms)
-- [ ] Light mode: text contrast 4.5:1 minimum
-- [ ] Focus states visible for keyboard navigation
-- [ ] `prefers-reduced-motion` respected
-- [ ] Responsive: 375px, 768px, 1024px, 1440px
-- [ ] No content hidden behind fixed navbars
-- [ ] No horizontal scroll on mobile
+- [ ] Contrast tests pass (≥4.5:1 text, ≥3:1 UI).
+- [ ] No external URLs; fonts only from `@fontsource` latin + latin-ext.
+- [ ] Evidence labels visible at full contrast in every screenshot.
+- [ ] Focus ring visible and static on keyboard navigation.
+- [ ] Reduced motion respected.
+- [ ] Viewports 375×812, 768×1024, 1440×900; no horizontal scroll on mobile.
+- [ ] No emojis as icons; use `lucide-react`.

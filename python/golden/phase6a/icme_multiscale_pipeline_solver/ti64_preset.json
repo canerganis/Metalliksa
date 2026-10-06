@@ -1,0 +1,546 @@
+{
+ "baseRevision": "d33b6f5",
+ "case": "ti64_preset",
+ "exitCode": 0,
+ "gitHead": "7f3f80310a94efffd3eb86356edfd5185244e226",
+ "input": {
+  "agingTemp_C": 550,
+  "agingTime_h": 4,
+  "alloyName": "Ti-6Al-4V Grade 5 (Aero AM)",
+  "baseMetal": "Ti",
+  "componentType": "lpbf_bracket",
+  "composition_wt": {
+   "Al": 6.0,
+   "C": 0.05,
+   "Fe": 0.25,
+   "Si": 0.05,
+   "V": 4.0
+  },
+  "coolingRate_C_s": 250000
+ },
+ "invocation": "python -B icme_multiscale_pipeline_solver.py < input (cwd python/)",
+ "schema": "phase6a-golden-1",
+ "solver": "icme_multiscale_pipeline_solver",
+ "solverFile": "python/icme_multiscale_pipeline_solver.py",
+ "solverSha256": "f68efb5d2729a889e3701242a6b4b2aba5f674dde71ecaa97cf0dfba7b625ed5",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "worktree",
+ "stdout": {
+  "caeExportCards": {
+   "abaqus": "*HEADING\n** MetalliX Multi-Scale ICME Calibrated Card for Ti-6Al-4V Grade 5 (Aero AM)\n*MATERIAL, NAME=TI-6AL-4V_GRADE_5_(AERO_AM)\n*DENSITY\n4430.00\n*ELASTIC, TYPE=ISOTROPIC\n110954.94, 0.3400\n*PLASTIC\n1029.0, 0.0000\n1377.4, 0.0500\n1413.0, 0.1000\n1445.9, 0.1800\n*RATE DEPENDENT\n0.02800, 0.001\n*TENSILE FAILURE\n0.1946, 0.0, 0.0",
+   "ansys": "! ANSYS APDL Material Card: Ti-6Al-4V Grade 5 (Aero AM)\nMPTEMP,,,,,,,,\nMPTEMP,1,0\nMPDATA,EX,1,,110954.94\nMPDATA,PRXY,1,,0.3400\nMPDATA,DENS,1,,4.4300e-09\nTB,PLAS,1,1,4,MISO\nTBTEMP,25.0\nTBPT,,0.0,1029.0\nTBPT,,0.05,1377.4\nTBPT,,0.10,1413.0\nTBPT,,0.20,1452.1",
+   "lsDyna": "$*LS-DYNA MATERIAL DECK: Ti-6Al-4V Grade 5 (Aero AM)\n*MAT_PIECEWISE_LINEAR_PLASTICITY\n$#     mid        ro         e        pr      sigy      etan      fail      tdel\n         1  4.430e-03  110954.9   0.3400  1029.0       0.0  0.1946       0.0\n$#       c         p      lcss      lcsr        vp\n   0.0280       0.0         0         0       0.0"
+  },
+  "engine": "MetalliX ICME Multi-Scale HPC Pipeline (DFT -> CALPHAD -> Kinetics -> Microstructure -> Macro FEA)",
+  "inputParameters": {
+   "agingTemp_C": 550.0,
+   "agingTime_h": 4.0,
+   "alloyName": "Ti-6Al-4V Grade 5 (Aero AM)",
+   "baseMetal": "Ti",
+   "componentType": "lpbf_bracket",
+   "coolingRate_C_s": 250000.0,
+   "crystalSystem": "HCP",
+   "grainSize_um": 0.8338930102860598
+  },
+  "scale0_dftAtomistic": {
+   "burgersVector_b_nm": 0.295,
+   "elasticTensor_Cij_GPa": {
+    "C11": 160.0,
+    "C12": 90.0,
+    "C44": 46.5
+   },
+   "homogenizedModuli": {
+    "bulkModulus_B_GPa": 113.3,
+    "cauchyPressure_GPa": 43.5,
+    "ductilityVerdict": "Ductile (Pugh B/G > 1.75)",
+    "poissonsRatio": 0.34,
+    "pughRatio_B_over_G": 2.731,
+    "shearModulus_G_GPa": 41.5,
+    "youngsModulus_E_GPa": 111.0
+   },
+   "latticeParameter_a0_Angstrom": 2.95,
+   "peierlsNabarroLatticeFriction": {
+    "sigma_0_friction_stress_MPa": 219.0,
+    "tau_PN_MPa": 66.07,
+    "taylorFactor_M": 4.2
+   },
+   "slipPlane_dhkl_nm": 0.234
+  },
+  "scale1_calphadSoluteMisfit": {
+   "atomicFractions": {
+    "Al": 10.18,
+    "C": 0.19,
+    "Fe": 0.2,
+    "Si": 0.08,
+    "Ti": 85.75,
+    "V": 3.6
+   },
+   "soluteBreakdown": {
+    "Al": {
+     "at_frac": 10.18,
+     "modulusMisfit": 0.409,
+     "sizeMisfit": 0.014,
+     "strengthContribution_MPa": 44.1,
+     "wt_pct": 6.0
+    },
+    "C": {
+     "at_frac": 0.19,
+     "modulusMisfit": 3.545,
+     "sizeMisfit": 0.469,
+     "strengthContribution_MPa": 35.8,
+     "wt_pct": 0.05
+    },
+    "Fe": {
+     "at_frac": 0.2,
+     "modulusMisfit": 0.864,
+     "sizeMisfit": 0.145,
+     "strengthContribution_MPa": 3.2,
+     "wt_pct": 0.25
+    },
+    "Si": {
+     "at_frac": 0.08,
+     "modulusMisfit": 0.091,
+     "sizeMisfit": 0.186,
+     "strengthContribution_MPa": 3.6,
+     "wt_pct": 0.05
+    },
+    "V": {
+     "at_frac": 3.6,
+     "modulusMisfit": 0.068,
+     "sizeMisfit": 0.076,
+     "strengthContribution_MPa": 40.0,
+     "wt_pct": 4.0
+    }
+   },
+   "totalSolidSolutionStrengthening_MPa": 126.7
+  },
+  "scale2_microstructureKinetics": {
+   "computedSDAS_um": 0.46,
+   "coolingRate_C_s": 250000.0,
+   "dislocationDensity_rho_m2": "1.12e+14",
+   "grainSize_d_um": 0.83,
+   "hallPetchStrengthening_MPa": 416.1,
+   "precipitationKinetics": {
+    "activeMechanism": "Dislocation Particle Shearing (Friedel-Gere Cutting)",
+    "agingTemp_C": 550.0,
+    "agingTime_h": 4.0,
+    "effectivePrecipitationStrengthening_MPa": 151.6,
+    "interparticleSpacing_nm": 7.9,
+    "meanPrecipitateRadius_nm": 1.5,
+    "orowanStrength_MPa": 900.0,
+    "shearingStrength_MPa": 151.6,
+    "volumeFractionPct": 4.0
+   },
+   "taylorDislocationStrengthening_MPa": 174.0
+  },
+  "scale3_continuumPlasticity": {
+   "johnsonCookParameters": {
+    "A_MPa": 1029,
+    "B_MPa": 530,
+    "C": 0.028,
+    "T_melt_C": 1650.0,
+    "m": 0.9,
+    "n": 0.14
+   },
+   "mechanicalProperties": {
+    "fractureToughness_K1c_MPa_sqrt_m": 538.7,
+    "hollomon_K_MPa": 1558.8,
+    "hollomon_n": 0.14,
+    "totalElongationPct": 21.5,
+    "ultimateTensileStrength_UTS_MPa": 1029.1,
+    "uniformElongationPct": 14.0,
+    "yieldStrength_Rp02_MPa": 1029.1
+   },
+   "strengtheningContributions_MPa": {
+    "deltaSigma_Disloc_Forest": 174.0,
+    "deltaSigma_HP_GrainBoundary": 416.1,
+    "deltaSigma_Precip_OrowanCutting": 151.6,
+    "deltaSigma_SS_SolidSolution": 126.7,
+    "sigma_0_LatticeFriction": 219.0
+   },
+   "stressStrainCurve": [
+    {
+     "engineeringStrainPct": 0.376,
+     "engineeringStressMPa": 417.1,
+     "trueStrain": 0.0038,
+     "trueStressMPa": 417.1
+    },
+    {
+     "engineeringStrainPct": 0.752,
+     "engineeringStressMPa": 834.1,
+     "trueStrain": 0.0075,
+     "trueStressMPa": 834.1
+    },
+    {
+     "engineeringStrainPct": 1.128,
+     "engineeringStressMPa": 1237.1,
+     "trueStrain": 0.0112,
+     "trueStressMPa": 1251.1
+    },
+    {
+     "engineeringStrainPct": 1.504,
+     "engineeringStressMPa": 1267.4,
+     "trueStrain": 0.0149,
+     "trueStressMPa": 1286.5
+    },
+    {
+     "engineeringStrainPct": 1.879,
+     "engineeringStressMPa": 1281.2,
+     "trueStrain": 0.0186,
+     "trueStressMPa": 1305.2
+    },
+    {
+     "engineeringStrainPct": 2.255,
+     "engineeringStressMPa": 1289.3,
+     "trueStrain": 0.0223,
+     "trueStressMPa": 1318.4
+    },
+    {
+     "engineeringStrainPct": 2.631,
+     "engineeringStressMPa": 1294.6,
+     "trueStrain": 0.026,
+     "trueStressMPa": 1328.7
+    },
+    {
+     "engineeringStrainPct": 3.007,
+     "engineeringStressMPa": 1298.1,
+     "trueStrain": 0.0296,
+     "trueStressMPa": 1337.2
+    },
+    {
+     "engineeringStrainPct": 3.383,
+     "engineeringStressMPa": 1300.4,
+     "trueStrain": 0.0333,
+     "trueStressMPa": 1344.4
+    },
+    {
+     "engineeringStrainPct": 3.759,
+     "engineeringStressMPa": 1301.8,
+     "trueStrain": 0.0369,
+     "trueStressMPa": 1350.7
+    },
+    {
+     "engineeringStrainPct": 4.135,
+     "engineeringStressMPa": 1302.6,
+     "trueStrain": 0.0405,
+     "trueStressMPa": 1356.4
+    },
+    {
+     "engineeringStrainPct": 4.511,
+     "engineeringStressMPa": 1302.8,
+     "trueStrain": 0.0441,
+     "trueStressMPa": 1361.5
+    },
+    {
+     "engineeringStrainPct": 4.886,
+     "engineeringStressMPa": 1302.5,
+     "trueStrain": 0.0477,
+     "trueStressMPa": 1366.2
+    },
+    {
+     "engineeringStrainPct": 5.262,
+     "engineeringStressMPa": 1302.0,
+     "trueStrain": 0.0513,
+     "trueStressMPa": 1370.5
+    },
+    {
+     "engineeringStrainPct": 5.638,
+     "engineeringStressMPa": 1301.1,
+     "trueStrain": 0.0548,
+     "trueStressMPa": 1374.5
+    },
+    {
+     "engineeringStrainPct": 6.014,
+     "engineeringStressMPa": 1300.0,
+     "trueStrain": 0.0584,
+     "trueStressMPa": 1378.2
+    },
+    {
+     "engineeringStrainPct": 6.39,
+     "engineeringStressMPa": 1298.7,
+     "trueStrain": 0.0619,
+     "trueStressMPa": 1381.7
+    },
+    {
+     "engineeringStrainPct": 6.766,
+     "engineeringStressMPa": 1297.3,
+     "trueStrain": 0.0655,
+     "trueStressMPa": 1385.0
+    },
+    {
+     "engineeringStrainPct": 7.142,
+     "engineeringStressMPa": 1295.6,
+     "trueStrain": 0.069,
+     "trueStressMPa": 1388.2
+    },
+    {
+     "engineeringStrainPct": 7.518,
+     "engineeringStressMPa": 1293.8,
+     "trueStrain": 0.0725,
+     "trueStressMPa": 1391.1
+    },
+    {
+     "engineeringStrainPct": 7.893,
+     "engineeringStressMPa": 1292.0,
+     "trueStrain": 0.076,
+     "trueStressMPa": 1393.9
+    },
+    {
+     "engineeringStrainPct": 8.269,
+     "engineeringStressMPa": 1290.0,
+     "trueStrain": 0.0795,
+     "trueStressMPa": 1396.6
+    },
+    {
+     "engineeringStrainPct": 8.645,
+     "engineeringStressMPa": 1287.9,
+     "trueStrain": 0.0829,
+     "trueStressMPa": 1399.2
+    },
+    {
+     "engineeringStrainPct": 9.021,
+     "engineeringStressMPa": 1285.7,
+     "trueStrain": 0.0864,
+     "trueStressMPa": 1401.7
+    },
+    {
+     "engineeringStrainPct": 9.397,
+     "engineeringStressMPa": 1283.4,
+     "trueStrain": 0.0898,
+     "trueStressMPa": 1404.1
+    },
+    {
+     "engineeringStrainPct": 9.773,
+     "engineeringStressMPa": 1281.1,
+     "trueStrain": 0.0932,
+     "trueStressMPa": 1406.3
+    },
+    {
+     "engineeringStrainPct": 10.149,
+     "engineeringStressMPa": 1278.8,
+     "trueStrain": 0.0967,
+     "trueStressMPa": 1408.5
+    },
+    {
+     "engineeringStrainPct": 10.525,
+     "engineeringStressMPa": 1276.3,
+     "trueStrain": 0.1001,
+     "trueStressMPa": 1410.7
+    },
+    {
+     "engineeringStrainPct": 10.9,
+     "engineeringStressMPa": 1273.9,
+     "trueStrain": 0.1035,
+     "trueStressMPa": 1412.7
+    },
+    {
+     "engineeringStrainPct": 11.276,
+     "engineeringStressMPa": 1271.4,
+     "trueStrain": 0.1068,
+     "trueStressMPa": 1414.7
+    },
+    {
+     "engineeringStrainPct": 11.652,
+     "engineeringStressMPa": 1268.8,
+     "trueStrain": 0.1102,
+     "trueStressMPa": 1416.6
+    },
+    {
+     "engineeringStrainPct": 12.028,
+     "engineeringStressMPa": 1266.2,
+     "trueStrain": 0.1136,
+     "trueStressMPa": 1418.5
+    },
+    {
+     "engineeringStrainPct": 12.404,
+     "engineeringStressMPa": 1263.6,
+     "trueStrain": 0.1169,
+     "trueStressMPa": 1420.3
+    },
+    {
+     "engineeringStrainPct": 12.78,
+     "engineeringStressMPa": 1261.0,
+     "trueStrain": 0.1203,
+     "trueStressMPa": 1422.1
+    },
+    {
+     "engineeringStrainPct": 13.156,
+     "engineeringStressMPa": 1258.3,
+     "trueStrain": 0.1236,
+     "trueStressMPa": 1423.8
+    },
+    {
+     "engineeringStrainPct": 13.532,
+     "engineeringStressMPa": 1255.6,
+     "trueStrain": 0.1269,
+     "trueStressMPa": 1425.5
+    },
+    {
+     "engineeringStrainPct": 13.908,
+     "engineeringStressMPa": 1252.9,
+     "trueStrain": 0.1302,
+     "trueStressMPa": 1427.1
+    },
+    {
+     "engineeringStrainPct": 14.283,
+     "engineeringStressMPa": 1233.4,
+     "trueStrain": 0.1335,
+     "trueStressMPa": 1428.7
+    },
+    {
+     "engineeringStrainPct": 14.659,
+     "engineeringStressMPa": 1208.8,
+     "trueStrain": 0.1368,
+     "trueStressMPa": 1430.3
+    },
+    {
+     "engineeringStrainPct": 15.035,
+     "engineeringStressMPa": 1184.2,
+     "trueStrain": 0.1401,
+     "trueStressMPa": 1431.8
+    },
+    {
+     "engineeringStrainPct": 15.411,
+     "engineeringStressMPa": 1159.8,
+     "trueStrain": 0.1433,
+     "trueStressMPa": 1433.3
+    },
+    {
+     "engineeringStrainPct": 15.787,
+     "engineeringStressMPa": 1135.4,
+     "trueStrain": 0.1466,
+     "trueStressMPa": 1434.7
+    },
+    {
+     "engineeringStrainPct": 16.163,
+     "engineeringStressMPa": 1111.1,
+     "trueStrain": 0.1498,
+     "trueStressMPa": 1436.2
+    },
+    {
+     "engineeringStrainPct": 16.539,
+     "engineeringStressMPa": 1086.9,
+     "trueStrain": 0.1531,
+     "trueStressMPa": 1437.6
+    },
+    {
+     "engineeringStrainPct": 16.915,
+     "engineeringStressMPa": 1062.8,
+     "trueStrain": 0.1563,
+     "trueStressMPa": 1438.9
+    },
+    {
+     "engineeringStrainPct": 17.29,
+     "engineeringStressMPa": 1038.8,
+     "trueStrain": 0.1595,
+     "trueStressMPa": 1440.3
+    },
+    {
+     "engineeringStrainPct": 17.666,
+     "engineeringStressMPa": 1014.9,
+     "trueStrain": 0.1627,
+     "trueStressMPa": 1441.6
+    },
+    {
+     "engineeringStrainPct": 18.042,
+     "engineeringStressMPa": 991.1,
+     "trueStrain": 0.1659,
+     "trueStressMPa": 1442.8
+    },
+    {
+     "engineeringStrainPct": 18.418,
+     "engineeringStressMPa": 967.4,
+     "trueStrain": 0.1691,
+     "trueStressMPa": 1444.1
+    },
+    {
+     "engineeringStrainPct": 18.794,
+     "engineeringStressMPa": 943.8,
+     "trueStrain": 0.1722,
+     "trueStressMPa": 1445.3
+    },
+    {
+     "engineeringStrainPct": 19.17,
+     "engineeringStressMPa": 920.3,
+     "trueStrain": 0.1754,
+     "trueStressMPa": 1446.6
+    },
+    {
+     "engineeringStrainPct": 19.546,
+     "engineeringStressMPa": 896.9,
+     "trueStrain": 0.1785,
+     "trueStressMPa": 1447.7
+    },
+    {
+     "engineeringStrainPct": 19.922,
+     "engineeringStressMPa": 873.6,
+     "trueStrain": 0.1817,
+     "trueStressMPa": 1448.9
+    },
+    {
+     "engineeringStrainPct": 20.297,
+     "engineeringStressMPa": 850.3,
+     "trueStrain": 0.1848,
+     "trueStressMPa": 1450.1
+    },
+    {
+     "engineeringStrainPct": 20.673,
+     "engineeringStressMPa": 827.2,
+     "trueStrain": 0.1879,
+     "trueStressMPa": 1451.2
+    },
+    {
+     "engineeringStrainPct": 21.049,
+     "engineeringStressMPa": 804.2,
+     "trueStrain": 0.191,
+     "trueStressMPa": 1452.3
+    },
+    {
+     "engineeringStrainPct": 21.425,
+     "engineeringStressMPa": 781.3,
+     "trueStrain": 0.1941,
+     "trueStressMPa": 1453.4
+    },
+    {
+     "engineeringStrainPct": 21.801,
+     "engineeringStressMPa": 758.5,
+     "trueStrain": 0.1972,
+     "trueStressMPa": 1454.5
+    },
+    {
+     "engineeringStrainPct": 22.177,
+     "engineeringStressMPa": 735.8,
+     "trueStrain": 0.2003,
+     "trueStressMPa": 1455.6
+    },
+    {
+     "engineeringStrainPct": 22.553,
+     "engineeringStressMPa": 713.1,
+     "trueStrain": 0.2034,
+     "trueStressMPa": 1456.6
+    }
+   ]
+  },
+  "scale4_macroComponentFEA": {
+   "actualSafetyFactor": 1.45,
+   "appliedStress_MPa": 710.0,
+   "componentName": "Generative LPBF Rocket Engine Swivel Bracket",
+   "criticalSectionArea_mm2": 190.0,
+   "lefmDamageTolerance": {
+    "criticalFlawSize_ac_mm": 111.83,
+    "inspectionNDICapability": "Detectable with Standard X-Ray / UT (Flaw > 1.0mm)",
+    "plasticZoneRadius_rp_mm": 43.6
+   },
+   "requiredSafetyFactor": 1.35,
+   "structuralVerdict": "STRUCTURALLY SAFE (Passed Yield & Creep Criteria)"
+  },
+  "success": true
+ },
+ "volatileKeysStripped": [
+  "computeTimeMs",
+  "durationMs",
+  "pythonDurationMs",
+  "pythonVersion",
+  "timestamp"
+ ]
+}

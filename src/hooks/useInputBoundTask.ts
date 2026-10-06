@@ -1,4 +1,6 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+
+const useClientLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 /** One current input/attempt owns all replies, including follow-up calculations.
  * HTTP abort only discards transport results; it does not cancel Python work.
@@ -10,7 +12,7 @@ export function useInputBoundTask<T>(key: string) {
     key: string; data: T | null; error: string | null; pending: string | null;
   } | null>(null);
 
-  useLayoutEffect(() => {
+  useClientLayoutEffect(() => {
     currentKey.current = key;
     setState(null);
     return () => {

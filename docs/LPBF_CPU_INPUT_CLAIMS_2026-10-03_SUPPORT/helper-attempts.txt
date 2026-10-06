@@ -1,0 +1,5 @@
+Validation helper attempt note
+
+The first source-count attempt treated every `git ls-tree -r` entry as a file and counted 1,521 entries, including one submodule gitlink, against the expected 1,520 tracked blobs. That attempt failed. The reproduction document was corrected to filter `blob` entries; `reproduction-check.json` records the corrected helper's syntax, unchanged/changed fixture, and 1,520-file frozen-source stable-read PASS. No raw failure log from the first count attempt was retained, so this note is the only record of that failure. The helper also kept its unchanged/changed fixture values only in memory; the support export accidentally contained two copies of the final `after` value, which were removed. No before-value bytes are preserved here, and those files are not presented as a byte comparison.
+
+`validate_reproduction.ps1.txt` is a text copy of the verifier; it was executed before packaging and is not an auto-running artifact. `verify_frozen_source.py.txt` is the read-only verifier source; the final result is in `frozen-source-check.json`.

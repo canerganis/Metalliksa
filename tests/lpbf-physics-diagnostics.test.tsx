@@ -14,7 +14,12 @@ const result = {
   metrics: { width_um: 120, depth_um: 60, length_um: 200 }, assumptions: [], analyticalComparison: {},
   numericalDiagnostics: { sourceIntegration: "cell-integrated-gaussian-gl2-v1", stabilityLimit: "local-conductance-row-sum",
     minimumCapturedSourceFraction: .9, maximumSourceRenormalization: 1/.9, maximumSurfaceOffset_um: 2,
-    maximumTimestep_s: 1e-6, maximumEnthalpyIncrement_K: 24, sourceTimestepRetries: 2 },
+    maximumTimestep_s: 1e-6, maximumEnthalpyIncrement_K: 24, sourceTimestepRetries: 2,
+    acceptedTimestepDistribution: { methodId: "accepted-timestep-distribution-v1", count: 3,
+      total_s: 2.5e-7, sumSquared_s2: 2.25e-14, mean_s: 2.5e-7/3,
+      minimum_s: .5e-7, p50_s: 1e-7, p90_s: 1e-7, p99_s: 1e-7, maximum_s: 1e-7,
+      eulerFirstOrderWeightedDt_s: .9e-7, requestedMaxDt_s: 1e-7, requestedMaxDtHitFraction: 2/3,
+      sourceLimitedStepCount: 1, sourceTimestepRetries: 2 } },
   geometricDefectScreen: { modelId: "elliptic-overlap-screening-v1", scope: "single-track-cross-section", status: "geometry-screened",
     limitations: ["Synthetic fixture, not experimental evidence"], lackOfFusion: {
       status: "lack-of-fusion-screened", ellipseIndex: 1.14, signedMargin: -.14, overlapDepth_um: 33,
@@ -39,11 +44,38 @@ test("physics diagnostics retain numerical limits and do not claim porosity", ()
   const parsed = parse().result!;
   const html = renderToStaticMarkup(<LpbfPhysicsDiagnostics result={parsed}/>);
   assert.match(html, /90%/);
+  assert.match(html, /Accepted timestep distribution/);
+  assert.match(html, /Euler weighted timestep/);
   assert.match(html, /first-order/);
   assert.match(html, /lack of fusion screened/);
   assert.match(html, /porosity remain unresolved/);
   assert.match(html, /not a recommended process setting/);
   assert.match(html, /Harkin/);
+});
+
+test("LPBF result parsing accepts the versioned adaptive Gaussian source diagnostics", () => {
+  const diagnostics = { ...result.numericalDiagnostics,
+    sourceIntegration: "cell-integrated-gaussian-adaptive-gl-v2" };
+  assert.equal(parse({ numericalDiagnostics: diagnostics }).result!.numericalDiagnostics!.sourceIntegration,
+    "cell-integrated-gaussian-adaptive-gl-v2");
+  const html = renderToStaticMarkup(<LpbfPhysicsDiagnostics result={parse({ numericalDiagnostics: diagnostics }).result!}/>);
+  assert.match(html, /Adaptive Gauss-Legendre source integration/);
+  assert.doesNotMatch(html, /two-point time integration/);
+});
+
+test("source integration label follows the recorded method and handles absent or unknown identifiers", () => {
+  const legacy = parse().result!;
+  assert.match(renderToStaticMarkup(<LpbfPhysicsDiagnostics result={legacy}/>), /Two-point Gauss-Legendre source integration/);
+
+  const renderWithSourceIntegration = (sourceIntegration: unknown) => renderToStaticMarkup(
+    <LpbfPhysicsDiagnostics result={{ ...legacy, numericalDiagnostics: {
+      ...legacy.numericalDiagnostics!, sourceIntegration,
+    } } as SimulationResult}/>);
+  assert.match(renderWithSourceIntegration(undefined), /Source integration method unavailable/);
+  assert.match(renderWithSourceIntegration("future-integrator-v3"),
+    /Source integration method unavailable · recorded identifier: future-integrator-v3/);
+  assert.match(renderWithSourceIntegration("future <integrator>"),
+    /future &lt;integrator&gt;/);
 });
 
 test("aggregate geometry presents unknown overlap without fake zero values", () => {
@@ -61,6 +93,11 @@ test("invalid source and overlap contracts are rejected before rendering", () =>
     { maximumSourceRenormalization: .9 }, { sourceTimestepRetries: .5 }, { maximumTimestep_s: Infinity },
     { sourceIntegration: "fake-CFD" }]) {
     assert.throws(() => parse({ numericalDiagnostics: { ...result.numericalDiagnostics, ...patch } }));
+  }
+  for (const patch of [{ mean_s: 1 }, { sumSquared_s2: 0 }, { p90_s: .4e-7 },
+    { requestedMaxDtHitFraction: 1.1 }, { sourceTimestepRetries: 0 }]) {
+    assert.throws(() => parse({ numericalDiagnostics: { ...result.numericalDiagnostics,
+      acceptedTimestepDistribution: { ...result.numericalDiagnostics.acceptedTimestepDistribution, ...patch } } }));
   }
   assert.throws(() => parse({ geometricDefectScreen: { ...result.geometricDefectScreen, limitations: "invalid" } }));
   assert.throws(() => parse({ geometricDefectScreen: { ...result.geometricDefectScreen, lackOfFusion: { ...result.geometricDefectScreen.lackOfFusion, ellipseIndex: "1.14" } } }));

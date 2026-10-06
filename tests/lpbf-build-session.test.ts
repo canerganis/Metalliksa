@@ -1,18 +1,69 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { after, beforeEach, test } from "node:test";
 import { pythonComputationService, type PythonLpbfBuildJobResult } from "../src/services/pythonComputationService";
-import { peekLpbfBuildJobKey, requestLpbfBuildJob, setLpbfMurakamiInput, useLpbfBuildJobStore } from "../src/store/useLpbfBuildJobStore";
+import { BUILD_JOB_SOLVER_REVISION, peekLpbfBuildJobKey, requestLpbfBuildJob, setLpbfMurakamiInput, useLpbfBuildJobStore } from "../src/store/useLpbfBuildJobStore";
 import { useMaterialSpecimenStore } from "../src/store/useMaterialSpecimenStore";
 import { useLpbfBuildMeshStore } from "../src/store/useLpbfBuildMeshStore";
+import { mapSpecimenToBuildJobMaterials } from "../src/utils/lpbfIndustrialDecision";
+import { canonicalBuildJobIdentity, canonicalBuildJobMaterialSnapshot } from "../src/utils/lpbfBuildJobIdentity";
 
 // Deliberately incomplete service fixtures exercise session routing, never physical truth.
 const initialSpecimen = useMaterialSpecimenStore.getState().activeSpecimen;
 const initialBuild = useLpbfBuildJobStore.getState();
 const originalSolve = pythonComputationService.solveLpbfBuildJob;
 let calls = 0;
-const fixture = (extra: Partial<PythonLpbfBuildJobResult> = {}) => ({
-  modelId: "synthetic-session-fixture", uq: null, ambench: null, ...extra,
-}) as unknown as PythonLpbfBuildJobResult;
+const sha = (value: string) => createHash("sha256").update(value).digest("hex");
+const fixture = (extra: Partial<PythonLpbfBuildJobResult> = {}) => {
+  const result = {
+    success: true,
+    modelId: "synthetic-session-fixture",
+    solverRevision: BUILD_JOB_SOLVER_REVISION,
+    alloyId: "in718",
+    materialPropertySchemaVersion: 1,
+    materialPropertyRevision: "build-job-effective-properties-v1",
+    uq: null,
+    ambench: null,
+    ...extra,
+  };
+  const alloyId = result.alloyId ?? "in718";
+  const modelId = result.modelId ?? "synthetic-session-fixture";
+  const solverRevision = result.solverRevision ?? BUILD_JOB_SOLVER_REVISION;
+  const propertySchemaVersion = result.materialPropertySchemaVersion ?? 1;
+  const propertyRevision = result.materialPropertyRevision ?? "build-job-effective-properties-v1";
+  const snapshot = {
+    schemaVersion: propertySchemaVersion,
+    alloyId,
+    thermal: { base: "Ni", liquidus_C: 1336.0, thermal_expansion_1_K: 13e-6 },
+    slicer: { density_gcm3: 8.19 },
+  };
+  const propertySha256 = result.materialPropertySha256 ?? sha(canonicalBuildJobMaterialSnapshot(snapshot));
+  const defaultIdentityPayload = {
+    schemaVersion: 1,
+    alloyId,
+    modelId,
+    solverRevision,
+    materialPropertySchemaVersion: propertySchemaVersion,
+    materialPropertyRevision: propertyRevision,
+    materialPropertySha256: propertySha256,
+  };
+  const defaultIdentity = { ...defaultIdentityPayload, sha256: sha(canonicalBuildJobIdentity({ ...defaultIdentityPayload, sha256: "" })) };
+  return {
+    ...result,
+    materialPropertySha256: propertySha256,
+    materialPropertySnapshot: snapshot,
+    buildJobIdentity: Object.prototype.hasOwnProperty.call(extra, "buildJobIdentity")
+      ? extra.buildJobIdentity
+      : defaultIdentity,
+  } as unknown as PythonLpbfBuildJobResult;
+};
+
+test("build-job snapshot canonical JSON preserves Python float bytes", () => {
+  assert.equal(canonicalBuildJobMaterialSnapshot({ schemaVersion: 1, alloyId: "in718",
+    thermal: { base: "Ni", liquidus_C: 1336.0, thermal_expansion_1_K: 13e-6 },
+    slicer: { density_gcm3: 8.19 } }),
+  '{"alloyId":"in718","schemaVersion":1,"slicer":{"density_gcm3":8.19},"thermal":{"base":"Ni","liquidus_C":1336.0,"thermal_expansion_1_K":1.3e-05}}');
+});
 
 beforeEach(() => {
   useMaterialSpecimenStore.setState({ activeSpecimen: initialSpecimen });
@@ -24,6 +75,18 @@ beforeEach(() => {
 });
 after(() => { pythonComputationService.solveLpbfBuildJob = originalSolve; });
 
+test("resetting the shared specimen selects an admitted LPBF alloy", () => {
+  const before = useMaterialSpecimenStore.getState().activeSpecimen;
+  try {
+    useMaterialSpecimenStore.getState().resetToDefault();
+    const specimen = useMaterialSpecimenStore.getState().activeSpecimen;
+    assert.equal(specimen.name, "Inconel 718 (AMS 5662 / UNS N07718)");
+    assert.equal(mapSpecimenToBuildJobMaterials(specimen.name, specimen.baseMetal)?.alloyId, "in718");
+  } finally {
+    useMaterialSpecimenStore.setState({ activeSpecimen: before });
+  }
+});
+
 test("identical fast requests reuse the result; changed CT threshold recomputes", async () => {
   setLpbfMurakamiInput({ ctDetectionThreshold_um: 10 });
   await requestLpbfBuildJob();
@@ -32,6 +95,85 @@ test("identical fast requests reuse the result; changed CT threshold recomputes"
   setLpbfMurakamiInput({ ctDetectionThreshold_um: 25 });
   await requestLpbfBuildJob();
   assert.equal(calls, 2);
+});
+
+test("same-input results from a prior solver revision are recomputed", async () => {
+  await requestLpbfBuildJob();
+  const currentKey = peekLpbfBuildJobKey();
+  const keyParts = JSON.parse(currentKey) as unknown[];
+  assert.equal(keyParts[0], BUILD_JOB_SOLVER_REVISION);
+
+  // The prior client key was the remaining input/flag tuple without a revision.
+  useLpbfBuildJobStore.setState({ lastKey: JSON.stringify(keyParts.slice(1)) });
+  await requestLpbfBuildJob();
+  assert.equal(calls, 2);
+  assert.equal(useLpbfBuildJobStore.getState().lastKey, currentKey);
+});
+
+test("a backend result from a different solver revision is rejected", async () => {
+  pythonComputationService.solveLpbfBuildJob = async () => fixture({ solverRevision: "old-solver-revision" });
+  await requestLpbfBuildJob();
+  assert.match(useLpbfBuildJobStore.getState().error ?? "", /solver revision mismatch/);
+  assert.equal(useLpbfBuildJobStore.getState().job, null);
+});
+
+test("successful results require a consistent material and model identity", async () => {
+  pythonComputationService.solveLpbfBuildJob = async () => fixture({
+    buildJobIdentity: undefined,
+  });
+  await requestLpbfBuildJob();
+  assert.match(useLpbfBuildJobStore.getState().error ?? "", /material\/model identity/);
+  assert.equal(useLpbfBuildJobStore.getState().job, null);
+
+  pythonComputationService.solveLpbfBuildJob = async () => fixture({
+    buildJobIdentity: {
+      schemaVersion: 1,
+      alloyId: "in718",
+      modelId: "wrong-model",
+      solverRevision: BUILD_JOB_SOLVER_REVISION,
+      materialPropertySchemaVersion: 1,
+      materialPropertyRevision: "build-job-effective-properties-v1",
+      materialPropertySha256: "a".repeat(64),
+      sha256: "b".repeat(64),
+    },
+  });
+  await requestLpbfBuildJob();
+  assert.match(useLpbfBuildJobStore.getState().error ?? "", /material\/model identity/);
+  assert.equal(useLpbfBuildJobStore.getState().job, null);
+});
+
+test("successful backend results require the top-level material revision", async () => {
+  pythonComputationService.solveLpbfBuildJob = async () => fixture({ materialPropertyRevision: undefined });
+  await requestLpbfBuildJob();
+  assert.match(useLpbfBuildJobStore.getState().error ?? "", /material\/model identity/);
+  assert.equal(useLpbfBuildJobStore.getState().job, null);
+});
+
+test("successful backend results reject changed material snapshots and identity hashes", async () => {
+  const changedSnapshot = fixture();
+  changedSnapshot.materialPropertySnapshot!.thermal.liquidus_C = 1400.0;
+  pythonComputationService.solveLpbfBuildJob = async () => changedSnapshot;
+  await requestLpbfBuildJob();
+  assert.match(useLpbfBuildJobStore.getState().error ?? "", /identity hash mismatch/);
+  assert.equal(useLpbfBuildJobStore.getState().job, null);
+
+  const changedIdentity = fixture();
+  changedIdentity.buildJobIdentity!.sha256 = "f".repeat(64);
+  pythonComputationService.solveLpbfBuildJob = async () => changedIdentity;
+  await requestLpbfBuildJob();
+  assert.match(useLpbfBuildJobStore.getState().error ?? "", /identity hash mismatch/);
+  assert.equal(useLpbfBuildJobStore.getState().job, null);
+});
+
+test("backend failures without a solver revision preserve their error", async () => {
+  const backendError = "Unsupported LPBF alloy identity: synthetic unknown alloy";
+  pythonComputationService.solveLpbfBuildJob = async () => ({
+    success: false,
+    error: backendError,
+  } as unknown as PythonLpbfBuildJobResult);
+  await requestLpbfBuildJob();
+  assert.equal(useLpbfBuildJobStore.getState().error, backendError);
+  assert.equal(useLpbfBuildJobStore.getState().job, null);
 });
 
 test("defect records differing beyond their first 80 characters cannot collide", async () => {
@@ -92,12 +234,50 @@ test("unsupported alloy identity refuses computation and clears a previous suppo
   assert.equal(calls, 1);
   assert.ok(useLpbfBuildJobStore.getState().job);
   const supported = useMaterialSpecimenStore.getState().activeSpecimen;
-  useMaterialSpecimenStore.setState({ activeSpecimen: { ...supported, id: "synthetic-unknown-alloy", name: "Unknown nickel alloy", baseMetal: "Ni" } });
-  await requestLpbfBuildJob();
-  assert.equal(calls, 1, "Unknown Ni alloy must not silently submit an IN718 surrogate");
-  assert.equal(useLpbfBuildJobStore.getState().job, null);
-  assert.equal(useLpbfBuildJobStore.getState().busy, false);
-  assert.match(useLpbfBuildJobStore.getState().error!, /no supported material mapping.*no surrogate alloy was submitted/);
+  useLpbfBuildJobStore.setState({
+    sessionUq: { enabled: true, nSamples: 8, source: "synthetic stale fixture" } as unknown as NonNullable<typeof initialBuild.sessionUq>, // intentionally partial stale fixture
+    sessionAmbench: {} as NonNullable<typeof initialBuild.sessionAmbench>,
+    sessionEvidenceKey: "stale-evidence",
+  });
+  for (const [name, baseMetal] of [
+    ["Unknown nickel alloy", "Ni"],
+    ["CoCrMo", "Co"],
+    ["Unknown iron alloy", "Fe"],
+    ["316L", "Co"],
+    ["IN718", "Fe"],
+  ] as const) {
+    useMaterialSpecimenStore.setState({ activeSpecimen: { ...supported, id: `synthetic-${baseMetal}`, name, baseMetal } });
+    await requestLpbfBuildJob();
+    assert.equal(calls, 1, `${name} must not submit a surrogate alloy`);
+    assert.equal(useLpbfBuildJobStore.getState().job, null);
+    assert.equal(useLpbfBuildJobStore.getState().busy, false);
+    assert.equal(useLpbfBuildJobStore.getState().sessionUq, null);
+    assert.equal(useLpbfBuildJobStore.getState().sessionAmbench, null);
+    assert.equal(useLpbfBuildJobStore.getState().sessionEvidenceKey, null);
+    assert.match(useLpbfBuildJobStore.getState().error!, /no supported material mapping.*no surrogate alloy was submitted/);
+  }
+});
+
+test("build-job material mapping accepts only its four canonical solver alloys", () => {
+  assert.equal(mapSpecimenToBuildJobMaterials("Ti-6Al-4V Grade 23 ELI", "Ti")?.alloyId, "ti6al4v");
+  assert.equal(mapSpecimenToBuildJobMaterials("Ti-6Al-4V Grade 5 Titanium", "Ti")?.alloyId, "ti6al4v");
+  assert.equal(mapSpecimenToBuildJobMaterials("Ti64", "Ti")?.alloyId, "ti6al4v");
+  assert.equal(mapSpecimenToBuildJobMaterials("AISI 316L Stainless Steel", "Fe")?.alloyId, "ss316l");
+  assert.equal(mapSpecimenToBuildJobMaterials("AlSi10Mg Additive Lightweight", "Al")?.alloyId, "alsi10mg");
+  assert.equal(mapSpecimenToBuildJobMaterials("Inconel 718 (AMS 5662)", "Ni")?.alloyId, "in718");
+  assert.equal(mapSpecimenToBuildJobMaterials("IN718", "Ni")?.alloyId, "in718");
+  assert.equal(mapSpecimenToBuildJobMaterials("316L", "Co"), null);
+  assert.equal(mapSpecimenToBuildJobMaterials("IN718", "Fe"), null);
+  assert.equal(mapSpecimenToBuildJobMaterials("Ti64", "Al"), null);
+  assert.equal(mapSpecimenToBuildJobMaterials("AlSi10Mg", "Ni"), null);
+  assert.equal(mapSpecimenToBuildJobMaterials("CoCrMo"), null);
+  assert.equal(mapSpecimenToBuildJobMaterials("Unknown iron alloy"), null);
+  assert.equal(mapSpecimenToBuildJobMaterials(""), null);
+  assert.equal(mapSpecimenToBuildJobMaterials("Not Inconel 718"), null);
+  assert.equal(mapSpecimenToBuildJobMaterials("Ti-6Al-4V alternative alloy"), null);
+  assert.equal(mapSpecimenToBuildJobMaterials("AlSi10Mg + CoCrMo"), null);
+  assert.equal(mapSpecimenToBuildJobMaterials("316L-coated CoCrMo"), null);
+  assert.equal(mapSpecimenToBuildJobMaterials("constructor"), null);
 });
 
 test("returning to a supported alloy cannot reuse a request superseded by an unsupported identity", async () => {

@@ -16,6 +16,22 @@ const result = {
   analyticalComparison: { goldak: { width_um: 100, depth_um: 50, length_um: 200 } },
 };
 assert.equal(parseSimulationJob({ ...base, status: "completed", result }).result?.label, "Screening only");
+const retained = { status: 'retained-unverified', fileCount: 2, totalBytes: 4096 };
+for (const status of ['failed', 'cancelled', 'timed_out'] as const) {
+  assert.deepEqual(parseSimulationJob({ ...base, status, partialArtifacts: retained }).partialArtifacts, retained);
+  assert.equal(parseSimulationJob({ ...base, status, partialArtifacts: { status: 'inventory-unavailable' } }).partialArtifacts?.status, 'inventory-unavailable');
+}
+for (const partialArtifacts of [
+  null, {}, { ...retained, fileCount: 0 }, { ...retained, fileCount: 1.5 },
+  { ...retained, totalBytes: -1 }, { ...retained, totalBytes: Number.MAX_SAFE_INTEGER + 1 },
+  { ...retained, unexpected: true }, { status: 'inventory-unavailable', fileCount: -1 },
+  { status: 'inventory-unavailable', totalBytes: 'unknown' }, { status: 'verified', fileCount: 2, totalBytes: 4096 },
+]) assert.throws(() => parseSimulationJob({ ...base, status: 'cancelled', partialArtifacts }), /partial artifact inventory/);
+for (const status of ['queued', 'running', 'completed'] as const) {
+  assert.throws(() => parseSimulationJob({ ...base, status, result: status === 'completed' ? result : undefined,
+    partialArtifacts: retained }), /partial artifact inventory/);
+}
+assert.equal(parseSimulationJob({ ...base, status: 'completed', result }).partialArtifacts, undefined);
 for (const patch of [
   { validationStatus: "validated" }, { productionReady: true },
   { metrics: { width_um: -1, depth_um: 50, length_um: 200 } },
@@ -63,6 +79,62 @@ for (const [actualBackend, solverId] of [['numpy-reference', 'enthalpy-fv-6'], [
   assert.doesNotThrow(() => parseSimulationJob({...base, status: 'completed', result: r}));
   const opposite = actualBackend === 'numpy-reference' ? 'openfoam-thermal' : 'reference';
   assert.throws(() => parseSimulationJob({...base, status: 'completed', result: {...r, settings: {backend: opposite}, coreContract: {...c, requestedBackend: opposite}}}), /core contract/);
+}
+const layerConformingContract = {
+  ...coreContract,
+  modelId: 'stationary-enthalpy-conduction-layer-conforming-v1',
+  actualBackend: 'numpy-reference', requestedBackend: 'reference',
+  effectiveMode: 'standard', solverId: 'enthalpy-fv-6',
+  resolvedPhysics: {...coreContract.resolvedPhysics, transient: true, latentHeat: true},
+};
+const layerConformingResult = {
+  ...thermal, solver: {id: 'enthalpy-fv-6', version: 'enthalpy-fv-6'},
+  settings: {backend: 'reference', mode: 'standard', surfaceMode: 'powder-layer', powderGridPolicy: 'layer-conforming'},
+  coreContract: layerConformingContract,
+};
+assert.doesNotThrow(() => parseSimulationJob({...base, status: 'completed', result: layerConformingResult}));
+assert.throws(() => parseSimulationJob({...base, status: 'completed', result: {
+  ...layerConformingResult, coreContract: {...layerConformingContract, modelId: 'stationary-enthalpy-conduction-v1'},
+}}), /core contract/);
+assert.throws(() => parseSimulationJob({...base, status: 'completed', result: {
+  ...layerConformingResult, settings: {...layerConformingResult.settings, backend: 'auto'},
+}}), /core contract/);
+const layeredV2 = {
+  ...thermal,
+  solver: { id: 'layered-enthalpy-fv-1', version: 'layered-enthalpy-fv-1' },
+  settings: { backend: 'reference', mode: 'standard', thermalModelId: 'layered-plate-enthalpy-v1',
+    surfaceMode: 'bare-plate', barePlateGeometry: 'square', scanAngle_deg: 0, layers: 1, tracks: 1, study: 'none',
+    plateThickness_um: 3170, supportThickness_um: 1000, contactResistance_m2K_W: 0,
+    supportBottomBoundary: 'adiabatic', incidenceAngle_deg: 5, incidenceAzimuth_deg: 0,
+    beamProfileModelId: 'assumed-oblique-gaussian-normal-plane-v1', sourcePenetration_um: 25 },
+  coreContract: {
+    schemaVersion: 2, modelId: 'layered-plate-enthalpy-v1', actualBackend: 'numpy-reference',
+    requestedBackend: 'reference', effectiveMode: 'standard', solverId: 'layered-enthalpy-fv-1',
+    inputSha256: 'a'.repeat(64), materialSha256: 'b'.repeat(64), evidenceClass: 'unvalidated-model',
+    units: { power: 'W', speed: 'mm/s', length: 'um', preheat: 'degC', temperature: 'K', internalLength: 'm',
+      time: 's', energy: 'J', beamDiameter: '1/e2-intensity', incidenceAngle: 'deg', incidenceAzimuth: 'deg',
+      contactResistance: 'm2-K/W' },
+    resolvedPhysics: { conduction: true, transient: true, latentHeat: true, momentum: false, freeSurface: false,
+      evaporation: false, layeredMaterials: true, interfaceModelId: 'planar-series-resistance-v1',
+      contactResistanceModelId: 'explicit-area-specific-resistance', supportMaterialRevisionSha256: 'c'.repeat(64),
+      beamSourceModelId: 'assumed-oblique-gaussian-normal-plane-v1', supportBottomBoundaryId: 'adiabatic' },
+  },
+};
+assert.doesNotThrow(() => parseSimulationJob({...base, status: 'completed', result: layeredV2}));
+for (const patch of [
+  { schemaVersion: 1 }, { modelId: 'stationary-enthalpy-conduction-v1' }, { actualBackend: 'cuda:0' },
+  { resolvedPhysics: { ...layeredV2.coreContract.resolvedPhysics, supportBottomBoundaryId: 'isothermal-at-preheat' } },
+  { resolvedPhysics: { ...layeredV2.coreContract.resolvedPhysics, supportMaterialRevisionSha256: 'bad-hash' } },
+]) {
+  assert.throws(() => parseSimulationJob({...base, status: 'completed', result: {
+    ...layeredV2, coreContract: { ...layeredV2.coreContract, ...patch },
+  }}), /core contract/);
+}
+for (const patch of [{ contactResistance_m2K_W: -1 }, { sourcePenetration_um: 151 },
+  { beamProfileModelId: 'measured-profile' }, { scanAngle_deg: 1 }, { barePlateGeometry: 'rectangular-corridor' }]) {
+  assert.throws(() => parseSimulationJob({...base, status: 'completed', result: {
+    ...layeredV2, settings: { ...layeredV2.settings, ...patch },
+  }}), /core contract/);
 }
 for (const effectiveMode of [undefined, null, "standrad", "high-fidelity", ["screening"]]) {
   assert.throws(() => parseSimulationJob(completed({ effectiveMode })), /execution mode/);

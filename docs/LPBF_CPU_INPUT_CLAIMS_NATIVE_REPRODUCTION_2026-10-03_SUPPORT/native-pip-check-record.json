@@ -1,0 +1,13 @@
+{
+  "stage": "pip-check",
+  "command": [
+    "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\lpbf-win-py312\\Scripts\\python.exe",
+    "-B",
+    "-m",
+    "pip",
+    "check"
+  ],
+  "exitCode": 0,
+  "elapsed_s": 2.077999999979511,
+  "logSha256": "672aec65a45bed50e70229c70934a7eebf0462595c459b83023027645d57cccf"
+}

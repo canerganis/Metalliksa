@@ -1,0 +1,54 @@
+# Every pattern here was checked against `git ls-files`:
+#  - untracked / gitignored local state: node_modules, dist, .env*, .runtime, .tmp-*,
+#    .npm-cache, graft, python/tmp*, .research-registry and the .lpbf-* data
+#    directories listed below
+#  - tracked but not needed to build, test or run the app: .git, .github, .claude,
+#    .agents, .cursor, .gemini, sonkayıtlar and the stale tracked **/__pycache__ files
+#  - local orchestration state (untracked): .orchestra* covers .orchestra/ and .orchestra-run/; logs written
+#    there during a build would otherwise change the build context and invalidate the verify cache
+#  - untracked local payloads, caches and scratch trees that a developer checkout has but a CI checkout
+#    does not, so a local image matches a CI image: virtualenvs, nested .env files, root tmp* and
+#    python/.tmp-* test directories, warp/pytest caches, python/python, python/scratch-manufactured,
+#    python/codex-lpbf-test-tmp, python/lpbf-run-shape-*, the compiled OpenFOAM tree and the gitignored
+#    data/benchmark/**/raw measurement payloads (data/benchmark/nist-amb2022-03/raw alone is about 525 MB)
+#  - spparks: a gitlink (optional solver checkout, about 250 MB when populated); CI checks out no submodules
+#    and nothing in the build, the tests or the server reads it
+# NOT excluded on purpose: docs/sources/in625 (read at run time by the server), *.log (tracked evidence logs under docs/), docs/, data/, scripts/, tests/.
+node_modules
+dist
+.orchestra*
+.runtime
+.tmp-*
+.npm-cache
+**/.env
+**/.env.*
+!.env.example
+.venv
+**/.venv
+/tmp*
+python/.tmp-*
+**/.warp-cache
+**/.pytest_cache
+python/python
+python/scratch-manufactured
+python/codex-lpbf-test-tmp
+python/lpbf-run-shape-*
+python/openfoam/bin
+python/openfoam/Make/linux*
+data/benchmark/**/raw
+spparks
+.git
+.github
+graft
+python/tmp*
+.lpbf-jobs
+.lpbf-runs
+.lpbf-sources
+.lpbf-run-bundles
+.research-registry
+.claude
+.agents
+.cursor
+.gemini
+sonkayıtlar
+**/__pycache__

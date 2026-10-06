@@ -368,12 +368,6 @@ void Foam::solvers::metalliksaMeltPoolFoam::thermophysicalPredictor()
         }
     }
 
-    volScalarField cpEff
-    (
-        IOobject("cpEff", runTime.name(), mesh),
-        alpha1 * cpEffMetal + alpha2 * cpGas_
-    );
-
     volScalarField rhoCp
     (
         IOobject("rhoCp", runTime.name(), mesh),
@@ -389,7 +383,8 @@ void Foam::solvers::metalliksaMeltPoolFoam::thermophysicalPredictor()
     surfaceScalarField rhoCpPhi
     (
         "rhoCpPhi",
-        fvc::interpolate(cpEff) * rhoPhi
+        mixture.rho1() * fvc::interpolate(cpEffMetal) * alphaPhi1
+      + mixture.rho2() * cpGas_ * alphaPhi2
     );
 
     fvScalarMatrix TEqn
@@ -483,6 +478,10 @@ void Foam::solvers::metalliksaMeltPoolFoam::postSolve()
         << "  \"vofModel\": \"multiphase-vof-csf-v1\",\n"
         << "  \"marangoniModel\": \"tangential-dsigmadT-interface-v1\",\n"
         << "  \"recoilModel\": \"recoil-knight-clausius-v1\",\n"
+        << "  \"evaporationEnabled\": " << (evaporation_.active() ? "true" : "false") << ",\n"
+        << "  \"evaporativeMassTransferClosure\": \"absent\",\n"
+        << "  \"evaporativeMassTransferClosureAvailable\": false,\n"
+        << "  \"evaporativeModelQualification\": \"unqualified-mass-transfer-closure-absent\",\n"
         << "  \"laserModel\": \"moving-gaussian-surface-flux-v1\",\n"
         << "  \"time_s\": " << runTime.value() << ",\n"
         << "  \"deltaP_Pa\": " << diag.deltaP_Pa << ",\n"

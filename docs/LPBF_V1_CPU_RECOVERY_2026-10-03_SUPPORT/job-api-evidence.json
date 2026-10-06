@@ -1,0 +1,36 @@
+{
+  "id": "419c408729b44f36905c60085b9f1467",
+  "status": "completed",
+  "progress": 1,
+  "error": null,
+  "result": {
+    "solver": {
+      "id": "enthalpy-fv-6",
+      "version": "enthalpy-fv-6",
+      "openfoam": null
+    },
+    "requestedMode": "standard",
+    "effectiveMode": "standard",
+    "requestedBackend": "reference",
+    "confidence": "low",
+    "validationStatus": "unvalidated",
+    "productionReady": false,
+    "runKind": "transient-thermal",
+    "provenance": {
+      "implementationHash": "4cf24334a711ecf6fd41597cb087726580c0ed85b52ece72e0f15b89f6802e35",
+      "runtime_s": 19.155999999988126,
+      "executionRuntime": {
+        "executable": "C:\\Users\\can02\\Projects\\metalliksaa\\Metalliksa-1\\.runtime\\lpbf-win-py312\\Scripts\\python.exe",
+        "python": "3.12.10",
+        "platform": "Windows-11-10.0.26300-SP0",
+        "numpy": "2.2.6"
+      }
+    },
+    "metrics": {
+      "length_um": 239.99999999999997,
+      "width_um": 80.00000000000004,
+      "depth_um": 40.00000000000002,
+      "peakTemperature_K": 3023.881045410188
+    }
+  }
+}

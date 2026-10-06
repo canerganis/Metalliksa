@@ -1,0 +1,250 @@
+{
+ "baseRevision": "d33b6f5",
+ "gitHead": "44f717c74baaf74d4aa45943aec09f864adba7d9",
+ "schema": "phase6a-golden-1",
+ "solver": "tafel_corrosion_rate_solver",
+ "solverFile": "python/tafel_corrosion_rate_solver.py",
+ "solverSha256": "43a45856fb5967398d8a78cf9539a5670209f054347a0c8f88bb3dfa2fc5a4af",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "git:d33b6f5",
+ "table": "ALLOY_LIBRARY",
+ "values": {
+  "al-6061": {
+   "activation_energy_j_mol": 35000.0,
+   "atomic_weights": {
+    "Al": 26.982,
+    "Cr": 51.996,
+    "Cu": 63.546,
+    "Fe": 55.845,
+    "Mg": 24.305,
+    "Si": 28.085
+   },
+   "composition": {
+    "Al": 0.97,
+    "Cr": 0.002,
+    "Cu": 0.003,
+    "Fe": 0.007,
+    "Mg": 0.01,
+    "Si": 0.006
+   },
+   "density_g_cm3": 2.7,
+   "ew": 9.02,
+   "name": "Structural Aluminum 6061-T6",
+   "standard_e0_v": -0.7,
+   "valencies": {
+    "Al": 3,
+    "Cr": 3,
+    "Cu": 2,
+    "Fe": 2,
+    "Mg": 2,
+    "Si": 4
+   }
+  },
+  "al-7075": {
+   "activation_energy_j_mol": 36000.0,
+   "atomic_weights": {
+    "Al": 26.982,
+    "Cr": 51.996,
+    "Cu": 63.546,
+    "Fe": 55.845,
+    "Mg": 24.305,
+    "Zn": 65.38
+   },
+   "composition": {
+    "Al": 0.895,
+    "Cr": 0.004,
+    "Cu": 0.016,
+    "Fe": 0.004,
+    "Mg": 0.025,
+    "Zn": 0.056
+   },
+   "density_g_cm3": 2.81,
+   "ew": 9.15,
+   "name": "Aerospace Aluminum 7075-T6",
+   "standard_e0_v": -0.73,
+   "valencies": {
+    "Al": 3,
+    "Cr": 3,
+    "Cu": 2,
+    "Fe": 2,
+    "Mg": 2,
+    "Zn": 2
+   }
+  },
+  "az31b": {
+   "activation_energy_j_mol": 29000.0,
+   "atomic_weights": {
+    "Al": 26.982,
+    "Mg": 24.305,
+    "Zn": 65.38
+   },
+   "composition": {
+    "Al": 0.03,
+    "Mg": 0.96,
+    "Zn": 0.01
+   },
+   "density_g_cm3": 1.77,
+   "ew": 12.28,
+   "name": "Magnesium Alloy AZ31B",
+   "standard_e0_v": -1.65,
+   "valencies": {
+    "Al": 3,
+    "Mg": 2,
+    "Zn": 2
+   }
+  },
+  "cu-c110": {
+   "activation_energy_j_mol": 30000.0,
+   "atomic_weights": {
+    "Cu": 63.546
+   },
+   "composition": {
+    "Cu": 0.999
+   },
+   "density_g_cm3": 8.94,
+   "ew": 31.77,
+   "name": "Pure Copper (ETP C11000)",
+   "standard_e0_v": 0.05,
+   "valencies": {
+    "Cu": 2
+   }
+  },
+  "inconel-718": {
+   "activation_energy_j_mol": 38000.0,
+   "atomic_weights": {
+    "Al": 26.982,
+    "Cr": 51.996,
+    "Fe": 55.845,
+    "Mo": 95.95,
+    "Nb": 92.906,
+    "Ni": 58.693,
+    "Ti": 47.867
+   },
+   "composition": {
+    "Al": 0.005,
+    "Cr": 0.19,
+    "Fe": 0.185,
+    "Mo": 0.03,
+    "Nb": 0.05,
+    "Ni": 0.525,
+    "Ti": 0.009
+   },
+   "density_g_cm3": 8.19,
+   "ew": 26.45,
+   "name": "Nickel Superalloy Inconel 718",
+   "standard_e0_v": 0.15,
+   "valencies": {
+    "Al": 3,
+    "Cr": 3,
+    "Fe": 2,
+    "Mo": 3,
+    "Nb": 5,
+    "Ni": 2,
+    "Ti": 4
+   }
+  },
+  "steel-1018": {
+   "activation_energy_j_mol": 42000.0,
+   "atomic_weights": {
+    "C": 12.011,
+    "Fe": 55.845,
+    "Mn": 54.938,
+    "Si": 28.085
+   },
+   "composition": {
+    "C": 0.002,
+    "Fe": 0.985,
+    "Mn": 0.008,
+    "Si": 0.005
+   },
+   "density_g_cm3": 7.87,
+   "ew": 27.92,
+   "name": "Carbon Steel (AISI 1018)",
+   "standard_e0_v": -0.44,
+   "valencies": {
+    "C": 4,
+    "Fe": 2,
+    "Mn": 2,
+    "Si": 4
+   }
+  },
+  "steel-304": {
+   "activation_energy_j_mol": 34000.0,
+   "atomic_weights": {
+    "Cr": 51.996,
+    "Fe": 55.845,
+    "Mn": 54.938,
+    "Ni": 58.693
+   },
+   "composition": {
+    "Cr": 0.19,
+    "Fe": 0.7,
+    "Mn": 0.02,
+    "Ni": 0.09
+   },
+   "density_g_cm3": 7.93,
+   "ew": 25.12,
+   "name": "AISI 304 Stainless Steel",
+   "standard_e0_v": -0.15,
+   "valencies": {
+    "Cr": 3,
+    "Fe": 2,
+    "Mn": 2,
+    "Ni": 2
+   }
+  },
+  "steel-316l": {
+   "activation_energy_j_mol": 32000.0,
+   "atomic_weights": {
+    "Cr": 51.996,
+    "Fe": 55.845,
+    "Mn": 54.938,
+    "Mo": 95.95,
+    "Ni": 58.693,
+    "Si": 28.085
+   },
+   "composition": {
+    "Cr": 0.17,
+    "Fe": 0.655,
+    "Mn": 0.02,
+    "Mo": 0.025,
+    "Ni": 0.12,
+    "Si": 0.01
+   },
+   "density_g_cm3": 7.98,
+   "ew": 25.68,
+   "name": "AISI 316L Stainless Steel",
+   "standard_e0_v": -0.08,
+   "valencies": {
+    "Cr": 3,
+    "Fe": 2,
+    "Mn": 2,
+    "Mo": 3,
+    "Ni": 2,
+    "Si": 4
+   }
+  },
+  "ti-6al-4v": {
+   "activation_energy_j_mol": 28000.0,
+   "atomic_weights": {
+    "Al": 26.982,
+    "Ti": 47.867,
+    "V": 50.942
+   },
+   "composition": {
+    "Al": 0.06,
+    "Ti": 0.9,
+    "V": 0.04
+   },
+   "density_g_cm3": 4.43,
+   "ew": 11.97,
+   "name": "Titanium Ti-6Al-4V (Grade 5)",
+   "standard_e0_v": 0.12,
+   "valencies": {
+    "Al": 3,
+    "Ti": 4,
+    "V": 3
+   }
+  }
+ }
+}

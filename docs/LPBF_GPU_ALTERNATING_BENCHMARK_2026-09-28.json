@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "benchmarkId": "lpbf-torch-warp-alternating-solver-wall-v1",
+  "scope": "Warm, alternating Torch/Warp solver wall time only; final-field capture, queue, archive and UI are excluded",
+  "input": {
+    "materialId": "in718",
+    "estimatedProperties": true,
+    "requestSha256": "cf2692fc4f4f06edf95ac6e4906b804d67ea1f71ec01901efbc6e9e489f3ee73",
+    "implementationFingerprint": "05ac6db2446c7ee940355d172432eab6e299c31bc543bb6cc72722522f8347dd",
+    "warpModuleSha256": "d5f395ff0214dd80a52e066a3ae310b019698dc3009a5f3621d41fbbe25b3468",
+    "settings": {
+      "mode": "standard",
+      "backend": "reference",
+      "power_W": 60,
+      "speed_mm_s": 1200,
+      "mesh_um": 10,
+      "maxDt_s": 2e-7,
+      "trackLength_um": 200,
+      "layer_um": 80,
+      "cooling_s": 2e-5,
+      "dwell_s": 0,
+      "powderGridPolicy": "layer-conforming"
+    },
+    "resolvedWorkPerTrial": {
+      "cells": 73568,
+      "acceptedSteps": 934
+    }
+  },
+  "device": {
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "memoryGiB": 8,
+    "computeCapability": "8.9",
+    "warp": "1.17.0",
+    "cudaToolkit": "12.9",
+    "driver": "13.4"
+  },
+  "protocol": {
+    "warmupsPerBackend": 1,
+    "alternatingOrder": ["torch", "warp", "warp", "torch", "torch", "warp"],
+    "measuredTrialsPerBackendPerSession": 3,
+    "captureFinal": false,
+    "useCudaSource": false,
+    "sessions": 2
+  },
+  "sessions": [
+    {
+      "session": 1,
+      "torch": {"median_s": 12.084224099991843, "spread_s": 0.4053497000131756, "trials_s": [12.084224099991843, 12.443682999990415, 12.03833329997724]},
+      "warp": {"median_s": 12.047300500009442, "spread_s": 0.4092978000117, "trials_s": [12.047300500009442, 12.426306200010004, 12.017008399998304]},
+      "torchOverWarp": 1.0030648857793805
+    },
+    {
+      "session": 2,
+      "torch": {"median_s": 12.36093379999511, "spread_s": 0.2918653999804519, "trials_s": [12.36093379999511, 12.486956199980341, 12.195090799999889]},
+      "warp": {"median_s": 12.04352530001779, "spread_s": 0.5170409000117, "trials_s": [11.94018249999499, 12.457223400007933, 12.04352530001779]},
+      "torchOverWarp": 1.026355115472448
+    }
+  ],
+  "interpretation": {
+    "conclusion": "No robust Warp speed advantage established. Current session medians are near parity; within-session trial spread exceeds the observed median differences.",
+    "endToEndSpeedup": "unmeasured",
+    "kernelAttribution": "unavailable; Nsight Systems/Compute not used",
+    "numericalParity": "not measured by this timing protocol; see separate same-input parity evidence",
+    "experimentalValidation": false
+  }
+}

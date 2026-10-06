@@ -1,0 +1,217 @@
+{
+  "schemaVersion": 1,
+  "auditStatus": "PASS",
+  "auditedAt": "2026-09-27T17:37:02.977512+00:00",
+  "scope": "Independent read-only numerical evidence admission; not experimental validation",
+  "solverInvoked": false,
+  "sourceFilesModified": false,
+  "experimentalValidation": false,
+  "sourceReport": "docs/LPBF_P4_FIXED_SCAN_END_CONTINUATION_2026-09-27.json",
+  "sourceReportSha256": "196c8dc3db026914fe7590ace40b8f364cf76509f1626958574ab9f8c6f3ecb6",
+  "sourceReportBytes": 50957,
+  "sourceReportCompletedAt": "2026-09-27T17:34:27.544682+00:00",
+  "sourceReportUnchangedDuringAudit": true,
+  "sourceGuardStatus": "PASS",
+  "implementationFingerprintBefore": "fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c",
+  "implementationFingerprintAfter": "fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c",
+  "originalProtocolSha256": "a384c0e0a72aa8fe1bf3a5543d70c0558971a5a9a8dcea45550c034c58cd93e1",
+  "reuseAddendumSha256": "19a5f5c49a5f0e1838f249d3df35bcdccf78c91c60e66b4971b514a5305b8289",
+  "continuationWrapperSha256": "e25774cf8267ddd3721d7c4f57d4acbbdadc166a027967141800c724e07ea688",
+  "acceptance": {
+    "source": "docs/DIGITAL_TWIN_MASTER_PLAN_2026-09-21.md#11",
+    "energyRelativeErrorMax": 0.01,
+    "finestPairWidthDepthRelativeChangeMax": 0.05,
+    "minimumLevelsPerAxis": 3,
+    "maximumLevelsPerAxis": 6,
+    "trend": "three finest levels must satisfy lpbf_verification.convergence using actual spacings"
+  },
+  "rowIdentityAndEnergyChecks": [
+    {
+      "caseOrdinal": 1,
+      "mesh_um": 20,
+      "maxDt_s": 2.5e-08,
+      "status": "PASS",
+      "inputHash": "98ba7cb77c7f3c71c0a402c66897070232831bfed6b640cb4737f2123fec767a",
+      "npzSha256": "20aeca654e2637ea08fc880912508fd5fdbc3854ff794a586c4e54f8f4c7a098",
+      "finalEnergyClosure": 1.6308683205074085e-13
+    },
+    {
+      "caseOrdinal": 2,
+      "mesh_um": 10,
+      "maxDt_s": 2.5e-08,
+      "status": "PASS",
+      "inputHash": "ae5b179d5260e8356c993f066d92e329ac3913a70f46153dbe3ec9df17eb81a1",
+      "npzSha256": "5224fda93d8b820a19100d3d8b742e164a7e74fd8cae360a9316645477a3af7b",
+      "finalEnergyClosure": 1.6308683205074085e-13
+    },
+    {
+      "caseOrdinal": 3,
+      "mesh_um": 5,
+      "maxDt_s": 2.5e-08,
+      "status": "PASS",
+      "inputHash": "e2199adbb8618f94625980ebdb78ddb73ca4813c32658b5957288b3e3cb23110",
+      "npzSha256": "eeda2dca62f823ed250f6818de5bf1afd6b6a4cf9362a2ccd60fa29ef66bfacd",
+      "finalEnergyClosure": 1.628585789617965e-13
+    },
+    {
+      "caseOrdinal": 4,
+      "mesh_um": 5,
+      "maxDt_s": 5e-08,
+      "status": "PASS",
+      "inputHash": "41ec735d7e3e6622a0304675f28877ad3a9e1e4f67da9c7fd209d83cd1e67278",
+      "npzSha256": "1a771da9f6f873a27bd68fadd2a43eb3671bc67549acc253171aea0c1812bd23",
+      "finalEnergyClosure": 9.324138683376302e-14
+    },
+    {
+      "caseOrdinal": 5,
+      "mesh_um": 5,
+      "maxDt_s": 1.25e-08,
+      "status": "PASS",
+      "inputHash": "2148adf25774158122675dd236bf3fb47ade4ad54af1d28c9d714900b0bdfca1",
+      "npzSha256": "d571784c1a65f1b2111d1484b6e4b2b45bcbdef416ca3d3bbc8124059847e9c7",
+      "finalEnergyClosure": 3.5675957801988197e-13
+    }
+  ],
+  "priorEvidence": {
+    "coarseReportSha256": "e35bc891d167db66e39c3ee7a24daf4f2cdbbd0a103dadf3da8bbc9efb0948a7",
+    "previousTwoFineRowsAuditPartialSha256": "25030a530e7f97b4c2f3645bc83cc50fcf3b6bbef80c9f190dcf3d2db49e09f3",
+    "reuse": "Two coarse row dictionaries matched their immutable source report; prior four field file hashes rechecked, without repeating their prior array decode audits."
+  },
+  "remainingCase": {
+    "caseOrdinal": 5,
+    "status": "PASS",
+    "fieldArtifact": {
+      "path": "docs/LPBF_P4_FIXED_SCAN_END_CONTINUATION_FIELDS_2026-09-27/mesh-5um-dt-1.25e-08s.npz",
+      "scope": "CPU numerical diagnostic fields only; not a run archive or experimental evidence",
+      "format": "numpy-npz-compressed-little-endian-float64-v1",
+      "cells": 526592,
+      "steps": 20000,
+      "targetTime_s": 0.00024999999999999995,
+      "actualTime_s": 0.00024999999999999995,
+      "schedulerTime_s": 0.00024999999999999995,
+      "targetMinusActualTime_s": 0.0,
+      "roundoffTolerance_s": 2.168404344971009e-15,
+      "uncompressedBytes": 25436416,
+      "byteSize": 5848904,
+      "sha256": "d571784c1a65f1b2111d1484b6e4b2b45bcbdef416ca3d3bbc8124059847e9c7",
+      "fieldSha256": {
+        "coordinates_m": "a682f3d8d75f92e126ec109d0d27f442fd1107fb38b195642c6bc270e47e92b6",
+        "temperature_K": "3771dcb0a8de12141ac63b911021928c745b7dc3b00fbd5e20cfc5f5a3efc75f",
+        "enthalpy_J_m3": "032045c0d844c085bbcf4d2d37c7338e93ae0ac93ffc116be05bb1e71000c044",
+        "density_kg_m3": "f71c2a5cf64852685f71396d0dabc728104924a58b1dd47e9e487b4eb7cd875f",
+        "accepted_dt_s": "364eda0f06de56e6332761008008c08230914a1b8741be4787a4c57c43478165"
+      }
+    },
+    "shapes": {
+      "coordinates_m": [
+        526592,
+        3
+      ],
+      "temperature_K": [
+        526592
+      ],
+      "enthalpy_J_m3": [
+        526592
+      ],
+      "density_kg_m3": [
+        526592
+      ],
+      "accepted_dt_s": [
+        20000
+      ]
+    },
+    "recomputedFieldSha256": {
+      "coordinates_m": "a682f3d8d75f92e126ec109d0d27f442fd1107fb38b195642c6bc270e47e92b6",
+      "temperature_K": "3771dcb0a8de12141ac63b911021928c745b7dc3b00fbd5e20cfc5f5a3efc75f",
+      "enthalpy_J_m3": "032045c0d844c085bbcf4d2d37c7338e93ae0ac93ffc116be05bb1e71000c044",
+      "density_kg_m3": "f71c2a5cf64852685f71396d0dabc728104924a58b1dd47e9e487b4eb7cd875f",
+      "accepted_dt_s": "364eda0f06de56e6332761008008c08230914a1b8741be4787a4c57c43478165"
+    },
+    "sequentialReplayedTime_s": 0.00024999999999999995,
+    "acceptedDtMinimum_s": 1.2499999970381256e-08,
+    "acceptedDtMaximum_s": 1.25e-08,
+    "acceptedDtCount": 20000,
+    "finalSteps": 28000,
+    "declaredFinalTime_s": 0.00034999999999999994,
+    "finalClockEvidence": "scan_segments end / final steps equals actualMeanDt_s; final accepted_dt suffix unavailable in selected NPZ",
+    "recomputedContour": {
+      "status": "thermal-proxy",
+      "operator": "peak-liquidus-cell-edge-linear-contour-v1",
+      "temporalSelection": "first-scan-end-accepted-state-v1",
+      "contour": "linear liquidus crossings between neighboring active cell centers",
+      "surfaceTreatment": "No temperature extrapolation to the model surface",
+      "width_um": 77.70020872025624,
+      "depth_um": 34.697874249725864,
+      "evidenceScope": "CPU numerical thermal proxy only; no experimental validation",
+      "sampleCells": 2190,
+      "crossingCount": 1014,
+      "observationOperator": "fixed-scan-end-liquidus-cell-edge-contour-v1",
+      "targetTime_s": 0.00024999999999999995,
+      "actualTime_s": 0.00024999999999999995,
+      "targetMinusActualTime_s": 0.0,
+      "roundoffTolerance_s": 2.168404344971009e-15,
+      "beamCenterX_m": 9.999999999999999e-05,
+      "surfaceZ_m": 3.9999999999999996e-05
+    }
+  },
+  "energyTimingBoundary": "Selected NPZ is at 250 us; final energy/scalars are at 350 us. Selected H integral was not compared to final stored_J.",
+  "meshAssessment": {
+    "status": "inconclusive",
+    "energyStatus": "pass",
+    "maximumEnergyRelativeError": 1.6308683205074085e-13,
+    "metrics": {
+      "width_um": {
+        "status": "inconclusive",
+        "finestPairRelativeChange": 0.04297863902896246,
+        "convergence": {
+          "status": "inconclusive",
+          "reason": "Non-monotonic, unresolved or identical discrete geometry"
+        },
+        "reason": "Non-monotonic, unresolved or identical discrete geometry"
+      },
+      "depth_um": {
+        "status": "pass",
+        "finestPairRelativeChange": 0.039297658850632966,
+        "convergence": {
+          "status": "numerically-converging",
+          "observedOrder": 1.4405062007479155,
+          "fineGCI_pct": 2.8656630860481016,
+          "fineChange_pct": 3.9297658850632966,
+          "note": "Numerical convergence is not experimental validation"
+        }
+      }
+    }
+  },
+  "timeAssessment": {
+    "status": "inconclusive",
+    "energyStatus": "pass",
+    "maximumEnergyRelativeError": 3.5675957801988197e-13,
+    "metrics": {
+      "width_um": {
+        "status": "inconclusive",
+        "finestPairRelativeChange": 1.8370779876908456e-05,
+        "convergence": {
+          "status": "inconclusive",
+          "reason": "Non-monotonic, unresolved or identical discrete geometry"
+        },
+        "reason": "Non-monotonic, unresolved or identical discrete geometry"
+      },
+      "depth_um": {
+        "status": "inconclusive",
+        "finestPairRelativeChange": 2.0106554981007938e-05,
+        "convergence": {
+          "status": "inconclusive",
+          "reason": "Non-monotonic, unresolved or identical discrete geometry"
+        },
+        "reason": "Non-monotonic, unresolved or identical discrete geometry"
+      }
+    }
+  },
+  "recomputedOverallStatus": "inconclusive",
+  "assessmentMatchesStoredExactly": true,
+  "limits": [
+    "Admission of numerical evidence is distinct from convergence acceptance.",
+    "Material remains estimated-legacy; no experimental validation.",
+    "No change to frozen acceptance thresholds."
+  ]
+}

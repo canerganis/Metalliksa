@@ -1,0 +1,139 @@
+
+> metallix-pocket-model@1.0.0 build
+> vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs
+
+vite v6.4.3 building for production...
+transforming...
+✓ 3593 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                            2.04 kB │ gzip:   0.89 kB
+dist/assets/stlParserWorker-DNG4hxGG.js                    2.62 kB
+dist/assets/index-i6JWJLg_.css                           316.43 kB │ gzip:  41.88 kB
+dist/assets/VisibleResponsiveContainer-Do8ygbh0.js         0.15 kB │ gzip:   0.15 kB
+dist/assets/check-B0bo04hD.js                              0.29 kB │ gzip:   0.25 kB
+dist/assets/chevron-right-CBcCXoKS.js                      0.30 kB │ gzip:   0.25 kB
+dist/assets/LineChart-6wv2ohAw.js                          0.31 kB │ gzip:   0.24 kB
+dist/assets/ComposedChart-BM59tEim.js                      0.31 kB │ gzip:   0.25 kB
+dist/assets/thermometer-BsBVTheG.js                        0.33 kB │ gzip:   0.27 kB
+dist/assets/terminal-1Kp0E4zU.js                           0.34 kB │ gzip:   0.27 kB
+dist/assets/clock-DvD8tkjo.js                              0.34 kB │ gzip:   0.27 kB
+dist/assets/circle-check-DDDWxsjC.js                       0.35 kB │ gzip:   0.27 kB
+dist/assets/trending-up-CEv9jA9W.js                        0.35 kB │ gzip:   0.28 kB
+dist/assets/gauge-B3bII_JM.js                              0.35 kB │ gzip:   0.27 kB
+dist/assets/play-OQCmbgPF.js                               0.36 kB │ gzip:   0.29 kB
+dist/assets/graphicalItemSelectors-BuI9nm2M.js             0.37 kB │ gzip:   0.20 kB
+dist/assets/info-DuZtko1z.js                               0.37 kB │ gzip:   0.28 kB
+dist/assets/rotate-ccw-C_bWukKh.js                         0.37 kB │ gzip:   0.29 kB
+dist/assets/target-DIM10cbD.js                             0.39 kB │ gzip:   0.27 kB
+dist/assets/upload-CpBJGKqc.js                             0.40 kB │ gzip:   0.30 kB
+dist/assets/copy-DY3SSSp6.js                               0.40 kB │ gzip:   0.31 kB
+dist/assets/download-DqpmQDnV.js                           0.41 kB │ gzip:   0.30 kB
+dist/assets/activity-C4rawes-.js                           0.41 kB │ gzip:   0.31 kB
+dist/assets/database-D8WOzICa.js                           0.42 kB │ gzip:   0.31 kB
+dist/assets/compass-k2MyG4G_.js                            0.42 kB │ gzip:   0.31 kB
+dist/assets/external-link-CQFIlGsa.js                      0.42 kB │ gzip:   0.30 kB
+dist/assets/eye-DBDx0wYc.js                                0.42 kB │ gzip:   0.31 kB
+dist/assets/chart-column-i8UIwRsx.js                       0.42 kB │ gzip:   0.30 kB
+dist/assets/table-AqRTRJQY.js                              0.43 kB │ gzip:   0.31 kB
+dist/assets/zap-D-4VhVMB.js                                0.44 kB │ gzip:   0.32 kB
+dist/assets/triangle-alert-CB31nx50.js                     0.44 kB │ gzip:   0.32 kB
+dist/assets/award-Ceu680DA.js                              0.44 kB │ gzip:   0.33 kB
+dist/assets/grid-3x3-0spq3OSB.js                           0.47 kB │ gzip:   0.32 kB
+dist/assets/scissors-BTgSwJLf.js                           0.48 kB │ gzip:   0.32 kB
+dist/assets/box-Cthugro1.js                                0.48 kB │ gzip:   0.33 kB
+dist/assets/engineeringDisclaimer-CNZD65zz.js              0.49 kB │ gzip:   0.37 kB
+dist/assets/file-code-QlNQ0siW.js                          0.49 kB │ gzip:   0.32 kB
+dist/assets/refresh-cw-kbQ-wAdL.js                         0.49 kB │ gzip:   0.33 kB
+dist/assets/trash-2-DmZcsmeS.js                            0.50 kB │ gzip:   0.32 kB
+dist/assets/bot-Bg1oPdu8.js                                0.50 kB │ gzip:   0.33 kB
+dist/assets/file-text-CSRxjJr-.js                          0.51 kB │ gzip:   0.32 kB
+dist/assets/camera-3RaHOybB.js                             0.51 kB │ gzip:   0.36 kB
+dist/assets/Dot-66Cv9R0Y.js                                0.52 kB │ gzip:   0.36 kB
+dist/assets/crosshair-Dz8ZFOvl.js                          0.53 kB │ gzip:   0.32 kB
+dist/assets/scale-BVg4NoE9.js                              0.54 kB │ gzip:   0.34 kB
+dist/assets/tooltipContext-BJT5Dxlg.js                     0.54 kB │ gzip:   0.28 kB
+dist/assets/file-spreadsheet-De-3gkdg.js                   0.55 kB │ gzip:   0.33 kB
+dist/assets/microscope-BMBE2Vyp.js                         0.56 kB │ gzip:   0.35 kB
+dist/assets/sliders-vertical-D2zlLiOS.js                   0.60 kB │ gzip:   0.35 kB
+dist/assets/sliders-horizontal-BYdh5Wlg.js                 0.60 kB │ gzip:   0.35 kB
+dist/assets/atom-D2WKGsvd.js                               0.60 kB │ gzip:   0.38 kB
+dist/assets/sparkles-C1ziaHKJ.js                           0.67 kB │ gzip:   0.39 kB
+dist/assets/CartesianScaleHelper-LjWuplES.js               0.77 kB │ gzip:   0.30 kB
+dist/assets/plus-jjh1uLTS.js                               0.82 kB │ gzip:   0.44 kB
+dist/assets/zoom-out-T64g8X1E.js                           0.85 kB │ gzip:   0.34 kB
+dist/assets/boxes-DKhqSQX_.js                              1.02 kB │ gzip:   0.51 kB
+dist/assets/ResearchIntegrationPanel-DPYiB1DV.js           2.20 kB │ gzip:   1.06 kB
+dist/assets/ExperimentalValidationLab-CBNuGzQ9.js          3.24 kB │ gzip:   1.54 kB
+dist/assets/ReferenceLine-C5bxQJ1q.js                      3.71 kB │ gzip:   1.66 kB
+dist/assets/OpticalTomographyLab-DTQN17ML.js               4.43 kB │ gzip:   1.78 kB
+dist/assets/ToolpathThermalMapLab-DzsBmCxr.js              4.57 kB │ gzip:   1.78 kB
+dist/assets/PowderDEMCompactionLab-CPciGl-Q.js             4.88 kB │ gzip:   1.89 kB
+dist/assets/meltPoolLiteratureCases-D-7TnYjX.js            5.40 kB │ gzip:   1.79 kB
+dist/assets/TransientEnthalpy3DGPULab-DrfOSN4A.js          6.31 kB │ gzip:   1.90 kB
+dist/assets/IndustrialCertificationLab-CJSx9csH.js         6.43 kB │ gzip:   2.04 kB
+dist/assets/EvidenceWorkspace-oODe2qBS.js                  6.63 kB │ gzip:   2.63 kB
+dist/assets/LpbfAdaptiveMitigationLab-BJ0lDmFE.js          7.25 kB │ gzip:   2.32 kB
+dist/assets/lpbfSourceService-BO2pn9sK.js                  7.39 kB │ gzip:   2.93 kB
+dist/assets/ModulusFNOLab-DiOLugCU.js                      7.49 kB │ gzip:   2.31 kB
+dist/assets/AIOrchestratorPanel-uAcggPYa.js                7.90 kB │ gzip:   2.87 kB
+dist/assets/ThermomechanicalDistortionLab-Bc-yp3u5.js      7.92 kB │ gzip:   2.70 kB
+dist/assets/LpbfToolpathStudioLab-CGGgJ6hC.js              8.31 kB │ gzip:   2.46 kB
+dist/assets/MurakamiFatigueLab-BXcAnDhN.js                 8.38 kB │ gzip:   2.70 kB
+dist/assets/LpbfDefectTwinLab-CDvY5x9g.js                  9.15 kB │ gzip:   2.78 kB
+dist/assets/LpbfBayesianOptimizerLab-DUCedQhn.js           9.74 kB │ gzip:   2.67 kB
+dist/assets/MetallurgyCopilot-DirvYoR_.js                 10.21 kB │ gzip:   4.21 kB
+dist/assets/SolidificationMicrostructureLab-DnrbD0XB.js   11.08 kB │ gzip:   3.82 kB
+dist/assets/MultiTrackThermalLab-Cx4fzT3l.js              11.74 kB │ gzip:   3.33 kB
+dist/assets/ScatterChart-DGE0XySv.js                      11.84 kB │ gzip:   4.37 kB
+dist/assets/SendToModuleButton-BzuDmtOB.js                11.85 kB │ gzip:   4.03 kB
+dist/assets/exportAerospaceCoC-8bxzxaV4.js                12.12 kB │ gzip:   4.32 kB
+dist/assets/MultiLaserPlumeLab-DPNJC9GV.js                12.65 kB │ gzip:   3.67 kB
+dist/assets/AreaChart-B93Lyx9f.js                         14.71 kB │ gzip:   5.31 kB
+dist/assets/Legend-78lh2JD9.js                            14.96 kB │ gzip:   4.99 kB
+dist/assets/Line-DMkdxvY0.js                              16.61 kB │ gzip:   5.38 kB
+dist/assets/PieChart-CKEnUatg.js                          18.08 kB │ gzip:   5.85 kB
+dist/assets/useResearchStore-DSscLra7.js                  19.17 kB │ gzip:   6.23 kB
+dist/assets/BarChart-CIkK5n7X.js                          20.29 kB │ gzip:   6.92 kB
+dist/assets/KeyholeRaytracingLab-3hj8T46T.js              25.20 kB │ gzip:   8.25 kB
+dist/assets/PhaseKineticsTTTCCTStudio-Wyi3Z3Ue.js         28.37 kB │ gzip:   7.20 kB
+dist/assets/purify.es-CYR4BTuT.js                         28.93 kB │ gzip:  11.14 kB
+dist/assets/diverging-WzqiU13S.js                         29.46 kB │ gzip:  11.28 kB
+dist/assets/transform-kZg5X06t.js                         31.82 kB │ gzip:  10.14 kB
+dist/assets/IndustrialLPBFDecisionLab-DFo0FluG.js         32.95 kB │ gzip:   9.35 kB
+dist/assets/MaterialsProjectExplorer-Cy5PdwCZ.js          33.76 kB │ gzip:   8.15 kB
+dist/assets/AerospaceAuditReportGenerator-CouGxXHa.js     39.77 kB │ gzip:  10.48 kB
+dist/assets/ICMEMultiScalePipelineStudio-B1Met-Vx.js      40.80 kB │ gzip:   8.40 kB
+dist/assets/MeltPool3DCrossSectionLab-CS_YC7T_.js         44.12 kB │ gzip:  11.91 kB
+dist/assets/AdvancedResearchHub-Cs74psVH.js               45.26 kB │ gzip:  13.76 kB
+dist/assets/DigitalTwinHub-DJ3Jfylb.js                    51.99 kB │ gzip:  11.22 kB
+dist/assets/StandardQualificationEngine-Drec-7oQ.js       56.46 kB │ gzip:  13.83 kB
+dist/assets/UQLab-C1UgL848.js                             57.06 kB │ gzip:  16.39 kB
+dist/assets/useLpbfBuildJobStore-CW8xS0u8.js              61.41 kB │ gzip:  12.68 kB
+dist/assets/EDSSpectrumLab-CNfKIWxo.js                    81.84 kB │ gzip:  23.58 kB
+dist/assets/MaterialsDatabaseView-DTKS80QO.js             99.14 kB │ gzip:  29.32 kB
+dist/assets/PhaseDiagramViewer-C4lbJcC2.js               106.89 kB │ gzip:  24.82 kB
+dist/assets/MicrographLab--OGTRz0w.js                    110.81 kB │ gzip:  28.30 kB
+dist/assets/BasicSTLSlicerLab-BvTKTz5Q.js                125.24 kB │ gzip:  39.50 kB
+dist/assets/PocketCalculators-CRXZHQZK.js                143.12 kB │ gzip:  33.08 kB
+dist/assets/OrbitControls-CaARX5Mi.js                    154.28 kB │ gzip:  49.95 kB
+dist/assets/index.es-1JulxymF.js                         159.77 kB │ gzip:  53.57 kB
+dist/assets/html2canvas.esm-QH1iLAAe.js                  202.38 kB │ gzip:  48.04 kB
+dist/assets/AlloyBuilder-iAPJ5Mbt.js                     216.43 kB │ gzip:  51.78 kB
+dist/assets/CorrosionEngineeringLab-sboaBZFb.js          221.96 kB │ gzip:  54.21 kB
+dist/assets/LpbfEngineeringWorkspace-FWtL98oB.js         241.38 kB │ gzip:  68.47 kB
+dist/assets/CartesianChart-B_6vvHga.js                   323.03 kB │ gzip:  93.32 kB
+dist/assets/index-BHWlabRy.js                            345.18 kB │ gzip: 111.62 kB
+dist/assets/jspdf.plugin.autotable-DLjkE0B2.js           421.39 kB │ gzip: 138.14 kB
+dist/assets/three.module-Dy_vXu0W.js                     734.16 kB │ gzip: 190.07 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 2m 20s
+
+  dist\server.cjs      344.0kb
+  dist\server.cjs.map  641.2kb
+
+Done in 37ms

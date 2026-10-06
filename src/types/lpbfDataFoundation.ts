@@ -11,6 +11,8 @@
  * 
  * Fully documents and calculates the recognized physical limitations of VED.
  */
+import { authorityThermal } from "../data/lpbfMaterialAuthority";
+
 export type LPBFAlloyId = "ti6al4v" | "ss316l" | "alsi10mg" | "in718" | "in625";
 export type ProcessRegime = 
   | "Lack of Fusion (LoF)"
@@ -69,7 +71,7 @@ export interface LPBFProcessParams {
     arealEnergyDensity_J_mm2: number;      // E_A = P / (v * h) [J/mm²]
     volumetricEnergyDensity_J_mm3: number; // E_V = P / (v * h * t) [J/mm³]
     peakLaserIntensity_MW_cm2: number;     // I_0 = 4P / (pi * d^2) [MW/cm²]
-    normalizedEnthalpy_dH_hs?: number;     // Normalized Enthalpy (King et al.)
+    normalizedEnthalpy_dH_hs?: number;     // Normalized Enthalpy (King et al.); not computed in the UI (Python only). Older stored user records may carry a legacy TS value; it is not used for ranking.
     pecletNumber?: number;                 // Pe = v * d / (2 * alpha)
     predictedRegime: ProcessRegime;
   };
@@ -135,66 +137,68 @@ export interface TraceableLPBFRecord {
 }
 
 /**
- * Physical Constants for Energy Density & Normalized Enthalpy calculations
+ * Alloy constants for the UI: the Python authority's values plus the TS-local VED thresholds.
+ * No normalized enthalpy (ΔH/h_s) is computed in the UI: that quantity comes from Python only
+ * (python/lpbf_thermal_solver.py), so h_s and alpha are not derived here.
  */
 export interface AlloyThermalConstants {
   meltingPoint_C: number;
   density_kg_m3: number;
   specificHeat_J_kgK: number;
   thermalConductivity_W_mK: number;
-  thermalDiffusivity_m2_s: number;
-  enthalpyOfMelting_hs_J_m3: number; // rho * Cp * Tm (enthalpy per unit volume to reach melting)
   defaultAbsorptivity: number;
   lofVedThreshold_J_mm3: number;
   keyholeVedThreshold_J_mm3: number;
 }
 
-export const ALLOY_THERMAL_PROPERTIES: Record<LPBFAlloyId, AlloyThermalConstants> = {
-  ti6al4v: {
-    meltingPoint_C: 1660,
-    density_kg_m3: 4430,
-    specificHeat_J_kgK: 526,
-    thermalConductivity_W_mK: 6.7,
-    thermalDiffusivity_m2_s: 2.87e-6,
-    enthalpyOfMelting_hs_J_m3: 3.86e9,
-    defaultAbsorptivity: 0.42,
-    lofVedThreshold_J_mm3: 48,
-    keyholeVedThreshold_J_mm3: 110,
-  },
-  ss316l: {
-    meltingPoint_C: 1420,
-    density_kg_m3: 7950,
-    specificHeat_J_kgK: 500,
-    thermalConductivity_W_mK: 15.0,
-    thermalDiffusivity_m2_s: 3.77e-6,
-    enthalpyOfMelting_hs_J_m3: 5.64e9,
-    defaultAbsorptivity: 0.53,
-    lofVedThreshold_J_mm3: 55,
-    keyholeVedThreshold_J_mm3: 135,
-  },
-  alsi10mg: {
-    meltingPoint_C: 600,
-    density_kg_m3: 2680,
-    specificHeat_J_kgK: 910,
-    thermalConductivity_W_mK: 130.0,
-    thermalDiffusivity_m2_s: 5.33e-5,
-    enthalpyOfMelting_hs_J_m3: 1.46e9,
-    defaultAbsorptivity: 0.22, // Low optical absorption in powder bed at 1064nm
-    lofVedThreshold_J_mm3: 40,
-    keyholeVedThreshold_J_mm3: 95,
-  },
-  in718: {
-    meltingPoint_C: 1336,
-    density_kg_m3: 8190,
-    specificHeat_J_kgK: 435,
-    thermalConductivity_W_mK: 11.4,
-    thermalDiffusivity_m2_s: 3.20e-6,
-    enthalpyOfMelting_hs_J_m3: 4.75e9,
-    defaultAbsorptivity: 0.55,
-    lofVedThreshold_J_mm3: 52,
-    keyholeVedThreshold_J_mm3: 125,
-  },
+/**
+ * TS-local, not authority: VED regime thresholds used only by classifyProcessRegime.
+ * The Python material authority has no counterpart for these values. B5 step 1 said to stop
+ * when a consumer needs a property the authority lacks; these pre-existing values were kept
+ * (labelled) instead of being invented in Python. Moving them is left to a later Python step.
+ */
+const VED_REGIME_THRESHOLDS_TS_LOCAL: Record<LPBFAlloyId, { lof_J_mm3: number; keyhole_J_mm3: number }> = {
+  ti6al4v: { lof_J_mm3: 48, keyhole_J_mm3: 110 },
+  ss316l: { lof_J_mm3: 55, keyhole_J_mm3: 135 },
+  alsi10mg: { lof_J_mm3: 40, keyhole_J_mm3: 95 },
+  in718: { lof_J_mm3: 52, keyhole_J_mm3: 125 },
+  in625: { lof_J_mm3: 50, keyhole_J_mm3: 110 },
 };
+
+/**
+ * Material constants read from the Python authority (src/generated/lpbfMaterialAuthority.json):
+ * Tm = liquidus_C, rho, Cp and k are the solid rows, defaultAbsorptivity = absorptivity_IR.
+ * No alloy number is held in TS. in625 is the labelled secondary row (quality "secondary-unreconciled").
+ */
+function alloyThermalConstantsFromAuthority(alloyId: LPBFAlloyId): AlloyThermalConstants {
+  const t = authorityThermal(alloyId);
+  const thresholds = VED_REGIME_THRESHOLDS_TS_LOCAL[alloyId];
+  return {
+    meltingPoint_C: t.liquidus_C,
+    density_kg_m3: t.density_kg_m3,
+    specificHeat_J_kgK: t.specific_heat_J_kgK,
+    thermalConductivity_W_mK: t.thermal_conductivity_W_mK,
+    defaultAbsorptivity: t.absorptivity_IR,
+    lofVedThreshold_J_mm3: thresholds.lof_J_mm3,
+    keyholeVedThreshold_J_mm3: thresholds.keyhole_J_mm3,
+  };
+}
+
+export const ALLOY_THERMAL_PROPERTIES: Readonly<Record<LPBFAlloyId, AlloyThermalConstants>> = Object.freeze({
+  ti6al4v: alloyThermalConstantsFromAuthority("ti6al4v"),
+  ss316l: alloyThermalConstantsFromAuthority("ss316l"),
+  alsi10mg: alloyThermalConstantsFromAuthority("alsi10mg"),
+  in718: alloyThermalConstantsFromAuthority("in718"),
+  in625: alloyThermalConstantsFromAuthority("in625"),
+});
+
+/** Constants for a known alloy id; an unknown id throws (no surrogate alloy is substituted). */
+export function alloyThermalConstants(alloyId: LPBFAlloyId): AlloyThermalConstants {
+  if (!Object.prototype.hasOwnProperty.call(ALLOY_THERMAL_PROPERTIES, alloyId)) {
+    throw new Error(`Unknown LPBF alloy "${String(alloyId)}": thermal constants unavailable; no surrogate alloy is substituted.`);
+  }
+  return ALLOY_THERMAL_PROPERTIES[alloyId];
+}
 
 /**
  * Standard Derived Energy Quantities
@@ -230,36 +234,21 @@ export function calculateVolumetricEnergyDensity(
   return Number((power_W / (scanSpeed_mm_s * hatch_mm * layer_mm)).toFixed(2));
 }
 
-/** Peak Laser Beam Center Intensity: I_0 = 4P / (pi * d_spot^2) [MW/cm²] */
+/** Gaussian peak irradiance for a 1/e² diameter: I_0 = 8P / (pi * d_spot^2) [MW/cm²]. */
 export function calculatePeakLaserIntensity(power_W: number, beamDiameter_um: number): number {
   if (beamDiameter_um <= 0) return 0;
   const radius_cm = (beamDiameter_um / 2) * 1e-4; // µm to cm
   const area_cm2 = Math.PI * Math.pow(radius_cm, 2);
   const power_MW = power_W * 1e-6;
-  return Number((power_MW / area_cm2).toFixed(3));
+  return Number(((2 * power_MW) / area_cm2).toFixed(3));
 }
 
-/** Normalized Enthalpy (King / Gouge / Scime criterion): ΔH / h_s */
-export function calculateNormalizedEnthalpy(
-  power_W: number,
-  scanSpeed_mm_s: number,
-  beamDiameter_um: number,
-  alloyId: LPBFAlloyId,
-  absorptivity?: number
-): number {
-  const alloy = ALLOY_THERMAL_PROPERTIES[alloyId] || ALLOY_THERMAL_PROPERTIES.ti6al4v;
-  const eta = absorptivity !== undefined ? absorptivity : alloy.defaultAbsorptivity;
-  const v_m_s = scanSpeed_mm_s * 1e-3;
-  const sigma_m = (beamDiameter_um / 2) * 1e-6; // beam radius in meters
-  const alpha = alloy.thermalDiffusivity_m2_s;
-  const hs = alloy.enthalpyOfMelting_hs_J_m3;
-
-  // delta H / hs ~ (eta * P) / (hs * sqrt(pi * alpha * v * sigma^3))
-  const denominator = hs * Math.sqrt(Math.PI * alpha * Math.max(1e-4, v_m_s) * Math.pow(Math.max(1e-6, sigma_m), 3));
-  if (denominator <= 0) return 0;
-  const normalized = (eta * power_W) / denominator;
-  return Number(normalized.toFixed(2));
-}
+/*
+ * Normalized enthalpy ΔH/h_s is intentionally NOT computed in the UI (B5 step 1). The former TS
+ * calculateNormalizedEnthalpy used h_s = rho Cp Tm(°C) with the record's absorptivity, while
+ * python/lpbf_thermal_solver.py uses rho Cp max(50, T_liq - T_preheat) with a powder-bed
+ * absorptivity: a second result path for the same quantity. The UI shows Python's value only.
+ */
 
 /**
  * Classify Process Regime based on VED, laser power, speed and alloy thresholds
@@ -270,7 +259,7 @@ export function classifyProcessRegime(
   scanSpeed_mm_s: number,
   alloyId: LPBFAlloyId
 ): ProcessRegime {
-  const alloy = ALLOY_THERMAL_PROPERTIES[alloyId] || ALLOY_THERMAL_PROPERTIES.ti6al4v;
+  const alloy = alloyThermalConstants(alloyId);
 
   // Balling occurs when scan speed is excessively high with insufficient linear density
   const linearDensity = power_W / Math.max(1, scanSpeed_mm_s);

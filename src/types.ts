@@ -10,42 +10,6 @@ export type TabType =
   | "qualification"
   | "notebook";
 
-export interface MmpdsBasisResult {
-  meanYield: number; // MPa
-  meanTensile: number; // MPa
-  stdDev: number; // MPa
-  covPct: number; // %
-  sampleSize: number;
-  kA: number;
-  kB: number;
-  aBasisYield: number; // MPa
-  bBasisYield: number; // MPa
-  sBasisYield: number; // MPa
-  aBasisTensile: number; // MPa
-  bBasisTensile: number; // MPa
-  shearUltimate: number; // MPa
-  bearingYield: number; // MPa
-  bearingUltimate: number; // MPa
-  compressiveYield: number; // MPa
-  fractureToughnessKic: number; // MPa*m^0.5
-  cpk: number;
-  status: "A-Basis Qualified" | "B-Basis Qualified" | "S-Basis Provisional" | "Insufficient Sampling";
-}
-
-export interface QualificationTestEvaluation {
-  id: string;
-  standard: "MIL-STD-810H" | "AS9100 Rev D" | "NATO STANAG" | "ASTM / AMS";
-  methodName: string;
-  testCategory: "Salt Fog / Marine" | "Mechanical Shock" | "Thermal Shock" | "Vibration / High-G" | "Extreme Climatics" | "Process Capability" | "SCC Threshold";
-  /** Kept for payload compatibility; screening templates must not auto-score PASS. */
-  passProbabilityPct: number;
-  riskLevel: "Low" | "Moderate" | "High" | "Critical";
-  primaryThreat: string;
-  criticalThreshold: string;
-  mitigationRecommendation: string;
-  executionStatus?: "Not executed" | "User attested";
-}
-
 export interface ElementData {
   atomicNumber: number;
   symbol: string;
@@ -92,16 +56,6 @@ export interface MaterialSpec {
   failureRisks: string[];
 }
 
-export interface HardnessConversionResult {
-  vickers: number; // HV
-  rockwellC?: number; // HRC
-  rockwellB?: number; // HRB
-  brinell: number; // HBW 10/3000
-  knoop?: number; // HK
-  tensileMpa: number; // Estimated Rm
-  tensileKsi: number;
-}
-
 export interface CarbonEquivalentResult {
   ceIIW: number;
   pcm: number;
@@ -140,27 +94,6 @@ export interface XrdPeak {
   twoTheta: number; // degrees
   dSpacing: number; // Angstroms
   intensityPct: number;
-}
-
-export interface MicrographSample {
-  id: string;
-  title: string;
-  material: string;
-  condition: string;
-  magnification: string;
-  etchant: string;
-  description: string;
-  keyFeatures: string[];
-  imageUrl: string;
-  mimeType: string;
-  category?: "Additive Manufacturing (LPBF)" | "Nickel & Cobalt Superalloys" | "Titanium & Aerospace Alloys" | "Steels & Hardmetals" | "Failure Analysis & Fractography" | "Coatings & Interfaces";
-  microscopeType?: "SEM-SE (Secondary Electron)" | "SEM-BSE (Backscattered)" | "TEM / STEM" | "Optical Metallograph";
-  voltageKv?: number;
-  defaultScaleMicronsPerPixel?: number;
-  scaleBarLengthUm?: number;
-  expectedPhases?: { phase: string; fractionPct: number; color: string }[];
-  expectedPorosityPct?: number;
-  nominalGrainSizeAstm?: string;
 }
 
 export interface ChatMessage {

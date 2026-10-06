@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "record_type": "official_published_measurement_transcription",
+  "dataset_id": "mds2-3707",
+  "dataset_doi": "10.18434/mds2-3707",
+  "source_document": {
+    "title": "AMB2025-06 and AMB2025-07 Benchmark Measurements and Challenge Problems",
+    "url": "https://www.nist.gov/system/files/documents/2025/12/18/AMB2024-06%20and%2007%20challenge%20descriptions_v3.pdf",
+    "section": "2.3.2 Single laser tracks",
+    "table": 5,
+    "pages": "6-7"
+  },
+  "source_scope": "Values transcribed from the publicly accessible NIST challenge-description PDF. This is not a downloaded mds2-3707 measurement payload or a reconstruction from TIFF masks.",
+  "specimen_and_process": {
+    "material": "IN718",
+    "substrate": "bare plate, rolled and annealed sheet, 3.17 mm thick",
+    "laser_power_W": 285,
+    "scan_speed_mm_s": 960,
+    "gaussian_spot_diameter_um": 72,
+    "gaussian_spot_diameter_uncertainty_um": 3.5,
+    "diameter_definition": "2D Gaussian power-profile regression; equivalent to D4sigma for a perfect Gaussian",
+    "track_length_approx_mm": 8,
+    "cross_section_location": "approximately mid-track",
+    "replicate_tracks": 3,
+    "cross_section_measurements": 6
+  },
+  "measurement_operator": {
+    "method": "MATLAB R2024a Segment Anything Model segmentation with small manual mask cleanup",
+    "surface_reference": "horizontal line drawn by hand at plate surface",
+    "width_um": "segmented bounding-box width",
+    "total_height_um": "segmented bounding-box height across the reference surface",
+    "bead_height_um": "segmented extent above the reference surface",
+    "depth_um": "segmented extent below the reference surface",
+    "area_um2": "segmented melt-pool area",
+    "uncertainty": "NIST did not calculate an uncertainty budget for image-segmentation results; published sample standard deviations are retained."
+  },
+  "image_segmentation_observations": [
+    {"measurement": 1, "width_um": 135.3, "total_height_um": 133.6, "bead_height_um": 9.8, "depth_um": 123.9, "area_um2": 12661},
+    {"measurement": 2, "width_um": 138.4, "total_height_um": 137.4, "bead_height_um": 11.4, "depth_um": 126.1, "area_um2": 13048},
+    {"measurement": 3, "width_um": 137.0, "total_height_um": 136.6, "bead_height_um": 10.9, "depth_um": 125.7, "area_um2": 12938},
+    {"measurement": 4, "width_um": 137.0, "total_height_um": 132.9, "bead_height_um": 10.3, "depth_um": 122.6, "area_um2": 12781},
+    {"measurement": 5, "width_um": 139.9, "total_height_um": 135.8, "bead_height_um": 10.9, "depth_um": 124.9, "area_um2": 13096},
+    {"measurement": 6, "width_um": 136.9, "total_height_um": 136.7, "bead_height_um": 10.2, "depth_um": 126.5, "area_um2": 13155}
+  ],
+  "published_summary": {
+    "mean": {"width_um": 137.4, "total_height_um": 135.5, "bead_height_um": 10.6, "depth_um": 124.9, "area_um2": 12946},
+    "sample_standard_deviation": {"width_um": 1.6, "total_height_um": 1.8, "bead_height_um": 0.6, "depth_um": 1.5, "area_um2": 193},
+    "expanded_uncertainty_k2": null
+  },
+  "intended_use": "Calibration target candidate for a single-track bare-plate IN718 thermal-model study, after explicitly defining a solidified-pool observation operator and fixed parameter set.",
+  "limitations": [
+    "Calibration data, not an independent holdout.",
+    "The reported operator measures solidified etched geometry; a simulated liquidus contour is not yet shown to be equivalent.",
+    "Image-segmentation uncertainty budget was not calculated.",
+    "The direct 29.2 kB mask download timed out with zero bytes; no raw PDR payload is included here.",
+    "No solver comparison or physical validation is claimed by this transcription."
+  ]
+}

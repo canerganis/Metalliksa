@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "scope": "Historical GPU input identity, bounded local/store field reader and pure numerical reassessment; before repository/import/bundle/UI archive integration",
+  "experimentalValidation": false,
+  "overallWorkflowAcceptance": "unvalidated",
+  "softwareAcceptance": "pass",
+  "numericalReadbackAcceptance": "pass-for-recorded-job",
+  "newSolverExecution": false,
+  "parentVerification": {
+    "command": "npx tsx --test tests/lpbf-gpu-bound-identity-numerics.test.ts tests/lpbf-gpu-artifact-reader.test.ts tests/lpbf-gpu-artifact-descriptor.test.ts tests/lpbf-gpu-pilot-client.test.ts",
+    "passed": 27, "failed": 0, "skipped": 0,
+    "typecheck": "npm run lint -- --pretty false: PASS",
+    "diffCheck": "PASS",
+    "sourceHeadAtVerification": "acdaa21"
+  },
+  "independentReview": {
+    "solFinalPureChecks": {"passed": 31, "failed": 0},
+    "solEarlierReaderMatrix": {"passed": 8, "failed": 0},
+    "astraCrossLanguageSerializerFixtures": {"passed": 509, "mismatched": 0, "pythonFloatCases": 230, "jsFloatOracleCases": 230, "stringCases": 35, "unicodeKeyCases": 6, "integerCases": 4, "actualNestedInputCases": 4},
+    "oracle": "Python json.dumps(sort_keys=True,separators=(',',':'),ensure_ascii=True,allow_nan=False)",
+    "runtime": {"python": "3.12.10", "node": "24.20.0"},
+    "solverCalls": 0,
+    "artifactWrites": 0
+  },
+  "workingSources": [
+    {"path": "server/lpbfBoundJson.ts", "sha256": "768b399dde5698a99d670cff518edb6a62ed3e5485d591e66d77c56d932bca71"},
+    {"path": "server/lpbfGpuRunIdentity.ts", "sha256": "f4e02fcfdfc6689ec0e1b2ba853b12370b7e9c6c38a709814a45766a315ba606"},
+    {"path": "server/lpbfGpuPilotNumerics.ts", "sha256": "dc18e1aa35ce5b16a6356f2b53d1a38a3794185948b3bc4e4b222ffd524f8fc3"},
+    {"path": "server/lpbfGpuPilotArtifacts.ts", "sha256": "44dc96a7239a57ffd60f3619f516a68a73a87bc842dac69defc84f43a6e3ba9d"},
+    {"path": "tests/lpbf-gpu-bound-identity-numerics.test.ts", "sha256": "57ecbe47eada5839d4122570c209155f2ad84dac90e1eee08aa79631d0e10550"}
+  ],
+  "actualReadback": {
+    "jobId": "2bcb01e5799041ec9458a947506d491f",
+    "resultSha256": "f3b43be46d04d8a2a78754496d2be0d9e91406bdc6a71bfcdd3e506e46a62923",
+    "manifestFiles": 12,
+    "fieldFiles": 10,
+    "cellsPerBackend": 1210,
+    "stepsPerBackend": 934,
+    "identity": "pass",
+    "fieldReadbackAndClock": "pass",
+    "recomputedNumerics": "pass",
+    "evidenceClass": "recorded-model-computation"
+  },
+  "retainedFailures": [
+    {"epoch": "BoundJson47a3491 / Identityf4e02fcf", "finding": "Equivalent Unicode or float token representation minted a false material revision; accepted by initial TS identity and rejected by Python core.", "fakeRevisions": ["a9a431afc5f88529283b3d11eecc255eff85fe1a4b7b15d80459db6000d2bdc4", "da04a6b95508585d78134ea3ad6452a29fefc012d8ba5227a73259e4851d6d94"], "closure": "Canonical decoded serialization plus supported producer token admission; regression PASS"},
+    {"epoch": "BoundJson72e100d3 / Identityf4e02fcf", "finding": "Request integer9007199254740993 falsely matched CPU integer9007199254740992 after JS rounding.", "closure": "Integer tokens outside JS safe integer range rejected before comparison; regression PASS"},
+    {"epoch": "Numerics801fdea2", "finding": "islandSize_um=Number.MIN_VALUE derived columns=Infinity and triggered a25ms VM guard.", "closure": "Derived grouping/column/segment resource bounds checked before iteration; regression PASS"}
+  ],
+  "limits": {
+    "jsonBytesPerSerializedString": 1048576,
+    "jsonDepth": 128,
+    "jsonNodes": 200000,
+    "manifestFiles": 10000,
+    "manifestTotalBytes": 268435456,
+    "fieldCells": 100000,
+    "acceptedSteps": 250000,
+    "scanSegments": 250000
+  },
+  "serializerScope": "Limited serializer for the frozen producer format; unsupported token spellings fail closed. The509-case sample is not a proof for every binary64 value. No15-significant-digit restriction is present;16/17 digits and subnormals are covered by examples.",
+  "numericScope": "Volumetric enthalpy energy is V*sum(H), without multiplying by rho. Ordered grid/clock integrity and stable norms preserve stored threshold decisions. This does not reconstruct constitutive H(T) or prove experimental validity.",
+  "historicalScope": "No current material registry, CUDA availability or current implementation fingerprint is required to read the saved result.",
+  "remaining": ["Whole archive content verification at import/store/bundle gates", "Permanent run API and actual browser selection/archive/export/restore/reload", "Warp full-state capture", "Complete convergence assessment", "Fair paired performance measurements", "Suitable independent IN718 validation and new alloy full-data admission"]
+}

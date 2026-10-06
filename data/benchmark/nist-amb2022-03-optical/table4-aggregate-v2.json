@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "kind": "local-transcription-of-published-aggregate-measurements",
+  "transcriptionVersion": "1.1.0",
+  "benchmark": "AMB2022-03",
+  "material": "IN718",
+  "doi": "10.18434/mds2-2718",
+  "publishedResults": "https://www.nist.gov/document/am-bench-amb2022-03-measurement-and-result-descriptions-v10",
+  "publishedMethods": "https://www.nist.gov/document/amb2022-03-measurement-and-challenge-descriptions-version-101",
+  "publishedResultsLocation": "Table 4, CHAL-AMB2022-03-TMPG, page 5 (PDF page index 4)",
+  "transcriptionNote": "Locally transcribed published Table 4 aggregate measurements. Version 1.1.0 corrects the specimen preparation metadata from the cited NIST methods PDF; all Table 4 numeric measurements are unchanged. This JSON is neither NIST-issued raw data nor the source PDF.",
+  "measurement": {
+    "method": "Ex-situ dark-field optical cross-section geometry",
+    "quantity": "Single-track melt-pool depth and width",
+    "unit": "um",
+    "countPerCondition": 6,
+    "uncertainty": "Published standard deviation of six measurements per condition; not a calibration uncertainty or model validation interval."
+  },
+  "experiment": {
+    "machine": "NIST Additive Manufacturing Metrology Testbed (AMMT)",
+    "processScope": "bare-plate",
+    "sample": "AMB2022-718-SH1-BP1",
+    "scanDirection": "+X",
+    "trackLength_mm": 10,
+    "beamDiameterDefinition": "D4sigma",
+    "substrateAndChamberTemperature_C": 23.5,
+    "substrateAndChamberTemperatureUncertainty_C": 1,
+    "powderLayerThickness_um": null,
+    "hatchSpacing_um": null,
+    "heatTreatment": "Residual-stress annealed in vacuum at 800 °C for 2 h before laser processing.",
+    "heatTreatmentMissingReason": null,
+    "heatTreatmentEvidence": {
+      "sourceUrl": "https://www.nist.gov/document/amb2022-03-measurement-and-challenge-descriptions-version-101",
+      "location": "Version 1.01, Section 2.1 (Plate preparation), PDF page 2",
+      "applicability": "AMB2022-03 bare plates; BP1 is identified as a bare plate in Section 2.5."
+    }
+  },
+  "cases": [
+    {
+      "caseNumber": "0",
+      "sampleId": "AMB2022-718-SH1-BP1-L0",
+      "laserPower_W": 285,
+      "scanSpeed_mm_s": 960,
+      "beamDiameterD4sigma_um": 67,
+      "depthMean_um": 139.7,
+      "depthStdDev_um": 1.9,
+      "widthMean_um": 136.3,
+      "widthStdDev_um": 2.9
+    },
+    {
+      "caseNumber": "1.1",
+      "sampleId": "AMB2022-718-SH1-BP1-L1.1",
+      "laserPower_W": 285,
+      "scanSpeed_mm_s": 960,
+      "beamDiameterD4sigma_um": 49,
+      "depthMean_um": 227.2,
+      "depthStdDev_um": 3.2,
+      "widthMean_um": 106.2,
+      "widthStdDev_um": 3.6
+    },
+    {
+      "caseNumber": "1.2",
+      "sampleId": "AMB2022-718-SH1-BP1-L1.2",
+      "laserPower_W": 285,
+      "scanSpeed_mm_s": 960,
+      "beamDiameterD4sigma_um": 82,
+      "depthMean_um": 102.4,
+      "depthStdDev_um": 1.1,
+      "widthMean_um": 141.7,
+      "widthStdDev_um": 1.8
+    },
+    {
+      "caseNumber": "2.1",
+      "sampleId": "AMB2022-718-SH1-BP1-L2.1",
+      "laserPower_W": 285,
+      "scanSpeed_mm_s": 1200,
+      "beamDiameterD4sigma_um": 67,
+      "depthMean_um": 109.7,
+      "depthStdDev_um": 1.7,
+      "widthMean_um": 112.9,
+      "widthStdDev_um": 1.7
+    },
+    {
+      "caseNumber": "2.2",
+      "sampleId": "AMB2022-718-SH1-BP1-L2.2",
+      "laserPower_W": 285,
+      "scanSpeed_mm_s": 800,
+      "beamDiameterD4sigma_um": 67,
+      "depthMean_um": 176.5,
+      "depthStdDev_um": 2.6,
+      "widthMean_um": 156.1,
+      "widthStdDev_um": 4.9
+    },
+    {
+      "caseNumber": "3.1",
+      "sampleId": "AMB2022-718-SH1-BP1-L3.1",
+      "laserPower_W": 325,
+      "scanSpeed_mm_s": 960,
+      "beamDiameterD4sigma_um": 67,
+      "depthMean_um": 166.1,
+      "depthStdDev_um": 2.0,
+      "widthMean_um": 134.3,
+      "widthStdDev_um": 2.5
+    },
+    {
+      "caseNumber": "3.2",
+      "sampleId": "AMB2022-718-SH1-BP1-L3.2",
+      "laserPower_W": 245,
+      "scanSpeed_mm_s": 960,
+      "beamDiameterD4sigma_um": 67,
+      "depthMean_um": 116.9,
+      "depthStdDev_um": 1.2,
+      "widthMean_um": 129.4,
+      "widthStdDev_um": 1.6
+    }
+  ],
+  "supersedes": {
+    "transcriptionVersion": "1.0.0",
+    "artifactPath": "table4-aggregate-v1.json",
+    "artifactSha256": "dcefd9c8c998e516eb81769cbe7b13014dfcb1c38e69c838a62475e79beac518"
+  }
+}

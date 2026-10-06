@@ -1,0 +1,510 @@
+{
+  "schemaVersion": 1,
+  "addendumId": "lpbf-p4-fixed-scan-end-coarse-reuse-addendum-2026-09-27-v1",
+  "createdAt": "2026-09-27T15:48:22.733569+00:00",
+  "change": {
+    "reason": "The coarse fixed-scan-end observation check completed before this reuse amendment.",
+    "beforeFineExecution": true,
+    "executionPlan": "Reuse only the completed 20 um and 10 um rows; execute each of the three missing 5 um cases exactly once.",
+    "thresholdsChanged": false,
+    "originalProtocolOrRunnerChanged": false,
+    "failedRowsReplaced": false
+  },
+  "originalProtocol": {
+    "protocolId": "lpbf-p4-fixed-scan-end-liquidus-contour-2026-09-27-v1",
+    "path": "docs/LPBF_P4_FIXED_SCAN_END_CONVERGENCE_PROTOCOL_2026-09-27.json",
+    "sha256": "a384c0e0a72aa8fe1bf3a5543d70c0558971a5a9a8dcea45550c034c58cd93e1",
+    "runnerPath": "python/run_lpbf_fixed_scan_end_convergence.py",
+    "runnerSha256": "fca47ccf0defc232ac9ff9a20f7e1c0931fc5edfe261b10ac4d9b67675e83569",
+    "scenarioSha256": "2abec47f9d35c02158ea2e06876e3ca06c3ba5ba9243f1ddccaa94ef64752ea6",
+    "observationModuleSha256": "74b4574747cf8ea1f42e570bdbd31d2523d67a3d0190c0e7268c65dcdc8fcf9a",
+    "assessmentModuleSha256": "62e04531004b6d57b30890bdc0568dc46a420a52ee8af5b75fa4436b03931d50",
+    "contourModuleSha256": "0e190f01dbc22ddebc765bd7b27a7a0f62bb8d65107512fa1cfc81276e9d6535",
+    "implementationFingerprint": "fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c"
+  },
+  "continuationWrapper": {
+    "path": "python/run_lpbf_fixed_scan_end_continuation.py",
+    "sha256": "e25774cf8267ddd3721d7c4f57d4acbbdadc166a027967141800c724e07ea688",
+    "reportPath": "docs/LPBF_P4_FIXED_SCAN_END_CONTINUATION_2026-09-27.json",
+    "partialPath": "docs/LPBF_P4_FIXED_SCAN_END_CONTINUATION_2026-09-27.partial.json",
+    "fieldDirectory": "docs/LPBF_P4_FIXED_SCAN_END_CONTINUATION_FIELDS_2026-09-27"
+  },
+  "coarseEvidence": {
+    "path": "docs/LPBF_P4_FIXED_SCAN_END_OBSERVATION_CHECK_2026-09-27.json",
+    "sha256": "e35bc891d167db66e39c3ee7a24daf4f2cdbbd0a103dadf3da8bbc9efb0948a7",
+    "executionHead": "4c155132ffa0141ff31f6eb0b865d718e2f9a72d",
+    "runnerSha256": "1e70784260b2987bb13378223e2832a32e3bbb804d27c9d764a59d6235c68021",
+    "fieldDirectory": "docs/LPBF_P4_FIXED_SCAN_END_OBSERVATION_CHECK_FIELDS_2026-09-27",
+    "rows": [
+      {
+        "caseOrdinal": 1,
+        "mesh_um": 20,
+        "requestedMaxDt_s": 2.5e-08,
+        "inputHash": "98ba7cb77c7f3c71c0a402c66897070232831bfed6b640cb4737f2123fec767a",
+        "materialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06",
+        "rowSha256": "5b04f890397267dc80f0a54509e0d703d007272dc7dae677a47e0c15905ae581",
+        "fieldArtifact": "mesh-20um.npz",
+        "fieldArtifactSha256": "20aeca654e2637ea08fc880912508fd5fdbc3854ff794a586c4e54f8f4c7a098",
+        "fieldArraySha256": {
+          "coordinates_m": "fc3b45a7afab6c49d1b4e7178b34e2d446e5471a6a1662bb7ed3ac7c46978ff8",
+          "temperature_K": "18840efcad04b64ef046026eb3dfe2a45da18ab3a2b8cd4873093d3064bb3ec5",
+          "enthalpy_J_m3": "b995eebfa2cfed4949910bbcfc5cb99513c53bf6fc668224f2ee78cd71a10042",
+          "density_kg_m3": "3c64b9a809a6c2916891ee2a8028297fd3c0edff50d66edcc462cbba5ba29fb4",
+          "accepted_dt_s": "40bb612825ccc7322ce730bdc67f138ea7753b6a40ae35ad4bb8adcf7047666f"
+        },
+        "reconstructedInputs": {
+          "provenance": "Reconstructed by validate() from the frozen scenario and current fingerprint-pinned source; not captured at the coarse run.",
+          "inputHash": "98ba7cb77c7f3c71c0a402c66897070232831bfed6b640cb4737f2123fec767a",
+          "settings": {
+            "mode": "standard",
+            "material": "Inconel 718",
+            "power_W": 40,
+            "speed_mm_s": 800,
+            "beamDiameter_um": 80,
+            "preheat_C": 80,
+            "layer_um": 40,
+            "hatch_um": 100,
+            "mesh_um": 20,
+            "maxDt_s": 2.5e-08,
+            "trackLength_um": 200,
+            "tracks": 1,
+            "layers": 1,
+            "dwell_s": 0,
+            "cooling_s": 0.0001,
+            "scanAngle_deg": 0,
+            "layerRotation_deg": 67,
+            "strategy": "meander",
+            "stripeWidth_um": 500,
+            "islandSize_um": 200,
+            "packingFraction": 0.55,
+            "powderConductivityRatio": 0.12,
+            "convection_W_m2K": 20,
+            "timeout_s": 300,
+            "study": "none",
+            "backend": "reference",
+            "surfaceMode": "powder-layer",
+            "sourcePenetration_um": null,
+            "barePlateGeometry": "square",
+            "powderGridPolicy": "layer-conforming",
+            "absorptivity": 0.38,
+            "emissivity": 0.35
+          },
+          "material": {
+            "solidus_K": 1533.15,
+            "liquidus_K": 1609.15,
+            "boiling_K": 3123.15,
+            "latentHeat_J_kg": 270000.0,
+            "absorptivity": 0.38,
+            "emissivity": 0.35,
+            "dGamma_dT": -0.0004,
+            "source": "Existing four_alloy_materials.py / lpbf_thermal_solver.py; endpoint provenance not independently verified",
+            "quality": "estimated",
+            "table": [
+              [
+                273.15,
+                8190.0,
+                11.4,
+                435.0,
+                0.0055
+              ],
+              [
+                1609.15,
+                7450.0,
+                29.0,
+                730.0,
+                0.0055
+              ],
+              [
+                3123.15,
+                7450.0,
+                29.0,
+                730.0,
+                0.0055
+              ]
+            ],
+            "name": "Inconel 718",
+            "version": "lpbf-materials-1",
+            "temperatureCoverage_K": [
+              273.15,
+              3123.15
+            ],
+            "uncertaintyNote": "Property uncertainties not quantified; source string does not establish validation.",
+            "materialId": "in718",
+            "provenanceClass": "estimated-legacy",
+            "materialIdentitySchemaVersion": 1,
+            "materialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06"
+          }
+        }
+      },
+      {
+        "caseOrdinal": 2,
+        "mesh_um": 10,
+        "requestedMaxDt_s": 2.5e-08,
+        "inputHash": "ae5b179d5260e8356c993f066d92e329ac3913a70f46153dbe3ec9df17eb81a1",
+        "materialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06",
+        "rowSha256": "c0ba7715db61ce605220443ba97f155e3f22153cb73dcdf163153b99a47aca21",
+        "fieldArtifact": "mesh-10um.npz",
+        "fieldArtifactSha256": "5224fda93d8b820a19100d3d8b742e164a7e74fd8cae360a9316645477a3af7b",
+        "fieldArraySha256": {
+          "coordinates_m": "c10b0493899e1eacb6885dfe730fff8c7205686816cab1b81ea864d305c48470",
+          "temperature_K": "5a8c4f84b7998d16281a4081c2070ce09924bcae0bb258143526cb1e75ff0ca3",
+          "enthalpy_J_m3": "903767357f8f174e3ab440f7b7b5311c2461d9199a4c731b021f5bea26e3916a",
+          "density_kg_m3": "bde223ae6c48935778f9f78ee674256d37f19523dd9204b5fe05b55a2617323f",
+          "accepted_dt_s": "40bb612825ccc7322ce730bdc67f138ea7753b6a40ae35ad4bb8adcf7047666f"
+        },
+        "reconstructedInputs": {
+          "provenance": "Reconstructed by validate() from the frozen scenario and current fingerprint-pinned source; not captured at the coarse run.",
+          "inputHash": "ae5b179d5260e8356c993f066d92e329ac3913a70f46153dbe3ec9df17eb81a1",
+          "settings": {
+            "mode": "standard",
+            "material": "Inconel 718",
+            "power_W": 40,
+            "speed_mm_s": 800,
+            "beamDiameter_um": 80,
+            "preheat_C": 80,
+            "layer_um": 40,
+            "hatch_um": 100,
+            "mesh_um": 10,
+            "maxDt_s": 2.5e-08,
+            "trackLength_um": 200,
+            "tracks": 1,
+            "layers": 1,
+            "dwell_s": 0,
+            "cooling_s": 0.0001,
+            "scanAngle_deg": 0,
+            "layerRotation_deg": 67,
+            "strategy": "meander",
+            "stripeWidth_um": 500,
+            "islandSize_um": 200,
+            "packingFraction": 0.55,
+            "powderConductivityRatio": 0.12,
+            "convection_W_m2K": 20,
+            "timeout_s": 300,
+            "study": "none",
+            "backend": "reference",
+            "surfaceMode": "powder-layer",
+            "sourcePenetration_um": null,
+            "barePlateGeometry": "square",
+            "powderGridPolicy": "layer-conforming",
+            "absorptivity": 0.38,
+            "emissivity": 0.35
+          },
+          "material": {
+            "solidus_K": 1533.15,
+            "liquidus_K": 1609.15,
+            "boiling_K": 3123.15,
+            "latentHeat_J_kg": 270000.0,
+            "absorptivity": 0.38,
+            "emissivity": 0.35,
+            "dGamma_dT": -0.0004,
+            "source": "Existing four_alloy_materials.py / lpbf_thermal_solver.py; endpoint provenance not independently verified",
+            "quality": "estimated",
+            "table": [
+              [
+                273.15,
+                8190.0,
+                11.4,
+                435.0,
+                0.0055
+              ],
+              [
+                1609.15,
+                7450.0,
+                29.0,
+                730.0,
+                0.0055
+              ],
+              [
+                3123.15,
+                7450.0,
+                29.0,
+                730.0,
+                0.0055
+              ]
+            ],
+            "name": "Inconel 718",
+            "version": "lpbf-materials-1",
+            "temperatureCoverage_K": [
+              273.15,
+              3123.15
+            ],
+            "uncertaintyNote": "Property uncertainties not quantified; source string does not establish validation.",
+            "materialId": "in718",
+            "provenanceClass": "estimated-legacy",
+            "materialIdentitySchemaVersion": 1,
+            "materialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06"
+          }
+        }
+      }
+    ]
+  },
+  "scope": "CPU numerical thermal proxy at the first scan end; no experimental validation",
+  "energyTimingBoundary": "Coarse final energy is reported at 350 us; selected field artifacts stop at 250 us. Do not compare selected-state H integrals to final-time stored energy.",
+  "allFiveUniqueCasesRetained": true,
+  "newCases": [
+    {
+      "caseOrdinal": 3,
+      "mesh_um": 5,
+      "maxDt_s": 2.5e-08,
+      "resolvedInputHash": "e2199adbb8618f94625980ebdb78ddb73ca4813c32658b5957288b3e3cb23110",
+      "resolvedInputs": {
+        "provenance": "Predeclared by validate() from the frozen scenario and fingerprint-pinned source; execution must match.",
+        "settings": {
+          "mode": "standard",
+          "material": "Inconel 718",
+          "power_W": 40,
+          "speed_mm_s": 800,
+          "beamDiameter_um": 80,
+          "preheat_C": 80,
+          "layer_um": 40,
+          "hatch_um": 100,
+          "mesh_um": 5,
+          "maxDt_s": 2.5e-08,
+          "trackLength_um": 200,
+          "tracks": 1,
+          "layers": 1,
+          "dwell_s": 0,
+          "cooling_s": 0.0001,
+          "scanAngle_deg": 0,
+          "layerRotation_deg": 67,
+          "strategy": "meander",
+          "stripeWidth_um": 500,
+          "islandSize_um": 200,
+          "packingFraction": 0.55,
+          "powderConductivityRatio": 0.12,
+          "convection_W_m2K": 20,
+          "timeout_s": 300,
+          "study": "none",
+          "backend": "reference",
+          "surfaceMode": "powder-layer",
+          "sourcePenetration_um": null,
+          "barePlateGeometry": "square",
+          "powderGridPolicy": "layer-conforming",
+          "absorptivity": 0.38,
+          "emissivity": 0.35
+        },
+        "material": {
+          "solidus_K": 1533.15,
+          "liquidus_K": 1609.15,
+          "boiling_K": 3123.15,
+          "latentHeat_J_kg": 270000.0,
+          "absorptivity": 0.38,
+          "emissivity": 0.35,
+          "dGamma_dT": -0.0004,
+          "source": "Existing four_alloy_materials.py / lpbf_thermal_solver.py; endpoint provenance not independently verified",
+          "quality": "estimated",
+          "table": [
+            [
+              273.15,
+              8190.0,
+              11.4,
+              435.0,
+              0.0055
+            ],
+            [
+              1609.15,
+              7450.0,
+              29.0,
+              730.0,
+              0.0055
+            ],
+            [
+              3123.15,
+              7450.0,
+              29.0,
+              730.0,
+              0.0055
+            ]
+          ],
+          "name": "Inconel 718",
+          "version": "lpbf-materials-1",
+          "temperatureCoverage_K": [
+            273.15,
+            3123.15
+          ],
+          "uncertaintyNote": "Property uncertainties not quantified; source string does not establish validation.",
+          "materialId": "in718",
+          "provenanceClass": "estimated-legacy",
+          "materialIdentitySchemaVersion": 1,
+          "materialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06"
+        }
+      }
+    },
+    {
+      "caseOrdinal": 4,
+      "mesh_um": 5,
+      "maxDt_s": 5e-08,
+      "resolvedInputHash": "41ec735d7e3e6622a0304675f28877ad3a9e1e4f67da9c7fd209d83cd1e67278",
+      "resolvedInputs": {
+        "provenance": "Predeclared by validate() from the frozen scenario and fingerprint-pinned source; execution must match.",
+        "settings": {
+          "mode": "standard",
+          "material": "Inconel 718",
+          "power_W": 40,
+          "speed_mm_s": 800,
+          "beamDiameter_um": 80,
+          "preheat_C": 80,
+          "layer_um": 40,
+          "hatch_um": 100,
+          "mesh_um": 5,
+          "maxDt_s": 5e-08,
+          "trackLength_um": 200,
+          "tracks": 1,
+          "layers": 1,
+          "dwell_s": 0,
+          "cooling_s": 0.0001,
+          "scanAngle_deg": 0,
+          "layerRotation_deg": 67,
+          "strategy": "meander",
+          "stripeWidth_um": 500,
+          "islandSize_um": 200,
+          "packingFraction": 0.55,
+          "powderConductivityRatio": 0.12,
+          "convection_W_m2K": 20,
+          "timeout_s": 300,
+          "study": "none",
+          "backend": "reference",
+          "surfaceMode": "powder-layer",
+          "sourcePenetration_um": null,
+          "barePlateGeometry": "square",
+          "powderGridPolicy": "layer-conforming",
+          "absorptivity": 0.38,
+          "emissivity": 0.35
+        },
+        "material": {
+          "solidus_K": 1533.15,
+          "liquidus_K": 1609.15,
+          "boiling_K": 3123.15,
+          "latentHeat_J_kg": 270000.0,
+          "absorptivity": 0.38,
+          "emissivity": 0.35,
+          "dGamma_dT": -0.0004,
+          "source": "Existing four_alloy_materials.py / lpbf_thermal_solver.py; endpoint provenance not independently verified",
+          "quality": "estimated",
+          "table": [
+            [
+              273.15,
+              8190.0,
+              11.4,
+              435.0,
+              0.0055
+            ],
+            [
+              1609.15,
+              7450.0,
+              29.0,
+              730.0,
+              0.0055
+            ],
+            [
+              3123.15,
+              7450.0,
+              29.0,
+              730.0,
+              0.0055
+            ]
+          ],
+          "name": "Inconel 718",
+          "version": "lpbf-materials-1",
+          "temperatureCoverage_K": [
+            273.15,
+            3123.15
+          ],
+          "uncertaintyNote": "Property uncertainties not quantified; source string does not establish validation.",
+          "materialId": "in718",
+          "provenanceClass": "estimated-legacy",
+          "materialIdentitySchemaVersion": 1,
+          "materialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06"
+        }
+      }
+    },
+    {
+      "caseOrdinal": 5,
+      "mesh_um": 5,
+      "maxDt_s": 1.25e-08,
+      "resolvedInputHash": "2148adf25774158122675dd236bf3fb47ade4ad54af1d28c9d714900b0bdfca1",
+      "resolvedInputs": {
+        "provenance": "Predeclared by validate() from the frozen scenario and fingerprint-pinned source; execution must match.",
+        "settings": {
+          "mode": "standard",
+          "material": "Inconel 718",
+          "power_W": 40,
+          "speed_mm_s": 800,
+          "beamDiameter_um": 80,
+          "preheat_C": 80,
+          "layer_um": 40,
+          "hatch_um": 100,
+          "mesh_um": 5,
+          "maxDt_s": 1.25e-08,
+          "trackLength_um": 200,
+          "tracks": 1,
+          "layers": 1,
+          "dwell_s": 0,
+          "cooling_s": 0.0001,
+          "scanAngle_deg": 0,
+          "layerRotation_deg": 67,
+          "strategy": "meander",
+          "stripeWidth_um": 500,
+          "islandSize_um": 200,
+          "packingFraction": 0.55,
+          "powderConductivityRatio": 0.12,
+          "convection_W_m2K": 20,
+          "timeout_s": 300,
+          "study": "none",
+          "backend": "reference",
+          "surfaceMode": "powder-layer",
+          "sourcePenetration_um": null,
+          "barePlateGeometry": "square",
+          "powderGridPolicy": "layer-conforming",
+          "absorptivity": 0.38,
+          "emissivity": 0.35
+        },
+        "material": {
+          "solidus_K": 1533.15,
+          "liquidus_K": 1609.15,
+          "boiling_K": 3123.15,
+          "latentHeat_J_kg": 270000.0,
+          "absorptivity": 0.38,
+          "emissivity": 0.35,
+          "dGamma_dT": -0.0004,
+          "source": "Existing four_alloy_materials.py / lpbf_thermal_solver.py; endpoint provenance not independently verified",
+          "quality": "estimated",
+          "table": [
+            [
+              273.15,
+              8190.0,
+              11.4,
+              435.0,
+              0.0055
+            ],
+            [
+              1609.15,
+              7450.0,
+              29.0,
+              730.0,
+              0.0055
+            ],
+            [
+              3123.15,
+              7450.0,
+              29.0,
+              730.0,
+              0.0055
+            ]
+          ],
+          "name": "Inconel 718",
+          "version": "lpbf-materials-1",
+          "temperatureCoverage_K": [
+            273.15,
+            3123.15
+          ],
+          "uncertaintyNote": "Property uncertainties not quantified; source string does not establish validation.",
+          "materialId": "in718",
+          "provenanceClass": "estimated-legacy",
+          "materialIdentitySchemaVersion": 1,
+          "materialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06"
+        }
+      }
+    }
+  ]
+}

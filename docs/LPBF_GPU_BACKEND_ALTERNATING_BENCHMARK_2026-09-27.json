@@ -1,0 +1,78 @@
+{
+  "case": {
+    "backend": "reference",
+    "cooling_s": 2e-05,
+    "dwell_s": 0,
+    "layer_um": 80,
+    "material": "Inconel 718",
+    "maxDt_s": 2e-07,
+    "mesh_um": 10,
+    "mode": "standard",
+    "powderGridPolicy": "layer-conforming",
+    "power_W": 60,
+    "speed_mm_s": 1200,
+    "trackLength_um": 200
+  },
+  "caseSha256": "cf2692fc4f4f06edf95ac6e4906b804d67ea1f71ec01901efbc6e9e489f3ee73",
+  "createdAtUtc": "2026-09-27T18:14:00Z",
+  "device": {
+    "computeCapability": "8.9",
+    "cudaRuntime": "12.6",
+    "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "torch": "2.14.0+cu126",
+    "warp": "1.17.0"
+  },
+  "evidenceClass": "measured-software-runtime",
+  "kind": "lpbf-gpu-backend-alternating-benchmark",
+  "limitations": [
+    "One warmed alternating session with three measurements per backend; preliminary case-specific timing only.",
+    "No stage-level profiler attribution was collected, so no internal bottleneck is identified.",
+    "Timed Torch and Warp trials report equal cell/step counts but do not capture fields; output preservation is supported separately by same-input CPU/Warp and CPU/Torch parity reports.",
+    "Not a measured application-wide speedup or an experimental result."
+  ],
+  "protocol": {
+    "alternatingOrder": [
+      "torch",
+      "warp",
+      "warp",
+      "torch",
+      "torch",
+      "warp"
+    ],
+    "cellsPerTrial": 73568,
+    "stepsPerTrial": 934,
+    "timedCallIncludes": "backend run, device allocation, dispatch, and device synchronization; excludes the two warm-up calls",
+    "totalWarmupCalls": 2,
+    "trialsPerBackend": 3,
+    "warmupsPerBackendOutsideMeasuredTrials": 1
+  },
+  "results": {
+    "torch": {
+      "median_s": 10.482651300000725,
+      "runtime_s": [
+        10.482651300000725,
+        10.508304799994221,
+        10.330055699974764
+      ],
+      "spread_s": 0.17824910001945682
+    },
+    "warp": {
+      "median_s": 8.101760799996555,
+      "runtime_s": [
+        7.814444200019352,
+        8.19637440002407,
+        8.101760799996555
+      ],
+      "spread_s": 0.38193020000471734
+    }
+  },
+  "sameCaseNumericalChecks": {
+    "cpuTorchReportSha256": "f91c6ded14f98c47c9fcd36a66b58e9db61539a7e0487e004c3719f3d513019d",
+    "cpuTorchStatus": "pass",
+    "cpuWarpReportSha256": "5b263290eca7b28f3c9937da11be3dd7c3976f2ac160d7af80e98e476d671e68",
+    "cpuWarpStatus": "pass"
+  },
+  "schemaVersion": 1,
+  "speedRatioTorchOverWarp": 1.2938732158082453,
+  "warpWallTimeReductionRelativeToTorch": 0.22712674798254573
+}

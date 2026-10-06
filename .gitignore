@@ -29,3 +29,27 @@ graft/.graph/
 # Local LPBF source archive bytes and SQLite metadata
 .lpbf-sources/
 .lpbf-surrogates/
+.lpbf-runs/
+.lpbf-run-bundles/
+
+# Local LPBF validation outputs and GPU compiler caches; provenance lives in docs.
+/.tmp-lpbf-*/
+/.tmp-phase22-*/
+/python/.tmp-*/
+/python/.warp-cache/
+
+# Orchestra shared state (agent coordination, local only)
+/.orchestra/
+
+
+# Local runtime state and test temp directories (not evidence)
+/server/graft/
+/.npm-cache/
+/tmp*/
+/python/python/
+/python/codex-lpbf-test-tmp/
+/python/lpbf-run-shape-*/
+docs/**/queue.sqlite
+docs/**/worker.lock
+# Orchestra lane run roots (local logs and scratch artifacts)
+/.orchestra-run/

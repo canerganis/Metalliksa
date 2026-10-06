@@ -1,0 +1,195 @@
+{
+  "schemaVersion": 1,
+  "stage": "completed",
+  "scope": "Actual production browser acceptance of saved-versus-current CUDA input presentation only",
+  "experimentalValidation": false,
+  "overallLpbfWorkflow": "unvalidated",
+  "recordedAt": "2026-09-27T16:11:50.354286+00:00",
+  "qaHead": "0459d6c480076708648cb2b3a107e99c9af2a765",
+  "uiSourceSha256": {
+    "src/components/3d-distortion-lab/LpbfEngineeringSimulation.tsx": "8dd8f38520487590c36961a8e03421ba8e980680737b3ab01b3847978095f1de",
+    "src/utils/scientificContext.ts": "78d8087590293d968a741cbc69f2c4ff38405406c161f634dfbff3dc4a7069c0",
+    "tests/lpbf-gpu-pilot-ui.test.tsx": "76efda27cbea661e906bf6c0aeffeb30c1c61f9b0f45af783cb2c9ed0fd4a173",
+    "tests/scientific-context-presentation.test.ts": "01c812071add15e790a107fd195f0cffd77b26d2651d361cb6006b6dbda37e12"
+  },
+  "httpOrigin": "http://localhost:4176",
+  "ipcPort": 5056,
+  "jobId": "2bcb01e5799041ec9458a947506d491f",
+  "sameHistoricalJobReused": true,
+  "newGpuSolveDuringFineCpuSeries": false,
+  "artifactDirectory": "docs/LPBF_GPU_NATIVE_WORKER_ACCEPTANCE_RETRY_2026-09-27/2bcb01e5799041ec9458a947506d491f",
+  "resultSha256": "f3b43be46d04d8a2a78754496d2be0d9e91406bdc6a71bfcdd3e506e46a62923",
+  "inputHash": "333c48bf26dca4b747340ebc6b4d917f55653ae3c0cdf0d74ba2a76aa52346f3",
+  "implementationHash": "fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c",
+  "sameRunNumericReadback": {
+    "status": "pass",
+    "samplingAligned": true,
+    "states": {
+      "cpu": {
+        "cells": 1210,
+        "steps": 934,
+        "mesh_m": 3.9999999999999996e-05,
+        "minimumDt_s": 6.666666666429208e-08,
+        "maximumDt_s": 2e-07,
+        "meanDt_s": 1.9985724482512492e-07,
+        "time_s": 0.00018666666666666666,
+        "cell_volume_m3": 6.399999999999998e-14,
+        "integral_J": 0.0037998026596582995,
+        "stored_J": 0.0037998026596582995,
+        "roundoffTolerance_J": 1.02259552459285e-15
+      },
+      "gpu": {
+        "cells": 1210,
+        "steps": 934,
+        "mesh_m": 3.9999999999999996e-05,
+        "minimumDt_s": 6.666666666429208e-08,
+        "maximumDt_s": 2e-07,
+        "meanDt_s": 1.9985724482512492e-07,
+        "time_s": 0.00018666666666666666,
+        "cell_volume_m3": 6.399999999999998e-14,
+        "integral_J": 0.003799802659657861,
+        "stored_J": 0.003799802659657861,
+        "roundoffTolerance_J": 1.0225955245927321e-15
+      }
+    },
+    "temperatureField": {
+      "status": "pass",
+      "normsRecomputed": true,
+      "relativeRiseL2": 2.1024253519462413e-09,
+      "relativeRiseMax": 3.0985019967931873e-09
+    },
+    "scalarComparisons": {
+      "peakTemperature_K": {
+        "cpu": 1813.8066862827575,
+        "gpu": 1813.806688189551,
+        "relativeDifference": 1.0512661730112786e-09,
+        "status": "pass"
+      },
+      "input_J": {
+        "cpu": 0.003799999999999877,
+        "gpu": 0.003799999999999877,
+        "relativeDifference": 0.0,
+        "status": "pass"
+      },
+      "losses_J": {
+        "cpu": 1.97340341646833e-07,
+        "gpu": 1.9734034208493558e-07,
+        "relativeDifference": 2.220035645428999e-09,
+        "status": "pass"
+      },
+      "stored_J": {
+        "cpu": 0.0037998026596582995,
+        "gpu": 0.003799802659657861,
+        "relativeDifference": 1.1538792874905932e-13,
+        "status": "pass"
+      },
+      "width_um": {
+        "cpu": 40.0,
+        "gpu": 40.0,
+        "absoluteDifference_um": 0.0,
+        "status": "pass"
+      },
+      "depth_um": {
+        "cpu": 40.0,
+        "gpu": 40.0,
+        "absoluteDifference_um": 0.0,
+        "status": "pass"
+      },
+      "length_um": {
+        "cpu": 119.99999999999999,
+        "gpu": 119.99999999999999,
+        "absoluteDifference_um": 0.0,
+        "status": "pass"
+      },
+      "volume_um3": {
+        "cpu": 191999.99999999994,
+        "gpu": 191999.99999999994,
+        "relativeDifference": 0.0,
+        "status": "pass"
+      }
+    }
+  },
+  "savedExecutedSettings": {
+    "mode": "standard",
+    "material": "Inconel 718",
+    "power_W": 60,
+    "speed_mm_s": 1200,
+    "beamDiameter_um": 80,
+    "preheat_C": 80,
+    "layer_um": 80,
+    "hatch_um": 100,
+    "mesh_um": 40,
+    "maxDt_s": 2e-07,
+    "trackLength_um": 200,
+    "tracks": 1,
+    "layers": 1,
+    "dwell_s": 0,
+    "cooling_s": 2e-05,
+    "scanAngle_deg": 0,
+    "layerRotation_deg": 67,
+    "strategy": "stripe",
+    "stripeWidth_um": 500,
+    "islandSize_um": 200,
+    "packingFraction": 0.55,
+    "powderConductivityRatio": 0.12,
+    "convection_W_m2K": 20,
+    "timeout_s": 300,
+    "study": "none",
+    "backend": "cuda:0",
+    "surfaceMode": "powder-layer",
+    "sourcePenetration_um": null,
+    "barePlateGeometry": "square",
+    "powderGridPolicy": "layer-conforming",
+    "absorptivity": 0.38,
+    "emissivity": 0.35,
+    "jobType": "gpu-thermal-pilot"
+  },
+  "priorFailureReport": {
+    "path": "docs/LPBF_GPU_BOUND_BROWSER_ACCEPTANCE_2026-09-27.partial.json",
+    "sha256": "4873e3bb5eaf746c9f79c3faac698effea69d8941652de1b8dba982b6fa2c3e9",
+    "preserved": true
+  },
+  "observedSoftwareChecks": {
+    "sameJobAndParityAfterReload": "pass",
+    "savedExecutedSettingsVisible": "pass",
+    "resetCurrentControlsIdentifyMeshDtDwellTrackCoolingDifferences": "pass",
+    "fiveControlsAdjustedToExecutedValuesWithoutNewSolve": "pass",
+    "matchingExplicitFieldsKeepOmittedDefaultsFullIdentityUnverified": "pass",
+    "changeDeviceToCuda1ShowsBackendDifferenceWithSavedCuda0Retained": "pass",
+    "returnDeviceToCuda0RestoresPartialMatch": "pass",
+    "comparisonDisclosureKeyboardReturnAndTenVisibleRows": "pass",
+    "finalReloadRestoresSameJobAndCurrentDifferenceWarning": "pass",
+    "heuristicConductivity9AbsentInLpbfContext": "pass",
+    "temperatureDependentWorkerTableContextVisible": "pass",
+    "permanentArchiveUnavailableBoundaryRetained": "pass",
+    "consoleErrorsObserved": []
+  },
+  "observedDifferencesAfterReload": [
+    "mesh_um",
+    "maxDt_s",
+    "dwell_s",
+    "trackLength_um",
+    "cooling_s"
+  ],
+  "observedExplicitMatchMessage": "Current submitted fields match the saved values where both are explicit. Omitted/defaulted fields are not compared, so full request identity is unverified.",
+  "softwareTestEvidence": {
+    "parentFocusedTsTests": {
+      "passed": 11,
+      "skipped": 0
+    },
+    "independentPureRenderCases": 15,
+    "typescriptLint": "pass",
+    "productionBuild": "pass",
+    "buildWarning": "Existing greater-than-500kB chunk warning remains"
+  },
+  "evidenceMethod": "Actual CUA accessibility and DOM observations, native keyboard Return and field edits; original job real byte/hash/numeric readback. Synthetic render fixtures are separate software checks.",
+  "remainingWorkflowAcceptance": [
+    "Permanent Node GPU archive/import/export/restore numerical and identity gate",
+    "Warp full H/rho/dt evidence",
+    "Numerical convergence",
+    "Independent applicable IN718 experimental validation",
+    "New-alloy full-model admission",
+    "Five paired performance repetitions"
+  ],
+  "performanceEvidence": "No UI throughput or speedup claim"
+}

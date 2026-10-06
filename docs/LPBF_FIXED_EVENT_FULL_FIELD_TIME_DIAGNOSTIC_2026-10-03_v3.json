@@ -1,0 +1,384 @@
+{
+  "schema_version": 1,
+  "status": "diagnostic-only",
+  "statement": "Historical synthetic numerical diagnostic only. These archived fields do not represent the ec3a5fc/current solver run and do not establish time or mesh convergence, physical accuracy, or experimental validation. Overall convergence remains inconclusive; NIST comparison unavailable; experimental validity unvalidated.",
+  "input_artifacts": {
+    "50ns": {
+      "path": "docs/LPBF_FIXED_EVENT_5UM_TIME_FIELDS_2026-10-02/maxdt-5.0000e-08.npz",
+      "sha256": "1a771da9f6f873a27bd68fadd2a43eb3671bc67549acc253171aea0c1812bd23",
+      "bytes": 5832892,
+      "steps": 5000,
+      "max_dt_s": 5e-08,
+      "report_array_sha256": {
+        "coordinates_m": "a682f3d8d75f92e126ec109d0d27f442fd1107fb38b195642c6bc270e47e92b6",
+        "temperature_K": "25ec6642a32fca334bbc1edaa7b52015953a8e0b010331a7708372d036e7ded3",
+        "enthalpy_J_m3": "d11df66ebe988302fcbabe35281882d5afcfc38868bcaf1c22f50413303472b7",
+        "density_kg_m3": "f71c2a5cf64852685f71396d0dabc728104924a58b1dd47e9e487b4eb7cd875f",
+        "accepted_dt_s": "c6333540d6435edff542dd978522a2fb097d0508e8c60711d24f6dc5f4009492"
+      }
+    },
+    "25ns": {
+      "path": "docs/LPBF_FIXED_EVENT_5UM_TIME_FIELDS_2026-10-02/maxdt-2.5000e-08.npz",
+      "sha256": "eeda2dca62f823ed250f6818de5bf1afd6b6a4cf9362a2ccd60fa29ef66bfacd",
+      "bytes": 5837849,
+      "steps": 10000,
+      "max_dt_s": 2.5e-08,
+      "report_array_sha256": {
+        "coordinates_m": "a682f3d8d75f92e126ec109d0d27f442fd1107fb38b195642c6bc270e47e92b6",
+        "temperature_K": "528493f331a99ce180de34534cc487ffe537bcda3b0bbc60e28cce13d0ffa4ea",
+        "enthalpy_J_m3": "93f5d885c6d853697ce02ae9c10a99462cb933bf8bd0624676be37c9420b2186",
+        "density_kg_m3": "f71c2a5cf64852685f71396d0dabc728104924a58b1dd47e9e487b4eb7cd875f",
+        "accepted_dt_s": "40bb612825ccc7322ce730bdc67f138ea7753b6a40ae35ad4bb8adcf7047666f"
+      }
+    },
+    "12.5ns": {
+      "path": "docs/LPBF_FIXED_EVENT_TIME_REFINEMENT_2026-10-02_FIELDS/finalstate-maxdt-1.2500e-08.npz",
+      "sha256": "db7fc10d052764db456f19f7f10c5756f830af6dfa952f99426e27fbce1979d8",
+      "bytes": 5849343,
+      "steps": 20000,
+      "max_dt_s": 1.25e-08,
+      "report_array_sha256": {
+        "coordinates_m": "a682f3d8d75f92e126ec109d0d27f442fd1107fb38b195642c6bc270e47e92b6",
+        "temperature_K": "3771dcb0a8de12141ac63b911021928c745b7dc3b00fbd5e20cfc5f5a3efc75f",
+        "enthalpy_J_m3": "032045c0d844c085bbcf4d2d37c7338e93ae0ac93ffc116be05bb1e71000c044",
+        "density_kg_m3": "f71c2a5cf64852685f71396d0dabc728104924a58b1dd47e9e487b4eb7cd875f",
+        "accepted_dt_s": "364eda0f06de56e6332761008008c08230914a1b8741be4787a4c57c43478165",
+        "time_s": "c1ac2acbc3b1aa9c19abc1a2e63532380eef1761265570cd798e4bba36637de0",
+        "local_final_ever_observer_derived": "f84b0dcf77e9c50e8bf56b232a3b6539ae23584cde3e788b7182f8b53ff8ee6d"
+      }
+    }
+  },
+  "provenance": {
+    "record_hashes": {
+      "base_report": "a509d8e8e67021956414be013aae54c52569f0c43c0db04dbad17a6423738a4d",
+      "base_protocol": "96b9b28d2100fc378477925160ded096bb8a0a8e7c06767ff022fdb3870c4c6a",
+      "refinement_report": "a6ab30df9253f5eabc2bfe75248579c4d61d1c582ed28073460cc33c9631ea4b",
+      "refinement_protocol": "9599b5bf434bafa58e7f42764043bdb99e725a8257e37495b52c7f72735f4484",
+      "history_report": "b5adeb9582b29b4c2d9def01695ccf780763ef4925032c5d02ee6209babd954b"
+    },
+    "event_time_s": 0.00024999999999999995,
+    "scenario_sha256": "2abec47f9d35c02158ea2e06876e3ca06c3ba5ba9243f1ddccaa94ef64752ea6",
+    "material_revision_sha256": "5c9179e947ca19c3128e78e6ab9ce005c9b0ee6f86a8e6b579d368077b909749",
+    "historical_execution": {
+      "50ns_25ns_commit": "a31ed20e5baf02d2101cf11a49d969e67503ee7c",
+      "50ns_25ns_implementation_fingerprint": "d5eae56b9bd1ef0ab241153eb44efe7a1652c41f1aa50a7b652ee5a9e11ac2fe",
+      "12_5ns_commit": "aacd910b8edd2625353cfbfb20f1f022cce971f6",
+      "12_5ns_implementation_fingerprint": "d7e5c4e3d5f0a59c4b955e0e1ca29f624fe6249c4e7cd1522e84ed1a87249315",
+      "current_candidate_commit": "ec3a5fcbeb1c5aa1b250ed31a4e812796c5d17ce",
+      "field_identity_bridge": "priorFieldExactMatch=true for 50 ns and 25 ns",
+      "current_candidate_binding": false
+    }
+  },
+  "grid_audit": {
+    "shape_xyz": [
+      88,
+      88,
+      68
+    ],
+    "cell_count": 526592,
+    "uniform_spacing_m": 5e-06,
+    "equal_cell_volume_m3": 1.2500000000000003e-16,
+    "weighting": "equal-cell RMS is volume-weighted because the verified grid is uniform",
+    "substrate_side_cells_z_lt_0": 464640,
+    "powder_side_cells_z_ge_0": 61952
+  },
+  "event_clock_audit": {
+    "50ns": {
+      "accepted_step_count": 5000,
+      "requested_max_dt_s": 5e-08,
+      "maximum_accepted_dt_s": 5e-08,
+      "sum_accepted_dt_s": 0.0002499999999999975,
+      "sequential_replayed_time_s": 0.00024999999999999995,
+      "recorded_or_derived_roundoff_tolerance_s": 5.421010862427522e-16,
+      "actual_event_time_s": 0.00024999999999999995,
+      "target_event_time_s": 0.00024999999999999995,
+      "passed": true
+    },
+    "25ns": {
+      "accepted_step_count": 10000,
+      "requested_max_dt_s": 2.5e-08,
+      "maximum_accepted_dt_s": 2.5e-08,
+      "sum_accepted_dt_s": 0.0002499999999999999,
+      "sequential_replayed_time_s": 0.00024999999999994287,
+      "recorded_or_derived_roundoff_tolerance_s": 1.0842021724855044e-15,
+      "actual_event_time_s": 0.00024999999999994287,
+      "target_event_time_s": 0.00024999999999999995,
+      "passed": true
+    },
+    "12.5ns": {
+      "accepted_step_count": 20000,
+      "requested_max_dt_s": 1.25e-08,
+      "maximum_accepted_dt_s": 1.25e-08,
+      "sum_accepted_dt_s": 0.0002499999999999703,
+      "sequential_replayed_time_s": 0.00024999999999999995,
+      "recorded_or_derived_roundoff_tolerance_s": 1.1102230246250246e-15,
+      "actual_event_time_s": 0.00024999999999999995,
+      "target_event_time_s": 0.00024999999999999995,
+      "passed": true
+    }
+  },
+  "tracked_50ns_to_25ns_temperature_hotspot": {
+    "selected_by": "maximum absolute temperature difference in 50ns_to_25ns pair",
+    "coordinate_m": [
+      -6.749999999999999e-05,
+      -2.5000000000000066e-06,
+      2.5000000000000066e-06
+    ],
+    "temperature_K_by_level": {
+      "50ns": 1089.230936065017,
+      "25ns": 1025.1828113682184,
+      "12.5ns": 1025.17768000954
+    },
+    "enthalpy_J_m3_by_level": {
+      "50ns": 1760764506.3156734,
+      "25ns": 1586266399.7639296,
+      "12.5ns": 1586252581.6447668
+    },
+    "historical_50ns_to_25ns_abs_temperature_difference_K": 64.0481246967986,
+    "scope": "tracks the archived pairwise maximum cell across all three historical levels; not a physical hotspot claim"
+  },
+  "phase_classification": {
+    "solidus_K": 1533.15,
+    "liquidus_K": 1609.15,
+    "classes": {
+      "solid": "T < solidus",
+      "mushy": "solidus <= T < liquidus",
+      "liquid": "T >= liquidus"
+    },
+    "scope": "diagnostic classification from the recorded IN718 values; not experimental evidence"
+  },
+  "pairwise_full_field_diagnostics": [
+    {
+      "pair": "50ns_to_25ns",
+      "direction": "fine minus coarse",
+      "fields": {
+        "temperature_K": {
+          "unit": "K",
+          "regions": {
+            "all_cells": {
+              "cell_count": 526592,
+              "equal_volume_rms_absolute_difference": 0.19004738122923007,
+              "absolute_volume_l2_difference": 1.5418922466067793e-06,
+              "absolute_volume_l2_unit": "K m^(3/2)",
+              "relative_l2_normalized_by_fine_field": 0.00048140924038854595,
+              "maximum_absolute_difference": 64.0481246967986,
+              "signed_fine_minus_coarse_at_maximum": -64.0481246967986,
+              "maximum_coordinate_m": [
+                -6.749999999999999e-05,
+                -2.5000000000000066e-06,
+                2.5000000000000066e-06
+              ],
+              "cells_abs_difference_gt_10_K": 16,
+              "cells_abs_difference_gt_50_K": 2,
+              "phase_class_mismatch_cells": 2
+            },
+            "substrate_side_z_lt_0": {
+              "cell_count": 464640,
+              "equal_volume_rms_absolute_difference": 0.05802072002542805,
+              "absolute_volume_l2_difference": 4.421772738933898e-07,
+              "absolute_volume_l2_unit": "K m^(3/2)",
+              "relative_l2_normalized_by_fine_field": 0.00016251070091750106,
+              "maximum_absolute_difference": 9.697269733053531,
+              "signed_fine_minus_coarse_at_maximum": -9.697269733053531,
+              "maximum_coordinate_m": [
+                -6.749999999999999e-05,
+                -2.5000000000000066e-06,
+                -2.5000000000000066e-06
+              ],
+              "cells_abs_difference_gt_10_K": 0,
+              "cells_abs_difference_gt_50_K": 0,
+              "phase_class_mismatch_cells": 0
+            },
+            "powder_side_z_ge_0": {
+              "cell_count": 61952,
+              "equal_volume_rms_absolute_difference": 0.5308060199458294,
+              "absolute_volume_l2_difference": 1.4771292965066773e-06,
+              "absolute_volume_l2_unit": "K m^(3/2)",
+              "relative_l2_normalized_by_fine_field": 0.0008742048829759372,
+              "maximum_absolute_difference": 64.0481246967986,
+              "signed_fine_minus_coarse_at_maximum": -64.0481246967986,
+              "maximum_coordinate_m": [
+                -6.749999999999999e-05,
+                -2.5000000000000066e-06,
+                2.5000000000000066e-06
+              ],
+              "cells_abs_difference_gt_10_K": 16,
+              "cells_abs_difference_gt_50_K": 2,
+              "phase_class_mismatch_cells": 2
+            }
+          }
+        },
+        "enthalpy_J_m3": {
+          "unit": "J/m^3",
+          "regions": {
+            "all_cells": {
+              "cell_count": 526592,
+              "equal_volume_rms_absolute_difference": 740841.2526742003,
+              "absolute_volume_l2_difference": 6.010592601047183,
+              "absolute_volume_l2_unit": "J m^(-3/2)",
+              "relative_l2_normalized_by_fine_field": 0.0017089186774335381,
+              "maximum_absolute_difference": 174498106.55174375,
+              "signed_fine_minus_coarse_at_maximum": -174498106.55174375,
+              "maximum_coordinate_m": [
+                -6.749999999999999e-05,
+                -2.5000000000000066e-06,
+                2.5000000000000066e-06
+              ]
+            },
+            "substrate_side_z_lt_0": {
+              "cell_count": 464640,
+              "equal_volume_rms_absolute_difference": 248222.49932134172,
+              "absolute_volume_l2_difference": 1.8917095137876985,
+              "absolute_volume_l2_unit": "J m^(-3/2)",
+              "relative_l2_normalized_by_fine_field": 0.0026864415878277955,
+              "maximum_absolute_difference": 42996419.885596275,
+              "signed_fine_minus_coarse_at_maximum": -42996419.885596275,
+              "maximum_coordinate_m": [
+                -6.749999999999999e-05,
+                -2.5000000000000066e-06,
+                -2.5000000000000066e-06
+              ]
+            },
+            "powder_side_z_ge_0": {
+              "cell_count": 61952,
+              "equal_volume_rms_absolute_difference": 2050141.6793414461,
+              "absolute_volume_l2_difference": 5.705143164830156,
+              "absolute_volume_l2_unit": "J m^(-3/2)",
+              "relative_l2_normalized_by_fine_field": 0.0016555940348954605,
+              "maximum_absolute_difference": 174498106.55174375,
+              "signed_fine_minus_coarse_at_maximum": -174498106.55174375,
+              "maximum_coordinate_m": [
+                -6.749999999999999e-05,
+                -2.5000000000000066e-06,
+                2.5000000000000066e-06
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "pair": "25ns_to_12.5ns",
+      "direction": "fine minus coarse",
+      "fields": {
+        "temperature_K": {
+          "unit": "K",
+          "regions": {
+            "all_cells": {
+              "cell_count": 526592,
+              "equal_volume_rms_absolute_difference": 0.019250155826233004,
+              "absolute_volume_l2_difference": 1.561803473557984e-07,
+              "absolute_volume_l2_unit": "K m^(3/2)",
+              "relative_l2_normalized_by_fine_field": 4.876266619638347e-05,
+              "maximum_absolute_difference": 7.44550042120386,
+              "signed_fine_minus_coarse_at_maximum": 7.44550042120386,
+              "maximum_coordinate_m": [
+                0.0001025,
+                1.2500000000000006e-05,
+                2.2500000000000005e-05
+              ],
+              "cells_abs_difference_gt_10_K": 0,
+              "cells_abs_difference_gt_50_K": 0,
+              "phase_class_mismatch_cells": 0
+            },
+            "substrate_side_z_lt_0": {
+              "cell_count": 464640,
+              "equal_volume_rms_absolute_difference": 0.0006182851972617575,
+              "absolute_volume_l2_difference": 4.711966050990483e-09,
+              "absolute_volume_l2_unit": "K m^(3/2)",
+              "relative_l2_normalized_by_fine_field": 1.7317594471730302e-06,
+              "maximum_absolute_difference": 0.021460805132619498,
+              "signed_fine_minus_coarse_at_maximum": 0.021460805132619498,
+              "maximum_coordinate_m": [
+                6.750000000000001e-05,
+                -2.2500000000000005e-05,
+                -2.5000000000000066e-06
+              ],
+              "cells_abs_difference_gt_10_K": 0,
+              "cells_abs_difference_gt_50_K": 0,
+              "phase_class_mismatch_cells": 0
+            },
+            "powder_side_z_ge_0": {
+              "cell_count": 61952,
+              "equal_volume_rms_absolute_difference": 0.05609781787157589,
+              "absolute_volume_l2_difference": 1.5610925109074144e-07,
+              "absolute_volume_l2_unit": "K m^(3/2)",
+              "relative_l2_normalized_by_fine_field": 9.239023640810831e-05,
+              "maximum_absolute_difference": 7.44550042120386,
+              "signed_fine_minus_coarse_at_maximum": 7.44550042120386,
+              "maximum_coordinate_m": [
+                0.0001025,
+                1.2500000000000006e-05,
+                2.2500000000000005e-05
+              ],
+              "cells_abs_difference_gt_10_K": 0,
+              "cells_abs_difference_gt_50_K": 0,
+              "phase_class_mismatch_cells": 0
+            }
+          }
+        },
+        "enthalpy_J_m3": {
+          "unit": "J/m^3",
+          "regions": {
+            "all_cells": {
+              "cell_count": 526592,
+              "equal_volume_rms_absolute_difference": 65474.44779806504,
+              "absolute_volume_l2_difference": 0.5312072324160475,
+              "absolute_volume_l2_unit": "J m^(-3/2)",
+              "relative_l2_normalized_by_fine_field": 0.0001510342450575542,
+              "maximum_absolute_difference": 24350464.32079029,
+              "signed_fine_minus_coarse_at_maximum": 24350464.32079029,
+              "maximum_coordinate_m": [
+                0.0001025,
+                1.2500000000000006e-05,
+                2.2500000000000005e-05
+              ]
+            },
+            "substrate_side_z_lt_0": {
+              "cell_count": 464640,
+              "equal_volume_rms_absolute_difference": 2418.703585838952,
+              "absolute_volume_l2_difference": 0.018432996996137225,
+              "absolute_volume_l2_unit": "J m^(-3/2)",
+              "relative_l2_normalized_by_fine_field": 2.6176885205583515e-05,
+              "maximum_absolute_difference": 89599.01368319988,
+              "signed_fine_minus_coarse_at_maximum": 89599.01368319988,
+              "maximum_coordinate_m": [
+                6.750000000000001e-05,
+                -2.2500000000000005e-05,
+                -2.5000000000000066e-06
+              ]
+            },
+            "powder_side_z_ge_0": {
+              "cell_count": 61952,
+              "equal_volume_rms_absolute_difference": 190774.21791256804,
+              "absolute_volume_l2_difference": 0.5308873217480873,
+              "absolute_volume_l2_unit": "J m^(-3/2)",
+              "relative_l2_normalized_by_fine_field": 0.00015406264566136333,
+              "maximum_absolute_difference": 24350464.32079029,
+              "signed_fine_minus_coarse_at_maximum": 24350464.32079029,
+              "maximum_coordinate_m": [
+                0.0001025,
+                1.2500000000000006e-05,
+                2.2500000000000005e-05
+              ]
+            }
+          }
+        }
+      }
+    }
+  ],
+  "trend_summary": {
+    "all_global_T_H_rms_and_max_differences_decrease_on_refinement": true,
+    "interpretation": "local full-field temporal diagnostic decrease",
+    "does_not_establish_convergence": true
+  },
+  "validation_checks": {
+    "archive_and_array_hashes_match_source_reports": true,
+    "report_protocol_and_historical_bridge_hashes_match": true,
+    "all_coordinates_bit_identical": true,
+    "all_density_arrays_bit_identical": true,
+    "uniform_cartesian_grid_verified": true,
+    "accepted_dt_replayed_sequentially_with_positive_and_max_dt_bounds": true,
+    "historical_run_data_not_current_candidate": true
+  }
+}

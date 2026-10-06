@@ -1,0 +1,157 @@
+"""Observe existing manufactured-test diagnostics from the frozen release snapshot."""
+import hashlib
+import importlib
+import json
+from pathlib import Path
+import sys
+import time
+import unittest
+
+ROOT = Path(__file__).resolve().parents[1]
+SNAPSHOT = ROOT / ".runtime/v1-input-claims-20261003"
+OUTPUT = Path(__file__).with_suffix(".json")
+REVISION = "ec3a5fcbeb1c5aa1b250ed31a4e812796c5d17ce"
+EXPECTED_PYTHON = ROOT / ".runtime/lpbf-win-py312/Scripts/python.exe"
+TEST_NAME = "test_lpbf_production_transient_manufactured"
+
+
+def sha(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def flatten(suite):
+    for item in suite:
+        if isinstance(item, unittest.TestSuite):
+            yield from flatten(item)
+        else:
+            yield item
+
+
+def level(result):
+    distribution = result.get("numericalDiagnostics", {}).get("acceptedTimestepDistribution", {})
+    return {"requestedMaxDt_s": result["settings"]["maxDt_s"],
+            "acceptedSteps": result["discretization"]["steps"],
+            "cells": result["discretization"]["cells"],
+            "energyBalanceRelativeError": result["energyBalance"]["relativeError"],
+            "acceptedTimestepDistribution": distribution}
+
+
+def main():
+    if OUTPUT.exists():
+        raise FileExistsError("Preserve the existing diagnostic record; choose a fresh output before rerunning")
+    if Path(sys.executable).resolve() != EXPECTED_PYTHON.resolve():
+        raise RuntimeError("Use the explicitly bound snapshot Python executable")
+    manifest_file = ROOT / ".tmp-lpbf-input-claims-acceptance-20261003/source-manifest.json"
+    manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+    if manifest["revision"] != REVISION:
+        raise RuntimeError("Snapshot revision differs")
+    sys.path.insert(0, str(SNAPSHOT / "python"))
+    module = importlib.import_module(TEST_NAME)
+    import lpbf_simulation
+    if Path(module.__file__).resolve() != (SNAPSHOT / "python" / f"{TEST_NAME}.py").resolve():
+        raise RuntimeError("Test module is not from the frozen snapshot")
+    if Path(lpbf_simulation.__file__).resolve() != (SNAPSHOT / "python/lpbf_simulation.py").resolve():
+        raise RuntimeError("Production module is not from the frozen snapshot")
+    bound_files = [f"python/{name}" for name in lpbf_simulation.IMPLEMENTATION_SOURCE_FILES]
+    bound_files.append(f"python/{TEST_NAME}.py")
+    for name in bound_files:
+        if sha(SNAPSHOT / name) != manifest["sha256"][name]:
+            raise RuntimeError(f"Frozen source bytes differ: {name}")
+    before = lpbf_simulation.implementation_fingerprint()
+    suite = unittest.defaultTestLoader.loadTestsFromModule(module)
+    instances = list(flatten(suite))
+    if len(instances) != 4:
+        raise RuntimeError("Expected exactly four existing manufactured tests")
+    codes = {getattr(module.__dict__[type(case).__name__], case._testMethodName).__code__: case.id()
+             for case in instances}
+    observations = {case.id(): {"levels": [], "actualStepCounts": None} for case in instances}
+    last_diffusion_result = [None]
+
+    def trace(frame, event, _arg):
+        name = codes.get(frame.f_code)
+        if name is None:
+            return None  # Production operators and helper frames have no line/return tracing.
+        values = frame.f_locals
+        target = observations[name]
+        if event == "line" and "mixed_boundary_eigenmode" in name:
+            result = values.get("result")
+            if isinstance(result, dict) and "discretization" in result and result is not last_diffusion_result[0]:
+                last_diffusion_result[0] = result
+                row = level(result)
+                row["cells_z"] = values["nz"]
+                target["levels"].append(row)
+        if event == "return":
+            results = values.get("results")
+            if isinstance(results, list):
+                for item in results:
+                    row = level(item[0])
+                    if "piecewise_enthalpy" in name:
+                        row.update(maxSampleTemperatureError_K=item[1],
+                                   maxSampleLiquidFractionError=item[2],
+                                   maxSampleSpecificEnthalpyError_J_kg=item[3])
+                    elif "uniform_enthalpy" in name and "nonuniform" not in name:
+                        row.update(finalTimeError_s=abs(item[2]["time_s"]-item[3]),
+                                   finalPeakTemperatureError_K=abs(item[2]["peak_K"]-item[1]),
+                                   finalCenterTemperatureError_K=abs(item[2]["center_K"]-item[1]))
+                    elif "nonuniform_enthalpy" in name:
+                        row.update(finalTimeError_s=abs(item[1]["time_s"]-item[4]),
+                                   finalPeakTemperatureError_K=abs(item[1]["peak_K"]-item[2]),
+                                   finalCenterTemperatureError_K=abs(item[1]["center_K"]-item[3]),
+                                   independentPassiveOperatorChecks=item[5])
+                    target["levels"].append(row)
+            target["actualStepCounts"] = values.get("steps", [row["acceptedSteps"] for row in target["levels"]])
+        return trace
+
+    started = time.monotonic()
+    previous_trace = sys.gettrace()
+    try:
+        sys.settrace(trace)
+        result = unittest.TextTestRunner(verbosity=2).run(suite)
+    finally:
+        sys.settrace(previous_trace)
+    elapsed = time.monotonic()-started
+    after = lpbf_simulation.implementation_fingerprint()
+    for name in bound_files:
+        if sha(SNAPSHOT / name) != manifest["sha256"][name]:
+            raise RuntimeError(f"Frozen source changed during diagnostics: {name}")
+    if after != before:
+        raise RuntimeError("Implementation identity changed during diagnostics")
+    failed = {case.id() for case, _ in result.failures+result.errors}
+    records = []
+    for case in instances:
+        diagnostic_state = {key: value for key, value in vars(case).items() if key.endswith("diagnostics")}
+        records.append({"testId": case.id(), "status": "FAIL" if case.id() in failed else "PASS",
+                        "storedInstanceDiagnostics": diagnostic_state or None,
+                        "storedDiagnosticsAvailability": "present" if diagnostic_state else "not-retained-by-test-instance",
+                        **observations[case.id()]})
+    report = {"schemaVersion": 1, "sourceRevision": REVISION, "snapshotRoot": str(SNAPSHOT),
+              "snapshotManifestSha256": sha(manifest_file), "snapshotManifestFileCount": manifest["fileCount"],
+              "boundSourceSha256": {name: sha(SNAPSHOT / name) for name in bound_files},
+              "harnessSha256": sha(Path(__file__)), "pythonExecutable": sys.executable,
+              "pythonVersion": sys.version, "implementationFingerprintSchema": lpbf_simulation.IMPLEMENTATION_FINGERPRINT_SCHEMA,
+              "implementationFingerprintBefore": before, "implementationFingerprintAfter": after,
+              "observationMethod": "sys.settrace on only four existing test-method frames; no production line tracing or operator/test mutation",
+              "testsRun": result.testsRun, "failures": len(result.failures), "errors": len(result.errors),
+              "skipped": len(result.skipped), "status": "PASS" if result.wasSuccessful() else "FAIL", "wallTime_s": elapsed,
+              "sourceStatedAcceptanceBounds": {"allCasesEnergyBalanceRelativeError": 1e-10,
+                  "uniformAndNonuniformFinalTemperatureAbsoluteError_K": 1e-7,
+                  "uniformAndNonuniformFinalTimeDecimalPlaces": 14,
+                  "nonuniformPassiveOperatorRtol": 2e-12, "nonuniformPassiveOperatorAtol_W_m3": 1e-7,
+                  "piecewiseFineToCoarseSampleErrorRatioUpperExclusive": 0.25,
+                  "piecewiseThresholdEnthalpyAbsoluteError_J_kg": 1e-6,
+                  "piecewiseThresholdEnthalpyJumpAbsoluteError_J_kg": 1e-3,
+                  "diffusionObservedOrderLowerExclusive": 1.0},
+              "diagnosticOnly": True, "experimentalValidation": False,
+              "solverValidationStatus": "unvalidated", "physicalLpbfConvergenceStatus": "inconclusive",
+              "scope": "Existing synthetic manufactured forcing through the production CPU transient loop; diffusion order follows coupled dx and dt proportional to dx squared, not a physical LPBF convergence claim",
+              "tests": records}
+    with OUTPUT.open("x", encoding="utf-8", newline="\n") as stream:
+        json.dump(report, stream, indent=2, allow_nan=False)
+        stream.write("\n")
+    print(json.dumps({"output": str(OUTPUT), "status": report["status"], "testsRun": result.testsRun,
+                      "sha256": sha(OUTPUT)}, allow_nan=False))
+    return 0 if result.wasSuccessful() else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

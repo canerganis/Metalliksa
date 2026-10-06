@@ -1,0 +1,21 @@
+{
+  "mode": "standard",
+  "backend": "reference",
+  "material": "Inconel 718",
+  "surfaceMode": "powder-layer",
+  "power_W": 75,
+  "speed_mm_s": 1200,
+  "beamDiameter_um": 80,
+  "preheat_C": 80,
+  "layer_um": 80,
+  "hatch_um": 100,
+  "tracks": 1,
+  "layers": 1,
+  "trackLength_um": 200,
+  "cooling_s": 0.00002,
+  "dwell_s": 0,
+  "packingFraction": 0.55,
+  "powderConductivityRatio": 0.12,
+  "mesh_um": 10,
+  "maxDt_s": 0.00000005
+}

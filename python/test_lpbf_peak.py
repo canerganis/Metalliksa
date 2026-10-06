@@ -63,6 +63,10 @@ class PeakContract(unittest.TestCase):
             self.assertAlmostEqual(metrics['crossSectionArea_um2'], 8.)
             self.assertEqual(d['peakMeltStep'], 2)
             self.assertEqual(d['peakMeltTime_s'], .2)
+            self.assertEqual(d['peakMeltCellCount'], 3)
+            self.assertEqual(d['equalMaximumEndpointCount'], 2)
+            self.assertEqual(d['firstEqualMaximumTime_s'], .2)
+            self.assertAlmostEqual(d['lastEqualMaximumTime_s'], .3)
             self.assertAlmostEqual(d['sampledPeakMeltVolume_um3'], 16.)
             self.assertAlmostEqual(d['peakMeltSamplingLossFraction'], 1/3)
             with np.load(Path(tmp)/'peak-field.npz') as field:
@@ -85,6 +89,10 @@ class PeakContract(unittest.TestCase):
             self.assertTrue(all(v == 0 for v in metrics.values()))
             self.assertIsNone(d['peakMeltTime_s'])
             self.assertIsNone(d['peakMeltStep'])
+            self.assertEqual(d['peakMeltCellCount'], 0)
+            self.assertEqual(d['equalMaximumEndpointCount'], 0)
+            self.assertIsNone(d['firstEqualMaximumTime_s'])
+            self.assertIsNone(d['lastEqualMaximumTime_s'])
             self.assertEqual(d['peakMeltSamplingLossFraction'], 0.)
             from lpbf_evidence import write_artifacts
             result = {}

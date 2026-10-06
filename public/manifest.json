@@ -4,8 +4,8 @@
   "description": "LPBF Engineering, Materials Intelligence and Evidence & Qualification with traceable research records.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#070b12",
-  "theme_color": "#070b12",
+  "background_color": "#eceef1",
+  "theme_color": "#eceef1",
   "orientation": "any",
   "icons": [
     {

@@ -1,0 +1,289 @@
+{
+  "_schema": "https://data.nist.gov/od/dm/nerdm-schema/v0.7#",
+  "@context": [
+    "https://data.nist.gov/od/dm/nerdm-pub-context.jsonld",
+    {
+      "@base": "ark:/88434/mds2-3842"
+    }
+  ],
+  "@type": [
+    "nrdp:DataPublication",
+    "nrdp:PublicDataResource",
+    "dcat:Dataset"
+  ],
+  "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/PublicDataResource"
+  ],
+  "@id": "ark:/88434/mds2-3842",
+  "ediid": "ark:/88434/mds2-3842",
+  "version": "1.0.3",
+  "doi": "doi:10.18434/mds2-3842",
+  "title": "Dynamic Laser Coupling of Scanned Single Tracks on Bare IN718 with Varying Beam Diameter, Scan Speed, and Power",
+  "contactPoint": {
+    "fn": "David Deisenroth",
+    "hasEmail": "mailto:david.deisenroth@nist.gov"
+  },
+  "modified": "2025-05-22",
+  "status": "available",
+  "landingPage": "https://data.nist.gov/od/id/mds2-3842",
+  "description": [
+    "These data are results from the dynamic laser coupling of scanned single tracks on bare nickel alloy 718 associated with AM-Bench 2022. In this work, \u201claser coupling\u201d is the portion of applied laser power that is not reflected from the material. The laser coupling (P_lc) value is determined by measuring the reflected laser power (P_rho), dividing that value by the applied laser power (P_app), and subtracting it from unity (making the value unitless, with a range from 0 to 1), i.e., P_lc = 1 \u2013 P_rho/P_app. Laser coupling is an approximation of laser absorption into the melting process, but is not directly referred to as such because of other physical mechanisms, such as laser power absorption into the plume of process byproducts. For this reason, an uncertainty budget is not offered for this measurement at the current state of development.",
+    "The experimental methods are detailed in Deisenroth et al. [1]. In summary, this work uses a calibrated integrating hemisphere to measure the total reflected laser power during scanned laser melting, with data collection at 100 kHz.The experimental conditions are detailed in \u201cAMB2022-03 Benchmark Measurements and Challenge Problems\u201d [2], with the most relevant details in Section 2.2.3: Single laser track measurements with dynamic coupling."
+  ],
+  "keyword": [
+    "additive manufacturing; benchmarks; laser coupling; laser absorption; laser melting; laser powder bed fusion"
+  ],
+  "topic": [
+    {
+      "@type": "Concept",
+      "scheme": "https://data.nist.gov/od/dm/nist-themes/v1.1",
+      "tag": "Manufacturing: Additive manufacturing"
+    },
+    {
+      "@type": "Concept",
+      "tag": "Metrology:Optical, photometry, and laser metrology"
+    },
+    {
+      "scheme": "https://data.nist.gov/od/dm/nist-themes-additivemanufacturing/v1.0",
+      "tag": "Materials: Metals",
+      "@type": "Concept"
+    },
+    {
+      "scheme": "https://data.nist.gov/od/dm/nist-themes-additivemanufacturing/v1.0",
+      "tag": "Build Process: Powder bed fusion: Laser",
+      "@type": "Concept"
+    },
+    {
+      "scheme": "https://data.nist.gov/od/dm/nist-themes-additivemanufacturing/v1.0",
+      "tag": "Collaboration: AM-Bench",
+      "@type": "Concept"
+    }
+  ],
+  "accessLevel": "public",
+  "license": "https://www.nist.gov/open/license",
+  "publisher": {
+    "name": "National Institute of Standards and Technology",
+    "@type": "org:Organization"
+  },
+  "language": [
+    "en"
+  ],
+  "bureauCode": [
+    "006:55"
+  ],
+  "programCode": [
+    "006:052"
+  ],
+  "_editStatus": "done",
+  "components": [
+    {
+      "@id": "cmps/3842_README.txt",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "3842_README.txt",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-3842/3842_README.txt",
+      "mediaType": "text/plain",
+      "format": {
+        "description": ".txt"
+      },
+      "description": "Contains description, methods, and data manifest. ",
+      "title": "README",
+      "size": 7469,
+      "checksum": {
+        "hash": "50d24d8dc85cd9075c774c3363c5dbbf1a0a769c4349979d82c76fa6b9b906be",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/dynamic_laser_coupling_data.zip",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "dynamic_laser_coupling_data.zip",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-3842/dynamic_laser_coupling_data.zip",
+      "mediaType": "application/x-zip-compressed",
+      "format": {
+        "description": ".txt"
+      },
+      "description": "In the data file, the first column is the time from track initiation in milliseconds. The second column is the instantaneous value of laser coupling at each time step. ",
+      "title": "Dynamic Laser Coupling Data",
+      "size": 93566,
+      "checksum": {
+        "hash": "8c4278eb621c1638465e13e87339fe0daba1dcae138f24b9c1d86c186cd74f66",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/summary_of_data_files.csv",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "summary_of_data_files.csv",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-3842/summary_of_data_files.csv",
+      "mediaType": "application/vnd.ms-excel",
+      "format": {
+        "description": "Comma Separated Variable"
+      },
+      "description": "The scan speed, power, and spot size corresponding to each data file are summarized.",
+      "title": "Summary of Data Files",
+      "size": 496,
+      "checksum": {
+        "hash": "abf339b8a2b36b69bc11a31e4600a3cc845dd4f705b6a96a7a543e990824f3b4",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    }
+  ],
+  "theme": [
+    "Manufacturing: Additive manufacturing",
+    "Metrology:Optical, photometry, and laser metrology"
+  ],
+  "references": [
+    {
+      "@type": [
+        "npg:Document"
+      ],
+      "@id": "#ref:10.1117/12.2547491",
+      "refType": "IsSupplementTo",
+      "location": "https://doi.org/10.1117/12.2547491",
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/bib/v0.7#/definitions/DCiteReference"
+      ],
+      "title": "Measurement of mass loss, absorbed energy, and time-resolved reflected power for laser powder bed fusion",
+      "issued": "2020-03-02",
+      "citation": "Deisenroth, D., Mekhontsev, S., & Lane, B. (2020). Measurement of mass loss, absorbed energy, and time-resolved reflected power for laser powder bed fusion. Laser 3D Manufacturing VII, 20. https://doi.org/10.1117/12.2547491\n"
+    },
+    {
+      "@type": [
+        "deo:BibliographicReference"
+      ],
+      "@id": "#ref:document/amb2022-03-measurement-and-challenge-descriptions-version-101",
+      "refType": "IsSupplementTo",
+      "location": "https://www.nist.gov/document/amb2022-03-measurement-and-challenge-descriptions-version-101",
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/bib/v0.7#/definitions/DCiteReference"
+      ]
+    }
+  ],
+  "authors": [
+    {
+      "familyName": "Deisenroth",
+      "fn": "David  Deisenroth",
+      "givenName": "David",
+      "middleName": "",
+      "affiliation": [
+        {
+          "title": "National Institute of Standards and Technology",
+          "@type": "org:Organization",
+          "@id": "ror:05xpvk416"
+        }
+      ],
+      "orcid": "0000-0002-6869-7970",
+      "@type": "foaf:Person"
+    },
+    {
+      "familyName": "Mekhontsev",
+      "fn": "Sergey  Mekhontsev",
+      "givenName": "Sergey",
+      "middleName": "",
+      "affiliation": [
+        {
+          "title": "National Institute of Standards and Technology",
+          "@type": "org:Organization",
+          "@id": "ror:05xpvk416"
+        }
+      ],
+      "orcid": "0000-0001-7764-630X",
+      "@type": "foaf:Person"
+    },
+    {
+      "familyName": "Weaver",
+      "fn": "Jordan  Weaver",
+      "givenName": "Jordan",
+      "middleName": "",
+      "affiliation": [
+        {
+          "title": "National Institute of Standards and Technology",
+          "@type": "org:Organization",
+          "@id": "ror:05xpvk416"
+        }
+      ],
+      "orcid": "0000-0003-4857-5164",
+      "@type": "foaf:Person"
+    }
+  ],
+  "annotated": "2026-01-06T04:03:34.849501",
+  "revised": "2025-07-16T12:24:39.233174",
+  "issued": null,
+  "firstIssued": "2025-07-16T12:24:39.233174",
+  "releaseHistory": {
+    "@id": "ark:/88434/mds2-3842/pdr:v",
+    "@type": [
+      "nrdr:ReleaseHistory"
+    ],
+    "hasRelease": [
+      {
+        "version": "1.0.0",
+        "issued": "2025-05-22",
+        "@id": "ark:/88434/mds2-3842/pdr:v/1.0.0",
+        "location": "https://data.nist.gov/od/id/ark:/88434/mds2-3842/pdr:v/1.0.0",
+        "description": "initial release"
+      },
+      {
+        "version": "1.0.1",
+        "issued": "2026-01-03",
+        "@id": "ark:/88434/mds2-3842/pdr:v/1.0.1",
+        "location": "https://data.nist.gov/od/id/ark:/88434/mds2-3842/pdr:v/1.0.1",
+        "description": "added to additiveman collection"
+      },
+      {
+        "version": "1.0.2",
+        "issued": "2026-01-04",
+        "@id": "ark:/88434/mds2-3842/pdr:v/1.0.2",
+        "location": "https://data.nist.gov/od/id/ark:/88434/mds2-3842/pdr:v/1.0.2",
+        "description": "fix AM tags"
+      },
+      {
+        "version": "1.0.3",
+        "issued": "2026-01-05",
+        "@id": "ark:/88434/mds2-3842/pdr:v/1.0.3",
+        "location": "https://data.nist.gov/od/id/ark:/88434/mds2-3842/pdr:v/1.0.3",
+        "description": "fix AM tags: remove redundant tags"
+      }
+    ]
+  },
+  "isPartOf": [
+    {
+      "@type": [
+        "nrda:ScienceTheme",
+        "nrdp:PublicDataResource"
+      ],
+      "@id": "ark:/88434/pdr0-0003",
+      "title": "Additive Manufacturing Data"
+    }
+  ]
+}

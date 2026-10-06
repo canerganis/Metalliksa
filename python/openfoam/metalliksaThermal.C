@@ -169,6 +169,13 @@ int main(int argc, char *argv[])
                 if(!std::isfinite(shapeSum) || shapeSum<=0)
                     FatalErrorInFunction<<"Gaussian source has no captured mass; refine or extend mesh"<<exit(FatalError);
                 captured=std::min(captured,2*shapeSum);
+                // Match the NumPy reference's maximum 1% source renormalization.
+                // Reject before normalization so a truncated domain cannot
+                // silently amplify deposited energy.
+                if(captured<1.0/1.01)
+                    FatalErrorInFunction<<"Gaussian source capture "<<captured
+                        <<" is below the 1/1.01 minimum; expand or refine the represented domain"
+                        <<exit(FatalError);
                 for(int i=0;i<n;++i) if(active[i]) source[i]+=.5*power*nodeSource[i]/shapeSum;
             }
             double allowed=dt;

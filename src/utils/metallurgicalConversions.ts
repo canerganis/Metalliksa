@@ -2,6 +2,7 @@
  * Metallurgical Unit Conversion & Physical Property Interpretation Engine
  * Compliant with ASTM E140, ISO 18265, ASTM E112, and standard aerospace metallurgy standards.
  */
+import { HardnessMaterialClass, NO_TABLE_FOR_CLASS, convertHardness } from "./hardnessConversion";
 
 // ==========================================
 // 1. STRESS & PRESSURE CONVERSIONS
@@ -104,103 +105,10 @@ export function interpretStressMpa(mpa: number): StressInterpretation {
 }
 
 // ==========================================
-// 2. HARDNESS CONVERSIONS (ASTM E140 / ISO 18265)
+// 2. HARDNESS
 // ==========================================
-export type HardnessScale = "HRC" | "HV" | "HRB" | "HBW" | "HK" | "HLD";
-
-export interface FullHardnessState {
-  HRC?: number;
-  HV: number;
-  HRB?: number;
-  HBW: number;
-  HK: number;
-  HLD: number;
-  tensileRm_MPa: number;
-  tensileRm_ksi: number;
-  validRangeNote: string;
-}
-
-export function convertMetallurgicalHardness(
-  value: number,
-  fromScale: HardnessScale
-): FullHardnessState {
-  let vickers = 300;
-
-  switch (fromScale) {
-    case "HV":
-      vickers = Math.max(40, Math.min(2000, value));
-      break;
-    case "HRC": {
-      const hrc = Math.max(15, Math.min(72, value));
-      // ASTM E140 non-linear polynomial fit for steel
-      vickers = 142.8 + 8.94 * hrc + 0.134 * hrc * hrc;
-      break;
-    }
-    case "HRB": {
-      const hrb = Math.max(30, Math.min(105, value));
-      vickers = 24.5 + 1.25 * hrb + 0.007 * hrb * hrb;
-      break;
-    }
-    case "HBW": {
-      const hbw = Math.max(60, Math.min(750, value));
-      vickers = 1.05 * hbw - 5;
-      break;
-    }
-    case "HK": {
-      vickers = Math.max(40, Math.min(2000, value)) / 1.03;
-      break;
-    }
-    case "HLD": {
-      // Leeb D conversion approximation: HLD ~ 500 + 4.5 * HRC
-      const eqHrc = (value - 500) / 4.5;
-      const clampedHrc = Math.max(15, Math.min(68, eqHrc));
-      vickers = 142.8 + 8.94 * clampedHrc + 0.134 * clampedHrc * clampedHrc;
-      break;
-    }
-  }
-
-  // Derive all scales from Vickers (HV)
-  let hrc: number | undefined;
-  if (vickers >= 230) {
-    const rawHrc = -20.6 + 0.098 * vickers - 0.000045 * vickers * vickers;
-    hrc = Number(Math.max(18, Math.min(70, rawHrc)).toFixed(1));
-  }
-
-  let hrb: number | undefined;
-  if (vickers <= 325) {
-    const rawHrb = -18.2 + 0.82 * vickers - 0.0014 * vickers * vickers;
-    hrb = Number(Math.max(25, Math.min(102, rawHrb)).toFixed(1));
-  }
-
-  const hbw = Math.round(Math.max(50, Math.min(700, vickers / 1.05)));
-  const hk = Math.round(vickers * 1.03);
-  const hld = Math.round(
-    hrc ? 500 + 4.5 * hrc : Math.min(890, Math.max(350, 200 + 1.6 * vickers))
-  );
-
-  // Tensile strength Rm estimate (ASTM E140 table for carbon and low-alloy steels)
-  const rm_mpa = Math.round(vickers * 3.25);
-  const rm_ksi = Number((rm_mpa * 0.1450377).toFixed(1));
-
-  let note = "ASTM E140 & ISO 18265 calibrated correlation";
-  if (fromScale === "HRC" && (value < 20 || value > 68)) {
-    note = "Notice: Value outside ASTM E140 certified HRC range (20 - 68 HRC). Diamond indenter geometry may diverge.";
-  } else if (fromScale === "HRB" && (value < 40 || value > 100)) {
-    note = "Notice: Value outside standard HRB ball indenter range (40 - 100 HRB).";
-  }
-
-  return {
-    HRC: hrc,
-    HV: Math.round(vickers),
-    HRB: hrb,
-    HBW: hbw,
-    HK: hk,
-    HLD: hld,
-    tensileRm_MPa: rm_mpa,
-    tensileRm_ksi: rm_ksi,
-    validRangeNote: note,
-  };
-}
+// Scale conversion lives in ./hardnessConversion (convertSteelHardness: ASTM E140 / ISO 18265 table interpolation,
+// shared with Pocket Calculators). Only the qualitative HV band description remains here.
 
 export interface HardnessInterpretation {
   condition: string;
@@ -209,40 +117,57 @@ export interface HardnessInterpretation {
   wearResistance: string;
 }
 
-export function interpretHardness(hv: number): HardnessInterpretation {
+/**
+ * The HV bands are qualitative and written for non-austenitic steels. Only the 450 HV limit has outside support
+ * (hard turning is usually taken to start at about 45 HRC, ASTM E140: 45 HRC = 446 HV); the 160, 280 and 750 HV
+ * limits are app heuristics without a cited source.
+ * Example placement checked against sources (2026-10-04): 300M landing gear is used at 52-55 HRC (Carpenter 300M data
+ * sheet; ~545-595 HV per E140), so it sits in the 450-750 band; AISI 4140 normalized at 870 C is 302 HB / 32 HRC
+ * (MatWeb), i.e. ~318 HV in the 280-450 band; CBN inserts turn hardened steel up to about 68 HRC (trade sources:
+ * Canadian Metalworking, CTE), so >= 750 HV is not "grinding/EDM only". "Solution annealed" is an austenitic/PH term.
+ */
+export const HARDNESS_INTERPRETATION_NOTE =
+  "Qualitative guide for non-austenitic steels only; band limits are approximate (only the ~450 HV / 45 HRC hard-turning limit has outside support), not from a standard.";
+
+export const HARDNESS_INTERPRETATION_UNAVAILABLE =
+  "Unavailable: the condition bands are defined for non-austenitic steels only";
+
+/** Qualitative condition for a non-austenitic steel HV; null for every other alloy class (no bands for them). */
+export function interpretHardness(hv: number, materialClass: HardnessMaterialClass): HardnessInterpretation | null {
+  if (materialClass !== "non-austenitic-steel" || !Number.isFinite(hv)) return null;
   if (hv < 160) {
     return {
-      condition: "Dead Soft / Solution Annealed",
+      condition: "Dead Soft / Annealed",
       machinability: "Gummy, prone to built-up edge; high rake angle required",
-      typicalComponent: "Gaskets, deep-drawn cans, annealed tubing, architectural copper",
+      typicalComponent: "Gaskets, deep-drawn cans, annealed tubing",
       wearResistance: "Low abrasive wear resistance; prone to galling and adhesion",
     };
   } else if (hv < 280) {
     return {
       condition: "Normalized / Stress-Relieved",
       machinability: "Optimal free-machining zone; clean chip breaking",
-      typicalComponent: "Drive shafts, structural beams, forged connecting rods, normalized 4140",
+      typicalComponent: "Drive shafts, structural beams, forged connecting rods",
       wearResistance: "Moderate; suitable for lubricated journal bearings",
     };
   } else if (hv < 450) {
     return {
-      condition: "Quenched & Tempered (Structural Toughness)",
+      condition: "Quenched & Tempered or Normalized Alloy Steel",
       machinability: "Tough cutting; coated carbide or cermet tooling recommended",
-      typicalComponent: "Aircraft landing gear, high-pressure pump shafts, Inconel turbine disks",
+      typicalComponent: "High-pressure pump shafts, normalized or Q&T 4140 shafting",
       wearResistance: "High toughness combined with solid impact resistance",
     };
   } else if (hv < 750) {
     return {
       condition: "Fully Hardened / Case Carburized Surface",
       machinability: "Hard turning or grinding only (CBN / ceramic inserts)",
-      typicalComponent: "Transmission gears, cam lobes, ball bearing races (52100), D2 dies",
+      typicalComponent: "Transmission gears, cam lobes, 300M landing gear, ball bearing races (52100), D2 dies",
       wearResistance: "Exceptional resistance to rolling contact fatigue and abrasive wear",
     };
   } else {
     return {
-      condition: "Super-Hard Nitride Case / Cemented Carbide",
-      machinability: "Diamond wheel grinding, EDM, or ultrasonic machining only",
-      typicalComponent: "Plasma nitrided cylinder liners, WC-Co cutting inserts, valve stems",
+      condition: "Super-Hard Nitride Case",
+      machinability: "CBN hard turning (up to about 68 HRC) or grinding",
+      typicalComponent: "Plasma nitrided cylinder liners, valve stems",
       wearResistance: "Extreme sliding abrasive and erosion wear resistance",
     };
   }
@@ -490,8 +415,10 @@ export interface AstmGrainSizeResult {
 
 export function calculateAstmE112FromG(g: number): AstmGrainSizeResult {
   const gClamped = Math.max(-3, Math.min(16, g));
-  // Metric intercept diameter: d = 1000 / sqrt(2^(G+3)) um
-  const meanInterceptUm = 1000 / Math.sqrt(Math.pow(2, gClamped + 3));
+  // Mean lineal intercept, the exact inverse of the E112 intercept relation used by calculateAstmE112FromDiameterUm:
+  // G = -6.643856 * log10(l_mm) - 3.288  =>  l_mm = 10^(-(G + 3.288) / 6.643856)
+  // (Until 2026-10 this was 1000 / sqrt(2^(G+3)) um, a planimetric diameter, so G -> l -> G did not round-trip.)
+  const meanInterceptUm = 1000 * Math.pow(10, -(gClamped + 3.288) / 6.643856);
   const grainsPerSqInch100x = Math.pow(2, gClamped - 1);
   const grainsPerMm2 = Math.round(grainsPerSqInch100x * 15.5);
 
@@ -630,5 +557,82 @@ export function convertDensity(
     kg_m3: Number((g_cm3 * 1000).toFixed(1)),
     lb_in3: Number((g_cm3 * 0.036127292).toFixed(5)),
     lb_ft3: Number((g_cm3 * 62.42796).toFixed(2)),
+  };
+}
+
+// ==========================================
+// 8. DUAL-UNIT TEST REPORT SCRATCHPAD (SI -> US customary + hardness)
+// ==========================================
+export type ReportHardnessScale = "HRC" | "HV" | "HBW" | "HRB";
+
+export interface DualUnitReportInputs {
+  yieldMpa: number;
+  utsMpa: number;
+  /** Measured hardness value and the scale it was measured in (reported as the primary value). */
+  hardnessValue: number;
+  hardnessScale: ReportHardnessScale;
+  /** Only "non-austenitic-steel" is converted (ASTM E140 tables); other classes report the measured value only. */
+  hardnessMaterialClass: HardnessMaterialClass;
+  cvnJ: number;
+  testTempC: number;
+}
+
+export interface DualUnitReport {
+  yieldKsi: number;
+  utsKsi: number;
+  /** Measured hardness, e.g. "34 HRC". */
+  hardnessMeasured: string;
+  /** Converted estimates of the other scales, e.g. "≈ 336 HV / 319 HBW"; null when none is available. */
+  hardnessConverted: string | null;
+  /** Measured value with the converted estimate (or the reason it is unavailable) in parentheses. */
+  hardnessText: string;
+  /** Converted values (null = unavailable); the measured scale echoes the input. */
+  hrc: number | null;
+  hv: number | null;
+  hbw: number | null;
+  cvnFtLbf: number;
+  tempF: number;
+  tempK: number;
+}
+
+const REPORT_HARDNESS_ORDER: ReportHardnessScale[] = ["HRC", "HV", "HBW"];
+
+/** Hardness line of the copied report: no placeholder value when no measured hardness was entered (e.g. after a load). */
+export function reportHardnessLine(entered: boolean, hardnessText: string, syncNote: string | null): string {
+  if (entered) return hardnessText;
+  return syncNote ? `not entered (${syncNote})` : "not entered";
+}
+
+export function computeDualUnitReport(inputs: DualUnitReportInputs): DualUnitReport {
+  const { yieldMpa: reportYieldMpa, utsMpa: reportUtsMpa, cvnJ: reportCvnJ, testTempC: reportTestTempC } = inputs;
+  const yieldKsi = Number((reportYieldMpa * 0.1450377).toFixed(1));
+  const utsKsi = Number((reportUtsMpa * 0.1450377).toFixed(1));
+  const hState = convertHardness(inputs.hardnessValue, inputs.hardnessScale, inputs.hardnessMaterialClass);
+  const hardnessMeasured = `${inputs.hardnessValue} ${inputs.hardnessScale}`;
+  const parts = REPORT_HARDNESS_ORDER.filter((sc) => sc !== inputs.hardnessScale)
+    .map((sc) => (hState[sc] === null ? null : `${hState[sc]} ${sc}`))
+    .filter((t): t is string => t !== null);
+  const hardnessConverted = parts.length > 0 ? `≈ ${parts.join(" / ")}` : null;
+  const reason =
+    inputs.hardnessMaterialClass === "non-austenitic-steel" ? "outside the verified table range" : NO_TABLE_FOR_CLASS.replace(/^Unavailable: /, "");
+  const hardnessText =
+    hardnessConverted === null
+      ? `${hardnessMeasured} (converted values: Unavailable, ${reason})`
+      : `${hardnessMeasured} (${hardnessConverted}, converted per ASTM E140 tables, not measured)`;
+  const cvnFtLbf = Number((reportCvnJ * 0.737562).toFixed(1));
+  const tempF = Number((reportTestTempC * 1.8 + 32).toFixed(1));
+  const tempK = Number((reportTestTempC + 273.15).toFixed(1));
+  return {
+    yieldKsi,
+    utsKsi,
+    hardnessMeasured,
+    hardnessConverted,
+    hardnessText,
+    hrc: hState.HRC,
+    hv: hState.HV,
+    hbw: hState.HBW,
+    cvnFtLbf,
+    tempF,
+    tempK,
   };
 }

@@ -53,8 +53,11 @@ def _binary_z_liquidus(T_fn: Callable, x: float, T_liq: float, z_hi: float) -> f
     if _t_scalar(T_fn, x, 0.0, 0.0) < T_liq:
         return -1.0
     lo, hi = 0.0, max(4e-6, float(z_hi))
-    if _t_scalar(T_fn, x, 0.0, hi) >= T_liq:
-        return hi
+    # Bisection needs a sign-changing bracket. If the top of the search
+    # domain is still superheated, the liquidus crossing lies beyond the
+    # requested domain; do not report its boundary as a physical front.
+    if _t_scalar(T_fn, x, 0.0, hi) > T_liq:
+        return -1.0
     for _ in range(16):
         mid = 0.5 * (lo + hi)
         if _t_scalar(T_fn, x, 0.0, mid) >= T_liq:

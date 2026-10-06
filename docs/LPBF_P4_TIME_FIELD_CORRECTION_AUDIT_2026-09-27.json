@@ -1,0 +1,247 @@
+{
+  "schemaVersion": 1,
+  "auditStatus": "PASS",
+  "createdAt": "2026-09-27T17:47:34.198676+00:00",
+  "scope": "Global selected-time field corrections on one identical ordered 5 um mesh; diagnostic only",
+  "sourceReport": "docs/LPBF_P4_FIXED_SCAN_END_CONTINUATION_2026-09-27.json",
+  "sourceReportSha256": "196c8dc3db026914fe7590ace40b8f364cf76509f1626958574ab9f8c6f3ecb6",
+  "originalProtocolSha256": "a384c0e0a72aa8fe1bf3a5543d70c0558971a5a9a8dcea45550c034c58cd93e1",
+  "reuseAddendumSha256": "19a5f5c49a5f0e1838f249d3df35bcdccf78c91c60e66b4971b514a5305b8289",
+  "continuationWrapperSha256": "e25774cf8267ddd3721d7c4f57d4acbbdadc166a027967141800c724e07ea688",
+  "implementationFingerprintBefore": "fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c",
+  "implementationFingerprintAfter": "fbef0bde60ea3fa1b16a009e97ea2db718fff835af1abfec59590cfded01761c",
+  "sourceGuards": "PASS",
+  "cells": 526592,
+  "orderedCoordinatesExactlyEqual": true,
+  "actualMesh_m": 4.9999999999999996e-06,
+  "nominalSelectedTime_s": 0.00024999999999999995,
+  "sourceBindings": [
+    {
+      "maxDt_s": 5e-08,
+      "inputHash": "41ec735d7e3e6622a0304675f28877ad3a9e1e4f67da9c7fd209d83cd1e67278",
+      "fieldArtifact": "docs/LPBF_P4_FIXED_SCAN_END_CONTINUATION_FIELDS_2026-09-27/mesh-5um-dt-5e-08s.npz",
+      "npzSha256": "1a771da9f6f873a27bd68fadd2a43eb3671bc67549acc253171aea0c1812bd23",
+      "fieldSha256": {
+        "coordinates_m": "a682f3d8d75f92e126ec109d0d27f442fd1107fb38b195642c6bc270e47e92b6",
+        "temperature_K": "25ec6642a32fca334bbc1edaa7b52015953a8e0b010331a7708372d036e7ded3",
+        "enthalpy_J_m3": "d11df66ebe988302fcbabe35281882d5afcfc38868bcaf1c22f50413303472b7",
+        "density_kg_m3": "f71c2a5cf64852685f71396d0dabc728104924a58b1dd47e9e487b4eb7cd875f",
+        "accepted_dt_s": "c6333540d6435edff542dd978522a2fb097d0508e8c60711d24f6dc5f4009492"
+      },
+      "selectedSteps": 5000,
+      "actualTime_s": 0.00024999999999999995,
+      "targetDifference_s": 0.0,
+      "clockRoundoffBound_s": 5.421010862427522e-16
+    },
+    {
+      "maxDt_s": 2.5e-08,
+      "inputHash": "e2199adbb8618f94625980ebdb78ddb73ca4813c32658b5957288b3e3cb23110",
+      "fieldArtifact": "docs/LPBF_P4_FIXED_SCAN_END_CONTINUATION_FIELDS_2026-09-27/mesh-5um-dt-2.5e-08s.npz",
+      "npzSha256": "eeda2dca62f823ed250f6818de5bf1afd6b6a4cf9362a2ccd60fa29ef66bfacd",
+      "fieldSha256": {
+        "coordinates_m": "a682f3d8d75f92e126ec109d0d27f442fd1107fb38b195642c6bc270e47e92b6",
+        "temperature_K": "528493f331a99ce180de34534cc487ffe537bcda3b0bbc60e28cce13d0ffa4ea",
+        "enthalpy_J_m3": "93f5d885c6d853697ce02ae9c10a99462cb933bf8bd0624676be37c9420b2186",
+        "density_kg_m3": "f71c2a5cf64852685f71396d0dabc728104924a58b1dd47e9e487b4eb7cd875f",
+        "accepted_dt_s": "40bb612825ccc7322ce730bdc67f138ea7753b6a40ae35ad4bb8adcf7047666f"
+      },
+      "selectedSteps": 10000,
+      "actualTime_s": 0.00024999999999994287,
+      "targetDifference_s": 5.708324438136181e-17,
+      "clockRoundoffBound_s": 1.0842021724855044e-15
+    },
+    {
+      "maxDt_s": 1.25e-08,
+      "inputHash": "2148adf25774158122675dd236bf3fb47ade4ad54af1d28c9d714900b0bdfca1",
+      "fieldArtifact": "docs/LPBF_P4_FIXED_SCAN_END_CONTINUATION_FIELDS_2026-09-27/mesh-5um-dt-1.25e-08s.npz",
+      "npzSha256": "d571784c1a65f1b2111d1484b6e4b2b45bcbdef416ca3d3bbc8124059847e9c7",
+      "fieldSha256": {
+        "coordinates_m": "a682f3d8d75f92e126ec109d0d27f442fd1107fb38b195642c6bc270e47e92b6",
+        "temperature_K": "3771dcb0a8de12141ac63b911021928c745b7dc3b00fbd5e20cfc5f5a3efc75f",
+        "enthalpy_J_m3": "032045c0d844c085bbcf4d2d37c7338e93ae0ac93ffc116be05bb1e71000c044",
+        "density_kg_m3": "f71c2a5cf64852685f71396d0dabc728104924a58b1dd47e9e487b4eb7cd875f",
+        "accepted_dt_s": "364eda0f06de56e6332761008008c08230914a1b8741be4787a4c57c43478165"
+      },
+      "selectedSteps": 20000,
+      "actualTime_s": 0.00024999999999999995,
+      "targetDifference_s": 0.0,
+      "clockRoundoffBound_s": 2.168404344971009e-15
+    }
+  ],
+  "normDefinition": "stableL2(delta)=max(abs(delta))*sqrt(sum((delta/max(abs(delta)))**2)); zero scale gives zero. RMS=stableL2/sqrt(cell count). relativeL2ToFine uses whole fine field norm, including temperature baseline.",
+  "fields": {
+    "temperature_K": {
+      "unit": "K",
+      "pairs": [
+        {
+          "coarseDt_s": 5e-08,
+          "fineDt_s": 2.5e-08,
+          "differenceDefinition": "fine minus coarse",
+          "rms": 0.19004738122923004,
+          "maxAbs": 64.0481246967986,
+          "stableL2": 137.9110350957051,
+          "relativeL2ToFine": 0.00048140924038854633,
+          "meanSigned": -0.0019331682551810062,
+          "nonzeroCells": 465084
+        },
+        {
+          "coarseDt_s": 2.5e-08,
+          "fineDt_s": 1.25e-08,
+          "differenceDefinition": "fine minus coarse",
+          "rms": 0.019250155826233007,
+          "maxAbs": 7.44550042120386,
+          "stableL2": 13.96919493748379,
+          "relativeL2ToFine": 4.87626661963835e-05,
+          "meanSigned": 2.8746132978835106e-05,
+          "nonzeroCells": 459256
+        },
+        {
+          "coarseDt_s": 5e-08,
+          "fineDt_s": 1.25e-08,
+          "differenceDefinition": "fine minus coarse",
+          "rms": 0.1913839120677546,
+          "maxAbs": 64.05325605547705,
+          "stableL2": 138.88091087187235,
+          "relativeL2ToFine": 0.0004847955467872257,
+          "meanSigned": -0.001904422122202171,
+          "nonzeroCells": 468514
+        }
+      ],
+      "successiveCorrectionRatio": {
+        "rms": 0.1012913500923961,
+        "maxAbs": 0.11624853118573851,
+        "stableL2": 0.10129135009239609,
+        "relativeL2ToFine": 0.10129150441114727
+      },
+      "ratioDefinition": "25-to-12.5 ns correction divided by 50-to-25 ns correction",
+      "trend": "shrinking"
+    },
+    "enthalpy_J_m3": {
+      "unit": "J/m3",
+      "pairs": [
+        {
+          "coarseDt_s": 5e-08,
+          "fineDt_s": 2.5e-08,
+          "differenceDefinition": "fine minus coarse",
+          "rms": 740841.2526742002,
+          "maxAbs": 174498106.55174375,
+          "stableL2": 537603745.6399509,
+          "relativeL2ToFine": 0.0017089186774335377,
+          "meanSigned": -0.4926746995551634,
+          "nonzeroCells": 526591
+        },
+        {
+          "coarseDt_s": 2.5e-08,
+          "fineDt_s": 1.25e-08,
+          "differenceDefinition": "fine minus coarse",
+          "rms": 65474.44779806504,
+          "maxAbs": 24350464.32079029,
+          "stableL2": 47512619.272872485,
+          "relativeL2ToFine": 0.00015103424505755417,
+          "meanSigned": 0.5773376907407547,
+          "nonzeroCells": 526592
+        },
+        {
+          "coarseDt_s": 5e-08,
+          "fineDt_s": 1.25e-08,
+          "differenceDefinition": "fine minus coarse",
+          "rms": 743662.2593328076,
+          "maxAbs": 174511924.67090654,
+          "stableL2": 539650855.9225764,
+          "relativeL2ToFine": 0.0017154549857760692,
+          "meanSigned": 0.08466299118584598,
+          "nonzeroCells": 526589
+        }
+      ],
+      "successiveCorrectionRatio": {
+        "rms": 0.08837851234893197,
+        "maxAbs": 0.13954572231171844,
+        "stableL2": 0.08837851234893199,
+        "relativeL2ToFine": 0.08838000722443863
+      },
+      "ratioDefinition": "25-to-12.5 ns correction divided by 50-to-25 ns correction",
+      "trend": "shrinking"
+    },
+    "density_kg_m3": {
+      "unit": "kg/m3",
+      "pairs": [
+        {
+          "coarseDt_s": 5e-08,
+          "fineDt_s": 2.5e-08,
+          "differenceDefinition": "fine minus coarse",
+          "rms": 0.0,
+          "maxAbs": 0.0,
+          "stableL2": 0.0,
+          "relativeL2ToFine": 0.0,
+          "meanSigned": 0.0,
+          "nonzeroCells": 0
+        },
+        {
+          "coarseDt_s": 2.5e-08,
+          "fineDt_s": 1.25e-08,
+          "differenceDefinition": "fine minus coarse",
+          "rms": 0.0,
+          "maxAbs": 0.0,
+          "stableL2": 0.0,
+          "relativeL2ToFine": 0.0,
+          "meanSigned": 0.0,
+          "nonzeroCells": 0
+        },
+        {
+          "coarseDt_s": 5e-08,
+          "fineDt_s": 1.25e-08,
+          "differenceDefinition": "fine minus coarse",
+          "rms": 0.0,
+          "maxAbs": 0.0,
+          "stableL2": 0.0,
+          "relativeL2ToFine": 0.0,
+          "meanSigned": 0.0,
+          "nonzeroCells": 0
+        }
+      ],
+      "successiveCorrectionRatio": {
+        "rms": null,
+        "maxAbs": null,
+        "stableL2": null,
+        "relativeL2ToFine": null
+      },
+      "ratioDefinition": "25-to-12.5 ns correction divided by 50-to-25 ns correction",
+      "trend": "identical fields; ratio undefined"
+    }
+  },
+  "contours": {
+    "width_um": {
+      "valuesCoarseToFine": [
+        77.70256216123119,
+        77.70163613368703,
+        77.70020872025624
+      ],
+      "signedCorrections": [
+        -0.000926027544153385,
+        -0.0014274134307896702
+      ],
+      "absoluteCorrectionRatio": 1.5414373360726266
+    },
+    "depth_um": {
+      "valuesCoarseToFine": [
+        34.69885790992903,
+        34.69857190444219,
+        34.697874249725864
+      ],
+      "signedCorrections": [
+        -0.00028600548684210025,
+        -0.0006976547163262126
+      ],
+      "absoluteCorrectionRatio": 2.4393053574925934
+    }
+  },
+  "experimentalValidation": false,
+  "solverInvoked": false,
+  "acceptanceChanged": false,
+  "limitations": [
+    "These diagnostics do not replace or relax the frozen convergence acceptance.",
+    "Selected state clocks differ only within recorded FP64 roundoff bounds; no temporal interpolation was applied.",
+    "No causal mechanism is established from these three snapshots alone.",
+    "No final 350 us fields or energy are inferred from the 250 us snapshots."
+  ]
+}

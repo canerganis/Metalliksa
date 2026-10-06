@@ -1,5 +1,8 @@
 import { ResponsiveContainer } from './VisibleResponsiveContainer';
 import React, { useState, useEffect } from "react";
+import { useDebouncedLatestTask } from "../hooks/useDebouncedLatestTask";
+import { isPythonValidationError, validationErrorFromResponse } from "../utils/pythonValidationError";
+import { UNAVAILABLE_TEXT } from "../utils/tafelDisplay";
 import {
   ShieldAlert,
   ShieldCheck,
@@ -12,7 +15,6 @@ import {
   Sliders,
   Layers,
   Code,
-  Zap,
   Flame,
   ArrowRight,
   Sparkles,
@@ -30,11 +32,7 @@ import {
   ReferenceLine
 } from "recharts";
 
-interface CorrosionEISKineticsStudioProps {
-  onSendToCNLS?: (points: any[], name: string) => void;
-}
-
-export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKineticsStudioProps) {
+export function CorrosionEISKineticsStudio() {
   const [metalId, setMetalId] = useState<string>("steel-316l");
   const [betaA, setBetaA] = useState<number>(0.12);
   const [betaC, setBetaC] = useState<number>(0.10);
@@ -49,11 +47,12 @@ export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKinetic
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [activeSubTab, setActiveSubTab] = useState<"coating_nyquist" | "water_uptake" | "pore_decay" | "python_code">("coating_nyquist");
 
-  const runPythonSimulation = async () => {
+  const runPythonSimulation = async (signal?: AbortSignal): Promise<boolean> => {
     setIsLoading(true);
     setErrorMsg(null);
     try {
       const response = await fetch("/api/python/battery-corrosion-eis", {
+        signal,
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -69,6 +68,9 @@ export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKinetic
       });
 
       if (!response.ok) {
+        // An unknown substrate id is refused by the engine (HTTP 422): show its message, never a guessed alloy.
+        const validation = await validationErrorFromResponse(response, "Corrosion EIS");
+        if (validation) throw validation;
         throw new Error(`Python solver HTTP error: ${response.statusText}`);
       }
 
@@ -76,18 +78,27 @@ export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKinetic
       if (data.error) {
         throw new Error(data.error);
       }
+      if (signal?.aborted) return false;
       setSimResult(data);
+      return true;
     } catch (err: any) {
+      if (signal?.aborted) return false;
       console.error("Corrosion EIS simulation error:", err);
+      if (isPythonValidationError(err)) setSimResult(null);
       setErrorMsg(err.message || "Failed to execute Python corrosion kinetics solver.");
+      return false;
     } finally {
-      setIsLoading(false);
+      if (!signal?.aborted) setIsLoading(false);
     }
   };
 
+  // Debounced, visibility-gated and abortable. coatingType is not part of the request body, so it is not
+  // part of the input signature (changing it never produced a different request).
+  const corrosionInputSignature = JSON.stringify([metalId, betaA, betaC, i0Corr, ePit, e0, exposureDays]);
   useEffect(() => {
-    runPythonSimulation();
-  }, [metalId, betaA, betaC, i0Corr, ePit, e0, exposureDays, coatingType]);
+    setSimResult(null);
+  }, [corrosionInputSignature]);
+  const { runNow: runPythonSimulationNow } = useDebouncedLatestTask(corrosionInputSignature, (_signature, signal) => runPythonSimulation(signal), 200);
 
   const currentCoatingStage = simResult?.coatingTimeline?.slice(-1)[0];
 
@@ -115,31 +126,9 @@ export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKinetic
         </div>
 
         <div className="flex items-center gap-2">
-          {onSendToCNLS && simResult?.coatingNyquist?.[0] && (
-            <button
-              type="button"
-              onClick={() => {
-                const latestSpec = simResult.coatingNyquist.slice(-1)[0]?.spectrum || [];
-                const points = latestSpec.map((pt: any) => ({
-                  frequency: pt.frequency,
-                  zReal: pt.zReal,
-                  zImag: -pt.minusZImag,
-                  minusZImag: pt.minusZImag,
-                  zMag: Math.sqrt(pt.zReal * pt.zReal + pt.minusZImag * pt.minusZImag),
-                  phaseDeg: (Math.atan2(-pt.minusZImag, pt.zReal) * 180) / Math.PI,
-                }));
-                onSendToCNLS(points, `Corrosion_Coating_${metalId.toUpperCase()}_Day${exposureDays}`);
-              }}
-              className="px-3.5 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm"
-            >
-              <Zap className="w-3.5 h-3.5 fill-current" />
-              <span>Send Spectrum to CNLS Studio</span>
-            </button>
-          )}
-
           <button
             type="button"
-            onClick={runPythonSimulation}
+            onClick={() => runPythonSimulationNow()}
             disabled={isLoading}
             className="px-3 py-1.5 rounded-xl bg-[#050810] border border-[#1e2d46] hover:border-amber-500 text-slate-200 text-xs font-mono flex items-center gap-1.5 transition-all"
           >
@@ -148,6 +137,12 @@ export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKinetic
           </button>
         </div>
       </div>
+
+      {errorMsg && (
+        <div role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/40 text-rose-300 text-xs font-mono">
+          {errorMsg}
+        </div>
+      )}
 
       {/* Grid: Controls & Output */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -162,23 +157,23 @@ export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKinetic
             {/* Metal Selection */}
             <div>
               <label className="text-[10px] text-slate-400 block mb-1">Substrate Alloy</label>
-              <select
+              <select aria-label="Substrate Alloy"
                 value={metalId}
                 onChange={(e) => {
                   const m = e.target.value;
                   setMetalId(m);
                   if (m === "steel-316l") { setEPit(0.45); setE0(0.08); setI0Corr(0.12); }
                   else if (m === "al-7075") { setEPit(-0.68); setE0(-1.66); setI0Corr(1.85); }
-                  else if (m === "mg-az31b") { setEPit(-1.42); setE0(-2.37); setI0Corr(6.5); }
-                  else if (m === "ti-6al4v") { setEPit(1.80); setE0(0.20); setI0Corr(0.01); }
+                  else if (m === "az31b") { setEPit(-1.42); setE0(-2.37); setI0Corr(6.5); }
+                  else if (m === "ti-6al-4v") { setEPit(1.80); setE0(0.20); setI0Corr(0.01); }
                   else if (m === "steel-1018") { setEPit(-0.15); setE0(-0.44); setI0Corr(4.2); }
                 }}
                 className="w-full bg-[#050810] border border-[#1e2d46] rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amber-500"
               >
                 <option value="steel-316l">Stainless Steel 316L (Cr-Ni-Mo)</option>
                 <option value="al-7075">Aerospace Aluminum 7075-T6 (Al-Zn-Mg)</option>
-                <option value="mg-az31b">Magnesium AZ31B (Sacrificial/Active)</option>
-                <option value="ti-6al4v">Titanium Ti-6Al-4V (Self-Healing TiO₂)</option>
+                <option value="az31b">Magnesium AZ31B (Sacrificial/Active)</option>
+                <option value="ti-6al-4v">Titanium Ti-6Al-4V (Self-Healing TiO₂)</option>
                 <option value="steel-1018">Carbon Steel AISI 1018 (Uniform Rust)</option>
               </select>
             </div>
@@ -187,7 +182,7 @@ export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKinetic
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-[10px] text-slate-400 block mb-1">Anodic Slope β_a (V/dec)</label>
-                <input
+                <input aria-label="Anodic Slope β_a (V/dec)"
                   type="number"
                   step="0.01"
                   value={betaA}
@@ -197,7 +192,7 @@ export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKinetic
               </div>
               <div>
                 <label className="text-[10px] text-slate-400 block mb-1">Cathodic Slope β_c (V/dec)</label>
-                <input
+                <input aria-label="Cathodic Slope β_c (V/dec)"
                   type="number"
                   step="0.01"
                   value={betaC}
@@ -213,7 +208,7 @@ export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKinetic
                 <span className="text-slate-400">Corrosion Current i_corr</span>
                 <span className="text-amber-400 font-bold font-mono">{i0Corr} µA/cm²</span>
               </div>
-              <input
+              <input aria-label="Corrosion Current i_corr (µA/cm²)"
                 type="range"
                 min={0.01}
                 max={10.0}
@@ -233,7 +228,7 @@ export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKinetic
                 </span>
                 <span className="text-sky-300 font-bold font-mono">{exposureDays} days</span>
               </div>
-              <input
+              <input aria-label="Electrolyte Exposure (days)"
                 type="range"
                 min={0}
                 max={180}
@@ -251,15 +246,32 @@ export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKinetic
               <div className="p-3 rounded-xl bg-[#090e18] border border-[#162032]">
                 <span className="text-[9px] text-slate-400 block">Polarization Resistance (R_p)</span>
                 <span className="text-base font-bold text-amber-400 font-mono">
-                  {simResult.polarizationResistance_Rp_Ohm_cm2?.toLocaleString()} Ω·cm²
+                  {simResult.polarizationResistance_Rp_Ohm_cm2 == null
+                    ? UNAVAILABLE_TEXT
+                    : `${simResult.polarizationResistance_Rp_Ohm_cm2.toLocaleString()} Ω·cm²`}
                 </span>
                 <span className="text-[9px] text-slate-500 block">ASTM G59</span>
               </div>
               <div className="p-3 rounded-xl bg-[#090e18] border border-[#162032]">
                 <span className="text-[9px] text-slate-400 block">Penetration Rate (CR)</span>
-                <span className="text-base font-bold text-rose-400 font-mono">{simResult.corrosionRate_mm_yr} mm/yr</span>
-                <span className="text-[9px] text-slate-500 block">({simResult.corrosionRate_mpy} mpy)</span>
+                <span className="text-base font-bold text-rose-400 font-mono">
+                  {simResult.corrosionRate_mm_yr == null ? UNAVAILABLE_TEXT : `${simResult.corrosionRate_mm_yr} mm/yr`}
+                </span>
+                <span className="text-[9px] text-slate-500 block">
+                  ({simResult.corrosionRate_mpy == null ? UNAVAILABLE_TEXT : `${simResult.corrosionRate_mpy} mpy`})
+                </span>
+                {simResult.equivalentWeight_g_eq != null && (
+                  <span className="text-[9px] text-slate-500 block" title={simResult.equivalentWeightNote}>
+                    EW {simResult.equivalentWeight_g_eq} g/eq, ρ {simResult.density_g_cm3} g/cm³ ({simResult.alloyId})
+                  </span>
+                )}
               </div>
+            </div>
+          )}
+
+          {simResult?.unavailableReason && (
+            <div role="status" className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-200 text-xs font-mono">
+              {simResult.unavailableReason}
             </div>
           )}
 
@@ -267,7 +279,9 @@ export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKinetic
           {simResult && (
             <div
               className={`p-3 rounded-xl border text-xs flex items-start gap-2.5 ${
-                simResult.deltaE_pit_V < 0.15
+                simResult.deltaE_pit_V == null
+                  ? "bg-slate-500/10 border-slate-500/30 text-slate-300"
+                  : simResult.deltaE_pit_V < 0.15
                   ? "bg-rose-500/10 border-rose-500/30 text-rose-300"
                   : "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
               }`}
@@ -275,10 +289,10 @@ export function CorrosionEISKineticsStudio({ onSendToCNLS }: CorrosionEISKinetic
               <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
               <div>
                 <span className="font-bold block uppercase text-[10px]">
-                  Pitting Margin: ΔE_pit = {simResult.deltaE_pit_V} V
+                  Pitting Margin: ΔE_pit = {simResult.deltaE_pit_V == null ? UNAVAILABLE_TEXT : `${simResult.deltaE_pit_V} V`}
                 </span>
                 <p className="text-[11px] opacity-90 mt-0.5">
-                  Assessment: <strong>{simResult.pittingAssessment}</strong>
+                  Assessment: <strong>{simResult.pittingAssessment ?? UNAVAILABLE_TEXT}</strong>
                 </p>
               </div>
             </div>

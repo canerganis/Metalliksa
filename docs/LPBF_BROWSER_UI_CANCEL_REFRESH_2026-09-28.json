@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "evidenceType": "software-workflow-acceptance",
+  "observedAt": "2026-09-28T15:01:50+03:00",
+  "repository": {
+    "branch": "codex/lpbf-buildjob-material-identity",
+    "head": "7cfc1a8",
+    "workingTreeWasDirty": true
+  },
+  "runtime": {
+    "serverUrl": "http://127.0.0.1:4187/?lpbfStage=thermal",
+    "isolatedJobRoot": "%TEMP%/metalliksa-lpbf-ui-cancel-20260928-1505/jobs",
+    "isolatedRunRoot": "%TEMP%/metalliksa-lpbf-ui-cancel-20260928-1505/runs",
+    "isolatedSourceRoot": "%TEMP%/metalliksa-lpbf-ui-cancel-20260928-1505/sources",
+    "isolatedBundleRoot": "%TEMP%/metalliksa-lpbf-ui-cancel-20260928-1505/bundles",
+    "isolatedIpcPort": 5187,
+    "python": "3.12.10",
+    "userTab4179Touched": false
+  },
+  "initialDefaultAttempt": {
+    "jobId": "41298301168b48f8bb0b87aa839fa20e",
+    "status": "failed",
+    "failure": "Stopped at step 1 by the configured IN718 boiling-limit fail-closed guard; no threshold or material property was changed."
+  },
+  "cancelledJob": {
+    "jobId": "6074781072904a7d9db63ecc50016aef",
+    "inputSha256": "22545da52c562e4beda7ba51ca88c451517befbac87a5f172751d10f1ace3fda",
+    "input": {
+      "material": "Inconel 718",
+      "power_W": 60,
+      "speed_mm_s": 1200,
+      "beamDiameter_um": 80,
+      "preheat_C": 200,
+      "layer_um": 40,
+      "hatch_um": 100,
+      "mesh_um": 20,
+      "maxDt_s": 1e-6,
+      "trackLength_um": 600,
+      "tracks": 1,
+      "layers": 1,
+      "dwell_s": 0.0002,
+      "cooling_s": 0.0005,
+      "absorptivity": 0.38,
+      "emissivity": 0.35
+    },
+    "uiTransitions": ["queued", "cancelled", "reloaded", "cancelled"],
+    "lastReportedProgress": 0.05044560890441601,
+    "queueDatabaseStatusAfterReload": "cancelled",
+    "resultJsonPresent": false,
+    "completedResult": false,
+    "partialFieldFilesRetained": [
+      {"path": "field-coordinates.bin", "sizeBytes": 359856},
+      {"path": "field-frame-000.bin", "sizeBytes": 119952},
+      {"path": "field-frame-001.bin", "sizeBytes": 119952},
+      {"path": "field-frame-002.bin", "sizeBytes": 119952},
+      {"path": "field-frame-003.bin", "sizeBytes": 119952}
+    ],
+    "materialDataQuality": "estimated",
+    "experimentalValidation": "unvalidated"
+  },
+  "serverCleanup": {
+    "isolatedServerProcessTreeTermination": "taskkill reported successful termination of the exact isolated server parent and descendants",
+    "temporaryJobDirectoryRetained": true
+  },
+  "sourceSha256": {
+    "src/components/3d-distortion-lab/LpbfEngineeringSimulation.tsx": "dff02b194874e440362b33554c8ccafc7db5d3ea0d3ddc7689ed075099e09ab5",
+    "src/services/lpbfSimulationService.ts": "3a93cf7a4017c737697f578f2c7af8e2748bdb6e8e87a0f7fcfa0613c4d05856",
+    "python/lpbf_worker.py": "5d63c2f985e383dac2bac3019afbf62f18f3829148973706477d5cd50c4d7990",
+    "server/lpbfWorkerBridge.ts": "dfdf304402da72febf7fb47750c829e3392f9ddee0c5619d0ad81df88a5d3552",
+    "server.ts": "bb33580efd58a5daf5f7f0686b22ce8d9acc089c3152f6c042c8d7cf2b7d931a"
+  },
+  "limitations": [
+    "This proves the isolated browser job status and queue row survive refresh; it does not test a completed-run bundle restore for the cancelled job. The current archive schema accepts completed jobs only.",
+    "Five partial field/checkpoint files remain in the isolated cancelled-job directory; they are not result.json, completed result artifacts, or archived run outputs. Their retention/cleanup policy needs a separate audit.",
+    "The live UI workflow did not independently record the execution-child PID. Native parent-death and HTTP DELETE fixture suites provide separate process-tree/reap evidence, not a PID-bound trace for this exact UI job.",
+    "The run used estimated legacy IN718 properties and produced no result; this is software-workflow evidence, not numerical verification or experimental validation."
+  ]
+}

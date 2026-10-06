@@ -1,0 +1,21 @@
+# CPU claim and reproduction contract follow-up
+
+Starting HEAD: bd979c7. Previous turn made progress: durable recovery evidence,
+corrected PROOF claims, verified owned source/hash boundaries and local commit.
+314 unrelated tracked dirty paths remain protected; no broad staging or source reset.
+
+Ownership:
+- Root: APPLICATION_REPRODUCTION.md runtime selection order, integration,
+  ROADMAP wording only after Sol review, STATUS/PROOF, owned local commits.
+- Luna: clean python/test_lpbf_280w_simulation.py legacy safety expectation,
+  bounded targeted verification and fresh scratch evidence only.
+- Sol 6.1: read-only bounded CPU UI scientific claim/source/evidence mapping.
+
+Constraints: no new physics, no new NIST fetch, no large 5um/GPU solves, no push.
+Prior browser denial is still authoritative; no retry or UI/API circumvention.
+Browser stale/cancellation acceptance stays pending explicit restored access.
+Changes here do not relabel the frozen 33efb32 release evidence as a new revision.
+
+Evidence: record Python resolution/import/dependency smoke, owned diffs and
+focused regression outcomes. Preserve numerical/convergence/experimental status.
+Commit only owned finished changes after review. Full V1 acceptance remains open.

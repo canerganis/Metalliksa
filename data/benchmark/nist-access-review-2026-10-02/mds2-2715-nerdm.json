@@ -1,0 +1,870 @@
+{
+  "_schema": "https://data.nist.gov/od/dm/nerdm-schema/v0.7#",
+  "@context": [
+    "https://data.nist.gov/od/dm/nerdm-pub-context.jsonld",
+    {
+      "@base": "ark:/88434/mds2-2715"
+    }
+  ],
+  "@type": [
+    "nrdp:DataPublication",
+    "nrdp:PublicDataResource",
+    "dcat:Dataset"
+  ],
+  "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/PublicDataResource"
+  ],
+  "@id": "ark:/88434/mds2-2715",
+  "ediid": "ark:/88434/mds2-2715",
+  "version": "1.0.2",
+  "doi": "doi:10.18434/mds2-2715",
+  "title": "AM Bench 2022 Measurement Results Data: 3D Builds In-situ Thermography and Data Processing Scripts (AMB2022-01)",
+  "contactPoint": {
+    "fn": "Brandon Lane",
+    "hasEmail": "mailto:brandon.lane@nist.gov"
+  },
+  "modified": "2023-08-25",
+  "status": "available",
+  "landingPage": "https://data.nist.gov/od/id/mds2-2715",
+  "description": [
+    "The following data files include in-situ thermographic measurement results, scan strategy, and various additional data associated with laser powder bed fusion (LPBF) 3D builds of nickel-based superalloy IN718 test objects for the 2022 Additive Manufacturing Benchmark (AM-Bench) test series. These data are associated with the AMB2022-01 series of modeling challenges described here: https://www.nist.gov/ambench/amb2022-01-benchmark-measurements-and-challenge-problems. However, these data may also be used in future AM-Bench challenges. These AM builds and thermographic measurements were performed on the NIST Additive Manufacturing Metrology Testbed (AMMT, https://www.nist.gov/el/ammt-temps).",
+    "Information on the directory structure and file formats are provided in the 2715_README.txt file. Note that this dataset will be periodically updated, and additional data will be added as it is made available. Future publications will also provide more in-depth description of the data in this dataset, as will links to available analysis code and scripts. Refer to the Version number below, and updates described in this Description and the 2715_README.txt file."
+  ],
+  "keyword": [
+    "AM-Bench",
+    "AMMT",
+    "Thermography",
+    "Thermal imaging",
+    "Laser powder bed fusion",
+    "additive manufacturing",
+    "Inconel",
+    "In718"
+  ],
+  "topic": [
+    {
+      "@type": "Concept",
+      "scheme": "https://data.nist.gov/od/dm/nist-themes/v1.1",
+      "tag": "Manufacturing: Additive manufacturing"
+    },
+    {
+      "scheme": "https://data.nist.gov/od/dm/nist-themes-additivemanufacturing/v1.0",
+      "tag": "Materials: Metals",
+      "@type": "Concept"
+    },
+    {
+      "scheme": "https://data.nist.gov/od/dm/nist-themes-additivemanufacturing/v1.0",
+      "tag": "Build Process: Powder bed fusion: Laser",
+      "@type": "Concept"
+    },
+    {
+      "scheme": "https://data.nist.gov/od/dm/nist-themes-additivemanufacturing/v1.0",
+      "tag": "Properties: Thermal / kinetic",
+      "@type": "Concept"
+    },
+    {
+      "scheme": "https://data.nist.gov/od/dm/nist-themes-additivemanufacturing/v1.0",
+      "tag": "Characterization Approach: In-situ: Build process",
+      "@type": "Concept"
+    },
+    {
+      "scheme": "https://data.nist.gov/od/dm/nist-themes-additivemanufacturing/v1.0",
+      "tag": "Characterization Approach: Thermography",
+      "@type": "Concept"
+    },
+    {
+      "scheme": "https://data.nist.gov/od/dm/nist-themes-additivemanufacturing/v1.0",
+      "tag": "Collaboration: AM-Bench",
+      "@type": "Concept"
+    }
+  ],
+  "accessLevel": "public",
+  "license": "https://www.nist.gov/open/license",
+  "publisher": {
+    "name": "National Institute of Standards and Technology",
+    "@type": "org:Organization"
+  },
+  "language": [
+    "en"
+  ],
+  "bureauCode": [
+    "006:55"
+  ],
+  "programCode": [
+    "006:052"
+  ],
+  "theme": [
+    "Manufacturing: Additive manufacturing"
+  ],
+  "_editStatus": "done",
+  "components": [
+    {
+      "@id": "cmps/DataProcessingScripts",
+      "@type": [
+        "nrdp:Subcollection"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/Subcollection"
+      ],
+      "filepath": "DataProcessingScripts"
+    },
+    {
+      "@id": "cmps/DataProcessingScripts/AMB2022_HDF5_Temperature_v1.m",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "DataProcessingScripts/AMB2022_HDF5_Temperature_v1.m",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-2715/DataProcessingScripts%2FAMB2022_HDF5_Temperature_v1.m",
+      "mediaType": "text/x-objcsrc",
+      "title": "DataProcessingScripts/AMB2022_HDF5_Temperature_v1",
+      "size": 13429,
+      "checksum": {
+        "hash": "880f8e6a1d641a6bf79594e09936bf623380481338e1f1c4970155036658dbe2",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/DataProcessingScripts/AMB2022_01_3DBuildLayer_TAMandCR_Calcs_v2.m",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "DataProcessingScripts/AMB2022_01_3DBuildLayer_TAMandCR_Calcs_v2.m",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-2715/DataProcessingScripts%2FAMB2022_01_3DBuildLayer_TAMandCR_Calcs_v2.m",
+      "mediaType": "text/x-objcsrc",
+      "title": "DataProcessingScripts/AMB2022_01_3DBuildLayer_TAMandCR_Calcs_v2",
+      "size": 4934,
+      "checksum": {
+        "hash": "c5cf9848120e24f87efa1176569f0020fdf8ed140ca27976cd7c23db14109300",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/DataProcessingScripts/XDMF_TAMVolumeParaview.xmf",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "DataProcessingScripts/XDMF_TAMVolumeParaview.xmf",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-2715/DataProcessingScripts%2FXDMF_TAMVolumeParaview.xmf",
+      "mediaType": "application/octet-stream",
+      "title": "DataProcessingScripts/XDMF_TAMVolumeParaview",
+      "size": 1671,
+      "checksum": {
+        "hash": "39e37182d23bec1190bf735faaf96243f2c9af41f078b0708a1f84aabf937c7a",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/DataProcessingScripts/2715_DataProcessingFlowDiagram.bmp",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "DataProcessingScripts/2715_DataProcessingFlowDiagram.bmp",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-2715/DataProcessingScripts%2F2715_DataProcessingFlowDiagram.bmp",
+      "mediaType": "image/bmp",
+      "title": "DataProcessingScripts/2715_DataProcessingFlowDiagram",
+      "size": 3918654,
+      "checksum": {
+        "hash": "fa1fd94f6945a146b53b97f9cc928abd44440959e45aaf120131de61b9dea5fb",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/DataProcessingScripts/AMB2022_HDF5_TAM_datasets_v4.m",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "DataProcessingScripts/AMB2022_HDF5_TAM_datasets_v4.m",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-2715/DataProcessingScripts%2FAMB2022_HDF5_TAM_datasets_v4.m",
+      "mediaType": "text/x-objcsrc",
+      "title": "DataProcessingScripts/AMB2022_HDF5_TAM_datasets_v4",
+      "size": 14039,
+      "checksum": {
+        "hash": "4df8b789c8fe0596611929cb3f0e9b6e2b2420000dcbc55d4de40cf1591b41ce",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/DataProcessingScripts/SpatterMask_v2.m",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "DataProcessingScripts/SpatterMask_v2.m",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-2715/DataProcessingScripts%2FSpatterMask_v2.m",
+      "mediaType": "text/x-objcsrc",
+      "title": "DataProcessingScripts/SpatterMask_v2",
+      "size": 3976,
+      "checksum": {
+        "hash": "e1c0229535ddd5e4400f60c3758fcafb5af6f7177b8944d7dcb47ffaf00beb2a",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/DataProcessingScripts/AMB2022_PhotronRegistrationArrays.mat",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "DataProcessingScripts/AMB2022_PhotronRegistrationArrays.mat",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-2715/DataProcessingScripts%2FAMB2022_PhotronRegistrationArrays.mat",
+      "mediaType": "application/x-matlab-data",
+      "title": "DataProcessingScripts/AMB2022_PhotronRegistrationArrays",
+      "size": 2617005,
+      "checksum": {
+        "hash": "5a5a78463c47a644045709a1478af8968310b8636e03cd9762a3c659517e6ac1",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/DataProcessingScripts/AMB2022-01-XYPT-ExampleMatlabPlots.m",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "DataProcessingScripts/AMB2022-01-XYPT-ExampleMatlabPlots.m",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-2715/DataProcessingScripts%2FAMB2022-01-XYPT-ExampleMatlabPlots.m",
+      "mediaType": "text/x-objcsrc",
+      "title": "DataProcessingScripts/AMB2022-01-XYPT-ExampleMatlabPlots",
+      "size": 4962,
+      "checksum": {
+        "hash": "8fc047cd31eeb8dadc353fa14b59e80e2af18555ab472365df9867de06d50909",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/DataProcessingScripts/CR_v1.m",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "DataProcessingScripts/CR_v1.m",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-2715/DataProcessingScripts%2FCR_v1.m",
+      "mediaType": "text/x-objcsrc",
+      "title": "DataProcessingScripts/CR_v1",
+      "size": 3602,
+      "checksum": {
+        "hash": "a0075d27342479c1cfaa29f59d099b804f4a4a65a05cff97d19c92921f015b02",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/DataProcessingScripts/AMB2022_HDF5_Signal_v1.m",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "DataProcessingScripts/AMB2022_HDF5_Signal_v1.m",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-2715/DataProcessingScripts%2FAMB2022_HDF5_Signal_v1.m",
+      "mediaType": "text/x-objcsrc",
+      "title": "DataProcessingScripts/AMB2022_HDF5_Signal_v1",
+      "size": 13005,
+      "checksum": {
+        "hash": "12937c1b164f17a16119b31a1937b243d9983a8f461154e1b9aa3023b2ff1b24",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/DataProcessingScripts/TAM_v1.m",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "DataProcessingScripts/TAM_v1.m",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-2715/DataProcessingScripts%2FTAM_v1.m",
+      "mediaType": "text/x-objcsrc",
+      "title": "DataProcessingScripts/TAM_v1",
+      "size": 3511,
+      "checksum": {
+        "hash": "fed524d9b36652642244c02e6eaeec8883e91dd8ffc5396fd05f89ec14d0b794",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/DataProcessingScripts/AMB2022_HDF5_SCR_datasets_v1.m",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "DataProcessingScripts/AMB2022_HDF5_SCR_datasets_v1.m",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-2715/DataProcessingScripts%2FAMB2022_HDF5_SCR_datasets_v1.m",
+      "mediaType": "text/x-objcsrc",
+      "title": "DataProcessingScripts/AMB2022_HDF5_SCR_datasets_v1",
+      "size": 14235,
+      "checksum": {
+        "hash": "079f352e4406aa489388e6865d2716569df10dce944b5194d0dc899eef7a296c",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/2715_README.txt",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "2715_README.txt",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-2715/2715_README.txt",
+      "mediaType": "text/plain",
+      "format": {
+        "description": "ASCII text"
+      },
+      "title": "README file description of dataset elements",
+      "size": 18045,
+      "checksum": {
+        "hash": "f93e2a1905e7fe75bbd7cd4ff6997f87ebc21c2c9cab95ab3344e768314638e4",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/Staring_Thermography",
+      "@type": [
+        "nrdp:Subcollection"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/Subcollection"
+      ],
+      "filepath": "Staring_Thermography"
+    },
+    {
+      "@id": "cmps/Staring_Thermography/AMB2022-01-718-AMMT-B8-StaringCamera_Te05.h5",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "Staring_Thermography/AMB2022-01-718-AMMT-B8-StaringCamera_Te05.h5",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-2715/Staring_Thermography%2FAMB2022-01-718-AMMT-B8-StaringCamera_Te05.h5",
+      "mediaType": "application/x-hdf",
+      "title": "Staring_Thermography/AMB2022-01-718-AMMT-B8-StaringCamera_Te05",
+      "size": 25602059283,
+      "checksum": {
+        "hash": "8c2e47734bc6ce946f5b8b801e0a40f72e307c8f58a257682a14d89f8a776c70",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/Staring_Thermography/AMB2022-01-718-AMMT-B7-StaringCamera_Te05.h5",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "Staring_Thermography/AMB2022-01-718-AMMT-B7-StaringCamera_Te05.h5",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-2715/Staring_Thermography%2FAMB2022-01-718-AMMT-B7-StaringCamera_Te05.h5",
+      "mediaType": "application/x-hdf",
+      "title": "Staring_Thermography/AMB2022-01-718-AMMT-B7-StaringCamera_Te05",
+      "size": 25312459890,
+      "checksum": {
+        "hash": "069749bcd2a58778b7640aaa76561e19a4a4ffbefb06dba358ded75445f4abe2",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/Staring_Thermography/AMB2022-01-718-AMMT-B7-StaringCamera_TAM.h5",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "Staring_Thermography/AMB2022-01-718-AMMT-B7-StaringCamera_TAM.h5",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-2715/Staring_Thermography%2FAMB2022-01-718-AMMT-B7-StaringCamera_TAM.h5",
+      "mediaType": "application/x-hdf",
+      "title": "Staring_Thermography/AMB2022-01-718-AMMT-B7-StaringCamera_TAM",
+      "size": 139311292,
+      "checksum": {
+        "hash": "e8092781ca02cd5209b300933677f0c5418f0e91ab6b6e76c005df74f563f868",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/Staring_Thermography/AMB2022-01-718-AMMT-B7-StaringCamera_Signal.h5",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "Staring_Thermography/AMB2022-01-718-AMMT-B7-StaringCamera_Signal.h5",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-2715/Staring_Thermography%2FAMB2022-01-718-AMMT-B7-StaringCamera_Signal.h5",
+      "mediaType": "application/x-hdf",
+      "title": "Staring_Thermography/AMB2022-01-718-AMMT-B7-StaringCamera_Signal",
+      "size": 34100300493,
+      "checksum": {
+        "hash": "ffdbf691ec3b4d5a995c0ea8caa81e803ee61b6e9200e4bd142c16c1d574db43",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/Staring_Thermography/AMB2022-01-718-AMMT-B6-StaringCamera_Signal.h5",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "Staring_Thermography/AMB2022-01-718-AMMT-B6-StaringCamera_Signal.h5",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-2715/Staring_Thermography%2FAMB2022-01-718-AMMT-B6-StaringCamera_Signal.h5",
+      "mediaType": "application/x-hdf",
+      "title": "Staring_Thermography/AMB2022-01-718-AMMT-B6-StaringCamera_Signal",
+      "size": 118928502701,
+      "checksum": {
+        "hash": "2315d2baa015a9f0b05f087e83fdea8a0ba9643f47d7f8e6518b943fcbfe0403",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/Staring_Thermography/AMB2022-01-718-AMMT-B8-StaringCamera_TAM.h5",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "Staring_Thermography/AMB2022-01-718-AMMT-B8-StaringCamera_TAM.h5",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-2715/Staring_Thermography%2FAMB2022-01-718-AMMT-B8-StaringCamera_TAM.h5",
+      "mediaType": "application/x-hdf",
+      "title": "Staring_Thermography/AMB2022-01-718-AMMT-B8-StaringCamera_TAM",
+      "size": 139772386,
+      "checksum": {
+        "hash": "3e58d1f491769240fbf8f813d188c84c6482f5d5e6d0eb470d06f9d54b5f9742",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/Staring_Thermography/AMB2022-01-718-AMMT-B6-StaringCamera_TAM.h5",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "Staring_Thermography/AMB2022-01-718-AMMT-B6-StaringCamera_TAM.h5",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-2715/Staring_Thermography%2FAMB2022-01-718-AMMT-B6-StaringCamera_TAM.h5",
+      "mediaType": "application/x-hdf",
+      "title": "Staring_Thermography/AMB2022-01-718-AMMT-B6-StaringCamera_TAM",
+      "size": 137982482,
+      "checksum": {
+        "hash": "d1ed629a7c47e6aa38a8a5a9fd0848eedc4f6114b2abc6eb474210c305c9842b",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/Staring_Thermography/AMB2022-01-718-AMMT-B6-StaringCamera_SCR.h5",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "Staring_Thermography/AMB2022-01-718-AMMT-B6-StaringCamera_SCR.h5",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-2715/Staring_Thermography%2FAMB2022-01-718-AMMT-B6-StaringCamera_SCR.h5",
+      "mediaType": "application/x-hdf",
+      "title": "Staring_Thermography/AMB2022-01-718-AMMT-B6-StaringCamera_SCR",
+      "size": 169994205,
+      "checksum": {
+        "hash": "e59c071a1595f1859bd39f1110af433427d302a1ad3b37d8df33fad8d62c3d35",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/Staring_Thermography/AMB2022-01-718-AMMT-B8-StaringCamera_SCR.h5",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "Staring_Thermography/AMB2022-01-718-AMMT-B8-StaringCamera_SCR.h5",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-2715/Staring_Thermography%2FAMB2022-01-718-AMMT-B8-StaringCamera_SCR.h5",
+      "mediaType": "application/x-hdf",
+      "title": "Staring_Thermography/AMB2022-01-718-AMMT-B8-StaringCamera_SCR",
+      "size": 179958474,
+      "checksum": {
+        "hash": "65deb18b6e74c34d23499fbf4f0d1c8a025e959a5f2d62578754dd2ac14c3398",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/Staring_Thermography/AMB2022-01-718-AMMT-B6-StaringCamera_Te05.h5",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "Staring_Thermography/AMB2022-01-718-AMMT-B6-StaringCamera_Te05.h5",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-2715/Staring_Thermography%2FAMB2022-01-718-AMMT-B6-StaringCamera_Te05.h5",
+      "mediaType": "application/x-hdf",
+      "title": "Staring_Thermography/AMB2022-01-718-AMMT-B6-StaringCamera_Te05",
+      "size": 20411529495,
+      "checksum": {
+        "hash": "75fe7bd70e1731f9d6f80697a97982f20c27bd35fb09076088d1739610a922b1",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/Staring_Thermography/AMB2022-01-718-AMMT-B7-StaringCamera_SCR.h5",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "Staring_Thermography/AMB2022-01-718-AMMT-B7-StaringCamera_SCR.h5",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-2715/Staring_Thermography%2FAMB2022-01-718-AMMT-B7-StaringCamera_SCR.h5",
+      "mediaType": "application/x-hdf",
+      "title": "Staring_Thermography/AMB2022-01-718-AMMT-B7-StaringCamera_SCR",
+      "size": 178928766,
+      "checksum": {
+        "hash": "ae305053bc64497188e781d45f992f2714687ecd0579ec9d18a7a2f1dcac4d48",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    },
+    {
+      "@id": "cmps/Staring_Thermography/AMB2022-01-718-AMMT-B8-StaringCamera_Signal.h5",
+      "@type": [
+        "nrdp:DataFile",
+        "nrdp:DownloadableFile",
+        "dcat:Distribution"
+      ],
+      "_extensionSchemas": [
+        "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+      ],
+      "filepath": "Staring_Thermography/AMB2022-01-718-AMMT-B8-StaringCamera_Signal.h5",
+      "downloadURL": "https://data.nist.gov/od/ds/mds2-2715/Staring_Thermography%2FAMB2022-01-718-AMMT-B8-StaringCamera_Signal.h5",
+      "mediaType": "application/x-hdf",
+      "title": "Staring_Thermography/AMB2022-01-718-AMMT-B8-StaringCamera_Signal",
+      "size": 35709605730,
+      "checksum": {
+        "hash": "779d19d615716df4ac4c0438544f1a58d228f05bc647e77de89e99e7c678978b",
+        "algorithm": {
+          "tag": "sha256",
+          "@type": "Thing"
+        }
+      }
+    }
+  ],
+  "authors": [
+    {
+      "familyName": "Lane",
+      "fn": "Brandon  Lane",
+      "givenName": "Brandon",
+      "middleName": "",
+      "affiliation": [
+        {
+          "title": "National Institute of Standards and Technology",
+          "subunits": [
+            "Intelligent Systems Division"
+          ],
+          "@type": "org:Organization",
+          "@id": "ror:05xpvk416"
+        }
+      ],
+      "orcid": "0000-0001-5153-1678",
+      "@type": "foaf:Person"
+    },
+    {
+      "familyName": "Deisenroth",
+      "fn": "David  Deisenroth",
+      "givenName": "David",
+      "middleName": "",
+      "affiliation": [
+        {
+          "title": "National Institute of Standards and Technology",
+          "subunits": [
+            "Intelligent Systems Division"
+          ],
+          "@type": "org:Organization",
+          "@id": "ror:05xpvk416"
+        }
+      ],
+      "orcid": "0000-0002-6869-7970",
+      "@type": "foaf:Person"
+    },
+    {
+      "familyName": "Yeung",
+      "fn": "Ho  Yeung",
+      "givenName": "Ho",
+      "middleName": "",
+      "affiliation": [
+        {
+          "title": "National Institute of Standards and Technology",
+          "subunits": [
+            "Intelligent Systems Division"
+          ],
+          "@type": "org:Organization",
+          "@id": "ror:05xpvk416"
+        }
+      ],
+      "orcid": "0000-0002-6869-7970",
+      "@type": "foaf:Person"
+    },
+    {
+      "familyName": "Mekhontsev",
+      "fn": "Sergey  Mekhontsev",
+      "givenName": "Sergey",
+      "middleName": "",
+      "affiliation": [
+        {
+          "title": "National Institute of Standards and Technology",
+          "subunits": [
+            "Intelligent Systems Division"
+          ],
+          "@type": "org:Organization",
+          "@id": "ror:05xpvk416"
+        }
+      ],
+      "orcid": "0000-0001-7764-630X",
+      "@type": "foaf:Person"
+    },
+    {
+      "familyName": "Grantham",
+      "fn": "Steven  Grantham",
+      "givenName": "Steven",
+      "middleName": "",
+      "affiliation": [
+        {
+          "title": "National Institute of Standards and Technology",
+          "subunits": [
+            "Sensor Science Division"
+          ],
+          "@type": "org:Organization",
+          "@id": "ror:05xpvk416"
+        }
+      ],
+      "orcid": "0000-0002-8218-512X",
+      "@type": "foaf:Person"
+    },
+    {
+      "familyName": "Levine",
+      "fn": "Lyle  Levine",
+      "givenName": "Lyle",
+      "middleName": "",
+      "affiliation": [
+        {
+          "title": "National Institute of Standards and Technology",
+          "subunits": [
+            "Materials Science and Engineering Division"
+          ],
+          "@type": "org:Organization",
+          "@id": "ror:05xpvk416"
+        }
+      ],
+      "orcid": "0000-0003-3448-4229",
+      "@type": "foaf:Person"
+    },
+    {
+      "familyName": "Neira",
+      "fn": "Jorge  Neira",
+      "givenName": "Jorge",
+      "middleName": "",
+      "affiliation": [
+        {
+          "title": "National Institute of Standards and Technology",
+          "subunits": [
+            "Intelligent Systems Division"
+          ],
+          "@type": "org:Organization",
+          "@id": "ror:05xpvk416"
+        }
+      ],
+      "orcid": "",
+      "@type": "foaf:Person"
+    }
+  ],
+  "annotated": "2026-01-06T22:45:09.812833",
+  "revised": "2023-10-19T19:24:27.171474",
+  "issued": null,
+  "firstIssued": "2023-10-19T19:24:27.171474",
+  "releaseHistory": {
+    "@id": "ark:/88434/mds2-2715/pdr:v",
+    "@type": [
+      "nrdr:ReleaseHistory"
+    ],
+    "hasRelease": [
+      {
+        "version": "1.0.0",
+        "issued": "2023-08-25",
+        "@id": "ark:/88434/mds2-2715/pdr:v/1.0.0",
+        "location": "https://data.nist.gov/od/id/ark:/88434/mds2-2715/pdr:v/1.0.0",
+        "description": "initial release"
+      },
+      {
+        "version": "1.0.1",
+        "issued": "2026-01-06",
+        "@id": "ark:/88434/mds2-2715/pdr:v/1.0.1",
+        "location": "https://data.nist.gov/od/id/ark:/88434/mds2-2715/pdr:v/1.0.1",
+        "description": "added to additiveman collection"
+      },
+      {
+        "version": "1.0.2",
+        "issued": "2026-01-06",
+        "@id": "ark:/88434/mds2-2715/pdr:v/1.0.2",
+        "location": "https://data.nist.gov/od/id/ark:/88434/mds2-2715/pdr:v/1.0.2",
+        "description": "fix subject keywords"
+      }
+    ]
+  },
+  "isPartOf": [
+    {
+      "@type": [
+        "nrda:ScienceTheme",
+        "nrdp:PublicDataResource"
+      ],
+      "@id": "ark:/88434/pdr0-0003",
+      "title": "Additive Manufacturing Data"
+    }
+  ]
+}

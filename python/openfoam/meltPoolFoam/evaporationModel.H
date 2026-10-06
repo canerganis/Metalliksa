@@ -35,7 +35,8 @@ public:
     EvaporationModel(const fvMesh& mesh, const dictionary& dict)
     :
         mesh_(mesh),
-        active_(dict.lookupOrDefault<bool>("active", true)),
+        // VOF mass-transfer closure is not implemented; require explicit opt-in.
+        active_(dict.lookupOrDefault<bool>("active", false)),
         latentHeatVap_(dict.lookupOrDefault<scalar>("latentHeatVap", 8.9e6)),
         boilingT_(dict.lookupOrDefault<scalar>("boiling_T", 3560.0)),
         molarMass_(dict.lookupOrDefault<scalar>("molarMass", 0.0459)),

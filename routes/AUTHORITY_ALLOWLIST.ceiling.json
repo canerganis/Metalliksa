@@ -1,0 +1,53 @@
+{
+  "description": "Immutable initial allowance pinned at Phase 7 slice 1 (base 464806f). The live allowlist must be a subset of this set; tests fail on any entry not listed here. Removing live entries is allowed; adding to this file needs explicit maintainer review. Reviewed addition (slice-1 fix round, review item 4): unbound 'GET /api/materials-project/search', unbound because it serves a canned hard-coded catalog (it was wrongly bound as a node-provider operation). Reviewed addition (slice-1 fix round 2, route discovery widened to server.ts, server/** and .use/.all mounts): unbound 'GET /api/health', 'GET /api/runtime-config', 'ALL /api/*' (server.ts infrastructure) and unclassified 'USE /api/lpbf', 'USE /api/lpbf/sources', 'USE /api/lpbf/runs', 'USE /api/research/registry' (guard/parser middleware mounts). Reviewed addition (fix round 2, stricter canned rules): cannedBaseline 'GET /api/health' (ternary-of-literals false positive on a liveness flag). Review rule: any change to an existing ceiling needs a commit trailer 'Ceiling-Review: <reason>' (CI: scripts/check_ceiling_review.py), and entries may never exceed the original content pinned in python/test_allowlist_ceilings.py plus its explicit DELIBERATE_DELTA. Site-keyed 'unclassified' allowlist entries (USE mounts, keyed 'USE /api/x (file#n)') are capped by path in 'unclassified' and by the number of sites per path in 'unclassifiedSites' (reviewed shape change, p7 re-audit fix round).",
+  "unbound": [
+    "ALL /api/*",
+    "GET /api/calphad/databases",
+    "GET /api/health",
+    "GET /api/lpbf/runs/:runId",
+    "GET /api/lpbf/runs/bundles/:bundleId/download",
+    "GET /api/lpbf/runs/bundles/restores/:restoreId/runs",
+    "GET /api/lpbf/runs/bundles/restores/:restoreId/runs/:runId",
+    "GET /api/lpbf/runs/proxy-campaigns",
+    "GET /api/lpbf/sources/:datasetId",
+    "GET /api/lpbf/sources/:datasetId/revisions",
+    "GET /api/lpbf/sources/:datasetId/revisions/:revision",
+    "GET /api/python/ipc-status",
+    "GET /api/python/status",
+    "GET /api/research/registry/history",
+    "GET /api/research/registry/revisions/:revision",
+    "GET /api/runtime-config",
+    "POST /api/calphad/minimize",
+    "POST /api/lpbf/runs/:runId/nist-comparison",
+    "POST /api/lpbf/runs/bundles/:bundleId/restore",
+    "POST /api/lpbf/runs/bundles/:bundleId/verify",
+    "POST /api/lpbf/runs/bundles/export",
+    "POST /api/lpbf/runs/bundles/import",
+    "POST /api/lpbf/runs/bundles/imports/:bundleId/restore",
+    "POST /api/lpbf/runs/bundles/restores/:restoreId/runs/:runId/nist-comparison",
+    "POST /api/lpbf/runs/import",
+    "POST /api/lpbf/runs/preview",
+    "POST /api/lpbf/runs/proxy-campaigns",
+    "POST /api/lpbf/runs/proxy-campaigns/preview",
+    "POST /api/lpbf/sources/:datasetId/import",
+    "POST /api/lpbf/sources/:datasetId/preview",
+    "POST /api/lpbf/sources/:datasetId/verify",
+    "POST /api/python/ipc-warmup",
+    "POST /api/python/xrd-deconvolve"
+  ],
+  "unclassified": [
+    "USE /api/lpbf",
+    "USE /api/lpbf/runs",
+    "USE /api/lpbf/sources",
+    "USE /api/research/registry"
+  ],
+  "unclassifiedSites": {
+    "USE /api/lpbf": 1,
+    "USE /api/lpbf/runs": 2,
+    "USE /api/lpbf/sources": 2,
+    "USE /api/research/registry": 1
+  },
+  "cannedBaseline": [
+    "GET /api/health"
+  ]
+}

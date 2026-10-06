@@ -1,0 +1,1265 @@
+{
+  "diagnosticOnly": true,
+  "experimentalValidation": false,
+  "solverValidationStatus": "unvalidated",
+  "convergenceConclusion": "inconclusive",
+  "NIST": "unavailable",
+  "analysisStatus": "accepted-step-transition-diagnostic",
+  "eventTime_s": 0.00024999999999999995,
+  "roundoffTolerance_s": 1e-14,
+  "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+  "transitionTimeMeaning": "first accepted-step endpoint where ever-liquidus changes false to true; bracket uses the stored previous accepted clock and endpoint, not dt subtraction or a continuous physical crossing time",
+  "cells": [
+    {
+      "indices_ijk": [
+        29,
+        43,
+        60
+      ],
+      "coordinate_m": [
+        -7.25e-05,
+        -2.5000000000000066e-06,
+        2.5000000000000066e-06
+      ],
+      "byLevel": {
+        "5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "2.5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "1.25e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        }
+      },
+      "comparisons": {
+        "50nsTo25ns": {
+          "status": "both_absent",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        },
+        "25nsTo12_5ns": {
+          "status": "both_absent",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        }
+      }
+    },
+    {
+      "indices_ijk": [
+        30,
+        42,
+        60
+      ],
+      "coordinate_m": [
+        -6.749999999999999e-05,
+        -7.4999999999999926e-06,
+        2.5000000000000066e-06
+      ],
+      "byLevel": {
+        "5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "2.5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "1.25e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        }
+      },
+      "comparisons": {
+        "50nsTo25ns": {
+          "status": "both_absent",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        },
+        "25nsTo12_5ns": {
+          "status": "both_absent",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        }
+      }
+    },
+    {
+      "indices_ijk": [
+        30,
+        43,
+        59
+      ],
+      "coordinate_m": [
+        -6.749999999999999e-05,
+        -2.5000000000000066e-06,
+        -2.5000000000000066e-06
+      ],
+      "byLevel": {
+        "5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "2.5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "1.25e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        }
+      },
+      "comparisons": {
+        "50nsTo25ns": {
+          "status": "both_absent",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        },
+        "25nsTo12_5ns": {
+          "status": "both_absent",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        }
+      }
+    },
+    {
+      "indices_ijk": [
+        30,
+        43,
+        60
+      ],
+      "coordinate_m": [
+        -6.749999999999999e-05,
+        -2.5000000000000066e-06,
+        2.5000000000000066e-06
+      ],
+      "byLevel": {
+        "5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "2.5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "1.25e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        }
+      },
+      "comparisons": {
+        "50nsTo25ns": {
+          "status": "both_absent",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        },
+        "25nsTo12_5ns": {
+          "status": "both_absent",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        }
+      }
+    },
+    {
+      "indices_ijk": [
+        30,
+        43,
+        61
+      ],
+      "coordinate_m": [
+        -6.749999999999999e-05,
+        -2.5000000000000066e-06,
+        7.50000000000002e-06
+      ],
+      "byLevel": {
+        "5e-08": {
+          "firstEverStep": 2312,
+          "crossingTime_s": 0.00011560000000000239,
+          "acceptedInterval_s": [
+            0.00011555000000000239,
+            0.00011560000000000239
+          ],
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": false,
+          "rightCensoredAt_s": null,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "2.5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "1.25e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        }
+      },
+      "comparisons": {
+        "50nsTo25ns": {
+          "status": "one_sided_crossing",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        },
+        "25nsTo12_5ns": {
+          "status": "both_absent",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        }
+      }
+    },
+    {
+      "indices_ijk": [
+        30,
+        44,
+        60
+      ],
+      "coordinate_m": [
+        -6.749999999999999e-05,
+        2.5000000000000066e-06,
+        2.5000000000000066e-06
+      ],
+      "byLevel": {
+        "5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "2.5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "1.25e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        }
+      },
+      "comparisons": {
+        "50nsTo25ns": {
+          "status": "both_absent",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        },
+        "25nsTo12_5ns": {
+          "status": "both_absent",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        }
+      }
+    },
+    {
+      "indices_ijk": [
+        31,
+        43,
+        60
+      ],
+      "coordinate_m": [
+        -6.25e-05,
+        -2.5000000000000066e-06,
+        2.5000000000000066e-06
+      ],
+      "byLevel": {
+        "5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "2.5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "1.25e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        }
+      },
+      "comparisons": {
+        "50nsTo25ns": {
+          "status": "both_absent",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        },
+        "25nsTo12_5ns": {
+          "status": "both_absent",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        }
+      }
+    },
+    {
+      "indices_ijk": [
+        58,
+        43,
+        61
+      ],
+      "coordinate_m": [
+        7.249999999999997e-05,
+        -2.5000000000000066e-06,
+        7.50000000000002e-06
+      ],
+      "byLevel": {
+        "5e-08": {
+          "firstEverStep": 4876,
+          "crossingTime_s": 0.0002438000000000055,
+          "acceptedInterval_s": [
+            0.0002437500000000055,
+            0.0002438000000000055
+          ],
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": false,
+          "rightCensoredAt_s": null,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "2.5e-08": {
+          "firstEverStep": 9750,
+          "crossingTime_s": 0.00024374999999993973,
+          "acceptedInterval_s": [
+            0.00024372499999993975,
+            0.00024374999999993973
+          ],
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": false,
+          "rightCensoredAt_s": null,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "1.25e-08": {
+          "firstEverStep": 19500,
+          "crossingTime_s": 0.0002437500000000387,
+          "acceptedInterval_s": [
+            0.0002437375000000387,
+            0.0002437500000000387
+          ],
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": false,
+          "rightCensoredAt_s": null,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        }
+      },
+      "comparisons": {
+        "50nsTo25ns": {
+          "status": "both_present",
+          "rawDelta_s": -5.000000006575808e-08,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": false,
+          "roundoffTolerance_s": 1e-14
+        },
+        "25nsTo12_5ns": {
+          "status": "both_present",
+          "rawDelta_s": 9.896055329361442e-17,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": true,
+          "roundoffTolerance_s": 1e-14
+        }
+      }
+    },
+    {
+      "indices_ijk": [
+        58,
+        44,
+        61
+      ],
+      "coordinate_m": [
+        7.249999999999997e-05,
+        2.5000000000000066e-06,
+        7.50000000000002e-06
+      ],
+      "byLevel": {
+        "5e-08": {
+          "firstEverStep": 4876,
+          "crossingTime_s": 0.0002438000000000055,
+          "acceptedInterval_s": [
+            0.0002437500000000055,
+            0.0002438000000000055
+          ],
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": false,
+          "rightCensoredAt_s": null,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "2.5e-08": {
+          "firstEverStep": 9750,
+          "crossingTime_s": 0.00024374999999993973,
+          "acceptedInterval_s": [
+            0.00024372499999993975,
+            0.00024374999999993973
+          ],
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": false,
+          "rightCensoredAt_s": null,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "1.25e-08": {
+          "firstEverStep": 19500,
+          "crossingTime_s": 0.0002437500000000387,
+          "acceptedInterval_s": [
+            0.0002437375000000387,
+            0.0002437500000000387
+          ],
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": false,
+          "rightCensoredAt_s": null,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        }
+      },
+      "comparisons": {
+        "50nsTo25ns": {
+          "status": "both_present",
+          "rawDelta_s": -5.000000006575808e-08,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": false,
+          "roundoffTolerance_s": 1e-14
+        },
+        "25nsTo12_5ns": {
+          "status": "both_present",
+          "rawDelta_s": 9.896055329361442e-17,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": true,
+          "roundoffTolerance_s": 1e-14
+        }
+      }
+    },
+    {
+      "indices_ijk": [
+        59,
+        42,
+        61
+      ],
+      "coordinate_m": [
+        7.749999999999999e-05,
+        -7.4999999999999926e-06,
+        7.50000000000002e-06
+      ],
+      "byLevel": {
+        "5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "2.5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "1.25e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        }
+      },
+      "comparisons": {
+        "50nsTo25ns": {
+          "status": "both_absent",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        },
+        "25nsTo12_5ns": {
+          "status": "both_absent",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        }
+      }
+    },
+    {
+      "indices_ijk": [
+        59,
+        43,
+        60
+      ],
+      "coordinate_m": [
+        7.749999999999999e-05,
+        -2.5000000000000066e-06,
+        2.5000000000000066e-06
+      ],
+      "byLevel": {
+        "5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "2.5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "1.25e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        }
+      },
+      "comparisons": {
+        "50nsTo25ns": {
+          "status": "both_absent",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        },
+        "25nsTo12_5ns": {
+          "status": "both_absent",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        }
+      }
+    },
+    {
+      "indices_ijk": [
+        59,
+        43,
+        61
+      ],
+      "coordinate_m": [
+        7.749999999999999e-05,
+        -2.5000000000000066e-06,
+        7.50000000000002e-06
+      ],
+      "byLevel": {
+        "5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "2.5e-08": {
+          "firstEverStep": 10000,
+          "crossingTime_s": 0.00024999999999994287,
+          "acceptedInterval_s": [
+            0.00024997499999994285,
+            0.00024999999999994287
+          ],
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": false,
+          "rightCensoredAt_s": null,
+          "terminalCrossing": true,
+          "boundarySensitive": true
+        },
+        "1.25e-08": {
+          "firstEverStep": 20000,
+          "crossingTime_s": 0.00024999999999999995,
+          "acceptedInterval_s": [
+            0.00024998750000002957,
+            0.00024999999999999995
+          ],
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": false,
+          "rightCensoredAt_s": null,
+          "terminalCrossing": true,
+          "boundarySensitive": true
+        }
+      },
+      "comparisons": {
+        "50nsTo25ns": {
+          "status": "one_sided_crossing",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        },
+        "25nsTo12_5ns": {
+          "status": "both_present",
+          "rawDelta_s": 5.708324438136181e-17,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": true,
+          "roundoffTolerance_s": 1e-14
+        }
+      }
+    },
+    {
+      "indices_ijk": [
+        59,
+        43,
+        62
+      ],
+      "coordinate_m": [
+        7.749999999999999e-05,
+        -2.5000000000000066e-06,
+        1.2499999999999979e-05
+      ],
+      "byLevel": {
+        "5e-08": {
+          "firstEverStep": 4602,
+          "crossingTime_s": 0.00023010000000000516,
+          "acceptedInterval_s": [
+            0.00023005000000000516,
+            0.00023010000000000516
+          ],
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": false,
+          "rightCensoredAt_s": null,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "2.5e-08": {
+          "firstEverStep": 9202,
+          "crossingTime_s": 0.00023004999999994683,
+          "acceptedInterval_s": [
+            0.00023002499999994684,
+            0.00023004999999994683
+          ],
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": false,
+          "rightCensoredAt_s": null,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "1.25e-08": {
+          "firstEverStep": 18404,
+          "crossingTime_s": 0.00023005000000003094,
+          "acceptedInterval_s": [
+            0.00023003750000003093,
+            0.00023005000000003094
+          ],
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": false,
+          "rightCensoredAt_s": null,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        }
+      },
+      "comparisons": {
+        "50nsTo25ns": {
+          "status": "both_present",
+          "rawDelta_s": -5.000000005833129e-08,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": false,
+          "roundoffTolerance_s": 1e-14
+        },
+        "25nsTo12_5ns": {
+          "status": "both_present",
+          "rawDelta_s": 8.410698353056301e-17,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": true,
+          "roundoffTolerance_s": 1e-14
+        }
+      }
+    },
+    {
+      "indices_ijk": [
+        59,
+        44,
+        60
+      ],
+      "coordinate_m": [
+        7.749999999999999e-05,
+        2.5000000000000066e-06,
+        2.5000000000000066e-06
+      ],
+      "byLevel": {
+        "5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "2.5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "1.25e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        }
+      },
+      "comparisons": {
+        "50nsTo25ns": {
+          "status": "both_absent",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        },
+        "25nsTo12_5ns": {
+          "status": "both_absent",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        }
+      }
+    },
+    {
+      "indices_ijk": [
+        59,
+        44,
+        61
+      ],
+      "coordinate_m": [
+        7.749999999999999e-05,
+        2.5000000000000066e-06,
+        7.50000000000002e-06
+      ],
+      "byLevel": {
+        "5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "2.5e-08": {
+          "firstEverStep": 10000,
+          "crossingTime_s": 0.00024999999999994287,
+          "acceptedInterval_s": [
+            0.00024997499999994285,
+            0.00024999999999994287
+          ],
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": false,
+          "rightCensoredAt_s": null,
+          "terminalCrossing": true,
+          "boundarySensitive": true
+        },
+        "1.25e-08": {
+          "firstEverStep": 20000,
+          "crossingTime_s": 0.00024999999999999995,
+          "acceptedInterval_s": [
+            0.00024998750000002957,
+            0.00024999999999999995
+          ],
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": false,
+          "rightCensoredAt_s": null,
+          "terminalCrossing": true,
+          "boundarySensitive": true
+        }
+      },
+      "comparisons": {
+        "50nsTo25ns": {
+          "status": "one_sided_crossing",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        },
+        "25nsTo12_5ns": {
+          "status": "both_present",
+          "rawDelta_s": 5.708324438136181e-17,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": true,
+          "roundoffTolerance_s": 1e-14
+        }
+      }
+    },
+    {
+      "indices_ijk": [
+        59,
+        44,
+        62
+      ],
+      "coordinate_m": [
+        7.749999999999999e-05,
+        2.5000000000000066e-06,
+        1.2499999999999979e-05
+      ],
+      "byLevel": {
+        "5e-08": {
+          "firstEverStep": 4602,
+          "crossingTime_s": 0.00023010000000000516,
+          "acceptedInterval_s": [
+            0.00023005000000000516,
+            0.00023010000000000516
+          ],
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": false,
+          "rightCensoredAt_s": null,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "2.5e-08": {
+          "firstEverStep": 9202,
+          "crossingTime_s": 0.00023004999999994683,
+          "acceptedInterval_s": [
+            0.00023002499999994684,
+            0.00023004999999994683
+          ],
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": false,
+          "rightCensoredAt_s": null,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "1.25e-08": {
+          "firstEverStep": 18404,
+          "crossingTime_s": 0.00023005000000003094,
+          "acceptedInterval_s": [
+            0.00023003750000003093,
+            0.00023005000000003094
+          ],
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": false,
+          "rightCensoredAt_s": null,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        }
+      },
+      "comparisons": {
+        "50nsTo25ns": {
+          "status": "both_present",
+          "rawDelta_s": -5.000000005833129e-08,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": false,
+          "roundoffTolerance_s": 1e-14
+        },
+        "25nsTo12_5ns": {
+          "status": "both_present",
+          "rawDelta_s": 8.410698353056301e-17,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": true,
+          "roundoffTolerance_s": 1e-14
+        }
+      }
+    },
+    {
+      "indices_ijk": [
+        59,
+        45,
+        61
+      ],
+      "coordinate_m": [
+        7.749999999999999e-05,
+        7.4999999999999926e-06,
+        7.50000000000002e-06
+      ],
+      "byLevel": {
+        "5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "2.5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "1.25e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        }
+      },
+      "comparisons": {
+        "50nsTo25ns": {
+          "status": "both_absent",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        },
+        "25nsTo12_5ns": {
+          "status": "both_absent",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        }
+      }
+    },
+    {
+      "indices_ijk": [
+        60,
+        43,
+        61
+      ],
+      "coordinate_m": [
+        8.25e-05,
+        -2.5000000000000066e-06,
+        7.50000000000002e-06
+      ],
+      "byLevel": {
+        "5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "2.5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "1.25e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        }
+      },
+      "comparisons": {
+        "50nsTo25ns": {
+          "status": "both_absent",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        },
+        "25nsTo12_5ns": {
+          "status": "both_absent",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        }
+      }
+    },
+    {
+      "indices_ijk": [
+        60,
+        44,
+        61
+      ],
+      "coordinate_m": [
+        8.25e-05,
+        2.5000000000000066e-06,
+        7.50000000000002e-06
+      ],
+      "byLevel": {
+        "5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "2.5e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        },
+        "1.25e-08": {
+          "firstEverStep": null,
+          "crossingTime_s": null,
+          "acceptedInterval_s": null,
+          "intervalConvention": "(previousAcceptedTime_s, crossingTime_s]",
+          "rightCensored": true,
+          "rightCensoredAt_s": 0.00024999999999999995,
+          "terminalCrossing": false,
+          "boundarySensitive": false
+        }
+      },
+      "comparisons": {
+        "50nsTo25ns": {
+          "status": "both_absent",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        },
+        "25nsTo12_5ns": {
+          "status": "both_absent",
+          "rawDelta_s": null,
+          "deltaDefinition": "finer accepted-step endpoint minus coarser accepted-step endpoint",
+          "roundoffEquivalent": null,
+          "roundoffTolerance_s": 1e-14
+        }
+      }
+    }
+  ],
+  "epistemicLimits": [
+    "Each discrete detection is bracketed by the stored previous accepted clock and crossing endpoint; no continuous within-step crossing is established.",
+    "Crossings on the event's final accepted step are boundary-sensitive at the fixed observation endpoint.",
+    "Right-censored cells have no observed crossing by the event time; absence is not evidence of no later crossing.",
+    "Roundoff-equivalent deltas retain their raw signed value and are only labeled using the stated tolerance."
+  ],
+  "provenance": {
+    "historyReaderSha256": "b468612c3225d5246f78d3f8c949be34382bd515f385a527df66a42fbc37c820",
+    "historyProtocolSha256": "fd5e20e0f64efebfaa7aa257bef61bff4e778dddb1ef014ae5fb968cd860aa9b",
+    "refinementProtocolSha256": "9599b5bf434bafa58e7f42764043bdb99e725a8257e37495b52c7f72735f4484",
+    "historyReportSha256": "b5adeb9582b29b4c2d9def01695ccf780763ef4925032c5d02ee6209babd954b",
+    "refinementReportSha256": "a6ab30df9253f5eabc2bfe75248579c4d61d1c582ed28073460cc33c9631ea4b",
+    "historicalImplementationFingerprint": "d7e5c4e3d5f0a59c4b955e0e1ca29f624fe6249c4e7cd1522e84ed1a87249315",
+    "executionHeadCommit": "aacd910b8edd2625353cfbfb20f1f022cce971f6",
+    "runnerSha256": "b468612c3225d5246f78d3f8c949be34382bd515f385a527df66a42fbc37c820",
+    "historyHelperSha256": "5a2725b51d03d4717f182913cc4099f9034248b26d99423127ff43267c10440e",
+    "archiveLineage": [
+      {
+        "level_s": 5e-08,
+        "archiveSha256": "d82faa7c1eaad34600707ca1619fd8848b9223feee55757104be4b7a35ce434b",
+        "arraySha256": {
+          "time_s": "bf12bbc5c2a70c661081dabe9d949ba315c9ac57efd36f7abc45cc6a1307e093",
+          "accepted_dt_s": "c6333540d6435edff542dd978522a2fb097d0508e8c60711d24f6dc5f4009492",
+          "values": "f450cbdb0cb302c69743aa016b9e56ed1aea1d3e388c26ba4f1367032cb4076d",
+          "ever": "2e1ff770340531b909e05a22e4331376366e7b6b3ac4024cb2c78db592035a7a",
+          "cell_indices_ijk": "8af11e56bfea453d7bdd5c0c0f0a691b29fd691f2cd500851533e4f6f22b1c01",
+          "coordinates_m": "18fd8b5f671a526f164a75eb8bb9bb4c134cc771702534e834db91c973a9f287"
+        },
+        "archivePath": "docs/LPBF_FIXED_EVENT_TIME_HISTORY_FIELDS_2026-10-02/maxdt-5.0000e-08.npz"
+      },
+      {
+        "level_s": 2.5e-08,
+        "archiveSha256": "74a6f40a17e8833ea63e065426807be0ec60184beb75438481c5c95e5b8f05b6",
+        "arraySha256": {
+          "time_s": "93149ab6bfdbb84f8aa01a3b2372afc3dc510c6470889430d195fdd877cb8c1a",
+          "accepted_dt_s": "40bb612825ccc7322ce730bdc67f138ea7753b6a40ae35ad4bb8adcf7047666f",
+          "values": "32ded6bc41d89d20a1f794b34fd88a32e9845e370448dc8bd1ce2d835d390a6d",
+          "ever": "25ad2ce12910ca8fac7cffe0e039fc27b8fb5e7a18dc3082447517a2300924f6",
+          "cell_indices_ijk": "8af11e56bfea453d7bdd5c0c0f0a691b29fd691f2cd500851533e4f6f22b1c01",
+          "coordinates_m": "18fd8b5f671a526f164a75eb8bb9bb4c134cc771702534e834db91c973a9f287"
+        },
+        "archivePath": "docs/LPBF_FIXED_EVENT_TIME_HISTORY_FIELDS_2026-10-02/maxdt-2.5000e-08.npz"
+      },
+      {
+        "level_s": 1.25e-08,
+        "archiveSha256": "899bf8d190d60d6fc46d045cec7704024f2d1b12395a6b549e64f688e494317f",
+        "arraySha256": {
+          "time_s": "c9ee35cf314e65e463ad2e64c899b0dd24bea54535be9ea67e9acab5f937b745",
+          "accepted_dt_s": "364eda0f06de56e6332761008008c08230914a1b8741be4787a4c57c43478165",
+          "values": "68c6b32fcba4e99f5b8cd974e83476294db2b857e2cbc0dc58608e4c51ad7a4f",
+          "ever": "e388ed83300e440888355b2d01d648898946f3bbec13de1b06e3ad0c2b355f6e",
+          "cell_indices_ijk": "8af11e56bfea453d7bdd5c0c0f0a691b29fd691f2cd500851533e4f6f22b1c01",
+          "coordinates_m": "18fd8b5f671a526f164a75eb8bb9bb4c134cc771702534e834db91c973a9f287"
+        },
+        "archivePath": "docs/LPBF_FIXED_EVENT_TIME_REFINEMENT_2026-10-02_FIELDS/history-maxdt-1.2500e-08.npz"
+      }
+    ],
+    "analysisSource": "python/analyze_lpbf_fixed_event_transitions.py",
+    "analysisSourceSha256": "62f7a88ed9d7f59787798fe401a883d0b2b4c42d8969357b7614f946af18a426"
+  }
+}

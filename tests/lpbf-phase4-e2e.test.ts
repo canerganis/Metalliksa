@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { LpbfSourceArchiveService } from '../server/lpbfSourceArchiveService';
@@ -8,6 +8,13 @@ import { LpbfRunArchiveService } from '../server/lpbfRunArchiveService';
 import { lpbfWorker } from '../server/lpbfWorkerBridge';
 
 test('Phase 4: Uçtan Uca Test - Calisma Secimi -> Is Calistirma -> Karsilastirma -> Export/Import', async t => {
+  const optionalRawRoot = path.resolve('data/benchmark/cmu-ti64-meltpool-v1/raw');
+  const requiredPayloads = ['STMeasurements.csv', 'MTMeasurements.csv', 'README.txt'];
+  const missingPayloads = requiredPayloads.filter(name => !existsSync(path.join(optionalRawRoot, name)));
+  if (missingPayloads.length > 0) {
+    t.skip(`Optional CMU source payload is not restored: ${missingPayloads.join(', ')}`);
+    return;
+  }
   try {
     const directory = mkdtempSync(path.join(tmpdir(), 'metalliksa-e2e-'));
     const sourceRoot = path.join(directory, 'sources');

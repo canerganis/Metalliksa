@@ -1,5 +1,6 @@
 import { createUqRunSession } from '../utils/uqRunSession';
-import { CouponSummary, CouponWorksheet, formatUqNumber } from './UqCouponReport';
+import { AccessibleModal } from "./AccessibleModal";
+import { CouponSummary, CouponWorksheet, formatUqNumber, UqModelStatusNote } from './UqCouponReport';
 import { ResponsiveContainer } from './VisibleResponsiveContainer';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
@@ -87,7 +88,8 @@ export function UQLab({ onNavigate }: UQLabProps) {
   }, [datasets, activeDatasetId]);
 
   // Solver Engine Configuration
-  const [samplingMethod, setSamplingMethod] = useState<"sobol_qmc" | "pseudo_mc">("sobol_qmc");
+  // Sobol QMC is the only sampling engine the solver accepts (pseudo-random MC was removed upstream in f9ae3e4).
+  const samplingMethod = "sobol_qmc" as const;
   const [scramble, setScramble] = useState<boolean>(true);
   const [mcSamples, setMcSamples] = useState<number>(2500);
   const [seed, setSeed] = useState<number>(42);
@@ -351,16 +353,10 @@ export function UQLab({ onNavigate }: UQLabProps) {
                 Normal-model statistics (screening)
               </span>
 
-              {samplingMethod === "sobol_qmc" ? (
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1.5 shadow-sm">
-                  <Zap className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-                  Sobol sampling · screening
-                </span>
-              ) : (
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-slate-800 text-slate-300 border border-slate-700">
-                  Pseudo-Random PRNG
-                </span>
-              )}
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1.5 shadow-sm">
+                <Zap className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                Sobol sampling · screening
+              </span>
 
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                 Coupons: {activeDataset.coupons.length} | Heats: {empiricalStats.lotCount}
@@ -369,7 +365,7 @@ export function UQLab({ onNavigate }: UQLabProps) {
 
             <h1 className="text-2xl md:text-3xl font-bold text-slate-100 tracking-tight flex items-center gap-2.5">
               <ShieldCheck className="w-7 h-7 text-sky-400" />
-              UQ-Lab: Quasi-Monte Carlo & Coupon Scatter
+              Coupon Statistics &amp; UQ Sampling
             </h1>
 
             <p className="text-xs md:text-sm text-slate-400 max-w-3xl leading-relaxed">
@@ -399,7 +395,7 @@ export function UQLab({ onNavigate }: UQLabProps) {
               <Upload className="w-3.5 h-3.5 text-sky-400" />
               Upload CSV
             </button>
-            <input
+            <input aria-label="Upload CSV"
               type="file"
               ref={fileInputRef}
               onChange={handleCSVUpload}
@@ -436,9 +432,7 @@ export function UQLab({ onNavigate }: UQLabProps) {
                   <Zap className="w-3.5 h-3.5" />
                 </span>
                 <span className="font-bold text-slate-200">
-                  {uqResult.samplingMetadata.samplingMethod === "sobol_qmc"
-                    ? "Sobol digital-net sampling diagnostics"
-                    : "Standard Pseudo-Random Monte Carlo (PRNG)"}
+                  Sobol digital-net sampling diagnostics
                 </span>
                 <span className="text-[10px] text-slate-400 hidden md:inline">
                   — {uqResult.samplingMetadata.samplingDescription}
@@ -526,51 +520,32 @@ export function UQLab({ onNavigate }: UQLabProps) {
 
           {/* Engine Parameters Controls */}
           <div className="flex flex-wrap items-center gap-3 text-xs font-mono">
-            {/* Method Toggle */}
+            {/* Sampling engine (fixed: Sobol QMC is the only engine the solver accepts) */}
             <div className="flex items-center gap-1.5">
               <span className="text-slate-400">Engine:</span>
               <div className="inline-flex rounded-lg bg-slate-800 p-0.5 border border-slate-700">
-                <button
-                  onClick={() => setSamplingMethod("sobol_qmc")}
-                  className={`px-2.5 py-1 rounded-md text-xs font-semibold flex items-center gap-1 transition cursor-pointer ${
-                    samplingMethod === "sobol_qmc"
-                      ? "bg-amber-500 text-slate-950 shadow"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
+                <span className="px-2.5 py-1 rounded-md text-xs font-semibold flex items-center gap-1 bg-amber-500 text-slate-950 shadow">
                   <Zap className="w-3 h-3" />
                   Sobol QMC
-                </button>
-                <button
-                  onClick={() => setSamplingMethod("pseudo_mc")}
-                  className={`px-2.5 py-1 rounded-md text-xs font-semibold transition cursor-pointer ${
-                    samplingMethod === "pseudo_mc"
-                      ? "bg-sky-500 text-slate-950 shadow"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  Pseudo-MC
-                </button>
+                </span>
               </div>
             </div>
 
             {/* Scrambling */}
-            {samplingMethod === "sobol_qmc" && (
-              <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-slate-300 select-none">
-                <input
-                  type="checkbox"
-                  checked={scramble}
-                  onChange={(e) => setScramble(e.target.checked)}
-                  className="rounded bg-slate-800 border-slate-700 text-amber-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer"
-                />
-                <span>Digital shift</span>
-              </label>
-            )}
+            <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-slate-300 select-none">
+              <input
+                type="checkbox"
+                checked={scramble}
+                onChange={(e) => setScramble(e.target.checked)}
+                className="rounded bg-slate-800 border-slate-700 text-amber-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer"
+              />
+              <span>Digital shift</span>
+            </label>
 
             {/* Samples */}
             <div className="flex items-center gap-1.5 text-slate-400">
               <span>Runs:</span>
-              <select
+              <select aria-label="Runs"
                 value={mcSamples}
                 onChange={(e) => setMcSamples(parseInt(e.target.value))}
                 className="bg-slate-800 border border-slate-700 text-sky-300 rounded-lg px-2 py-1 text-xs"
@@ -948,6 +923,7 @@ export function UQLab({ onNavigate }: UQLabProps) {
           </div>
 
           <p className="text-xs text-amber-200">{uqResult.sensitivityMetadata?.limitations}</p>
+          <UqModelStatusNote modelStatus={uqResult.provenance?.modelStatus} />
           {/* Bar Chart */}
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -1039,7 +1015,7 @@ export function UQLab({ onNavigate }: UQLabProps) {
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                <input
+                <input aria-label="Filter lots"
                   type="text"
                   placeholder="Filter Heat/Specimen..."
                   value={searchLot}
@@ -1166,8 +1142,13 @@ export function UQLab({ onNavigate }: UQLabProps) {
       {/* SYNTHESIZE BATCH MODAL */}
       {/* ==================================================================== */}
       {isSynthesizeModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+        <AccessibleModal
+          open
+          onClose={() => setIsSynthesizeModalOpen(false)}
+          label="Synthesize coupon data"
+          overlayClassName="bg-black/70 backdrop-blur-sm p-4"
+          panelClassName="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl"
+        >
             {errorMsg && <p role="alert" className="text-sm text-rose-300">{errorMsg}</p>}
             <div className="flex items-center justify-between">
               <h4 className="text-base font-bold text-slate-100 flex items-center gap-2">
@@ -1189,7 +1170,7 @@ export function UQLab({ onNavigate }: UQLabProps) {
             <div className="space-y-3 font-mono text-xs">
               <div>
                 <label className="block text-slate-400 mb-1">Coupon Sample Size (N):</label>
-                <input
+                <input aria-label="Coupon Sample Size (N)"
                   type="number"
                   min={10}
                   max={200}
@@ -1201,7 +1182,7 @@ export function UQLab({ onNavigate }: UQLabProps) {
 
               <div>
                 <label className="block text-slate-400 mb-1">Number of Melt Lots / Heats:</label>
-                <input
+                <input aria-label="Number of Melt Lots / Heats"
                   type="number"
                   min={2}
                   max={12}
@@ -1226,8 +1207,7 @@ export function UQLab({ onNavigate }: UQLabProps) {
                 Generate Coupons
               </button>
             </div>
-          </div>
-        </div>
+        </AccessibleModal>
       )}
     </div>
   );

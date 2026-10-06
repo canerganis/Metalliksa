@@ -1,0 +1,346 @@
+{
+  "schemaVersion": 1,
+  "benchmarkId": "lpbf-torch-warp-alternating-independent-process-sessions-v1",
+  "status": "completed",
+  "scope": "Warm, alternating Torch/Warp solver wall time only",
+  "excludes": [
+    "final-field capture",
+    "queue",
+    "archive/persistence",
+    "UI"
+  ],
+  "experimentalValidation": false,
+  "baseline": "docs/LPBF_GPU_ALTERNATING_BENCHMARK_2026-09-28.json",
+  "baselineIdentity": {
+    "materialId": "in718",
+    "estimatedProperties": true,
+    "requestSha256": "cf2692fc4f4f06edf95ac6e4906b804d67ea1f71ec01901efbc6e9e489f3ee73",
+    "implementationFingerprint": "05ac6db2446c7ee940355d172432eab6e299c31bc543bb6cc72722522f8347dd",
+    "warpModuleSha256": "d5f395ff0214dd80a52e066a3ae310b019698dc3009a5f3621d41fbbe25b3468",
+    "settings": {
+      "mode": "standard",
+      "backend": "reference",
+      "power_W": 60,
+      "speed_mm_s": 1200,
+      "mesh_um": 10,
+      "maxDt_s": 2e-07,
+      "trackLength_um": 200,
+      "layer_um": 80,
+      "cooling_s": 2e-05,
+      "dwell_s": 0,
+      "powderGridPolicy": "layer-conforming"
+    },
+    "resolvedWorkPerTrial": {
+      "cells": 73568,
+      "acceptedSteps": 934
+    }
+  },
+  "startedAtUtc": "2026-09-28T04:15:42.779988+00:00",
+  "completedAtUtc": "2026-09-28T04:20:12.009040+00:00",
+  "wallSecondsIncludingFreshProcessStartup": 269.22944070000085,
+  "sessionCount": 3,
+  "identityAggregationPolicy": "all request, material revision, implementation, device and runtime identities must match exactly",
+  "sessions": [
+    {
+      "identity": {
+        "acceptedStepsPerTrial": 934,
+        "benchmarkRunnerSha256": "b54a1335c561f06b608d69e59c7b0d8726868e51bfa29c5052b170d729f23a48",
+        "cellsPerTrial": 73568,
+        "device": {
+          "computeCapability": "8.9",
+          "memoryGiB": 7.996,
+          "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+          "selected": "cuda:0"
+        },
+        "implementationFingerprint": "05ac6db2446c7ee940355d172432eab6e299c31bc543bb6cc72722522f8347dd",
+        "legacyCaseSha256": "cf2692fc4f4f06edf95ac6e4906b804d67ea1f71ec01901efbc6e9e489f3ee73",
+        "materialId": "in718",
+        "materialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06",
+        "runtime": {
+          "cudaDriver": "13.4",
+          "platform": "Windows-11-10.0.26200-SP0",
+          "python": "3.12.10",
+          "torch": "2.14.0+cu126",
+          "torchCudaRuntime": "12.6",
+          "warp": "1.17.0",
+          "warpCudaToolkit": "12.9"
+        },
+        "validatedRequestSha256": "da2469ce4bc698c233c279023fe4931db681d9fb1ca3fba7b23e77633a7440ee",
+        "validatedSettingsSha256": "988ce1ccb804694fe79b8f5fd564a5ee0aef379c52923eed4705062847186298",
+        "warpModuleSha256": "d5f395ff0214dd80a52e066a3ae310b019698dc3009a5f3621d41fbbe25b3468"
+      },
+      "processId": 25844,
+      "protocol": {
+        "alternatingOrder": [
+          "torch",
+          "warp",
+          "warp",
+          "torch",
+          "torch",
+          "warp"
+        ],
+        "captureFinal": false,
+        "measuredTrialsPerBackend": 3,
+        "useCudaSource": false,
+        "warmupsPerBackend": 1
+      },
+      "session": 1,
+      "torch": {
+        "mad_s": 0.01653320001787506,
+        "median_s": 12.559251600003336,
+        "spread_s": 0.2203639000072144,
+        "trials": [
+          {
+            "acceptedSteps": 934,
+            "cells": 73568,
+            "runtime_s": 12.57578480002121
+          },
+          {
+            "acceptedSteps": 934,
+            "cells": 73568,
+            "runtime_s": 12.559251600003336
+          },
+          {
+            "acceptedSteps": 934,
+            "cells": 73568,
+            "runtime_s": 12.355420900013996
+          }
+        ]
+      },
+      "torchOverWarp": 1.3981270393441407,
+      "warp": {
+        "mad_s": 0.02693239998188801,
+        "median_s": 8.982911600003717,
+        "spread_s": 0.0703603999572806,
+        "trials": [
+          {
+            "acceptedSteps": 934,
+            "cells": 73568,
+            "runtime_s": 9.02633959997911
+          },
+          {
+            "acceptedSteps": 934,
+            "cells": 73568,
+            "runtime_s": 8.982911600003717
+          },
+          {
+            "acceptedSteps": 934,
+            "cells": 73568,
+            "runtime_s": 8.95597920002183
+          }
+        ]
+      }
+    },
+    {
+      "identity": {
+        "acceptedStepsPerTrial": 934,
+        "benchmarkRunnerSha256": "b54a1335c561f06b608d69e59c7b0d8726868e51bfa29c5052b170d729f23a48",
+        "cellsPerTrial": 73568,
+        "device": {
+          "computeCapability": "8.9",
+          "memoryGiB": 7.996,
+          "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+          "selected": "cuda:0"
+        },
+        "implementationFingerprint": "05ac6db2446c7ee940355d172432eab6e299c31bc543bb6cc72722522f8347dd",
+        "legacyCaseSha256": "cf2692fc4f4f06edf95ac6e4906b804d67ea1f71ec01901efbc6e9e489f3ee73",
+        "materialId": "in718",
+        "materialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06",
+        "runtime": {
+          "cudaDriver": "13.4",
+          "platform": "Windows-11-10.0.26200-SP0",
+          "python": "3.12.10",
+          "torch": "2.14.0+cu126",
+          "torchCudaRuntime": "12.6",
+          "warp": "1.17.0",
+          "warpCudaToolkit": "12.9"
+        },
+        "validatedRequestSha256": "da2469ce4bc698c233c279023fe4931db681d9fb1ca3fba7b23e77633a7440ee",
+        "validatedSettingsSha256": "988ce1ccb804694fe79b8f5fd564a5ee0aef379c52923eed4705062847186298",
+        "warpModuleSha256": "d5f395ff0214dd80a52e066a3ae310b019698dc3009a5f3621d41fbbe25b3468"
+      },
+      "processId": 32560,
+      "protocol": {
+        "alternatingOrder": [
+          "torch",
+          "warp",
+          "warp",
+          "torch",
+          "torch",
+          "warp"
+        ],
+        "captureFinal": false,
+        "measuredTrialsPerBackend": 3,
+        "useCudaSource": false,
+        "warmupsPerBackend": 1
+      },
+      "session": 2,
+      "torch": {
+        "mad_s": 0.06366710001020692,
+        "median_s": 12.519445499987341,
+        "spread_s": 0.15350109999417327,
+        "trials": [
+          {
+            "acceptedSteps": 934,
+            "cells": 73568,
+            "runtime_s": 12.519445499987341
+          },
+          {
+            "acceptedSteps": 934,
+            "cells": 73568,
+            "runtime_s": 12.583112599997548
+          },
+          {
+            "acceptedSteps": 934,
+            "cells": 73568,
+            "runtime_s": 12.429611500003375
+          }
+        ]
+      },
+      "torchOverWarp": 1.4725584748948317,
+      "warp": {
+        "mad_s": 0.1437292999762576,
+        "median_s": 8.50183249998372,
+        "spread_s": 0.319313299987698,
+        "trials": [
+          {
+            "acceptedSteps": 934,
+            "cells": 73568,
+            "runtime_s": 8.358103200007463
+          },
+          {
+            "acceptedSteps": 934,
+            "cells": 73568,
+            "runtime_s": 8.67741649999516
+          },
+          {
+            "acceptedSteps": 934,
+            "cells": 73568,
+            "runtime_s": 8.50183249998372
+          }
+        ]
+      }
+    },
+    {
+      "identity": {
+        "acceptedStepsPerTrial": 934,
+        "benchmarkRunnerSha256": "b54a1335c561f06b608d69e59c7b0d8726868e51bfa29c5052b170d729f23a48",
+        "cellsPerTrial": 73568,
+        "device": {
+          "computeCapability": "8.9",
+          "memoryGiB": 7.996,
+          "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+          "selected": "cuda:0"
+        },
+        "implementationFingerprint": "05ac6db2446c7ee940355d172432eab6e299c31bc543bb6cc72722522f8347dd",
+        "legacyCaseSha256": "cf2692fc4f4f06edf95ac6e4906b804d67ea1f71ec01901efbc6e9e489f3ee73",
+        "materialId": "in718",
+        "materialRevisionSha256": "c90d2094ca2b5162b26399347a6fb0f9d703b1a05e8aa0883d9d9672012e8c06",
+        "runtime": {
+          "cudaDriver": "13.4",
+          "platform": "Windows-11-10.0.26200-SP0",
+          "python": "3.12.10",
+          "torch": "2.14.0+cu126",
+          "torchCudaRuntime": "12.6",
+          "warp": "1.17.0",
+          "warpCudaToolkit": "12.9"
+        },
+        "validatedRequestSha256": "da2469ce4bc698c233c279023fe4931db681d9fb1ca3fba7b23e77633a7440ee",
+        "validatedSettingsSha256": "988ce1ccb804694fe79b8f5fd564a5ee0aef379c52923eed4705062847186298",
+        "warpModuleSha256": "d5f395ff0214dd80a52e066a3ae310b019698dc3009a5f3621d41fbbe25b3468"
+      },
+      "processId": 25444,
+      "protocol": {
+        "alternatingOrder": [
+          "torch",
+          "warp",
+          "warp",
+          "torch",
+          "torch",
+          "warp"
+        ],
+        "captureFinal": false,
+        "measuredTrialsPerBackend": 3,
+        "useCudaSource": false,
+        "warmupsPerBackend": 1
+      },
+      "session": 3,
+      "torch": {
+        "mad_s": 0.09947640003520064,
+        "median_s": 12.449874200014165,
+        "spread_s": 0.22675100003834814,
+        "trials": [
+          {
+            "acceptedSteps": 934,
+            "cells": 73568,
+            "runtime_s": 12.577148800017312
+          },
+          {
+            "acceptedSteps": 934,
+            "cells": 73568,
+            "runtime_s": 12.449874200014165
+          },
+          {
+            "acceptedSteps": 934,
+            "cells": 73568,
+            "runtime_s": 12.350397799978964
+          }
+        ]
+      },
+      "torchOverWarp": 1.4894789382734663,
+      "warp": {
+        "mad_s": 0.16152229998260736,
+        "median_s": 8.358543300011661,
+        "spread_s": 0.3451274999824818,
+        "trials": [
+          {
+            "acceptedSteps": 934,
+            "cells": 73568,
+            "runtime_s": 8.358543300011661
+          },
+          {
+            "acceptedSteps": 934,
+            "cells": 73568,
+            "runtime_s": 8.520065599994268
+          },
+          {
+            "acceptedSteps": 934,
+            "cells": 73568,
+            "runtime_s": 8.174938100011786
+          }
+        ]
+      }
+    }
+  ],
+  "aggregate": {
+    "torch": {
+      "trialCount": 9,
+      "median_s": 12.519445499987341,
+      "mad_s": 0.06366710001020692,
+      "spread_s": 0.23271480001858436,
+      "sessionMedians_s": [
+        12.559251600003336,
+        12.519445499987341,
+        12.449874200014165
+      ]
+    },
+    "warp": {
+      "trialCount": 9,
+      "median_s": 8.520065599994268,
+      "mad_s": 0.1619623999868054,
+      "spread_s": 0.8514014999673236,
+      "sessionMedians_s": [
+        8.982911600003717,
+        8.50183249998372,
+        8.358543300011661
+      ]
+    }
+  },
+  "interpretation": {
+    "speedRatioMedianOfSessionMeasurementsTorchOverWarp": 1.4725584748948317,
+    "endToEndSpeedup": "unmeasured",
+    "kernelAttribution": "unavailable; this timing protocol does not profile device kernels",
+    "numericalParity": "not measured by this timing protocol",
+    "experimentalValidation": false
+  }
+}

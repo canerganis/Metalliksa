@@ -1,0 +1,174 @@
+{
+  "codeCommit": "3498da5a21168b4f74dda2c5c462ff78a0f6663e",
+  "experimentalValidation": false,
+  "frozenArtifactSha256": {
+    "docs/LPBF_FIXED_EVENT_TIME_REFINEMENT_2026-10-02.json": "a6ab30df9253f5eabc2bfe75248579c4d61d1c582ed28073460cc33c9631ea4b",
+    "docs/LPBF_FIXED_EVENT_TIME_REFINEMENT_2026-10-02_AUDIT.py": "256fe917e8cea83910ef63f6af063454ce700a7e6d4ac1d63129d2b1c62e3106",
+    "docs/LPBF_FIXED_EVENT_TIME_REFINEMENT_2026-10-02_FIELDS/finalstate-maxdt-1.2500e-08.npz": "db7fc10d052764db456f19f7f10c5756f830af6dfa952f99426e27fbce1979d8",
+    "docs/LPBF_FIXED_EVENT_TIME_REFINEMENT_2026-10-02_FIELDS/history-maxdt-1.2500e-08.npz": "899bf8d190d60d6fc46d045cec7704024f2d1b12395a6b549e64f688e494317f",
+    "docs/LPBF_FIXED_EVENT_TIME_REFINEMENT_2026-10-02_PROTOCOL.json": "9599b5bf434bafa58e7f42764043bdb99e725a8257e37495b52c7f72735f4484",
+    "docs/LPBF_SOURCE_IDENTITY_2026-10-02.json": "aebf1e453588f91a7e7db850afb647a75a9ec7b59712f95b56ca184082b0a81d"
+  },
+  "implementationFingerprint": "4cf24334a711ecf6fd41597cb087726580c0ed85b52ece72e0f15b89f6802e35",
+  "implementationFingerprintSchema": "lpbf-thermal-implementation-manifest-v3-canonical-utf8-crlf",
+  "numericalConvergence": "not-assessed-by-this-package",
+  "numericalPreservation": {
+    "beforeSourceSha256": "d292b25d3a1198ddf23aa60652bc6412fdf41da3f41bdce9d63161bd0c6d3292",
+    "check": "before-orchestration-vs-tracked-reference-automatic",
+    "checks": [
+      {
+        "arrayEqual": [
+          "coordinates_m",
+          "temperature_K",
+          "enthalpy_J_m3",
+          "density_kg_m3",
+          "accepted_dt_s"
+        ],
+        "backend": "reference",
+        "clockEqual": true,
+        "metricAuditSettingsEqual": true,
+        "progress": {
+          "acceptedSteps": 230,
+          "attemptedSourceCellSteps": 167670,
+          "attemptedSourceEvaluations": 230,
+          "cells": 729,
+          "lastAcceptedDt_s": 1e-06,
+          "lastAcceptedSchedulerTime_s": 0.00023,
+          "lastAcceptedTime_s": 0.00022999999999999946,
+          "schemaVersion": 1,
+          "scope": "cpu-reference",
+          "sourceEvaluationFailures": 0,
+          "sourceEvaluationRetries": 0,
+          "stage": "completed"
+        }
+      },
+      {
+        "arrayEqual": [
+          "coordinates_m",
+          "temperature_K",
+          "enthalpy_J_m3",
+          "density_kg_m3",
+          "accepted_dt_s"
+        ],
+        "backend": "auto",
+        "clockEqual": true,
+        "metricAuditSettingsEqual": true,
+        "progress": {
+          "acceptedSteps": 230,
+          "attemptedSourceCellSteps": 167670,
+          "attemptedSourceEvaluations": 230,
+          "cells": 729,
+          "lastAcceptedDt_s": 1e-06,
+          "lastAcceptedSchedulerTime_s": 0.00023,
+          "lastAcceptedTime_s": 0.00022999999999999946,
+          "schemaVersion": 1,
+          "scope": "cpu-reference",
+          "sourceEvaluationFailures": 0,
+          "sourceEvaluationRetries": 0,
+          "stage": "completed"
+        }
+      }
+    ],
+    "comparisonBasis": "before run/transient source with current unchanged numerical dependencies; progress disabled for control",
+    "currentImplementationHash": "4cf24334a711ecf6fd41597cb087726580c0ed85b52ece72e0f15b89f6802e35",
+    "experimentalValidation": false,
+    "nonorchestrationFunctionAstEqual": true,
+    "nonorchestrationFunctionCount": 16,
+    "numericalConvergence": "not-assessed",
+    "payload": {
+      "backend": "reference",
+      "cooling_s": 2e-05,
+      "layer_um": 40.0,
+      "layers": 1,
+      "maxDt_s": 1e-06,
+      "mesh_um": 40.0,
+      "mode": "standard",
+      "power_W": 10.0,
+      "speed_mm_s": 10000.0,
+      "study": "none",
+      "trackLength_um": 100.0,
+      "tracks": 1
+    },
+    "schemaVersion": 1
+  },
+  "schemaVersion": 1,
+  "scope": "CPU public-run progress and existing Automatic dispatch",
+  "verification": {
+    "committedCanonicalIdentityEqual": true,
+    "fail": 0,
+    "graph": {
+      "cards": 6,
+      "edges": 390,
+      "isolatedByteExactOwnedFiles": 6,
+      "main": "unavailable: existing temporary-directory EPERM",
+      "nodes": 146
+    },
+    "newLargeSolverRun": false,
+    "newPublicRunPass": 14,
+    "newPublicRunTests": 14,
+    "newWorkerPass": 5,
+    "newWorkerTests": 5,
+    "pass": 186,
+    "pyCompile": "pass",
+    "skip": 2,
+    "skippedControls": [
+      "Linux-only OpenFOAM oracle",
+      "Windows symlink creation privilege unavailable (WinError 1314)"
+    ],
+    "tests": 188,
+    "wallTime_s": 113.621
+  },
+  "workerFailureComparison": {
+    "check": "reference-auto-real-worker-boiling-failure",
+    "experimentalValidation": false,
+    "identicalFailureOutput": true,
+    "numericalConvergence": "not-assessed",
+    "observations": [
+      {
+        "completedResultExists": false,
+        "payload": {
+          "backend": "reference",
+          "beamDiameter_um": 20.0,
+          "cooling_s": 0.0,
+          "layer_um": 80.0,
+          "layers": 1,
+          "maxDt_s": 0.0001,
+          "mesh_um": 40.0,
+          "mode": "standard",
+          "power_W": 1500.0,
+          "speed_mm_s": 10.0,
+          "study": "none",
+          "trackLength_um": 100.0,
+          "tracks": 1
+        },
+        "returncode": 1,
+        "stderr": "",
+        "stdout": "{\"progress\": 1.5948179590336943e-06, \"message\": \"step=1 t=1.626714e-08s peak=376.8K cells=160\"}\nThermal model validity exceeded at or above the material boiling limit (specific enthalpy 2165289.89 J/kg; limit 2153440 J/kg at 3123.15 K; cell=(np.int64(0), np.int64(1), np.int64(9)), previous T=3115.6 K, previous specific enthalpy=2147930.64 J/kg, dt=2.63296104e-08 s, source rate=2.9698795e+15 W/m\u00b3, net rate=2.95377203e+15 W/m\u00b3); evaporation/free-surface CFD required\nLast valid CPU state: 132 accepted steps at 3.19345553e-06 s. Source work: 266 source evaluations, 133 retries, 42560 source cell-evaluations (excludes conduction and other solver work). No completed result.\n",
+        "temporaryResultExists": false
+      },
+      {
+        "completedResultExists": false,
+        "payload": {
+          "backend": "auto",
+          "beamDiameter_um": 20.0,
+          "cooling_s": 0.0,
+          "layer_um": 80.0,
+          "layers": 1,
+          "maxDt_s": 0.0001,
+          "mesh_um": 40.0,
+          "mode": "standard",
+          "power_W": 1500.0,
+          "speed_mm_s": 10.0,
+          "study": "none",
+          "trackLength_um": 100.0,
+          "tracks": 1
+        },
+        "returncode": 1,
+        "stderr": "",
+        "stdout": "{\"progress\": 1.5948179590336943e-06, \"message\": \"step=1 t=1.626714e-08s peak=376.8K cells=160\"}\nThermal model validity exceeded at or above the material boiling limit (specific enthalpy 2165289.89 J/kg; limit 2153440 J/kg at 3123.15 K; cell=(np.int64(0), np.int64(1), np.int64(9)), previous T=3115.6 K, previous specific enthalpy=2147930.64 J/kg, dt=2.63296104e-08 s, source rate=2.9698795e+15 W/m\u00b3, net rate=2.95377203e+15 W/m\u00b3); evaporation/free-surface CFD required\nLast valid CPU state: 132 accepted steps at 3.19345553e-06 s. Source work: 266 source evaluations, 133 retries, 42560 source cell-evaluations (excludes conduction and other solver work). No completed result.\n",
+        "temporaryResultExists": false
+      }
+    ],
+    "schemaVersion": 1
+  }
+}

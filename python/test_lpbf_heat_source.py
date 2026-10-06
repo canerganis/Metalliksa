@@ -8,10 +8,105 @@ from types import SimpleNamespace
 from unittest.mock import patch
 import unittest
 import numpy as np
-from lpbf_heat_source import gaussian_interval, cell_weights, integrated_source, source_limited_step, conduction_diagonal
+from lpbf_core_physics import calculate_mesh_domain
+from lpbf_heat_source import (require_source_capture, gaussian_interval, cell_weights, integrated_source,
+                              source_limited_step, conduction_diagonal)
+from lpbf_simulation import MINIMUM_SOURCE_CAPTURE_FRACTION, validate
+
+
+def _moving_source_case(travel_radii):
+    radius = 100e-6
+    dx = 0.4 * radius
+    axis = (np.arange(27, dtype=np.float64) - 13) * dx
+    z = -(np.arange(14, dtype=np.float64) + 0.5) * dx
+    surface = 0.0
+    segment = {
+        "start": np.array([-0.5 * travel_radii * radius, 0.0]),
+        "end": np.array([0.5 * travel_radii * radius, 0.0]),
+        "start_s": 0.0,
+        "end_s": 1.0,
+    }
+    return axis, z, dx, segment, surface, radius, 1.5 * radius, 75.0
+
+
+def _high_order_moving_source_reference(case, *, reverse=False, order=96):
+    """Independent temporal GL reference; spatial cell integrals stay shared."""
+    axis, z, dx, segment, surface, radius, penetration, power = case
+    if reverse:
+        segment = {**segment, "start": segment["end"], "end": segment["start"]}
+    nodes, weights = np.polynomial.legendre.leggauss(order)
+    source = np.zeros((len(axis), len(axis), len(z)), dtype=np.float64)
+    capture = 1.0
+    for node, weight in zip((nodes + 1.0) * 0.5, weights * 0.5):
+        position = segment["start"] + node * (segment["end"] - segment["start"])
+        cell_mass = cell_weights(axis, z, dx, position, surface, radius, penetration, axis)
+        total = float(cell_mass.sum())
+        capture = min(capture, 2.0 * total)
+        source += cell_mass * (power / (total * dx**3)) * weight
+    return source, capture
 
 
 class HeatSourceVerification(unittest.TestCase):
+    def test_layer_conforming_powder_grid_aligns_surfaces_and_captures_source(self):
+        for requested_mesh in (36.7, 13.34, 6.667):
+            with self.subTest(requested_mesh=requested_mesh):
+                raw = dict(mode="standard", backend="reference", material="Inconel 718",
+                           power_W=80, speed_mm_s=1200, beamDiameter_um=80,
+                           layer_um=80, mesh_um=requested_mesh, trackLength_um=200,
+                           tracks=1, layers=3, powderGridPolicy="layer-conforming")
+                p, _ = validate(raw)
+                domain = calculate_mesh_domain(p)
+                dx = domain["dx"]
+                layer_m = p["layer_um"]*1e-6
+                substrate_cells = domain["substrate_depth"]/dx
+                self.assertLessEqual(dx*1e6, requested_mesh*(1+1e-12))
+                requested_span = p["trackLength_um"]*1e-6+6*domain["radius"]
+                self.assertGreaterEqual(domain["span"], requested_span)
+                self.assertLess(domain["span"]-requested_span, dx*(1+1e-12))
+                self.assertAlmostEqual(substrate_cells, round(substrate_cells), places=10)
+                self.assertAlmostEqual(domain["span"]/dx, round(domain["span"]/dx), places=10)
+                for layer_index in range(1, p["layers"]+1):
+                    face_index = (domain["substrate_depth"]+layer_index*layer_m)/dx
+                    self.assertAlmostEqual(face_index, round(face_index), places=10)
+
+                axis = (np.arange(domain["nx"])+.5)*dx-domain["span"]/2
+                z = (np.arange(domain["nz"])+.5)*dx-domain["substrate_depth"]
+                captures = [2*float(cell_weights(axis, z, dx, [x, 0.], layer_m,
+                                                    domain["radius"], layer_m).sum())
+                            for x in np.linspace(-100e-6, 100e-6, 11)]
+                self.assertGreaterEqual(min(captures), MINIMUM_SOURCE_CAPTURE_FRACTION)
+
+    def test_standard_powder_grid_defaults_to_layer_conforming_and_legacy_geometry_remains_reproducible(self):
+        p, _ = validate(dict(mode="standard", backend="reference", mesh_um=36.7,
+                             trackLength_um=200, beamDiameter_um=80, layer_um=80))
+        domain = calculate_mesh_domain(p)
+        self.assertEqual(p["powderGridPolicy"], "layer-conforming")
+        self.assertAlmostEqual(domain["dx"]*1e6, 80/3, places=8)
+        for layer in range(1, p["layers"]+1):
+            self.assertAlmostEqual((domain["substrate_depth"]+layer*p["layer_um"]*1e-6)/domain["dx"],
+                                   round((domain["substrate_depth"]+layer*p["layer_um"]*1e-6)/domain["dx"]),
+                                   places=10)
+        legacy = dict(p)
+        legacy.pop("powderGridPolicy")
+        legacy_domain = calculate_mesh_domain(legacy)
+        self.assertEqual(legacy_domain["nxy"], 12)
+        self.assertAlmostEqual(legacy_domain["dx"]*1e6, 36.6666666667, places=8)
+        self.assertAlmostEqual(legacy_domain["substrate_depth"]*1e6, 330., places=8)
+
+    def test_layer_conforming_policy_rejects_unimplemented_modes(self):
+        base = dict(mode="standard", backend="reference", surfaceMode="bare-plate",
+                    sourcePenetration_um=40, powderGridPolicy="layer-conforming")
+        with self.assertRaisesRegex(ValueError, "requires standard reference or OpenFOAM powder-layer mode"):
+            validate(base)
+
+    def test_capture_gate_uses_shared_one_percent_limit(self):
+        self.assertEqual(require_source_capture(MINIMUM_SOURCE_CAPTURE_FRACTION,
+                                               MINIMUM_SOURCE_CAPTURE_FRACTION),
+                         MINIMUM_SOURCE_CAPTURE_FRACTION)
+        with self.assertRaisesRegex(ValueError, "Gaussian source capture .* below the 99% minimum"):
+            require_source_capture(MINIMUM_SOURCE_CAPTURE_FRACTION - 1e-6,
+                                   MINIMUM_SOURCE_CAPTURE_FRACTION)
+
     @unittest.skipIf(os.name == "nt", "OpenFOAM dispatch is Linux-only")
     def test_reused_case_cannot_inherit_new_binary_diagnostics(self):
         from lpbf_openfoam import thermal
@@ -51,6 +146,53 @@ class HeatSourceVerification(unittest.TestCase):
         self.assertGreater(capture, 0)
         self.assertLessEqual(capture, 1)
 
+    def test_oblique_source_zero_angle_is_exact_legacy_parity(self):
+        axis = (np.arange(18)+.5)*.1-.9
+        z = (np.arange(14)+.5)*.1-1.3
+        segment = dict(start_s=0., end_s=1., start=[-.2, .1], end=[.2, -.1])
+        legacy, legacy_capture = integrated_source(axis, z, .1, segment, .1, .7, 0., .35, .3, 40.)
+        explicit, explicit_capture = integrated_source(
+            axis, z, .1, segment, .1, .7, 0., .35, .3, 40.,
+            incidence_angle_deg=0., incidence_azimuth_deg=37.)
+        np.testing.assert_array_equal(explicit, legacy)
+        self.assertEqual(explicit_capture, legacy_capture)
+
+    def test_oblique_source_normalizes_on_large_domain_and_rotates_with_azimuth(self):
+        dx = .1
+        axis = (np.arange(40)+.5)*dx-2.
+        z = (np.arange(20)+.5)*dx-2.
+        segment = dict(start_s=0., end_s=1., start=[0., 0.], end=[0., 0.])
+        along_x, capture_x = integrated_source(
+            axis, z, dx, segment, 0., .2, 0., .45, .4, 70.,
+            incidence_angle_deg=30., incidence_azimuth_deg=0.)
+        along_y, capture_y = integrated_source(
+            axis, z, dx, segment, 0., .2, 0., .45, .4, 70.,
+            incidence_angle_deg=30., incidence_azimuth_deg=90.)
+        self.assertAlmostEqual(float(along_x.sum())*dx**3, 70., delta=1e-11)
+        self.assertAlmostEqual(float(along_y.sum())*dx**3, 70., delta=1e-11)
+        self.assertAlmostEqual(capture_x, 1., delta=2e-3)
+        self.assertAlmostEqual(capture_y, 1., delta=2e-3)
+        np.testing.assert_allclose(along_y, along_x.transpose(1, 0, 2), rtol=2e-12, atol=1e-12)
+        xx = axis[:, None, None]
+        shallow = z > -.5
+        deep = z < -1.2
+        centroid_shallow = float((along_x[:, :, shallow]*xx).sum()/along_x[:, :, shallow].sum())
+        centroid_deep = float((along_x[:, :, deep]*xx).sum()/along_x[:, :, deep].sum())
+        self.assertGreater(centroid_deep, centroid_shallow)
+
+    def test_oblique_source_rejects_invalid_angles(self):
+        axis = np.array([-.5, .5])
+        z = np.array([-.5])
+        segment = dict(start_s=0., end_s=1., start=[0., 0.], end=[0., 0.])
+        for angle in (-1., 90., math.inf, math.nan, True):
+            with self.subTest(angle=angle), self.assertRaisesRegex(ValueError, "Incidence angle"):
+                integrated_source(axis, z, 1., segment, 0., .1, 0., .5, .5, 1.,
+                                  incidence_angle_deg=angle)
+        for azimuth in (-1., 360., math.inf, math.nan, True):
+            with self.subTest(azimuth=azimuth), self.assertRaisesRegex(ValueError, "Incidence azimuth"):
+                integrated_source(axis, z, 1., segment, 0., .1, 0., .5, .5, 1.,
+                                  incidence_azimuth_deg=azimuth)
+
     def test_moving_quadrature_beats_left_endpoint_and_reverses(self):
         axis = (np.arange(16)+.5)*.2-1.6
         z = (np.arange(8)+.5)*.2-1.6
@@ -65,6 +207,29 @@ class HeatSourceVerification(unittest.TestCase):
         self.assertLess(np.linalg.norm(actual-reference), np.linalg.norm(left-reference)*.01)
         reverse, _ = integrated_source(axis, z, .2, {**seg, "start":seg["end"], "end":seg["start"]}, 0, 1, 0, .5, .3, 1)
         np.testing.assert_allclose(actual, reverse, rtol=1e-13, atol=1e-13)
+
+    def test_adaptive_moving_source_matches_high_order_oracle_through_four_radii(self):
+        for travel_radii in (.5, 1., 2., 4., 8.):
+            with self.subTest(travel_radii=travel_radii):
+                case = _moving_source_case(travel_radii)
+                axis, z, dx, segment, surface, radius, penetration, power = case
+                actual, capture = integrated_source(
+                    axis, z, dx, segment, 0., 1., surface, radius, penetration,
+                    power, axis_y=axis)
+                expected, expected_capture = _high_order_moving_source_reference(case)
+                relative_l2 = np.linalg.norm(actual - expected) / np.linalg.norm(expected)
+                self.assertTrue(np.isfinite(actual).all())
+                self.assertLessEqual(relative_l2, 1e-6, (travel_radii, relative_l2))
+                self.assertAlmostEqual(float(actual.sum()) * dx**3, power, delta=1e-12)
+                self.assertAlmostEqual(capture, expected_capture, delta=1e-12)
+                self.assertGreaterEqual(capture, MINIMUM_SOURCE_CAPTURE_FRACTION)
+
+                reverse, reverse_capture = integrated_source(
+                    axis, z, dx,
+                    {**segment, "start": segment["end"], "end": segment["start"]},
+                    0., 1., surface, radius, penetration, power, axis_y=axis)
+                np.testing.assert_allclose(actual, reverse, rtol=1e-12, atol=1e-10)
+                self.assertAlmostEqual(capture, reverse_capture, delta=1e-12)
 
     def test_source_recomputed_after_cap_and_dwell_is_dark(self):
         axis = np.arange(-1.5, 2, 1.)
@@ -106,7 +271,37 @@ class HeatSourceVerification(unittest.TestCase):
         d = r["numericalDiagnostics"]
         self.assertLessEqual(d["maximumEnthalpyIncrement_K"], 25*(1+1e-10))
         self.assertLessEqual(d["maximumSurfaceOffset_um"], r["discretization"]["mesh_m"]*5e5+1e-9)
+        dt_summary = d["acceptedTimestepDistribution"]
+        self.assertEqual(dt_summary["methodId"], "accepted-timestep-distribution-v1")
+        self.assertEqual(dt_summary["count"], r["discretization"]["steps"])
+        self.assertAlmostEqual(dt_summary["total_s"], end, delta=1e-13)
+        self.assertAlmostEqual(dt_summary["mean_s"], r["discretization"]["meanDt_s"], delta=1e-15)
+        self.assertAlmostEqual(dt_summary["sourceTimestepRetries"], d["sourceTimestepRetries"])
+        self.assertLessEqual(dt_summary["minimum_s"], dt_summary["p50_s"])
+        self.assertLessEqual(dt_summary["p50_s"], dt_summary["p90_s"])
+        self.assertLessEqual(dt_summary["p90_s"], dt_summary["p99_s"])
+        self.assertLessEqual(dt_summary["p99_s"], dt_summary["maximum_s"])
+        self.assertGreaterEqual(dt_summary["eulerFirstOrderWeightedDt_s"], dt_summary["minimum_s"])
+        self.assertLessEqual(dt_summary["eulerFirstOrderWeightedDt_s"], dt_summary["maximum_s"])
         self.assertEqual(r["geometricDefectScreen"]["status"], "unresolved")
+
+    def test_accepted_timestep_distribution_uses_realized_steps(self):
+        from lpbf_simulation import summarize_accepted_timesteps
+        summary = summarize_accepted_timesteps([1.0, 1.0, 0.5], 1.0, 1, 2)
+        self.assertEqual(summary["count"], 3)
+        self.assertAlmostEqual(summary["total_s"], 2.5)
+        self.assertAlmostEqual(summary["mean_s"], 2.5/3)
+        self.assertAlmostEqual(summary["eulerFirstOrderWeightedDt_s"], 2.25/2.5)
+        self.assertAlmostEqual(summary["requestedMaxDtHitFraction"], 2/3)
+        self.assertEqual(summary["sourceLimitedStepCount"], 1)
+        self.assertEqual(summary["sourceTimestepRetries"], 2)
+        # Geometric requested caps do not imply geometric realized refinement.
+        coarse = summarize_accepted_timesteps([1.0, .1], 1.0, 0, 0)
+        fine = summarize_accepted_timesteps([.5, .5], .5, 0, 0)
+        self.assertAlmostEqual(coarse["eulerFirstOrderWeightedDt_s"], .9181818181818182)
+        self.assertAlmostEqual(fine["eulerFirstOrderWeightedDt_s"], .5)
+        with self.assertRaises(ValueError):
+            summarize_accepted_timesteps([1.0, 0.0], 1.0, 0, 0)
 
 
 if __name__ == "__main__":

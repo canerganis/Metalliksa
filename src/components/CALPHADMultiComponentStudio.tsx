@@ -1,5 +1,5 @@
 import { ResponsiveContainer } from './VisibleResponsiveContainer';
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   Atom,
   Flame,
@@ -56,10 +56,56 @@ import {
   PythonCalphadSolveResult,
   PythonEngineStatus,
   PythonCalphadDatabaseEntry,
+  isAbortError,
 } from "../services/pythonComputationService";
 import { useMaterialSpecimenStore } from "../store/useMaterialSpecimenStore";
+import { isPythonValidationError } from "../utils/pythonValidationError";
+import {
+  CLIENT_DATABASE_LABEL,
+  CLIENT_MODEL_LABEL,
+  calphadProvenanceLabels,
+  calphadUnavailableDetails,
+  formatCalphadUnavailable,
+  formatComputeTime,
+  formatCriticalTemperature,
+  formatFreezingRange,
+  formatNullable,
+  partitionSourceNote,
+} from "../utils/calphadDisplay";
+import {
+  calphadUnavailableHeadline,
+  formatModelCache,
+  formatTimings,
+  formatCoverageRow,
+  formatPartitionK,
+  scheilSummaryLines,
+  SCHEIL_COMPUTED,
+  calphadTemperatureWindow,
+  clampProbeToRange,
+  withOrderingNote,
+  type CalphadSystemCoverage,
+} from "../utils/calphadResultDisplay";
 
-export const CALPHADMultiComponentStudio: React.FC = () => {
+export interface CALPHADMultiComponentStudioProps {
+  /** Test seam: a solved result to show on first paint (the live solve still replaces it). */
+  initialResult?: PythonCalphadSolveResult;
+  /** Test seam: the sub-tab shown on first paint. */
+  initialSubTab?: "phase_fractions" | "gibbs_energy" | "solute_partitioning" | "multi_scheil" | "tdb_editor";
+  /** Test seam: the database coverage list shown on first paint. */
+  initialCoverage?: CalphadSystemCoverage[];
+  /** Test seam: render the "calculating" state on first paint. */
+  initialSolving?: boolean;
+  /** Test seam: start with the Python engine off (client screening model, explicitly chosen). */
+  initialUsePython?: boolean;
+}
+
+export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioProps> = ({
+  initialResult,
+  initialSubTab,
+  initialCoverage,
+  initialSolving,
+  initialUsePython,
+}) => {
   const activeSpecimen = useMaterialSpecimenStore((s) => s.activeSpecimen);
   const [isLiveSyncedWithUniversalSpecimen, setIsLiveSyncedWithUniversalSpecimen] = useState<boolean>(true);
   const [selectedAlloyIndex, setSelectedAlloyIndex] = useState<number>(-1); // -1 = Live Universal Specimen
@@ -77,7 +123,7 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
   );
   const [viewSubTab, setViewSubTab] = useState<
     "phase_fractions" | "gibbs_energy" | "solute_partitioning" | "multi_scheil" | "tdb_editor"
-  >("phase_fractions");
+  >(initialSubTab ?? "phase_fractions");
 
   // Open TDB Database & True Gibbs Minimizer States
   const [availableDatabases, setAvailableDatabases] = useState<PythonCalphadDatabaseEntry[]>([]);
@@ -97,13 +143,21 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
   }, [activeSpecimen.lastModified, isLiveSyncedWithUniversalSpecimen, activeSpecimen.name]);
 
   // Python Engine Integration State
-  const [usePythonEngine, setUsePythonEngine] = useState<boolean>(true);
+  const [usePythonEngine, setUsePythonEngine] = useState<boolean>(initialUsePython ?? true);
+  // Identifies this Studio's requests: the server drops a queued, not yet started request of this key
+  // when a newer one arrives (slider drags compute only the latest input).
+  const supersedeKey = useRef<string>(`studio-${Math.random().toString(36).slice(2)}-${Date.now().toString(36)}`);
   const [pythonStatus, setPythonStatus] = useState<PythonEngineStatus | null>(null);
-  const [isSolving, setIsSolving] = useState<boolean>(false);
-  const [asyncSolveResult, setAsyncSolveResult] = useState<PythonCalphadSolveResult | null>(null);
+  const [isSolving, setIsSolving] = useState<boolean>(initialSolving ?? false);
+  // Wall time of the running request, measured here (no estimated progress percentage exists).
+  const [solveStartedAt, setSolveStartedAt] = useState<number | null>(null);
+  const [solveElapsedMs, setSolveElapsedMs] = useState<number>(0);
+  const [coverage, setCoverage] = useState<CalphadSystemCoverage[]>(initialCoverage ?? []);
+  const [asyncSolveResult, setAsyncSolveResult] = useState<PythonCalphadSolveResult | null>(initialResult ?? null);
+  // Message of a Python 422 validation refusal (shown; the client solver result is used instead).
+  const [pythonValidationMessage, setPythonValidationMessage] = useState<string | null>(null);
 
-  // Adaptive Temperature Grid State
-  const [adaptiveGrid, setAdaptiveGrid] = useState<boolean>(true);
+  // Liquidus / solidus boundary refinement (multi-section equilibrium calculations; the grid is uniform)
   const [boundaryRefinement, setBoundaryRefinement] = useState<boolean>(true);
   const [minRefineStep, setMinRefineStep] = useState<number>(0.5);
 
@@ -119,35 +173,61 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
       if (dbRes.success && dbRes.databases?.length) {
         setAvailableDatabases(dbRes.databases);
       }
+      if (dbRes.success && Array.isArray(dbRes.systemCoverage)) {
+        setCoverage(dbRes.systemCoverage);
+      }
     });
   }, []);
 
-  // Solve multi-component equilibrium via Python HPC Proxy (with client fallback)
+  // Elapsed-time display while a calculation runs.
+  useEffect(() => {
+    if (!isSolving || solveStartedAt == null) return;
+    const id = setInterval(() => setSolveElapsedMs(performance.now() - solveStartedAt), 250);
+    return () => clearInterval(id);
+  }, [isSolving, solveStartedAt]);
+
+  // Solve via the Python pycalphad service (Python ON) or the client screening model (Python OFF, explicit)
   useEffect(() => {
     let isMounted = true;
     setIsSolving(true);
+    setSolveStartedAt(performance.now());
+    setSolveElapsedMs(0);
 
+    const win = calphadTemperatureWindow(customAlloy.elements);
+    const controller = new AbortController();
     const timer = setTimeout(() => {
       pythonComputationService
         .solveCalphadEquilibrium(
           customAlloy,
-          500,
-          1450,
-          25,
+          win.tMin,
+          win.tMax,
+          win.tStep,
           usePythonEngine,
           selectedDatabaseId === "auto" ? undefined : selectedDatabaseId,
           undefined,
-          adaptiveGrid,
+          false, // no adaptive grid exists in the engine
           boundaryRefinement,
-          minRefineStep
+          minRefineStep,
+          { signal: controller.signal, supersedeKey: supersedeKey.current }
         )
         .then((res) => {
           if (isMounted) {
+            setPythonValidationMessage(null);
             setAsyncSolveResult(res);
             setIsSolving(false);
           }
         })
         .catch((err) => {
+          if (isAbortError(err)) return; // superseded by newer input
+          if (isPythonValidationError(err)) {
+            // Python refused the input (HTTP 422): say so; no result is shown (no client substitute).
+            if (isMounted) {
+              setPythonValidationMessage(err.message);
+              setAsyncSolveResult(null);
+              setIsSolving(false);
+            }
+            return;
+          }
           console.warn("Async solve error:", err);
           if (isMounted) setIsSolving(false);
         });
@@ -156,8 +236,9 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
     return () => {
       isMounted = false;
       clearTimeout(timer);
+      controller.abort();
     };
-  }, [customAlloy, usePythonEngine, selectedDatabaseId, adaptiveGrid, boundaryRefinement, minRefineStep]);
+  }, [customAlloy, usePythonEngine, selectedDatabaseId, boundaryRefinement, minRefineStep]);
 
   // Switch preloaded alloy
   const handleSelectPreload = (idx: number) => {
@@ -209,11 +290,29 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
   const solveResult: PythonCalphadSolveResult = asyncSolveResult || {
     ...clientSolveResult,
     engine: "MetalliX-Client-WASM/TS",
-    computeTimeMs: 4,
+    computeTimeMs: null,
     isPythonEngine: false,
-    databaseUsed: "Built-in Standard TDB Model",
-    thermodynamicModel: "Client-side Simplified Solvus Minimizer",
+    isEmpirical: true,
+    databaseUsed: CLIENT_DATABASE_LABEL,
+    thermodynamicModel: CLIENT_MODEL_LABEL,
   };
+  const provenanceLabels = calphadProvenanceLabels(solveResult);
+  const tempWindowStep = (range: [number, number]) => (range[1] - range[0] > 600 ? 25 : 10);
+  const tempWindow = calphadTemperatureWindow(customAlloy.elements);
+  const criticalStatus = solveResult.criticalTemperatureStatus ?? {};
+  // A Python "unavailable" answer is shown as such: no equilibrium numbers (the client screening model
+  // is not substituted; it is shown only when the user switches the Python engine off).
+  const pythonUnavailable = usePythonEngine ? solveResult.pythonUnavailable : undefined;
+  // With Python ON, nothing but a pycalphad answer is shown: before the first answer, after a refusal
+  // (422) or while only a client result from an earlier Python-OFF period exists, no numbers appear.
+  const pythonRefused = usePythonEngine && pythonValidationMessage != null;
+  const pythonPending = usePythonEngine && !pythonRefused && !pythonUnavailable &&
+    !(asyncSolveResult && asyncSolveResult.isPythonEngine);
+  const showNumbers = !pythonUnavailable && !pythonPending && !pythonRefused;
+  const phaseNotes = solveResult.phaseNameNotes ?? {};
+  const timingText = formatTimings(solveResult.timingsMs);
+  const scheilBlock = solveResult.scheilSolidification;
+  const scheilComputed = provenanceLabels.isPycalphad && scheilBlock?.status !== undefined && scheilBlock.status !== "unavailable";
 
   // Active components list for activities and chemical potentials
   const activeComponentsList = useMemo(() => {
@@ -268,8 +367,37 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
     return Array.from(set);
   }, [solveResult]);
 
+  // Equilibrium fraction solid vs T (grid points inside the freezing range plus its two ends), for the Scheil tab.
+  const equilibriumSolidCurve = useMemo(() => {
+    const pts = solveResult.equilibriumProfile
+      .filter((p) => p.status !== "not-converged")
+      .map((p) => {
+        const liquid = p.phases.filter((ph) => ph.phaseId.includes("LIQUID")).reduce((acc, ph) => acc + ph.fraction, 0);
+        return { temperatureC: p.temperatureC, fractionSolid: +(1 - liquid).toFixed(4), liquid };
+      })
+      .sort((x, y) => x.temperatureC - y.temperatureC);
+    const inside = pts.filter((p) => p.liquid > 0 && p.liquid < 1);
+    const out: { temperatureC: number; fractionSolid: number }[] = [];
+    const { liquidusC, solidusC } = solveResult.criticalTemperatures;
+    if (typeof liquidusC === "number") out.push({ temperatureC: liquidusC, fractionSolid: 0 });
+    inside.reverse().forEach((p) => out.push({ temperatureC: p.temperatureC, fractionSolid: p.fractionSolid }));
+    if (typeof solidusC === "number") out.push({ temperatureC: solidusC, fractionSolid: 1 });
+    return out;
+  }, [solveResult]);
+
   // Probe at current temperature
+  const solvedRange = solveResult.temperatureRangeC;
+  useEffect(() => {
+    // The probe stays on the solved grid when the window changes (e.g. 950 C for an Al alloy solved 400-750 C).
+    setProbeTemperatureC((t) => clampProbeToRange(t, solvedRange[0], solvedRange[1], tempWindowStep(solvedRange)));
+  }, [solvedRange[0], solvedRange[1]]);
+
   const currentEquilibriumPoint = useMemo(() => {
+    if (solveResult.equilibriumProfile.length === 0) {
+      return { temperatureC: probeTemperatureC, phases: [], totalGibbsEnergy_kJ_mol: null,
+        thermodynamicActivities: undefined, chemicalPotentials_J_mol: undefined } as unknown as
+        PythonCalphadSolveResult["equilibriumProfile"][number];
+    }
     const closest = solveResult.equilibriumProfile.reduce((prev, curr) => {
       return Math.abs(curr.temperatureC - probeTemperatureC) < Math.abs(prev.temperatureC - probeTemperatureC)
         ? curr
@@ -369,13 +497,81 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
         </div>
       </div>
 
+      {pythonValidationMessage && (
+        <div role="alert" className="px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-200 text-xs">
+          Python solver refused the input: {pythonValidationMessage}. No result is shown; correct the input, or switch
+          Python HPC off to look at the client screening model.
+        </div>
+      )}
+
+      {isSolving && (
+        <div role="status" aria-live="polite" data-testid="calphad-solving"
+          className="px-4 py-2 rounded-xl bg-sky-500/10 border border-sky-500/40 text-sky-200 text-xs space-y-0.5">
+          <div className="flex items-center gap-2">
+            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+            <strong>Calculating{usePythonEngine ? " with pycalphad" : ""}…</strong>
+            <span>{(solveElapsedMs / 1000).toFixed(1)} s elapsed</span>
+          </div>
+          {usePythonEngine && (
+            <div>The first calculation for a database and element set builds and compiles the thermodynamic models;
+              later ones for the same system reuse them. No completion estimate exists for a single calculation.</div>
+          )}
+          {asyncSolveResult && <div>The results below belong to the previous input until this calculation finishes.</div>}
+        </div>
+      )}
+
+      {pythonUnavailable && (
+        <div role="alert" data-testid="calphad-unavailable" className="px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-200 text-xs space-y-0.5">
+          <div className="text-sm font-bold">{calphadUnavailableHeadline(pythonUnavailable)}</div>
+          <div>{formatCalphadUnavailable(pythonUnavailable)}</div>
+          {calphadUnavailableDetails(pythonUnavailable).map((line) => (
+            <div key={line}>{line}</div>
+          ))}
+          <div>No equilibrium numbers are shown for this request. The client-side screening model is not a substitute;
+            switch Python HPC off to look at it, labelled as a screening model.</div>
+        </div>
+      )}
+
+      {showNumbers && provenanceLabels.isPycalphad && (
+        <div data-testid="calphad-provenance" className={`px-4 py-1.5 rounded-xl bg-[#060a14] border border-[#1a273e] text-[11px] text-slate-300 space-y-0.5 ${isSolving ? "opacity-60" : ""}`}>
+          <div>
+            Provenance: pycalphad {solveResult.pycalphadVersion ?? "(version not reported)"} equilibrium on {provenanceLabels.database}
+            {solveResult.modelCache?.databaseSha256 ? ` (TDB SHA-256 ${solveResult.modelCache.databaseSha256.slice(0, 12)}…)` : ""}.
+            Calculated, not validated against experiment in this application.
+          </div>
+          <div data-testid="calphad-model-cache">
+            {formatModelCache(solveResult.modelCache)}{timingText ? `. Measured: ${timingText}.` : "."}
+          </div>
+        </div>
+      )}
+
+      {coverage.length > 0 && (
+        <details data-testid="calphad-coverage" className="px-4 py-1.5 rounded-xl bg-[#060a14] border border-[#1a273e] text-[11px] text-slate-300">
+          <summary className="cursor-pointer text-slate-200 font-semibold">
+            Database coverage: {coverage.filter((c) => c.status === "covered").length} of {coverage.length} reference alloy systems
+          </summary>
+          <ul className="mt-1 space-y-0.5">
+            {coverage.map((row) => (
+              <li key={row.id} className={row.status === "covered" ? "text-slate-300" : "text-amber-200"}>
+                {formatCoverageRow(row)}
+                {row.knownDeviation && <span className="block text-amber-300/90">Known deviation: {row.knownDeviation}</span>}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+
       {/* Python HPC Telemetry & Execution Banner */}
       <div className="px-4 py-2.5 rounded-xl bg-[#060a14] border border-[#1a273e] flex flex-wrap items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2.5 flex-wrap">
           <span className="flex items-center gap-1.5 text-slate-300">
-            <span className={`w-2 h-2 rounded-full ${solveResult.isPythonEngine ? "bg-emerald-400 animate-ping" : "bg-amber-400"}`} />
+            <span className={`w-2 h-2 rounded-full ${showNumbers && solveResult.isPythonEngine ? "bg-emerald-400 animate-ping" : "bg-amber-400"}`} />
             <strong className="text-white">Active Engine:</strong>
-            <span className="text-sky-300 font-bold">{solveResult.engine || "pycalphad-open-tdb"}</span>
+            <span className="text-sky-300 font-bold">
+              {showNumbers ? solveResult.engine || "pycalphad-open-tdb"
+                : pythonUnavailable ? "pycalphad (unavailable for this input)"
+                : "pycalphad (no result for this input yet)"}
+            </span>
             {solveResult.pycalphadVersion && (
               <span className="text-[10px] px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">
                 v{solveResult.pycalphadVersion}
@@ -384,11 +580,11 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
           </span>
           <span className="text-slate-600">|</span>
           <span className="text-slate-400">
-            Database: <strong className="text-violet-300">{solveResult.databaseUsed || "Open TDB Assessment"}</strong>
+            Database: <strong className="text-violet-300">{showNumbers ? provenanceLabels.database : pythonUnavailable?.databaseUsed ?? "n/a"}</strong>
           </span>
           <span className="text-slate-600">|</span>
           <span className="text-slate-400">
-            Compute Time: <strong className="text-emerald-400">{solveResult.computeTimeMs || 12} ms</strong>
+            Compute Time: <strong className="text-emerald-400">{formatComputeTime(showNumbers ? solveResult.computeTimeMs : null)}</strong>
             {solveResult.proxyRoundtripMs ? ` (HTTP Proxy: ${solveResult.proxyRoundtripMs}ms)` : ""}
           </span>
         </div>
@@ -397,32 +593,40 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
         <div className="flex items-center gap-2">
           <Database className="w-3.5 h-3.5 text-violet-400" />
           <span className="text-slate-400 font-medium">TDB Source:</span>
-          <select
+          <select aria-label="TDB Source"
             value={selectedDatabaseId}
             onChange={(e) => setSelectedDatabaseId(e.target.value)}
             className="bg-[#050810] border border-[#1e2d46] text-xs text-sky-300 rounded-lg px-2.5 py-1 focus:outline-none focus:border-violet-500 font-mono"
           >
             <option value="auto">⚡ Auto-Detect Database (Composition Match)</option>
             {availableDatabases.map((db) => (
-              <option key={db.id} value={db.id}>
-                {db.name} ({db.elements.slice(0, 5).join("-")}...)
+              <option key={db.id} value={db.id} disabled={db.usable === false}>
+                {db.name} ({db.elements.slice(0, 5).join("-")}...){db.usable === false ? " - test fixture, refused" : ""}
               </option>
             ))}
             {availableDatabases.length === 0 && (
               <>
-                <option value="alcocrni">Al-Co-Cr-Ni Superalloys & HEAs (Dupin/Saunders)</option>
                 <option value="cost507">COST 507 Light Alloys (29 Elements Al-Mg-Ti...)</option>
-                <option value="mc_fecocrnbti">MC-FeCoCrNbTi Superalloys & Steels</option>
                 <option value="alni_dupin_2001">Al-Ni Dupin 2001 NIST Benchmark</option>
-                <option value="cr_fe_ni">Cr-Fe-Ni Austenitic & Ferritic Steels</option>
-                <option value="crtiv_ghosh">Ghosh Cr-Ti-V Aerospace Titanium</option>
+                <option value="crtiv_ghosh">Cr-Ti-V Assessment (Ghosh), no Al</option>
               </>
             )}
           </select>
         </div>
       </div>
 
-      {/* Adaptive Temperature Grid & Transition Boundary Refinement Control Strip */}
+      {provenanceLabels.scope && (
+        <div className="px-4 py-1.5 rounded-xl bg-[#060a14] border border-[#1a273e] text-[11px] text-amber-200/90" data-testid="calphad-database-scope">
+          Database scope: {provenanceLabels.scope}
+        </div>
+      )}
+      {showNumbers && solveResult.nonConvergedPoints && solveResult.nonConvergedPoints.length > 0 && (
+        <div role="alert" className="px-4 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-200 text-[11px]">
+          {solveResult.nonConvergedPoints.length} grid point(s) did not converge and are shown as n/a: {solveResult.nonConvergedPoints.join(", ")} °C.
+        </div>
+      )}
+
+      {/* Liquidus / solidus boundary refinement control strip */}
       <div className="p-3.5 rounded-xl bg-[#070b16] border border-sky-500/30 space-y-2.5 text-xs font-mono">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 flex-wrap">
@@ -431,49 +635,31 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-white">Adaptive Temperature Grid for CALPHAD</span>
+                <span className="font-bold text-white">Liquidus / solidus boundary refinement</span>
                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
-                  adaptiveGrid
+                  boundaryRefinement
                     ? "bg-sky-500/20 text-sky-300 border-sky-500/40"
                     : "bg-slate-800 text-slate-400 border-slate-700"
                 }`}>
-                  {adaptiveGrid ? "ADAPTIVE REFINEMENT ACTIVE" : "UNIFORM GRID"}
+                  {boundaryRefinement ? "REFINEMENT ON" : "GRID BRACKET ONLY"}
                 </span>
-                {solveResult.adaptiveTelemetry?.speedupFactor && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-bold">
-                    ⚡ {solveResult.adaptiveTelemetry.speedupFactor}x Speedup
-                  </span>
-                )}
               </div>
               <p className="text-[11px] text-slate-400">
-                Dynamically concentrates evaluation points at liquidus, solidus, and solvus boundaries using two-pass bisection root-finding.
+                Python / pycalphad engine only. The temperature grid is uniform (at most 80 points); there is no adaptive grid.
+                The liquidus and solidus are located between the bracketing grid points by repeated multi-section equilibrium
+                calculations down to the tolerance chosen here.
               </p>
             </div>
           </div>
 
-          {/* Adaptive Controls */}
           <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
-              onClick={() => setAdaptiveGrid(!adaptiveGrid)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition border flex items-center gap-1.5 ${
-                adaptiveGrid
-                  ? "bg-sky-500/20 text-sky-300 border-sky-500/40 shadow-sm"
-                  : "bg-slate-800 text-slate-400 border-slate-700"
-              }`}
-            >
-              <Activity className="w-3 h-3" />
-              <span>{adaptiveGrid ? "Adaptive Grid: ON" : "Adaptive Grid: OFF"}</span>
-            </button>
-
-            <button
-              type="button"
-              disabled={!adaptiveGrid}
               onClick={() => setBoundaryRefinement(!boundaryRefinement)}
               className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition border flex items-center gap-1.5 ${
-                boundaryRefinement && adaptiveGrid
+                boundaryRefinement
                   ? "bg-violet-500/20 text-violet-300 border-violet-500/40 shadow-sm"
-                  : "bg-slate-800 text-slate-500 border-slate-700 opacity-60"
+                  : "bg-slate-800 text-slate-500 border-slate-700 opacity-80"
               }`}
             >
               <Sparkles className="w-3 h-3" />
@@ -481,61 +667,26 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
             </button>
 
             <div className="flex items-center gap-1 bg-[#050810] border border-[#1e2d46] rounded-lg px-2 py-0.5">
-              <span className="text-[11px] text-slate-400">Step:</span>
-              <select
-                disabled={!adaptiveGrid}
+              <span className="text-[11px] text-slate-400">Tolerance:</span>
+              <select aria-label="Boundary tolerance"
+                disabled={!boundaryRefinement}
                 value={minRefineStep}
                 onChange={(e) => setMinRefineStep(parseFloat(e.target.value))}
                 className="bg-transparent text-xs text-sky-300 focus:outline-none font-mono"
               >
-                <option value="0.2">0.2°C (Ultra-Sharp)</option>
-                <option value="0.5">0.5°C (Balanced)</option>
-                <option value="1.0">1.0°C (Fast)</option>
-                <option value="2.0">2.0°C (Coarse)</option>
+                <option value="0.2">0.2°C</option>
+                <option value="0.5">0.5°C</option>
+                <option value="1.0">1.0°C</option>
+                <option value="2.0">2.0°C</option>
               </select>
             </div>
           </div>
         </div>
 
-        {/* Telemetry Metrics & Detected Transition Zones */}
-        {solveResult.adaptiveTelemetry && (
-          <div className="pt-2 border-t border-[#162032] flex flex-wrap items-center justify-between gap-2 text-[11px]">
-            <div className="flex items-center gap-3 text-slate-300 flex-wrap">
-              <span>
-                Evaluations: <strong className="text-white">{solveResult.adaptiveTelemetry.totalEvaluations} pts</strong> (
-                <span className="text-sky-300">{solveResult.adaptiveTelemetry.coarseStepsCount} coarse</span> +{" "}
-                <span className="text-violet-300">{solveResult.adaptiveTelemetry.refinedStepsCount} refined</span>)
-              </span>
-              <span className="text-slate-600">•</span>
-              <span>
-                Equiv. Dense Grid: <strong className="text-slate-400">{solveResult.adaptiveTelemetry.equivalentUniformSteps} steps</strong>
-              </span>
-              <span className="text-slate-600">•</span>
-              <span>
-                Boundary Tol: <strong className="text-emerald-400">±{solveResult.adaptiveTelemetry.boundaryToleranceC}°C</strong>
-              </span>
-            </div>
-
-            {/* Transition Zones Chips */}
-            {solveResult.adaptiveTelemetry.transitionZones && solveResult.adaptiveTelemetry.transitionZones.length > 0 && (
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-slate-400 text-[10px]">Transitions Detected:</span>
-                {solveResult.adaptiveTelemetry.transitionZones.slice(0, 4).map((zone, idx) => {
-                  const midT = Math.round((zone.intervalC[0] + zone.intervalC[1]) / 2);
-                  return (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setProbeTemperatureC(midT)}
-                      title={`Click to probe ${zone.description} at ~${midT}°C`}
-                      className="px-1.5 py-0.5 rounded bg-sky-950/40 text-sky-300 border border-sky-500/30 text-[10px] hover:border-sky-400 transition"
-                    >
-                      {zone.description.split("(")[0].replace("Boundary", "").trim()} [{zone.intervalC[0]}–{zone.intervalC[1]}°C]
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+        {showNumbers && solveResult.boundaryRefinement && (
+          <div className="pt-2 border-t border-[#162032] text-[11px] text-slate-300">
+            Refinement {solveResult.boundaryRefinement.enabled ? "on" : "off"}, tolerance ±{solveResult.boundaryRefinement.toleranceC}°C,{" "}
+            {solveResult.boundaryRefinement.equilibriumCalls} refinement round(s). {solveResult.boundaryRefinement.note}
           </div>
         )}
       </div>
@@ -650,7 +801,7 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
       </div>
 
       {/* Main Grid: Composition & State Sliders (Left 4 cols) + Interactive CALPHAD Graphs (Right 8 cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      <div className={`grid grid-cols-1 lg:grid-cols-12 gap-5 ${isSolving ? "opacity-60" : ""}`} aria-busy={isSolving}>
         {/* Left Column: Multi-Element Composition Sliders & Critical Temperatures */}
         <div className="lg:col-span-4 space-y-4">
           {/* Element Sliders */}
@@ -672,7 +823,7 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
                     <span className="font-bold text-slate-200">{el}</span>
                     <span className="text-violet-300 font-bold">{val}%</span>
                   </div>
-                  <input
+                  <input aria-label={`${el} content (%)`}
                     type="range"
                     min="0"
                     max={el === "Ni" || el === "Ti" || el === "Fe" ? "90" : "25"}
@@ -687,6 +838,7 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
           </div>
 
           {/* Critical Transition Temperatures */}
+          {showNumbers && (
           <div className="p-4 rounded-2xl bg-[#090e18] border border-[#1e2d46] space-y-3">
             <div className="flex items-center justify-between border-b border-[#162032] pb-2 text-xs">
               <span className="font-bold text-white flex items-center gap-1.5">
@@ -695,30 +847,32 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
               </span>
               <span
                 className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                  solveResult.tcpEmbrittlementRisk === "Low"
+                  solveResult.tcpEmbrittlementRisk == null
+                    ? "bg-slate-800 text-slate-400 border border-slate-700"
+                    : solveResult.tcpEmbrittlementRisk === "Low"
                     ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
                     : solveResult.tcpEmbrittlementRisk === "Moderate"
                     ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
                     : "bg-rose-500/10 text-rose-400 border border-rose-500/30"
                 }`}
               >
-                TCP Risk: {solveResult.tcpEmbrittlementRisk}
+                <span title={solveResult.phacompAnalysis?.reason ?? ""}>TCP Risk: {solveResult.tcpEmbrittlementRisk ?? "Unavailable"}</span>
               </span>
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-              <div className="p-2 rounded-xl bg-[#050810] border border-[#162032]">
+              <div className="p-2 rounded-xl bg-[#050810] border border-[#162032]" title={formatCriticalTemperature(solveResult.criticalTemperatures.liquidusC, criticalStatus.liquidusC).title}>
                 <div className="text-[10px] text-slate-400">Liquidus (T_liq):</div>
-                <div className="text-sm font-bold text-sky-300">{solveResult.criticalTemperatures.liquidusC}°C</div>
+                <div className="text-sm font-bold text-sky-300">{formatCriticalTemperature(solveResult.criticalTemperatures.liquidusC, criticalStatus.liquidusC).text}</div>
               </div>
-              <div className="p-2 rounded-xl bg-[#050810] border border-[#162032]">
+              <div className="p-2 rounded-xl bg-[#050810] border border-[#162032]" title={formatCriticalTemperature(solveResult.criticalTemperatures.solidusC, criticalStatus.solidusC).title}>
                 <div className="text-[10px] text-slate-400">Solidus (T_sol):</div>
-                <div className="text-sm font-bold text-emerald-300">{solveResult.criticalTemperatures.solidusC}°C</div>
+                <div className="text-sm font-bold text-emerald-300">{formatCriticalTemperature(solveResult.criticalTemperatures.solidusC, criticalStatus.solidusC).text}</div>
               </div>
-              {solveResult.criticalTemperatures.gammaPrimeSolvusC && (
-                <div className="p-2 rounded-xl bg-[#050810] border border-[#162032]">
+              {(solveResult.criticalTemperatures.gammaPrimeSolvusC || criticalStatus.gammaPrimeSolvusC) && (
+                <div className="p-2 rounded-xl bg-[#050810] border border-[#162032]" title={formatCriticalTemperature(solveResult.criticalTemperatures.gammaPrimeSolvusC, criticalStatus.gammaPrimeSolvusC).title}>
                   <div className="text-[10px] text-slate-400">γ' Solvus:</div>
-                  <div className="text-sm font-bold text-purple-300">{solveResult.criticalTemperatures.gammaPrimeSolvusC}°C</div>
+                  <div className="text-sm font-bold text-purple-300">{formatCriticalTemperature(solveResult.criticalTemperatures.gammaPrimeSolvusC, criticalStatus.gammaPrimeSolvusC).text}</div>
                 </div>
               )}
               {solveResult.criticalTemperatures.gammaDoublePrimeSolvusC && (
@@ -734,16 +888,40 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
                 </div>
               )}
               {solveResult.criticalTemperatures.betaTransusC && (
-                <div className="p-2 rounded-xl bg-[#050810] border border-[#162032]">
-                  <div className="text-[10px] text-slate-400">β-Transus:</div>
+                <div className="p-2 rounded-xl bg-[#050810] border border-[#162032]" title={criticalStatus.betaTransusC?.note ?? ""}
+                  data-testid="beta-transus-card">
+                  <div className="text-[10px] text-slate-400">β-Transus (phase-name heuristic, grid resolution):</div>
                   <div className="text-sm font-bold text-amber-300">{solveResult.criticalTemperatures.betaTransusC}°C</div>
+                  {criticalStatus.betaTransusC?.knownDeviation && (
+                    <div className="text-[10px] text-amber-200/90 mt-0.5">{criticalStatus.betaTransusC.knownDeviation}</div>
+                  )}
+                </div>
+              )}
+              {(criticalStatus.liquidusC?.knownDeviation || criticalStatus.solidusC?.knownDeviation) && (
+                <div className="col-span-2 text-[10px] text-amber-200/90" data-testid="melting-deviation">
+                  {criticalStatus.liquidusC?.knownDeviation ?? criticalStatus.solidusC?.knownDeviation}
                 </div>
               )}
             </div>
           </div>
+          )}
         </div>
 
         {/* Right Column: Interactive Graphs & Solute Partitioning Matrix */}
+        {!showNumbers ? (
+          <div className="lg:col-span-8 p-6 rounded-2xl bg-[#090e18] border border-amber-500/30 text-xs text-amber-200 space-y-2" data-testid="calphad-no-result">
+            <div className="font-bold text-sm">No equilibrium result</div>
+            <div>
+              {pythonUnavailable
+                ? `${calphadUnavailableHeadline(pythonUnavailable)}. Phase fractions, Gibbs energies, partition coefficients and the Scheil path are not shown because no CALPHAD calculation was made.`
+                : pythonRefused
+                ? "The Python solver refused this input (see the message above); nothing was calculated."
+                : isSolving
+                ? "Waiting for the first pycalphad result for this input. No numbers are shown until it arrives."
+                : "No pycalphad result for this input yet."}
+            </div>
+          </div>
+        ) : (
         <div className="lg:col-span-8 space-y-4">
           {/* Sub-tab Switcher */}
           <div className="p-3 rounded-2xl bg-[#090e18] border border-[#1e2d46] flex flex-wrap items-center justify-between gap-2">
@@ -813,11 +991,11 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
             {/* Probe Slider */}
             <div className="flex items-center gap-2 text-xs">
               <span className="text-slate-400">T Probe: <strong className="text-violet-300">{probeTemperatureC}°C</strong></span>
-              <input
+              <input aria-label="T Probe (°C)"
                 type="range"
-                min="500"
-                max="1450"
-                step="25"
+                min={tempWindow.tMin}
+                max={tempWindow.tMax}
+                step={tempWindow.tStep}
                 value={probeTemperatureC}
                 onChange={(e) => setProbeTemperatureC(parseInt(e.target.value, 10))}
                 className="w-28 accent-violet-500"
@@ -831,7 +1009,7 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-white flex items-center gap-2">
                   <Activity className="w-4 h-4 text-violet-400" />
-                  <span>Equilibrium Phase Mole Fractions vs Temperature (500°C – 1450°C)</span>
+                  <span>Equilibrium Phase Mole Fractions vs Temperature ({solveResult.temperatureRangeC[0]}°C – {solveResult.temperatureRangeC[1]}°C)</span>
                 </span>
                 <span className="text-[11px] text-slate-400 font-mono">
                   Minimization: min G(T, x_i)
@@ -846,18 +1024,22 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
                       dataKey="temperatureC"
                       stroke="#64748b"
                       tick={{ fill: "#94a3b8", fontSize: 11 }}
-                      unit="°C"
+                      minTickGap={28}
+                      tickFormatter={(value: number) => `${Math.round(value)}°C`}
                     />
                     <YAxis
                       stroke="#64748b"
                       tick={{ fill: "#94a3b8", fontSize: 11 }}
                       domain={[0, 100]}
-                      unit="%"
+                      ticks={[0, 25, 50, 75, 100]}
+                      allowDataOverflow
+                      tickFormatter={(value: number) => `${Math.round(value)}%`}
+                      width={44}
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "#050810",
-                        borderColor: "#1e2d46",
+                        backgroundColor: "#ffffff",
+                        borderColor: "#d0d5dc",
                         borderRadius: "12px",
                         fontSize: "12px",
                         fontFamily: "monospace",
@@ -910,10 +1092,16 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
                 </ResponsiveContainer>
               </div>
 
+              {Object.keys(phaseNotes).length > 0 && (
+                <p className="text-[10px] text-amber-200/90" data-testid="phase-name-notes">
+                  {Object.keys(phaseNotes).join(", ")}: {Object.values(phaseNotes)[0]}.
+                </p>
+              )}
+
               {/* Probe Breakdown Bar */}
               <div className="pt-2 border-t border-[#162032] flex flex-wrap items-center justify-between gap-3 text-xs">
                 <div className="flex items-center gap-2">
-                  <span className="text-slate-400">At {probeTemperatureC}°C:</span>
+                  <span className="text-slate-400">At {currentEquilibriumPoint.temperatureC}°C (nearest grid point):</span>
                   {currentEquilibriumPoint.phases.map((p) => (
                     <span key={p.phaseId} className="px-2 py-0.5 rounded bg-violet-500/10 text-violet-300 font-bold border border-violet-500/20 text-[10px]">
                       {p.phaseName.split("(")[0]}: {(p.fraction * 100).toFixed(1)}%
@@ -921,7 +1109,7 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
                   ))}
                 </div>
                 <span className="text-[11px] text-slate-400 font-mono">
-                  G_total = {currentEquilibriumPoint.totalGibbsEnergy_kJ_mol} kJ/mol
+                  G_total = {formatNullable(currentEquilibriumPoint.totalGibbsEnergy_kJ_mol, "kJ/mol")}
                 </span>
               </div>
             </div>
@@ -934,10 +1122,10 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
                 <div>
                   <span className="font-bold text-white flex items-center gap-2">
                     <Zap className="w-4 h-4 text-amber-400" />
-                    <span>True CALPHAD Gibbs Free Energy & Solute Activities</span>
+                    <span>{provenanceLabels.isPycalphad ? "CALPHAD Gibbs Free Energy & Solute Activities" : "Screening-model Gibbs energy & activities (not CALPHAD)"}</span>
                   </span>
                   <p className="text-[11px] text-slate-400 mt-0.5 font-mono">
-                    Model: <strong className="text-violet-300">{solveResult.thermodynamicModel || "pycalphad CEF / Sub-regular Solution Minimizer"}</strong>
+                    Model: <strong className="text-violet-300">{provenanceLabels.model}</strong>
                   </p>
                 </div>
 
@@ -1123,10 +1311,10 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
               <div className="pt-3 border-t border-[#162032] space-y-3">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-semibold text-slate-300">
-                    Component Thermodynamic Activities & Potentials at <strong className="text-amber-300">{probeTemperatureC}°C</strong>:
+                    Component Thermodynamic Activities & Potentials at <strong className="text-amber-300">{currentEquilibriumPoint.temperatureC}°C</strong> (nearest grid point):
                   </span>
                   <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold">
-                    G_min = {currentEquilibriumPoint.totalGibbsEnergy_kJ_mol} kJ/mol
+                    G_min = {formatNullable(currentEquilibriumPoint.totalGibbsEnergy_kJ_mol, "kJ/mol")}
                   </span>
                 </div>
 
@@ -1160,10 +1348,12 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
                   <ShieldCheck className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
                   <div className="space-y-1 text-slate-300">
                     <p className="font-bold text-white">
-                      Rigorous Thermodynamic Trust Guarantee:
+                      {provenanceLabels.isPycalphad ? "Provenance of these numbers:" : "These numbers are not CALPHAD results:"}
                     </p>
                     <p className="text-[11px] text-slate-400 leading-relaxed">
-                      All calculations are performed via <strong>Gibbs Free Energy Global Minimization</strong> using the open-source <strong>pycalphad</strong> engine and assessed Open TDB databases (COST 507 / Al-Co-Cr-Ni / MC-FeCoCrNbTi). Chemical potentials are equalized across all active phases (μ_i^α = μ_i^β = μ_i^γ), ensuring 100% physically valid phase boundaries without linear regression approximations.
+                      {provenanceLabels.isPycalphad
+                        ? "Phase constitution, Gibbs energy, chemical potentials and activities come from a pycalphad Gibbs energy minimisation with the database named above (assessments only; test-fixture databases are refused). Liquidus and solidus are read off the temperature grid and are null when the grid cannot support them; the gamma-prime solvus is not stated because the L1_2 phase name does not prove ordering. The partition matrix and the Scheil-style curve are screening aids, flagged where they use default values."
+                        : "The Python CALPHAD engine did not return a result (it has no fallback model). The curves shown come from a simplified client-side screening model with hard-coded relations; they are not a Gibbs energy minimisation and carry no CALPHAD validity."}
                     </p>
                   </div>
                 </div>
@@ -1171,45 +1361,67 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
             </div>
           )}
 
-          {/* Subtab 2: Solute Partitioning Matrix */}
+          {/* Subtab 2: Solute Partitioning */}
           {viewSubTab === "solute_partitioning" && (
             <div className="p-4 rounded-2xl bg-[#090e18] border border-[#1e2d46] space-y-3">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-white flex items-center gap-2">
                   <Table className="w-4 h-4 text-purple-400" />
-                  <span>Solute Partitioning Matrix (k_i = C_i_precipitate / C_i_matrix)</span>
+                  <span>
+                    {provenanceLabels.isPycalphad
+                      ? "Solid/liquid partition coefficients k_i = x_i(primary solid) / x_i(liquid)"
+                      : "Partition table of the client screening model (not CALPHAD)"}
+                  </span>
                 </span>
               </div>
+              {provenanceLabels.isPycalphad && (
+                <p className="text-[11px] text-slate-400" data-testid="partition-definition">
+                  From the equilibrium tie-line between the majority solid phase of the Scheil-Gulliver path and the liquid,
+                  at the temperature where that phase first forms (mole fractions). Calculated, not validated against experiment.
+                </p>
+              )}
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse font-mono">
                   <thead>
                     <tr className="border-b border-[#162032] text-slate-400 text-[10px] uppercase">
                       <th className="pb-2">Element</th>
-                      <th className="pb-2 text-right">Matrix (γ) wt%</th>
-                      <th className="pb-2 text-right">Precipitate (γ'/γ'') wt%</th>
                       <th className="pb-2 text-right">Partition k_i</th>
-                      <th className="pb-2 text-right">Metallurgical Role</th>
+                      <th className="pb-2 text-right">Primary solid / T</th>
+                      <th className="pb-2 text-right">Meaning</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#162032]/60">
                     {solveResult.solutePartitioning.map((sp) => (
                       <tr key={sp.element} className="hover:bg-white/[0.02]">
                         <td className="py-2.5 font-bold text-white">{sp.element}</td>
-                        <td className="py-2.5 text-right text-slate-300">{sp.matrixFraction_pct.toFixed(2)}%</td>
-                        <td className="py-2.5 text-right text-purple-300 font-bold">{sp.precipitateFraction_pct.toFixed(2)}%</td>
-                        <td className="py-2.5 text-right">
+                        <td className="py-2.5 text-right" title={sp.partitionCoefficient_k == null ? sp.reason ?? "" : ""}>
                           <span
                             className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                              sp.partitionCoefficient_k > 1.0
+                              sp.partitionCoefficient_k == null
+                                ? "bg-slate-800 text-slate-400 border border-slate-700"
+                                : sp.partitionCoefficient_k > 1.0
                                 ? "bg-purple-500/20 text-purple-300 border border-purple-500/40"
                                 : "bg-blue-500/20 text-blue-300 border border-blue-500/40"
                             }`}
                           >
-                            k = {sp.partitionCoefficient_k.toFixed(2)}
+                            {formatPartitionK(sp.partitionCoefficient_k)}
                           </span>
                         </td>
-                        <td className="py-2.5 text-right text-[11px] text-slate-400">{sp.role}</td>
+                        <td className="py-2.5 text-right text-slate-300">
+                          {sp.primarySolidPhase
+                            ? `${withOrderingNote(sp.primarySolidPhase, phaseNotes, scheilBlock?.phaseNameNotes)}${typeof sp.temperatureC === "number" ? ` at ${sp.temperatureC} °C` : ""}`
+                            : "n/a"}
+                        </td>
+                        <td className="py-2.5 text-right text-[11px] text-slate-400">
+                          {sp.role ?? sp.reason ?? ""}
+                          {!provenanceLabels.isPycalphad && (
+                            <span className="block text-amber-300">screening value, not CALPHAD</span>
+                          )}
+                          {partitionSourceNote(sp.partitionCoefficientSource) && (
+                            <span className="block text-amber-300">{partitionSourceNote(sp.partitionCoefficientSource)}</span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -1218,55 +1430,103 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
             </div>
           )}
 
-          {/* Subtab 3: Multi-Element Scheil Solidification Simulator */}
+          {/* Subtab 3: Scheil-Gulliver solidification path */}
           {viewSubTab === "multi_scheil" && (
             <div className="p-4 rounded-2xl bg-[#090e18] border border-[#1e2d46] space-y-3">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-white flex items-center gap-2">
                   <Flame className="w-4 h-4 text-amber-400" />
-                  <span>Multi-Element Scheil-Gulliver Non-Equilibrium Microsegregation</span>
+                  <span>
+                    {provenanceLabels.isPycalphad
+                      ? "Scheil-Gulliver solidification path (pycalphad equilibria of the remaining liquid)"
+                      : "Solidification screening curve of the client model (not a CALPHAD Scheil calculation)"}
+                  </span>
                 </span>
                 <span className="text-[11px] text-slate-400 font-mono">
-                  Freezing Range ΔT = {solveResult.criticalTemperatures.freezingRangeC} K
+                  Equilibrium freezing range ΔT = {formatFreezingRange(solveResult.criticalTemperatures.freezingRangeC)}
                 </span>
               </div>
 
-              <div className="h-[320px] w-full pt-2">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={solveResult.multiElementScheil}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e2d46" />
-                    <XAxis
-                      dataKey="fractionSolid"
-                      stroke="#64748b"
-                      tick={{ fill: "#94a3b8", fontSize: 11 }}
-                      unit=" (f_S)"
-                    />
-                    <YAxis
-                      stroke="#64748b"
-                      tick={{ fill: "#94a3b8", fontSize: 11 }}
-                      unit="°C"
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#050810",
-                        borderColor: "#1e2d46",
-                        borderRadius: "12px",
-                        fontSize: "12px",
-                        fontFamily: "monospace",
-                      }}
-                    />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="temperatureC"
-                      name="Scheil Cooling Curve"
-                      stroke="#f59e0b"
-                      strokeWidth={2.5}
-                      dot={false}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+              {solveResult.multiElementScheilNote && (
+                <p className="text-[11px] text-slate-400" data-testid="scheil-note">{solveResult.multiElementScheilNote}</p>
+              )}
+              {provenanceLabels.isPycalphad && scheilBlock && (
+                <div data-testid="scheil-summary" className={`p-3 rounded-xl text-xs space-y-0.5 border ${
+                  scheilBlock.status === SCHEIL_COMPUTED ? "bg-[#050810] border-[#162032] text-slate-300" : "bg-amber-500/10 border-amber-500/40 text-amber-200"
+                }`}>
+                  {scheilSummaryLines(scheilBlock).map((line) => (
+                    <div key={line}>{line}</div>
+                  ))}
+                  {scheilBlock.validity && <div className="text-slate-400">Validity: {scheilBlock.validity}</div>}
+                  <div className="text-amber-300">Evidence: {scheilBlock.evidence ?? "unvalidated"} (calculated path, no experimental comparison here)</div>
+                </div>
+              )}
+              {!provenanceLabels.isPycalphad && solveResult.multiElementScheil.every((pt) => pt.temperatureC == null) && (
+                <div role="status" className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-200 text-xs space-y-1" data-testid="scheil-unavailable">
+                  <div>No temperature axis: the screening curve needs both the liquidus and the solidus.</div>
+                  {(["liquidusC", "solidusC"] as const).map((key) =>
+                    solveResult.criticalTemperatures[key] == null ? (
+                      <div key={key}>{key === "liquidusC" ? "Liquidus" : "Solidus"} unavailable: {criticalStatus[key]?.reason ?? "no reason reported"}</div>
+                    ) : null,
+                  )}
+                </div>
+              )}
+
+              {(scheilComputed || !provenanceLabels.isPycalphad) && solveResult.multiElementScheil.some((pt) => pt.temperatureC != null) && (
+                <div className="h-[320px] w-full pt-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1e2d46" />
+                      <XAxis
+                        dataKey="fractionSolid"
+                        type="number"
+                        domain={[0, 1]}
+                        stroke="#64748b"
+                        tick={{ fill: "#94a3b8", fontSize: 11 }}
+                        unit=" (f_S)"
+                      />
+                      <YAxis
+                        dataKey="temperatureC"
+                        type="number"
+                        domain={["auto", "auto"]}
+                        stroke="#64748b"
+                        tick={{ fill: "#94a3b8", fontSize: 11 }}
+                        unit="°C"
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#050810",
+                          borderColor: "#1e2d46",
+                          borderRadius: "12px",
+                          fontSize: "12px",
+                          fontFamily: "monospace",
+                        }}
+                      />
+                      <Legend />
+                      <Line
+                        data={solveResult.multiElementScheil.filter((pt) => pt.temperatureC != null)}
+                        type="linear"
+                        dataKey="temperatureC"
+                        name={provenanceLabels.isPycalphad ? "Scheil-Gulliver (no solid diffusion)" : "Screening curve (client model)"}
+                        stroke="#f59e0b"
+                        strokeWidth={2.5}
+                        dot={false}
+                      />
+                      {provenanceLabels.isPycalphad && equilibriumSolidCurve.length > 1 && (
+                        <Line
+                          data={equilibriumSolidCurve}
+                          type="linear"
+                          dataKey="temperatureC"
+                          name="Equilibrium fraction solid (grid points and refined liquidus/solidus; markers only, not interpolated)"
+                          stroke="none"
+                          isAnimationActive={false}
+                          dot={{ r: 3, fill: "#38bdf8", stroke: "#38bdf8" }}
+                        />
+                      )}
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </div>
           )}
 
@@ -1283,7 +1543,7 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
                 </span>
               </div>
 
-              <textarea
+              <textarea aria-label="OpenCALPHAD Thermodynamic Database (.TDB) Script"
                 value={activeTdbContent}
                 onChange={(e) => setActiveTdbContent(e.target.value)}
                 className="w-full h-[320px] bg-[#050810] border border-[#162032] rounded-xl p-3 text-xs text-violet-300 font-mono focus:outline-none focus:border-violet-500 resize-none leading-relaxed"
@@ -1292,6 +1552,7 @@ export const CALPHADMultiComponentStudio: React.FC = () => {
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );
