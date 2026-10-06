@@ -5,12 +5,14 @@ The Goldak melt-pool *width* depends on which absorptivity model
 lpbf_thermal_solver.calculate_meltpool_physics uses:
 
 - Default (every machine since the 2026-10-06 tier-2 bump): the material's flat-plate
-  absorptivity (IN718 IR: 0.38), width 117.3 um with goldak-half-space-v3 and the peak-anchored
+  absorptivity (IN718 IR: 0.38), width 128.5 um with goldak-half-space-v3 after the Wave B LA-5
+  absorbed-power Q (117.3 um at Tier 2) and the peak-anchored
   extent search (117.4 um before it; retired v2 kernel: 81.7 um).
 - Explicit opt-in absorption_model="powder-raytrace": powder_bed_raytracer (NVIDIA warp, device
-  "cuda:0") ray-traces the powder bed and returns an effective conduction absorptivity (0.581 for
-  the NIST case below on an RTX 4060, warp 1.17.0): width 145.9 um with v3 (measured 2026-10-06;
-  102.2 um with the retired v2 kernel). Both paths are inside the 0.70-1.40 NIST band here.
+  "cuda:0") ray-traces the powder bed and returns an effective conduction absorptivity (0.609 for
+  the NIST case below on an RTX 4060, warp 1.17.0, after the Wave B KS-4/6/7 ray-tracer fixes; 0.581
+  before): width 163.5 um with v3 after Wave B (145.9 um at Tier 2, 2026-10-06; 102.2 um with the
+  retired v2 kernel). Both paths are inside the 0.70-1.40 NIST band here.
 
 The NIST width band check of the ray-traced path is skipped ONLY when the ray tracer cannot run on
 this host: `import warp` fails or warp reports no CUDA device. Where warp and a CUDA device are
@@ -119,7 +121,7 @@ class GoldakMeltPoolPathIndependentTests(unittest.TestCase):
         gk, _ = _goldak_nist()
         self.assertEqual(gk["modelId"], "goldak-half-space-v3", "goldak model id")
         self.assertEqual(gk["keyholeModel"]["modelId"], "fabbro-keyhole-v1", "fabbro on goldak path")
-        self.assertLess(abs(gk["keyholeModel"]["absorptivity"] - 0.38), 0.02, "Fabbro A is Fresnel, not eta_eff")
+        self.assertLess(abs(gk["keyholeModel"]["absorptivity"] - 0.38), 0.02, "Fabbro A is the flat effective absorptivity, not eta_eff")
         D = gk["meltPoolGeometry"]["depth_um"]
         # For this NIST case: the same value (123.9 um) with and without the ray tracer.
         self.assertTrue(0.70 * NIST_DEPTH_UM <= D <= 1.40 * NIST_DEPTH_UM, f"Goldak+Fabbro NIST depth {D}")
@@ -132,7 +134,9 @@ class GoldakMeltPoolPathIndependentTests(unittest.TestCase):
     def test_rosenthal_build_job_default_unchanged(self):
         ros = calculate_meltpool_physics("Inconel 718", 285, 960, 80, 80, 40, 110)
         self.assertEqual(ros["modelId"], "rosenthal-screening-v1", "Build Job default unchanged")
-        self.assertEqual(ros["keyholeModel"]["modelId"], "king-increment", "Rosenthal keeps King increment")
+        self.assertEqual(ros["keyholeModel"]["modelId"], "heuristic-keyhole-increment-v1",
+                         "Rosenthal keeps the labelled (uncited) heuristic increment")
+        self.assertIn("uncited", ros["keyholeModel"]["basis"])
 
 
 class GoldakNistWidthGpuRayTracingTests(unittest.TestCase):
@@ -140,7 +144,7 @@ class GoldakNistWidthGpuRayTracingTests(unittest.TestCase):
         unavailable = _gpu_raytrace_unavailable_reason()
         if unavailable is not None:
             reason = (
-                f"{GPU_SKIP_REASON}: {unavailable} (flat-plate width 117.3 um vs NIST {NIST_WIDTH_UM} um; "
+                f"{GPU_SKIP_REASON}: {unavailable} (flat-plate width 128.5 um vs NIST {NIST_WIDTH_UM} um; "
                 "see GoldakCpuFallbackTests)"
             )
             if os.environ.get("METALLIKSA_REQUIRE_GPU_RAYTRACE") == "1":
@@ -161,7 +165,7 @@ class GoldakCpuFallbackTests(unittest.TestCase):
     """Pins the flat-plate default (the ray tracer made unimportable, so it runs on every host).
 
     With the goldak-half-space-v3 kernel and the peak-anchored extent search the flat-plate width
-    (117.3 um) is 0.86x the NIST value (136.3 um) and inside the 0.70-1.40 band (the retired v2
+    (128.5 um after Wave B LA-5; 117.3 um at Tier 2) is 0.94x the NIST value (136.3 um) and inside the 0.70-1.40 band (the retired v2
     kernel gave 81.7 um, ratio 0.60, outside the band). This test pins the default value only and
     does NOT claim a NIST match. The default is labelled in processParameters.absorptionModel and
     prints no fallback warning (there is no fallback any more).
@@ -180,7 +184,8 @@ class GoldakCpuFallbackTests(unittest.TestCase):
                                msg="fallback conduction absorptivity is the flat-plate value")
         self.assertAlmostEqual(pp["fabbroAbsorptivity"], round(flat, 3), places=9)
         W = gk["meltPoolGeometry"]["width_um"]
-        self.assertAlmostEqual(W, 117.3, delta=0.5, msg=f"flat-plate default width {W}")
+        # Wave B LA-5 (Goldak takes the absorbed power as Q, no latent-heat cut): 117.3 -> 128.5 um.
+        self.assertAlmostEqual(W, 128.5, delta=0.5, msg=f"flat-plate default width {W}")
         self.assertAlmostEqual(gk["meltPoolGeometry"]["depth_um"], 123.9, delta=0.5)
 
 

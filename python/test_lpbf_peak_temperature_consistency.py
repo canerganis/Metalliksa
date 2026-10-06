@@ -63,7 +63,8 @@ class PeakTemperatureConsistency(unittest.TestCase):
                 heat_source="rosenthal",
             )
         self._assert_peak(result, center_values, axial_values)
-        self.assertLess(result["meltPoolGeometry"]["peakOffset_um"], 0.0)
+        # Wave B LA-2: R + x = 0 on the trailing axis, so the Rosenthal field peaks at the beam centre.
+        self.assertEqual(result["meltPoolGeometry"]["peakOffset_um"], 0.0)
 
     def test_eagar_tsai_peak_is_evaluated_from_the_selected_field(self):
         self._record("eagar-tsai", solver.EagarTsaiField, "temperature_C")

@@ -118,12 +118,14 @@ class ConvergenceStudy(unittest.TestCase):
         def uneven(payload):
             result = fake_solver(payload)
             if payload["mesh_um"] == 40:
-                result["discretization"]["mesh_m"] = 45e-6
+                # Realised 80/70/20 um: r32 = 1.14 is below the Celik et al. 2008 r >= 1.3 gate (Wave B LT-2;
+                # unequal ratios above 1.3, e.g. 80/45/20, are valid Celik data now).
+                result["discretization"]["mesh_m"] = 70e-6
             return result
         with patch("lpbf_convergence_study.run", side_effect=uneven):
             report = study(CASE, [80, 40, 20], [4e-7, 2e-7, 1e-7])
         self.assertEqual(report["meshStudy"]["assessment"]["status"], "inconclusive")
-        self.assertIn("constant refinement ratio",
+        self.assertIn("Refinement ratio below 1.3",
                       report["meshStudy"]["assessment"]["metrics"]["width_um"]["reason"])
 
     def test_backend_and_material_revision_consistency(self):

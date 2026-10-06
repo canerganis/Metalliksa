@@ -169,24 +169,31 @@ class PeakAnchoredExtentTest(unittest.TestCase):
         g = result["meltPoolGeometry"]
         self.assertEqual(g["extentStatus"], "computed")
         self.assertIsNone(g["extentNote"])
-        self.assertLess(g["peakOffset_um"], 0.0)
-        self.assertAlmostEqual(g["width_um"], 148.3, delta=0.2)
-        self.assertAlmostEqual(g["depth_um"], 116.6, delta=0.2)
-        self.assertAlmostEqual(g["length_um"], 1191.7, delta=0.5)
-        # T(0,0,0) (the reported peak / surface proxy, unchanged by the bump) is below liquidus here;
-        # the axial maximum behind the beam centre is above it.
+        # Wave B LA-2: with the prefactor-only regularisation the Rosenthal field peaks at the beam centre
+        # (x_peak = 0), so the reported T(0,0,0) is the axial maximum and is above liquidus. Tier 2 values
+        # were 148.3 / 116.6 / 1191.7 um with x_peak < 0 (exponent damped by r_reg).
+        self.assertEqual(g["peakOffset_um"], 0.0)
+        self.assertAlmostEqual(g["width_um"], 158.5, delta=0.2)
+        self.assertAlmostEqual(g["depth_um"], 123.5, delta=0.2)
+        self.assertAlmostEqual(g["length_um"], 1266.3, delta=0.5)
         t_liq = solver.THERMOPHYSICAL_DB["Inconel 718"]["liquidus_C"]
-        self.assertLess(result["hydrodynamicsAndRecoil"]["peakTemperature_C"], t_liq)
-        self.assertGreater(g["axialFieldMaximum_C"], t_liq)
+        self.assertGreater(result["hydrodynamicsAndRecoil"]["peakTemperature_C"], t_liq)
+        self.assertEqual(g["axialFieldMaximum_C"], result["hydrodynamicsAndRecoil"]["peakTemperature_C"])
         self.assertNotEqual(compose_verdict(result, "in718")["verdict"], "inconclusive")
+        # The distributed sources (Eagar-Tsai, Goldak) still peak behind the beam centre.
+        for source in ("eagar-tsai", "goldak"):
+            other, _ = run(*IN718_287, heat_source=source)
+            self.assertEqual(other["meltPoolGeometry"]["extentStatus"], "computed", source)
+            self.assertLess(other["meltPoolGeometry"]["peakOffset_um"], 0.0, source)
 
     def test_in718_280_940_geometry(self):
         result, _ = run(*IN718_280)
         g = result["meltPoolGeometry"]
         self.assertEqual(g["extentStatus"], "computed")
-        self.assertAlmostEqual(g["width_um"], 175.2, delta=0.2)
-        self.assertAlmostEqual(g["depth_um"], 159.7, delta=0.2)
-        self.assertAlmostEqual(g["length_um"], 1250.5, delta=0.5)
+        # Wave B LA-2 (Tier 2: 175.2 / 159.7 / 1250.5 um).
+        self.assertAlmostEqual(g["width_um"], 183.8, delta=0.2)
+        self.assertAlmostEqual(g["depth_um"], 166.4, delta=0.2)
+        self.assertAlmostEqual(g["length_um"], 1306.8, delta=0.5)
 
     def test_axial_peak_locator(self):
         def field(x, y, z):
@@ -198,18 +205,28 @@ class PeakAnchoredExtentTest(unittest.TestCase):
         self.assertAlmostEqual(solver._axial_peak_x(monotone_front, -400e-6, 50e-6) * 1e6, 0.0, delta=1e-3)
 
     def test_unmelted_field_keeps_heuristic_fallback(self):
-        result, _ = run("Inconel 718", 20.0, 2000.0, 80.0, 80.0, 40.0, 100.0)
+        # 10 W: after Wave B LA-2 the 20 W case peaks at 1839.9 C, above liquidus, so it no longer tests this.
+        result, _ = run("Inconel 718", 10.0, 2000.0, 80.0, 80.0, 40.0, 100.0)
         g = result["meltPoolGeometry"]
         self.assertEqual(g["extentStatus"], "heuristic-width-fallback")
         self.assertLess(result["meltPoolGeometry"]["axialFieldMaximum_C"],
                         solver.THERMOPHYSICAL_DB["Inconel 718"]["liquidus_C"])
 
     def test_reported_peak_stays_beam_centre(self):
-        # Surface/recoil proxy reads T(0,0,0) as before the bump (IN718 200/800/80 Rosenthal, G11 payload).
+        # The reported peak is still T(0,0,0) (IN718 200/800/80 Rosenthal, G11 payload). Wave B LA-2 makes it the
+        # regularised point-source value T0 + P/(2 pi k r_reg): 2500.2 C at Tier 2 -> 35 097 C, labelled (D1).
         result, _ = run("Inconel 718", 200.0, 800.0, 80.0, 80.0, 40.0, 110.0)
         h = result["hydrodynamicsAndRecoil"]
-        self.assertAlmostEqual(h["peakTemperature_C"], 2500.2, delta=0.11)
-        self.assertGreater(result["meltPoolGeometry"]["axialFieldMaximum_C"], h["peakTemperature_C"])
+        pp = result["processParameters"]
+        props = solver.THERMOPHYSICAL_DB["Inconel 718"]
+        r_reg = max(80e-6 / 2.0 / math.sqrt(2.0), 8e-6)
+        k_th = pp["effectiveConductivity_W_mK"]
+        expected = 80.0 + pp["fieldPower_W"] / (2.0 * math.pi * k_th * r_reg)
+        self.assertAlmostEqual(h["peakTemperature_C"], expected, delta=0.1 + 1e-4 * expected)
+        self.assertAlmostEqual(h["peakTemperature_C"], 35097.0, delta=1.0)
+        self.assertEqual(result["meltPoolGeometry"]["axialFieldMaximum_C"], h["peakTemperature_C"])
+        self.assertEqual(h["peakTemperatureBasis"], "regularised-singular-source-value")
+        self.assertEqual(h["surfaceTemperature_C"], props["boiling_C"])
 
     def test_cross_sections_anchored_at_axial_peak(self):
         # Whenever the extent is computed, the transverse contour, the hatch-overlap contours and the

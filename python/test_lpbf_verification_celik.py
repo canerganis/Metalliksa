@@ -112,10 +112,8 @@ class TimestepStudyRefinesBelowRealisedStep(unittest.TestCase):
         with patch.object(lpbf_simulation, "transient", recording):
             r = run({**CASE, "power_W": 10, "study": "timestep"})
         self.assertEqual(len(requested), 3)
-        mean_dt = r["convergenceStudy"]["results"][0]["discretization"]["meanDt_s"] \
-            if isinstance(r["convergenceStudy"]["results"][0], dict) and "discretization" in r["convergenceStudy"]["results"][0] \
-            else None
-        base = r["discretization"]["meanDt_s"] if mean_dt is None else mean_dt
+        # The requested run is the coarse level; its realised mean step anchors the refinement.
+        base = r["discretization"]["meanDt_s"]
         self.assertAlmostEqual(requested[1], max(BOUNDS["maxDt_s"][0], base / math.sqrt(2.0)), delta=1e-18)
         self.assertAlmostEqual(requested[2], max(BOUNDS["maxDt_s"][0], base / 2.0), delta=1e-18)
         checks = r["convergenceStudy"]["checks"]
@@ -148,6 +146,12 @@ class SolidificationResolutionLT3(unittest.TestCase):
             else:
                 self.assertEqual(res["status"], "single-mesh-unverified")
             self.assertAlmostEqual(res["mesh_um"], 40.0, places=6)
+
+    def test_known_cases(self):
+        # 10 W at 40 um does not melt; 60 W melts one cell deep and wide (the 2-cell stencil spans it).
+        self.assertEqual(self.cold["numericalDiagnostics"]["solidificationResolution"]["status"], "not-available")
+        self.assertEqual(self.hot["numericalDiagnostics"]["solidificationResolution"]["status"],
+                         "stencil-spans-melt-pool")
 
 
 if __name__ == "__main__":

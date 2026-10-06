@@ -296,7 +296,7 @@ class Verification(unittest.TestCase):
         r = run({**CASE, "power_W": 10, "study": "mesh"})
         self.assertEqual(len(r["convergenceStudy"]["results"]), 3)
         self.assertEqual(r["convergenceStudy"]["checks"]["width_um"]["status"], "inconclusive")
-        self.assertEqual(r["convergenceStudy"]["protocol"], "layer-aligned-three-grid-cpu-reference-v1")
+        self.assertEqual(r["convergenceStudy"]["protocol"], "layer-aligned-three-grid-cpu-reference-v2-celik-ratio")
         self.assertEqual(r["convergenceStudy"]["cellsPerLayer"], [1, 2, 3])
         self.assertEqual(r["settings"]["powderGridPolicy"], "layer-conforming")
         self.assertEqual(r["settings"]["backend"], "reference")

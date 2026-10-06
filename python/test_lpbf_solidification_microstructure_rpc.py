@@ -73,32 +73,47 @@ class SolidificationMicrostructureRpcTest(unittest.TestCase):
         print("  rpc available IN718 285/960:", {k: out[k] for k in ("status", "G_K_m", "R_m_s", "PDAS_um", "SDAS_um", "morphology", "heatSourceModel", "gradientSource")})
 
     def test_screening_fallback_is_labelled(self):
-        out = rpc({**IN718_285, "power_W": 60, "speed_mm_s": 2000})
+        # 20 W / 2000 mm/s: no closed liquidus field (after Wave B LA-2/KS-1 the 60 W case resolves).
+        out = rpc({**IN718_285, "power_W": 20, "speed_mm_s": 2000})
         self.assertEqual(out["status"], "screening-fallback")
         self.assertEqual(out["reason"], FALLBACK_REASON)
         self.assertIs(out["usedFieldMap"], False)
         self.assertEqual(out["gradientSource"], "tail-length-fallback")
         self.assertTrue(math.isfinite(out["G_K_m"]))
 
-    def test_degenerate_floor_in718_100_960(self):
-        # Real output: the frozen front mapper reports usedFieldMap True but clamps R and cooling to floors.
-        # (285 W / 1200 mm/s was this case before the 2026-10-06 tier-2 bump; the peak-anchored extent
-        # search resolves that pool now.)
+    def test_in718_100_960_is_available_after_waveb(self):
+        # This was the real degenerate-floor case at Tier 2. Wave B KS-1 samples only the solidifying
+        # (n_x > 0) part of the rear liquidus, so the clamp floors are no longer reached here.
         out = rpc({**IN718_285, "power_W": 100})
-        kin = calculate_meltpool_physics("Inconel 718", 100, 960, 80, 80, 40, 110, heat_source="rosenthal")["solidificationKinetics"]
-        self.assertIs(kin["usedFieldMap"], True)
-        self.assertLessEqual(kin["solidificationRate_R_mm_s"], 0.1)
-        self.assertLessEqual(kin["coolingRate_K_s"], 1.0)
+        self.assertEqual(out["status"], "available")
+        self.assertGreater(out["R_m_s"], 1.0e-4)
+        self.assertGreater(out["coolingRate_K_s"], 1.0)
+
+    def test_degenerate_floor_is_labelled_synthetic(self):
+        # Synthetic: the floor state cannot be reached on the 4x5x5 grid after Wave B KS-1, so a real thermal
+        # result is edited to sit on the floors; the RPC must still label it and copy, not recompute, numbers.
+        from unittest import mock
+        import lpbf_thermal_solver
+        real = lpbf_thermal_solver.calculate_meltpool_physics
+
+        def floored(*args, **kwargs):
+            thermal = real(*args, **kwargs)
+            kin = thermal["solidificationKinetics"]
+            kin.update(usedFieldMap=True, solidificationRate_R_mm_s=0.1, solidificationRate_R_m_s=1.0e-4,
+                       coolingRate_K_s=1.0)
+            return thermal
+
+        with mock.patch.object(lpbf_thermal_solver, "calculate_meltpool_physics", floored):
+            out = rpc({**IN718_285, "power_W": 100})
+            kin = floored("Inconel 718", 100, 960, 80, 80, 40, 110, heat_source="rosenthal")["solidificationKinetics"]
         self.assertEqual(out["status"], "degenerate-floor")
         self.assertEqual(out["reason"], DEGENERATE_FLOOR_REASON)
         self.assertIs(out["usedFieldMap"], True)
-        # Numbers are copied, not recomputed.
         self.assertEqual(out["coolingRate_K_s"], kin["coolingRate_K_s"])
         self.assertEqual(out["G_K_m"], kin["thermalGradient_G_K_m"])
         self.assertEqual(out["PDAS_um"], kin["primaryDendriteArmSpacing_PDAS_um"])
         self.assertLessEqual(out["R_m_s"], 1.0e-4 * (1.0 + 1.0e-9))
         self.assertIn("not a computed result", out["disclaimer"])
-        print("  rpc degenerate-floor IN718 100/960:", {k: out[k] for k in ("status", "R_m_s", "coolingRate_K_s", "PDAS_um", "SDAS_um", "morphology")})
 
     def test_no_available_result_sits_on_a_clamp_floor(self):
         # Sample grid (4 alloys x 5 powers x 5 speeds), calculate_meltpool_physics + projection directly.
@@ -119,7 +134,8 @@ class SolidificationMicrostructureRpcTest(unittest.TestCase):
                         self.assertEqual(block["reason"], DEGENERATE_FLOOR_REASON)
                         self.assertTrue(block["R_m_s"] <= 1.0e-4 * (1.0 + 1.0e-9) or block["coolingRate_K_s"] <= 1.0)
         print("  grid scan status counts:", dict(counts))
-        self.assertGreaterEqual(counts["degenerate-floor"], 1)
+        # Wave B KS-1: 84/9/7 available/degenerate/fallback at Tier 2 -> 97/0/3; the floor is unreachable here.
+        self.assertEqual(counts["degenerate-floor"], 0)
         self.assertGreaterEqual(counts["available"], 1)
 
     def test_heat_source_is_passed_through(self):

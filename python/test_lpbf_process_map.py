@@ -18,7 +18,7 @@ _DOC = {}
 def tiny_doc():
     """2 x 2 grid, 2 kernels, with overlay; built once (solver calls are the expensive part)."""
     if not _DOC:
-        _DOC["d"] = pm.build_document(MATERIAL, 80.0, 30.0, 100.0, 20.0, [100.0, 400.0], [300.0, 1500.0],
+        _DOC["d"] = pm.build_document(MATERIAL, 80.0, 30.0, 100.0, 20.0, [40.0, 400.0], [300.0, 1500.0],
                                       ["rosenthal", "eagar-tsai"], jobs=1, overlay=True, probe_raytracer=False)
     return _DOC["d"]
 
@@ -52,7 +52,7 @@ class TinyGrid(unittest.TestCase):
         d = tiny_doc()
         self.assertEqual(d["schema"], "lpbf-process-map-1")
         self.assertIs(d["honesty"]["experimentalValidation"], False)
-        self.assertEqual(d["grid"], {"powers_W": [100.0, 400.0], "speeds_mm_s": [300.0, 1500.0]})
+        self.assertEqual(d["grid"], {"powers_W": [40.0, 400.0], "speeds_mm_s": [300.0, 1500.0]})
         self.assertEqual(len(d["cells"]), 2 * 2 * 2)
         for key in ("implementationHash", "absorption", "inputs", "regimeBoundaries", "heuristicZones", "overlay",
                     "limits", "generatedAt"):
@@ -77,8 +77,9 @@ class TinyGrid(unittest.TestCase):
             self.assertEqual(len(z["list"]), len(bad))
             for c in cells:
                 self.assertEqual(c["computed"], c["extentStatus"] == "computed")
-        # the fast slow-speed corner of the low-power / high-speed Rosenthal cell is a heuristic fallback
-        ros = [c for c in d["cells"] if c["kernel"] == "rosenthal" and c["power_W"] == 100.0 and c["speed_mm_s"] == 1500.0]
+        # the low-power / high-speed Rosenthal cell is not computed (40 W: width floor; after Wave B LA-2 the
+        # former 100 W / 1500 mm/s corner resolves a closed isotherm)
+        ros = [c for c in d["cells"] if c["kernel"] == "rosenthal" and c["power_W"] == 40.0 and c["speed_mm_s"] == 1500.0]
         self.assertFalse(ros[0]["computed"])
         md = pm.render_markdown(d)
         self.assertIn(pm.NON_COMPUTED_MARK, md)
@@ -113,8 +114,8 @@ class TinyGrid(unittest.TestCase):
         d = tiny_doc()
         for k, edges in d["regimeBoundaries"].items():
             lab = {(c["power_W"], c["speed_mm_s"]): c["regime"] for c in d["cells"] if c["kernel"] == k}
-            expect = sum(1 for p in (100.0, 400.0) if lab[(p, 300.0)] != lab[(p, 1500.0)])
-            expect += sum(1 for v in (300.0, 1500.0) if lab[(100.0, v)] != lab[(400.0, v)])
+            expect = sum(1 for p in (40.0, 400.0) if lab[(p, 300.0)] != lab[(p, 1500.0)])
+            expect += sum(1 for v in (300.0, 1500.0) if lab[(40.0, v)] != lab[(400.0, v)])
             self.assertEqual(len(edges), expect)
             for e in edges:
                 self.assertNotEqual(e["from"]["regime"], e["to"]["regime"])
