@@ -39,7 +39,7 @@ def main():
 
     ros = calculate_meltpool_physics("Inconel 718", 285, 960, 80, 80, 40, 110)
     assert_true(ros["modelId"] == "rosenthal-screening-v1", "Build Job path untouched")
-    assert_true(ros["keyholeModel"]["modelId"] == "king-increment", "King increment stays")
+    assert_true(ros["keyholeModel"]["modelId"] == "heuristic-keyhole-increment-v1", "Rosenthal keeps the labelled heuristic increment")
 
     print("PASS: Heiple–Roper Marangoni screening")
     return 0

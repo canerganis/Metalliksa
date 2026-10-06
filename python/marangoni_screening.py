@@ -9,6 +9,10 @@ flips ∂γ/∂T and therefore the surface-flow direction — outward (wide, sha
 Inversion band 30–60 ppm S is the welding / LPBF review range (Heiple–Roper;
 Ebrahimi et al., *Int. J. Heat Mass Transfer* 2021, DOI 10.1016/j.ijheatmasstransfer.2020.120801).
 Alloy ∂γ/∂T comes from `four_alloy_materials.py`. This module does **not** refit W/D.
+
+Surface velocity: order-of-magnitude estimate of DebRoy & David, *Rev. Mod. Phys.* 67 (1995) 85,
+Eq. (8) (DOI 10.1103/RevModPhys.67.85): Marangoni stress (Eq. 6) balanced against laminar
+boundary-layer shear (Eq. 7) at y = W/4, u_m^(3/2) ≈ |dγ/dT|·(dT/dy)·W^(1/2) / (0.664·ρ^(1/2)·μ^(1/2)).
 """
 
 from __future__ import annotations
@@ -18,6 +22,15 @@ import math
 MODEL_ID = "marangoni-heiple-v1"
 SULFUR_OUTWARD_PPM = 30.0
 SULFUR_INWARD_PPM = 60.0
+SURFACE_VELOCITY_DOI = "10.1103/RevModPhys.67.85"
+
+
+def debroy_david_surface_velocity_m_s(
+    d_gamma_N_mK: float, dT_dy_K_m: float, pool_width_m: float, density_kg_m3: float, viscosity_Pa_s: float
+) -> float:
+    """DebRoy & David (1995) Eq. (8): u_m^(3/2) ≈ |dγ/dT|·(dT/dy)·W^(1/2) / (0.664·sqrt(ρμ)). SI in, m/s out."""
+    drive = abs(float(d_gamma_N_mK)) * abs(float(dT_dy_K_m)) * math.sqrt(max(0.0, float(pool_width_m)))
+    return (drive / (0.664 * math.sqrt(float(density_kg_m3) * float(viscosity_Pa_s)))) ** (2.0 / 3.0)
 
 
 def heiple_roper_d_gamma_dT(d_gamma_pure_N_mK: float, sulfur_ppm: float) -> float:
@@ -55,8 +68,9 @@ def marangoni_screening(
     rho = max(100.0, float(density_kg_m3))
 
     Ma = (abs(d_gamma) * delta_T * L) / (mu * alpha)
-    # Inertial thermocapillary scale (same form as the existing pore-instability lab).
-    u_m_s = math.sqrt((abs(d_gamma) * delta_T) / rho)
+    # DebRoy & David (1995) Eq. (8) with the screening gradient dT/dy ≈ ΔT / L over the half-width L
+    # (W = 2L). Order-of-magnitude only; replaces sqrt(|dγ/dT|ΔT/ρ), which had units of m^1.5/s.
+    u_m_s = debroy_david_surface_velocity_m_s(d_gamma, delta_T / L, 2.0 * L, rho, mu)
     Pe_Ma = (u_m_s * L) / alpha
     if d_gamma > 0.0:
         direction = "inward"
@@ -75,6 +89,7 @@ def marangoni_screening(
         "flowDirection": direction,
         "marangoniNumber": float(Ma),
         "surfaceVelocity_m_s": float(u_m_s),
+        "surfaceVelocityDoi": SURFACE_VELOCITY_DOI,
         "pecletMarangoni": float(Pe_Ma),
         "geometrySource": "thermal",
         "aspectNote": aspect_note,

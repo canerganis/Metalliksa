@@ -960,6 +960,7 @@ def calculate_meltpool_physics(
             "dGamma_dT_N_mK": round(ma["dGamma_dT_N_mK"], 6),
             "sulfur_ppm": round(ma["sulfur_ppm"], 1),
             "surfaceVelocity_m_s": round(ma["surfaceVelocity_m_s"], 3),
+            "surfaceVelocityDoi": ma.get("surfaceVelocityDoi"),
             "pecletMarangoni": round(ma["pecletMarangoni"], 2),
             "aspectNote": ma["aspectNote"],
             "doi": ma["doi"],
