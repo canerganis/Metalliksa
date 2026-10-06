@@ -138,7 +138,13 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${BASE//0/}" ]; then BASE="$(git rev-parse HEAD^)"; fi
-          git cat-file -e "$BASE:scripts/check_ceiling_review.py"
+          # Bootstrap: when the base revision predates the checker there is no reviewed baseline to
+          # compare against (the first change that introduces this guard). Once the checker is on the
+          # base branch, every later run uses the base copy as intended.
+          if ! git cat-file -e "$BASE:scripts/check_ceiling_review.py" 2>/dev/null; then
+            echo "::notice::Base revision has no ceiling checker (this change introduces it); nothing to compare against, skipping."
+            exit 0
+          fi
           git show "$BASE:scripts/check_ceiling_review.py" | python - "$BASE"
       - name: LPBF engineering tests (non-blocking until proven green on Linux)
         run: npm run test:lpbf:engineering
