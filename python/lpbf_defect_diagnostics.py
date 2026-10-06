@@ -67,7 +67,7 @@ def defect_diagnostics(width_um, depth_um, length_um, hatch_um, layer_um, *, agg
         "status": "unresolved", "limitations": limitations,
         "lackOfFusion": lof,
         "keyhole": {
-            "depthToWidth": None, "risk": None,
+            "depthToWidth": None, "risk": None, "kingModeIndicator": None,
             "reason": "Aspect ratio alone cannot resolve vapor depression stability or keyhole pore formation.",
         },
         "balling": {
@@ -107,27 +107,22 @@ def defect_diagnostics(width_um, depth_um, length_um, hatch_um, layer_um, *, agg
             "use": "Rayleigh-Plateau capillary instability for single-track balling (L/W > \u03c0).",
         })
 
-    # King & Cunningham Keyhole Criterion
-    # High-speed X-ray vapor depression stability based on aspect ratio D/W > 1.5
-    # (or normalized enthalpy, but we only have D and W in this purely geometric screen).
+    # Keyhole: no stability/porosity verdict from D/W alone (see limitations; risk stays None). The
+    # King et al. 2014 sec. 5.2 classification (keyhole mode when depth > half-width, D/W > 0.5) is
+    # reported as a mode indicator only. The old 1.5 / 1.0 thresholds are in neither King 2014 nor
+    # Cunningham 2019.
     aspect_ratio = _finite_ratio(depth, width)
     if aspect_ratio is not None:
-        keyhole_threshold = 1.5
-        if aspect_ratio >= keyhole_threshold:
-            result["keyhole"]["risk"] = "high"
-            result["keyhole"]["reason"] = "Aspect ratio D/W >= 1.5 indicates deep vapor depression prone to collapse and porosity trapping (King/Cunningham)."
-        elif aspect_ratio >= 1.0:
-            result["keyhole"]["risk"] = "moderate"
-            result["keyhole"]["reason"] = "Aspect ratio D/W >= 1.0 indicates unstable transition regime."
-        else:
-            result["keyhole"]["risk"] = "low"
-            result["keyhole"]["reason"] = "Aspect ratio D/W < 1.0 indicates stable conduction/transition mode."
-            
-        # Update provenance for keyhole
+        mode = "keyhole-mode" if aspect_ratio > 0.5 else "conduction-mode"
+        result["keyhole"]["kingModeIndicator"] = mode
+        result["keyhole"]["reason"] = (
+            f"D/W {aspect_ratio:.2f} {'>' if aspect_ratio > 0.5 else '<='} 0.5: {mode} by the King et al. 2014 "
+            "depth > half-width classification. Aspect ratio alone cannot resolve vapor depression stability "
+            "or keyhole pore formation, so no risk is assigned.")
         result["provenance"].append({
-            "title": "King et al. (2014) & Cunningham et al. (2019)",
-            "url": "https://doi.org/10.1126/science.aav4687",
-            "use": "Aspect ratio D/W > 1.5 for keyhole instability and vapor depression collapse porosity.",
+            "title": "King et al. (2014), J. Mater. Process. Technol. 214, 2915, sec. 5.2",
+            "url": "https://doi.org/10.1016/j.jmatprotec.2014.06.005",
+            "use": "Keyhole-mode classification when melt-pool depth exceeds the half-width (D/W > 0.5); label only.",
         })
 
     if width == 0 or depth == 0:

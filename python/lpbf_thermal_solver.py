@@ -167,6 +167,12 @@ THERMOPHYSICAL_DB = {**four_alloy_thermophysical_db(), **SECONDARY_THERMOPHYSICA
 # King et al. (2014) / Rubenchik: keyhole onset typically ΔH/hs ≈ 25–30.
 ENTHALPY_TRANSITION = 15.0
 ENTHALPY_KEYHOLE = 30.0
+KEYHOLE_INCREMENT_MODEL_ID = "heuristic-keyhole-increment-v1"
+KEYHOLE_INCREMENT_BASIS = ("uncited screening heuristic: extra depth = d_iso*(0.15+0.55*t) for 15<=dH/hs<30, "
+                           "d_iso*(0.85+0.55*log10(1+(dH/hs-30)/10)) above; only the 15/30 thresholds are from "
+                           "King et al. 2014 (doi 10.1016/j.jmatprotec.2014.06.005)")
+FABBRO_BASIS = ("Fabbro 2020 eq. 2 with the flat-surface absorptivity as a calibrated effective value (not the "
+                "keyhole A(R)); m=2.4, n=3 fitted for 2<=Pe<=10; uncited linear dH/hs onset ramp 15->30")
 
 # Absorption model of the screening kernels. "flat-plate" (default, every machine): the material
 # authority's flat absorptivity feeds ΔH/hs, the multiple-reflection η_eff, the conduction power and
@@ -191,11 +197,32 @@ def classify_enthalpy_regime(normalized_enthalpy: float) -> str:
 
 
 def rosenthal_temperature_C(x_m, y_m, z_m, T0_C, P_eff, k_th, v_scan, alpha_th, r_reg):
-    """3D Rosenthal moving point source, regularized at the origin (beam radius)."""
-    R = math.sqrt(x_m * x_m + y_m * y_m + z_m * z_m + r_reg * r_reg)
+    """3D Rosenthal (1946) moving point source T0 + P/(2 pi k R) exp(-v (R + x) / 2 alpha).
+
+    Only the 1/R prefactor is regularised (R_reg = sqrt(R^2 + r_reg^2), r_reg ~ beam radius); the
+    advective exponent keeps the true R, so R + x = 0 on the trailing axis exactly as in Rosenthal.
+    The near-field maximum T0 + P/(2 pi k r_reg) is a regularisation artefact, not a wall temperature.
+    """
+    R = math.sqrt(x_m * x_m + y_m * y_m + z_m * z_m)
+    R_reg = math.sqrt(R * R + r_reg * r_reg)
     arg = -v_scan * (R + x_m) / max(1e-16, 2.0 * alpha_th)
     arg = max(-45.0, min(20.0, arg))
-    return T0_C + (P_eff / (2.0 * math.pi * k_th * R)) * math.exp(arg)
+    return T0_C + (P_eff / (2.0 * math.pi * k_th * R_reg)) * math.exp(arg)
+
+
+def knight_recoil_pressure_kPa(T_surface_C, T_vap_C, delta_H_vap_J_mol, R_gas=8.314):
+    """Anisimov (1968) / Knight (1979) recoil p = 0.54 p_sat(T), p_sat from Clausius-Clapeyron referenced to
+    1 atm at T_vap. Continuous in T: no 0.8*T_vap gate (taken in degC before) and no fixed 0.1 kPa floor."""
+    T_surf_K = float(T_surface_C) + 273.15
+    T_vap_K = float(T_vap_C) + 273.15
+    recoil_exp = (delta_H_vap_J_mol / R_gas) * (1.0 / T_vap_K - 1.0 / max(500.0, T_surf_K))
+    if recoil_exp > 700.0:
+        p_recoil_atm = 1.0e200
+    elif recoil_exp < -700.0:
+        p_recoil_atm = 0.0
+    else:
+        p_recoil_atm = 0.54 * math.exp(recoil_exp)
+    return min(1.0e12, p_recoil_atm * 101.325)
 
 
 def _binary_extent(pred, lo, hi, iters=18):
@@ -426,18 +453,23 @@ def calculate_meltpool_physics(
         cavity_aspect = 0.0
 
     effective_power = eta_eff * P_laser
-    # Latent-heat (Stefan) correction so the liquidus is not an over-hot Rosenthal tail.
     Lf = props["latent_heat_fusion_J_kg"]
     stefan = Lf / max(1.0, cp * max(50.0, T_liq - T_preheat))
-    # ET/Goldak are conduction fields: Fresnel A only. Fabbro already carries keyhole A(R)
-    # (Appl. Sci. 2020 eq. 2). Stacking eta_eff on both double-counts Trapp multiple reflections.
+    # ET/Goldak are conduction fields driven by the conduction (flat / ray-traced) absorptivity only.
+    # Fabbro gets the FLAT absorptivity as a calibrated effective value: Fabbro (Appl. Sci. 2020, eq. 2)
+    # defines A(R), the aspect-ratio-dependent keyhole absorptivity, which is NOT modelled here.
     if source in ("eagar-tsai", "goldak"):
         P_absorbed = eta_base * P_laser
         A_fabbro = eta_base_flat
+        # Eagar & Tsai (1983) and Goldak et al. (1984) take the absorbed power as Q: no latent-heat cut.
+        latent_heat_power_factor = 1.0
     else:
         P_absorbed = effective_power
         A_fabbro = eta_base_flat
-    P_geom = P_absorbed / (1.0 + 0.55 * stefan)
+        # rosenthal-screening-v1 only: uncited screening factor 1/(1 + 0.55 St) on the field power
+        # (no published source for the 0.55 coefficient or the form); exported as latentHeatPowerFactor.
+        latent_heat_power_factor = 1.0 / (1.0 + 0.55 * stefan)
+    P_geom = P_absorbed * latent_heat_power_factor
     r_reg = max(r_beam / math.sqrt(2.0), 8e-6)
 
     goldak_seed = seed_goldak_axes(r_beam)
@@ -560,7 +592,9 @@ def calculate_meltpool_physics(
     x_rear = max(r_beam * 0.8, l_melt_m - x_front)
     l_melt_m = x_front + x_rear
 
-    # Keyhole extra: Fabbro on Melt Pool lab fields; Rosenthal Build Job keeps the King increment.
+    # Keyhole extra: Fabbro on Melt Pool lab fields. The Rosenthal Build Job increment below is an
+    # uncited screening heuristic: King et al. 2014 supply only the 15/30 dH/hs thresholds it is
+    # keyed to, not this depth law (coefficients 0.15/0.55/0.85 and /10 have no source).
     if source in ("eagar-tsai", "goldak"):
         extra = max(0.0, fabbro["depth_m"] - d_iso)
         keyhole_depth_um = extra * 1e6
@@ -598,24 +632,25 @@ def calculate_meltpool_physics(
 
     # 8. Recoil from evaporative surface T (Anisimov/Knight 0.54 Psat). Field peak stays
     # uncapped (PROOF 015). Conduction singularities of 10^4 °C are not a wall temperature.
-    R_gas = 8.314
     M_molar = float(props.get("M_molar_kg_mol", 0.055))
     delta_H_vap = props["latent_heat_vap_J_kg"] * M_molar
     t_surface_C = min(float(t_peak_C), float(T_vap))
-    T_surf_K = t_surface_C + 273.15
-    T_vap_K = T_vap + 273.15
-
-    if t_surface_C >= T_vap * 0.8:
-        recoil_exp = (delta_H_vap / R_gas) * (1.0 / T_vap_K - 1.0 / max(500.0, T_surf_K))
-        if recoil_exp > 700.0:
-            p_recoil_atm = 1.0e200
-        elif recoil_exp < -700.0:
-            p_recoil_atm = 0.0
-        else:
-            p_recoil_atm = 0.54 * math.exp(recoil_exp)
-        p_recoil_kPa = min(1.0e12, p_recoil_atm * 101.325)
+    # Wave B D1: label what the reported peak is. It is the beam-centre value T(0,0,0) of a conduction
+    # field with no evaporation sink, so above T_vap it is not a physical wall temperature.
+    if source in ("eagar-tsai", "goldak"):
+        peak_temperature_basis = "distributed-source-conduction-centre-value"
+        peak_temperature_note = ("beam-centre value T(0,0,0) of the uncapped Eagar-Tsai/Goldak conduction field "
+                                 "(no evaporation sink); above T_vap it is not a wall temperature. Recoil and "
+                                 "Marangoni use surfaceTemperature_C = min(peak, T_vap).")
     else:
-        p_recoil_kPa = 0.1
+        peak_temperature_basis = "regularised-singular-source-value"
+        peak_temperature_note = ("beam-centre value T(0,0,0) of the Rosenthal (1946) point source with only the 1/R "
+                                 "prefactor regularised at r_reg (= axial maximum for Rosenthal after Wave B LA-2), "
+                                 "i.e. T0 + P/(2 pi k r_reg): a regularised singular-source value, not a wall "
+                                 "temperature. Recoil and Marangoni use surfaceTemperature_C = min(peak, T_vap).")
+    surface_temperature_basis = ("saturated at T_vap: " + peak_temperature_basis.replace("-", " ")
+                                 if float(t_peak_C) >= float(T_vap) else "beam-centre field value below T_vap")
+    p_recoil_kPa = knight_recoil_pressure_kPa(t_surface_C, T_vap, delta_H_vap)
 
     ma = marangoni_screening(
         props["d_gamma_dT_N_mK"],
@@ -883,6 +918,9 @@ def calculate_meltpool_physics(
             "heatSource": source,
             "absorptionModel": absorption_model,
             "thermalSliceBackend": thermal_slice_backend,
+            "stefanNumber": round(stefan, 4),
+            "latentHeatPowerFactor": round(latent_heat_power_factor, 4),
+            "fieldPower_W": round(P_geom, 2),
         },
         "meltPoolGeometry": {
             "length_um": round(l_melt_um, 1),
@@ -906,11 +944,14 @@ def calculate_meltpool_physics(
             }
         },
         "keyholeModel": {
-            "modelId": FABBRO_MODEL_ID if source in ("eagar-tsai", "goldak") else "king-increment",
+            "modelId": FABBRO_MODEL_ID if source in ("eagar-tsai", "goldak") else KEYHOLE_INCREMENT_MODEL_ID,
+            "basis": FABBRO_BASIS if source in ("eagar-tsai", "goldak") else KEYHOLE_INCREMENT_BASIS,
             "fabbroDepth_um": round(fabbro["depth_m"] * 1e6, 1),
             "aspectRatio_e_over_d": round(fabbro["aspectRatio_e_over_d"], 2),
             "peclet": round(fabbro["peclet"], 2),
+            "pecletInFitRange": fabbro["pecletInFitRange"],
             "absorptivity": round(A_fabbro, 3),
+            "absorptivityBasis": "flat-surface effective (not Fabbro keyhole A(R))",
             "doi": fabbro["doi"],
         },
         "marangoniModel": {
@@ -925,6 +966,10 @@ def calculate_meltpool_physics(
         },
         "hydrodynamicsAndRecoil": {
             "peakTemperature_C": round(t_peak_C, 1),
+            "peakTemperatureBasis": peak_temperature_basis,
+            "peakTemperatureNote": peak_temperature_note,
+            "peakExceedsVaporization": bool(t_peak_C > float(T_vap)),
+            "surfaceTemperatureBasis": surface_temperature_basis,
             "surfaceTemperature_C": round(t_surface_C, 1),
             "knudsenRecoilPressure_kPa": round(p_recoil_kPa, 2),
             "marangoniNumber": round(marangoni_number, 0),

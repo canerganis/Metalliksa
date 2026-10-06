@@ -62,14 +62,15 @@ def rosenthal_slice_kernel(
         y_m = a
         z_m = b
 
-    R = wp.sqrt(x_m * x_m + y_m * y_m + z_m * z_m + r_reg * r_reg)
+    R = wp.sqrt(x_m * x_m + y_m * y_m + z_m * z_m)
+    R_reg = wp.sqrt(R * R + r_reg * r_reg)
     arg = -v_scan * (R + x_m) / (2.0 * alpha_th)
     if arg < -45.0:
         arg = -45.0
     if arg > 20.0:
         arg = 20.0
 
-    T_out[tid] = T0 + (P_eff / (2.0 * 3.1415926535 * k_th * R)) * wp.exp(arg)
+    T_out[tid] = T0 + (P_eff / (2.0 * 3.1415926535 * k_th * R_reg)) * wp.exp(arg)
 
 def compute_rosenthal_slice_warp(axis_a_span, axis_b_span, na, nb, plane, z_val, T0, P_eff, k_th, v_scan, alpha_th, r_reg):
     ensure_wp_initialized()
