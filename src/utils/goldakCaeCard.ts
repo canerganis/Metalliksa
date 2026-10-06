@@ -28,6 +28,11 @@ export interface GoldakCaeCardInput {
     normalizedEnthalpy?: number;
     effectiveAbsorptivity: number;
     conductionAbsorptivity?: number;
+    /** Power that drove the screening field (Wave B LA-5): P_absorbed * latentHeatPowerFactor. */
+    fieldPower_W?: number;
+    stefanNumber?: number;
+    /** 1/(1+0.55*Stefan) for rosenthal (uncited screening factor); 1 for goldak/eagar-tsai. */
+    latentHeatPowerFactor?: number;
   };
   meltPoolGeometry: {
     regime?: string;
@@ -115,7 +120,7 @@ export function buildGoldakCaeCard(
   }
   if (isRosenthal) {
     lines.push(
-      `** field absorbed power before the Stefan factor (rosenthal source), P_absorbed = eta_eff*P_laser: ${Q_W} W`,
+      `** field absorbed power before the latent-heat factor (rosenthal source), P_absorbed = eta_eff*P_laser: ${Q_W} W`,
     );
     if (hasEtaCond) {
       lines.push(
@@ -125,22 +130,29 @@ export function buildGoldakCaeCard(
   } else if (isConductionSource && hasEtaCond) {
     lines.push(
       `** conductionAbsorptivity (tabulated flat-plate absorptivity, or ray-traced powder value when warp is present; used by the screening conduction field): ${etaCond}`,
-      `** conduction-field absorbed power before the Stefan factor, eta_cond*P_laser: ${goldakAbsorbedPower_W(params.laserPower_W, etaCond as number)} W`,
+      `** conduction-field absorbed power, eta_cond*P_laser: ${goldakAbsorbedPower_W(params.laserPower_W, etaCond as number)} W (the field power: Eagar & Tsai 1983 and Goldak et al. 1984 take the absorbed power as Q, no latent-heat factor)`,
     );
   } else if (hasEtaCond) {
     lines.push(
       `** conductionAbsorptivity (tabulated flat-plate absorptivity, or ray-traced powder value when warp is present): ${etaCond}`,
-      `** field absorbed power before the Stefan factor depends on the heat source, which is not identified here: eta_cond*P_laser = ${goldakAbsorbedPower_W(params.laserPower_W, etaCond as number)} W (goldak/eagar-tsai) or eta_eff*P_laser = ${Q_W} W (rosenthal)`,
+      `** field absorbed power depends on the heat source, which is not identified here: eta_cond*P_laser = ${goldakAbsorbedPower_W(params.laserPower_W, etaCond as number)} W (goldak/eagar-tsai) or eta_eff*P_laser = ${Q_W} W (rosenthal, before its latent-heat factor)`,
     );
   }
+  const hasFieldPower = typeof params.fieldPower_W === "number" && Number.isFinite(params.fieldPower_W);
+  const exportedFieldPower = hasFieldPower
+    ? `** exported by the solver: fieldPower_W = ${params.fieldPower_W} W` +
+      (typeof params.latentHeatPowerFactor === "number" ? `, latentHeatPowerFactor = ${params.latentHeatPowerFactor}` : "") +
+      (typeof params.stefanNumber === "number" ? `, stefanNumber = ${params.stefanNumber}` : "") +
+      (hasFieldPower && (params.fieldPower_W as number) > 0 ? `; Q/P_field = ${(Q_W / (params.fieldPower_W as number)).toFixed(2)}` : "")
+    : "** fieldPower_W not present in this result (older worker); P_field is not recomputed here.";
   lines.push(
-    "** axes and Q are NOT a calibrated pair: the screening field was driven by P_field = P_absorbed/(1+0.55*Stefan), with P_absorbed = conductionAbsorptivity*P_laser for goldak/eagar-tsai sources and effectiveAbsorptivity*P_laser for rosenthal (python/lpbf_thermal_solver.py); P_field is not exported by the solver and is not recomputed here.",
-    "** field power = P_absorbed/(1+0.55*Stefan); Stefan not exported — Q exceeds the field power by at least the Stefan factor in EVERY regime (and by eta_eff/eta_cond additionally for goldak/eagar-tsai in transition/keyhole cases)",
+    "** axes and Q are NOT a calibrated pair: the screening field was driven by P_field = P_absorbed*latentHeatPowerFactor, with P_absorbed = conductionAbsorptivity*P_laser and factor 1 for goldak/eagar-tsai sources, and P_absorbed = effectiveAbsorptivity*P_laser and factor 1/(1+0.55*Stefan) (uncited screening factor) for rosenthal (python/lpbf_thermal_solver.py).",
+    exportedFieldPower,
     isConductionSource && etaRatio !== undefined
-      ? `** Q = eta_eff*P_laser = ${Q_W} W; for this ${heatSource} source eta_eff/eta_cond = ${etaRatio} here (1.00 means no extra excess beyond the Stefan factor); an FEA with these axes and Q will not reproduce the screening pool.`
+      ? `** Q = eta_eff*P_laser = ${Q_W} W; for this ${heatSource} source the field power is eta_cond*P_laser, so Q exceeds it by eta_eff/eta_cond = ${etaRatio} here (1.00 means Q equals the field power); an FEA with these axes and Q will not reproduce the screening pool.`
       : isRosenthal
-        ? `** Q = eta_eff*P_laser = ${Q_W} W is the rosenthal P_absorbed, so the excess over the field power is the Stefan factor only (no eta_eff/eta_cond ratio for this source); an FEA with these axes and Q will not reproduce the screening pool.`
-        : "** Q = eta_eff*P_laser exceeds the field power by at least the Stefan factor (and by eta_eff/eta_cond additionally for goldak/eagar-tsai in transition/keyhole cases); an FEA with these axes and Q will not reproduce the screening pool.",
+        ? `** Q = eta_eff*P_laser = ${Q_W} W is the rosenthal P_absorbed, so the excess over the field power is the latent-heat factor only (no eta_eff/eta_cond ratio for this source); an FEA with these axes and Q will not reproduce the screening pool.`
+        : "** Q = eta_eff*P_laser can exceed the field power (by the rosenthal latent-heat factor, or by eta_eff/eta_cond for goldak/eagar-tsai in transition/keyhole cases); an FEA with these axes and Q will not reproduce the screening pool.",
     "** a_front (m), a_rear (m), b_halfwidth (m), c_depth (m), Q_Goldak=eta_eff*P_laser (W, absorbed power deposited in the half-space body; f_f+f_r=2, do not halve), eta_eff (informational, ALREADY included in Q; do not apply again in DFLUX)",
     ` ${axis_m(goldak.semiAxis_af_front_um)}, ${axis_m(goldak.semiAxis_ar_rear_um)}, ${axis_m(goldak.semiAxis_b_halfwidth_um)}, ${axis_m(goldak.semiAxis_c_depth_um)}, ${Q_W}, ${params.effectiveAbsorptivity}`,
     `** f_f, f_r (continuity rule f_f = 2*a_f/(a_f+a_r), f_r = 2 - f_f): ${f_f.toFixed(4)}, ${f_r.toFixed(4)}`,

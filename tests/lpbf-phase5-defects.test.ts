@@ -33,16 +33,17 @@ diag_balling = defect_diagnostics(width_um=50, depth_um=30, length_um=200, hatch
 assert diag_balling['balling']['risk'] in ['high', 'moderate'], "Balling risk should be elevated"
 assert diag_balling['balling']['lengthToWidth'] == 4.0
 
-# King/Cunningham Keyhole
+# Keyhole (Wave B LA-3): D/W alone gives no risk verdict; King et al. 2014 sec. 5.2 mode indicator only
 diag_keyhole = defect_diagnostics(width_um=50, depth_um=80, length_um=100, hatch_um=40, layer_um=20)
-assert diag_keyhole['keyhole']['risk'] == 'high', "Keyhole risk should be high"
+assert diag_keyhole['keyhole']['risk'] is None, "D/W alone must not assign a keyhole risk"
+assert diag_keyhole['keyhole']['kingModeIndicator'] == 'keyhole-mode'
 assert diag_keyhole['keyhole']['depthToWidth'] == 1.6
 
 # 3. Aggregation
 samples = [diag_balling, diag_keyhole]
 agg = aggregate_part_porosity(samples, powder_gas_prior_percent=0.01)
 assert agg['status'] == 'aggregated'
-assert agg['mechanismCounts']['keyhole'] == 1
+assert agg['mechanismCounts']['keyhole'] == 0, "a null keyhole risk adds no keyhole porosity"
 assert agg['mechanismCounts']['balling'] == 1
 assert agg['relativeDensity']['mean_percent'] < 100.0
 

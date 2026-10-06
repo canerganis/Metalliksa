@@ -63,6 +63,12 @@ export interface SimulationResult {
     sourceIntegration: string; stabilityLimit: string; minimumCapturedSourceFraction: number;
     maximumSourceRenormalization: number; maximumSurfaceOffset_um: number;
     maximumTimestep_s: number; maximumEnthalpyIncrement_K: number; sourceTimestepRetries: number;
+    /** Wave B LT-3: G, R and cooling rate are single-mesh values; status says how many cells span the pool. */
+    solidificationResolution?: {
+      methodId: string; mesh_um: number; cellsAcrossWidth: number; cellsAcrossDepth: number;
+      gradientStencilCells: number; meshVerified: false;
+      status: "not-available" | "stencil-spans-melt-pool" | "single-mesh-unverified"; note: string;
+    };
     acceptedTimestepDistribution?: {
       methodId: "accepted-timestep-distribution-v1"; count: number; total_s: number; sumSquared_s2: number;
       mean_s: number; minimum_s: number; p50_s: number; p90_s: number; p99_s: number; maximum_s: number;
@@ -82,6 +88,8 @@ export interface SimulationResult {
     modelId: string; scope: string; status: string; limitations: string[];
     lackOfFusion: { status: string; ellipseIndex: number | null; signedMargin: number | null;
       overlapDepth_um: number | null; maximumHatch_um: number | null; riskScreened: boolean | null; reason: string | null };
+    /** Wave B LA-3: no D/W risk verdict (null; archived pre-Wave-B runs may carry a string); King et al. 2014 sec. 5.2 mode label only. */
+    keyhole?: { depthToWidth: number | null; risk: string | null; kingModeIndicator?: "keyhole-mode" | "conduction-mode" | null; reason: string };
   } | null; // null only for bare-plate runs (enforced by parseSimulationJob)
   schemaVersion: 1; requestedMode: SimulationMode; effectiveMode: SimulationMode;
   requestedBackend?: SimulationInput["backend"];

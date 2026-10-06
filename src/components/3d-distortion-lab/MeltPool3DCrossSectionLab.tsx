@@ -40,6 +40,7 @@ import {
   contourToCutFace,
   disposeObject3D,
 } from "./meltPool3DGeometry";
+import { colourScalePeak_C, peakTemperatureBasisLabel } from "../../utils/peakTemperatureDisplay";
 import {
   MELT_POOL_LITERATURE_CASES,
   isLoadableLiteratureCase,
@@ -1126,6 +1127,11 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
                     <span className="text-slate-400">Field peak (conduction):</span>
                     <span className="font-bold text-amber-300">{pyResult.hydrodynamicsAndRecoil.peakTemperature_C} °C</span>
                   </div>
+                  {peakTemperatureBasisLabel(pyResult) && (
+                    <div className="py-0.5 border-b border-slate-800/60 text-[10px] text-slate-500" data-testid="peak-temperature-basis">
+                      Field peak basis: {peakTemperatureBasisLabel(pyResult)}; colour scale capped at {Math.round(colourScalePeak_C(pyResult, pyResult.thermalSlices?.liquidus_C ?? 1336))} °C.
+                    </div>
+                  )}
                   <div className="flex justify-between py-0.5 border-b border-slate-800/60">
                     <span className="text-slate-400">Surface T proxy (screening cap):</span>
                     <span className="font-bold text-amber-200">

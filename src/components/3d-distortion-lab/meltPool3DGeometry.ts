@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import type { PythonLPBFResult } from "../../services/pythonComputationService";
+import { colourScalePeak_C } from "../../utils/peakTemperatureDisplay";
 
 export function interpolateHalfWidth(
   topDown: Array<{ x_um: number; y_um: number }>,
@@ -67,7 +68,8 @@ export function buildLoftedMeltPoolGeometry(
   const Tliq = result.thermalSlices?.liquidus_C ?? 1336;
   const Tsol = result.thermalSlices?.solidus_C ?? 1260;
   const Thaz = result.thermalSlices?.haz_C ?? Tsol * 0.7;
-  const Tpeak = result.hydrodynamicsAndRecoil.peakTemperature_C;
+  // Colour-scale top, capped (D10); the uncapped peak is displayed as text elsewhere.
+  const Tpeak = colourScalePeak_C(result, Tliq);
   const xz = result.thermalSlices?.xz;
   const isKeyhole = result.meltPoolGeometry.regime.startsWith("Keyhole");
 

@@ -1627,7 +1627,11 @@ export interface PythonLPBFResult {
     fabbroDepth_um?: number;
     aspectRatio_e_over_d?: number;
     peclet?: number;
+    /** Fabbro m=2.4, n=3 fit band 2 <= Pe <= 10 (Wave B LA-4). */
+    pecletInFitRange?: boolean;
+    basis?: string;
     absorptivity?: number;
+    absorptivityBasis?: string;
     doi?: string;
   };
   marangoniModel?: {
@@ -1635,7 +1639,9 @@ export interface PythonLPBFResult {
     flowDirection?: string;
     dGamma_dT_N_mK?: number;
     sulfur_ppm?: number;
+    /** DebRoy & David 1995 Eq. 8 order-of-magnitude estimate (Wave B LA-1). */
     surfaceVelocity_m_s?: number;
+    surfaceVelocityDoi?: string;
     pecletMarangoni?: number;
     aspectNote?: string;
     doi?: string;
@@ -1669,6 +1675,11 @@ export interface PythonLPBFResult {
     /** "flat-plate" on every machine unless the GPU powder ray tracer was requested explicitly. */
     absorptionModel?: "flat-plate" | "powder-raytrace";
     thermalSliceBackend?: "cpu" | "warp";
+    stefanNumber?: number;
+    /** 1/(1+0.55 St) for rosenthal (uncited screening factor), 1 for goldak/eagar-tsai (Wave B LA-5). */
+    latentHeatPowerFactor?: number;
+    /** Power that drove the screening field: P_absorbed * latentHeatPowerFactor. */
+    fieldPower_W?: number;
   };
   meltPoolGeometry: {
     length_um: number;
@@ -1693,8 +1704,15 @@ export interface PythonLPBFResult {
     };
   };
   hydrodynamicsAndRecoil: {
+    /** Beam-centre value T(0,0,0) of the conduction field; can exceed T_vap by far (see peakTemperatureBasis). */
     peakTemperature_C: number;
+    /** "regularised-singular-source-value" (Rosenthal) or "distributed-source-conduction-centre-value" (ET/Goldak). */
+    peakTemperatureBasis?: string;
+    peakTemperatureNote?: string;
+    peakExceedsVaporization?: boolean;
+    /** min(peak, T_vap); the value recoil and Marangoni read. */
     surfaceTemperature_C?: number;
+    surfaceTemperatureBasis?: string;
     knudsenRecoilPressure_kPa: number;
     marangoniNumber: number;
     marangoniGeometrySource?: string;

@@ -81,14 +81,26 @@ def microstructure_fixture_blocks():
 
     common = {"beamDiameter_um": 80, "layerThickness_um": 40, "hatchSpacing_um": 110, "bypassCache": True}
     available = run_job({"alloyId": "in718", "laserPower_W": 285, "scanSpeed_mm_s": 960, **common})
-    fallback = run_job({"alloyId": "in718", "laserPower_W": 60, "scanSpeed_mm_s": 2000, **common})
+    fallback = run_job({"alloyId": "in718", "laserPower_W": 20, "scanSpeed_mm_s": 2000, **common})
+    # Wave B KS-1: the clamp-floor state is unreachable on real builds now, so the degenerate block is
+    # projected from the real IN718 100/960 thermal result with its kinetics moved onto the floors.
     degenerate = run_job({"alloyId": "in718", "laserPower_W": 100, "scanSpeed_mm_s": 960, **common})
     return {
         "available_in718_285_960": available["microstructure"],
-        "screening_fallback_in718_60_2000": fallback["microstructure"],
-        "degenerate_floor_in718_100_960": degenerate["microstructure"],
+        "screening_fallback_in718_20_2000": fallback["microstructure"],
+        "degenerate_floor_synthetic": project_build_job_microstructure(_floored_thermal(degenerate["thermal"])),
         "unavailable_no_kinetics": project_build_job_microstructure({}),
     }
+
+
+def _floored_thermal(thermal):
+    """SYNTHETIC: a real thermal result with R and the cooling rate set to the front-mapper clamp floors."""
+    import copy
+
+    floored = copy.deepcopy(thermal)
+    floored["solidificationKinetics"].update(
+        usedFieldMap=True, solidificationRate_R_mm_s=0.1, solidificationRate_R_m_s=1.0e-4, coolingRate_K_s=1.0)
+    return floored
 
 
 def check_microstructure_fixture():
@@ -214,11 +226,13 @@ def check_build_job_kinetics(ti):
     placeholder = build_rate_martensite("in718", "Inconel 718", steel["calphadVsKineticsGap"], {"status": "selected"})
     assert placeholder["status"] == "unavailable" and "non-physical placeholder" in placeholder["reason"]
 
-    # Real degenerate-front build (B1 regression): IN718 150 W / 1500 mm/s reports the 1 K/s floor.
+    # B1 regression: IN718 150 W / 1500 mm/s reported the 1 K/s floor until the Wave B bump (LA-2 resolves the
+    # pool and KS-1 samples only the solidifying front: about 5.5e6 K/s now). The degenerate-floor path keeps
+    # its synthetic coverage above (floor_rate loop).
     fast = run_job({"alloyId": "in718", "laserPower_W": 150, "scanSpeed_mm_s": 1500, "beamDiameter_um": 80,
                     "layerThickness_um": 30, "hatchSpacing_um": 100, "bypassCache": True})
-    assert fast["thermal"]["solidificationKinetics"]["coolingRate_K_s"] == 1.0
-    assert fast["kinetics"]["status"] == "unavailable" and fast["kinetics"]["reason"] == DEGENERATE_FRONT_REASON
+    assert fast["thermal"]["solidificationKinetics"]["coolingRate_K_s"] > 2000.0
+    assert fast["kinetics"]["status"] == "unavailable" and fast["kinetics"]["reason"] != DEGENERATE_FRONT_REASON
     assert fast["kinetics"]["buildCoolingRateCctRow"] is None
     # A non-degenerate IN718 build: unavailable because the kinetics model is steel-only.
     slow = run_job({"alloyId": "in718", "laserPower_W": 220, "scanSpeed_mm_s": 900, "beamDiameter_um": 80,
@@ -322,8 +336,9 @@ FALLBACK_REASON = (
 def check_build_job_microstructure_fallback():
     """Low power / high speed cases fall back to the tail-length heuristic: labelled, not 'available'."""
     cases = (
-        {"alloyId": "in718", "laserPower_W": 60, "scanSpeed_mm_s": 2000},
-        {"alloyId": "ti6al4v", "laserPower_W": 40, "scanSpeed_mm_s": 1500},
+        # Wave B LA-2/KS-1: 60/2000 (IN718) and 40/1500 (Ti64) resolve the field map now.
+        {"alloyId": "in718", "laserPower_W": 20, "scanSpeed_mm_s": 2000},
+        {"alloyId": "ti6al4v", "laserPower_W": 15, "scanSpeed_mm_s": 1500},
     )
     for case in cases:
         job = run_job({**case, "beamDiameter_um": 80, "layerThickness_um": 40,
@@ -353,15 +368,16 @@ DEGENERATE_FLOOR_REASON = (
 
 
 def check_build_job_microstructure_degenerate_floor():
-    """IN718 100 W / 960 mm/s: the frozen front mapper clamps R and cooling to their floors. (285 W / 1200 mm/s
-    was the case before the 2026-10-06 tier-2 bump; the peak-anchored extent search resolves it now.)"""
+    """Degenerate-floor labelling. Real case at Tier 2: IN718 100 W / 960 mm/s; after Wave B KS-1 (only
+    solidifying n_x > 0 samples) it is available, and the floor state is exercised synthetically."""
     job = run_job({"alloyId": "in718", "laserPower_W": 100, "scanSpeed_mm_s": 960, "beamDiameter_um": 80,
                    "layerThickness_um": 40, "hatchSpacing_um": 110, "bypassCache": True})
-    kin = job["thermal"]["solidificationKinetics"]
-    micro = job["microstructure"]
-    # The mapper reports usedFieldMap True, yet R and cooling are the 1e-4 m/s and 1 K/s clamp floors.
-    assert kin["usedFieldMap"] is True and kin["gradientSource"] != "tail-length-fallback", kin
-    assert kin["solidificationRate_R_mm_s"] <= 0.1 and kin["coolingRate_K_s"] <= 1.0, kin
+    assert job["microstructure"]["status"] == "available", job["microstructure"]["status"]
+    from lpbf_solidification_microstructure import project_build_job_microstructure
+
+    floored = _floored_thermal(job["thermal"])
+    kin = floored["solidificationKinetics"]
+    micro = project_build_job_microstructure(floored)
     assert micro["status"] == "degenerate-floor", micro["status"]
     assert micro["reason"] == DEGENERATE_FLOOR_REASON
     assert micro["usedFieldMap"] is True
@@ -373,8 +389,6 @@ def check_build_job_microstructure_degenerate_floor():
     assert micro["SDAS_um"] == kin["secondaryDendriteArmSpacing_SDAS_um"]
     assert micro["morphology"] == kin["microstructureMorphology"]
     assert "not a computed result" in micro["disclaimer"]
-    print("  degenerate-floor in718 100 W / 960 mm/s:", "R", micro["R_m_s"], "cooling", micro["coolingRate_K_s"],
-          "G", micro["G_K_m"], "PDAS", micro["PDAS_um"], "SDAS", micro["SDAS_um"], micro["morphology"], micro["status"])
 
     # Synthetic: field map used, R above the floor but cooling on its floor, and vice versa.
     from lpbf_solidification_microstructure import project_build_job_microstructure
@@ -398,10 +412,10 @@ def check_extent_status_consumers():
     common = {"alloyId": "in718", "beamDiameter_um": 80, "layerThickness_um": 30,
               "hatchSpacing_um": 100, "bypassCache": True}
 
-    # (a) IN718 60 W / 1000 mm/s / d80: the Rosenthal field stays below liquidus even at its axial peak.
-    # (200 W / 1000 mm/s was this case before the 2026-10-06 tier-2 bump: the peak-anchored extent search
-    # resolves it now. 60 W is below the IN718 literature box, so literature_pv warns.)
-    heur = run_job({**common, "laserPower_W": 60, "scanSpeed_mm_s": 1000})
+    # (a) IN718 20 W / 1000 mm/s / d80: the Rosenthal field stays below liquidus even at its axial peak.
+    # (200 W / 1000 mm/s was this case before the 2026-10-06 tier-2 bump and 60 W before the Wave B LA-2
+    # bump: both resolve now. 20 W is below the IN718 literature box, so literature_pv warns.)
+    heur = run_job({**common, "laserPower_W": 20, "scanSpeed_mm_s": 1000})
     geo = heur["thermal"]["meltPoolGeometry"]
     assert geo["extentStatus"] == "heuristic-width-fallback", geo["extentStatus"]
     v = heur["verdict"]
@@ -543,8 +557,9 @@ def main():
         "lpbf-build-job-extent-status-v6",
         "lpbf-build-job-kinetics-li1998-extent-v7",
         "lpbf-build-job-kinetics-li1998-extent-v8",
+        "lpbf-build-job-flat-absorptivity-peak-extent-v10",
     ), BUILD_JOB_SOLVER_REVISION
-    assert BUILD_JOB_SOLVER_REVISION == "lpbf-build-job-flat-absorptivity-peak-extent-v10"
+    assert BUILD_JOB_SOLVER_REVISION == "lpbf-build-job-waveb-front-field-marangoni-v11"
     assert ti["processSeed"] == 42
     assert ti["scanStrategy"]["id"] == "stripe"
     assert ti["uq"] is None  # lazy default

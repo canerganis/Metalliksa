@@ -35,6 +35,7 @@ import { isComputedMeltPoolExtent, meltPoolExtentInfo } from "../../utils/meltPo
 import { BuildJobKineticsPanel } from "./BuildJobKineticsPanel";
 import { BuildJobMicrostructurePanel } from "./BuildJobMicrostructurePanel";
 import { stressProxyYieldCheck } from "../../utils/residualStressYieldCheck";
+import { peakTemperatureBasisLabel } from "../../utils/peakTemperatureDisplay";
 
 interface Props {
   onOpenSlicer?: () => void;
@@ -536,7 +537,7 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
                   stress_MPa={thermal.defectDiagnostics.effectiveResidualStress_MPa}
                   yieldStrength_MPa={specimen.yieldStrength_25C_MPa}
                 />
-                <Metric label="Peak T (°C)" value={String(thermal.hydrodynamicsAndRecoil.peakTemperature_C)} ok />
+                <Metric label="Peak T (°C)" value={String(thermal.hydrodynamicsAndRecoil.peakTemperature_C)} ok hint={peakTemperatureBasisLabel(thermal) ?? undefined} />
                 <Metric label="Preheat (°C)" value={String(lpbf.preheatTemp_C)} ok={lpbf.preheatTemp_C >= 80} />
               </div>
               <p className="text-[10px] text-slate-500">

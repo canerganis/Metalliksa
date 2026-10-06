@@ -18,7 +18,8 @@ test("available (field map): numbers, correlation names, modelId · gradientSour
   const markup = html("available_in718_285_960");
   const t = text(markup);
   assert.match(markup, /data-micro-status="available"/);
-  assert.ok(t.includes("0.66") && t.includes("0.51"), t);
+  // Wave B (LA-2 field, KS-1 solidifying-front samples): PDAS/SDAS 0.66/0.51 -> 0.67/0.47 um.
+  assert.ok(t.includes("0.67") && t.includes("0.47"), t);
   assert.ok(t.includes("Hunt–Lu 1996"), t);
   // modelId and gradientSource are the same string on the field-map path: the source is shown once, not repeated.
   assert.equal(t.split("solidification-front-v1").length - 1, 1, t);
@@ -36,23 +37,23 @@ test("available (field map): numbers, correlation names, modelId · gradientSour
 });
 
 test("screening-fallback: amber note with Python's reason, tail-length-fallback shown, numbers still rendered", () => {
-  const markup = html("screening_fallback_in718_60_2000");
+  const markup = html("screening_fallback_in718_20_2000");
   const t = text(markup);
   assert.match(markup, /data-micro-status="screening-fallback"/);
   assert.match(markup, /data-micro-note="screening-fallback"[^>]*>/);
-  assert.ok(t.includes(BLOCKS.screening_fallback_in718_60_2000.reason), t);
+  assert.ok(t.includes(BLOCKS.screening_fallback_in718_20_2000.reason), t);
   assert.ok(t.includes("tail-length-fallback"), t);
-  assert.ok(t.includes("2.67"), t);
+  assert.ok(t.includes("0.33"), t);
   assert.ok(t.includes("Source: solidification-front-v1 · tail-length-fallback"), t);
   assert.equal(t.split("tail-length-fallback").length - 1, 1, t); // only in the single source line
   assert.doesNotMatch(markup, /data-micro-note="regime"/);
 });
 
 test("degenerate-floor: rendered like unavailable (reason, no PDAS/SDAS/morphology/cooling as results)", () => {
-  const block = BLOCKS.degenerate_floor_in718_100_960;
+  const block = BLOCKS.degenerate_floor_synthetic;
   assert.equal(block.status, "degenerate-floor");
   assert.equal(block.coolingRate_K_s, 1);
-  const markup = html("degenerate_floor_in718_100_960");
+  const markup = html("degenerate_floor_synthetic");
   const t = text(markup);
   assert.match(markup, /data-micro-status="degenerate-floor"/);
   assert.match(markup, /data-micro-note="degenerate-floor"/);
