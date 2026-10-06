@@ -247,12 +247,16 @@ class BaseBlobTest(unittest.TestCase):
         # eyewash removal: the fixed-constant coating timeline and Nyquist spectra are gone from the output
         nyquist = re.compile(r"coating(Nyquist|Timeline).*")
         fixed = {"corrosionRate_mm_yr", "corrosionRate_mpy", "polarizationResistance_Rp_Ohm_cm2", "alloyId",
-                 "equivalentWeight_g_eq", "density_g_cm3", "equivalentWeightNote"}
+                 "equivalentWeight_g_eq", "density_g_cm3", "equivalentWeightNote",
+                 # eyewash removal: "Immune / Wide Passivity Margin" claimed immunity from an in-house threshold
+                 "pittingAssessment"}
         self.assertEqual({k for k in by_key if not nyquist.fullmatch(k)}, fixed,
                          drift_report.render("battery_corrosion_eis_solver", rows, 20))
         for key in ("alloyId", "equivalentWeight_g_eq", "density_g_cm3", "equivalentWeightNote"):
             self.assertEqual(by_key[key]["kind"], "added", key)
         self.assertTrue(all(r["kind"] == "removed" for k, r in by_key.items() if nyquist.fullmatch(k)))
+        self.assertEqual(old["stdout"]["pittingAssessment"], "Immune / Wide Passivity Margin")
+        self.assertEqual(new["stdout"]["pittingAssessment"], "Wide passivity margin (dE_pit >= 0.30 V, in-house threshold)")
         k1 = (1e-6 * 31557600.0 * 10.0) / pc.FARADAY.value
 
         def sig6(x):
