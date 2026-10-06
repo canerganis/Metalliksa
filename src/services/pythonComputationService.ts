@@ -1963,7 +1963,9 @@ export interface PythonICMEMultiScaleResult {
       meanPrecipitateRadius_nm: number;
       volumeFractionPct: number;
       interparticleSpacing_nm: number;
-      shearingStrength_MPa: number;
+      /** null when the weak pair-coupling expression is <= 0 (see cuttingContributionStatus). */
+      shearingStrength_MPa: number | null;
+      cuttingContributionStatus?: string | null;
       orowanStrength_MPa: number;
       activeMechanism: string;
       effectivePrecipitationStrengthening_MPa: number;
@@ -2109,14 +2111,33 @@ export function fallbackClientTafelCorrosionRate(
   const densityIn = positive(payload.density_g_cm3);
   const ewIn = positive(payload.equivalentWeight);
   const eCorr_V = typeof payload.eCorr_V === "number" && Number.isFinite(payload.eCorr_V) ? payload.eCorr_V : null;
-  const specimenArea = Math.max(1e-4, payload.specimenAreaCm2 || 1.0);
-  const initialThickness = Math.max(0.1, payload.initialThicknessMm || 5.0);
-  const allowableLoss = Math.max(0.01, payload.allowableLossMm || 1.5);
-  const tempC = payload.temperatureC ?? 25.0;
+  // Scenario inputs follow python _scenario_number (EUQ-5): only an absent value takes the documented default;
+  // a supplied non-finite, 0 or negative thickness/allowance, a 0 area or a temperature at or below absolute
+  // zero makes the result unavailable (Python raises a ValidationError) instead of being replaced or clamped.
+  const unavailable: Record<string, string> = {};
+  const scenario = (
+    raw: number | null | undefined,
+    fallback: number,
+    label: string,
+    ok: (v: number) => boolean,
+    rule: string
+  ): number => {
+    if (raw === undefined || raw === null) return fallback;
+    if (typeof raw !== "number" || !Number.isFinite(raw) || !ok(raw)) {
+      unavailable[label] = `${label} must be ${rule} (received ${String(raw)})`;
+      // Echo what was supplied (not the default) in the unavailable result.
+      return typeof raw === "number" ? raw : fallback;
+    }
+    return raw;
+  };
+  const areaIn = scenario(payload.specimenAreaCm2, 1.0, "specimenAreaCm2", (v) => v !== 0, "a finite number other than 0");
+  const specimenArea = "specimenAreaCm2" in unavailable ? areaIn : Math.max(1e-4, Math.abs(areaIn));
+  const initialThickness = scenario(payload.initialThicknessMm, 5.0, "initialThicknessMm", (v) => v > 0, "a finite number > 0");
+  const allowableLoss = scenario(payload.allowableLossMm, 1.5, "allowableLossMm", (v) => v > 0, "a finite number > 0");
+  const tempC = scenario(payload.temperatureC, 25.0, "temperatureC", (v) => v > -273.15, "above absolute zero (-273.15 C)");
   const alloyName = payload.alloyName || payload.alloyId || "Unspecified substrate";
   const alloyId = payload.alloyId || "";
-
-  const unavailable: Record<string, string> = {};
+  const scenarioInvalid = Object.keys(unavailable).length > 0;
   if (iCorrIn === null) {
     unavailable.iCorr_uA_cm2 =
       payload.iCorr_uA_cm2 === undefined || payload.iCorr_uA_cm2 === null
@@ -2127,7 +2148,7 @@ export function fallbackClientTafelCorrosionRate(
     unavailable.substrate =
       "density_g_cm3 and equivalentWeight must be supplied: the client formula cannot resolve an alloy preset";
   }
-  if (iCorrIn === null || densityIn === null || ewIn === null) {
+  if (scenarioInvalid || iCorrIn === null || densityIn === null || ewIn === null) {
     return unavailableTafelCorrosionRate(payload, alloyId, alloyName, eCorr_V, specimenArea, tempC, initialThickness, allowableLoss, unavailable);
   }
 

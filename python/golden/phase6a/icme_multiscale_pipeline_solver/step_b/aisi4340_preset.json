@@ -80,6 +80,12 @@
    "old": "Dislocation Particle Shearing (Friedel-Gere Cutting)"
   },
   {
+   "key": "scale2_microstructureKinetics.precipitationKinetics.cuttingContributionStatus",
+   "kind": "added",
+   "new": null,
+   "old": null
+  },
+  {
    "abs": -46.6,
    "key": "scale2_microstructureKinetics.precipitationKinetics.effectivePrecipitationStrengthening_MPa",
    "kind": "numeric",
@@ -2157,7 +2163,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "b0d77480750d9f68679f343d3c6a54d0a500db8c",
+ "gitHead": "e61ae23f11a6f7ea2692f26acb0db53acd0c145c",
  "input": {
   "agingTemp_C": 480,
   "agingTime_h": 2,
@@ -2190,7 +2196,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "icme_multiscale_pipeline_solver",
  "solverFile": "python/icme_multiscale_pipeline_solver.py",
- "solverSha256": "3d38d4e2a23a3a86487bbdcd859ddad7c28a79a52e2da6bd6cac6de72f61d9b5",
+ "solverSha256": "3b7ec94b60177228d5cf025c9d6b0eaad0d1ed9fd2c55e663e53c305985894d9",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {
@@ -2310,6 +2316,7 @@
     "activeMechanism": "Dislocation Particle Shearing (Brown-Ham weak pair-coupling cutting)",
     "agingTemp_C": 480.0,
     "agingTime_h": 2.0,
+    "cuttingContributionStatus": null,
     "effectivePrecipitationStrengthening_MPa": 63.1,
     "interparticleSpacing_nm": 6.9,
     "meanPrecipitateRadius_nm": 1.5,

@@ -98,6 +98,30 @@ class CurrentUnitTests(unittest.TestCase):
         self.assertEqual(r["currentInput"]["keys"], ["currentDensity_uA_cm2"])
         self.assertIsNone(r["currentInput"]["currentUnit"])
 
+    def test_point_log_current_next_to_bare_current_does_not_override_the_unit(self):
+        # Review residual of EUQ-3: 'current' in A (currentUnit "A") plus a logCurrentDensity computed in A
+        # (log10 of the ampere value, about -6 for 1 uA). The fit used the point log as given, so i_corr came
+        # out 1e6 too small (0.0 uA/cm2 after rounding, logIcorr -6.04); it now follows currentUnit and
+        # equals the fit of the same data without the point log.
+        ref = tafel.fit_tafel_curve({"points": _bv_points(1.0), "alloyId": "ss316l", "currentUnit": "uA"})
+        pts = []
+        for p in _bv_points(1.0):
+            amps = p["current"] * 1e-6
+            pts.append({"potential": p["potential"], "current": amps, "logCurrentDensity": math.log10(max(amps, 1e-30))})
+        r = tafel.fit_tafel_curve({"points": pts, "alloyId": "ss316l", "currentUnit": "A"})
+        self.assertGreater(r["iCorr_uA_cm2"], 0.5)
+        self.assertAlmostEqual(r["iCorr_uA_cm2"], ref["iCorr_uA_cm2"], places=4)
+        self.assertAlmostEqual(r["logIcorr"], ref["logIcorr"], places=4)
+
+    def test_point_log_current_next_to_a_density_key_is_still_used(self):
+        # Next to a density key (fixed unit) the point log is still the fit input: a log shifted by +1
+        # moves i_corr by a factor 10.
+        base = [{"potential": p["potential"], "currentDensity_uA_cm2": p["current"]} for p in _bv_points(1.0)]
+        ref = tafel.fit_tafel_curve({"points": base, "alloyId": "ss316l"})
+        pts = [dict(b, logCurrentDensity=math.log10(max(b["currentDensity_uA_cm2"], 1e-9)) + 1.0) for b in base]
+        r = tafel.fit_tafel_curve({"points": pts, "alloyId": "ss316l"})
+        self.assertAlmostEqual(r["logIcorr"], ref["logIcorr"] + 1.0, places=2)
+
 
 class ScenarioInputTests(unittest.TestCase):
     """EUQ-5: a supplied 0 was replaced by the default (temperatureC = 0 -> 25 C)."""

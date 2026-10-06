@@ -56,6 +56,24 @@ class BrownHamCuttingTest(unittest.TestCase):
                 expected = min(850.0, _brown_ham_MPa(out))
                 self.assertAlmostEqual(kin["shearingStrength_MPa"], expected, delta=0.01 * max(1.0, expected) + 0.1)
 
+    def test_nonpositive_weak_coupling_bracket_is_not_reported_as_cutting(self):
+        # EUQ-10 review: r = 1.5 nm, f = 0.35 gives sqrt(8*gamma*f*r/(pi*T)) < f. The old code floored the
+        # bracket to 0 and reported "Brown-Ham weak pair-coupling cutting" with 0.0 MPa and no note.
+        out = _run({"composition_wt": {"Ni": 80, "Al": 5, "Ti": 5}, "agingTemp_C": 600, "agingTime_h": 0.1})
+        kin = out["scale2_microstructureKinetics"]["precipitationKinetics"]
+        self.assertEqual(kin["meanPrecipitateRadius_nm"], 1.5)
+        self.assertEqual(kin["volumeFractionPct"], 35.0)
+        self.assertEqual(_brown_ham_MPa(out), 0.0)  # bracket <= 0
+        self.assertIsNone(kin["shearingStrength_MPa"])
+        self.assertTrue(kin["cuttingContributionStatus"].startswith("unavailable_weak_coupling_not_applicable"))
+        self.assertNotIn("Shearing", kin["activeMechanism"])
+        self.assertTrue(kin["activeMechanism"].startswith("Not estimated"))
+        self.assertEqual(kin["effectivePrecipitationStrengthening_MPa"], 0.0)
+
+    def test_positive_bracket_has_no_cutting_status(self):
+        kin = _run()["scale2_microstructureKinetics"]["precipitationKinetics"]
+        self.assertIsNone(kin["cuttingContributionStatus"])
+
     def test_comment_no_longer_claims_pi_g_b2(self):
         with open(icme.__file__, encoding="utf-8") as fh:
             src = fh.read()

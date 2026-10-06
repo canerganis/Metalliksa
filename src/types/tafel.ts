@@ -107,7 +107,9 @@ export interface TafelFitResult {
   pittingPotentialEpit_V?: number | null;
   passivationCurrentIpass_uA?: number | null;
 
-  // Severity and Assessment (null when no corrosion rate is available)
+  // Severity and Assessment (null when no corrosion rate is available). In-house four-band screen
+  // (< 0.02 / < 0.1 / < 0.5 / >= 0.5 mm/y), not a cited scale and not Fontana's six bands used by the
+  // annual-rate engine (python/tafel_corrosion_rate_solver.py).
   severity: "Immune / Highly Resistant" | "Passivated / Good" | "Moderate (Caution)" | "Severe Rapid Corrosion" | null;
   astmClassification: string | null;
 

@@ -13,7 +13,8 @@ because each one is checked exactly here, never by a tolerance:
   bounds, two description strings; all texts pinned here, not imported from the solver).
 - icme_multiscale_pipeline_solver (EUQ-9, EUQ-10): the oracle is the pinned pre-fix solver blob
   (ICME_ORACLE_REVISION, bound by sha256) with exactly the source replacements in ICME_SOURCE_PATCH
-  (Brown-Ham '- f' term, Abaqus density in tonne/mm^3 + units line, mechanism label). A drift row is an
+  (Brown-Ham '- f' term, Abaqus density in tonne/mm^3 + units line, mechanism label; review follow-up: a
+  weak-coupling bracket <= 0 gives shearingStrength_MPa null + cuttingContributionStatus, never 0 MPa cutting). A drift row is an
   audit row when its key differs between the unpatched and the patched blob run; it is accepted only if the
   whole re-blessed document equals the patched run and the row's new value is that document's leaf.
 """
@@ -160,12 +161,33 @@ ICME_ORACLE_SHA256 = "305d1324a6e5e3f8ddc9e321ce64bb6842eeedc3996f2ba5969ecfda58
 ICME_SOURCE_PATCH = (
     ("    # Shear stress: delta_sigma_cut = M * (gamma_apb / (2*b)) * sqrt( (8 * gamma_apb * r * f) / (pi * G * b^2) )\n",
      ""),
-    ("    delta_sigma_cutting_MPa = (taylor_M * (gamma_apb_J_m2 / (2.0 * b_meters)) * math.sqrt(max(1e-6, ratio_term))) / 1e6\n",
-     # Brown-Ham weak pair coupling (Ardell 1985): (gamma/2b) * [sqrt(8 gamma f r / (pi T)) - f], T = G b^2 / 2
-     "    delta_sigma_cutting_MPa = (taylor_M * (gamma_apb_J_m2 / (2.0 * b_meters))"
-     " * max(0.0, math.sqrt(ratio_term) - volume_frac_precip)) / 1e6\n"),
-    ('        precip_mechanism = "Dislocation Particle Shearing (Friedel-Gere Cutting)"\n',
+    ("    delta_sigma_cutting_MPa = (taylor_M * (gamma_apb_J_m2 / (2.0 * b_meters)) * math.sqrt(max(1e-6, ratio_term))) / 1e6\n"
+     "    delta_sigma_cutting_MPa = min(850.0, delta_sigma_cutting_MPa)\n",
+     # Brown-Ham weak pair coupling (Ardell 1985): (gamma/2b) * [sqrt(8 gamma f r / (pi T)) - f], T = G b^2 / 2;
+     # a bracket <= 0 (weak coupling not applicable) gives no cutting estimate (null + status), never 0 MPa.
+     "    brown_ham_bracket = math.sqrt(ratio_term) - volume_frac_precip\n"
+     "    cutting_estimated = brown_ham_bracket > 0.0\n"
+     "    cutting_status = None\n"
+     "    if cutting_estimated:\n"
+     "        delta_sigma_cutting_MPa = (taylor_M * (gamma_apb_J_m2 / (2.0 * b_meters)) * brown_ham_bracket) / 1e6\n"
+     "        delta_sigma_cutting_MPa = min(850.0, delta_sigma_cutting_MPa)\n"
+     "    else:\n"
+     "        delta_sigma_cutting_MPa = None\n"
+     "        cutting_status = (\n"
+     "            \"unavailable_weak_coupling_not_applicable: sqrt(8*gamma*f*r/(pi*T)) <= f at \"\n"
+     "            f\"r = {r_nm:.2f} nm, f = {volume_frac_precip:.3f}; the Brown-Ham weak pair-coupling expression is \"\n"
+     "            \"<= 0 here, so the cutting contribution is not estimated and the precipitation term is left out \"\n"
+     "            \"of the yield strength (0 MPa added, not a cutting estimate)\")\n"),
+    ('    if delta_sigma_cutting_MPa < delta_sigma_orowan_MPa:\n'
+     '        precip_mechanism = "Dislocation Particle Shearing (Friedel-Gere Cutting)"\n',
+     '    if not cutting_estimated:\n'
+     '        precip_mechanism = "Not estimated (weak pair-coupling cutting expression <= 0; see cuttingContributionStatus)"\n'
+     '        delta_sigma_precip_MPa = 0.0\n'
+     '    elif delta_sigma_cutting_MPa < delta_sigma_orowan_MPa:\n'
      '        precip_mechanism = "Dislocation Particle Shearing (Brown-Ham weak pair-coupling cutting)"\n'),
+    ('                "shearingStrength_MPa": round(delta_sigma_cutting_MPa, 1),\n',
+     '                "shearingStrength_MPa": None if delta_sigma_cutting_MPa is None else round(delta_sigma_cutting_MPa, 1),\n'
+     '                "cuttingContributionStatus": cutting_status,\n'),
     ("** MetalliX Multi-Scale ICME ILLUSTRATIVE Card (uncalibrated, not validated) for {alloy_name}\n"
      "*MATERIAL, NAME={alloy_name.replace(' ', '_').upper()}\n*DENSITY\n{density_g_cm3 * 1000.0:.2f}\n",
      # Abaqus without built-in units: mm-N-s-tonne-MPa needs the density in tonne/mm^3

@@ -776,7 +776,12 @@ def fit_tafel_curve(data: dict) -> dict:
                                   "no value is invented", {"type": "NoneType", "index": idx})
 
         curr_uA = max(1e-9, curr_uA)
-        log_i = float(pt.get("logCurrentDensity") or math.log10(curr_uA))
+        # A point-level logCurrentDensity is used only next to a density key (currentDensity_uA_cm2 /
+        # current_uA), whose unit is fixed. Next to the bare 'current' key it is ignored: its unit is not
+        # stated, and the fit must follow the dataset's currentUnit (EUQ-3 review). A supplied 0.0 is a
+        # value (1 uA/cm2), not a missing one.
+        log_given = pt.get("logCurrentDensity") if density_key is not None else None
+        log_i = float(log_given) if log_given is not None else math.log10(curr_uA)
         norm_points.append({
             "potential": round(pot, 4),
             "currentDensity_uA_cm2": round(curr_uA, 5),

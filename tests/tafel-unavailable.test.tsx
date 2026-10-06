@@ -285,6 +285,32 @@ test("client annual-rate fallback: missing slopes leave only Stern-Geary B and R
   assert.equal(full.temperatureSensitivity.length, 9);
 });
 
+test("client annual-rate fallback: a supplied 0 thickness / allowance / area is unavailable, not the default (EUQ-5)", () => {
+  const base = { iCorr_uA_cm2: 2, density_g_cm3: 8, equivalentWeight: 25.68, alloyId: "x" };
+  // Old code: thickness 0 -> 5.0 mm, allowance 0 -> 1.5 mm, area 0 -> 1.0 cm2 (falsy ||), then a full result.
+  for (const [key, value] of [
+    ["initialThicknessMm", 0],
+    ["allowableLossMm", 0],
+    ["specimenAreaCm2", 0],
+    ["initialThicknessMm", -2],
+    ["temperatureC", -300],
+  ] as const) {
+    const res = fallbackClientTafelCorrosionRate({ ...base, [key]: value });
+    assert.equal(res.status, "unavailable", `${key}=${value}`);
+    assert.equal(res.corrosionRateMmYr, null);
+    assert.match(res.unavailable![key], /must be/);
+    assert.equal((res as unknown as Record<string, number>)[key], value); // echoes the supplied value
+  }
+  // 0 C is a valid temperature (Arrhenius T_ref) and absent inputs keep the documented defaults.
+  const zeroC = fallbackClientTafelCorrosionRate({ ...base, betaA: 0.1, betaC: 0.12, temperatureC: 0 });
+  assert.equal(zeroC.status, undefined);
+  assert.equal(zeroC.temperatureC, 0);
+  const defaults = fallbackClientTafelCorrosionRate(base);
+  assert.equal(defaults.initialThicknessMm, 5.0);
+  assert.equal(defaults.allowableLossMm, 1.5);
+  assert.equal(defaults.specimenAreaCm2, 1.0);
+});
+
 // ---- UI markup ---------------------------------------------------------------------------------------------------
 
 test("D3 chart summary and header show Unavailable for an unavailable fit (never null / NaN)", () => {

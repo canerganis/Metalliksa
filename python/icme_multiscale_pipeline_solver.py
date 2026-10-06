@@ -315,19 +315,34 @@ def solve_multiscale_pipeline(params: dict) -> dict:
     #   delta_sigma_cut = M * delta_tau
     # EUQ-10: the '- f' term was missing (default IN718: 223 MPa instead of 64 MPa) and the comment said
     # pi*G*b^2 where the code (correctly) used pi*T. r is the mean particle radius; Ardell's form uses the
-    # mean planar radius r_s = (pi/4)*r, which this illustrative model does not apply. The bracket is floored
-    # at 0 (the weak-coupling expression is not meaningful below the radius where it vanishes).
+    # mean planar radius r_s = (pi/4)*r, which this illustrative model does not apply. Below the radius where
+    # the bracket vanishes the weak-coupling expression does not apply (cutting not estimated, see below).
     line_tension_T = 0.5 * G_Pa * (b_meters**2)
     ratio_term = (8.0 * gamma_apb_J_m2 * (r_nm * 1e-9) * volume_frac_precip) / (math.pi * line_tension_T)
-    brown_ham_bracket = max(0.0, math.sqrt(ratio_term) - volume_frac_precip)
-    delta_sigma_cutting_MPa = (taylor_M * (gamma_apb_J_m2 / (2.0 * b_meters)) * brown_ham_bracket) / 1e6
-    delta_sigma_cutting_MPa = min(850.0, delta_sigma_cutting_MPa)
+    brown_ham_bracket = math.sqrt(ratio_term) - volume_frac_precip
+    # EUQ-10 review: where sqrt(8*gamma*f*r/(pi*T)) <= f the weak-coupling expression is <= 0 and does not
+    # apply; the cutting term is then not estimated (null with a status), not reported as 0 MPa of cutting.
+    cutting_estimated = brown_ham_bracket > 0.0
+    cutting_status = None
+    if cutting_estimated:
+        delta_sigma_cutting_MPa = (taylor_M * (gamma_apb_J_m2 / (2.0 * b_meters)) * brown_ham_bracket) / 1e6
+        delta_sigma_cutting_MPa = min(850.0, delta_sigma_cutting_MPa)
+    else:
+        delta_sigma_cutting_MPa = None
+        cutting_status = (
+            "unavailable_weak_coupling_not_applicable: sqrt(8*gamma*f*r/(pi*T)) <= f at "
+            f"r = {r_nm:.2f} nm, f = {volume_frac_precip:.3f}; the Brown-Ham weak pair-coupling expression is "
+            "<= 0 here, so the cutting contribution is not estimated and the precipitation term is left out "
+            "of the yield strength (0 MPa added, not a cutting estimate)")
 
     # Orowan looping for overaged / coarse precipitates:
     delta_sigma_orowan_MPa = (taylor_M * (0.4 * G_Pa * b_meters) / (math.pi * (lambda_spacing_nm * 1e-9))) * (math.log(2.0 * (r_nm * 1e-9) / b_meters) / math.sqrt(1.0 - poisson_ratio)) / 1e6
     delta_sigma_orowan_MPa = min(900.0, delta_sigma_orowan_MPa)
 
-    if delta_sigma_cutting_MPa < delta_sigma_orowan_MPa:
+    if not cutting_estimated:
+        precip_mechanism = "Not estimated (weak pair-coupling cutting expression <= 0; see cuttingContributionStatus)"
+        delta_sigma_precip_MPa = 0.0
+    elif delta_sigma_cutting_MPa < delta_sigma_orowan_MPa:
         precip_mechanism = "Dislocation Particle Shearing (Brown-Ham weak pair-coupling cutting)"
         delta_sigma_precip_MPa = delta_sigma_cutting_MPa
     else:
@@ -535,7 +550,8 @@ TBPT,,0.20,{jcA_MPa + (jcB_MPa * 0.20**jcn):.1f}"""
                 "meanPrecipitateRadius_nm": round(mean_precip_radius_nm, 2),
                 "volumeFractionPct": round(volume_frac_precip * 100.0, 1),
                 "interparticleSpacing_nm": round(lambda_spacing_nm, 1),
-                "shearingStrength_MPa": round(delta_sigma_cutting_MPa, 1),
+                "shearingStrength_MPa": None if delta_sigma_cutting_MPa is None else round(delta_sigma_cutting_MPa, 1),
+                "cuttingContributionStatus": cutting_status,
                 "orowanStrength_MPa": round(delta_sigma_orowan_MPa, 1),
                 "activeMechanism": precip_mechanism,
                 "effectivePrecipitationStrengthening_MPa": round(delta_sigma_precip_MPa, 1)
