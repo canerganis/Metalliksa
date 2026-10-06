@@ -706,7 +706,7 @@ class PythonComputationService {
     return res.json();
   }
 
-  // Phase 15: Closed-Loop Feed-Forward Mitigation
+  // Phase 15: Open-loop feed-forward per-vector power scaling (no sensor feedback)
   async processAdaptiveFeedforward(data: {
     content: string;
     format?: "gcode" | "cli";
@@ -1112,6 +1112,9 @@ class PythonComputationService {
       body: JSON.stringify(payload),
     });
 
+    // 422 carries the solver's validation message; surface it instead of a bare status code.
+    const validation = await validationErrorFromResponse(res, "ICME input rejected");
+    if (validation) throw validation;
     if (!res.ok) {
       throw new Error(`ICME MultiScale Pipeline proxy error: HTTP ${res.status}`);
     }
@@ -1621,8 +1624,11 @@ export interface PythonLPBFResult {
     tOverD?: number;
     keyholePorosityRisk: string;
     ballingInstabilityRisk: string;
+    /** Band on distortionIndex (1.2 / 2.0); heuristic, see src/utils/distortionHeuristic.ts. */
     recoaterCrashRisk: string;
+    /** Heuristic 0.72·E·α·ΔT/(1−ν) with fixed uncited constants; not a stress solve. */
     effectiveResidualStress_MPa: number;
+    /** Heuristic index σ_eff·(layer/40 µm)/420 MPa with fixed uncited constants. */
     distortionIndex: number;
   };
   solidificationKinetics: {

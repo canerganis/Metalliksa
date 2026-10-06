@@ -321,6 +321,28 @@ class GalvanometerKinematicsEngine:
 
         duty_cycle_pct = (total_laser_time_s / total_time_s * 100.0) if total_time_s > 0 else 0.0
 
+        # Segments where the vector is too short to reach cruise speed (cruise ~ 0).
+        # Under skywriting the laser only fires during cruise, so these never fire:
+        # zero energy / zero hotspots there means "laser never fires", NOT "mitigated".
+        mark_segments = [s for s in segments if s.laser_active]
+        no_cruise_count = sum(1 for s in mark_segments if s.t_cruise_s <= 1e-9)
+        warnings: List[str] = []
+        if mark_segments and no_cruise_count > 0:
+            frac = no_cruise_count / len(mark_segments)
+            if self.profile.skywriting_enabled:
+                warnings.append(
+                    f"{no_cruise_count} of {len(mark_segments)} marking vectors have no constant-velocity "
+                    "cruise phase; with skywriting the laser never fires on them (0 J deposited). "
+                    "Zero hotspots here means no exposure, not a mitigated exposure."
+                )
+            else:
+                warnings.append(
+                    f"{no_cruise_count} of {len(mark_segments)} marking vectors never reach their "
+                    "commanded speed (triangular velocity profile); delivered LED differs from nominal."
+                )
+            if frac >= 0.999 and self.profile.skywriting_enabled:
+                warnings.append("The laser never fires anywhere in this toolpath under skywriting.")
+
         return {
             "total_segments": len(segments),
             "total_build_time_s": round(total_time_s, 4),
@@ -331,5 +353,9 @@ class GalvanometerKinematicsEngine:
             "total_jump_distance_mm": round(total_jump_dist_mm, 2),
             "hotspot_count": len(hotspots),
             "hotspots": hotspots[:50],  # Return top 50 critical hotspots
-            "skywriting_mitigation_active": self.profile.skywriting_enabled
+            "skywriting_mitigation_active": self.profile.skywriting_enabled,
+            "no_cruise_segment_count": no_cruise_count,
+            "marking_segment_count": len(mark_segments),
+            "laser_never_fires": bool(mark_segments) and total_energy_J <= 0.0 and self.profile.skywriting_enabled,
+            "warnings": warnings,
         }

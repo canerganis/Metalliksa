@@ -50,6 +50,7 @@ import {
 import { buildGoldakCaeCard } from "../../utils/goldakCaeCard";
 import { literatureErrorUnavailableText } from "../../utils/meltPoolExtentStatus";
 import { MeltPoolExtentNotice } from "../MeltPoolExtentNotice";
+import { DISTORTION_HEURISTIC_NOTE } from "../../utils/distortionHeuristic";
 
 export interface MeltPool3DCrossSectionProps {
   initialPower_W?: number;
@@ -1251,9 +1252,12 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
                   <span className="font-bold text-slate-200">{pyResult.defectDiagnostics.ballingInstabilityRisk}</span>
                 </div>
                 <div className="flex items-center justify-between p-1.5 bg-[#050810] rounded-lg border border-slate-800">
-                  <span className="text-slate-300">Thermal-stress proxy (unvalidated):</span>
+                  <span className="text-slate-300">Thermal-stress heuristic (unvalidated):</span>
                   <span className="font-bold text-amber-300">{pyResult.defectDiagnostics.effectiveResidualStress_MPa} MPa</span>
                 </div>
+                <p data-testid="distortion-heuristic-note" className="text-[10px] leading-snug text-slate-500">
+                  {DISTORTION_HEURISTIC_NOTE}
+                </p>
               </div>
             )}
           </div>

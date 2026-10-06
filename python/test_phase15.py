@@ -65,5 +65,20 @@ class TestPhase15AdaptiveFeedforward(unittest.TestCase):
         self.assertIn("G1 X", gcode)
         self.assertIn("M5", gcode)
 
+    def test_travel_moves_command_laser_off(self):
+        # M3 stays on for the whole layer, so every G0 jump must carry an explicit S0.
+        vectors = [
+            ToolpathVector(0.0, 0.0, 5.0, 0.0, "hatch", 280.0, 1200.0),
+            ToolpathVector(5.0, 0.0, 0.0, 1.0, "jump", 0.0, 3000.0),
+            ToolpathVector(0.0, 1.0, 5.0, 1.0, "hatch", 280.0, 1200.0),
+        ]
+        gcode = self.mitigator.process_toolpath(vectors)["mitigated_gcode"]
+        g0_lines = [ln for ln in gcode.splitlines() if ln.startswith("G0")]
+        self.assertTrue(g0_lines)
+        for ln in g0_lines:
+            self.assertTrue(ln.endswith(" S0"), ln)
+        self.assertIn("NOT machine-validated", gcode)
+        self.assertNotIn("Closed-Loop", gcode)
+
 if __name__ == "__main__":
     unittest.main()

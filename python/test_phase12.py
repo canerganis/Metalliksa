@@ -100,5 +100,25 @@ class TestPhase12ToolpathKinematics(unittest.TestCase):
         res = self.engine.simulate_toolpath(vectors)
         self.assertTrue(res["skywriting_mitigation_active"])
 
+    def test_skywriting_without_cruise_reports_laser_never_fires(self):
+        # 15 mm at 1000 mm/s, a=40000 mm/s^2: 25 mm needed to reach speed -> triangular, cruise = 0.
+        self.engine.profile.skywriting_enabled = True
+        vectors = [ToolpathVector(0.0, 0.0, 15.0, 0.0, "hatch", 280.0, 1000.0)]
+        res = self.engine.simulate_toolpath(vectors)
+        self.assertEqual(res["total_energy_input_J"], 0.0)
+        self.assertEqual(res["hotspot_count"], 0)
+        self.assertEqual(res["no_cruise_segment_count"], 1)
+        self.assertTrue(res["laser_never_fires"])
+        self.assertTrue(any("never fires" in w for w in res["warnings"]))
+
+    def test_skywriting_with_cruise_has_no_warning(self):
+        self.engine.profile.skywriting_enabled = True
+        vectors = [ToolpathVector(0.0, 0.0, 40.0, 0.0, "hatch", 280.0, 1000.0)]
+        res = self.engine.simulate_toolpath(vectors)
+        self.assertGreater(res["total_energy_input_J"], 0.0)
+        self.assertEqual(res["no_cruise_segment_count"], 0)
+        self.assertFalse(res["laser_never_fires"])
+        self.assertEqual(res["warnings"], [])
+
 if __name__ == "__main__":
     unittest.main()

@@ -6,6 +6,32 @@ import { pythonComputationService } from '../services/pythonComputationService';
 
 const AVAILABLE_ALLOYS = ["Ti-6Al-4V", "316L SS", "Inconel 718", "AlSi10Mg"];
 
+/** Paris-law life label without any safety verdict. */
+export function parisLifeLabel(paris: { status: string; cycles_to_failure: number }): string {
+  if (paris.status === 'non_propagating') return 'ΔK < ΔK_th (no growth computed)';
+  if (paris.status === 'runout') return `> ${paris.cycles_to_failure.toLocaleString('en-US')} cycles (integration limit)`;
+  return `${paris.cycles_to_failure.toLocaleString('en-US')} cycles`;
+}
+
+/**
+ * The fatigue-limit criterion (σ_a vs corrected limit) and the Paris threshold criterion
+ * (ΔK vs ΔK_th) are independent; return a message when they point in opposite directions.
+ */
+export function fatigueCriteriaDisagreement(result: any, stressAmplitude_MPa: number): string | null {
+  const limit = result?.fatigue_limit?.fatigue_limit_corrected_MPa;
+  const status = result?.paris_crack_growth?.status;
+  if (typeof limit !== 'number' || !status) return null;
+  const aboveLimit = stressAmplitude_MPa > limit;
+  const grows = status !== 'non_propagating';
+  if (aboveLimit && !grows) {
+    return `σ_a = ${stressAmplitude_MPa} MPa exceeds the fatigue limit ${limit} MPa, but ΔK is below ΔK_th so the Paris model predicts no growth.`;
+  }
+  if (!aboveLimit && grows) {
+    return `σ_a = ${stressAmplitude_MPa} MPa is below the fatigue limit ${limit} MPa, but ΔK exceeds ΔK_th so the Paris model predicts crack growth.`;
+  }
+  return null;
+}
+
 export const MurakamiFatigueLab: React.FC = () => {
   const [selectedAlloy, setSelectedAlloy] = useState("Ti-6Al-4V");
   const [sqrtArea, setSqrtArea] = useState(45);
@@ -41,7 +67,8 @@ export const MurakamiFatigueLab: React.FC = () => {
         <div>
           <h2 className="text-lg font-bold text-white">Defect Fatigue & Crack Growth</h2>
           <p className="text-sm text-gray-400">Phase 13: Kitagawa-Takahashi Diagram, El-Haddad Short Cracks & Paris Law Life</p>
-          <p data-testid="murakami-not-statement" className="text-xs text-amber-300">Steel-derived formula; surface roughness and R-ratio not modelled.</p>
+          <p data-testid="murakami-not-statement" className="text-xs text-amber-300">Steel-derived formula; surface roughness not modelled. R enters only through an empirical power-law factor on the fatigue limit and the peak stress used for the critical crack size; the Paris growth rate has no R (mean-stress) correction.</p>
+          <p data-testid="murakami-unsourced-constants" className="text-xs text-amber-300">Unsourced constants: per-alloy hardness, smooth fatigue limit, ΔK_th, K_IC and Paris C, m are internal table values (alloy_registry fatigue_fracture domain) with no literature citation.</p>
         </div>
         <button
           onClick={handleCompute}
@@ -165,11 +192,20 @@ export const MurakamiFatigueLab: React.FC = () => {
                 </div>
                 <div className="p-3 bg-gray-800 border border-gray-700 rounded flex flex-col items-center">
                   <span className="text-xs text-gray-400 mb-1">Paris Life (Cycles)</span>
-                  <span className={`text-lg font-mono font-bold ${result.paris_crack_growth.status === 'fractured' ? 'text-amber-400' : 'text-green-400'}`}>
-                    {result.paris_crack_growth.status === 'non_propagating' ? '>10⁷ (Safe)' : `${result.paris_crack_growth.cycles_to_failure.toLocaleString()} cycles`}
+                  <span className={`text-lg font-mono font-bold ${result.paris_crack_growth.status === 'fractured' ? 'text-amber-400' : 'text-gray-200'}`}>
+                    {parisLifeLabel(result.paris_crack_growth)}
                   </span>
                 </div>
               </div>
+
+              {(() => {
+                const disagreement = fatigueCriteriaDisagreement(result, stressAmplitude);
+                return disagreement ? (
+                  <div role="alert" data-testid="murakami-criteria-disagree" className="p-3 bg-amber-900/30 border border-amber-700 rounded text-xs text-amber-200">
+                    Criteria disagree: {disagreement}
+                  </div>
+                ) : null;
+              })()}
 
               {/* Kitagawa-Takahashi Diyagramı */}
               <div className="bg-gray-800 border border-gray-700 rounded p-4 h-80 flex flex-col">
@@ -193,8 +229,8 @@ export const MurakamiFatigueLab: React.FC = () => {
                   Status: <strong className="text-white capitalize">{result.paris_crack_growth.status}</strong> | Initial Flaw: <strong>{result.paris_crack_growth.initial_crack_size_um} µm</strong> | Final Size: <strong>{result.paris_crack_growth.final_crack_size_um} µm</strong>
                 </p>
                 {result.paris_crack_growth.status === 'non_propagating' ? (
-                  <div className="p-3 bg-green-950/30 border border-green-800 rounded text-xs text-green-300">
-                    The initial defect produces a stress intensity range (ΔK) below the threshold ΔK_th. The crack will not propagate under the applied cyclic stress.
+                  <div className="p-3 bg-gray-900 border border-gray-700 rounded text-xs text-gray-300">
+                    The initial defect gives a stress intensity range (ΔK) below the tabulated threshold ΔK_th, so the Paris integration does not start. This is a screening result with unsourced constants, not a life guarantee.
                   </div>
                 ) : (
                   <div className="p-3 bg-amber-950/30 border border-amber-800 rounded text-xs text-amber-300">

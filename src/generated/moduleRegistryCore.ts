@@ -190,7 +190,7 @@ export const MODULE_REGISTRY_CORE = {
       "version": "0.1.0",
       "workspace": "lpbf",
       "label": "Defect Fatigue & Crack Growth",
-      "description": "Murakami √area fatigue limit, Kitagawa–Takahashi / El-Haddad diagram and Paris-law crack growth from an entered defect size; screening estimates from a steel-derived formula; surface roughness and R-ratio are not modelled.",
+      "description": "Murakami √area fatigue limit, Kitagawa–Takahashi / El-Haddad diagram and Paris-law crack growth from an entered defect size; screening estimates from a steel-derived formula; surface roughness is not modelled; R enters only through an empirical power-law factor on the fatigue limit and the peak stress of the critical crack size, not the Paris growth rate; the per-alloy constants are internal table values without a literature source.",
       "next": "adaptive-mitigation",
       "maturity": "Research",
       "navigation": "listed",

@@ -38,6 +38,7 @@ import {
 import { useDigitalTwin } from "../context/DigitalTwinContext";
 import { useMaterialStore } from "../store/useMaterialStore";
 import { SampleDigitalTwin, DigitalTwinAttachment } from "../types/digitalTwin";
+import { attachmentDownloadHref, withEditedComposition } from "../utils/digitalTwinEvidence";
 import {
   BarChart,
   Bar,
@@ -90,10 +91,11 @@ export const DigitalTwinHub: React.FC<{ onNavigateToModule?: (tab: string) => vo
       sampleName: activeMaterialSpecimen.name,
       materialCategory: (activeMaterialSpecimen.metadata?.category || prev.materialCategory) as any,
       standardDesignation: activeMaterialSpecimen.metadata?.standardDesignation || prev.standardDesignation,
+      // Composition-derived values belong to the old composition; clear them (not recomputed here).
+      thermodynamics: withEditedComposition(prev, { ...activeMaterialSpecimen.composition }).thermodynamics,
       chemistry: {
-        ...prev.chemistry,
+        ...withEditedComposition(prev, { ...activeMaterialSpecimen.composition }).chemistry,
         baseElement: activeMaterialSpecimen.metadata?.baseMetal || prev.chemistry.baseElement,
-        nominalComposition: { ...activeMaterialSpecimen.composition },
         measuredComposition: undefined,
       },
       mechanical: {
@@ -103,7 +105,7 @@ export const DigitalTwinHub: React.FC<{ onNavigateToModule?: (tab: string) => vo
         elongationPct: activeMaterialSpecimen.elongation_pct,
       },
     }));
-    setSyncNotice("Synced twin from shared material store!");
+    setSyncNotice("Pulled record from shared material store; composition-derived values cleared.");
     setTimeout(() => setSyncNotice(null), 3000);
   };
 
@@ -118,11 +120,11 @@ export const DigitalTwinHub: React.FC<{ onNavigateToModule?: (tab: string) => vo
         manufacturingRoute: activeTwin.processHistory.manufacturingRoute,
         condition: activeTwin.processHistory.currentCondition,
         leadMetallurgist: activeTwin.leadMetallurgist,
-        notes: `Synchronized from Sample Digital Twin (${activeTwin.serialNumber ?? "Unresolved"})`,
+        notes: `Synchronized from specimen record (${activeTwin.serialNumber ?? "Unresolved"})`,
       },
-      "Digital Twin Hub"
+      "Specimen Records"
     );
-    setSyncNotice("Published twin to shared material store!");
+    setSyncNotice("Published record to shared material store.");
     setTimeout(() => setSyncNotice(null), 3000);
   };
 
@@ -190,14 +192,14 @@ export const DigitalTwinHub: React.FC<{ onNavigateToModule?: (tab: string) => vo
     measured: activeTwin.chemistry.measuredComposition?.[element] ?? null,
   }));
 
-  // Run Global AI Digital Twin Audit
+  // AI evidence-gap review of the active specimen record
   const handleAiAudit = async () => {
     setIsAiAuditing(true);
     setAiReport(null);
 
     const prompt = `Provide a research review of an unqualified digital record. This is NOT a validation or certification report.
 Record evidence: ${JSON.stringify(activeTwin.evidence)}. All values require source and measurement-condition review. Demo values are synthetic, not measured. Do not infer MMPDS qualification, flight readiness, experimental validation, or physical coherence from numbers alone. Identify missing evidence explicitly.
-Audit this Sample Digital Twin across all scales:
+Review this specimen record across all scales:
 - Serial / Designation: ${activeTwin.serialNumber ?? "Unresolved"} (${activeTwin.standardDesignation ?? "Unresolved"})
 - Material & Route: ${activeTwin.materialCategory ?? "Unresolved"} via ${activeTwin.processHistory.manufacturingRoute ?? "Unresolved"}
 - Condition: ${activeTwin.processHistory.currentCondition ?? "Unresolved"}
@@ -249,16 +251,13 @@ Provide an evidence-gap review:
           <div>
             <div className="flex items-center gap-2.5">
               <div className="p-2.5 bg-gradient-to-br from-sky-500 to-indigo-600 rounded-xl shadow-lg shadow-sky-500/20 text-white">
-                <Boxes className="w-6 h-6 animate-pulse" />
+                <Boxes className="w-6 h-6" />
               </div>
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="text-xl font-bold tracking-tight text-white">
                     Specimen Records
                   </h2>
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/40">
-                    Integrated Multi-Scale Data Spine
-                  </span>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
                     {activeTwin.currentStatus ?? "Unresolved"}
                   </span>
@@ -290,7 +289,7 @@ Provide an evidence-gap review:
               onClick={() => createNewTwin()}
               className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-sky-300 border border-sky-500/40 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
             >
-              <span>+ New Twin</span>
+              <span>+ New Record</span>
             </button>
 
             <button
@@ -302,17 +301,17 @@ Provide an evidence-gap review:
               <span>{isAiAuditing ? "Reviewing evidence..." : "AI Evidence Review"}</span>
             </button>
 
-            {/* IndexedDB Storage Engine Quota Badge */}
-            <div className="px-3 py-1.5 bg-slate-950/80 border border-emerald-500/30 rounded-xl text-[11px] font-mono flex items-center gap-2 shadow-inner">
-              <Database className="w-3.5 h-3.5 text-emerald-400" />
+            {/* Browser storage estimate, shown only when the browser reports one */}
+            <div className="px-3 py-1.5 bg-slate-950/80 border border-slate-700 rounded-xl text-[11px] font-mono flex items-center gap-2 shadow-inner">
+              <Database className="w-3.5 h-3.5 text-slate-400" />
               <div>
-                <span className="text-emerald-400 font-bold">IndexedDB: </span>
+                <span className="text-slate-300 font-bold">Storage: </span>
                 <span className="text-slate-200">
-                  {storageInfo ? `${storageInfo.usageMb} MB` : "Active"}
+                  {storageInfo ? `${storageInfo.usageMb} MB` : "usage unavailable"}
                 </span>
                 <span className="text-slate-500"> / </span>
                 <span className="text-slate-400">
-                  {storageInfo?.quotaMb ? `${Math.round(storageInfo.quotaMb).toLocaleString()} MB Cap` : "No 5MB Limit"}
+                  {storageInfo?.quotaMb ? `${Math.round(storageInfo.quotaMb).toLocaleString()} MB quota` : "quota unavailable"}
                 </span>
               </div>
             </div>
@@ -344,7 +343,7 @@ Provide an evidence-gap review:
               id="btn-sync-from-store"
               onClick={handleSyncFromGlobalSpecimen}
               className="px-2.5 py-1 bg-sky-600/20 hover:bg-sky-600/30 text-sky-300 border border-sky-500/40 rounded-lg text-xs font-medium flex items-center gap-1 transition-colors"
-              title="Pull composition and properties from activeMaterialSpecimen into this digital twin"
+              title="Pull composition and properties from activeMaterialSpecimen into this specimen record"
             >
               <RotateCw className="w-3 h-3 text-sky-400" />
               <span>Pull from Store</span>
@@ -354,7 +353,7 @@ Provide an evidence-gap review:
               onClick={handlePushToGlobalSpecimen}
               disabled={!canShareComposition}
               className="px-2.5 py-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 rounded-lg text-xs font-medium flex items-center gap-1 transition-colors"
-              title="Push this digital twin's chemistry and metadata into activeMaterialSpecimen"
+              title="Push this specimen record's chemistry and metadata into activeMaterialSpecimen"
             >
               <Upload className="w-3 h-3 text-emerald-400" />
               <span>Push to Store</span>
@@ -362,11 +361,11 @@ Provide an evidence-gap review:
           </div>
         </div>
 
-        {/* Digital Twin Specimen Switcher Bar */}
+        {/* Specimen record switcher bar */}
         <div className="mt-4 pt-4 border-t border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Active Specimen Twin:
+              Active Specimen Record:
             </span>
             <div className="flex gap-1.5 flex-wrap">
               {twins.map((t) => (
@@ -477,7 +476,7 @@ Provide an evidence-gap review:
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <div>
                   <span className="text-[10px] font-mono text-sky-400 uppercase tracking-widest block">
-                    Digital Passport
+                    Specimen Record
                   </span>
                   <h3 className="text-base font-bold text-slate-100">{activeTwin.sampleName ?? "Unresolved"}</h3>
                 </div>
@@ -547,7 +546,7 @@ Provide an evidence-gap review:
               </div>
               <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5">
                 <span className="text-[10px] text-slate-400 block">Qualification</span>
-                <span className="text-lg font-bold font-mono text-emerald-400">
+                <span className="text-lg font-bold font-mono text-slate-300">
                   Not assessed
                 </span>
               </div>
@@ -584,7 +583,7 @@ Provide an evidence-gap review:
                 </span>
               </div>
 
-              <p className="rounded-xl bg-slate-950/60 p-4 text-xs leading-6 text-slate-300">{isDemo ? "This specimen contains synthetic example values. Start a new twin and attach your own source records for an engineering assessment." : "Attach characterization data and record their source, test method, process conditions and uncertainty. A record alone does not establish experimental validity."}</p>
+              <p className="rounded-xl bg-slate-950/60 p-4 text-xs leading-6 text-slate-300">{isDemo ? "This specimen contains synthetic example values. Start a new record and attach your own source records for an engineering assessment." : "Attach characterization data and record their source, test method, process conditions and uncertainty. A record alone does not establish experimental validity."}</p>
 
               {/* Composition Matrix Bar Chart */}
               <div className="mt-4 pt-4 border-t border-slate-800">
@@ -646,7 +645,7 @@ Provide an evidence-gap review:
                           category: activeTwin.materialCategory,
                           standardDesignation: activeTwin.standardDesignation,
                         },
-                        "Digital Twin Hub (Chemistry Tab)"
+                        "Specimen Records (Chemistry Tab)"
                       );
                       setSyncNotice("Broadcast chemistry to universal store!");
                       setTimeout(() => setSyncNotice(null), 3000);
@@ -669,14 +668,8 @@ Provide an evidence-gap review:
                         onChange={(e) => {
                           const newPct = parseFloat(e.target.value) || 0;
                           const nextComp = { ...activeTwin.chemistry.nominalComposition, [el]: newPct };
-                          updateActiveTwin((prev) => ({
-                            ...prev,
-                            chemistry: {
-                              ...prev.chemistry,
-                              nominalComposition: nextComp,
-                            },
-                          }));
-                          if (!isDemo) updateGlobalComposition(nextComp, activeTwin.sampleName, undefined, "Digital Twin Hub (Live Edit; unverified composition)");
+                          updateActiveTwin((prev) => withEditedComposition(prev, nextComp));
+                          if (!isDemo) updateGlobalComposition(nextComp, activeTwin.sampleName, undefined, "Specimen Records (edit; unverified composition)");
                         }}
                         className="w-12 px-1 py-0.5 bg-slate-950 border border-slate-700 rounded text-right font-mono text-xs text-slate-100 focus:outline-none focus:border-sky-400"
                       />
@@ -685,6 +678,12 @@ Provide an evidence-gap review:
                   ))}
                 </div>
               </div>
+
+              {!activeTwin.chemistry.schaefflerCoordinates && !activeTwin.chemistry.carbonEquivalent && (
+                <p data-testid="composition-derived-cleared" className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 text-[11px] text-slate-400">
+                  Schaeffler, carbon-equivalent and CALPHAD values are unavailable for this composition: they are not stored or were cleared by a composition edit. Recompute them in the CALPHAD Lab; this view does not recompute them.
+                </p>
+              )}
 
               {activeTwin.chemistry.schaefflerCoordinates && (
                 <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 space-y-1.5 text-xs font-mono">
@@ -889,7 +888,11 @@ Provide an evidence-gap review:
 
             <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 flex justify-between items-center text-xs font-mono">
               <span className="text-slate-400">Statistical Process Capability (Cpk):</span>
-              <span className="text-emerald-400 font-bold">{activeTwin.mechanical.mmpdsStatisticalBasis.cpkReliability ?? "Unresolved"} (N={activeTwin.mechanical.mmpdsStatisticalBasis.sampleCountN ?? "Unresolved"})</span>
+              {isDemo ? (
+                <span data-testid="cpk-synthetic" className="text-slate-400">Unavailable: synthetic record has no coupon population</span>
+              ) : (
+                <span className="text-slate-200 font-bold">{activeTwin.mechanical.mmpdsStatisticalBasis.cpkReliability ?? "Unresolved"} (N={activeTwin.mechanical.mmpdsStatisticalBasis.sampleCountN ?? "Unresolved"}, user-reported, unverified)</span>
+              )}
             </div>
           </div>
 
@@ -974,7 +977,7 @@ Provide an evidence-gap review:
         </div>
       )}
 
-      {/* Binary Attachments & Large Datasets Tab (IndexedDB Powered) */}
+      {/* Binary attachments tab */}
       {activeTab === "binary_attachments" && (
         <div className="space-y-4">
           <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
@@ -983,14 +986,11 @@ Provide an evidence-gap review:
                 <div className="flex items-center gap-2">
                   <Database className="w-5 h-5 text-emerald-400" />
                   <h3 className="text-sm font-bold text-slate-100">
-                    High-Capacity Binary Storage & Characterization Runs
+                    Attached Characterization Files
                   </h3>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                    IndexedDB Engine
-                  </span>
                 </div>
                 <p className="text-xs text-slate-400 mt-1">
-                  Replaces the strict 5 MB / 10 MB localStorage ceiling with asynchronous IndexedDB. Stores large binary STL tensile coupons, 10⁶-point EBSD orientation maps, and Nyquist sweeps directly without choking the browser main thread.
+                  Files are stored in this browser as data URLs. They are kept as attached, not parsed or validated; capacity depends on the browser quota.
                 </p>
               </div>
 
@@ -998,15 +998,15 @@ Provide an evidence-gap review:
               <div className="px-4 py-2 bg-slate-950 rounded-xl border border-slate-800 text-xs font-mono space-y-1">
                 <div className="flex items-center justify-between gap-4 text-slate-400">
                   <span>Storage Engine:</span>
-                  <span className="text-sky-300 font-bold">{storageInfo?.engine || "IndexedDB (idb-keyval)"}</span>
+                  <span className="text-sky-300 font-bold">{storageInfo?.engine || "Unavailable"}</span>
                 </div>
                 <div className="flex items-center justify-between gap-4 text-slate-400">
                   <span>Storage Used:</span>
-                  <span className="text-emerald-400 font-bold">{storageInfo ? `${storageInfo.usageMb} MB` : "0.5 MB"}</span>
+                  <span className="text-emerald-400 font-bold">{storageInfo ? `${storageInfo.usageMb} MB` : "Unavailable"}</span>
                 </div>
                 <div className="flex items-center justify-between gap-4 text-slate-400">
                   <span>Browser Disk Quota:</span>
-                  <span className="text-slate-200">{storageInfo?.quotaMb ? `${Math.round(storageInfo.quotaMb).toLocaleString()} MB` : "Uncapped"}</span>
+                  <span className="text-slate-200">{storageInfo?.quotaMb ? `${Math.round(storageInfo.quotaMb).toLocaleString()} MB` : "Unavailable"}</span>
                 </div>
               </div>
             </div>
@@ -1044,10 +1044,10 @@ Provide an evidence-gap review:
               <div className="text-center py-10 px-4 border border-dashed border-slate-800 rounded-xl space-y-2">
                 <HardDrive className="w-8 h-8 text-slate-600 mx-auto" />
                 <p className="text-xs text-slate-400">
-                  No binary datasets attached to this specimen twin yet.
+                  No files attached to this specimen record yet.
                 </p>
                 <p className="text-[11px] text-slate-500 max-w-md mx-auto">
-                  Click the buttons above to attach real characterization files (.stl geometry, .ctf EBSD maps, EIS sweeps) or generate synthetic benchmarks to verify seamless storage above 10 MB.
+                  Use the upload button above to attach characterization files (.stl geometry, .ctf EBSD maps, EIS sweeps).
                 </p>
               </div>
             ) : (
@@ -1094,7 +1094,7 @@ Provide an evidence-gap review:
                         <button
                           onClick={() => removeBinaryDataset(activeTwin.id, att.id)}
                           className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all cursor-pointer"
-                          title="Remove attachment from IndexedDB"
+                          title="Remove attachment from browser storage"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -1113,7 +1113,7 @@ Provide an evidence-gap review:
 
                       {att.data && typeof att.data === "string" && (
                         <a
-                          href={att.data.startsWith("data:") ? att.data : `data:application/octet-stream;base64,${btoa(att.data.slice(0, 1000))}`}
+                          href={attachmentDownloadHref(att.data)}
                           download={att.name}
                           className="w-full py-1.5 bg-slate-900 hover:bg-slate-800 text-sky-400 hover:text-sky-300 border border-slate-800 rounded-lg text-[11px] font-medium flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                         >

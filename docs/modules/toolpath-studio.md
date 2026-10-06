@@ -34,7 +34,7 @@ All keys are optional at the authority, which applies the listed default when a 
 
 Undeclared input keys (read by the authority, not describable by the Field schema): `content`.
 
-Output fields (no status key, so the output carries no evidence status): `total_segments`, `total_build_time_s`, `total_laser_on_time_s`, `duty_cycle_pct`, `total_energy_input_J`, `total_mark_distance_mm`, `total_jump_distance_mm`, `hotspot_count`, `hotspots`, `skywriting_mitigation_active`.
+Output fields (no status key, so the output carries no evidence status): `total_segments`, `total_build_time_s`, `total_laser_on_time_s`, `duty_cycle_pct`, `total_energy_input_J`, `total_mark_distance_mm`, `total_jump_distance_mm`, `hotspot_count`, `hotspots`, `skywriting_mitigation_active`, `no_cruise_segment_count`, `marking_segment_count`, `laser_never_fires`, `warnings`.
 
 ## Evidence
 

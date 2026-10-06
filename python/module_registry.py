@@ -270,7 +270,8 @@ _KEYHOLE_FIELDS = (
 
 _KEYHOLE_OUTPUT = OutputSchema(
     fields=("status", "model_id", "device", "warp_version", "solve_time_ms", "total_input_W",
-            "total_absorbed_W", "total_escaped_W", "total_truncated_W", "energy_balance_relative_error",
+            "total_absorbed_W", "total_escaped_W", "total_truncated_W", "total_missed_W",
+            "mesh_aperture_half_extent_um", "energy_balance_relative_error",
             "absorption_efficiency", "sampling", "inputs", "limitations", "mesh", "ray_paths"),
     status_key=None,
     # The solver returns the literal "success"; failures raise and reach the route as errors.
@@ -764,7 +765,8 @@ def _toolpath_contract(row: Dict[str, str]) -> ModuleContract:
         "toolpath-kinematics", _TOOLPATH_FIELDS,
         OutputSchema(fields=("total_segments", "total_build_time_s", "total_laser_on_time_s", "duty_cycle_pct",
                              "total_energy_input_J", "total_mark_distance_mm", "total_jump_distance_mm",
-                             "hotspot_count", "hotspots", "skywriting_mitigation_active"), status_key=None),
+                             "hotspot_count", "hotspots", "skywriting_mitigation_active", "no_cruise_segment_count",
+                             "marking_segment_count", "laser_never_fires", "warnings"), status_key=None),
         undeclared=("content",))
     return _wave2(
         row, operation,

@@ -12,6 +12,8 @@ interface RaytracingResult {
   total_absorbed_W: number;
   total_escaped_W: number;
   total_truncated_W: number;
+  total_missed_W: number;
+  mesh_aperture_half_extent_um: number;
   absorption_efficiency: number;
   energy_balance_relative_error: number;
   sampling: { seed: number; num_rays: number; absorption_efficiency_standard_error: number; uncertainty_scope: string };
@@ -102,12 +104,14 @@ export const KeyholeRaytracingLab: React.FC = () => {
           <dl className="grid grid-cols-2 gap-2 text-sm">
             <dt>Absorption</dt><dd>{(result.absorption_efficiency * 100).toFixed(2)}%</dd>
             <dt>Absorbed power</dt><dd>{result.total_absorbed_W.toFixed(3)} W</dd>
-            <dt>Escaped power</dt><dd>{result.total_escaped_W.toFixed(3)} W</dd>
+            <dt>Escaped power (reflected out)</dt><dd>{result.total_escaped_W.toFixed(3)} W</dd>
+            <dt>Missed power (outside mesh)</dt><dd>{result.total_missed_W.toFixed(3)} W</dd>
             <dt>Bounce-limited power</dt><dd>{result.total_truncated_W.toFixed(3)} W</dd>
             <dt>Energy closure error</dt><dd>{(result.energy_balance_relative_error * 100).toExponential(2)}%</dd>
             <dt>Sampling standard error</dt><dd>{(result.sampling.absorption_efficiency_standard_error * 100).toFixed(3)} pp</dd>
             <dt>Solve time</dt><dd>{result.solve_time_ms.toFixed(1)} ms</dd>
           </dl>
+          <p className="text-xs text-gray-400">Mesh aperture ±{result.mesh_aperture_half_extent_um.toFixed(0)} µm; beam radius {(process.beamDiameter_um / 2).toFixed(0)} µm. Rays starting outside the aperture never reach the cavity and are counted as missed, not escaped.</p>
           <p className="text-xs text-gray-400">{result.model_id} · seed {result.sampling.seed} · {result.sampling.num_rays} rays</p>
           <p className="text-xs text-gray-400">{result.sampling.uncertainty_scope}</p>
           <ul className="list-disc space-y-1 pl-4 text-xs text-amber-300">{result.limitations.map(limit => <li key={limit}>{limit}</li>)}</ul>
