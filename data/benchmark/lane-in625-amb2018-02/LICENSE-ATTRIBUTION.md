@@ -21,11 +21,15 @@ Transcription rules: values are copied as published strings. Footnote markers ar
 `a` (AMMT case C emittance 0.519 assumed, sigma not available), `b` (AMMT 1290-1000 C cooling rate not
 reported, blank), `c` (AMMT cooling rates "should not be used, but are printed here for reference").
 `cooling_rate_use` is `do-not-use (Table 3 footnote c)` for every AMMT row; CBM rows are `exemplar, not
-reference (paper conclusions)`. `nominal_case_power_W` is the case power in the paper text (A 150 W, B/C 195 W).
+reference (paper conclusions)`. `table4_summary.csv` carries the same flag per class: Table 4 takes AMMT length
+and cooling rate from the AMMT-20 us tracks only (Table 4 caption), so the AMMT-A/B/C cooling rates are the
+same values Table 3 footnote c marks as not to be used (`do-not-use (same AMMT-20us values as Table 3,
+footnote c)`); Table 4 itself cites no footnote for them. This column is added, not published. `nominal_case_power_W` is the case power in the paper text (A 150 W, B/C 195 W).
 
-Open question, not resolved: Table 3 gives AMMT powers 137.9 W and 179.2 W, the text gives the case powers
-150 W and 195 W, and the retrieved text does not explain the difference. Kernel inputs use the Table 3 value;
-a nominal-power re-run is reported as a sensitivity.
+Open question, not resolved: the Fig. 2 caption says "Laser power values indicated are the applied laser
+power"; Table 3 lists 137.9/179.2 W for the AMMT cases and the Section 2 case definitions give 150/195 W.
+Whether these are applied vs commanded powers is not stated explicitly, and the Fig. 2 image was not read.
+Kernel inputs use the Table 3 value; a nominal-power re-run is reported as a sensitivity.
 
 Columns: Table 3 "Cross Section (um)" appears twice; the first is width, the second depth (the CBM track
 means reproduce Table 4 Class Width / Class Depth). Each track has N = 3 microscopy measurements; sigma is

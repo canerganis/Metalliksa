@@ -34,7 +34,9 @@ Not established here: the beam diameter. The kernels are run at 37.5 um, the val
 KU Leuven IN718 record attributes to the paper. The article itself (Coen, Goossens, Van Hooreweder,
 J. Mater. Process. Technol. 304 (2022) 117547, doi:10.1016/j.jmatprotec.2022.117547) returned HTTP 403, so
 diameter vs radius and the beam definition are unverified. A 75 um re-run is reported as a sensitivity.
-Powder layer, preheat and absorptivity are not stated in these files.
+Powder layer, preheat and absorptivity are not stated in these files. The 2026-10-05 KU Leuven IN718 record cites a
+60 um powder layer from the Coen article; that article could not be read here (HTTP 403), so no layer is carried
+over (the screening kernels ignore layer thickness, so there is no numeric effect).
 
 Please attribute: V. Coen, KU Leuven, melt-pool measurements of SS316L and Ti-6Al-4V, Figshare (CC0), DOIs
 above; manuscript doi:10.1016/j.jmatprotec.2022.117547. Comparison only; not experimental validation.

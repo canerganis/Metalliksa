@@ -5,60 +5,60 @@
    "Inconel 625": 0.38,
    "Ti-6Al-4V": 0.35
   },
-  "fallbackWarnings": 4410,
+  "fallbackWarnings": 4206,
   "fallbackWarningsByKernel": {
    "eagar-tsai": 838,
    "goldak": 838,
    "rosenthal": 838
   },
-  "fallbackWarningsSensitivityRuns": 1896,
+  "fallbackWarningsSensitivityRuns": 1692,
   "howPinned": "sys.modules['powder_bed_raytracer'] = None is set in the main process and in every worker before lpbf_thermal_solver is imported, so the solver's `from powder_bed_raytracer import ...` raises ImportError and its except branch (flat-plate absorptivity) is taken; the solver is not edited",
   "note": "flat-plate absorptivity_IR; the GPU powder ray tracer was not used; with it the predictions change (reviewer stub: Eagar-Tsai hofmann-0001 171.0/119.6 -> 209.2/143.6 um at effective 0.65). fallbackWarnings counts the solver's 'GPU Powder Bed Ray Tracing failed' messages (captured, not suppressed): with the pin it fires once per solver call (solverCalls), which confirms the flat-plate branch was the realized path.",
   "path": "flat-plate",
   "pinned": true,
   "raytracerImportable": true,
   "raytracerModulePresent": true,
-  "solverCalls": 4410
+  "solverCalls": 4206
  },
  "absorptivitySensitivity": {
   "eagar-tsai": {
    "depth_mape_pct_by_value": {
-    "0.30": 31.2043,
-    "0.40": 27.4767,
-    "0.50": 37.1033,
-    "0.60": 53.2854
+    "0.30": 30.458,
+    "0.40": 28.6659,
+    "0.50": 39.5345,
+    "0.60": 56.2101
    },
    "n_included_by_value": {
-    "0.30": 157,
-    "0.40": 158,
-    "0.50": 158,
-    "0.60": 158
+    "0.30": 140,
+    "0.40": 141,
+    "0.50": 141,
+    "0.60": 141
    },
    "width_mape_pct_by_value": {
-    "0.30": 21.2313,
-    "0.40": 15.8648,
-    "0.50": 13.163,
-    "0.60": 12.542
+    "0.30": 23.0523,
+    "0.40": 15.6254,
+    "0.50": 11.4848,
+    "0.60": 9.9322
    }
   },
   "goldak": {
    "depth_mape_pct_by_value": {
-    "0.30": 30.1056,
-    "0.40": 41.0844,
-    "0.50": 58.5053,
-    "0.60": 74.4366
+    "0.30": 29.7016,
+    "0.40": 42.0449,
+    "0.50": 60.3068,
+    "0.60": 76.5806
    },
    "n_included_by_value": {
-    "0.30": 107,
-    "0.40": 134,
-    "0.50": 148,
-    "0.60": 151
+    "0.30": 103,
+    "0.40": 126,
+    "0.50": 136,
+    "0.60": 139
    },
    "width_mape_pct_by_value": {
-    "0.30": 40.6311,
-    "0.40": 30.7203,
-    "0.50": 22.456,
-    "0.60": 16.3478
+    "0.30": 41.1515,
+    "0.40": 31.3939,
+    "0.50": 23.5671,
+    "0.60": 17.3646
    }
   },
   "label": "SENSITIVITY, not a calibrated value: conduction-regime rows (regime assigned at the repo's default absorptivity), absorptivity_IR overridden uniformly via prop_overrides; the absorptivity actually acting in a physical track is unknown.",
@@ -82,7 +82,7 @@
     "0.60": 12.8125
    }
   },
-  "rows": 158,
+  "rows": 141,
   "values": [
    0.3,
    0.4,
@@ -91,14 +91,14 @@
   ]
  },
  "assumptions": {
-  "absorptivity": "the repo's estimated absorptivity_IR (316L 0.42, Ti-6Al-4V 0.35), flat-plate",
-  "addedDatasetTreatment": "CMU ST has no power field; all CMU rows lack beam diameter. KU Leuven source dimensions retain unresolved units and width operator. These rows have no numeric regime classification or kernel predictions and are excluded from MAPE/statistics; source observations remain in rows with explicit extentStatus reasons.",
-  "hatch_um": "100 (neither dataset has a hatch: single tracks; the hatch only enters the lack-of-fusion screen, not the width/depth/length extents)",
+  "absorptivity": "the repo's estimated absorptivity_IR (316L 0.42, Ti-6Al-4V 0.35; IN625 0.38 from the legacy-estimated secondary table, wave 2 Lane rows only), flat-plate",
+  "addedDatasetTreatment": "CMU ST has no power field; all CMU rows lack beam diameter. KU Leuven IN718 (ku-leuven-in718-2021) source dimensions retain unresolved units and width operator. These rows have no numeric regime classification or kernel predictions and are excluded from MAPE/statistics; source observations remain in rows with explicit extentStatus reasons. This applies to the IN718 file only: the wave 2 KU Leuven 316L/Ti-6Al-4V units were resolved from their raw '(1)' files (see the wave 2 catalog notes); the same raw-file check was not applied to the IN718 file in this record.",
+  "hatch_um": "100 (no dataset in this record has a hatch: single tracks; the hatch only enters the lack-of-fusion screen, not the width/depth/length extents)",
   "inclusionRule": "a row counts for statistics only when extentStatus == 'computed'",
   "layer_um": "t_powder 0 (bare plate) rows are passed with a nominal 30 um layer because the function requires a positive layer; width/depth/length do not depend on it (checked at 10/30/60 um)",
   "powderBedRayTracer": "calculate_meltpool_physics tries the optional GPU powder ray tracer and falls back to the flat-plate absorptivity on any exception. This harness pins the flat-plate path (sys.modules['powder_bed_raytracer'] = None before the solver import; --allow-raytracer unpins), so the ray tracer was not used; see `absorption`",
-  "preheat_C": "20 C assumed (not given by either dataset)",
-  "wave2": "KU Leuven rows: beam diameter unverified: 37.5 um carried from the 2026-10-05 KU Leuven IN718 record ('Paper reports 37.5 um spot'); the article (doi:10.1016/j.jmatprotec.2022.117547) could not be read (HTTP 403), so diameter vs radius and the beam-size definition are not confirmed; layer not stated (kernels ignore it); 20 C preheat assumed. Lane rows: bare plate (layer 0, passed as the nominal layer), Table 3 power, D4sigma spot as the 1/e^2 diameter, 20 C preheat assumed, IN625 properties from the solver's legacy-estimated secondary table. No kernel parameter was changed for these rows; sensitivities are reported separately."
+  "preheat_C": "20 C assumed for every dataset (no dataset in this record states a build-plate or substrate temperature in the files read)",
+  "wave2": "KU Leuven rows: beam diameter unverified: 37.5 um carried from the 2026-10-05 KU Leuven IN718 record ('Paper reports 37.5 um spot'); the article (doi:10.1016/j.jmatprotec.2022.117547) could not be read (HTTP 403), so diameter vs radius and the beam-size definition are not confirmed; layer left unset (not stated in the files read; the 2026-10-05 KU Leuven IN718 record cites a 60 um powder layer from the Coen article, which could not be read here (HTTP 403), so it is not carried over to these rows; kernels ignore it); 20 C preheat assumed. Lane rows: bare plate (layer 0, passed as the nominal layer), Table 3 power, D4sigma spot as the 1/e^2 diameter, 20 C preheat assumed, IN625 properties from the solver's legacy-estimated secondary table. No kernel parameter was changed for these rows; sensitivities are reported separately."
  },
  "datasets": [
   {
@@ -220,7 +220,7 @@
     "Width operator: 'Width' in the raw files; the authors' R = d/w with keyhole for R > 1 implies full width (inference, the article was not read).",
     "Regime labels are the authors' published labels ('melting regime' column), kept verbatim; they are not a strict function of R exp and are not the repo's screening classifier.",
     "Beam diameter unverified: 37.5 um carried from the 2026-10-05 KU Leuven IN718 record ('Paper reports 37.5 um spot'); the article (doi:10.1016/j.jmatprotec.2022.117547) could not be read (HTTP 403), so diameter vs radius and the beam-size definition are not confirmed.",
-    "Powder layer, preheat and absorptivity are not stated in the files read; 20 C preheat is an assumption.",
+    "Powder layer not stated in the files read; the 2026-10-05 KU Leuven IN718 record cites a 60 um powder layer from the Coen article, which could not be read here (HTTP 403), so it is not carried over to these rows (the kernels ignore layer thickness, so there is no numeric effect). Preheat and absorptivity are not stated in the files read; 20 C preheat is an assumption.",
     "Conditions blank in the processed file (316L 600 W at 400/500/1000/1100 mm/s) carry no exp value and are not compared, although the raw file has partial sections for some of them.",
     "Condition means: per-condition section count is taken from the raw file (raw_sections_n); the trailing 'nb. of samples' column of the processed file belongs to its regime-summary block and is not used.",
     "not compared: ku-leuven-316l-2021-41 (w exp / d exp blank in the processed source file)",
@@ -270,7 +270,7 @@
     "Width operator: 'Width' in the raw files; the authors' R = d/w with keyhole for R > 1 implies full width (inference, the article was not read).",
     "Regime labels are the authors' published labels ('melting regime' column), kept verbatim; they are not a strict function of R exp and are not the repo's screening classifier.",
     "Beam diameter unverified: 37.5 um carried from the 2026-10-05 KU Leuven IN718 record ('Paper reports 37.5 um spot'); the article (doi:10.1016/j.jmatprotec.2022.117547) could not be read (HTTP 403), so diameter vs radius and the beam-size definition are not confirmed.",
-    "Powder layer, preheat and absorptivity are not stated in the files read; 20 C preheat is an assumption.",
+    "Powder layer not stated in the files read; the 2026-10-05 KU Leuven IN718 record cites a 60 um powder layer from the Coen article, which could not be read here (HTTP 403), so it is not carried over to these rows (the kernels ignore layer thickness, so there is no numeric effect). Preheat and absorptivity are not stated in the files read; 20 C preheat is an assumption.",
     "Conditions blank in the processed file (316L 600 W at 400/500/1000/1100 mm/s) carry no exp value and are not compared, although the raw file has partial sections for some of them.",
     "Condition means: per-condition section count is taken from the raw file (raw_sections_n); the trailing 'nb. of samples' column of the processed file belongs to its regime-summary block and is not used."
    ],
@@ -313,7 +313,7 @@
    "notes": [
     "Width and depth are Table 3 'Cross Section (um)' track means (N = 3 microscopy measurements per track, sigma = spread, not an uncertainty); the first Cross Section column is width, the second depth (their CBM means reproduce Table 4 Class Width/Depth).",
     "Bare IN625 plate, no powder; preheat not stated (20 C assumed). Spot sizes are D4sigma diameters (CBM 100 um, AMMT 170 um, Table 1); for a Gaussian beam D4sigma equals the 1/e^2 diameter the kernels take.",
-    "AMMT power: Table 3 lists 137.9 W (case A) and 179.2 W (cases B, C) while the text gives case powers 150 W and 195 W; the paper text retrieved does not explain the difference. Kernel inputs use the Table 3 values; the discrepancy is UNRESOLVED and a nominal-power sensitivity is reported separately.",
+    "AMMT power: Fig. 2 caption: 'Laser power values indicated are the applied laser power'; Table 3 lists 137.9/179.2 W for the AMMT cases and the Section 2 case definitions give 150/195 W. Whether these are applied vs commanded powers is not stated explicitly, and the Fig. 2 image was not read. Status: UNRESOLVED. Kernel inputs use the Table 3 values; a nominal-power sensitivity is reported separately.",
     "AMMT cooling rates: Table 3 footnote c says they 'should not be used' (motion blur / calibration range); they are stored flagged do-not-use. AMMT 1290-1000 C cooling rates are blank (footnote b). AMMT-100us case C emittance 0.519 is assumed (footnote a). The conclusions call all cooling rates exemplar, not reference data.",
     "AMMT-100us and AMMT-20us tracks are different physical tracks made under nominally the same conditions (paper Fig. 7); CBM case A is described as near or at keyholing.",
     "IN625 kernel properties come from lpbf_thermal_solver.SECONDARY_THERMOPHYSICAL_DB (provenance class 'legacy-estimated-secondary', absorptivity_IR 0.38 estimated), not from a measured property set."
@@ -331,7 +331,7 @@
     "sha256": "19757c67b91aeee5b4575722482103649dc98d03167bced14d64244f5313b460",
     "tableSha256ByName": {
      "table3_tracks.csv": "32fe10fb8606a49cdc59e1e3753b40e6be9ea9751dae9ec8ac95c217e6d16179",
-     "table4_summary.csv": "5ea0e60266a948d266d80f253eaa9df130aece639060cb1fc5f54f2a9d59390d"
+     "table4_summary.csv": "b3eaf59e1b3e7aa2b989449095b4a7f7f5ba6d3188e77604fe8151eb1b9843d5"
     },
     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8194244/"
    },
@@ -351,10 +351,10 @@
   "goldak"
  ],
  "limits": [
-  "Kernels are compared on different included subsets (rows with extentStatus == 'computed'): pooled n = rosenthal 580 of 1512, eagar-tsai 838 of 1512, goldak 815 of 1512. Only summary.<kernel>.common (n = 580, the rows where all kernels are computed) is a like-for-like comparison; pooled and per-regime figures of different kernels are not.",
-  "Rosenthal conduction statistics rest on 27 of 158 conduction rows: they are selected by the kernel's own output (only rows where Rosenthal resolves an extent without heuristic fallback, search-box limitation or the 0.55 x beam-diameter width floor are 'computed'), so they describe the rows it can resolve, not the regime.",
-  "Eagar-Tsai and Goldak keyhole-regime depth statistics are identical (bias -2.0 %, MAPE 25.2 %) because both add the same Fabbro keyhole depth term; they are not independent evidence.",
-  "The measurements carry no uncertainty model (neither dataset provides per-row measurement uncertainty); the bootstrap intervals cover resampling of parameter sets only, not measurement error, the estimated material laws or the assumed absorptivity.",
+  "Kernels are compared on different included subsets (rows with extentStatus == 'computed'): pooled n = rosenthal 519 of 1431, eagar-tsai 757 of 1431, goldak 743 of 1431. Only summary.<kernel>.common (n = 519, the rows where all kernels are computed) is a like-for-like comparison; pooled and per-regime figures of different kernels are not.",
+  "Rosenthal conduction statistics rest on 27 of 141 conduction rows: they are selected by the kernel's own output (only rows where Rosenthal resolves an extent without heuristic fallback, search-box limitation or the 0.55 x beam-diameter width floor are 'computed'), so they describe the rows it can resolve, not the regime.",
+  "Eagar-Tsai and Goldak keyhole-regime depth statistics are identical (bias +0.4 %, MAPE 24.7 %) because both add the same Fabbro keyhole depth term; they are not independent evidence.",
+  "The measurements carry no uncertainty model: the pooled-summary datasets (Hofmann 316L, Totis Ti-6Al-4V) provide no per-row measurement uncertainty; the wave 2 Lane IN625 rows carry Table 3 per-track sigma (measured.widthSigma_um / depthSigma_um, the spread of N = 3 microscopy measurements, not an uncertainty) and the statistics do not use it. The bootstrap intervals cover resampling of parameter sets only, not measurement error, the estimated material laws or the assumed absorptivity.",
   "Replicate rows are not independent: the Hofmann table has 677 rows but only 623 distinct parameter sets; the bootstrap intervals resample whole parameter sets (clusters), the point statistics weight every row.",
   "Balling-flagged rows (216) are inside the pooled 'all' headline statistics; a continuous-track screening kernel is not meant to describe them.",
   "The Totis depth reference line (original substrate surface vs powder surface) is not stated by the source; the 80 Totis depths carry an unknown offset.",
@@ -362,8 +362,9 @@
   "Absorption path: flat-plate absorptivity_IR (316L 0.42, Ti-6Al-4V 0.35, Inconel 625 0.38); the GPU powder ray tracer was not used; with the ray tracer the predictions change.",
   "The reference-transient block depends on wall-clock budgets (total and per case): on a slower host rows can become 'not-run (budget)'. --reuse-reference copies the block of an earlier record instead.",
   "KU Leuven 316L/Ti-6Al-4V (58 condition means): the beam diameter is unverified: 37.5 um carried from the 2026-10-05 KU Leuven IN718 record ('Paper reports 37.5 um spot'); the article (doi:10.1016/j.jmatprotec.2022.117547) could not be read (HTTP 403), so diameter vs radius and the beam-size definition are not confirmed; the 75 um re-run in wave2.kuBeamDiameterSensitivity shows how much the statistics move with it. Rows are condition means of 7 to 16 sections; the bootstrap resamples conditions, not sections.",
-  "Lane IN625 (23 tracks): AMMT kernel inputs use the Table 3 power (137.9/179.2 W), which differs from the nominal case power in the text (150/195 W) without an explanation in the paper; see wave2.laneNominalPowerSensitivity. IN625 properties are legacy estimates (absorptivity_IR 0.38).",
-  "Wave 2 reference targets (NIST AMB2022-03 thermal Tables 2-3, Simonds 2018 Table III) have no like-for-like model comparison in the app; their comparison status is 'unavailable' with the reason recorded."
+  "Lane IN625 (23 tracks): AMMT kernel inputs use the Table 3 power (137.9/179.2 W). Fig. 2 caption: 'Laser power values indicated are the applied laser power'; Table 3 lists 137.9/179.2 W for the AMMT cases and the Section 2 case definitions give 150/195 W. Whether these are applied vs commanded powers is not stated explicitly, and the Fig. 2 image was not read. Status: UNRESOLVED. See wave2.laneNominalPowerSensitivity. IN625 properties are legacy estimates (absorptivity_IR 0.38).",
+  "Wave 2 reference targets (NIST AMB2022-03 thermal Tables 2-3, Simonds 2018 Table III) have no like-for-like model comparison in the app; their comparison status is 'unavailable' with the reason recorded.",
+  "The pooled summary, its limits above and the absorptivity sensitivity exclude the 81 wave 2 rows (KU Leuven 316L/Ti-6Al-4V, Lane IN625; see summaryScope), so the pooled headline keeps the 2026-10-05 scope and is comparable to it. Per-dataset wave 2 figures are in wave2.scorecard; they are not pooled across materials."
  ],
  "predictionExclusions": [
   {
@@ -417,7 +418,7 @@
    "keyholeEnthalpy": 30.0,
    "transitionEnthalpy": 15.0
   },
-  "rule": "Screening classifier, not the papers' regime definition. Inputs: normalised enthalpy dH/h_s = eta*P / (rho*cp_s*max(50, T_liq-T0)*sqrt(pi*alpha_s*v*r^3)) (same form as lpbf_thermal_solver.py, flat-plate absorptivity_IR of the material authority, solid k/cp, r = d/2) and the dataset's own balling flag. balling == 1 -> 'balling-flagged' (Hofmann only); otherwise dH/h_s < 15 -> 'conduction', 15 <= dH/h_s < 30 -> 'transition', >= 30 -> 'keyhole'. Measured D/W is recorded next to the label but not used for it. Wave 2 rows (KU Leuven 316L/Ti-6Al-4V, Lane IN625) are classified by the same screening rule; the KU Leuven authors' own labels are kept verbatim in regime.publishedLabel and are not used for the statistics' regime split. Added datasets without a reported beam diameter (CMU) or with unresolved measured dimension units/operator (KU Leuven) are labeled unclassified and excluded from kernel predictions; no regime label is inferred for them."
+  "rule": "Screening classifier, not the papers' regime definition. Inputs: normalised enthalpy dH/h_s = eta*P / (rho*cp_s*max(50, T_liq-T0)*sqrt(pi*alpha_s*v*r^3)) (same form as lpbf_thermal_solver.py, flat-plate absorptivity_IR of the material authority, solid k/cp, r = d/2) and the dataset's own balling flag. balling == 1 -> 'balling-flagged' (Hofmann only); otherwise dH/h_s < 15 -> 'conduction', 15 <= dH/h_s < 30 -> 'transition', >= 30 -> 'keyhole'. Measured D/W is recorded next to the label but not used for it. Wave 2 rows (KU Leuven 316L/Ti-6Al-4V, Lane IN625) are classified by the same screening rule; the KU Leuven authors' own labels are kept verbatim in regime.publishedLabel and are not used for the statistics' regime split. Added datasets without a reported beam diameter (CMU) or with unresolved measured dimension units/operator (KU Leuven IN718 (ku-leuven-in718-2021)) are labeled unclassified and excluded from kernel predictions; no regime label is inferred for them."
  },
  "rows": [
   {
@@ -41408,37 +41409,37 @@
   "eagar-tsai": {
    "all": {
     "depth": {
-     "bias_pct": 8.6838,
+     "bias_pct": 10.8816,
      "bias_pct_ci95": [
-      4.9466,
-      12.4209
+      6.7723,
+      15.2108
      ],
-     "mape_pct": 33.5997,
+     "mape_pct": 34.0666,
      "mape_pct_ci95": [
-      30.7818,
-      37.0506
+      30.7611,
+      37.7706
      ],
-     "n_parameterSets": 767,
-     "rmse_um": 63.3977,
-     "within30pct": 0.6193,
-     "withinFactor2": 0.9153
+     "n_parameterSets": 703,
+     "rmse_um": 54.1295,
+     "within30pct": 0.6328,
+     "withinFactor2": 0.9141
     },
-    "n": 838,
+    "n": 757,
     "nExcluded": 674,
     "width": {
-     "bias_pct": -9.0472,
+     "bias_pct": -10.2125,
      "bias_pct_ci95": [
-      -10.0711,
-      -7.9451
+      -11.1249,
+      -9.3009
      ],
-     "mape_pct": 13.8916,
+     "mape_pct": 13.9319,
      "mape_pct_ci95": [
-      13.2417,
-      14.5228
+      13.3037,
+      14.5517
      ],
-     "n_parameterSets": 767,
-     "rmse_um": 28.3682,
-     "within30pct": 0.9451,
+     "n_parameterSets": 703,
+     "rmse_um": 29.0407,
+     "within30pct": 0.9406,
      "withinFactor2": 1.0
     }
    },
@@ -41480,145 +41481,145 @@
    },
    "common": {
     "depth": {
-     "bias_pct": 8.0026,
+     "bias_pct": 9.8327,
      "bias_pct_ci95": [
-      3.0889,
-      13.1042
+      4.7743,
+      15.5139
      ],
-     "mape_pct": 36.0492,
+     "mape_pct": 36.6907,
      "mape_pct_ci95": [
-      32.1397,
-      40.1887
+      32.4147,
+      41.5625
      ],
-     "n_parameterSets": 536,
-     "rmse_um": 75.4238,
-     "within30pct": 0.5741,
-     "withinFactor2": 0.9155
+     "n_parameterSets": 477,
+     "rmse_um": 64.5008,
+     "within30pct": 0.5896,
+     "withinFactor2": 0.9114
     },
-    "n": 580,
-    "nExcluded": 932,
+    "n": 519,
+    "nExcluded": 912,
     "width": {
-     "bias_pct": -7.6269,
+     "bias_pct": -8.3562,
      "bias_pct_ci95": [
-      -8.6184,
-      -6.4732
+      -9.5728,
+      -7.2139
      ],
-     "mape_pct": 13.1678,
+     "mape_pct": 13.1713,
      "mape_pct_ci95": [
-      12.4483,
-      13.8502
+      12.4562,
+      13.9038
      ],
-     "n_parameterSets": 536,
-     "rmse_um": 27.6881,
-     "within30pct": 0.9517,
+     "n_parameterSets": 477,
+     "rmse_um": 28.3113,
+     "within30pct": 0.948,
      "withinFactor2": 1.0
     }
    },
    "conduction": {
     "depth": {
-     "bias_pct": 13.1878,
+     "bias_pct": 17.2036,
      "bias_pct_ci95": [
-      5.6675,
-      21.1659
+      9.4841,
+      24.9785
      ],
-     "mape_pct": 27.6448,
+     "mape_pct": 28.5279,
      "mape_pct_ci95": [
-      21.7982,
-      34.0343
+      22.1158,
+      35.2472
      ],
-     "n_parameterSets": 132,
-     "rmse_um": 13.3143,
-     "within30pct": 0.7468,
-     "withinFactor2": 0.9367
+     "n_parameterSets": 128,
+     "rmse_um": 13.3028,
+     "within30pct": 0.7447,
+     "withinFactor2": 0.9291
     },
-    "n": 158,
+    "n": 141,
     "nExcluded": 0,
     "width": {
-     "bias_pct": -9.5105,
+     "bias_pct": -12.5344,
      "bias_pct_ci95": [
-      -12.6312,
-      -5.883
+      -14.378,
+      -10.6871
      ],
-     "mape_pct": 14.8448,
+     "mape_pct": 14.7574,
      "mape_pct_ci95": [
-      13.4222,
-      16.314
+      13.3821,
+      16.1094
      ],
-     "n_parameterSets": 132,
-     "rmse_um": 26.3074,
-     "within30pct": 0.9494,
+     "n_parameterSets": 128,
+     "rmse_um": 26.9665,
+     "within30pct": 0.9433,
      "withinFactor2": 1.0
     }
    },
    "keyhole": {
     "depth": {
-     "bias_pct": -1.9793,
+     "bias_pct": 0.372,
      "bias_pct_ci95": [
-      -5.948,
-      2.1911
+      -4.079,
+      4.8282
      ],
-     "mape_pct": 25.2064,
+     "mape_pct": 24.6698,
      "mape_pct_ci95": [
-      22.9929,
-      27.6105
+      22.0463,
+      27.2667
      ],
-     "n_parameterSets": 236,
-     "rmse_um": 99.7922,
-     "within30pct": 0.6327,
-     "withinFactor2": 0.9878
+     "n_parameterSets": 185,
+     "rmse_um": 82.8143,
+     "within30pct": 0.6701,
+     "withinFactor2": 0.9845
     },
-    "n": 245,
+    "n": 194,
     "nExcluded": 0,
     "width": {
-     "bias_pct": -3.0769,
+     "bias_pct": -3.9561,
      "bias_pct_ci95": [
-      -4.5979,
-      -1.2392
+      -5.6905,
+      -2.0999
      ],
-     "mape_pct": 11.6392,
+     "mape_pct": 11.1833,
      "mape_pct_ci95": [
-      10.6865,
-      12.5047
+      10.1702,
+      12.2058
      ],
-     "n_parameterSets": 236,
-     "rmse_um": 24.4396,
-     "within30pct": 0.9837,
+     "n_parameterSets": 185,
+     "rmse_um": 25.0411,
+     "within30pct": 0.9845,
      "withinFactor2": 1.0
     }
    },
    "transition": {
     "depth": {
-     "bias_pct": -11.4703,
+     "bias_pct": -11.8969,
      "bias_pct_ci95": [
-      -16.6266,
-      -6.0641
+      -16.8646,
+      -7.2671
      ],
-     "mape_pct": 30.3229,
+     "mape_pct": 29.1633,
      "mape_pct_ci95": [
-      27.0873,
-      33.5892
+      25.9337,
+      32.4675
      ],
-     "n_parameterSets": 194,
-     "rmse_um": 44.2997,
-     "within30pct": 0.5662,
-     "withinFactor2": 0.895
+     "n_parameterSets": 185,
+     "rmse_um": 43.6251,
+     "within30pct": 0.5922,
+     "withinFactor2": 0.9175
     },
-    "n": 219,
+    "n": 206,
     "nExcluded": 0,
     "width": {
-     "bias_pct": -14.3558,
+     "bias_pct": -14.6354,
      "bias_pct_ci95": [
-      -15.6744,
-      -13.1065
+      -16.0512,
+      -13.2569
      ],
-     "mape_pct": 15.0177,
+     "mape_pct": 15.2468,
      "mape_pct_ci95": [
-      13.8949,
-      16.1917
+      14.0102,
+      16.4134
      ],
-     "n_parameterSets": 194,
-     "rmse_um": 30.125,
-     "within30pct": 0.9269,
+     "n_parameterSets": 185,
+     "rmse_um": 30.7108,
+     "within30pct": 0.9223,
      "withinFactor2": 1.0
     }
    },
@@ -41638,38 +41639,38 @@
   "goldak": {
    "all": {
     "depth": {
-     "bias_pct": 15.3119,
+     "bias_pct": 17.6626,
      "bias_pct_ci95": [
-      11.2104,
-      19.5062
+      13.1216,
+      22.1541
      ],
-     "mape_pct": 37.0015,
+     "mape_pct": 37.6528,
      "mape_pct_ci95": [
-      33.8027,
-      40.5735
+      33.9223,
+      41.6333
      ],
-     "n_parameterSets": 752,
-     "rmse_um": 64.1938,
-     "within30pct": 0.5914,
-     "withinFactor2": 0.9104
+     "n_parameterSets": 690,
+     "rmse_um": 54.5944,
+     "within30pct": 0.607,
+     "withinFactor2": 0.9058
     },
-    "n": 815,
-    "nExcluded": 697,
+    "n": 743,
+    "nExcluded": 688,
     "width": {
-     "bias_pct": -16.481,
+     "bias_pct": -17.4463,
      "bias_pct_ci95": [
-      -17.5956,
-      -15.4119
+      -18.5082,
+      -16.3981
      ],
-     "mape_pct": 19.5709,
+     "mape_pct": 19.9508,
      "mape_pct_ci95": [
-      18.7661,
-      20.4574
+      19.1494,
+      20.8015
      ],
-     "n_parameterSets": 752,
-     "rmse_um": 38.4582,
-     "within30pct": 0.8233,
-     "withinFactor2": 0.9951
+     "n_parameterSets": 690,
+     "rmse_um": 39.5239,
+     "within30pct": 0.8089,
+     "withinFactor2": 0.9946
     }
    },
    "balling-flagged": {
@@ -41710,146 +41711,146 @@
    },
    "common": {
     "depth": {
-     "bias_pct": 9.8724,
+     "bias_pct": 11.9022,
      "bias_pct_ci95": [
-      4.8107,
-      15.0741
+      6.7762,
+      17.6172
      ],
-     "mape_pct": 36.3357,
+     "mape_pct": 37.031,
      "mape_pct_ci95": [
-      32.3413,
-      40.376
+      32.7025,
+      41.9115
      ],
-     "n_parameterSets": 536,
-     "rmse_um": 75.2117,
-     "within30pct": 0.5879,
-     "withinFactor2": 0.9138
+     "n_parameterSets": 477,
+     "rmse_um": 64.2675,
+     "within30pct": 0.605,
+     "withinFactor2": 0.9094
     },
-    "n": 580,
-    "nExcluded": 932,
+    "n": 519,
+    "nExcluded": 912,
     "width": {
-     "bias_pct": -11.6331,
+     "bias_pct": -12.5858,
      "bias_pct_ci95": [
-      -12.7068,
-      -10.3875
+      -13.8291,
+      -11.3919
      ],
-     "mape_pct": 15.9591,
+     "mape_pct": 16.1536,
      "mape_pct_ci95": [
-      15.1586,
-      16.6809
+      15.3971,
+      16.9701
      ],
-     "n_parameterSets": 536,
-     "rmse_um": 32.9442,
-     "within30pct": 0.9224,
+     "n_parameterSets": 477,
+     "rmse_um": 33.9045,
+     "within30pct": 0.9133,
      "withinFactor2": 1.0
     }
    },
    "conduction": {
     "depth": {
-     "bias_pct": 36.1464,
+     "bias_pct": 38.861,
      "bias_pct_ci95": [
-      26.1019,
-      46.72
+      29.0482,
+      49.0217
      ],
-     "mape_pct": 42.6788,
+     "mape_pct": 43.8618,
      "mape_pct_ci95": [
-      34.4637,
-      52.1005
+      35.1408,
+      53.2631
      ],
-     "n_parameterSets": 118,
-     "rmse_um": 16.7999,
-     "within30pct": 0.5588,
-     "withinFactor2": 0.8897
+     "n_parameterSets": 116,
+     "rmse_um": 16.9528,
+     "within30pct": 0.5625,
+     "withinFactor2": 0.8828
     },
-    "n": 136,
-    "nExcluded": 22,
+    "n": 128,
+    "nExcluded": 13,
     "width": {
-     "bias_pct": -29.5427,
+     "bias_pct": -29.946,
      "bias_pct_ci95": [
-      -31.8167,
-      -27.4817
+      -31.9701,
+      -27.9177
      ],
-     "mape_pct": 29.7223,
+     "mape_pct": 30.1368,
      "mape_pct_ci95": [
-      27.7883,
-      31.8922
+      28.1729,
+      32.0866
      ],
-     "n_parameterSets": 118,
-     "rmse_um": 49.1491,
-     "within30pct": 0.5368,
-     "withinFactor2": 0.9779
+     "n_parameterSets": 116,
+     "rmse_um": 49.9629,
+     "within30pct": 0.5234,
+     "withinFactor2": 0.9766
     }
    },
    "keyhole": {
     "depth": {
-     "bias_pct": -1.9793,
+     "bias_pct": 0.372,
      "bias_pct_ci95": [
-      -5.948,
-      2.1911
+      -4.079,
+      4.8282
      ],
-     "mape_pct": 25.2064,
+     "mape_pct": 24.6698,
      "mape_pct_ci95": [
-      22.9929,
-      27.6105
+      22.0463,
+      27.2667
      ],
-     "n_parameterSets": 236,
-     "rmse_um": 99.7922,
-     "within30pct": 0.6327,
-     "withinFactor2": 0.9878
+     "n_parameterSets": 185,
+     "rmse_um": 82.8143,
+     "within30pct": 0.6701,
+     "withinFactor2": 0.9845
     },
-    "n": 245,
+    "n": 194,
     "nExcluded": 0,
     "width": {
-     "bias_pct": -5.4613,
+     "bias_pct": -6.5924,
      "bias_pct_ci95": [
-      -7.0451,
-      -3.5596
+      -8.3515,
+      -4.6808
      ],
-     "mape_pct": 12.745,
+     "mape_pct": 12.4445,
      "mape_pct_ci95": [
-      11.7597,
-      13.6867
+      11.3218,
+      13.4759
      ],
-     "n_parameterSets": 236,
-     "rmse_um": 26.8139,
-     "within30pct": 0.9837,
+     "n_parameterSets": 185,
+     "rmse_um": 27.8769,
+     "within30pct": 0.9794,
      "withinFactor2": 1.0
     }
    },
    "transition": {
     "depth": {
-     "bias_pct": -7.2636,
+     "bias_pct": -7.5824,
      "bias_pct_ci95": [
-      -12.6398,
-      -1.4032
+      -12.6697,
+      -2.8944
      ],
-     "mape_pct": 29.6019,
+     "mape_pct": 28.5544,
      "mape_pct_ci95": [
-      26.2242,
-      32.9763
+      25.0348,
+      32.0255
      ],
-     "n_parameterSets": 194,
-     "rmse_um": 42.9947,
-     "within30pct": 0.621,
-     "withinFactor2": 0.9178
+     "n_parameterSets": 185,
+     "rmse_um": 42.4849,
+     "within30pct": 0.6505,
+     "withinFactor2": 0.9272
     },
-    "n": 219,
+    "n": 206,
     "nExcluded": 0,
     "width": {
-     "bias_pct": -20.1011,
+     "bias_pct": -20.2746,
      "bias_pct_ci95": [
-      -21.3656,
-      -18.872
+      -21.6321,
+      -18.9923
      ],
-     "mape_pct": 20.2946,
+     "mape_pct": 20.4405,
      "mape_pct_ci95": [
-      19.0988,
-      21.5563
+      19.1601,
+      21.7037
      ],
-     "n_parameterSets": 194,
-     "rmse_um": 39.0078,
-     "within30pct": 0.8584,
-     "withinFactor2": 0.9954
+     "n_parameterSets": 185,
+     "rmse_um": 39.59,
+     "within30pct": 0.8495,
+     "withinFactor2": 0.9951
     }
    },
    "unclassified-missing-process-input": {
@@ -41868,38 +41869,38 @@
   "rosenthal": {
    "all": {
     "depth": {
-     "bias_pct": 38.6284,
+     "bias_pct": 42.6131,
      "bias_pct_ci95": [
-      32.4939,
-      44.9523
+      36.4476,
+      49.3727
      ],
-     "mape_pct": 51.3815,
+     "mape_pct": 51.7936,
      "mape_pct_ci95": [
-      46.0664,
-      56.8111
+      46.138,
+      58.1003
      ],
-     "n_parameterSets": 536,
-     "rmse_um": 92.701,
-     "within30pct": 0.4793,
-     "withinFactor2": 0.8483
+     "n_parameterSets": 477,
+     "rmse_um": 73.7113,
+     "within30pct": 0.5048,
+     "withinFactor2": 0.8593
     },
-    "n": 580,
-    "nExcluded": 932,
+    "n": 519,
+    "nExcluded": 912,
     "width": {
-     "bias_pct": 24.1941,
+     "bias_pct": 21.4844,
      "bias_pct_ci95": [
-      21.5245,
-      27.0956
+      18.5517,
+      24.2673
      ],
-     "mape_pct": 32.2553,
+     "mape_pct": 30.2735,
      "mape_pct_ci95": [
-      30.3311,
-      34.3568
+      28.2383,
+      32.3474
      ],
-     "n_parameterSets": 536,
-     "rmse_um": 63.4125,
-     "within30pct": 0.5724,
-     "withinFactor2": 0.9845
+     "n_parameterSets": 477,
+     "rmse_um": 61.1327,
+     "within30pct": 0.6069,
+     "withinFactor2": 0.9827
     }
    },
    "balling-flagged": {
@@ -41940,38 +41941,38 @@
    },
    "common": {
     "depth": {
-     "bias_pct": 38.6284,
+     "bias_pct": 42.6131,
      "bias_pct_ci95": [
-      32.4939,
-      44.9523
+      36.4476,
+      49.3727
      ],
-     "mape_pct": 51.3815,
+     "mape_pct": 51.7936,
      "mape_pct_ci95": [
-      46.0664,
-      56.8111
+      46.138,
+      58.1003
      ],
-     "n_parameterSets": 536,
-     "rmse_um": 92.701,
-     "within30pct": 0.4793,
-     "withinFactor2": 0.8483
+     "n_parameterSets": 477,
+     "rmse_um": 73.7113,
+     "within30pct": 0.5048,
+     "withinFactor2": 0.8593
     },
-    "n": 580,
-    "nExcluded": 932,
+    "n": 519,
+    "nExcluded": 912,
     "width": {
-     "bias_pct": 24.1941,
+     "bias_pct": 21.4844,
      "bias_pct_ci95": [
-      21.5245,
-      27.0956
+      18.5517,
+      24.2673
      ],
-     "mape_pct": 32.2553,
+     "mape_pct": 30.2735,
      "mape_pct_ci95": [
-      30.3311,
-      34.3568
+      28.2383,
+      32.3474
      ],
-     "n_parameterSets": 536,
-     "rmse_um": 63.4125,
-     "within30pct": 0.5724,
-     "withinFactor2": 0.9845
+     "n_parameterSets": 477,
+     "rmse_um": 61.1327,
+     "within30pct": 0.6069,
+     "withinFactor2": 0.9827
     }
    },
    "conduction": {
@@ -41992,7 +41993,7 @@
      "withinFactor2": 0.9259
     },
     "n": 27,
-    "nExcluded": 131,
+    "nExcluded": 114,
     "width": {
      "bias_pct": -35.0041,
      "bias_pct_ci95": [
@@ -42012,73 +42013,73 @@
    },
    "keyhole": {
     "depth": {
-     "bias_pct": 17.4406,
+     "bias_pct": 23.4033,
      "bias_pct_ci95": [
-      11.3815,
-      23.3278
+      17.2111,
+      29.5728
      ],
-     "mape_pct": 37.4797,
+     "mape_pct": 36.4038,
      "mape_pct_ci95": [
-      33.238,
-      41.6522
+      31.5536,
+      41.4109
      ],
-     "n_parameterSets": 234,
-     "rmse_um": 125.8039,
-     "within30pct": 0.4979,
-     "withinFactor2": 0.9012
+     "n_parameterSets": 183,
+     "rmse_um": 94.1978,
+     "within30pct": 0.5469,
+     "withinFactor2": 0.9323
     },
-    "n": 243,
+    "n": 192,
     "nExcluded": 2,
     "width": {
-     "bias_pct": 46.7008,
+     "bias_pct": 44.8513,
      "bias_pct_ci95": [
-      43.7175,
-      49.8769
+      41.3347,
+      48.111
      ],
-     "mape_pct": 46.7148,
+     "mape_pct": 44.869,
      "mape_pct_ci95": [
-      43.7324,
-      49.8769
+      41.3525,
+      48.111
      ],
-     "n_parameterSets": 234,
-     "rmse_um": 85.8606,
-     "within30pct": 0.3128,
-     "withinFactor2": 0.9835
+     "n_parameterSets": 183,
+     "rmse_um": 85.5449,
+     "within30pct": 0.3438,
+     "withinFactor2": 0.9792
     }
    },
    "transition": {
     "depth": {
-     "bias_pct": 33.6956,
+     "bias_pct": 32.5412,
      "bias_pct_ci95": [
-      26.8044,
-      41.2738
+      25.7626,
+      39.3092
      ],
-     "mape_pct": 40.6053,
+     "mape_pct": 38.3914,
      "mape_pct_ci95": [
-      35.2591,
-      47.0642
+      32.5198,
+      44.237
      ],
-     "n_parameterSets": 167,
-     "rmse_um": 41.2023,
-     "within30pct": 0.5556,
-     "withinFactor2": 0.8836
+     "n_parameterSets": 159,
+     "rmse_um": 40.8541,
+     "within30pct": 0.5866,
+     "withinFactor2": 0.8994
     },
-    "n": 189,
-    "nExcluded": 30,
+    "n": 179,
+    "nExcluded": 27,
     "width": {
-     "bias_pct": 2.1233,
+     "bias_pct": 1.4302,
      "bias_pct_ci95": [
-      -0.3933,
-      4.6947
+      -1.1866,
+      3.8211
      ],
-     "mape_pct": 14.4091,
+     "mape_pct": 13.7658,
      "mape_pct_ci95": [
-      13.0042,
-      15.7761
+      12.4679,
+      15.119
      ],
-     "n_parameterSets": 167,
-     "rmse_um": 29.9298,
-     "within30pct": 0.9471,
+     "n_parameterSets": 159,
+     "rmse_um": 30.178,
+     "within30pct": 0.9609,
      "withinFactor2": 1.0
     }
    },
@@ -42095,6 +42096,23 @@
     "width": null
    }
   }
+ },
+ "summaryScope": {
+  "datasets": [
+   "cmu-ti64-mt-2026",
+   "cmu-ti64-st-2026",
+   "hofmann-316l-2026",
+   "ku-leuven-in718-2021",
+   "totis-ti64-2021"
+  ],
+  "excludedWave2Datasets": [
+   "ku-leuven-316l-2021",
+   "ku-leuven-ti64-2021",
+   "lane-in625-2020"
+  ],
+  "excludedWave2Rows": 81,
+  "note": "summary, limits and absorptivitySensitivity cover the 2026-10-05 dataset scope only, so the pooled headline is comparable to the 2026-10-05 record; wave 2 rows are scored per dataset in wave2.scorecard because their inputs include unverified (KU Leuven beam diameter) or legacy-estimated (IN625 properties) values.",
+  "rows": 1431
  },
  "wave2": {
   "evidence": {
@@ -43274,6 +43292,7 @@
   "laneTable4": [
    {
     "class": "AMMT-A",
+    "cooling_rate_use": "do-not-use (same AMMT-20us values as Table 3, footnote c)",
     "cr_1290_1190_mean_C_s": "1.16E+06",
     "cr_N": "19",
     "cr_Umean_C_s": "6.15E+04",
@@ -43289,6 +43308,7 @@
    },
    {
     "class": "AMMT-B",
+    "cooling_rate_use": "do-not-use (same AMMT-20us values as Table 3, footnote c)",
     "cr_1290_1190_mean_C_s": "1.08E+06",
     "cr_N": "10",
     "cr_Umean_C_s": "1.86E+05",
@@ -43304,6 +43324,7 @@
    },
    {
     "class": "AMMT-C",
+    "cooling_rate_use": "do-not-use (same AMMT-20us values as Table 3, footnote c)",
     "cr_1290_1190_mean_C_s": "1.90E+06",
     "cr_N": "7",
     "cr_Umean_C_s": "2.09E+05",
@@ -43319,6 +43340,7 @@
    },
    {
     "class": "CBM-A",
+    "cooling_rate_use": "exemplar, not reference (paper conclusions)",
     "cr_1290_1190_mean_C_s": "6.20E+05",
     "cr_N": "129",
     "cr_Umean_C_s": "6.16E+03",
@@ -43334,6 +43356,7 @@
    },
    {
     "class": "CBM-B",
+    "cooling_rate_use": "exemplar, not reference (paper conclusions)",
     "cr_1290_1190_mean_C_s": "9.35E+05",
     "cr_N": "59",
     "cr_Umean_C_s": "1.82E+04",
@@ -43349,6 +43372,7 @@
    },
    {
     "class": "CBM-C",
+    "cooling_rate_use": "exemplar, not reference (paper conclusions)",
     "cr_1290_1190_mean_C_s": "1.28E+06",
     "cr_N": "52",
     "cr_Umean_C_s": "5.29E+04",
@@ -43367,7 +43391,7 @@
    {
     "caveats": [
      "Thermography of bare IN718 single tracks; each value is the mean of three tracks over 30 centerline pixels at a nominally steady-state location (page 2).",
-     "Processing assumptions stated on page 2: no undercooling, and emissivity set so the apparent solidification inflection equals the solidus/liquidus midpoint (TTAM threshold assumed 1298 C). The document notes the measurement error in TAM and SCR may be greatest at the largest spot size (case 1.2).",
+     "Processing assumptions stated on page 2: no undercooling, and emissivity set so the apparent solidification inflection equals the IN718 solidus/liquidus midpoint. The TTAM challenge definition on page 1 gives that midpoint as 'assumed to be 1298 C'; the explicit 'Ttrans = 1298 C' with emissivity 0.5 on page 7 belongs to the pad PTAM/PSCR processing. Page 3 notes the measurement error in TAM and SCR may be greatest at the largest spot size (case 1.2).",
      "TTCR is listed as supplementary data 'for reference', not a challenge quantity (Table 3); its definition is in the separate challenge-description document, which was not transcribed here.",
      "Same seven cases as the IN718 optical width/depth record already in the app (NIST mds2-2718 / AMB2022-03 Table 4); process parameters agree with lpbf_nist_in718_comparison.CASE_PROCESS."
     ],
@@ -44919,6 +44943,11 @@
      }
     }
    }
+  },
+  "sensitivityRunAccounting": {
+   "fallbackWarnings": 213,
+   "note": "solver calls of the two wave 2 sensitivity re-runs, not included in absorption.solverCalls; fallbackWarnings counts the captured ray-tracer fallback messages of those calls",
+   "solverCalls": 213
   }
  }
 }

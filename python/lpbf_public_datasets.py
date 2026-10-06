@@ -1,11 +1,19 @@
 #!/usr/bin/env python3
 """Typed loaders for public single-track melt-pool datasets and transcribed literature tables (comparison inputs only).
 
-Datasets (both CC BY 4.0, measured; nothing here is a calibration or a validation):
+Sources (all measured; nothing here is a calibration or a validation). Licence status per source:
 
-* Hofmann et al. 2026, 316L single tracks (Zenodo 10.5281/zenodo.16979848), 677 rows.
+* Hofmann et al. 2026, 316L single tracks (Zenodo 10.5281/zenodo.16979848), 677 rows. CC BY 4.0.
 * Totis / Vaglio et al. 2021, Ti-6Al-4V single tracks (Mendeley Data
-  10.17632/s9438vb5xd.1), 80 rows (8 powers x 10 speeds, n = 1 per cell).
+  10.17632/s9438vb5xd.1), 80 rows (8 powers x 10 speeds, n = 1 per cell). CC BY 4.0.
+* CMU KiltHub Ti-6Al-4V melt-pool tables (10.1184/R1/25696293.v1). CC BY 4.0.
+* KU Leuven (Coen) Figshare CSVs: IN718 (10.6084/m9.figshare.15035706.v1) and, wave 2, 316L / Ti-6Al-4V
+  (see KU_WAVE2_FILES). CC0.
+* Wave 2 transcriptions (numeric table values with citation; the source documents are not committed):
+  Lane et al. 2020 IN625 Tables 3-4 (PMC author manuscript; no licence stated, PMC text-mining / fair-use
+  permissions), NIST AMB2022-03 results document Tables 1-3 (no licence stated; NIST publication, US public
+  domain by inference, not confirmed), Simonds et al. 2018 Table III (US Government work, stated in the
+  manuscript).
 
 The committed small derived tables live in ``data/benchmark/``; the loaders read them by
 default and verify their SHA-256 against the pinned values below. The raw Hofmann CSV and the
@@ -13,8 +21,8 @@ Totis ``Allegati.zip`` / ``Data.xlsx`` can be parsed too (stdlib only: csv, zipf
 no new dependency) and ``build`` regenerates the committed tables from them.
 
 Units are normalised to the repo's process inputs: power W, speed mm/s, lengths um.
-``preheat_C`` is an ASSUMPTION (20 C room temperature): neither dataset states a build-plate
-temperature in the files read here.
+``preheat_C`` is an ASSUMPTION (20 C room temperature): no dataset here states a build-plate
+temperature in the files read.
 
 Regime screening (``classify_regime``) is an a-priori classifier from process inputs and the
 dataset's own balling flag. It is NOT the papers' regime definition.
@@ -604,6 +612,9 @@ KU_WAVE2_BEAM_STATUS = ("unverified: 37.5 um carried from the 2026-10-05 KU Leuv
 KU_WAVE2_PROCESSED_REQUIRED = ["Sample", "P", "v", "w exp", "d exp", "R exp", "melting regime"]
 KU_WAVE2_TABLE_COLUMNS = ["alloy", "sample", "power_W", "speed_mm_s", "w_exp_um", "d_exp_um", "R_exp",
                           "published_regime", "raw_sections_n", "raw_mean_width_um", "raw_mean_depth_um"]
+KU_WAVE2_LAYER_STATUS = ("not stated in the files read; the 2026-10-05 KU Leuven IN718 record cites a 60 um powder "
+                         "layer from the Coen article, which could not be read here (HTTP 403), so it is not carried "
+                         "over to these rows")
 KU_WAVE2_PROVENANCE = {
     "license": "CC0",
     "citation": ("V. Coen (KU Leuven), melt-pool measurement CSVs for 316L and Ti-6Al-4V, Figshare (CC0, 2021-07-22): "
@@ -621,7 +632,8 @@ KU_WAVE2_PROVENANCE = {
         "Regime labels are the authors' published labels ('melting regime' column), kept verbatim; they are not "
         "a strict function of R exp and are not the repo's screening classifier.",
         "Beam diameter " + KU_WAVE2_BEAM_STATUS + ".",
-        "Powder layer, preheat and absorptivity are not stated in the files read; 20 C preheat is an assumption.",
+        "Powder layer " + KU_WAVE2_LAYER_STATUS + " (the kernels ignore layer thickness, so there is no numeric "
+        "effect). Preheat and absorptivity are not stated in the files read; 20 C preheat is an assumption.",
         "Conditions blank in the processed file (316L 600 W at 400/500/1000/1100 mm/s) carry no exp value and are not "
         "compared, although the raw file has partial sections for some of them.",
         "Condition means: per-condition section count is taken from the raw file (raw_sections_n); the trailing "
@@ -778,7 +790,7 @@ LANE_DIR = REPO_ROOT / "data" / "benchmark" / "lane-in625-amb2018-02"
 LANE_TRACKS_TABLE = LANE_DIR / "table3_tracks.csv"
 LANE_SUMMARY_TABLE = LANE_DIR / "table4_summary.csv"
 LANE_TRACKS_TABLE_SHA256 = "32fe10fb8606a49cdc59e1e3753b40e6be9ea9751dae9ec8ac95c217e6d16179"
-LANE_SUMMARY_TABLE_SHA256 = "5ea0e60266a948d266d80f253eaa9df130aece639060cb1fc5f54f2a9d59390d"
+LANE_SUMMARY_TABLE_SHA256 = "b3eaf59e1b3e7aa2b989449095b4a7f7f5ba6d3188e77604fe8151eb1b9843d5"
 LANE_SOURCE = {
     "doi": "10.1007/s40192-020-00169-1", "pmcid": "PMC8194244", "nihmsid": "NIHMS1686029",
     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8194244/",
@@ -787,6 +799,10 @@ LANE_SOURCE = {
     "sha256": "19757c67b91aeee5b4575722482103649dc98d03167bced14d64244f5313b460",
     "hashOf": "PMC JATS XML returned by NCBI efetch (two fetches gave identical bytes); not committed",
 }
+LANE_POWER_QUESTION = (
+    "Fig. 2 caption: 'Laser power values indicated are the applied laser power'; Table 3 lists 137.9/179.2 W for the "
+    "AMMT cases and the Section 2 case definitions give 150/195 W. Whether these are applied vs commanded powers is "
+    "not stated explicitly, and the Fig. 2 image was not read. Status: UNRESOLVED.")
 LANE_PROVENANCE = {
     "id": "lane-in625-2020", "doi": LANE_SOURCE["doi"], "url": LANE_SOURCE["url"],
     "license": ("not stated as a licence: PMC author manuscript (NIHMS1686029), PMC permissions text 'available for "
@@ -802,9 +818,8 @@ LANE_PROVENANCE = {
         "reproduce Table 4 Class Width/Depth).",
         "Bare IN625 plate, no powder; preheat not stated (20 C assumed). Spot sizes are D4sigma diameters (CBM 100 um, "
         "AMMT 170 um, Table 1); for a Gaussian beam D4sigma equals the 1/e^2 diameter the kernels take.",
-        "AMMT power: Table 3 lists 137.9 W (case A) and 179.2 W (cases B, C) while the text gives case powers 150 W "
-        "and 195 W; the paper text retrieved does not explain the difference. Kernel inputs use the Table 3 values; "
-        "the discrepancy is UNRESOLVED and a nominal-power sensitivity is reported separately.",
+        "AMMT power: " + LANE_POWER_QUESTION + " Kernel inputs use the Table 3 values; a nominal-power sensitivity is "
+        "reported separately.",
         "AMMT cooling rates: Table 3 footnote c says they 'should not be used' (motion blur / calibration range); they "
         "are stored flagged do-not-use. AMMT 1290-1000 C cooling rates are blank (footnote b). AMMT-100us case C "
         "emittance 0.519 is assumed (footnote a). The conclusions call all cooling rates exemplar, not reference data.",
@@ -819,9 +834,14 @@ LANE_TRACK_COLUMNS = ["machine", "integration_time_us", "track", "case", "power_
                       "effective_emittance_sigma", "length_mean_um", "length_sigma_um", "cr_1290_1190_mean_C_s",
                       "cr_1290_1190_sigma_C_s", "cr_1290_1000_mean_C_s", "cr_1290_1000_sigma_C_s", "width_mean_um",
                       "width_sigma_um", "depth_mean_um", "depth_sigma_um", "footnotes", "cooling_rate_use"]
-LANE_SUMMARY_COLUMNS = ["class", "cr_1290_1190_mean_C_s", "cr_N", "cr_Umean_C_s", "length_mean_um", "length_N",
-                        "length_Umean_um", "width_mean_um", "width_N", "width_Umean_um", "depth_mean_um", "depth_N",
-                        "depth_Umean_um"]
+LANE_SUMMARY_PUBLISHED_COLUMNS = ["class", "cr_1290_1190_mean_C_s", "cr_N", "cr_Umean_C_s", "length_mean_um",
+                                  "length_N", "length_Umean_um", "width_mean_um", "width_N", "width_Umean_um",
+                                  "depth_mean_um", "depth_N", "depth_Umean_um"]
+LANE_SUMMARY_COLUMNS = LANE_SUMMARY_PUBLISHED_COLUMNS + ["cooling_rate_use"]
+LANE_TABLE4_COOLING_RATE_USE = {
+    "AMMT": "do-not-use (same AMMT-20us values as Table 3, footnote c)",
+    "CBM": "exemplar, not reference (paper conclusions)",
+}
 LANE_NOMINAL_CASE_POWER_W = {"A": 150.0, "B": 195.0, "C": 195.0}  # paper text, Section 2 (case definitions)
 
 
@@ -870,7 +890,9 @@ def build_lane_tables(xml_path: Union[str, Path], tracks_out: Path = LANE_TRACKS
     summary = []
     for cells in t4:
         if len(cells) == 13 and re.fullmatch(r"(AMMT|CBM)-[ABC]", cells[0]):
-            summary.append(dict(zip(LANE_SUMMARY_COLUMNS, cells)))
+            item = dict(zip(LANE_SUMMARY_PUBLISHED_COLUMNS, cells))
+            item["cooling_rate_use"] = LANE_TABLE4_COOLING_RATE_USE[cells[0].split("-")[0]]
+            summary.append(item)
     if len(tracks) != 23 or len(summary) != 6:
         raise ValueError(f"Lane table parse: {len(tracks)} tracks / {len(summary)} classes (expected 23 / 6)")
     return (_write_table(LANE_TRACK_COLUMNS, tracks, Path(tracks_out)),
@@ -929,8 +951,10 @@ NIST_THERMAL_PROVENANCE = {
         "Thermography of bare IN718 single tracks; each value is the mean of three tracks over 30 centerline pixels at a "
         "nominally steady-state location (page 2).",
         "Processing assumptions stated on page 2: no undercooling, and emissivity set so the apparent solidification "
-        "inflection equals the solidus/liquidus midpoint (TTAM threshold assumed 1298 C). The document notes the "
-        "measurement error in TAM and SCR may be greatest at the largest spot size (case 1.2).",
+        "inflection equals the IN718 solidus/liquidus midpoint. The TTAM challenge definition on page 1 gives that "
+        "midpoint as 'assumed to be 1298 C'; the explicit 'Ttrans = 1298 C' with emissivity 0.5 on page 7 belongs to "
+        "the pad PTAM/PSCR processing. Page 3 notes the measurement error in TAM and SCR may be greatest at the "
+        "largest spot size (case 1.2).",
         "TTCR is listed as supplementary data 'for reference', not a challenge quantity (Table 3); its definition is in "
         "the separate challenge-description document, which was not transcribed here.",
         "Same seven cases as the IN718 optical width/depth record already in the app (NIST mds2-2718 / AMB2022-03 "

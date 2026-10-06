@@ -1,5 +1,7 @@
 """Wave 2 (2026-10-06) open LPBF datasets: hash pins, measured-columns-only parsing, citation fields,
-missing-file behaviour, and the comparison tool's wave2 block on a tiny synthetic prediction set.
+missing-file behaviour, the comparison tool's wave2 block (build_wave2_block / wave2_limits / build_limits /
+render_wave2_markdown) on three committed rows with the solver replaced by a fixed +10 % / -10 % stub, and the
+committed 2026-10-06 record (which ships with this module: the record tests fail, not skip, when it is missing).
 
 Fixtures: the four KU Leuven Figshare CSVs (CC0) are committed under
 data/benchmark/ku-leuven-316l-ti64-2021/source/ with their SHA-256 pinned in lpbf_public_datasets.KU_WAVE2_FILES.
@@ -140,6 +142,9 @@ class LiteratureTableTests(unittest.TestCase):
         self.assertEqual({r["power_W"] for r in pds.load_lane_in625(use_nominal_power=True)["rows"]
                           if r["machine"] == "AMMT"}, {150.0, 195.0})
         self.assertTrue(any("UNRESOLVED" in c for c in d["provenance"]["caveats"]))
+        power_caveat = next(c for c in d["provenance"]["caveats"] if c.startswith("AMMT power"))
+        self.assertIn("Fig. 2 caption: 'Laser power values indicated are the applied laser power'", power_caveat)
+        self.assertIn("Fig. 2 image was not read", power_caveat)
         cbm3 = rows[0]
         self.assertEqual((cbm3["rowId"], cbm3["width_um"], cbm3["depth_um"], cbm3["beamDiameter_um"]),
                          ("lane-in625-cbm40-t03-A", 173.82, 154.4, 100.0))
@@ -151,6 +156,33 @@ class LiteratureTableTests(unittest.TestCase):
                                    delta=0.6)
             self.assertAlmostEqual(sum(r["depth_um"] for r in cbm) / len(cbm), float(t4[f"CBM-{case}"]["depth_mean_um"]),
                                    delta=0.6)
+
+    def test_lane_table4_ammt_cooling_rates_are_flagged_do_not_use(self):
+        d = pds.load_lane_in625()
+        t4 = {c["class"]: c for c in d["provenance"]["table4"]}
+        self.assertEqual(sorted(t4), ["AMMT-A", "AMMT-B", "AMMT-C", "CBM-A", "CBM-B", "CBM-C"])
+        ammt20 = {r["case"]: r for r in pds._load_pinned_csv(pds.LANE_TRACKS_TABLE, pds.LANE_TRACKS_TABLE_SHA256,
+                                                              pds.LANE_TRACK_COLUMNS, "t")
+                  if r["machine"] == "AMMT" and r["integration_time_us"] == "20"}
+        for case in "ABC":
+            ammt = t4[f"AMMT-{case}"]
+            self.assertTrue(ammt["cooling_rate_use"].startswith("do-not-use"))
+            self.assertIn("footnote c", ammt["cooling_rate_use"])
+            # the flag rests on this identity: Table 4 AMMT cooling rate == the AMMT-20us Table 3 track value
+            self.assertEqual(ammt["cr_1290_1190_mean_C_s"], ammt20[case]["cr_1290_1190_mean_C_s"])
+            self.assertTrue(t4[f"CBM-{case}"]["cooling_rate_use"].startswith("exemplar"))
+
+    def test_nist_caveat_page_references(self):
+        caveat = next(c for c in pds.NIST_THERMAL_PROVENANCE["caveats"] if "undercooling" in c)
+        self.assertIn("page 1", caveat)
+        self.assertIn("page 7 belongs to the pad PTAM/PSCR processing", caveat)
+        self.assertIn("Page 3", caveat)
+        self.assertNotIn("TTAM threshold assumed", caveat)
+
+    def test_ku_layer_statement_matches_the_in718_record(self):
+        self.assertIn("60 um", pds.KU_WAVE2_LAYER_STATUS)
+        self.assertTrue(any("60 um powder layer" in c for c in pds.KU_LEUVEN_PROVENANCE["caveats"]))
+        self.assertTrue(all(r["layer_um"] is None for r in pds.load_ku_leuven_316l_ti64()["rows"]))
 
     def test_lane_table3_keeps_footnote_flags_and_blank_cells(self):
         recs = pds._load_pinned_csv(pds.LANE_TRACKS_TABLE, pds.LANE_TRACKS_TABLE_SHA256, pds.LANE_TRACK_COLUMNS, "t")
@@ -268,11 +300,118 @@ class ScreeningPropsTests(unittest.TestCase):
             pds.classify_regime("Unobtainium", 150, 400, 100, 20.0, None)
 
 
-class Wave2RecordTests(unittest.TestCase):
+def _stub_prediction(row):
+    """Fixed stand-in for one kernel call: +10 % width, -10 % depth, one counted fallback warning."""
+    return {"width_um": round(row["width_um"] * 1.1, 6), "depth_um": round(row["depth_um"] * 0.9, 6),
+            "length_um": 100.0, "extentStatus": "computed", "extentNote": None, "included": True,
+            "_fallbackWarnings": 1}
+
+
+class Wave2BlockStubTests(unittest.TestCase):
+    """build_wave2_block and its helpers on three committed rows; the solver is replaced by _stub_prediction."""
+
     def setUp(self):
-        if not RECORD.is_file():
-            self.skipTest(f"{RECORD.name} is not committed in this checkout")
+        import lpbf_dataset_comparison as cmp
+        self.cmp = cmp
+        self.calls = []
+
+        def fake_map(tasks, jobs):
+            self.calls.append(len(tasks))
+            return [_stub_prediction(t["row"]) for t in tasks]
+
+        self._orig_map = cmp._map
+        cmp._map = fake_map
+        self.w2 = cmp.load_wave2(pds)
+        picked = {"ku-leuven-316l-2021-01", "ku-leuven-ti64-2021-08"}
+        rows = [r for r in self.w2["rows"] if r["rowId"] in picked]
+        rows.append(next(r for r in self.w2["lane"]["rows"] if r["machine"] == "AMMT"))
+        self.out_rows = []
+        for r in rows:
+            regime = pds.classify_regime(r["material"], r["power_W"], r["speed_mm_s"], r["beamDiameter_um"],
+                                         r["preheat_C"], r["balling"])
+            pred = {kk: v for kk, v in _stub_prediction(r).items() if kk != "_fallbackWarnings"}
+            self.out_rows.append({
+                "dataset": r["dataset"], "rowId": r["rowId"],
+                "inputs": {"power_W": r["power_W"], "speed_mm_s": r["speed_mm_s"],
+                           "beamDiameter_um": r["beamDiameter_um"], "layer_um": r["layer_um"]},
+                "measured": {"width_um": r["width_um"], "depth_um": r["depth_um"]}, "regime": regime,
+                "predictions": {k: dict(pred) for k in cmp.KERNELS}})
+
+    def tearDown(self):
+        self.cmp._map = self._orig_map
+
+    def test_scorecard_sensitivities_accounting_and_crosstab(self):
+        cmp = self.cmp
+        w = cmp.build_wave2_block(pds, self.w2, self.out_rows, jobs=1, allow_raytracer=False)
+        self.assertEqual(set(w["scorecard"]), {"ku-leuven-316l-2021", "ku-leuven-ti64-2021", "lane-in625-2020"})
+        for ds, s in w["scorecard"].items():
+            for k in cmp.KERNELS:
+                self.assertEqual(s[k]["all"]["n"], 1, (ds, k))
+                self.assertAlmostEqual(s[k]["all"]["width"]["bias_pct"], 10.0, places=3)
+                self.assertAlmostEqual(s[k]["all"]["depth"]["bias_pct"], -10.0, places=3)
+        # sensitivity re-runs: 2 KU rows at 75 um + 1 Lane AMMT row at nominal power, every kernel each
+        self.assertEqual(w["kuBeamDiameterSensitivity"]["rows"], 2)
+        self.assertEqual(w["laneNominalPowerSensitivity"]["rows"], 1)
+        acct = w["sensitivityRunAccounting"]
+        self.assertEqual(acct["solverCalls"], 3 * len(cmp.KERNELS))
+        self.assertEqual(acct["fallbackWarnings"], 3 * len(cmp.KERNELS))
+        self.assertEqual(sum(self.calls), acct["solverCalls"])
+        counts = w["kuRegimeLabelCrosstab"]["counts"]
+        self.assertEqual(sum(n for v in counts.values() for n in v.values()), 2)
+        self.assertIn("keyhole", counts)  # ku-leuven-ti64-2021-08 is published as keyhole
+        self.assertTrue(all(c["cooling_rate_use"] for c in w["laneTable4"]))
+        self.assertFalse(w["evidence"]["experimentalValidation"])
+        self.assertFalse(w["evidence"]["opticalOperatorMatched"])
+        text = "\n".join(cmp.render_wave2_markdown(w))
+        self.assertIn("cooling-rate use", text)
+        self.assertIn("do-not-use (same AMMT-20us values as Table 3, footnote c)", text)
+        self.assertIn("Tables 5-7 give the uncertainty budgets", text)
+        self.assertIn(f"Sensitivity re-runs: {acct['solverCalls']} solver calls", text)
+
+    def test_limits_state_power_question_and_summary_scope(self):
+        joined = " ".join(self.cmp.wave2_limits(pds, self.w2, self.out_rows))
+        self.assertIn("Fig. 2 caption", joined)
+        self.assertNotIn("without an explanation", joined)
+        self.assertIn("exclude the 3 wave 2 rows", joined)
+        self.assertIn("wave2.scorecard", joined)
+
+    def test_uncertainty_limit_wording_follows_scope(self):
+        cmp = self.cmp
+        summary = cmp.summarize(self.out_rows)
+        cmp.add_common_cells(summary, self.out_rows)
+        absorption = {"path": "flat-plate", "pinned": True, "absorptivity_by_material": {"316L": 0.42}}
+        old = " ".join(cmp.build_limits(self.out_rows, summary, absorption))
+        new = " ".join(cmp.build_limits(self.out_rows, summary, absorption, include_wave2=True))
+        self.assertIn("neither dataset provides per-row measurement uncertainty", old)
+        self.assertNotIn("neither dataset", new)
+        self.assertIn("spread of N = 3 microscopy measurements, not an uncertainty", new)
+
+
+class Wave2RecordTests(unittest.TestCase):
+    """The committed 2026-10-06 record ships with this module: a missing record is a failure, not a skip."""
+
+    def setUp(self):
+        self.assertTrue(RECORD.is_file(), f"{RECORD} is committed with the wave 2 change and must be present")
         self.doc = json.loads(RECORD.read_text(encoding="utf-8"))
+
+    def test_pooled_headline_keeps_the_2026_10_05_scope(self):
+        old = json.loads((REPO / "docs" / "LPBF_DATASET_COMPARISON_2026-10-05.json").read_text(encoding="utf-8"))
+        scope = self.doc["summaryScope"]
+        self.assertEqual(scope["excludedWave2Datasets"],
+                         ["ku-leuven-316l-2021", "ku-leuven-ti64-2021", "lane-in625-2020"])
+        self.assertEqual(scope["rows"], len(old["rows"]))
+        self.assertEqual(self.doc["summary"], old["summary"])
+        self.assertEqual(self.doc["absorptivitySensitivity"]["rows"], old["absorptivitySensitivity"]["rows"])
+        text = json.dumps({k: self.doc[k] for k in ("limits", "regimeFilter", "assumptions")})
+        self.assertNotIn("neither dataset", text)
+        self.assertNotIn("not given by either dataset", text)
+        self.assertIn("KU Leuven IN718 (ku-leuven-in718-2021)", self.doc["regimeFilter"]["rule"])
+        self.assertIn("IN625 0.38", self.doc["assumptions"]["absorptivity"])
+        self.assertNotIn("without an explanation", json.dumps(self.doc))
+        lane = next(d for d in self.doc["datasets"] if d["id"] == "lane-in625-2020")
+        self.assertTrue(any("Fig. 2 caption" in n for n in lane["notes"]))
+        self.assertTrue(all(c["cooling_rate_use"] for c in self.doc["wave2"]["laneTable4"]))
+        self.assertGreater(self.doc["wave2"]["sensitivityRunAccounting"]["solverCalls"], 0)
 
     def test_record_honesty_and_wave2_block(self):
         doc = self.doc

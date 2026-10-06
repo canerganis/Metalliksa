@@ -8,10 +8,14 @@ import { checkedDatasetComparison } from '../src/data/lpbfDatasetComparison';
 
 const RECORD = 'docs/LPBF_DATASET_COMPARISON_2026-10-06.json';
 const VIEW = 'docs/LPBF_DATASET_COMPARISON_2026-10-06.view.json';
-const missing = !existsSync(RECORD) || !existsSync(VIEW);
-const skip = missing ? `${RECORD} or its view record is not present in this checkout` : false;
 
-test('2026-10-06 record and view pass the loader and keep validation flags false', { skip }, () => {
+// The record ships with the wave 2 change: a missing file is a failure, not a skip.
+test('2026-10-06 record and view are committed', () => {
+  assert.ok(existsSync(RECORD), `${RECORD} must be committed`);
+  assert.ok(existsSync(VIEW), `${VIEW} must be committed`);
+});
+
+test('2026-10-06 record and view pass the loader and keep validation flags false', () => {
   const raw = JSON.parse(readFileSync(RECORD, 'utf8'));
   const doc = checkedDatasetComparison(raw);
   assert.equal(doc.generatedAt, '2026-10-06');
@@ -26,6 +30,10 @@ test('2026-10-06 record and view pass the loader and keep validation flags false
     assert.equal(target.comparison.status, 'unavailable');
     assert.ok(target.comparison.reason.length > 80);
   }
+  // The pooled headline keeps the 2026-10-05 scope; wave 2 rows are scored per dataset only.
+  const previous = checkedDatasetComparison(JSON.parse(readFileSync('docs/LPBF_DATASET_COMPARISON_2026-10-05.json', 'utf8')));
+  assert.deepEqual(doc.summary, previous.summary);
+  assert.equal(raw.summaryScope.rows, previous.rows.length);
   const view = checkedDatasetComparison(JSON.parse(readFileSync(VIEW, 'utf8')));
   assert.equal(view.generatedAt, '2026-10-06');
 });
