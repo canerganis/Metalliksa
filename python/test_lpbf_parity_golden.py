@@ -317,6 +317,16 @@ class ParityHarnessTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "must not request the GPU melt-pool path"):
             parity._require_cpu_meltpool_payloads([{"thermal_slice_backend": "warp"}])
 
+    def test_g2_fixture_comparison_ignores_only_the_named_post_capture_labels(self):
+        # Wave B LT-3 added a top-level label after the bare-plate fixture was captured; the fixture
+        # comparison may drop exactly that name (when the fixture lacks it) and nothing else.
+        self.assertEqual(parity.FIXTURE_POST_CAPTURE_LABEL_KEYS, ("solidificationResolution",))
+        _capture, reference = parity._fixture()
+        for key in parity.FIXTURE_POST_CAPTURE_LABEL_KEYS:
+            self.assertNotIn(key, reference)
+        for numeric in ("metrics", "numericalDiagnostics", "thermalHistory", "energyBalance", "discretization"):
+            self.assertNotIn(numeric, parity.FIXTURE_POST_CAPTURE_LABEL_KEYS)
+
     def test_cfd_case_module_falls_back_only_when_lpbf_cfd_cases_itself_is_missing(self):
         import sys
         with patch.dict(sys.modules, {"lpbf_cfd_cases": None}):

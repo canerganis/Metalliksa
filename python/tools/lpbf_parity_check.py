@@ -366,6 +366,13 @@ def _fixture() -> Tuple[Dict[str, Any], Dict[str, Any]]:
     return capture, json.loads(capture["resultJson"])
 
 
+# Top-level result labels added after the bare-plate fixture was captured. They carry no numerics:
+# the Wave B LT-3 solidificationResolution label only counts cells across the already pinned melt pool.
+# The fixture comparison drops ONLY these names and only when the fixture lacks them, so every key the
+# fixture has is still compared bit-exact; the label itself is pinned by result.key.<name> in the golden.
+FIXTURE_POST_CAPTURE_LABEL_KEYS = ("solidificationResolution",)
+
+
 def case_g2_bare_plate_fixture(ctx: CaseContext) -> Dict[str, Any]:
     """Real bare-plate 100 W corridor job 7ec9dc57...: rerun and compare with the in-repo fixture."""
     capture, reference = _fixture()
@@ -373,6 +380,9 @@ def case_g2_bare_plate_fixture(ctx: CaseContext) -> Dict[str, Any]:
     artifact_dir = ctx.work_dir / "result"
     run_stripped, _ = strip_result(result)
     reference_stripped, reference_hash = strip_result(reference)
+    for key in FIXTURE_POST_CAPTURE_LABEL_KEYS:
+        if key not in reference_stripped:
+            run_stripped.pop(key, None)
     observations["fixture.strippedResultEqual"] = (
         canonical_json_sha256(run_stripped) == canonical_json_sha256(reference_stripped))
     # No ordered/typed comparison with the fixture: the worker passed the original request
