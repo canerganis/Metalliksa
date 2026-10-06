@@ -18,7 +18,7 @@ import {
   CartesianGrid,
   Legend
 } from "recharts";
-import { pythonComputationService, PythonBayesianOptimizationResult } from "../services/pythonComputationService";
+import { pythonComputationService, PythonBayesianOptimizationResult, PythonBayesianIterationDiagnostics } from "../services/pythonComputationService";
 import { useMaterialSpecimenStore } from "../store/useMaterialSpecimenStore";
 import {
   resolveOptimizerAlloy,
@@ -26,6 +26,48 @@ import {
   OPTIMIZER_DEFAULT_BEAM_DIAMETER_UM,
   OPTIMIZER_DEFAULT_PREHEAT_C,
 } from "../utils/lpbfOptimizerAlloy";
+
+/** Failing (do-not-print) gates, then risk (risky) gates, then advisory-only gates, for one candidate. */
+export function formatIterationGates(d: PythonBayesianIterationDiagnostics): string {
+  const parts: string[] = [];
+  if (d.blockingGates.length) parts.push(`fail: ${d.blockingGates.join(", ")}`);
+  if (d.riskGates.length) parts.push(`warn: ${d.riskGates.join(", ")}`);
+  if (d.advisoryGates.length) parts.push(`advisory (no verdict effect): ${d.advisoryGates.join(", ")}`);
+  return parts.length ? parts.join("; ") : "none";
+}
+
+/** L/W is only a verdict input when the extent was computed; otherwise it is the heuristic fallback value. */
+export function formatIterationAspectRatio(d: PythonBayesianIterationDiagnostics | undefined | null): string {
+  if (d == null || d.aspectRatio_L_over_W == null) return "not returned";
+  if (d.extentStatus === "computed") return String(d.aspectRatio_L_over_W);
+  if (d.extentStatus == null) return `${d.aspectRatio_L_over_W} (extent status not returned)`;
+  return `${d.aspectRatio_L_over_W} (unavailable: ${d.extentStatus})`;
+}
+
+const formatCounts = (m: Record<string, number> | undefined): string =>
+  m && Object.keys(m).length ? Object.entries(m).map(([k, n]) => `${k} ×${n}`).join(", ") : "none";
+
+/** Shown when every candidate scored 0: which gates held them back. Nothing is hidden or relaxed. */
+export const BlockingGateSummary: React.FC<{ result: PythonBayesianOptimizationResult }> = ({ result }) => {
+  const s = result.gateSummary;
+  return (
+    <div className="mt-3 space-y-1 text-xs text-amber-100" data-testid="optimizer-blocking-summary">
+      <p className="font-semibold">Dominant blocking gates across the evaluated candidates</p>
+      {s ? (
+        <>
+          <p>Do-not-print (failing gate): <span className="font-mono">{formatCounts(s.blockingGateCounts)}</span></p>
+          <p>Inconclusive (melt-pool extent not resolved): <span className="font-mono">{formatCounts(s.inconclusiveExtentStatusCounts)}</span></p>
+          <p>Risky (warn gate, scored 0.5 when no gate fails): <span className="font-mono">{formatCounts(s.riskGateCounts)}</span></p>
+        </>
+      ) : (
+        <p>Gate summary not returned by the backend.</p>
+      )}
+      <p data-testid="optimizer-keyhole-note" className="text-amber-200">
+        {result.keyholeGateNote ?? "Keyhole gate note not returned by the backend."}
+      </p>
+    </div>
+  );
+};
 
 export const LpbfBayesianOptimizerLab: React.FC = () => {
   const specimen = useMaterialSpecimenStore(s => s.activeSpecimen);
@@ -194,7 +236,7 @@ export const LpbfBayesianOptimizerLab: React.FC = () => {
           </div>
         </div>
 
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 min-w-0 space-y-6">
           {result ? (
             <>
               <div className={`rounded-xl border p-5 ${result.bestParams ? "border-emerald-500/30 bg-emerald-950/20" : "border-amber-500/30 bg-amber-950/20"}`}>
@@ -225,9 +267,12 @@ export const LpbfBayesianOptimizerLab: React.FC = () => {
                     <p className="mt-3 text-xs text-slate-400" data-testid="optimizer-best-verdict">Screening verdict of this candidate: <span className="font-mono text-slate-200">{result.bestVerdict ?? "not returned"}</span></p>
                   </>
                 ) : (
-                  <p className="text-sm text-amber-200" data-testid="optimizer-no-positive">
-                    No candidate scored above 0 (every evaluated candidate was do-not-print or inconclusive), so no parameter set is presented.
-                  </p>
+                  <>
+                    <p className="text-sm text-amber-200" data-testid="optimizer-no-positive">
+                      No candidate scored above 0 (every evaluated candidate was do-not-print or inconclusive), so no parameter set is presented.
+                    </p>
+                    <BlockingGateSummary result={result} />
+                  </>
                 )}
                 <div className="mt-4 flex items-center justify-between text-xs text-slate-400">
                   <p>Peak Score: <span className="font-mono text-slate-200">{result.bestScore}</span></p>
@@ -267,20 +312,40 @@ export const LpbfBayesianOptimizerLab: React.FC = () => {
               </div>
               <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
                 <h3 className="text-sm font-semibold text-slate-200 mb-3">Per-iteration verdicts</h3>
-                <div className="max-h-64 overflow-auto">
-                  <table className="w-full text-xs text-slate-300">
-                    <caption className="sr-only">Per-iteration parameters, screening verdict and score</caption>
+                <div className="max-h-64 overflow-auto" tabIndex={0} role="region" aria-label="Per-iteration verdicts and gates (scrollable)">
+                  <table className="w-full whitespace-nowrap text-xs text-slate-300 [&_td]:pr-2 [&_th]:pr-2">
+                    <caption className="sr-only">Per-iteration parameters, screening verdict, score and the gates behind the verdict</caption>
                     <thead className="text-slate-500 text-left">
-                      <tr><th scope="col">#</th><th scope="col">P (W)</th><th scope="col">v (mm/s)</th><th scope="col">h (µm)</th><th scope="col">t (µm)</th><th scope="col">Verdict</th><th scope="col">Score</th></tr>
+                      <tr><th scope="col">#</th><th scope="col">P (W)</th><th scope="col">v (mm/s)</th><th scope="col">h (µm)</th><th scope="col">t (µm)</th><th scope="col">Verdict</th><th scope="col">Score</th><th scope="col" className="px-1">Gates (fail / warn / advisory)</th><th scope="col">Extent</th><th scope="col">ΔH/hₛ</th><th scope="col">L/W</th><th scope="col">Keyhole flag</th></tr>
                     </thead>
                     <tbody>
-                      {result.iterations.map(it => (
-                        <tr key={it.iteration} className={`border-t border-slate-800 ${it.verdict === "inconclusive" ? "bg-amber-500/10 text-amber-200" : ""}`}>
-                          <td>{it.iteration}</td><td>{it.params.laserPower_W}</td><td>{it.params.scanSpeed_mms}</td>
-                          <td>{it.params.hatch_um}</td><td>{it.params.layer_um}</td>
-                          <td>{it.verdict}</td><td className="font-mono">{it.score}</td>
-                        </tr>
-                      ))}
+                      {result.iterations.map(it => {
+                        const d = it.diagnostics;
+                        return (
+                          <tr key={it.iteration} className={`border-t border-slate-800 align-top ${it.verdict === "inconclusive" ? "bg-amber-500/10 text-amber-200" : ""}`}>
+                            <td>{it.iteration}</td><td>{it.params.laserPower_W}</td><td>{it.params.scanSpeed_mms}</td>
+                            <td>{it.params.hatch_um}</td><td>{it.params.layer_um}</td>
+                            <td>{it.verdict}</td><td className="font-mono">{it.score}</td>
+                            <td data-testid="optimizer-iter-gates" className="min-w-[16rem] whitespace-normal">
+                              {d ? (
+                                <>
+                                  <div>{formatIterationGates(d)}</div>
+                                  {d.reasons.length > 0 && (
+                                    <details className="mt-0.5">
+                                      <summary className="cursor-pointer text-slate-500">Reasons ({d.reasons.length})</summary>
+                                      <ul className="list-disc pl-4 text-slate-400">{d.reasons.map((r, i) => <li key={i}>{r}</li>)}</ul>
+                                    </details>
+                                  )}
+                                </>
+                              ) : "not returned"}
+                            </td>
+                            <td className="font-mono">{d?.extentStatus ?? "not returned"}</td>
+                            <td className="font-mono">{d?.normalizedEnthalpy ?? "not returned"}</td>
+                            <td className="font-mono">{formatIterationAspectRatio(d)}</td>
+                            <td>{d == null || d.keyholeHigh == null ? "not returned" : d.keyholeHigh ? "High" : "not High"}</td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

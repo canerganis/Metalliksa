@@ -118,6 +118,50 @@ OBJECTIVE_DESCRIPTION = (
 )
 
 
+KEYHOLE_GATE_NOTE = (
+    'The keyhole gate (King normalised enthalpy dH/h_s: High at >= 30, do-not-print when High and > 35) '
+    'comes from the frozen thermal solver (python/lpbf_thermal_solver.py) and is not relaxed or re-derived '
+    'here; a correction is pending a planned implementation bump.'
+)
+
+
+def _iteration_diagnostics(vd, th):
+    """Per-candidate gate diagnostics: which gates drove the verdict and the raw screening numbers."""
+    th = th if isinstance(th, dict) else {}
+    pp = th.get('processParameters') or {}
+    geo = th.get('meltPoolGeometry') or {}
+    dd = th.get('defectDiagnostics') or {}
+    kh = dd.get('keyholePorosityRisk')
+    return {
+        'blockingGates': list(vd.get('blockingGates') or []),
+        'riskGates': list(vd.get('riskGates') or []),
+        'advisoryGates': list(vd.get('advisoryGates') or []),
+        'reasons': list(vd.get('reasons') or []),
+        'extentStatus': geo.get('extentStatus', vd.get('extentStatus')),
+        'normalizedEnthalpy': pp.get('normalizedEnthalpy'),
+        'aspectRatio_L_over_W': geo.get('aspectRatio_L_over_W'),
+        'keyholeRisk': kh,
+        'keyholeHigh': None if kh is None else str(kh).startswith('High'),
+    }
+
+
+def _gate_summary(iters):
+    """Counts of the gates that held candidates back (fail -> do-not-print, unresolved extent -> inconclusive)."""
+    blocking, risk, inconclusive = {}, {}, {}
+    for it in iters:
+        d = it.get('diagnostics') or {}
+        for g in d.get('blockingGates') or []:
+            blocking[g] = blocking.get(g, 0) + 1
+        for g in d.get('riskGates') or []:
+            risk[g] = risk.get(g, 0) + 1
+        if it.get('verdict') == 'inconclusive':
+            k = str(d.get('extentStatus') or 'not-reported')
+            inconclusive[k] = inconclusive.get(k, 0) + 1
+    order = lambda m: dict(sorted(m.items(), key=lambda kv: (-kv[1], kv[0])))
+    return {'blockingGateCounts': order(blocking), 'riskGateCounts': order(risk),
+            'inconclusiveExtentStatusCounts': order(inconclusive)}
+
+
 class _SolverError(Exception):
     """Wraps a thermal-solver/verdict exception so it is reported as errorKind 'solver'."""
 
@@ -205,15 +249,15 @@ def run_bayesian_optimization(alloy_id, param_bounds=None, n_iter=20, n_warmup=5
             raise _SolverError(str(e)) from e
         vs = verdict_score(vd['verdict'])
         prod = (float(params['scanSpeed_mms']) * float(params['hatch_um'])) / (v_max * h_max)
-        return float(vs) * float(prod), vd['verdict']
+        return float(vs) * float(prod), vd['verdict'], _iteration_diagnostics(vd, th)
 
     opt = BayesianProcessOptimizer(resolved, None, param_bounds=merged, n_warmup=n_warmup, seed=seed)
     t0 = time.time(); iters = []
     try:
         for i in range(n_iter):
-            sug = opt.suggest_next(); sc, verd = _obj(sug); opt.observe(sug, sc)
+            sug = opt.suggest_next(); sc, verd, diag = _obj(sug); opt.observe(sug, sc)
             iters.append({'iteration': i + 1, 'params': {k: round(sug[k], 2) for k in _PARAM_KEYS},
-                          'score': round(sc, 4), 'verdict': verd})
+                          'score': round(sc, 4), 'verdict': verd, 'diagnostics': diag})
     except _SolverError as e:
         cause = e.__cause__
         return _refuse('solver', f'Thermal solver failed at iteration {len(iters) + 1}: {type(cause).__name__}: {cause}')
@@ -237,7 +281,8 @@ def run_bayesian_optimization(alloy_id, param_bounds=None, n_iter=20, n_warmup=5
             'iterations': iters, 'converged': converged, 'elapsedMs': elapsed, 'nIterations': n_iter,
             'nWarmup': n_warmup, 'surrogateSteps': max(0, n_iter - n_warmup),
             'beamDiameter_um': beam, 'preheatTemp_C': preheat,
-            'objective': OBJECTIVE_DESCRIPTION}
+            'objective': OBJECTIVE_DESCRIPTION,
+            'gateSummary': _gate_summary(iters), 'keyholeGateNote': KEYHOLE_GATE_NOTE}
 
 
 def optimize_process_window(alloy_id, bounds=None, param_bounds=None, n_iterations=20, n_iter=None, n_initial=5,
