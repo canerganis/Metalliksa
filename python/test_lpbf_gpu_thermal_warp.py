@@ -36,6 +36,12 @@ class WarpThermalCandidate(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "energy balance failed"):
             candidate._energy_closure(100.0, 0.0, 98.99)
 
+    def test_candidate_rejects_evaporation_model(self):
+        # Wave B LT-7: the candidate kernels use table k only; evaporationModel physics is CPU-only.
+        with self.assertRaisesRegex(ValueError, "evaporationModel"):
+            candidate._validate_candidate({**CASE, "evaporationModel": True})
+        candidate._validate_candidate({**CASE, "marangoniMultiplier": 3.0})
+
     def test_explicit_device_and_dependency_fail_closed(self):
         with self.assertRaisesRegex(ValueError, "Explicit cuda:N"):
             candidate._require_warp_cuda("cpu")

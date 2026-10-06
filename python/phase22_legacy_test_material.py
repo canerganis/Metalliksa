@@ -19,4 +19,9 @@ LEGACY_SOLVER_TEST_MATERIAL = {
     "cp_liquid": 730.0,
     "k_solid": 15.0,
     "k_liquid": 25.0,
+    # Beam/surface values the launches used to hard-code (LT-4); recorded tests keep them.
+    "beam_radius_m": 30e-6,
+    "absorptivity": 0.4,
+    "h_conv_W_m2K": 10.0,
+    "emissivity": 0.35,
 }

@@ -145,6 +145,16 @@ class GpuQueue(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     validate_pilot_request({**CASE, **invalid})
 
+    def test_evaporation_model_is_rejected_not_silently_dropped(self):
+        # Wave B LT-7: the GPU kernels solve neither the Marangoni k multiplier nor the boiling cap
+        # of evaporationModel, so a pilot request with it fails closed.
+        with patch("lpbf_gpu_thermal.require_cuda"):
+            with self.assertRaisesRegex(ValueError, "evaporationModel"):
+                validate_pilot_request({**CASE, "evaporationModel": True})
+            # marangoniMultiplier has no CPU effect without evaporationModel, so it stays accepted.
+            settings, _material = validate_pilot_request({**CASE, "marangoniMultiplier": 3.0})
+            self.assertFalse(settings.get("evaporationModel"))
+
     def test_missing_device_is_explicit_submit_error(self):
         with patch("torch.cuda.is_available", return_value=False), tempfile.TemporaryDirectory() as tmp:
             queue = Queue(tmp, start=False)

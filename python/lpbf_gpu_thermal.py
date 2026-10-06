@@ -313,6 +313,22 @@ def _model_id_for_settings(settings):
             if settings.get("powderGridPolicy") == "layer-conforming" else MODEL_ID)
 
 
+GPU_UNIMPLEMENTED_PHYSICS_MESSAGE = (
+    "GPU thermal pilots do not implement evaporationModel (the CPU reference's Marangoni liquid-"
+    "conductivity multiplier k*(1+(lambda-1)*f_liq) and boiling-temperature cap); "
+    "run evaporationModel cases on the CPU reference")
+
+
+def reject_unimplemented_gpu_physics(p):
+    """Fail closed on CPU-reference options the GPU kernels do not solve (LT-7).
+
+    marangoniMultiplier is only read by the CPU when evaporationModel is true, so it is not
+    rejected on its own.
+    """
+    if p.get("evaporationModel"):
+        raise ValueError(GPU_UNIMPLEMENTED_PHYSICS_MESSAGE)
+
+
 def validate_pilot_request(raw):
     """Resolve an explicit CUDA queue request to the CPU reference physics input."""
     if not isinstance(raw, dict) or raw.get("jobType") != PILOT_JOB_TYPE:
@@ -327,6 +343,7 @@ def validate_pilot_request(raw):
             or p["layers"] != 1 or p["surfaceMode"] != "powder-layer"
             or p.get("measurements")):
         raise ValueError("CUDA pilot requires one powder-layer track, one layer, standard mode, no study or measurements")
+    reject_unimplemented_gpu_physics(p)
     domain = calculate_mesh_domain(p)
     if domain["nxy"]**2 * domain["nz"] > MAX_CELLS:
         raise ValueError("CUDA pilot cell budget exceeded")
@@ -467,6 +484,7 @@ def run_gpu(raw, device="cuda:0", capture_final=False, use_cuda_source=False):
     if (p["mode"] != "standard" or p["backend"] != "reference" or p["study"] != "none"
             or p["tracks"] != 1 or p["layers"] != 1):
         raise ValueError("CUDA pilot supports one-track, one-layer standard/reference cases only")
+    reject_unimplemented_gpu_physics(p)
     domain = calculate_mesh_domain(p)
     radius, span, nxy, nz, dx, substrate = (domain[k] for k in
         ("radius", "span", "nxy", "nz", "dx", "substrate_depth"))

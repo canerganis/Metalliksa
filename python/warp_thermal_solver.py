@@ -14,8 +14,8 @@ def ensure_wp_initialized():
 
 @wp.kernel
 def rosenthal_slice_kernel(
-    nx: int,
-    ny: int,
+    na: int,
+    nb: int,
     x_min: float,
     x_max: float,
     y_min: float,
@@ -31,14 +31,16 @@ def rosenthal_slice_kernel(
     T_out: wp.array(dtype=float)
 ):
     tid = wp.tid()
-    if tid >= nx * ny:
+    if tid >= na * nb:
         return
 
-    i = tid % nx
-    j = tid // nx
+    # Row-major [ia][ib] (axis a outermost), the layout of the CPU sample_thermal_slice and of the
+    # frontend reader T_C[ia * nb + ib] (meltPool3DGeometry.ts).
+    i = tid // nb
+    j = tid % nb
 
-    dx = (x_max - x_min) / float(wp.max(1, nx - 1))
-    dy = (y_max - y_min) / float(wp.max(1, ny - 1))
+    dx = (x_max - x_min) / float(wp.max(1, na - 1))
+    dy = (y_max - y_min) / float(wp.max(1, nb - 1))
 
     a = x_min + float(i) * dx
     b = y_min + float(j) * dy

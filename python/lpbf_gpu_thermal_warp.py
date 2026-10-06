@@ -280,6 +280,8 @@ def _validate_candidate(raw):
         raise ValueError("Warp candidate supports one powder-layer track/layer, standard/reference, no study or measurements")
     if p.get("powderGridPolicy") != "layer-conforming":
         raise ValueError("Warp candidate requires the layer-conforming thermal grid")
+    from lpbf_gpu_thermal import reject_unimplemented_gpu_physics
+    reject_unimplemented_gpu_physics(p)
     domain = calculate_mesh_domain(p)
     cells = domain["nx"] * domain["ny"] * domain["nz"]
     if cells > MAX_CELLS:

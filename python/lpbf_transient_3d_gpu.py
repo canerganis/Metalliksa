@@ -1307,6 +1307,7 @@ class TransientEnthalpy3DGPU:
     def solve_toolpath(self, toolpath, T_preheat_K=300.0, *,
               rho, L_f, T_solidus, T_liquidus, Lv, Rs, Tv,
               cp_solid, cp_liquid, k_solid, k_liquid,
+              beam_radius_m, absorptivity, h_conv_W_m2K, emissivity,
               P0=101325.0,
               mu=0.005, d_gamma_dT=-0.0003, beta=1e-4,
               include_diagnostic_fields=False, include_energy_ledger=False):
@@ -1318,6 +1319,12 @@ class TransientEnthalpy3DGPU:
         units are kg/m3, J/kg, K, K, J/kg, J/(kg K) (specific gas constant R/M), K,
         J/(kg K), J/(kg K), W/(m K), W/(m K).
 
+        Beam and surface data (beam_radius_m = Gaussian 1/e^2 radius w in
+        q = 2 A P/(pi w^2) exp(-2 r^2/w^2), absorptivity A, h_conv_W_m2K, emissivity)
+        are keyword-only and REQUIRED as well: they are process/material inputs, not
+        solver constants. A comes from the material authority (absorptivity_IR) and
+        emissivity from the material registry; the same A sets nominal_absorbed_J.
+
         P0 (ambient pressure), mu, d_gamma_dT and beta are model constants of this
         solver, not alloy data, and keep their defaults. They are NOT the authority's
         per-alloy viscosity / d(gamma)/dT / thermal expansion; this solver does not
@@ -1326,6 +1333,15 @@ class TransientEnthalpy3DGPU:
 
         if type(include_diagnostic_fields) is not bool or type(include_energy_ledger) is not bool:
             raise ValueError("diagnostic options must be booleans")
+        optics = {"beam_radius_m": beam_radius_m, "absorptivity": absorptivity,
+                  "h_conv_W_m2K": h_conv_W_m2K, "emissivity": emissivity}
+        for name, value in optics.items():
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+                raise ValueError(f"{name} must be a finite number")
+        if not 0.0 < beam_radius_m < 1e-3:
+            raise ValueError("beam_radius_m must be a 1/e^2 radius in (0, 1 mm)")
+        if not 0.0 < absorptivity <= 1.0 or not 0.0 <= emissivity <= 1.0 or h_conv_W_m2K < 0.0:
+            raise ValueError("absorptivity must be in (0, 1], emissivity in [0, 1], h_conv_W_m2K >= 0")
         diagnostic_cell_count = self.nx * self.ny * self.nz
         if include_diagnostic_fields and diagnostic_cell_count > 100_000:
             raise ValueError("Full-field diagnostics are limited to 100000 cells")
@@ -1534,8 +1550,8 @@ class TransientEnthalpy3DGPU:
                     self.dx, self.dy, self.dz,
                     step_dt, current_t, rho, L_f, T_solidus, T_liquidus,
                     tp_t, tp_x, tp_y, tp_p, num_pts,
-                    30e-6, 0.4, 
-                    10.0, 0.35, float(T_preheat_K),
+                    float(beam_radius_m), float(absorptivity),
+                    float(h_conv_W_m2K), float(emissivity), float(T_preheat_K),
                     P0, Lv, Rs, Tv,
                     float(cp_solid), float(cp_liquid), float(k_solid), float(k_liquid)
                 ],
@@ -1555,7 +1571,8 @@ class TransientEnthalpy3DGPU:
                         self.nx, self.ny, self.nz, self.dx, self.dy, self.dz,
                         step_dt, current_t, rho, L_f, T_solidus, T_liquidus,
                         tp_t, tp_x, tp_y, tp_p, num_pts,
-                        30e-6, 0.4, 10.0, 0.35, float(T_preheat_K),
+                        float(beam_radius_m), float(absorptivity), float(h_conv_W_m2K),
+                        float(emissivity), float(T_preheat_K),
                         P0, Lv, Rs, Tv, float(cp_solid), float(cp_liquid),
                         float(k_solid), float(k_liquid),
                     ],
@@ -1690,7 +1707,7 @@ class TransientEnthalpy3DGPU:
                 + energy_terms["surface_mask_reset_J"]
             )
             residual = enthalpy_change - modeled_change
-            expected_absorbed = float(0.4 * np.trapezoid(toolpath["p"], toolpath["t"]))
+            expected_absorbed = float(absorptivity * np.trapezoid(toolpath["p"], toolpath["t"]))
             result["energy_ledger"] = {
                 "terms_J": energy_terms,
                 "enthalpy_J": {
@@ -1765,6 +1782,10 @@ if __name__ == "__main__":
         Tv=_m["boiling_C"] + 273.15,
         cp_solid=_m["specific_heat_J_kgK"], cp_liquid=_m["specific_heat_liquid_J_kgK"],
         k_solid=_m["thermal_conductivity_W_mK"], k_liquid=_m["thermal_conductivity_liquid_W_mK"],
+        beam_radius_m=40e-6,  # demo: 80 um 1/e^2 beam diameter (repo Build Job default)
+        absorptivity=_m["absorptivity_IR"],
+        h_conv_W_m2K=20.0,  # demo: lpbf_simulation DEFAULTS convection_W_m2K
+        emissivity=0.35,  # demo: lpbf_material_registry emissivity for the four-alloy records
     )
     print(f"Results: {res}")
     print(f"RUN COMPLETE; pressure-projection status={res['pressure_projection_status']}.")
