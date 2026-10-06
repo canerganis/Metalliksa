@@ -414,7 +414,8 @@ def check_extent_status_consumers():
     # Geometry-independent gates keep their result.
     assert by_id["keyhole"]["status"] == "pass" and by_id["keyhole"]["measured"] == heur["thermal"]["processParameters"]["normalizedEnthalpy"]
     assert by_id["literature_pv"]["status"] == "pass" and by_id["downskin"]["status"] == "pass"
-    assert by_id["recoater"]["status"] == "warn" and by_id["distortion"]["status"] == "warn"
+    # Parameter-independent alloy/layer advisories: reported, never verdict-driving.
+    assert by_id["recoater"]["status"] == "advisory" and by_id["distortion"]["status"] == "advisory"
     assert v["verdict"] not in ("printable", "do-not-print", "risky")
     assert "do-not-print" not in json.dumps(v["headline"]).lower()
     assert not any(r.startswith("Lack of fusion (Tang)") or "Plateau" in r for r in v["reasons"]), v["reasons"]
@@ -437,14 +438,17 @@ def check_extent_status_consumers():
     comp = run_job({**common, "laserPower_W": 285, "scanSpeed_mm_s": 960})
     assert comp["thermal"]["meltPoolGeometry"]["extentStatus"] == "computed"
     cv = comp["verdict"]
-    assert cv["verdict"] == "do-not-print", cv["verdict"]
+    # Tier 1 verdict policy: balling (steady-Rosenthal L/W screen) is risky, not do-not-print;
+    # recoater / distortion are advisories. Keyhole stays warn here (dH <= 35 on this path).
+    assert cv["verdict"] == "risky", cv["verdict"]
     assert cv["geometryResolved"] is True and cv["verdictReason"] is None
     assert cv["unavailableGates"] == [] and cv["geometryIndependentFailGates"] == []
     assert {g["id"]: g["status"] for g in cv["gates"]} == {
         "lof_tang": "pass", "lof_wh": "pass", "lof_dt": "pass", "keyhole": "warn",
-        "balling": "fail", "literature_pv": "pass", "recoater": "warn", "distortion": "warn",
+        "balling": "warn", "literature_pv": "pass", "recoater": "advisory", "distortion": "advisory",
         "downskin": "pass"}, cv["gates"]
-    assert cv["dominantGate"] == "balling"
+    assert cv["dominantGate"] == "keyhole"
+    assert cv["blockingGates"] == [] and cv["advisoryGates"] == ["recoater", "distortion"]
     assert all("reason" not in g and g["measured"] is not None or g["id"] == "downskin" for g in cv["gates"])
     assert not any("not resolved" in r for r in cv["reasons"])
 
@@ -529,8 +533,9 @@ def main():
         "lpbf-build-job-kinetics-li1998-v6",
         "lpbf-build-job-extent-status-v6",
         "lpbf-build-job-kinetics-li1998-extent-v7",
+        "lpbf-build-job-kinetics-li1998-extent-v8",
     ), BUILD_JOB_SOLVER_REVISION
-    assert BUILD_JOB_SOLVER_REVISION == "lpbf-build-job-kinetics-li1998-extent-v8"
+    assert BUILD_JOB_SOLVER_REVISION == "lpbf-build-job-verdict-advisory-v9"
     assert ti["processSeed"] == 42
     assert ti["scanStrategy"]["id"] == "stripe"
     assert ti["uq"] is None  # lazy default

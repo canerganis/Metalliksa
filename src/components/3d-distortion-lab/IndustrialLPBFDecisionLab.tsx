@@ -747,7 +747,9 @@ export const VerdictBanner: React.FC<{
                   ? "border-amber-400/50 text-amber-100"
                   : g.status === "unavailable"
                     ? "border-dashed border-slate-400/50 text-slate-300"
-                    : "border-white/20 text-white/70"
+                    : g.status === "advisory"
+                      ? "border-dotted border-sky-300/60 text-sky-100"
+                      : "border-white/20 text-white/70"
             } ${dominantGate === g.id ? "ring-1 ring-white/60" : ""}`}
           >
             {g.id} {g.status}

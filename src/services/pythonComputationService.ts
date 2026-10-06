@@ -531,10 +531,34 @@ export interface PythonBayesianOptimizationResult {
     };
     score: number;
     verdict: string;
+    /** Gates behind this candidate's verdict (python/lpbf_bayesian_optimizer.py _iteration_diagnostics). */
+    diagnostics?: PythonBayesianIterationDiagnostics;
   }>;
   converged: boolean;
   elapsedMs: number;
   nIterations: number;
+  gateSummary?: {
+    blockingGateCounts: Record<string, number>;
+    riskGateCounts: Record<string, number>;
+    inconclusiveExtentStatusCounts: Record<string, number>;
+  };
+  /** States that the keyhole gate is frozen solver physics, pending a planned bump. */
+  keyholeGateNote?: string;
+}
+
+export interface PythonBayesianIterationDiagnostics {
+  /** "fail" gates (do-not-print). */
+  blockingGates: string[];
+  /** "warn" gates (risky). */
+  riskGates: string[];
+  /** Advisory-only gates (never change the verdict). */
+  advisoryGates: string[];
+  reasons: string[];
+  extentStatus: string | null;
+  normalizedEnthalpy: number | null;
+  aspectRatio_L_over_W: number | null;
+  keyholeRisk: string | null;
+  keyholeHigh: boolean | null;
 }
 
 // Phase 8: Solidification Microstructure Lab result type.
@@ -1367,7 +1391,8 @@ export interface PythonSTLSlicerResult {
   };
 }
 
-export type PythonLpbfGateStatus = "pass" | "warn" | "fail" | "unavailable";
+/** "advisory": reported but never changes the verdict (recoater / distortion: parameter-independent alloy/layer index). */
+export type PythonLpbfGateStatus = "pass" | "warn" | "fail" | "unavailable" | "advisory";
 
 export interface PythonLpbfScreeningGate {
   id: string;
@@ -1415,6 +1440,14 @@ export interface PythonLpbfBuildJobVerdict {
   verdictReason?: string | null;
   unavailableGates?: string[];
   geometryIndependentFailGates?: string[];
+  /** Gate ids with status "fail" (drive do-not-print). */
+  blockingGates?: string[];
+  /** Gate ids with status "warn" (drive risky). */
+  riskGates?: string[];
+  /** Gate ids with status "advisory" (never change the verdict). */
+  advisoryGates?: string[];
+  /** Advisory lines; also appended (last) to reasons. */
+  advisories?: string[];
   uq?: {
     P_printable: number;
     normalizedEnthalpy: { mean: number; std: number; unit: string };

@@ -274,6 +274,20 @@ def _suggested_patch(thermal, alloy_id, dominant_gate, verdict):
 # these are unavailable: a verdict must not be built from screening-heuristic numbers.
 GEOMETRY_DEPENDENT_GATES = ("lof_tang", "lof_wh", "lof_dt", "balling")
 
+# Gates reported as advisories only: they never change the verdict, the dominant gate or an
+# optimizer score. The frozen solver's distortion index (and the recoater flag derived from it,
+# High when index > 2.0) is a function of alloy properties, preheat and layer thickness only,
+# not of P, v or hatch, so it cannot discriminate between process parameter sets.
+ADVISORY_GATES = ("recoater", "distortion")
+PARAMETER_INDEPENDENT_ADVISORY_NOTE = (
+    "parameter-independent alloy/layer advisory: the frozen distortion index depends only on alloy "
+    "properties, preheat and layer thickness (not on P, v or hatch); it does not change the verdict"
+)
+BALLING_SCREEN_NOTE = (
+    "steady-Rosenthal aspect-ratio screen (frozen L/W > 3.8 flag), not a demonstrated balling "
+    "prediction; reported as risky, not do-not-print"
+)
+
 
 def compose_verdict(thermal, alloy_id, extras=None):
     extras = extras or {}
@@ -349,12 +363,20 @@ def compose_verdict(thermal, alloy_id, extras=None):
         reasons.append(f"Keyhole porosity: ΔH/hₛ = {dh} (King onset ~30).")
     if balling_high:
         reasons.append(
-            f"Plateau–Rayleigh balling: L/W = {thermal['meltPoolGeometry']['aspectRatio_L_over_W']}."
+            f"Plateau–Rayleigh balling screen: L/W = {thermal['meltPoolGeometry']['aspectRatio_L_over_W']} "
+            f"(> 3.8) — {BALLING_SCREEN_NOTE}."
         )
+    advisories = []
     if recoater_high:
-        reasons.append("Recoater crash / part curl risk from residual stress.")
+        advisories.append(
+            f"Advisory: recoater crash / part curl flag High (distortion index {def_['distortionIndex']} > 2.0) — "
+            f"{PARAMETER_INDEPENDENT_ADVISORY_NOTE}."
+        )
     if distortion_high:
-        reasons.append(f"Inherent-strain distortion index {def_['distortionIndex']} (≥0.65).")
+        advisories.append(
+            f"Advisory: inherent-strain distortion index {def_['distortionIndex']} (≥0.65) — "
+            f"{PARAMETER_INDEPENDENT_ADVISORY_NOTE}."
+        )
     if downskin_fail:
         reasons.append(
             f"Downskin overhang {float(downskin_angle):.1f}° from vertical exceeds 55° screening gate."
@@ -370,10 +392,11 @@ def compose_verdict(thermal, alloy_id, extras=None):
             f"({box['powerMin_W']}–{box['powerMax_W']} W, {box['speedMin_mm_s']}–{box['speedMax_mm_s']} mm/s)."
         )
 
+    # recoater_high / distortion_high are advisories (ADVISORY_GATES) and are deliberately absent here.
     verdict = "printable"
-    if lof_fail or balling_high or downskin_fail or (keyhole_high and dh > 35):
+    if lof_fail or downskin_fail or (keyhole_high and dh > 35):
         verdict = "do-not-print"
-    elif lof_warn or keyhole_high or recoater_high or distortion_high or downskin_warn or (not win["inside"]):
+    elif lof_warn or keyhole_high or balling_high or downskin_warn or (not win["inside"]):
         verdict = "risky"
     if not geometry_resolved:
         verdict = "inconclusive"
@@ -396,10 +419,10 @@ def compose_verdict(thermal, alloy_id, extras=None):
     tang_r = round(tang, 3)
     tang_status = "fail" if lof_fail else ("warn" if lof_warn else "pass")
     kh_status = "fail" if (keyhole_high and dh > 35) else ("warn" if keyhole_high else "pass")
-    ball_status = "fail" if balling_high else "pass"
+    ball_status = "warn" if balling_high else "pass"
     lit_status = "pass" if win["inside"] else "warn"
-    rec_status = "warn" if recoater_high else "pass"
-    dist_status = "warn" if distortion_high else "pass"
+    rec_status = "advisory" if recoater_high else "pass"
+    dist_status = "advisory" if distortion_high else "pass"
     ds_status = "fail" if downskin_fail else ("warn" if downskin_warn else "pass")
     aspect = float(thermal["meltPoolGeometry"]["aspectRatio_L_over_W"])
 
@@ -442,7 +465,8 @@ def compose_verdict(thermal, alloy_id, extras=None):
             aspect,
             None,
             "1",
-            "Plateau–Rayleigh aspect L/W from Rosenthal length — High → fail.",
+            "Plateau–Rayleigh aspect L/W from steady Rosenthal length — High (> 3.8) → warn (risky). "
+            "Aspect-ratio screen, not a demonstrated balling prediction.",
         ),
         _gate(
             "literature_pv",
@@ -458,7 +482,8 @@ def compose_verdict(thermal, alloy_id, extras=None):
             float(def_["distortionIndex"]),
             None,
             "index",
-            "Recoater-crash heuristic from residual-stress index — not a blade FEA.",
+            "Recoater-crash heuristic from residual-stress index (High when > 2.0) — not a blade FEA. "
+            "Advisory only: " + PARAMETER_INDEPENDENT_ADVISORY_NOTE + ".",
         ),
         _gate(
             "distortion",
@@ -466,7 +491,8 @@ def compose_verdict(thermal, alloy_id, extras=None):
             float(def_["distortionIndex"]),
             0.65,
             "index",
-            "Inherent-strain distortion screening (≥0.65 warn) — not Goldak FEA.",
+            "Inherent-strain distortion screening (≥0.65 advisory) — not Goldak FEA. "
+            "Advisory only: " + PARAMETER_INDEPENDENT_ADVISORY_NOTE + ".",
         ),
         _gate(
             "downskin",
@@ -494,6 +520,8 @@ def compose_verdict(thermal, alloy_id, extras=None):
             + ", ".join(geometry_independent_fail_gates)
             + " (these do not depend on the unresolved melt-pool extent)."
         )
+    # Advisories last, after every verdict-driving reason.
+    reasons.extend(advisories)
     dominant = "none"
     for g in gates:
         if g["status"] == "fail":
@@ -526,6 +554,12 @@ def compose_verdict(thermal, alloy_id, extras=None):
         "verdictReason": geometry_reason,
         "unavailableGates": unavailable_gates,
         "geometryIndependentFailGates": geometry_independent_fail_gates,
+        # Verdict-driving gate ids ("fail" -> do-not-print, "warn" -> risky) and the advisory-only
+        # gates that never change the verdict (see ADVISORY_GATES).
+        "blockingGates": [g["id"] for g in gates if g["status"] == "fail"],
+        "riskGates": [g["id"] for g in gates if g["status"] == "warn"],
+        "advisoryGates": [g["id"] for g in gates if g["status"] == "advisory"],
+        "advisories": advisories,
     }
 
 

@@ -96,6 +96,37 @@ class TestBayesianOptimizerHonesty(unittest.TestCase):
         self.assertIsNone(res["bestParams"])
         self.assertEqual(res["verdictCounts"], {"do-not-print": 3})
 
+    def test_iterations_return_gate_diagnostics(self):
+        res = bo.run_bayesian_optimization("in718", n_iter=2, n_warmup=1)
+        self.assertTrue(res["success"])
+        keys = {"blockingGates", "riskGates", "advisoryGates", "reasons", "extentStatus",
+                "normalizedEnthalpy", "aspectRatio_L_over_W", "keyholeRisk", "keyholeHigh"}
+        for it in res["iterations"]:
+            d = it["diagnostics"]
+            self.assertEqual(set(d), keys)
+            self.assertIsInstance(d["normalizedEnthalpy"], float)
+            self.assertIsInstance(d["keyholeHigh"], bool)
+            self.assertTrue(d["reasons"])
+            # Recoater / distortion never appear as failing or risk gates.
+            self.assertFalse({"recoater", "distortion"} & set(d["blockingGates"] + d["riskGates"]))
+            if it["verdict"] == "do-not-print":
+                self.assertTrue(d["blockingGates"])
+        self.assertIn("frozen", res["keyholeGateNote"])
+        self.assertIn("planned implementation bump", res["keyholeGateNote"])
+        self.assertEqual(set(res["gateSummary"]),
+                         {"blockingGateCounts", "riskGateCounts", "inconclusiveExtentStatusCounts"})
+
+    def test_all_zero_run_summarises_blocking_gates(self):
+        import lpbf_build_job_solver as bj
+        vd = {"verdict": "do-not-print", "blockingGates": ["keyhole"], "riskGates": ["balling"],
+              "advisoryGates": ["recoater", "distortion"], "reasons": ["Keyhole porosity: ..."]}
+        with mock.patch.object(bj, "compose_verdict", return_value=vd):
+            res = bo.run_bayesian_optimization("in718", n_iter=3, n_warmup=3)
+        self.assertTrue(res["noPositiveScore"])
+        self.assertEqual(res["gateSummary"]["blockingGateCounts"], {"keyhole": 3})
+        self.assertEqual(res["gateSummary"]["riskGateCounts"], {"balling": 3})
+        self.assertEqual(res["iterations"][0]["diagnostics"]["advisoryGates"], ["recoater", "distortion"])
+
     def test_inconclusive_counted_and_scored_zero(self):
         import lpbf_build_job_solver as bj
         with mock.patch.object(bj, "compose_verdict", return_value={"verdict": "inconclusive"}):
