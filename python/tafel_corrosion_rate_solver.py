@@ -414,11 +414,9 @@ def solve_tafel_corrosion_rate(data: dict) -> dict:
             "allowableLossMm": allowable_loss_mm,
 
             "rulUniformYears": None,
-            "rulPittingYears": None,
             "severity": None,
             "timelineProjections": [],
             "temperatureSensitivity": [],
-            "pythonCode": None,
             "provenance": _provenance(preset),
         }
 
@@ -446,13 +444,10 @@ def solve_tafel_corrosion_rate(data: dict) -> dict:
     # 5. Service Life & Wall Thinning Projections (1 to 25 Years)
     years_timeline = [1, 2, 3, 5, 7, 10, 15, 20, 25]
     projections = []
-    pitting_acceleration_factor = 3.5  # Typical pitting penetration vs uniform ratio
 
     for yr in years_timeline:
         loss_uniform_mm = cr_mm_yr * yr
-        loss_pitting_mm = cr_mm_yr * yr * pitting_acceleration_factor
         remaining_wall_mm = max(0.0, initial_thickness_mm - loss_uniform_mm)
-        remaining_pitting_mm = max(0.0, initial_thickness_mm - loss_pitting_mm)
         wall_loss_pct = min(100.0, (loss_uniform_mm / initial_thickness_mm) * 100.0)
         
         is_breached = loss_uniform_mm >= allowable_loss_mm
@@ -460,16 +455,14 @@ def solve_tafel_corrosion_rate(data: dict) -> dict:
         projections.append({
             "year": yr,
             "lossUniformMm": round(loss_uniform_mm, 4),
-            "lossPittingMm": round(loss_pitting_mm, 4),
             "remainingWallMm": round(remaining_wall_mm, 3),
-            "remainingPittingMm": round(remaining_pitting_mm, 3),
             "wallLossPct": round(wall_loss_pct, 2),
             "exceedsAllowance": is_breached
         })
 
     # Remaining Useful Life (RUL) in Years before exceeding corrosion allowance
-    rul_uniform_years = (allowable_loss_mm / cr_mm_yr) if cr_mm_yr > 0 else 999.0
-    rul_pitting_years = (allowable_loss_mm / (cr_mm_yr * pitting_acceleration_factor)) if cr_mm_yr > 0 else 999.0
+    # A zero corrosion rate has no finite life: unavailable (None), not a 999-year placeholder.
+    rul_uniform_years = (allowable_loss_mm / cr_mm_yr) if cr_mm_yr > 0 else None
 
     # 6. Temperature Sensitivity (Arrhenius Model from 5°C to 85°C)
     t_ref_k = temp_c + ZERO_CELSIUS_K
@@ -494,65 +487,6 @@ def solve_tafel_corrosion_rate(data: dict) -> dict:
 
     # 7. Severity Rating & Recommendations
     severity = classify_corrosion_severity(cr_mm_yr)
-
-    # 8. Python Code Generation (reproducible script for user)
-    e_corr_text = "None" if e_corr_v is None else str(e_corr_v)  # None: eCorr_V was not supplied
-    if stern_ok:
-        reproducible_python_code = f"""# =========================================================================
-# ASTM G102 & G59 Automated Annual Corrosion Rate Calculation
-# Grounded in Faraday's Law & Stern-Geary Potentiodynamic Polarization
-# =========================================================================
-import math
-
-# Inputs determined from Tafel Fit
-i_corr_uA_cm2 = {i_corr_ua_cm2}  # Extrapolated corrosion current density
-e_corr_V = {e_corr_text}          # Corrosion potential
-beta_a = {beta_a}            # Anodic Tafel slope (V/decade)
-beta_c = {beta_c}            # Cathodic Tafel slope (V/decade)
-
-# Substrate properties ({alloy_name})
-equivalent_weight = {ew}     # EW (g/equivalent)
-density_g_cm3 = {density}        # Density rho (g/cm^3)
-
-# 1. Stern-Geary Constant B & Polarization Resistance Rp (ASTM G59)
-B = (beta_a * beta_c) / (math.log(10.0) * (beta_a + beta_c))
-i_corr_A_cm2 = i_corr_uA_cm2 * 1e-6
-Rp = B / i_corr_A_cm2  # Ohm * cm^2
-
-# 2. Faraday Penetration Rate (ASTM G102)
-# Formula: CR (mm/yr) = K1 * (i_corr * EW) / density, K1 = 1e-6 * (s per year) * 10 / F
-F = {FARADAY_C_PER_MOL!r}  # C/mol, exact SI 2019 value N_A * e
-K1 = (1e-6 * 31557600.0 * 10.0) / F  # = 0.0032707148 mm * g / (uA * cm * year)
-cr_mm_yr = (K1 * i_corr_uA_cm2 * equivalent_weight) / density_g_cm3
-cr_mpy = cr_mm_yr * {MILS_PER_MM!r}  # mils per year (1 mil = 0.0254 mm)
-
-print(f"Stern-Geary B: {{B:.4f}} V")
-print(f"Polarization Resistance Rp: {{Rp:.1f}} Ohm*cm^2")
-print(f"Annual Corrosion Rate: {{cr_mm_yr:.5f}} mm/year ({{cr_mpy:.3f}} mpy)")
-"""
-    else:
-        reproducible_python_code = f"""# =========================================================================
-# ASTM G102 Annual Corrosion Rate Calculation (Faraday's Law)
-# Stern-Geary B and Rp are unavailable: betaA and/or betaC were not supplied.
-# =========================================================================
-import math
-
-i_corr_uA_cm2 = {i_corr_ua_cm2}  # Corrosion current density
-e_corr_V = {e_corr_text}          # Corrosion potential
-
-# Substrate properties ({alloy_name})
-equivalent_weight = {ew}     # EW (g/equivalent)
-density_g_cm3 = {density}        # Density rho (g/cm^3)
-
-# Faraday Penetration Rate (ASTM G102)
-# Formula: CR (mm/yr) = K1 * (i_corr * EW) / density, K1 = 1e-6 * (s per year) * 10 / F
-F = {FARADAY_C_PER_MOL!r}  # C/mol, exact SI 2019 value N_A * e
-K1 = (1e-6 * 31557600.0 * 10.0) / F  # = 0.0032707148 mm * g / (uA * cm * year)
-cr_mm_yr = (K1 * i_corr_uA_cm2 * equivalent_weight) / density_g_cm3
-cr_mpy = cr_mm_yr * {MILS_PER_MM!r}  # mils per year (1 mil = 0.0254 mm)
-
-print(f"Annual Corrosion Rate: {{cr_mm_yr:.5f}} mm/year ({{cr_mpy:.3f}} mpy)")
-"""
 
     duration_ms = round((time.perf_counter() - start_time) * 1000.0, 3)
 
@@ -593,8 +527,7 @@ print(f"Annual Corrosion Rate: {{cr_mm_yr:.5f}} mm/year ({{cr_mpy:.3f}} mpy)")
         "allowableLossMm": allowable_loss_mm,
         
         # Remaining Useful Life (RUL)
-        "rulUniformYears": round(rul_uniform_years, 2),
-        "rulPittingYears": round(rul_pitting_years, 2),
+        "rulUniformYears": None if rul_uniform_years is None else round(rul_uniform_years, 2),
         
         # Categorization & Engineering Decisions
         "severity": severity,
@@ -603,9 +536,6 @@ print(f"Annual Corrosion Rate: {{cr_mm_yr:.5f}} mm/year ({{cr_mpy:.3f}} mpy)")
         "timelineProjections": projections,
         "temperatureSensitivity": temp_sensitivity,
         
-        # Reproducibility Snippet
-        "pythonCode": reproducible_python_code,
-
         # Phase 6a provenance (registry / constants versions)
         "provenance": _provenance(preset),
     }
@@ -897,7 +827,7 @@ def fit_tafel_curve(data: dict) -> dict:
         "success": True,
         "isPythonEngine": True,
         "pythonVersion": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
-        "solverMethod": "ASTM G102 / G59 CPython 3.10 Linear Least-Squares Evans Optimization",
+        "solverMethod": "Linear least-squares Tafel-branch fit with Evans-diagram intersection (ASTM G102 formulation)",
         "durationMs": duration_ms,
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "eCorr": _r(extrapolated_ecorr, 4),

@@ -1,36 +1,13 @@
-import { ResponsiveContainer } from './VisibleResponsiveContainer';
 import React, { useState, useEffect } from "react";
 import { useDebouncedLatestTask } from "../hooks/useDebouncedLatestTask";
 import { isPythonValidationError, validationErrorFromResponse } from "../utils/pythonValidationError";
 import { UNAVAILABLE_TEXT } from "../utils/tafelDisplay";
 import {
   ShieldAlert,
-  ShieldCheck,
-  Droplets,
-  Activity,
-  AlertTriangle,
-  CheckCircle2,
-  TrendingDown,
   RefreshCw,
-  Sliders,
-  Layers,
-  Code,
-  Flame,
-  ArrowRight,
-  Sparkles,
-  Compass
+  Sliders
 } from "lucide-react";
-import {
-  ComposedChart,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ReferenceLine
-} from "recharts";
+
 
 export function CorrosionEISKineticsStudio() {
   const [metalId, setMetalId] = useState<string>("steel-316l");
@@ -39,13 +16,10 @@ export function CorrosionEISKineticsStudio() {
   const [i0Corr, setI0Corr] = useState<number>(0.15); // uA/cm2
   const [ePit, setEPit] = useState<number>(0.45); // V
   const [e0, setE0] = useState<number>(0.08); // V
-  const [exposureDays, setExposureDays] = useState<number>(60);
-  const [coatingType, setCoatingType] = useState<string>("epoxy");
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [simResult, setSimResult] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [activeSubTab, setActiveSubTab] = useState<"coating_nyquist" | "water_uptake" | "pore_decay" | "python_code">("coating_nyquist");
 
   const runPythonSimulation = async (signal?: AbortSignal): Promise<boolean> => {
     setIsLoading(true);
@@ -63,13 +37,12 @@ export function CorrosionEISKineticsStudio() {
           i0Corr_uA: i0Corr,
           ePit,
           e0,
-          exposureDays,
         }),
       });
 
       if (!response.ok) {
         // An unknown substrate id is refused by the engine (HTTP 422): show its message, never a guessed alloy.
-        const validation = await validationErrorFromResponse(response, "Corrosion EIS");
+        const validation = await validationErrorFromResponse(response, "Corrosion kinetics");
         if (validation) throw validation;
         throw new Error(`Python solver HTTP error: ${response.statusText}`);
       }
@@ -83,7 +56,7 @@ export function CorrosionEISKineticsStudio() {
       return true;
     } catch (err: any) {
       if (signal?.aborted) return false;
-      console.error("Corrosion EIS simulation error:", err);
+      console.error("Corrosion kinetics error:", err);
       if (isPythonValidationError(err)) setSimResult(null);
       setErrorMsg(err.message || "Failed to execute Python corrosion kinetics solver.");
       return false;
@@ -92,15 +65,12 @@ export function CorrosionEISKineticsStudio() {
     }
   };
 
-  // Debounced, visibility-gated and abortable. coatingType is not part of the request body, so it is not
-  // part of the input signature (changing it never produced a different request).
-  const corrosionInputSignature = JSON.stringify([metalId, betaA, betaC, i0Corr, ePit, e0, exposureDays]);
+  // Debounced, visibility-gated and abortable. The signature only contains request inputs.
+  const corrosionInputSignature = JSON.stringify([metalId, betaA, betaC, i0Corr, ePit, e0]);
   useEffect(() => {
     setSimResult(null);
   }, [corrosionInputSignature]);
   const { runNow: runPythonSimulationNow } = useDebouncedLatestTask(corrosionInputSignature, (_signature, signal) => runPythonSimulation(signal), 200);
-
-  const currentCoatingStage = simResult?.coatingTimeline?.slice(-1)[0];
 
   return (
     <div className="space-y-4">
@@ -113,14 +83,14 @@ export function CorrosionEISKineticsStudio() {
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
-                Corrosion EIS, ASTM G59 Polarization &amp; Coating Delamination Engine
+                Corrosion Kinetics: Stern-Geary R_p, Faraday Rate &amp; Pitting Margin
               </h3>
               <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-mono border border-amber-500/40">
-                CPython 3.10+ Stern-Geary &amp; Brasher-Kingsbury
+                Stern-Geary / ASTM G102
               </span>
             </div>
             <p className="text-xs text-slate-400 font-mono mt-0.5">
-              Calculates R_p polarization resistance, corrosion rate (mm/yr &amp; mpy), and barrier coating water uptake φ(t)
+              Calculates R_p polarization resistance, corrosion rate (mm/yr &amp; mpy) and the pitting-potential margin from the entered parameters
             </p>
           </div>
         </div>
@@ -218,26 +188,6 @@ export function CorrosionEISKineticsStudio() {
                 className="w-full accent-amber-500 h-1.5 bg-[#162032] rounded-lg cursor-pointer"
               />
             </div>
-
-            {/* Exposure Days */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-400 flex items-center gap-1">
-                  <Droplets className="w-3 h-3 text-sky-400" />
-                  Electrolyte Exposure
-                </span>
-                <span className="text-sky-300 font-bold font-mono">{exposureDays} days</span>
-              </div>
-              <input aria-label="Electrolyte Exposure (days)"
-                type="range"
-                min={0}
-                max={180}
-                step={5}
-                value={exposureDays}
-                onChange={(e) => setExposureDays(parseInt(e.target.value))}
-                className="w-full accent-sky-400 h-1.5 bg-[#162032] rounded-lg cursor-pointer"
-              />
-            </div>
           </div>
 
           {/* Quick Metrics Cards */}
@@ -299,186 +249,24 @@ export function CorrosionEISKineticsStudio() {
           )}
         </div>
 
-        {/* Right Column: Visualization */}
+        {/* Right Column: solver inputs/outputs summary. The former coating Nyquist, water-uptake and pore-resistance
+            charts came from fixed constants (no request input changed them) and were removed. */}
         <div className="lg:col-span-8 p-4 rounded-xl bg-[#090e18] border border-[#162032] space-y-3">
           <div className="flex items-center justify-between border-b border-[#162032] pb-2 flex-wrap gap-2">
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => setActiveSubTab("coating_nyquist")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  activeSubTab === "coating_nyquist"
-                    ? "bg-amber-500/20 border border-amber-400 text-amber-200"
-                    : "bg-[#050810] border border-[#162032] text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                Coating Nyquist Impedance
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveSubTab("water_uptake")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  activeSubTab === "water_uptake"
-                    ? "bg-amber-500/20 border border-amber-400 text-amber-200"
-                    : "bg-[#050810] border border-[#162032] text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                Water Uptake φ(t) (Brasher-Kingsbury)
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveSubTab("pore_decay")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  activeSubTab === "pore_decay"
-                    ? "bg-amber-500/20 border border-amber-400 text-amber-200"
-                    : "bg-[#050810] border border-[#162032] text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                Pore Resistance Decay R_pore(t)
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveSubTab("python_code")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  activeSubTab === "python_code"
-                    ? "bg-amber-500/20 border border-amber-400 text-amber-200"
-                    : "bg-[#050810] border border-[#162032] text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                Python Engine Code
-              </button>
-            </div>
-
+            <span className="text-xs font-bold text-slate-300 font-mono uppercase tracking-wider">Solver Output</span>
             {simResult?.pythonDurationMs && (
               <span className="text-[10px] text-amber-400 font-mono">
                 CPython solved in {simResult.pythonDurationMs} ms
               </span>
             )}
           </div>
-
-          {/* Sub-Tab 1: Coating Nyquist */}
-          {activeSubTab === "coating_nyquist" && (
-            <div className="h-[360px] w-full pt-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart margin={{ top: 10, right: 20, bottom: 20, left: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1a2638" />
-                  <XAxis
-                    dataKey="zReal"
-                    type="number"
-                    stroke="#64748b"
-                    tick={{ fontSize: 10, fill: "#94a3b8" }}
-                    label={{ value: "Z' Real (Ω)", position: "insideBottom", offset: -10, fill: "#94a3b8", fontSize: 11 }}
-                  />
-                  <YAxis
-                    dataKey="minusZImag"
-                    type="number"
-                    stroke="#64748b"
-                    tick={{ fontSize: 10, fill: "#94a3b8" }}
-                    label={{ value: "-Z'' Imag (Ω)", angle: -90, position: "insideLeft", offset: 10, fill: "#94a3b8", fontSize: 11 }}
-                  />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: "#090e18", borderColor: "#1e2d46", borderRadius: "12px", fontSize: "11px", color: "#f8fafc" }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "5px" }} />
-                  {simResult?.coatingNyquist?.map((group: any, idx: number) => {
-                    const colors = ["#10b981", "#38bdf8", "#f43f5e"];
-                    const color = colors[idx % colors.length];
-                    return (
-                      <Line
-                        key={idx}
-                        data={group.spectrum}
-                        type="monotone"
-                        dataKey="minusZImag"
-                        stroke={color}
-                        strokeWidth={2.5}
-                        dot={false}
-                        name={`Day ${group.day} Exposure`}
-                      />
-                    );
-                  })}
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-
-          {/* Sub-Tab 2: Water Uptake */}
-          {activeSubTab === "water_uptake" && (
-            <div className="h-[360px] w-full pt-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={simResult?.coatingTimeline || []} margin={{ top: 10, right: 20, bottom: 20, left: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1a2638" />
-                  <XAxis
-                    dataKey="day"
-                    stroke="#64748b"
-                    tick={{ fontSize: 10, fill: "#94a3b8" }}
-                    label={{ value: "Exposure Time (Days)", position: "insideBottom", offset: -10, fill: "#94a3b8", fontSize: 11 }}
-                  />
-                  <YAxis
-                    stroke="#38bdf8"
-                    domain={[0, 6]}
-                    tick={{ fontSize: 10, fill: "#38bdf8" }}
-                    label={{ value: "Water Uptake φ (Vol %)", angle: -90, position: "insideLeft", offset: 10, fill: "#38bdf8", fontSize: 11 }}
-                  />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: "#090e18", borderColor: "#1e2d46", borderRadius: "12px", fontSize: "11px", color: "#f8fafc" }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "5px" }} />
-                  <Line type="monotone" dataKey="waterUptakePct" stroke="#38bdf8" strokeWidth={2.5} dot={{ r: 3 }} name="Water Uptake φ (%)" />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-
-          {/* Sub-Tab 3: Pore Resistance Decay */}
-          {activeSubTab === "pore_decay" && (
-            <div className="h-[360px] w-full pt-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={simResult?.coatingTimeline || []} margin={{ top: 10, right: 20, bottom: 20, left: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1a2638" />
-                  <XAxis
-                    dataKey="day"
-                    stroke="#64748b"
-                    tick={{ fontSize: 10, fill: "#94a3b8" }}
-                    label={{ value: "Exposure Time (Days)", position: "insideBottom", offset: -10, fill: "#94a3b8", fontSize: 11 }}
-                  />
-                  <YAxis
-                    stroke="#f43f5e"
-                    tick={{ fontSize: 10, fill: "#f43f5e" }}
-                    label={{ value: "Pore Resistance R_pore (kΩ·cm²)", angle: -90, position: "insideLeft", offset: 10, fill: "#f43f5e", fontSize: 11 }}
-                  />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: "#090e18", borderColor: "#1e2d46", borderRadius: "12px", fontSize: "11px", color: "#f8fafc" }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "5px" }} />
-                  <Line type="monotone" dataKey="poreResistance_kOhm_cm2" stroke="#f43f5e" strokeWidth={2.5} dot={{ r: 3 }} name="R_pore (kΩ·cm²)" />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-
-          {/* Sub-Tab 4: Python Code */}
-          {activeSubTab === "python_code" && (
-            <div className="h-[360px] overflow-y-auto bg-[#050810] border border-[#162032] rounded-xl p-4 font-mono text-[11px] text-slate-300 leading-relaxed space-y-2">
-              <div className="text-amber-400 font-bold"># Python 3.10+ ASTM G59 &amp; Brasher-Kingsbury Solver</div>
-              <pre className="text-slate-300 whitespace-pre-wrap">
-{`import math
-
-def simulate_corrosion_kinetics(beta_a=${betaA}, beta_c=${betaC}, i0_corr_ua=${i0Corr}, days=${exposureDays}):
-    # Stern-Geary Constant B (V)
-    b_val = (beta_a * beta_c) / (2.303 * (beta_a + beta_c))
-    
-    # Polarization Resistance R_p (Ohm*cm2)
-    i_corr_a = i0_corr_ua * 1e-6
-    r_p = b_val / i_corr_a
-    
-    # Brasher-Kingsbury Water Uptake
-    # phi = log10(C_t / C_0) / log10(80)
-    phi_water = 4.8 * (1.0 - math.exp(-days / 12.0))
-    return {"b_val": b_val, "r_p": r_p, "phi_water": phi_water}
-`}
-              </pre>
-            </div>
-          )}
+          <div className="text-[11px] text-slate-400 font-mono space-y-1.5 leading-relaxed">
+            <p>R_p = B / i_corr with the Stern-Geary constant B = (β_a·β_c) / (ln 10·(β_a + β_c)).</p>
+            <p>Penetration rate (ASTM G102): CR = K1·i_corr·EW / ρ, with EW and ρ resolved from the substrate alloy composition.</p>
+            <p>Pitting margin: ΔE_pit = E_pit − E0 using the in-app preset E_pit and E0 of the selected substrate (not measured values; E_pit = {ePit} V, E0 = {e0} V); the qualitative label uses fixed in-house thresholds (not a standard).</p>
+            <p>Coating degradation (water uptake, pore resistance, coating EIS spectra) is not modelled here.</p>
+            {simResult?.sternGeary_B_V != null && <p>Stern-Geary B = {simResult.sternGeary_B_V} V</p>}
+          </div>
         </div>
       </div>
     </div>

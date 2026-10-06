@@ -14,6 +14,18 @@ export interface ScientificContext {
 // Browser-locale formatting showed "1.200 mm/s" and "31,25 J/mm³" in a Turkish browser; same rounding, fixed locale.
 const format = formatDisplayNumber;
 
+// Modules that have a module-specific context text above. Every other module would fall through to the generic
+// default at the end of buildScientificContext, which prints the shared LPBF specimen numbers (composition, density,
+// freezing range) that are unrelated to that module, so the panel is hidden there (see ScientificContextPanel).
+const MODULES_WITH_CONTEXT: ReadonlySet<string> = new Set([
+  'materials-project', 'alloy-builder', '3d-distortion-lab', 'phase-diagram', 'ttt-cct-kinetics',
+  'eds-lab', 'micrograph', 'research-hub', 'experimental-data', 'digital-twin', 'uq-lab', 'traceability',
+]);
+
+export function hasScientificContext(moduleId: ModuleId): boolean {
+  return MODULES_WITH_CONTEXT.has(moduleId);
+}
+
 export function buildScientificContext(moduleId: ModuleId, specimen: ActiveSpecimenState): ScientificContext {
   if (moduleId === 'materials-project') return {
     title: 'Elastic Constants input context',

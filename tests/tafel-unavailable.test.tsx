@@ -256,7 +256,7 @@ test("client annual-rate fallback: a missing i_corr is unavailable, not 1.25 uA/
   const res = fallbackClientTafelCorrosionRate({ alloyId: "steel-316l", density_g_cm3: 7.98, equivalentWeight: 24.8205 });
   assert.equal(res.status, "unavailable");
   assert.match(res.unavailableReason!, /iCorr_uA_cm2 was not supplied/);
-  for (const key of ["corrosionRateMmYr", "corrosionRateMpy", "sternGearyB_V", "rp_ohm_cm2", "iCorr_uA_cm2", "severity", "pythonCode"] as const) {
+  for (const key of ["corrosionRateMmYr", "corrosionRateMpy", "sternGearyB_V", "rp_ohm_cm2", "iCorr_uA_cm2", "severity", "rulUniformYears"] as const) {
     assert.equal(res[key], null, key);
   }
   assert.deepEqual(res.timelineProjections, []);

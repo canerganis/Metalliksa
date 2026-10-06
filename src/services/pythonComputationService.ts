@@ -2002,11 +2002,9 @@ function unavailableTafelCorrosionRate(
     initialThicknessMm,
     allowableLossMm,
     rulUniformYears: null,
-    rulPittingYears: null,
     severity: null,
     timelineProjections: [],
     temperatureSensitivity: [],
-    pythonCode: null,
   };
 }
 
@@ -2083,23 +2081,19 @@ export function fallbackClientTafelCorrosionRate(
 
   // Timeline projections
   const years = [1, 2, 3, 5, 7, 10, 15, 20, 25];
-  const pittingFactor = 3.5;
   const timelineProjections = years.map((yr) => {
     const lossUniform = cr_mm_yr * yr;
-    const lossPitting = cr_mm_yr * yr * pittingFactor;
     return {
       year: yr,
       lossUniformMm: +lossUniform.toFixed(4),
-      lossPittingMm: +lossPitting.toFixed(4),
       remainingWallMm: +Math.max(0, initialThickness - lossUniform).toFixed(3),
-      remainingPittingMm: +Math.max(0, initialThickness - lossPitting).toFixed(3),
       wallLossPct: +Math.min(100, (lossUniform / initialThickness) * 100).toFixed(2),
       exceedsAllowance: lossUniform >= allowableLoss,
     };
   });
 
-  const rulUniformYears = +(allowableLoss / cr_mm_yr).toFixed(2);
-  const rulPittingYears = +(allowableLoss / (cr_mm_yr * pittingFactor)).toFixed(2);
+  // A zero corrosion rate has no finite life: unavailable (null), not Infinity / a placeholder.
+  const rulUniformYears = cr_mm_yr > 0 ? +(allowableLoss / cr_mm_yr).toFixed(2) : null;
 
   // Temperature sensitivity (Arrhenius)
   // No registry in the browser: without a caller-supplied activation energy the 32 kJ/mol stand-in of the old
@@ -2167,15 +2161,6 @@ export function fallbackClientTafelCorrosionRate(
     };
   }
 
-  const pythonCode = `# ASTM G102 & G59 Python Calculation
-i_corr_uA_cm2 = ${iCorr_uA_cm2}
-ew = ${ew}
-density = ${density}
-K1 = 0.00327072
-cr_mm_yr = (K1 * i_corr_uA_cm2 * ew) / density
-print(f"Annual Corrosion Rate: {cr_mm_yr:.5f} mm/year")
-`;
-
   return {
     success: true,
     isPythonEngine: false,
@@ -2214,11 +2199,9 @@ print(f"Annual Corrosion Rate: {cr_mm_yr:.5f} mm/year")
     initialThicknessMm: initialThickness,
     allowableLossMm: allowableLoss,
     rulUniformYears,
-    rulPittingYears,
     severity,
     timelineProjections,
     temperatureSensitivity,
-    pythonCode,
   };
 }
 

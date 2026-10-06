@@ -24,10 +24,16 @@
    "new": 9.0179,
    "old": 9.02,
    "rel": -0.00023281596452332982
+  },
+  {
+   "key": "solverMethod",
+   "kind": "changed",
+   "new": "Linear least-squares Tafel-branch fit with Evans-diagram intersection (ASTM G102 formulation)",
+   "old": "ASTM G102 / G59 CPython 3.10 Linear Least-Squares Evans Optimization"
   }
  ],
  "exitCode": 0,
- "gitHead": "348ed5c05b4cd38c32caaf7329dd861acc84dbf2",
+ "gitHead": "67c8afbd7f6e5f3050c3e6fd73423010bb3c686d",
  "input": {
   "action": "fit_curve",
   "alloyId": "al-6061",
@@ -214,7 +220,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "tafel_corrosion_rate_solver",
  "solverFile": "python/tafel_corrosion_rate_solver.py",
- "solverSha256": "a48034be77d0cf63ef20cdd12747568eec4e9636ae1361016f15e0d6372d6cc4",
+ "solverSha256": "0e89a02445cac643aae3ef865787e6cb0c7c281d2fa6439d94c1b7c974a1546c",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {
@@ -541,7 +547,7 @@
    "level": "Excellent",
    "recommendation": "Periodic 5-year ultrasonic wall gauge inspection; minimal sacrificial allowance."
   },
-  "solverMethod": "ASTM G102 / G59 CPython 3.10 Linear Least-Squares Evans Optimization",
+  "solverMethod": "Linear least-squares Tafel-branch fit with Evans-diagram intersection (ASTM G102 formulation)",
   "specimenAreaCm2": 1.0,
   "sternGearyB_V": 0.02062,
   "success": true,

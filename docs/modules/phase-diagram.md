@@ -236,7 +236,7 @@ Background work: none; resources: fetch, interval.
 - `src/utils/calphadResultDisplay.ts::calphadTemperatureWindow`
 - `routes/physics.ts:58-63#physicsRouter.post(["/api/python/calphad-minimize"`
 - `routes/physics.ts:62-63#physicsRouter.get(["/api/python/calphad-databases"`
-- `routes/copilot.ts:23-52#copilotRouter.post(["/api/metallurgy/consult"`
+- `routes/copilot.ts:45-82#copilotRouter.post(["/api/metallurgy/consult"`
 - `server/openaiService.ts::generateGpt6Response`
 - `python/calphad_solver.py::list_available_databases`
 - `python/calphad_solver.py::normalize_composition`

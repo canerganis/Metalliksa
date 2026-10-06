@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { useMaterialSpecimenStore, type ActiveSpecimenState } from '../src/store/useMaterialSpecimenStore';
-import { buildScientificContext } from '../src/utils/scientificContext';
+import { buildScientificContext, hasScientificContext } from '../src/utils/scientificContext';
 
 test('Alloy Builder context describes composition estimates independently of process settings', () => {
   const specimen = useMaterialSpecimenStore.getInitialState().activeSpecimen;
@@ -70,7 +70,9 @@ test('Elastic Constants context describes form inputs independently of the share
   assert.match(text, /not.*validation claim/i);
   assert.doesNotMatch(text, /Shared IN718 fixture|280 W|8\.2 g\/cm|predicted behavior/i);
 
-  // Unrelated modules retain the existing specimen-driven generic presentation.
+  // Unrelated modules fall to the generic default text, but the panel is hidden there (hasScientificContext).
+  assert.equal(hasScientificContext('database'), false);
+  assert.equal(hasScientificContext('materials-project'), true);
   const generic = buildScientificContext('database', specimen);
   assert.equal(generic.title, 'Scientific interpretation for this module');
   assert.match(generic.observation, /Shared IN718 fixture; 280 W/);
@@ -118,5 +120,17 @@ test('each module family gets its own context; unrelated modules never fall into
   for (const id of ['electrochem-suite', 'database', 'calculators', 'copilot'] as const) {
     assert.notEqual(title(id), microstructure, `${id} must not show the LPBF microstructure context`);
     assert.equal(title(id), 'Scientific interpretation for this module', id);
+    assert.equal(hasScientificContext(id), false, `${id} must not render the LPBF-number default panel`);
   }
+});
+
+test('the context panel is not labelled live and renders nothing for modules without a module-specific text', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { renderToStaticMarkup } = await import('react-dom/server');
+  const React = await import('react');
+  const { ScientificContextPanel } = await import('../src/components/ScientificContextPanel');
+  const source = readFileSync('src/components/ScientificContextPanel.tsx', 'utf8');
+  assert.doesNotMatch(source, /live interpretation/i);
+  const specimen = { name: 'x', composition: { Ni: 52 }, density_gcm3: 8, freezingRange_C: 80, lpbf: { laserPower_W: 1, scanSpeed_mms: 1, hatch_um: 1, layer_um: 1 }, stablePhases: [], xrd: {} } as unknown as ActiveSpecimenState;
+  assert.equal(renderToStaticMarkup(React.createElement(ScientificContextPanel, { moduleId: 'database', specimen })), '');
 });

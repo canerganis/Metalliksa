@@ -63,12 +63,7 @@ def _python(operation_id: str, script: str, timeout_ms: int, *, fields: Tuple[In
     )
 
 
-_GALVANIC_METALS = (
-    "mg", "al-7075", "al-6061", "zn", "steel-1018", "cast-iron", "cd", "ni-200", "pb-sn",
-    "cu-c110", "ss-304", "ss-316l", "duplex-2205", "ti-64", "inconel-718", "cfrp-carbon",
-)
-_ELECTROLYTES = ("marine", "acidic", "industrial", "soil", "tapwater")
-_VIEW_TABS = ("galvanic", "pren", "polarization", "pourbaix", "corrosion-eis")
+_VIEW_TABS = ("pren", "polarization", "pourbaix", "corrosion-eis")
 _RUN_STATUS = (("status", ("partial", "unavailable")),)
 _TAFEL_STATUS = (
     ("fitStatus", ("unavailable",)),
@@ -80,19 +75,7 @@ ELECTROCHEM_OPERATIONS: Tuple[Operation, ...] = (
     _local("select-corrosion-view", fields=(_enum(
         "activeTab", "Selected corrosion view", "ui-view", "corrosion-eis", _VIEW_TABS,
     ),), outputs=("activeTab",)),
-    _local("calculate-galvanic-pair", fields=(
-        _enum("anodeId", "Anodic substrate", "corrosion-alloy-id", "al-7075", _GALVANIC_METALS),
-        _enum("cathodeId", "Cathodic substrate", "corrosion-alloy-id", "cu-c110", _GALVANIC_METALS),
-        _number("currentDensity", "Base current density", "mA/cm²", "current-density", 3.0,
-                note="Default from the local UI; no independent validity interval is established."),
-        _number("anodeArea", "Anode area", "cm²", "area", 25.0,
-                note="Default from the local UI; no independent validity interval is established."),
-        _number("cathodeArea", "Cathode area", "cm²", "area", 250.0,
-                note="Default from the local UI; no independent validity interval is established."),
-        _enum("electrolyte", "Electrolyte scenario", "environment-preset", "marine", _ELECTROLYTES),
-    ), outputs=("potentialDiff", "areaRatio", "envFactor", "effectiveIcorr_uA", "penetrationRateMmYear",
-                "penetrationMpy", "massLossGramsPerDay")),
-    _local("calculate-pren-cpt", fields=(
+    _local("calculate-pren", fields=(
         _number("cr", "Chromium content", "wt.%", "element-content", 22.0,
                 note="Default from the local UI; the displayed slider extent is not a validity domain."),
         _number("mo", "Molybdenum content", "wt.%", "element-content", 3.2,
@@ -101,14 +84,12 @@ ELECTROCHEM_OPERATIONS: Tuple[Operation, ...] = (
                 note="Default from the local UI; the displayed slider extent is not a validity domain."),
         _number("n", "Nitrogen content", "wt.%", "element-content", 0.18,
                 note="Default from the local UI; the displayed slider extent is not a validity domain."),
-    ), outputs=("prenScore", "estimatedCPT_Celsius")),
+    ), outputs=("prenScore",)),
     _local("apply-pren-alloy-preset", undeclared=("presetLabel",),
-           outputs=("cr", "mo", "w", "n", "prenScore", "estimatedCPT_Celsius")),
+           outputs=("cr", "mo", "w", "n", "prenScore")),
     _local("import-tafel-dataset", undeclared=("file", "parsedDataset"),
-           outputs=("dataset", "loadError", "parseError", "selectedBenchmarkId", "pythonFitResult",
+           outputs=("dataset", "loadError", "parseError", "pythonFitResult",
                     "isPythonFitting", "pythonFitError")),
-    _local("select-tafel-benchmark", undeclared=("benchmarkId", "benchmarkDataset"),
-           outputs=("dataset", "selectedBenchmarkId", "pythonFitResult", "isPythonFitting", "isManualOverride")),
     _local("estimate-tafel-locally", undeclared=("dataset", "electrodeMetadata", "fitWindows", "manualOverrides"),
            outputs=("fitResult", "unavailableReason", "unavailable")),
     _local("export-tafel-csv", undeclared=("dataset", "localFitResult"), outputs=("csvBlob", "downloadUrl", "downloadAnchor")),
@@ -125,7 +106,7 @@ ELECTROCHEM_OPERATIONS: Tuple[Operation, ...] = (
                         "density_g_cm3", "equivalentWeight", "specimenAreaCm2", "initialThicknessMm",
                         "allowableLossMm", "temperatureC"),
             outputs=("status", "unavailableReason", "corrosionRateMmYr", "corrosionRateMpy",
-                     "rp_ohm_cm2", "rulUniformYears", "rulPittingYears", "pythonCode"),
+                     "rp_ohm_cm2", "rulUniformYears"),
             transport_values=_RUN_STATUS),
     _local("manage-pourbaix-test-points", undeclared=("experimentalPoints", "pointAction", "pointFields"),
            outputs=("experimentalPoints", "pointStates", "selectedPointId")),
@@ -141,15 +122,11 @@ ELECTROCHEM_OPERATIONS: Tuple[Operation, ...] = (
             outputs=("pythonPourbaixData", "solverError", "isPythonSolving", "pythonFresh")),
     _python("simulate-corrosion-eis", "python/battery_corrosion_eis_solver.py",
             _PYTHON_TIMEOUT_CHARACTERIZATION_MS,
-            undeclared=("action", "metalId", "betaA", "betaC", "i0Corr_uA", "ePit", "e0", "exposureDays"),
+            undeclared=("action", "metalId", "betaA", "betaC", "i0Corr_uA", "ePit", "e0"),
             outputs=("status", "unavailable", "unavailableReason", "polarizationResistance_Rp_Ohm_cm2",
                      "corrosionRate_mm_yr", "corrosionRate_mpy", "deltaE_pit_V", "pittingAssessment",
-                     "coatingTimeline", "coatingNyquist", "pythonDurationMs"),
+                     "pythonDurationMs"),
             transport_values=_RUN_STATUS),
-    _local("select-eis-visualization", fields=(_enum(
-        "activeSubTab", "Corrosion EIS view", "ui-view", "coating_nyquist",
-        ("coating_nyquist", "water_uptake", "pore_decay", "python_code"),
-    ),), outputs=("activeSubTab", "simResult")),
 )
 
 
@@ -175,12 +152,12 @@ def build_electrochem_contract(seed: Mapping[str, str]) -> ModuleContract:
         lifecycle=Lifecycle(background_work="none", resources=("fetch",)),
         legacy_notes=(
             "CorrosionEngineeringLab is reachable from electrochem-suite. Its child tabs mount conditionally; switching tabs unmounts the prior child and its local state.",
-            "Galvanic, PREN/CPT, and Tafel's immediate fit are browser-local formulas. Their outputs are calculated estimates and are not validated measurements.",
+            "PREN and Tafel's immediate fit are browser-local formulas. Their outputs are calculated estimates and are not validated measurements.",
             "Pourbaix sends only element, fixed 25 °C, effective dissolved-ion activity, chloride activity converted to ppm, and user-supplied point fields to /api/python/pourbaix-diagram. Chloride is echoed; the current equilibrium species model does not include chloride or derive a sourced pitting potential. Unsupported elements suppress dispatch and show unavailable data status. The nested solver run/domain statuses are temperatureStatus=supported-25C-only, dataValidity=withheld-species-regions|withheld-candidates-without-region|no-withheld-candidates, and chloridePittingBoundary=unavailable-no-sourced-epit; these are not evidence statuses. The request signature includes chloride and point fields, but the rendered Python result freshness predicate checks only element and dissolved activity; while another solve is pending, echoed chloride/point diagnostics can remain from an earlier request. The Python request is debounced, visibility-gated, and abortable. The displayed TypeScript map and point classifications remain a separate local path.",
-            "Tafel imports user files/pasted text or selects a bundled benchmark dataset; source currently declares the benchmark list empty, so the initial state is upload-only and no synthetic benchmark is invented. The UI has a browser-local tryAutoFitTafel estimate and a Python fit action on the same /api/python/tafel-corrosion-rate route (action=fit_curve); a network failure falls back to the local estimate, while Python validation errors are surfaced and do not reuse the prior Python result. The local manualBetaA/manualBetaC overrides affect the browser fit but are not sent to Python; custom fit windows and Ecorr/Icorr overrides are sent. Dataset values and instrument provenance remain user source labels, not independently validated measurements.",
+            "Tafel imports user files/pasted text; the benchmark selector was removed because no benchmark dataset is bundled, so the state is upload-only and no synthetic benchmark is invented. The UI has a browser-local tryAutoFitTafel estimate and a Python fit action on the same /api/python/tafel-corrosion-rate route (action=fit_curve); a network failure falls back to the local estimate, while Python validation errors are surfaced and do not reuse the prior Python result. The local manualBetaA/manualBetaC overrides affect the browser fit but are not sent to Python; custom fit windows and Ecorr/Icorr overrides are sent. Dataset values and instrument provenance remain user source labels, not independently validated measurements.",
             "Tafel CSV export creates a Blob URL, clicks a download anchor, then revokes the URL. Summary copy calls navigator.clipboard.writeText without awaiting/rejecting it and raises a success notification optimistically. Digital Twin sync is a conditional callback action; if the callback is absent it does nothing.",
             "The embedded annual-rate child uses the same Tafel route without action=fit_curve and recalculates when fit, dataset metadata, or its own inputs change. Missing iCorr remains unavailable; it is not defaulted. Its status values partial/unavailable are runtime availability states, not evidence statuses.",
-            "Corrosion EIS posts action=corrosion_kinetics to /api/python/battery-corrosion-eis. coatingType and the four visualization sub-tabs are local UI state; coatingType is not in the request body. The request is debounced and abortable. Solver partial/unavailable statuses and per-output unavailable reasons describe calculation availability only.",
+            "Corrosion EIS posts action=corrosion_kinetics to /api/python/battery-corrosion-eis. The coating timeline, coating Nyquist and the sub-tab selector were removed (they came from fixed constants); exposureDays is no longer sent. The request is debounced and abortable. Solver partial/unavailable statuses and per-output unavailable reasons describe calculation availability only.",
             "HTTP paths dispatch Python scripts through the registered Python IPC authority; Pourbaix uses a 25 s timeout and Tafel/EIS use 15 s. Pourbaix and EIS requests accept AbortSignal and are aborted when superseded/hidden; Tafel fit and annual-rate requests do not accept AbortSignal and can finish after their child view is unmounted. Child state is not persisted across unmount. Transient notifications and timer details are not represented as lifecycle resources by the current schema vocabulary.",
             "No equivalent-circuit fit/import child is reachable from this module. The contract does not claim circuit fitting, physical validation, measurement provenance beyond the selected source labels, or evidence promotion.",
             "Independent Pourbaix brute-force oracle and its golden comparison tooling exist in python/tools/pourbaix_oracle.py and python/tools/pourbaix_golden_check.py; Tafel/EIS analytic and input-refusal checks exist in python/test_electrochem_fallbacks.py. This contract keeps its module-level oracle pending because those solver-specific checks do not cover every local operation or the complete reachable UI, and none were executed in this task. Their existence does not establish experimental validation.",
@@ -191,8 +168,8 @@ def build_electrochem_contract(seed: Mapping[str, str]) -> ModuleContract:
             "python/module_registry.py:192-197#electrochem-suite solver registry operations",
             "routes/physics.ts:86-89#Pourbaix Python dispatch",
             "routes/characterization.ts:31-42#Tafel and corrosion EIS Python dispatch",
-            "src/components/CorrosionEngineeringLab.tsx:58-164#suite state and browser-local calculations",
-            "src/components/CorrosionEngineeringLab.tsx:671-690#conditional Pourbaix and EIS child mounting",
+            "src/components/CorrosionEngineeringLab.tsx:15-27#suite state and browser-local calculations",
+            "src/components/CorrosionEngineeringLab.tsx:296-327#conditional Pourbaix and EIS child mounting",
             "src/components/DynamicPourbaixStudio.tsx:84-152#Pourbaix inputs, unsupported-data availability, and local state",
             "src/components/DynamicPourbaixStudio.tsx:215-258#debounced abortable Python dispatch and freshness handling",
             "src/utils/pourbaixRequest.ts:7-28#actual solver request body and point provenance",
@@ -201,11 +178,11 @@ def build_electrochem_contract(seed: Mapping[str, str]) -> ModuleContract:
             "src/utils/tafelPythonService.ts:29-54#fit_curve endpoint payload",
             "src/utils/tafelPythonService.ts:150-166#validation refusal and local fallback behavior",
             "src/components/PythonAnnualCorrosionRateModule.tsx:35-133#annual corrosion input and request state",
-            "src/components/CorrosionEISKineticsStudio.tsx:25-83#EIS action payload and debounced cancellable dispatch",
+            "src/components/CorrosionEISKineticsStudio.tsx:12-74#EIS action payload and debounced cancellable dispatch",
             "python/battery_corrosion_eis_solver.py:57-92#required supplied inputs and partial/unavailable behavior",
-            "python/battery_corrosion_eis_solver.py:257-271#corrosion_kinetics action dispatch",
+            "python/battery_corrosion_eis_solver.py:186-194#corrosion_kinetics action dispatch",
             "python/tafel_corrosion_rate_solver.py:306-368#annual rate input and availability handling",
-            "python/tafel_corrosion_rate_solver.py:960-977#fit_curve versus annual-rate dispatch",
+            "python/tafel_corrosion_rate_solver.py:885-902#fit_curve versus annual-rate dispatch",
             "python/tools/pourbaix_oracle.py:1-23#independent Pourbaix brute-force oracle source",
             "python/tools/pourbaix_golden_check.py:1-25#Pourbaix golden comparison against independent oracle",
             "python/test_electrochem_fallbacks.py:1-30#Tafel and EIS analytic-oracle test scope",

@@ -617,7 +617,7 @@ export const PocketCalculators: React.FC = () => {
 
               <div className="mt-2.5 pt-2.5 border-t border-white/10 flex items-center justify-between">
                 <div>
-                  <div className="text-xs opacity-80">Recommended Minimum Preheat Temperature (AWS D1.1):</div>
+                  <div className="text-xs opacity-80">Heuristic preheat estimate (unsourced, not an AWS D1.1 value; ignores hydrogen, restraint and heat input):</div>
                   <div className="text-2xl font-black font-mono mt-0.5 text-white">
                     {ceResult.recommendedPreheatTemp} °C{" "}
                     <span className="text-xs font-normal text-slate-400">
@@ -868,13 +868,13 @@ export const PocketCalculators: React.FC = () => {
             <div>
               <div className="flex justify-between items-center mb-2.5">
                 <div>
-                  <h4 className="text-sm font-bold text-white">Schaeffler Diagram Position</h4>
+                  <h4 className="text-sm font-bold text-white">Constitution-diagram coordinates (Cr_eq / Ni_eq)</h4>
                   <div className="text-xs font-mono text-slate-400 mt-0.5">
                     Cr_eq = {schaefflerResult.crEq} % | Ni_eq = {schaefflerResult.niEq} %
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="text-xs text-slate-400 font-mono block">Estimated Ferrite (FN)</span>
+                  <span className="text-xs text-slate-400 font-mono block">Rough ferrite estimate (rule-based, not a measured FN)</span>
                   <span className="text-lg font-bold font-mono text-sky-400">
                     {schaefflerResult.ferriteNumberEstimated} FN
                   </span>
@@ -894,17 +894,8 @@ export const PocketCalculators: React.FC = () => {
                     ))}
                   </g>
 
-                  {/* Phase Field Regions */}
-                  <polygon points="30,120 180,140 280,250 30,250" fill="rgba(16, 185, 129, 0.12)" stroke="rgba(16, 185, 129, 0.4)" strokeWidth="1.5" />
-                  <text x="70" y="70" fill="#10b981" fontSize="12" fontWeight="bold" fontFamily="sans-serif">Austenite (γ)</text>
-
-                  <polygon points="30,250 160,250 120,170 30,170" fill="rgba(239, 68, 68, 0.12)" stroke="rgba(239, 68, 68, 0.4)" strokeWidth="1.5" />
-                  <text x="50" y="210" fill="#ef4444" fontSize="11" fontWeight="bold" fontFamily="sans-serif">Martensite (α')</text>
-
-                  <polygon points="200,250 390,250 390,180 240,180" fill="rgba(56, 189, 248, 0.12)" stroke="rgba(56, 189, 248, 0.4)" strokeWidth="1.5" />
-                  <text x="300" y="220" fill="#38bdf8" fontSize="11" fontWeight="bold" fontFamily="sans-serif">Ferrite (δ)</text>
-
-                  <text x="180" y="160" fill="#38bdf8" fontSize="11" fontWeight="bold" fontFamily="sans-serif">γ + δ (3-12 FN)</text>
+                  {/* No phase-field polygons are drawn: the former hand-drawn regions contradicted the rule-based
+                      classification below (and the classifier is a coarse rule set), so only the computed point is plotted. */}
 
                   {/* Current Alloy Plotted Coordinate */}
                   {(() => {
@@ -923,14 +914,14 @@ export const PocketCalculators: React.FC = () => {
 
                   {/* Axis labels */}
                   <text x="210" y="270" fill="#64748b" fontSize="10" textAnchor="middle">Cr Equivalent = %Cr + %Mo + 1.5%Si + 0.5%Nb</text>
-                  <text x="12" y="130" fill="#64748b" fontSize="10" transform="rotate(-90 12 130)" textAnchor="middle">Ni Equivalent</text>
+                  <text x="12" y="130" fill="#64748b" fontSize="10" transform="rotate(-90 12 130)" textAnchor="middle">Ni Equivalent = %Ni + 30%C + 30%N + 0.5%Mn</text>
                 </svg>
               </div>
             </div>
 
             <div className="p-2.5 bg-[#0c1322] rounded border border-[#162032] flex justify-between items-center text-xs text-slate-300 mt-2.5">
               <div>
-                <span className="text-slate-400">Primary Phase: </span>
+                <span className="text-slate-400">Coarse rule-based class: </span>
                 <span className="font-bold text-sky-400 font-mono">{schaefflerResult.primaryPhase}</span>
               </div>
               <div>

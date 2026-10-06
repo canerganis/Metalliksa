@@ -110,8 +110,8 @@ test("Schaeffler equivalents and ferrite number (hand computed)", () => {
   // FN = round(3 (20.8 - 0.93*13.35 - 6.7)) = round(3 * 1.6845) = 5
   assert.equal(s304.ferriteNumberEstimated, 5);
   assert.equal(s304.hotCrackingRisk, "Low");
-  // 316L-type with unspecified N -> 0.03 default: Creq 20.25, Nieq 14.25, FN = round(3*0.2975) = 1 -> hot-cracking Moderate
-  const s316 = calculateSchaeffler({ C: 0.02, Cr: 17, Ni: 12, Mo: 2.5, Si: 0.5, Mn: 1.5 });
+  // 316L-type with N = 0.03 supplied: Creq 20.25, Nieq 14.25, FN = round(3*0.2975) = 1 -> hot-cracking Moderate
+  const s316 = calculateSchaeffler({ C: 0.02, Cr: 17, Ni: 12, Mo: 2.5, Si: 0.5, Mn: 1.5, N: 0.03 });
   assert.equal(s316.crEq, 20.25);
   assert.equal(s316.niEq, 14.25);
   assert.equal(s316.ferriteNumberEstimated, 1);
@@ -136,9 +136,10 @@ test("Schaeffler regions: fully austenitic, ferritic, martensitic", () => {
 
 test("Andrews / Steven-Haynes temperatures (hand computed, 4140-like default)", () => {
   const r = calculateTransformationTemps({ C: 0.42, Mn: 0.85, Cr: 1.05, Mo: 0.22, Ni: 0.2, Si: 0.25, V: 0.02 });
-  // Ms = 539 - 423(0.42) - 30.4(0.85) - 17.7(0.2) - 12.1(1.05) - 7.5(0.22) = 317.6
-  assert.equal(r.ms, 318);
-  assert.equal(r.mf, 138); // Ms - 180
+  // Ms (Andrews 1965, with the -7.5 Si term) = 539 - 423(0.42) - 30.4(0.85) - 17.7(0.2) - 12.1(1.05) - 7.5(0.22) - 7.5(0.25)
+  //    = 317.6 - 1.875 = 315.7
+  assert.equal(r.ms, 316);
+  assert.equal(r.mf, 136); // Ms - 180
   // Bs = 830 - 270(0.42) - 90(0.85) - 37(0.2) - 70(1.05) - 83(0.22) = 540.94
   assert.equal(r.bs, 541);
   // Ac1 = 723 - 10.7(0.85) - 16.9(0.2) + 29.1(0.25) + 16.9(1.05) = 735.545
@@ -346,4 +347,30 @@ test("Pilling-Bedworth ratio: published oxide ratios and verdict bands", () => {
   assert.equal(mg.verdict, "Porous / Non-protective");
   assert.equal(calculatePillingBedworth(1, 1, 1, 1, 1).verdict, "Passivating / Protective"); // PBR = 1.0 is protective
   assert.equal(calculatePillingBedworth(2, 1, 1, 1, 1).verdict, "Passivating / Protective"); // PBR = 2.0 is still protective
+});
+
+test("Andrews Ms carries the -7.5 Si term (Andrews 1965)", () => {
+  const noSi = calculateTransformationTemps({ C: 0.3, Mn: 0.8 });
+  const withSi = calculateTransformationTemps({ C: 0.3, Mn: 0.8, Si: 2 });
+  // 539 - 423(0.3) - 30.4(0.8) = 387.78 ; with 2 % Si: 387.78 - 15 = 372.78
+  assert.equal(noSi.ms, 388);
+  assert.equal(withSi.ms, 373);
+});
+
+test("Schaeffler: N = 0 is honoured (no invented 0.03 wt% default) and N enters Ni_eq as 30*N", () => {
+  const base = { C: 0.02, Cr: 18, Ni: 8, Mo: 0, Si: 0, Mn: 0, Nb: 0 };
+  const zero = calculateSchaeffler({ ...base, N: 0 });
+  const omitted = calculateSchaeffler(base);
+  const some = calculateSchaeffler({ ...base, N: 0.1 });
+  assert.equal(zero.niEq, 8.6); // 8 + 30(0.02)
+  assert.equal(omitted.niEq, zero.niEq);
+  assert.equal(some.niEq, 11.6); // + 30(0.1)
+});
+
+test("weldability preheat is a heuristic, not labelled as an AWS D1.1 value in the UI", async () => {
+  const { readFileSync } = await import("node:fs");
+  const ui = readFileSync("src/components/PocketCalculators.tsx", "utf8");
+  assert.doesNotMatch(ui, /Recommended Minimum Preheat Temperature \(AWS D1\.1\)/);
+  assert.match(ui, /Heuristic preheat estimate \(unsourced/);
+  assert.doesNotMatch(ui, /<polygon /, "no hand-drawn Schaeffler phase polygons");
 });

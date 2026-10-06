@@ -769,7 +769,9 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
 
                     <div className="text-right">
                       <span className="text-[10px] font-mono text-slate-400">
-                        {tempConversions.C < 0
+                        {!Number.isFinite(tempConversions.C)
+                          ? "Unavailable (below absolute zero)"
+                          : tempConversions.C < 0
                           ? "Cryogenic"
                           : tempConversions.C <= 100
                           ? "Ambient"
@@ -795,7 +797,7 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
                           id="input-temp-celsius"
                           type="number"
                           inputMode="decimal"
-                          value={tempConversions.C}
+                          value={Number.isFinite(tempConversions.C) ? tempConversions.C : ""}
                           onChange={(e) => handleTempCChange(parseFloat(e.target.value) || 0)}
                           className="w-full px-2 py-1.5 bg-[#090e18] border border-[#1e2d46] rounded-lg font-mono font-bold text-xs text-amber-400 focus:outline-none focus:border-amber-400"
                         />
@@ -827,7 +829,7 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
                           type="number"
                           inputMode="decimal"
                           min={0}
-                          value={tempConversions.K}
+                          value={Number.isFinite(tempConversions.K) ? tempConversions.K : ""}
                           onChange={(e) => handleTempKChange(parseFloat(e.target.value) || 0)}
                           className="w-full px-2 py-1.5 bg-[#090e18] border border-[#1e2d46] rounded-lg font-mono font-bold text-xs text-sky-400 focus:outline-none focus:border-sky-400"
                         />
@@ -859,7 +861,7 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
                           type="number"
                           inputMode="decimal"
                           min={0}
-                          value={tempConversions.R}
+                          value={Number.isFinite(tempConversions.R) ? tempConversions.R : ""}
                           onChange={(e) => handleTempRChange(parseFloat(e.target.value) || 0)}
                           className="w-full px-2 py-1.5 bg-[#090e18] border border-[#1e2d46] rounded-lg font-mono font-bold text-xs text-rose-400 focus:outline-none focus:border-rose-400"
                         />
@@ -885,7 +887,7 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
                       min={-200}
                       max={1600}
                       step={5}
-                      value={tempConversions.C}
+                      value={Number.isFinite(tempConversions.C) ? tempConversions.C : ""}
                       onChange={(e) => handleTempCChange(parseFloat(e.target.value) || 0)}
                       className="w-full accent-amber-400 bg-[#090e18] h-1.5 rounded cursor-pointer"
                     />

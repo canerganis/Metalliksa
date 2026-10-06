@@ -153,9 +153,7 @@ export interface TafelPythonCorrosionRateInput {
 export interface TafelYearlyProjection {
   year: number;
   lossUniformMm: number;
-  lossPittingMm: number;
   remainingWallMm: number;
-  remainingPittingMm: number;
   wallLossPct: number;
   exceedsAllowance: boolean;
 }
@@ -216,7 +214,6 @@ export interface TafelPythonCorrosionRateResult {
 
   // Remaining Useful Life (RUL)
   rulUniformYears: number | null;
-  rulPittingYears: number | null;
 
   // Severity Classification (null when unavailable)
   severity: {
@@ -231,7 +228,5 @@ export interface TafelPythonCorrosionRateResult {
   timelineProjections: TafelYearlyProjection[];
   temperatureSensitivity: TafelTemperatureSensitivity[];
 
-  // Reproducible Python Snippet (null when unavailable)
-  pythonCode: string | null;
   error?: string;
 }

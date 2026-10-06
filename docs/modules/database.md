@@ -250,7 +250,7 @@ Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
 
 | Key | Label | Type | Unit | Min | Max | Step | Default | Note |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `heatmapMode` | D3 plot mode | enum ['alloy-elements', 'element-property-binned', 'property-correlation'] | — | — | — | — | alloy-elements | — |
+| `heatmapMode` | D3 plot mode | enum ['alloy-elements', 'element-property-binned'] | — | — | — | — | alloy-elements | — |
 
 — = not established from the authority code or a source; the contract states no bound.
 Required keys are marked in the contract JSON.
@@ -365,20 +365,6 @@ Undeclared input keys (read by the authority, not describable by the Field schem
 
 Output fields (no status key, so the output carries no evidence status): `selectedMaterial`.
 
-### `select-correlation-cell`: `None None`
-
-Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
-
-| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-
-— = not established from the authority code or a source; the contract states no bound.
-All keys are optional at the authority, which applies the listed default when a key is absent.
-
-Undeclared input keys (read by the authority, not describable by the Field schema): `cell`.
-
-Output fields (no status key, so the output carries no evidence status): `selectedElement`, `selectedPropertyKey`, `svgPlot`.
-
 ### `select-scatter-point`: `None None`
 
 Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
@@ -418,20 +404,6 @@ Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
 All keys are optional at the authority, which applies the listed default when a key is absent.
 
 Undeclared input keys (read by the authority, not describable by the Field schema): `b`.
-
-Output fields (no status key, so the output carries no evidence status): `hoveredCell`, `xLabel`, `yLabel`, `value`, `extraInfo`, `xPos`, `yPos`.
-
-### `inspect-correlation-cell`: `None None`
-
-Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
-
-| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-
-— = not established from the authority code or a source; the contract states no bound.
-All keys are optional at the authority, which applies the listed default when a key is absent.
-
-Undeclared input keys (read by the authority, not describable by the Field schema): `cell`.
 
 Output fields (no status key, so the output carries no evidence status): `hoveredCell`, `xLabel`, `yLabel`, `value`, `extraInfo`, `xPos`, `yPos`.
 
@@ -481,7 +453,7 @@ Background work: none; resources: none.
 
 - This module reads the statically imported MATERIALS_DATABASE array and performs filtering, sorting, selection, comparison, clipboard copy, JSON download, and transfer-payload preparation in the browser. Outputs name local view effects and transfer state; this is not an API request/response surface.
 - The trimmed, lowercased searchQuery checks material name, standard, category, microstructure, application text, and composition element symbols. Category filtering is exact. Yield strength and Young's modulus are filtered by both min and max state; density is also filtered by both min and max. Only minYield, minModulus, and maxDensity have visible sliders; maxYield, maxModulus, and minDensity remain at their initialized values unless the reset action writes them. Slider limits and steps are control settings, not a material validity domain.
-- MaterialSpec stores nominal scalar or min/max composition entries and property values, but has no per-property source citation, condition/temper, applicability, uncertainty, or confidence fields. The catalog header says 'Calibrated'; that UI label is not a record-level evidence link or validation proof.
+- MaterialSpec stores nominal scalar or min/max composition entries and property values, but has no per-property source citation, condition/temper, applicability, uncertainty, or confidence fields. The catalog header no longer claims calibrated compositions; no record-level evidence link or validation proof exists.
 - Selection and comparison callbacks receive MaterialSpec records from local catalog rows. Since the SDK scalar schema cannot describe that nested record/map, these actions record the actual 'material' input as undeclared rather than inventing a record-ID endpoint or object schema.
 - createPipelinePayloadFromMaterialSpec preserves originalComposition and marks composition as nominal or range-midpoint, while normalizing composition and deriving kinetic, hardness, and XRD profiles. The downstream bridge states that source property values/confidence are not promoted and derived properties remain estimates. Missing Poisson ratio also receives a code fallback in the pipeline; that fallback is software behavior, not a database measurement.
 - The transfer picker presents Alloy Builder, ICME, LPBF wizard, and Phase Diagram as destinations. Dispatch stores the payload through the browser pipeline utility, then navigates after a 350 ms setTimeout. This is a local cross-module handoff, not provider/server execution or LPBF acceptance.
@@ -504,7 +476,7 @@ Background work: none; resources: none.
 - `src/components/MaterialsDatabaseView.tsx:230-245#setShowFilters(!showFilters)`
 - `src/components/MaterialsDatabaseView.tsx:250-264#Sort:`
 - `src/components/MaterialsDatabaseView.tsx:336-346#Maximum Density (ρ)`
-- `src/components/MaterialsDatabaseView.tsx:150-150#Calibrated chemical compositions`
+- `src/components/MaterialsDatabaseView.tsx:150-150#Chemical compositions, tensile`
 - `src/components/MaterialsDatabaseView.tsx:56-56#compareList`
 - `src/components/MaterialsDatabaseView.tsx:113-118#compareList.length < 4`
 - `src/components/MaterialsDatabaseView.tsx:373-377#MaterialsPropertyHeatmapD3`
@@ -515,10 +487,10 @@ Background work: none; resources: none.
 - `src/components/MaterialsPropertyHeatmapD3.tsx::MaterialsPropertyHeatmapD3`
 - `src/components/MaterialsPropertyHeatmapD3.tsx::HEATMAP_PROPERTIES`
 - `src/components/MaterialsPropertyHeatmapD3.tsx::ALLOYING_ELEMENTS`
-- `src/components/MaterialsPropertyHeatmapD3.tsx:320-345#observer.disconnect()`
-- `src/components/MaterialsPropertyHeatmapD3.tsx:348-348#useEffect(() => {`
-- `src/components/MaterialsPropertyHeatmapD3.tsx:858-868#URL.revokeObjectURL(url)`
-- `src/components/MaterialsPropertyHeatmapD3.tsx:1045-1062#hoveredCell`
+- `src/components/MaterialsPropertyHeatmapD3.tsx:252-275#observer.disconnect()`
+- `src/components/MaterialsPropertyHeatmapD3.tsx:277-277#useEffect(() => {`
+- `src/components/MaterialsPropertyHeatmapD3.tsx:645-656#URL.revokeObjectURL(url)`
+- `src/components/MaterialsPropertyHeatmapD3.tsx:820-840#hoveredCell`
 - `src/types.ts:32-63#MaterialSpec`
 - `src/data/materialsDatabase.ts:1-28#MATERIALS_DATABASE`
 - `src/utils/materialDataPipeline.ts:666-715#createPipelinePayloadFromMaterialSpec`

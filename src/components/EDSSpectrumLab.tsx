@@ -424,7 +424,7 @@ export const EDSSpectrumLab: React.FC<{
           {useGpuView ? (
             <WebGLSpectrometerCanvas
               data={gpuData}
-              deconvolutionPeaks={showBackground ? gpuBackground : []}
+              backgroundOverlays={showBackground ? gpuBackground : []}
               annotations={showMarkers ? gpuAnnotations : []}
               xLabel="X-Ray Energy"
               yLabel="Counts"

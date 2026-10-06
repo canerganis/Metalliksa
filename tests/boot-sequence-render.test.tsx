@@ -21,7 +21,7 @@ test("first paint of the boot screen: a labelled dialog, a plain list of five wa
   assert.equal((html.match(/<li class="mk-boot-row" data-state="pending">/g) ?? []).length, 5);
   assert.equal((html.match(/>Waiting</g) ?? []).length, 5, "state word once per row");
   assert.ok(!html.includes("mk-boot-detail"), "no detail before a check answers (no 'Waiting Waiting')");
-  for (const label of ["Runtime configuration", "Access", "Air-gap", "Python engine", "Module registry"]) assert.ok(html.includes(label), label);
+  for (const label of ["Runtime configuration", "Access", "Air-gap", "Python engine", "Module registry (bundled)"]) assert.ok(html.includes(label), label);
   assert.ok(!html.includes("%"), "no percent progress");
   assert.ok(!/online|OK</.test(html), "nothing is reported before a check has answered");
   assert.match(html, />Skip intro</);

@@ -162,13 +162,12 @@ class DatabaseContractTests(unittest.TestCase):
             "set-heatmap-mode", "set-heatmap-property", "set-heatmap-element",
             "sort-heatmap-alloys", "set-heatmap-palette", "select-heatmap-element-from-axis",
             "select-heatmap-property-from-axis", "select-composition-cell", "select-binned-bucket",
-            "select-correlation-cell",
             "select-scatter-point", "inspect-composition-cell", "inspect-binned-cell",
-            "inspect-correlation-cell", "clear-heatmap-tooltip",
+            "clear-heatmap-tooltip",
             "export-heatmap-svg",
         ))
         self.assertEqual(operations["set-heatmap-mode"].input[0].enum,
-                         ("alloy-elements", "element-property-binned", "property-correlation"))
+                         ("alloy-elements", "element-property-binned"))
         self.assertEqual(operations["set-heatmap-property"].input[0].enum, (
             "yieldStrength", "tensileStrength", "youngsModulus", "density", "specificStrength",
             "elongation", "thermalConductivity",
@@ -183,7 +182,6 @@ class DatabaseContractTests(unittest.TestCase):
         self.assertEqual(operations["select-composition-cell"].undeclared_input, ("mat", "elem"))
         self.assertEqual(operations["render-heatmap"].undeclared_input, ("materials", "selectedMaterial"))
         self.assertEqual(operations["select-binned-bucket"].undeclared_input, ("b",))
-        self.assertEqual(operations["select-correlation-cell"].undeclared_input, ("cell",))
         self.assertEqual(operations["select-heatmap-property-from-axis"].undeclared_input, ("prop",))
         self.assertEqual(operations["select-scatter-point"].undeclared_input, ("mat",))
         self.assertEqual(operations["inspect-composition-cell"].undeclared_input, ("mat", "elem", "wt"))
@@ -191,7 +189,6 @@ class DatabaseContractTests(unittest.TestCase):
                          ("hoveredCell", "xLabel", "yLabel", "value", "unit", "material", "extraInfo",
                           "xPos", "yPos"))
         self.assertEqual(operations["inspect-binned-cell"].undeclared_input, ("b",))
-        self.assertEqual(operations["inspect-correlation-cell"].undeclared_input, ("cell",))
         self.assertEqual(operations["export-heatmap-svg"].output.fields,
                          ("source", "blob", "url", "download"))
         self.assertTrue(all(operation.route is None and operation.method is None
@@ -199,18 +196,15 @@ class DatabaseContractTests(unittest.TestCase):
 
         source = read_product_source("src/components/MaterialsPropertyHeatmapD3.tsx")
         for exact_control in (
-            '"alloy-elements" | "element-property-binned" | "property-correlation"',
+            '"alloy-elements" | "element-property-binned";',
             '"yieldStrength", label: "Yield Strength (σy)", unit: "MPa"',
             '"specificStrength", label: "Specific Strength (σy/ρ)", unit: "kN·m/kg"',
             '"thermalConductivity", label: "Thermal Conductivity", unit: "W/(m·K)"',
             '"C", "Cr", "Ni", "Mo", "Ti", "Al", "Cu", "V", "Mn", "Si", "Mg", "W", "Co", "Nb", "Zr", "Fe"',
-            'onClick={() => setHeatmapMode("property-correlation")}',
             'onChange={(e) => setSelectedPropertyKey(e.target.value)}',
             'onChange={(e) => setSelectedElement(e.target.value)}',
             'onChange={(e) => setColorPalette(e.target.value as ColorPaletteKey)}',
             '.on("click", () => onSelectMaterial(mat))',
-            'value: `r = ${cell.r > 0 ? "+" : ""}${cell.r}`',
-            'r: 0,\n            sampleCount: pairs.length',
             'a.download = `Materials_Heatmap_${heatmapMode}_${selectedPropertyKey}.svg`',
         ):
             with self.subTest(source_fragment=exact_control):

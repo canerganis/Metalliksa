@@ -91,7 +91,7 @@ Background work: none; resources: fetch.
 - `python/micrograph_measure.py::measure`
 - `python/micrograph_measure.py::intercept_statistics`
 - `routes/copilot.ts`
-- `server/openaiService.ts:39#request.timeoutMs ?? 60_000`
+- `server/openaiService.ts:42#request.timeoutMs ?? 60_000`
 - `src/components/MicrographLab.tsx::MicrographLab`
 - `src/components/MicrographAdvisoryDescription.tsx::MicrographAdvisoryDescription`
 - `src/components/MicrographMeasureStudio.tsx::MicrographMeasureStudio`

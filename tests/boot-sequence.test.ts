@@ -274,7 +274,7 @@ test("the status service passes the server's subsystemStatus through (and only a
 
 test("module registry row reports the bundled registry, not a probe", async () => {
   const snap = await runAll(deps());
-  assert.equal(snap.rows[4].detail, "Registry loaded · 37 modules");
+  assert.equal(snap.rows[4].detail, "Bundled with the app · 37 modules (not probed)");
   const empty = await runAll(deps({ moduleCount: () => 0 }));
   assert.deepEqual([empty.rows[4].state, empty.rows[4].detail], ["unavailable", "Registry empty"]);
 });

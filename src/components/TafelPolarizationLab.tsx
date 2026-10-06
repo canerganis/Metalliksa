@@ -8,7 +8,6 @@ import {
   Zap,
   Sliders,
   Sparkles,
-  CheckCircle2,
   AlertTriangle,
   Download,
   Copy,
@@ -27,7 +26,6 @@ import {
   FileSpreadsheet,
   Cpu,
   Info,
-  ArrowRight,
   ExternalLink,
   Plus,
 } from "lucide-react";
@@ -128,7 +126,6 @@ function TafelPolarizationLabWithData({
 
   // Active dataset & fitting state
   const [dataset, setDataset] = useState<TafelDataset>(initialDataset);
-  const [selectedBenchmarkId, setSelectedBenchmarkId] = useState<string>(initialDataset.id);
 
   // File upload state
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -334,21 +331,6 @@ function TafelPolarizationLabWithData({
   const { eCorrRef: eCorrAnchor, logIcorrRef: logIcorrAnchor } = tafelIntersectionAnchors(fitResult);
   const effectiveUnavailableReason = tafelUnavailableReason(effectiveFitResult);
 
-  // Handle benchmark change
-  const handleSelectBenchmark = (benchId: string) => {
-    setSelectedBenchmarkId(benchId);
-    const bench = TAFEL_BENCHMARK_DATASETS.find((b) => b.id === benchId);
-    if (bench) {
-      setDataset(bench);
-      setIsManualOverride(false);
-      setCustomCathodicRange(undefined);
-      setCustomAnodicRange(undefined);
-      setParseError(null);
-      if (onDatasetLoaded) onDatasetLoaded(bench);
-      runPythonFit(bench);
-    }
-  };
-
   // File processing with automated Python Ecorr & Icorr calculation
   const handleProcessFile = (file: File) => {
     setParseError(null);
@@ -361,7 +343,6 @@ function TafelPolarizationLabWithData({
         }
         const parsed = parseTafelFile(text, file.name, electrodeAreaCm2, currentAlloy);
         setDataset(parsed);
-        setSelectedBenchmarkId("custom_upload");
         setIsManualOverride(false);
         setCustomCathodicRange(undefined);
         setCustomAnodicRange(undefined);
@@ -385,7 +366,6 @@ function TafelPolarizationLabWithData({
       }
       const parsed = parseTafelFile(pastedText, "pasted_tafel_data.csv", electrodeAreaCm2, currentAlloy);
       setDataset(parsed);
-      setSelectedBenchmarkId("custom_upload");
       setIsManualOverride(false);
       setCustomCathodicRange(undefined);
       setCustomAnodicRange(undefined);
@@ -686,7 +666,7 @@ function TafelPolarizationLabWithData({
               <span>•</span>
               <span>Unit auto-scaling (A → µA)</span>
               <span>•</span>
-              <span>Zero-noise filtering</span>
+              <span>Zero currents clamped to 1e-10 µA/cm² before log₁₀</span>
             </div>
           </div>
 
@@ -738,48 +718,16 @@ function TafelPolarizationLabWithData({
           </div>
         </div>
 
-        {/* Right Column: Preloaded Benchmark Selectors */}
+        {/* Right Column: active scan summary (no preloaded benchmark list: none are bundled) */}
         <div className="lg:col-span-4 bg-[#090e18] rounded-2xl border border-[#162032] p-5 space-y-4 flex flex-col justify-between">
           <div className="border-b border-[#162032] pb-3">
             <span className="text-xs font-bold text-white font-mono uppercase tracking-wider flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-sky-400" />
-              Preloaded Benchmark Standards
+              Active Scan
             </span>
             <span className="text-[10px] text-slate-400 font-mono block mt-0.5">
-              Instant NIST / ASTM G5 calibrated datasets for reference verification
+              Upload or paste a potentiodynamic scan; no reference datasets are bundled.
             </span>
-          </div>
-
-          <div className="space-y-2">
-            {TAFEL_BENCHMARK_DATASETS.map((bench) => {
-              const isSelected = selectedBenchmarkId === bench.id;
-              return (
-                <button
-                  key={bench.id}
-                  type="button"
-                  onClick={() => handleSelectBenchmark(bench.id)}
-                  className={`w-full p-2.5 rounded-xl border text-left transition-all font-mono text-xs flex items-center justify-between ${
-                    isSelected
-                      ? "bg-emerald-500/15 border-emerald-400/60 shadow-[0_0_12px_rgba(52,211,153,0.2)] text-white"
-                      : "bg-[#050810] border-[#162032] hover:border-slate-600 text-slate-300"
-                  }`}
-                >
-                  <div className="truncate pr-2">
-                    <span className={`font-bold block truncate ${isSelected ? "text-emerald-300" : "text-white"}`}>
-                      {bench.name}
-                    </span>
-                    <span className="text-[10px] text-slate-400 block truncate">
-                      {bench.metadata.electrolyte}
-                    </span>
-                  </div>
-                  {isSelected ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  ) : (
-                    <ArrowRight className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                  )}
-                </button>
-              );
-            })}
           </div>
 
           <div className="p-3 bg-[#050810] rounded-xl border border-[#162032] text-[11px] font-mono text-slate-400 flex items-center justify-between">

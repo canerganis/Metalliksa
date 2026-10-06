@@ -38,7 +38,7 @@ _CATEGORIES = (
 _SORT_FIELDS = ("yield", "tensile", "specific_strength", "modulus", "density", "name")
 _SORT_ORDERS = ("desc", "asc")
 _TRANSFER_TARGETS = ("alloy-builder", "icme-motor", "3d-distortion-lab", "phase-diagram")
-_HEATMAP_MODES = ("alloy-elements", "element-property-binned", "property-correlation")
+_HEATMAP_MODES = ("alloy-elements", "element-property-binned")
 _HEATMAP_PROPERTIES = (
     "yieldStrength", "tensileStrength", "youngsModulus", "density", "specificStrength",
     "elongation", "thermalConductivity",
@@ -283,11 +283,6 @@ HEATMAP_OPERATIONS: Tuple[Operation, ...] = (
         outputs=("selectedMaterial",),
     ),
     _local_operation(
-        "select-correlation-cell",
-        undeclared=("cell",),
-        outputs=("selectedElement", "selectedPropertyKey", "svgPlot"),
-    ),
-    _local_operation(
         "select-scatter-point",
         undeclared=("mat",),
         outputs=("selectedMaterial",),
@@ -300,11 +295,6 @@ HEATMAP_OPERATIONS: Tuple[Operation, ...] = (
     _local_operation(
         "inspect-binned-cell",
         undeclared=("b",),
-        outputs=("hoveredCell", "xLabel", "yLabel", "value", "extraInfo", "xPos", "yPos"),
-    ),
-    _local_operation(
-        "inspect-correlation-cell",
-        undeclared=("cell",),
         outputs=("hoveredCell", "xLabel", "yLabel", "value", "extraInfo", "xPos", "yPos"),
     ),
     _local_operation(
@@ -356,7 +346,7 @@ def build_database_contract(seed: Mapping[str, str]) -> ModuleContract:
             "The trimmed, lowercased searchQuery checks material name, standard, category, microstructure, application text, and composition element symbols. Category filtering is exact. Yield strength and Young's modulus are filtered by both min and max state; density is also filtered by both min and max. Only minYield, minModulus, and maxDensity have visible sliders; maxYield, maxModulus, and minDensity remain at their initialized values unless the reset action writes them. Slider limits and steps are control settings, not a material validity domain.",
             "MaterialSpec stores nominal scalar or min/max composition entries and property values, but has no "
             "per-property source citation, condition/temper, applicability, uncertainty, or confidence fields. The "
-            "catalog header says 'Calibrated'; that UI label is not a record-level evidence link or validation proof.",
+            "catalog header no longer claims calibrated compositions; no record-level evidence link or validation proof exists.",
             "Selection and comparison callbacks receive MaterialSpec records from local catalog rows. Since the SDK "
             "scalar schema cannot describe that nested record/map, these actions record the actual 'material' input "
             "as undeclared rather than inventing a record-ID endpoint or object schema.",
@@ -393,7 +383,7 @@ def build_database_contract(seed: Mapping[str, str]) -> ModuleContract:
             "src/components/MaterialsDatabaseView.tsx:230-245#setShowFilters(!showFilters)",
             "src/components/MaterialsDatabaseView.tsx:250-264#Sort:",
             "src/components/MaterialsDatabaseView.tsx:336-346#Maximum Density (ρ)",
-            "src/components/MaterialsDatabaseView.tsx:150-150#Calibrated chemical compositions",
+            "src/components/MaterialsDatabaseView.tsx:150-150#Chemical compositions, tensile",
             "src/components/MaterialsDatabaseView.tsx:56-56#compareList",
             "src/components/MaterialsDatabaseView.tsx:113-118#compareList.length < 4",
             "src/components/MaterialsDatabaseView.tsx:373-377#MaterialsPropertyHeatmapD3",
@@ -404,10 +394,10 @@ def build_database_contract(seed: Mapping[str, str]) -> ModuleContract:
             "src/components/MaterialsPropertyHeatmapD3.tsx::MaterialsPropertyHeatmapD3",
             "src/components/MaterialsPropertyHeatmapD3.tsx::HEATMAP_PROPERTIES",
             "src/components/MaterialsPropertyHeatmapD3.tsx::ALLOYING_ELEMENTS",
-            "src/components/MaterialsPropertyHeatmapD3.tsx:320-345#observer.disconnect()",
-            "src/components/MaterialsPropertyHeatmapD3.tsx:348-348#useEffect(() => {",
-            "src/components/MaterialsPropertyHeatmapD3.tsx:858-868#URL.revokeObjectURL(url)",
-            "src/components/MaterialsPropertyHeatmapD3.tsx:1045-1062#hoveredCell",
+            "src/components/MaterialsPropertyHeatmapD3.tsx:252-275#observer.disconnect()",
+            "src/components/MaterialsPropertyHeatmapD3.tsx:277-277#useEffect(() => {",
+            "src/components/MaterialsPropertyHeatmapD3.tsx:645-656#URL.revokeObjectURL(url)",
+            "src/components/MaterialsPropertyHeatmapD3.tsx:820-840#hoveredCell",
             "src/types.ts:32-63#MaterialSpec",
             "src/data/materialsDatabase.ts:1-28#MATERIALS_DATABASE",
             "src/utils/materialDataPipeline.ts:666-715#createPipelinePayloadFromMaterialSpec",

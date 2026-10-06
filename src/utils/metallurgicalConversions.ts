@@ -186,7 +186,10 @@ export interface TempConversionState {
 }
 
 export function convertTemperature(val: number, fromUnit: TempUnit): TempConversionState {
-  if (isNaN(val) || val === null) val = 0;
+  // A non-finite input or a state below absolute zero has no temperature: every scale is NaN (unavailable), never
+  // silently 0 K / clamped to 0 K.
+  const unavailable: TempConversionState = { C: NaN, K: NaN, F: NaN, R: NaN };
+  if (typeof val !== "number" || !Number.isFinite(val)) return unavailable;
   let kelvin = 0;
   switch (fromUnit) {
     case "K":
@@ -203,7 +206,9 @@ export function convertTemperature(val: number, fromUnit: TempUnit): TempConvers
       break;
   }
 
-  kelvin = Math.max(0, kelvin); // Physical limit: Absolute zero
+  // Below absolute zero is not a physical state (1e-9 K tolerance keeps -459.67 degF exactly 0 K despite float error).
+  if (kelvin < -1e-9) return unavailable;
+  kelvin = Math.max(0, kelvin);
   const c = kelvin - 273.15;
   const f = c * (9 / 5) + 32;
   const r = kelvin * 1.8;

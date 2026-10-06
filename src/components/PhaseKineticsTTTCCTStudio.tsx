@@ -500,7 +500,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
               { id: "ttt", label: "1. TTT Isothermal Diagram", icon: Clock },
               { id: "cct", label: "2. CCT Continuous Cooling", icon: TrendingUp },
               { id: "calphad_vs_kinetics", label: "3. CALPHAD vs. Kinetics Gap", icon: AlertTriangle },
-              { id: "lsw_aging", label: "4. LSW Aging & Orowan", icon: Atom },
+              { id: "lsw_aging", label: "4. LSW Aging & Orowan (illustrative)", icon: Atom },
               { id: "microstructure", label: "5. Phase & Hardness", icon: Layers }
             ].map((tab) => {
               const Icon = tab.icon;
@@ -718,9 +718,6 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                     <span className="text-xs font-bold text-sky-300 uppercase tracking-wide">
                       CALPHAD (Equilibrium, $t \rightarrow \infty$)
                     </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-sky-500/10 text-sky-300 border border-sky-500/20">
-                      Gibbs Minimization
-                    </span>
                   </div>
                   <div className="space-y-2 text-xs">
                     <div className="flex justify-between">
@@ -809,7 +806,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                     </span>
                   </h3>
                   <p className="text-[11px] text-slate-400 mt-0.5">
-                    Precipitate particle radius growth and transition from Dislocation Cutting to Orowan Looping.
+                    Illustrative only: generic LSW / Orowan constants, not fitted to this alloy's precipitate system. Precipitate particle radius growth and transition from Dislocation Cutting to Orowan Looping.
                   </p>
                 </div>
               </div>
