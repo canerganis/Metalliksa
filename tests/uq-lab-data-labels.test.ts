@@ -142,3 +142,29 @@ test("uploaded-coupon CSV statistics are unchanged: pinned values for a fixed CS
   assert.equal(stats.normality.status, "not-tested");
   assert.equal(stats.andersonDarlingPVal, null);
 });
+
+test("every preset's minimums carry a provenance record and none claims a verified citation", () => {
+  for (const d of AEROSPACE_MATERIAL_DATASETS) {
+    assert.ok(d.specMinSource && d.specMinSource.citation.length > 20, d.id);
+    assert.ok(["unverified-reference", "no-source"].includes(d.specMinSource.status), d.id);
+    assert.match(d.specMinSource.citation, /not verified|No source/, d.id);
+  }
+});
+
+test("AlSi10Mg LPBF preset has no invented MMPDS chapter and its minimums are flagged as not sourced", () => {
+  const d = AEROSPACE_MATERIAL_DATASETS.find(x => x.id === "alsi10mg-lpbf-ams4215")!;
+  assert.equal(d.mmpdsChapter, null);
+  assert.equal(d.specMinSource.status, "no-source");
+  assert.doesNotMatch(JSON.stringify(d), /Additive Qualification Protocol|MMPDS Sec\. 9/);
+});
+
+test("UQ Lab UI labels minimums and the coupon badge as unverified reference comparisons", () => {
+  const ui = readSrc("src/components/UQLab.tsx");
+  assert.doesNotMatch(ui, />\s*PASS\s*</);
+  assert.doesNotMatch(ui, /OUT-OF-SPEC|Spec Minimums:|F_ty ≥|Spec Status/);
+  assert.match(ui, /uq-spec-min-source/);
+  assert.match(ui, /below ref\. min/);
+  // "Speedup not estimated" is neutral, not a success badge.
+  const i = ui.indexOf("Speedup not estimated");
+  assert.doesNotMatch(ui.slice(i - 260, i), /emerald/);
+});

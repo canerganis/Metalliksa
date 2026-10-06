@@ -67,7 +67,9 @@ import {
   calculateMMPDSToleranceFactor,
   parseCSVToCoupons,
   exportCouponsToCSV,
-  isSyntheticCouponDataset
+  isSyntheticCouponDataset,
+  SPEC_MINIMUM_LABEL,
+  SPEC_MINIMUM_BADGE_BASIS
 } from "./uqLabData";
 import { ENGINEERING_ESTIMATE_DISCLAIMER, EngineeringEstimateBanner, SYNTHETIC_COUPON_MMPDS_NOTICE } from "../utils/engineeringDisclaimer";
 
@@ -401,7 +403,7 @@ export function UQLab() {
                 <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 text-[10px]">
                   Rate: {uqResult.samplingMetadata.theoreticalConvergenceRate}
                 </span>
-                <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">
+                <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 text-[10px] font-bold">
                   Speedup not estimated
                 </span>
               </div>
@@ -513,7 +515,7 @@ export function UQLab() {
             </span>
             <span>
               <strong className="text-slate-400">MMPDS:</strong>{" "}
-              <span className="text-slate-300 font-mono">{activeDataset.mmpdsChapter}</span>
+              <span className="text-slate-300 font-mono">{activeDataset.mmpdsChapter ?? "No MMPDS chapter cited"}</span>
             </span>
             <span>
               <strong className="text-slate-400">Product:</strong>{" "}
@@ -526,17 +528,20 @@ export function UQLab() {
           </div>
 
           <div className="flex items-center gap-2 text-[11px] font-mono">
-            <span className="text-slate-400">Spec Minimums:</span>
+            <span className="text-slate-400" title={activeDataset.specMinSource.citation}>{SPEC_MINIMUM_LABEL}:</span>
             <span className="px-2 py-0.5 rounded bg-sky-950/60 text-sky-300 border border-sky-800/60">
-              F_ty ≥ {activeDataset.specMinYieldMPa} MPa
+              F_ty ref. {activeDataset.specMinYieldMPa} MPa
             </span>
             <span className="px-2 py-0.5 rounded bg-sky-950/60 text-sky-300 border border-sky-800/60">
-              F_tu ≥ {activeDataset.specMinUTSMPa} MPa
+              F_tu ref. {activeDataset.specMinUTSMPa} MPa
             </span>
             <span className="px-2 py-0.5 rounded bg-sky-950/60 text-sky-300 border border-sky-800/60">
-              e ≥ {activeDataset.specMinElongationPct}%
+              e ref. {activeDataset.specMinElongationPct}%
             </span>
           </div>
+          <p className="w-full text-[11px] text-amber-200" data-testid="uq-spec-min-source">
+            {activeDataset.specMinSource.status === "no-source" ? "Not sourced. " : "Unverified. "}{activeDataset.specMinSource.citation}
+          </p>
         </div>
       </div>
 
@@ -677,7 +682,7 @@ export function UQLab() {
               )}
               <span className="flex items-center gap-1 text-rose-400">
                 <span className="w-2.5 h-2.5 rounded-full bg-rose-400" />
-                Spec Min: {propertyMeta.specMin} {propertyMeta.unit}
+                Reference min (unverified): {propertyMeta.specMin} {propertyMeta.unit}
               </span>
             </div>
           </div>
@@ -790,7 +795,7 @@ export function UQLab() {
                   stroke="#f43f5e"
                   strokeWidth={2}
                   label={{
-                    value: `Spec Min (${propertyMeta.specMin})`,
+                    value: `Ref. min, unverified (${propertyMeta.specMin})`,
                     fill: "#f43f5e",
                     fontSize: 10,
                     position: "insideTopRight"
@@ -1008,7 +1013,7 @@ export function UQLab() {
                   <th className="py-2.5 px-3 text-emerald-300">Elong (%)</th>
                   <th className="py-2.5 px-3 text-slate-400">RA (%)</th>
                   <th className="py-2.5 px-3 text-slate-400">Hardness</th>
-                  <th className="py-2.5 px-3">Spec Status</th>
+                  <th className="py-2.5 px-3" title={SPEC_MINIMUM_BADGE_BASIS}>Vs reference min (unverified)</th>
                   <th className="py-2.5 px-3 text-right">Actions</th>
                 </tr>
               </thead>
@@ -1038,11 +1043,11 @@ export function UQLab() {
                       <td className="py-2.5 px-3">
                         {fullyCompliant ? (
                           <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                            PASS
+                            ≥ ref. min
                           </span>
                         ) : (
                           <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                            OUT-OF-SPEC
+                            below ref. min
                           </span>
                         )}
                       </td>

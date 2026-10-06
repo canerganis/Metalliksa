@@ -18,19 +18,38 @@ export interface CouponTestSpecimen {
   evidenceOrigin?: "synthetic" | "user-reported" | "unknown";
 }
 
+/**
+ * Provenance of a preset's reference minimums. `status` is never "cited" unless the exact table, product form and
+ * condition were checked against the specification text; none of the bundled presets meet that bar.
+ */
+export interface SpecMinimumSource {
+  status: "unverified-reference" | "no-source";
+  /** What the minimums are claimed to refer to, and what was not verified. */
+  citation: string;
+}
+
+export const SPEC_MINIMUM_LABEL = "Reference minimums (unverified)";
+export const SPEC_MINIMUM_BADGE_BASIS = "vs reference minimum (unverified, not a specification check)";
+
 export interface MaterialDataset {
   id: string;
   name: string;
   materialClass: "Superalloy" | "Titanium" | "Aluminum" | "Steel" | "Additive Metal";
   baseMetal: "Ni" | "Fe" | "Ti" | "Al";
   specification: string;
-  mmpdsChapter: string;
+  /** MMPDS chapter that covers this alloy family, or null when no MMPDS chapter is cited for the preset. */
+  mmpdsChapter: string | null;
   productForm: string;
   heatTreatment: string;
+  /**
+   * Reference minimums carried with the preset (used as solver inputs and for the per-coupon comparison).
+   * They are NOT tied to a verified table of the named specification; see `specMinSource`.
+   */
   specMinYieldMPa: number;
   specMinUTSMPa: number;
   specMinElongationPct: number;
   specMinReductionAreaPct: number;
+  specMinSource: SpecMinimumSource;
   nominalChemistry: Record<string, number>;
   chemicalTolerances: Record<string, number>;
   nominalThermal: {
@@ -279,6 +298,7 @@ export const AEROSPACE_MATERIAL_DATASETS: MaterialDataset[] = [
     specMinUTSMPa: 1379, // 200 ksi
     specMinElongationPct: 12.0,
     specMinReductionAreaPct: 15.0,
+    specMinSource: { status: "unverified-reference", citation: "AMS 5664 (SAE), Inconel 718 forgings/bar: values are preset reference numbers; the governing table, product form and test direction were not verified against the specification text. Confirm against the controlling document before use." },
     nominalChemistry: { Cr: 19.0, Fe: 18.0, Nb: 5.1, Mo: 3.05, Ti: 0.95, Al: 0.52, C: 0.04, Si: 0.18 },
     chemicalTolerances: { Cr: 1.0, Fe: 1.0, Nb: 0.35, Mo: 0.30, Ti: 0.15, Al: 0.10, C: 0.015, Si: 0.08 },
     nominalThermal: {
@@ -306,6 +326,7 @@ export const AEROSPACE_MATERIAL_DATASETS: MaterialDataset[] = [
     specMinUTSMPa: 896, // 130 ksi
     specMinElongationPct: 10.0,
     specMinReductionAreaPct: 25.0,
+    specMinSource: { status: "unverified-reference", citation: "AMS 4928 (SAE), Ti-6Al-4V annealed bar: values are preset reference numbers; the governing table, product form and test direction were not verified against the specification text. Confirm against the controlling document before use." },
     nominalChemistry: { Al: 6.1, V: 4.05, Fe: 0.22, C: 0.035, O: 0.16, N: 0.015 },
     chemicalTolerances: { Al: 0.35, V: 0.30, Fe: 0.08, C: 0.015, O: 0.03, N: 0.008 },
     nominalThermal: {
@@ -333,6 +354,7 @@ export const AEROSPACE_MATERIAL_DATASETS: MaterialDataset[] = [
     specMinUTSMPa: 538, // 78 ksi (L)
     specMinElongationPct: 7.0,
     specMinReductionAreaPct: 14.0,
+    specMinSource: { status: "unverified-reference", citation: "AMS 4045 (SAE), Al 7075-T651 plate; the (L) direction note refers to longitudinal minimums: values are preset reference numbers; the governing table, product form and test direction were not verified against the specification text. Confirm against the controlling document before use." },
     nominalChemistry: { Zn: 5.6, Mg: 2.5, Cu: 1.6, Cr: 0.23, Fe: 0.28, Si: 0.18, Mn: 0.10 },
     chemicalTolerances: { Zn: 0.40, Mg: 0.25, Cu: 0.20, Cr: 0.05, Fe: 0.08, Si: 0.06, Mn: 0.04 },
     nominalThermal: {
@@ -360,6 +382,7 @@ export const AEROSPACE_MATERIAL_DATASETS: MaterialDataset[] = [
     specMinUTSMPa: 1517, // 220 ksi
     specMinElongationPct: 9.0,
     specMinReductionAreaPct: 35.0,
+    specMinSource: { status: "unverified-reference", citation: "AMS 6414 (SAE), 4340 VAR bar: values are preset reference numbers; the governing table, product form and test direction were not verified against the specification text. Confirm against the controlling document before use." },
     nominalChemistry: { C: 0.40, Cr: 0.82, Ni: 1.82, Mo: 0.26, Mn: 0.72, Si: 0.25 },
     chemicalTolerances: { C: 0.03, Cr: 0.10, Ni: 0.15, Mo: 0.05, Mn: 0.08, Si: 0.05 },
     nominalThermal: {
@@ -379,14 +402,15 @@ export const AEROSPACE_MATERIAL_DATASETS: MaterialDataset[] = [
     name: "AlSi10Mg Additive LPBF As-Built & SR (ASTM F3318)",
     materialClass: "Additive Metal",
     baseMetal: "Al",
-    specification: "ASTM F3318",
-    mmpdsChapter: "Additive Qualification Protocol (MMPDS Sec. 9)",
+    specification: "ASTM F3318 (AlSi10Mg powder bed fusion; minimums not sourced)",
+    mmpdsChapter: null, // No MMPDS chapter is cited for this additive preset.
     productForm: "Laser Powder Bed Fusion (LPBF) Additive Build Jobs",
     heatTreatment: "Stress Relief 300°C / 2h Air Cool (Retaining fine cellular Si-eutectic)",
     specMinYieldMPa: 220,
     specMinUTSMPa: 330,
     specMinElongationPct: 5.0,
     specMinReductionAreaPct: 8.0,
+    specMinSource: { status: "no-source", citation: "No source: ASTM F3318 was not checked for these numbers and no verified minimum is known for this preset. The values are solver placeholders, not specification requirements." },
     nominalChemistry: { Si: 10.0, Mg: 0.45, Fe: 0.14, Ti: 0.04, Mn: 0.02 },
     chemicalTolerances: { Si: 0.50, Mg: 0.08, Fe: 0.04, Ti: 0.02, Mn: 0.01 },
     nominalThermal: {
@@ -414,6 +438,7 @@ export const AEROSPACE_MATERIAL_DATASETS: MaterialDataset[] = [
     specMinUTSMPa: 717, // 104 ksi
     specMinElongationPct: 35.0,
     specMinReductionAreaPct: 40.0,
+    specMinSource: { status: "unverified-reference", citation: "AMS 5754 (SAE), Hastelloy X sheet: values are preset reference numbers; the governing table, product form and test direction were not verified against the specification text. Confirm against the controlling document before use." },
     nominalChemistry: { Cr: 22.0, Fe: 18.5, Mo: 9.0, Co: 1.5, W: 0.6, C: 0.08, Si: 0.40 },
     chemicalTolerances: { Cr: 1.2, Fe: 1.2, Mo: 0.6, Co: 0.4, W: 0.2, C: 0.02, Si: 0.15 },
     nominalThermal: {
