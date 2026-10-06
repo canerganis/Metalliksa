@@ -124,6 +124,15 @@ class In718EndToEnd(unittest.TestCase):
                "layerThickness_um": 40, "beamDiameter_um": 80, "preheatTemp_C": 80, "bypassCache": True,
                "enableUq": False, "includeAmbench": False}
 
+    def setUp(self):
+        # Another test in a combined run can leave a None entry for the tracer (a "module unavailable" stub);
+        # these tests patch the real module, so give each one a clean import table and restore it after.
+        patcher = mock.patch.dict(sys.modules)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        if sys.modules.get("powder_bed_raytracer", 0) is None:
+            del sys.modules["powder_bed_raytracer"]
+
     def _check(self, res):
         self.assertTrue(res["success"], res.get("error"))
         v = res["verdict"]

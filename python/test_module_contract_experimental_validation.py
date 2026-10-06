@@ -123,7 +123,9 @@ class ExperimentalValidationContractTests(unittest.TestCase):
         self.assertIn("{ signal, cache: 'no-store' }", client)
         self.assertIn("return () => controller.abort()", view)
         self.assertNotRegex(client, re.compile(r"AbortSignal\.timeout|setTimeout|timeoutMs"))
-        self.assertIn("if (!response.ok) throw new Error('Failed to load experimental measurements')", client)
+        # A not-imported 404 is its own error; every other failure keeps its message (or the generic one).
+        self.assertIn("if (response.status === 404 && message === 'Source dataset has not been imported.') throw new SourceNotImportedError(datasetId);", client)
+        self.assertIn("throw new Error(message || 'Failed to load experimental measurements');", client)
         self.assertIn("catch (error) {", route)
         self.assertIn("res.status(503).json({ error:", route)
         self.assertIn("!loaded", view)
