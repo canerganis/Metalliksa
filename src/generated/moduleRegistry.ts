@@ -6189,7 +6189,7 @@ export const MODULE_REGISTRY = {
       "owner": "unassigned (needs maintainer)",
       "workspace": "evidence",
       "label": "Coupon Statistics & UQ Sampling",
-      "description": "Coupon summary statistics and one-sided tolerance bounds, plus illustrative solver sampling and sensitivity analysis; simulated scatter is not test evidence.",
+      "description": "Coupon summary statistics and one-sided tolerance bounds, plus illustrative solver sampling and sensitivity analysis; simulated scatter is not test evidence; solver tolerance output is an illustrative tolerance estimate (uncalibrated response law), not an MMPDS allowable.",
       "next": "traceability",
       "maturity": "Research",
       "navigation": "listed",

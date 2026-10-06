@@ -614,7 +614,7 @@ export function UQLab({ onNavigate }: UQLabProps) {
             }`}
           >
             <BarChart3 className="w-3.5 h-3.5" />
-            Distribution & Allowables (PDF/CDF)
+            Distribution & tolerance estimates (PDF/CDF)
           </button>
 
           <button

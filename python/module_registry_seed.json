@@ -224,7 +224,7 @@
     "workspace": "evidence",
     "label": "Coupon Statistics & UQ Sampling",
     "scope": "Research",
-    "description": "Coupon summary statistics and one-sided tolerance bounds, plus illustrative solver sampling and sensitivity analysis; simulated scatter is not test evidence.",
+    "description": "Coupon summary statistics and one-sided tolerance bounds, plus illustrative solver sampling and sensitivity analysis; simulated scatter is not test evidence; solver tolerance output is an illustrative tolerance estimate (uncalibrated response law), not an MMPDS allowable.",
     "next": "traceability",
     "viewComponent": "src/components/UQLab.tsx",
     "viewExport": "UQLab"
