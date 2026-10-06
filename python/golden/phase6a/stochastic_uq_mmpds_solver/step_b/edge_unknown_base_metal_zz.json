@@ -20,12 +20,94 @@
    "old": null
   },
   {
-   "abs": -0.08999999999999986,
+   "key": "aerospaceReliability.designFactor",
+   "kind": "added",
+   "new": 1.5,
+   "old": null
+  },
+  {
+   "key": "aerospaceReliability.failureCount",
+   "kind": "added",
+   "new": 500,
+   "old": null
+  },
+  {
+   "key": "aerospaceReliability.generalizedReliabilityIndex",
+   "kind": "added",
+   "new": null,
+   "old": null
+  },
+  {
+   "key": "aerospaceReliability.generalizedReliabilityIndexBound.beta",
+   "kind": "added",
+   "new": -2.51,
+   "old": null
+  },
+  {
+   "key": "aerospaceReliability.generalizedReliabilityIndexBound.pfLower",
+   "kind": "added",
+   "new": 0.994,
+   "old": null
+  },
+  {
+   "key": "aerospaceReliability.generalizedReliabilityIndexBound.type",
+   "kind": "added",
+   "new": "upper",
+   "old": null
+  },
+  {
+   "key": "aerospaceReliability.generalizedReliabilityIndexBoundMethod",
+   "kind": "added",
+   "new": "No sampled point (or every point) failed, so Pf and beta_G are censored: the bound uses the rule of three (95 %, Pf < 3/N or Pf > 1 - 3/N), which assumes independent samples; the QMC points are not independent, so the bound is approximate",
+   "old": null
+  },
+  {
+   "key": "aerospaceReliability.generalizedReliabilityIndexStatus",
+   "kind": "added",
+   "new": "censored_all_failures",
+   "old": null
+  },
+  {
    "key": "aerospaceReliability.hasoferLindBetaIndex",
-   "kind": "numeric",
-   "new": -4.75,
-   "old": -4.66,
-   "rel": -0.019313304721030013
+   "kind": "removed",
+   "new": null,
+   "old": -4.66
+  },
+  {
+   "key": "aerospaceReliability.limitState",
+   "kind": "added",
+   "new": "g = Rp0.2 - 1.5 * max(50 MPa, service stress); Pf = P(g < 0) at design factor 1.5",
+   "old": null
+  },
+  {
+   "key": "aerospaceReliability.probabilityYieldBelowDesignStress_Pf",
+   "kind": "added",
+   "new": 1.0,
+   "old": null
+  },
+  {
+   "key": "aerospaceReliability.reliabilityIndexMethod",
+   "kind": "added",
+   "new": "Generalized reliability index beta_G = Phi^-1(1 - Pf) (Ditlevsen 1979) from the sampled failure count; not the Hasofer-Lind / FORM index (no design-point search is run)",
+   "old": null
+  },
+  {
+   "key": "aerospaceReliability.yieldFailureProbability_Pf",
+   "kind": "removed",
+   "new": null,
+   "old": 1.0
+  },
+  {
+   "key": "samplingMetadata.samplingDescription",
+   "kind": "changed",
+   "new": "Local Sobol sequence (Joe & Kuo 2008 new-joe-kuo-6.21201 direction numbers) with optional random digital shift.",
+   "old": "Local Sobol sequence with optional random digital shift."
+  },
+  {
+   "key": "sensitivityMetadata.method",
+   "kind": "changed",
+   "new": "Centered Saltelli first-order / Jansen total-order pick-freeze on a digitally shifted Joe-Kuo Sobol design (A and B from one 2k-dimensional sequence)",
+   "old": "Centered Saltelli first-order / Jansen total-order; seeded pseudo-MC pick-freeze"
   },
   {
    "abs": -0.016,
@@ -5853,7 +5935,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "697ca2c2462d96137381c1044e74131c6618b134",
+ "gitHead": "b0d77480750d9f68679f343d3c6a54d0a500db8c",
  "input": {
   "alloyName": "Unobtainium",
   "baseMetal": "Zz",
@@ -5886,7 +5968,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "stochastic_uq_mmpds_solver",
  "solverFile": "python/stochastic_uq_mmpds_solver.py",
- "solverSha256": "cfc4a035568f002c982a2e4586ba6a15822c5e7bcae1669e0f2b6f81859e9180",
+ "solverSha256": "352cc21b72f98d60dd7530716004e47224da84e5b6c8a742f4ee273341a2f075",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {
@@ -5897,9 +5979,20 @@
    "criticalFlawMedian_mm": null,
    "criticalFlaw_P10_mm": null,
    "criticalFlaw_status": "unavailable: critical flaw size needs a sourced K_Ic; the former estimate was dimensionally unsupported",
-   "hasoferLindBetaIndex": -4.75,
+   "designFactor": 1.5,
+   "failureCount": 500,
+   "generalizedReliabilityIndex": null,
+   "generalizedReliabilityIndexBound": {
+    "beta": -2.51,
+    "pfLower": 0.994,
+    "type": "upper"
+   },
+   "generalizedReliabilityIndexBoundMethod": "No sampled point (or every point) failed, so Pf and beta_G are censored: the bound uses the rule of three (95 %, Pf < 3/N or Pf > 1 - 3/N), which assumes independent samples; the QMC points are not independent, so the bound is approximate",
+   "generalizedReliabilityIndexStatus": "censored_all_failures",
+   "limitState": "g = Rp0.2 - 1.5 * max(50 MPa, service stress); Pf = P(g < 0) at design factor 1.5",
+   "probabilityYieldBelowDesignStress_Pf": 1.0,
    "qualificationStatus": "Screening only; qualification not assessed",
-   "yieldFailureProbability_Pf": 1.0
+   "reliabilityIndexMethod": "Generalized reliability index beta_G = Phi^-1(1 - Pf) (Ditlevsen 1979) from the sampled failure count; not the Hasofer-Lind / FORM index (no design-point search is run)"
   },
   "alloyMetadata": {
    "alloyName": "Unobtainium",
@@ -5933,7 +6026,7 @@
    "effectiveSampleSize": null,
    "pseudoDiscrepancyBenchmark": 0,
    "qmcAccelerationFactor": null,
-   "samplingDescription": "Local Sobol sequence with optional random digital shift.",
+   "samplingDescription": "Local Sobol sequence (Joe & Kuo 2008 new-joe-kuo-6.21201 direction numbers) with optional random digital shift.",
    "samplingMethod": "sobol_qmc",
    "scrambled": true,
    "sobolDimensions": 7,
@@ -5946,7 +6039,7 @@
    "independentInputs": true,
    "indicesNormalized": false,
    "limitations": "Finite-sample model estimates without confidence intervals. Values are not clipped or normalized and may fall outside [0, 1]. All supplied composition factors and cooling/aging distributions are included; service stress and flaw size do not enter yield strength.",
-   "method": "Centered Saltelli first-order / Jansen total-order; seeded pseudo-MC pick-freeze",
+   "method": "Centered Saltelli first-order / Jansen total-order pick-freeze on a digitally shifted Joe-Kuo Sobol design (A and B from one 2k-dimensional sequence)",
    "output": "yieldStrength_Rp02",
    "status": "estimated"
   },

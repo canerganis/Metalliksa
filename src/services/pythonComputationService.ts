@@ -1904,8 +1904,20 @@ export interface PythonStochasticUQResult {
   }[];
   aerospaceReliability: {
     qualificationStatus: string;
-    yieldFailureProbability_Pf: number;
-    hasoferLindBetaIndex: number;
+    /** g = Rp0.2 - 1.5 * max(50 MPa, service stress); Pf = P(g < 0) (EUQ-11: an exceedance at design factor 1.5). */
+    limitState: string;
+    designFactor: number;
+    failureCount: number;
+    probabilityYieldBelowDesignStress_Pf: number;
+    /** Generalized reliability index Phi^-1(1 - Pf) (Ditlevsen), not Hasofer-Lind; null when censored. */
+    generalizedReliabilityIndex: number | null;
+    generalizedReliabilityIndexStatus: "estimated" | "censored_no_failures" | "censored_all_failures";
+    generalizedReliabilityIndexBound:
+      | { type: "lower"; beta: number | null; pfUpper: number }
+      | { type: "upper"; beta: number | null; pfLower: number }
+      | null;
+    generalizedReliabilityIndexBoundMethod: string | null;
+    reliabilityIndexMethod: string;
     aBasisConforming: boolean;
     bBasisConforming: boolean;
     cpkConforming: boolean;
@@ -1985,7 +1997,9 @@ export interface PythonICMEMultiScaleResult {
       meanPrecipitateRadius_nm: number;
       volumeFractionPct: number;
       interparticleSpacing_nm: number;
-      shearingStrength_MPa: number;
+      /** null when the weak pair-coupling expression is <= 0 (see cuttingContributionStatus). */
+      shearingStrength_MPa: number | null;
+      cuttingContributionStatus?: string | null;
       orowanStrength_MPa: number;
       activeMechanism: string;
       effectivePrecipitationStrengthening_MPa: number;
@@ -2070,7 +2084,7 @@ function unavailableTafelCorrosionRate(
     unavailableReason: "Corrosion rate unavailable: " + Object.values(unavailable).join("; ") + ".",
     isPythonEngine: false,
     pythonVersion: "3.10 (Client Dual-Engine)",
-    standards: ["ASTM G102-89(2015)", "ASTM G59-97(2020)", "NACE SP0169"],
+    standards: [...TAFEL_RATE_STANDARDS],
     durationMs: 0.5,
     timestamp: new Date().toISOString(),
     corrosionRateMmYr: null,
@@ -2102,6 +2116,17 @@ function unavailableTafelCorrosionRate(
   };
 }
 
+/** Standards the annual-rate engine computes by (EUQ-6: NACE SP0169 / ISO 8044 define no rate bands). */
+export const TAFEL_RATE_STANDARDS = ["ASTM G102-89(2015)", "ASTM G59-97(2020)"] as const;
+/** Same text as SEVERITY_SCALE_SOURCE in python/tafel_corrosion_rate_solver.py. */
+export const TAFEL_SEVERITY_SCALE_SOURCE =
+  "Fontana, Corrosion Engineering, 3rd ed., relative corrosion resistance scale (mm/y equivalents): " +
+  "Outstanding < 0.02, Excellent 0.02-0.1, Good 0.1-0.5, Fair 0.5-1, Poor 1-5, Unacceptable > 5 mm/y";
+/** Same text as SEVERITY_TEXT_BASIS in python/tafel_corrosion_rate_solver.py. */
+export const TAFEL_SEVERITY_TEXT_BASIS =
+  "In-house engineering guidance: the description and recommendation texts are not taken from Fontana or " +
+  "from any standard";
+
 /**
  * Pure TypeScript fallback for ASTM G102 / G59 Annual Corrosion Rate solver
  * providing parity with python/tafel_corrosion_rate_solver.py
@@ -2120,14 +2145,33 @@ export function fallbackClientTafelCorrosionRate(
   const densityIn = positive(payload.density_g_cm3);
   const ewIn = positive(payload.equivalentWeight);
   const eCorr_V = typeof payload.eCorr_V === "number" && Number.isFinite(payload.eCorr_V) ? payload.eCorr_V : null;
-  const specimenArea = Math.max(1e-4, payload.specimenAreaCm2 || 1.0);
-  const initialThickness = Math.max(0.1, payload.initialThicknessMm || 5.0);
-  const allowableLoss = Math.max(0.01, payload.allowableLossMm || 1.5);
-  const tempC = payload.temperatureC ?? 25.0;
+  // Scenario inputs follow python _scenario_number (EUQ-5): only an absent value takes the documented default;
+  // a supplied non-finite, 0 or negative thickness/allowance, a 0 area or a temperature at or below absolute
+  // zero makes the result unavailable (Python raises a ValidationError) instead of being replaced or clamped.
+  const unavailable: Record<string, string> = {};
+  const scenario = (
+    raw: number | null | undefined,
+    fallback: number,
+    label: string,
+    ok: (v: number) => boolean,
+    rule: string
+  ): number => {
+    if (raw === undefined || raw === null) return fallback;
+    if (typeof raw !== "number" || !Number.isFinite(raw) || !ok(raw)) {
+      unavailable[label] = `${label} must be ${rule} (received ${String(raw)})`;
+      // Echo what was supplied (not the default) in the unavailable result.
+      return typeof raw === "number" ? raw : fallback;
+    }
+    return raw;
+  };
+  const areaIn = scenario(payload.specimenAreaCm2, 1.0, "specimenAreaCm2", (v) => v !== 0, "a finite number other than 0");
+  const specimenArea = "specimenAreaCm2" in unavailable ? areaIn : Math.max(1e-4, Math.abs(areaIn));
+  const initialThickness = scenario(payload.initialThicknessMm, 5.0, "initialThicknessMm", (v) => v > 0, "a finite number > 0");
+  const allowableLoss = scenario(payload.allowableLossMm, 1.5, "allowableLossMm", (v) => v > 0, "a finite number > 0");
+  const tempC = scenario(payload.temperatureC, 25.0, "temperatureC", (v) => v > -273.15, "above absolute zero (-273.15 C)");
   const alloyName = payload.alloyName || payload.alloyId || "Unspecified substrate";
   const alloyId = payload.alloyId || "";
-
-  const unavailable: Record<string, string> = {};
+  const scenarioInvalid = Object.keys(unavailable).length > 0;
   if (iCorrIn === null) {
     unavailable.iCorr_uA_cm2 =
       payload.iCorr_uA_cm2 === undefined || payload.iCorr_uA_cm2 === null
@@ -2138,7 +2182,7 @@ export function fallbackClientTafelCorrosionRate(
     unavailable.substrate =
       "density_g_cm3 and equivalentWeight must be supplied: the client formula cannot resolve an alloy preset";
   }
-  if (iCorrIn === null || densityIn === null || ewIn === null) {
+  if (scenarioInvalid || iCorrIn === null || densityIn === null || ewIn === null) {
     return unavailableTafelCorrosionRate(payload, alloyId, alloyName, eCorr_V, specimenArea, tempC, initialThickness, allowableLoss, unavailable);
   }
 
@@ -2245,21 +2289,30 @@ export function fallbackClientTafelCorrosionRate(
       description: "Noticeable corrosion penetration. Significant wall thinning occurs within 2 to 5 years if unprotected.",
       recommendation: "Active cathodic protection (ICCP/sacrificial zinc) and chemical corrosion inhibitor injection mandated.",
     };
+  } else if (cr_mm_yr < 5.0) {
+    severity = {
+      level: "Poor",
+      code: "POOR",
+      color: "red",
+      description: "High corrosion rate. Usable only for short-life or readily replaced parts with a large corrosion allowance.",
+      recommendation: "Change the material or the environment, or apply corrosion protection, before service; confirm the rate by immersion or field testing.",
+    };
   } else {
     severity = {
-      level: "Unacceptable / Critical",
+      level: "Unacceptable",
       code: "UNACCEPTABLE",
       color: "rose",
       description: "Severe catastrophic dissolution. Wall breach and structural failure imminent without immediate mitigation.",
       recommendation: "Material change required (upgrade to Inconel/316L/Titanium) or continuous heavy-duty barrier protection.",
     };
   }
+  severity = { ...severity, scaleSource: TAFEL_SEVERITY_SCALE_SOURCE, textBasis: TAFEL_SEVERITY_TEXT_BASIS };
 
   return {
     success: true,
     isPythonEngine: false,
     pythonVersion: "3.10 (Client Dual-Engine)",
-    standards: ["ASTM G102-89(2015)", "ASTM G59-97(2020)", "NACE SP0169"],
+    standards: [...TAFEL_RATE_STANDARDS],
     durationMs: 0.5,
     timestamp: new Date().toISOString(),
     corrosionRateMmYr: +cr_mm_yr.toFixed(5),

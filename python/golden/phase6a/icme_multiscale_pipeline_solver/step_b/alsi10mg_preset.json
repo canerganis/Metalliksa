@@ -4,19 +4,19 @@
   {
    "key": "caeExportCards.abaqus",
    "kind": "changed",
-   "new": "*HEADING\n** MetalliX Multi-Scale ICME ILLUSTRATIVE Card (uncalibrated, not validated) for AlSi10Mg Additive Alloy\n*MATERIAL, NAME=ALSI10MG_ADDITIVE_ALLOY\n*DENSITY\n2700.00\n*ELASTIC, TYPE=ISOTROPIC\n71002.64, 0.3300\n*PLASTIC\n441.0, 0.0000\n605.1, 0.0500\n628.2, 0.1000\n650.4, 0.1800\n*RATE DEPENDENT\n0.02800, 0.001\n*TENSILE FAILURE\n0.2685, 0.0, 0.0",
+   "new": "*HEADING\n** MetalliX Multi-Scale ICME ILLUSTRATIVE Card (uncalibrated, not validated) for AlSi10Mg Additive Alloy\n** Units: mm, N, s, tonne, MPa (density in tonne/mm^3)\n*MATERIAL, NAME=ALSI10MG_ADDITIVE_ALLOY\n*DENSITY\n2.7000e-09\n*ELASTIC, TYPE=ISOTROPIC\n71002.64, 0.3300\n*PLASTIC\n433.0, 0.0000\n594.4, 0.0500\n617.2, 0.1000\n639.1, 0.1800\n*RATE DEPENDENT\n0.02800, 0.001\n*TENSILE FAILURE\n0.2699, 0.0, 0.0",
    "old": "*HEADING\n** MetalliX Multi-Scale ICME Calibrated Card for AlSi10Mg Additive Alloy\n*MATERIAL, NAME=ALSI10MG_ADDITIVE_ALLOY\n*DENSITY\n2700.00\n*ELASTIC, TYPE=ISOTROPIC\n71002.64, 0.3300\n*PLASTIC\n441.0, 0.0000\n605.1, 0.0500\n628.2, 0.1000\n650.4, 0.1800\n*RATE DEPENDENT\n0.02800, 0.001\n*TENSILE FAILURE\n0.2685, 0.0, 0.0"
   },
   {
    "key": "caeExportCards.ansys",
    "kind": "changed",
-   "new": "! ANSYS APDL Material Card: AlSi10Mg Additive Alloy\n! ILLUSTRATIVE estimate (uncalibrated, not validated)\nMPTEMP,,,,,,,,\nMPTEMP,1,0\nMPDATA,EX,1,,71002.64\nMPDATA,PRXY,1,,0.3300\nMPDATA,DENS,1,,2.7000e-09\nTB,PLAS,1,1,4,MISO\nTBTEMP,25.0\nTBPT,,0.0,441.0\nTBPT,,0.05,605.1\nTBPT,,0.10,628.2\nTBPT,,0.20,654.6",
+   "new": "! ANSYS APDL Material Card: AlSi10Mg Additive Alloy\n! ILLUSTRATIVE estimate (uncalibrated, not validated)\nMPTEMP,,,,,,,,\nMPTEMP,1,0\nMPDATA,EX,1,,71002.64\nMPDATA,PRXY,1,,0.3300\nMPDATA,DENS,1,,2.7000e-09\nTB,PLAS,1,1,4,MISO\nTBTEMP,25.0\nTBPT,,0.0,433.0\nTBPT,,0.05,594.4\nTBPT,,0.10,617.2\nTBPT,,0.20,643.3",
    "old": "! ANSYS APDL Material Card: AlSi10Mg Additive Alloy\nMPTEMP,,,,,,,,\nMPTEMP,1,0\nMPDATA,EX,1,,71002.64\nMPDATA,PRXY,1,,0.3300\nMPDATA,DENS,1,,2.7000e-09\nTB,PLAS,1,1,4,MISO\nTBTEMP,25.0\nTBPT,,0.0,441.0\nTBPT,,0.05,605.1\nTBPT,,0.10,628.2\nTBPT,,0.20,654.6"
   },
   {
    "key": "caeExportCards.lsDyna",
    "kind": "changed",
-   "new": "$*LS-DYNA MATERIAL DECK: AlSi10Mg Additive Alloy\n$ ILLUSTRATIVE estimate (uncalibrated, not validated)\n*MAT_PIECEWISE_LINEAR_PLASTICITY\n$#     mid        ro         e        pr      sigy      etan      fail      tdel\n         1  2.700e-03  71002.6   0.3300  441.0       0.0  0.2685       0.0\n$#       c         p      lcss      lcsr        vp\n   0.0280       0.0         0         0       0.0",
+   "new": "$*LS-DYNA MATERIAL DECK: AlSi10Mg Additive Alloy\n$ ILLUSTRATIVE estimate (uncalibrated, not validated)\n*MAT_PIECEWISE_LINEAR_PLASTICITY\n$#     mid        ro         e        pr      sigy      etan      fail      tdel\n         1  2.700e-03  71002.6   0.3300  433.0       0.0  0.2699       0.0\n$#       c         p      lcss      lcsr        vp\n   0.0280       0.0         0         0       0.0",
    "old": "$*LS-DYNA MATERIAL DECK: AlSi10Mg Additive Alloy\n*MAT_PIECEWISE_LINEAR_PLASTICITY\n$#     mid        ro         e        pr      sigy      etan      fail      tdel\n         1  2.700e-03  71002.6   0.3300  441.0       0.0  0.2685       0.0\n$#       c         p      lcss      lcsr        vp\n   0.0280       0.0         0         0       0.0"
   },
   {
@@ -74,6 +74,58 @@
    "old": null
   },
   {
+   "key": "scale2_microstructureKinetics.precipitationKinetics.activeMechanism",
+   "kind": "changed",
+   "new": "Dislocation Particle Shearing (Brown-Ham weak pair-coupling cutting)",
+   "old": "Dislocation Particle Shearing (Friedel-Gere Cutting)"
+  },
+  {
+   "key": "scale2_microstructureKinetics.precipitationKinetics.cuttingContributionStatus",
+   "kind": "added",
+   "new": null,
+   "old": null
+  },
+  {
+   "abs": -9.299999999999997,
+   "key": "scale2_microstructureKinetics.precipitationKinetics.effectivePrecipitationStrengthening_MPa",
+   "kind": "numeric",
+   "new": 64.2,
+   "old": 73.5,
+   "rel": -0.12653061224489792
+  },
+  {
+   "abs": -9.299999999999997,
+   "key": "scale2_microstructureKinetics.precipitationKinetics.shearingStrength_MPa",
+   "kind": "numeric",
+   "new": 64.2,
+   "old": 73.5,
+   "rel": -0.12653061224489792
+  },
+  {
+   "abs": -8,
+   "key": "scale3_continuumPlasticity.johnsonCookParameters.A_MPa",
+   "kind": "numeric",
+   "new": 433,
+   "old": 441,
+   "rel": -0.018140589569160998
+  },
+  {
+   "abs": -4,
+   "key": "scale3_continuumPlasticity.johnsonCookParameters.B_MPa",
+   "kind": "numeric",
+   "new": 286,
+   "old": 290,
+   "rel": -0.013793103448275862
+  },
+  {
+   "abs": 0.0010000000000000009,
+   "key": "scale3_continuumPlasticity.johnsonCookParameters.n",
+   "kind": "numeric",
+   "new": 0.191,
+   "old": 0.19,
+   "rel": 0.005263157894736846
+  },
+  {
    "key": "scale3_continuumPlasticity.mechanicalProperties.fractureToughness_K1c_MPa_sqrt_m",
    "kind": "changed",
    "new": null,
@@ -86,6 +138,30 @@
    "old": null
   },
   {
+   "abs": -11.100000000000023,
+   "key": "scale3_continuumPlasticity.mechanicalProperties.hollomon_K_MPa",
+   "kind": "numeric",
+   "new": 719.5,
+   "old": 730.6,
+   "rel": -0.015192992061319494
+  },
+  {
+   "abs": 0.0010000000000000009,
+   "key": "scale3_continuumPlasticity.mechanicalProperties.hollomon_n",
+   "kind": "numeric",
+   "new": 0.191,
+   "old": 0.19,
+   "rel": 0.005263157894736846
+  },
+  {
+   "abs": 0.1999999999999993,
+   "key": "scale3_continuumPlasticity.mechanicalProperties.totalElongationPct",
+   "kind": "numeric",
+   "new": 31.0,
+   "old": 30.8,
+   "rel": 0.0064935064935064705
+  },
+  {
    "key": "scale3_continuumPlasticity.mechanicalProperties.ultimateTensileStrength_UTS_MPa",
    "kind": "changed",
    "new": null,
@@ -96,6 +172,1950 @@
    "kind": "added",
    "new": "unavailable: n is a placeholder correlation of the yield strength and the Hollomon K was set so that the engineering UTS equals Rp0.2, so the Considere relation UTS = K*(n/e)^n would only return the yield strength; an independent measured n and K are required",
    "old": null
+  },
+  {
+   "abs": 0.10000000000000142,
+   "key": "scale3_continuumPlasticity.mechanicalProperties.uniformElongationPct",
+   "kind": "numeric",
+   "new": 19.1,
+   "old": 19.0,
+   "rel": 0.005263157894736917
+  },
+  {
+   "abs": -7.300000000000011,
+   "key": "scale3_continuumPlasticity.mechanicalProperties.yieldStrength_Rp02_MPa",
+   "kind": "numeric",
+   "new": 433.3,
+   "old": 440.6,
+   "rel": -0.01656831593281891
+  },
+  {
+   "abs": -9.299999999999997,
+   "key": "scale3_continuumPlasticity.strengtheningContributions_MPa.deltaSigma_Precip_OrowanCutting",
+   "kind": "numeric",
+   "new": 64.2,
+   "old": 73.5,
+   "rel": -0.12653061224489792
+  },
+  {
+   "abs": 0.0030000000000000027,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[0].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 0.542,
+   "old": 0.539,
+   "rel": 0.005565862708719856
+  },
+  {
+   "abs": 2.099999999999966,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[0].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 384.9,
+   "old": 382.8,
+   "rel": 0.00548589341692781
+  },
+  {
+   "abs": 2.099999999999966,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[0].trueStressMPa",
+   "kind": "numeric",
+   "new": 384.9,
+   "old": 382.8,
+   "rel": 0.00548589341692781
+  },
+  {
+   "abs": 0.034000000000000696,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[10].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 5.964,
+   "old": 5.93,
+   "rel": 0.005733558178752225
+  },
+  {
+   "abs": -9.300000000000068,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[10].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 563.3,
+   "old": 572.6,
+   "rel": -0.016241704505763305
+  },
+  {
+   "abs": 0.00030000000000000165,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[10].trueStrain",
+   "kind": "numeric",
+   "new": 0.0579,
+   "old": 0.0576,
+   "rel": 0.0052083333333333625
+  },
+  {
+   "abs": -9.600000000000023,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[10].trueStressMPa",
+   "kind": "numeric",
+   "new": 596.9,
+   "old": 606.5,
+   "rel": -0.015828524319868132
+  },
+  {
+   "abs": 0.03699999999999992,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[11].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 6.506,
+   "old": 6.469,
+   "rel": 0.005719585716494036
+  },
+  {
+   "abs": -9.300000000000068,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[11].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 563.3,
+   "old": 572.6,
+   "rel": -0.016241704505763305
+  },
+  {
+   "abs": 0.0002999999999999947,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[11].trueStrain",
+   "kind": "numeric",
+   "new": 0.063,
+   "old": 0.0627,
+   "rel": 0.004784688995215227
+  },
+  {
+   "abs": -9.600000000000023,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[11].trueStressMPa",
+   "kind": "numeric",
+   "new": 600.0,
+   "old": 609.6,
+   "rel": -0.01574803149606303
+  },
+  {
+   "abs": 0.040000000000000036,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[12].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 7.048,
+   "old": 7.008,
+   "rel": 0.0057077625570776305
+  },
+  {
+   "abs": -9.299999999999955,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[12].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 563.1,
+   "old": 572.4,
+   "rel": -0.016247379454926547
+  },
+  {
+   "abs": 0.0003999999999999976,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[12].trueStrain",
+   "kind": "numeric",
+   "new": 0.0681,
+   "old": 0.0677,
+   "rel": 0.0059084194977843075
+  },
+  {
+   "abs": -9.700000000000045,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[12].trueStressMPa",
+   "kind": "numeric",
+   "new": 602.8,
+   "old": 612.5,
+   "rel": -0.015836734693877624
+  },
+  {
+   "abs": 0.04300000000000015,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[13].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 7.59,
+   "old": 7.547,
+   "rel": 0.0056976281966344446
+  },
+  {
+   "abs": -9.299999999999955,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[13].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 562.7,
+   "old": 572.0,
+   "rel": -0.016258741258741178
+  },
+  {
+   "abs": 0.0003999999999999976,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[13].trueStrain",
+   "kind": "numeric",
+   "new": 0.0732,
+   "old": 0.0728,
+   "rel": 0.005494505494505461
+  },
+  {
+   "abs": -9.700000000000045,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[13].trueStressMPa",
+   "kind": "numeric",
+   "new": 605.4,
+   "old": 615.1,
+   "rel": -0.01576979352950747
+  },
+  {
+   "abs": 0.045999999999999375,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[14].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 8.132,
+   "old": 8.086,
+   "rel": 0.00568884491714066
+  },
+  {
+   "abs": -9.199999999999932,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[14].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 562.2,
+   "old": 571.4,
+   "rel": -0.016100805040251895
+  },
+  {
+   "abs": 0.00040000000000001146,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[14].trueStrain",
+   "kind": "numeric",
+   "new": 0.0782,
+   "old": 0.0778,
+   "rel": 0.005141388174807346
+  },
+  {
+   "abs": -9.700000000000045,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[14].trueStressMPa",
+   "kind": "numeric",
+   "new": 607.9,
+   "old": 617.6,
+   "rel": -0.01570595854922287
+  },
+  {
+   "abs": 0.05000000000000071,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[15].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 8.675,
+   "old": 8.625,
+   "rel": 0.005797101449275445
+  },
+  {
+   "abs": -9.299999999999955,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[15].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 561.5,
+   "old": 570.8,
+   "rel": -0.0162929222144358
+  },
+  {
+   "abs": 0.0005000000000000004,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[15].trueStrain",
+   "kind": "numeric",
+   "new": 0.0832,
+   "old": 0.0827,
+   "rel": 0.006045949214026608
+  },
+  {
+   "abs": -9.799999999999955,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[15].trueStressMPa",
+   "kind": "numeric",
+   "new": 610.2,
+   "old": 620.0,
+   "rel": -0.01580645161290315
+  },
+  {
+   "abs": 0.05200000000000138,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[16].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 9.217,
+   "old": 9.165,
+   "rel": 0.005673758865248378
+  },
+  {
+   "abs": -9.200000000000045,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[16].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 560.8,
+   "old": 570.0,
+   "rel": -0.016140350877193062
+  },
+  {
+   "abs": 0.0005000000000000004,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[16].trueStrain",
+   "kind": "numeric",
+   "new": 0.0882,
+   "old": 0.0877,
+   "rel": 0.005701254275940712
+  },
+  {
+   "abs": -9.700000000000045,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[16].trueStressMPa",
+   "kind": "numeric",
+   "new": 612.5,
+   "old": 622.2,
+   "rel": -0.01558984249437487
+  },
+  {
+   "abs": 0.054999999999999716,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[17].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 9.759,
+   "old": 9.704,
+   "rel": 0.005667765869744406
+  },
+  {
+   "abs": -9.200000000000045,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[17].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 559.9,
+   "old": 569.1,
+   "rel": -0.01616587594447381
+  },
+  {
+   "abs": 0.0005000000000000004,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[17].trueStrain",
+   "kind": "numeric",
+   "new": 0.0931,
+   "old": 0.0926,
+   "rel": 0.00539956803455724
+  },
+  {
+   "abs": -9.799999999999955,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[17].trueStressMPa",
+   "kind": "numeric",
+   "new": 614.6,
+   "old": 624.4,
+   "rel": -0.01569506726457392
+  },
+  {
+   "abs": 0.05799999999999983,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[18].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 10.301,
+   "old": 10.243,
+   "rel": 0.005662403592697435
+  },
+  {
+   "abs": -9.200000000000045,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[18].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 559.0,
+   "old": 568.2,
+   "rel": -0.016191481872580155
+  },
+  {
+   "abs": 0.0005000000000000004,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[18].trueStrain",
+   "kind": "numeric",
+   "new": 0.098,
+   "old": 0.0975,
+   "rel": 0.0051282051282051325
+  },
+  {
+   "abs": -9.799999999999955,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[18].trueStressMPa",
+   "kind": "numeric",
+   "new": 616.6,
+   "old": 626.4,
+   "rel": -0.015644955300127644
+  },
+  {
+   "abs": 0.06099999999999994,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[19].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 10.843,
+   "old": 10.782,
+   "rel": 0.005657577443887956
+  },
+  {
+   "abs": -9.200000000000045,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[19].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 558.0,
+   "old": 567.2,
+   "rel": -0.01622002820874479
+  },
+  {
+   "abs": 0.0005000000000000004,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[19].trueStrain",
+   "kind": "numeric",
+   "new": 0.1029,
+   "old": 0.1024,
+   "rel": 0.004882812500000004
+  },
+  {
+   "abs": -9.799999999999955,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[19].trueStressMPa",
+   "kind": "numeric",
+   "new": 618.5,
+   "old": 628.3,
+   "rel": -0.015597644437370611
+  },
+  {
+   "abs": 0.006000000000000005,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[1].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 1.084,
+   "old": 1.078,
+   "rel": 0.005565862708719856
+  },
+  {
+   "abs": -8.399999999999977,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[1].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 530.5,
+   "old": 538.9,
+   "rel": -0.015587307478196285
+  },
+  {
+   "abs": 0.00010000000000000113,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[1].trueStrain",
+   "kind": "numeric",
+   "new": 0.0108,
+   "old": 0.0107,
+   "rel": 0.009345794392523471
+  },
+  {
+   "abs": -8.400000000000091,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[1].trueStressMPa",
+   "kind": "numeric",
+   "new": 536.3,
+   "old": 544.7,
+   "rel": -0.015421332843767377
+  },
+  {
+   "abs": 0.06400000000000006,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[20].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 11.385,
+   "old": 11.321,
+   "rel": 0.005653210847098318
+  },
+  {
+   "abs": -9.200000000000045,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[20].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 556.9,
+   "old": 566.1,
+   "rel": -0.016251545663310447
+  },
+  {
+   "abs": 0.0006000000000000033,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[20].trueStrain",
+   "kind": "numeric",
+   "new": 0.1078,
+   "old": 0.1072,
+   "rel": 0.005597014925373165
+  },
+  {
+   "abs": -9.900000000000091,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[20].trueStressMPa",
+   "kind": "numeric",
+   "new": 620.3,
+   "old": 630.2,
+   "rel": -0.015709298635354
+  },
+  {
+   "abs": 0.06700000000000017,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[21].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 11.927,
+   "old": 11.86,
+   "rel": 0.005649241146711651
+  },
+  {
+   "abs": -9.200000000000045,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[21].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 555.8,
+   "old": 565.0,
+   "rel": -0.016283185840708043
+  },
+  {
+   "abs": 0.0005999999999999894,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[21].trueStrain",
+   "kind": "numeric",
+   "new": 0.1127,
+   "old": 0.1121,
+   "rel": 0.005352363960749237
+  },
+  {
+   "abs": -9.899999999999977,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[21].trueStressMPa",
+   "kind": "numeric",
+   "new": 622.1,
+   "old": 632.0,
+   "rel": -0.015664556962025282
+  },
+  {
+   "abs": 0.0710000000000015,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[22].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 12.47,
+   "old": 12.399,
+   "rel": 0.005726268247439431
+  },
+  {
+   "abs": -9.199999999999932,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[22].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 554.6,
+   "old": 563.8,
+   "rel": -0.016317843206810807
+  },
+  {
+   "abs": 0.0005999999999999894,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[22].trueStrain",
+   "kind": "numeric",
+   "new": 0.1175,
+   "old": 0.1169,
+   "rel": 0.0051325919589391734
+  },
+  {
+   "abs": -9.900000000000091,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[22].trueStressMPa",
+   "kind": "numeric",
+   "new": 623.8,
+   "old": 633.7,
+   "rel": -0.015622534322234639
+  },
+  {
+   "abs": 0.07399999999999984,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[23].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 13.012,
+   "old": 12.938,
+   "rel": 0.005719585716494036
+  },
+  {
+   "abs": -9.100000000000023,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[23].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 553.4,
+   "old": 562.5,
+   "rel": -0.01617777777777782
+  },
+  {
+   "abs": 0.0006000000000000033,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[23].trueStrain",
+   "kind": "numeric",
+   "new": 0.1223,
+   "old": 0.1217,
+   "rel": 0.004930156121610544
+  },
+  {
+   "abs": -9.899999999999977,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[23].trueStressMPa",
+   "kind": "numeric",
+   "new": 625.4,
+   "old": 635.3,
+   "rel": -0.015583189044545849
+  },
+  {
+   "abs": 0.07699999999999996,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[24].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 13.554,
+   "old": 13.477,
+   "rel": 0.005713437708688874
+  },
+  {
+   "abs": -9.199999999999932,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[24].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 552.1,
+   "old": 561.3,
+   "rel": -0.01639052200249409
+  },
+  {
+   "abs": 0.0006999999999999784,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[24].trueStrain",
+   "kind": "numeric",
+   "new": 0.1271,
+   "old": 0.1264,
+   "rel": 0.005537974683544132
+  },
+  {
+   "abs": -9.899999999999977,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[24].trueStressMPa",
+   "kind": "numeric",
+   "new": 627.0,
+   "old": 636.9,
+   "rel": -0.015544041450777167
+  },
+  {
+   "abs": 0.08000000000000007,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[25].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 14.096,
+   "old": 14.016,
+   "rel": 0.0057077625570776305
+  },
+  {
+   "abs": -9.100000000000023,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[25].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 550.9,
+   "old": 560.0,
+   "rel": -0.016250000000000042
+  },
+  {
+   "abs": 0.0006999999999999784,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[25].trueStrain",
+   "kind": "numeric",
+   "new": 0.1319,
+   "old": 0.1312,
+   "rel": 0.005335365853658371
+  },
+  {
+   "abs": -10.0,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[25].trueStressMPa",
+   "kind": "numeric",
+   "new": 628.5,
+   "old": 638.5,
+   "rel": -0.015661707126076743
+  },
+  {
+   "abs": 0.08300000000000018,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[26].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 14.638,
+   "old": 14.555,
+   "rel": 0.005702507729302658
+  },
+  {
+   "abs": -9.100000000000023,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[26].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 549.5,
+   "old": 558.6,
+   "rel": -0.016290726817042647
+  },
+  {
+   "abs": 0.0007000000000000062,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[26].trueStrain",
+   "kind": "numeric",
+   "new": 0.1366,
+   "old": 0.1359,
+   "rel": 0.005150846210448905
+  },
+  {
+   "abs": -10.0,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[26].trueStressMPa",
+   "kind": "numeric",
+   "new": 630.0,
+   "old": 640.0,
+   "rel": -0.015625
+  },
+  {
+   "abs": 0.08499999999999908,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[27].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 15.18,
+   "old": 15.095,
+   "rel": 0.0056310036435905314
+  },
+  {
+   "abs": -9.099999999999909,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[27].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 548.2,
+   "old": 557.3,
+   "rel": -0.016328727794724402
+  },
+  {
+   "abs": 0.0007000000000000062,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[27].trueStrain",
+   "kind": "numeric",
+   "new": 0.1413,
+   "old": 0.1406,
+   "rel": 0.00497866287339976
+  },
+  {
+   "abs": -10.0,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[27].trueStressMPa",
+   "kind": "numeric",
+   "new": 631.4,
+   "old": 641.4,
+   "rel": -0.015590894917368257
+  },
+  {
+   "abs": 0.08900000000000041,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[28].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 15.723,
+   "old": 15.634,
+   "rel": 0.0056927209927082265
+  },
+  {
+   "abs": -9.100000000000023,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[28].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 546.8,
+   "old": 555.9,
+   "rel": -0.01636985069257065
+  },
+  {
+   "abs": 0.0006999999999999784,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[28].trueStrain",
+   "kind": "numeric",
+   "new": 0.146,
+   "old": 0.1453,
+   "rel": 0.004817618719889734
+  },
+  {
+   "abs": -10.0,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[28].trueStressMPa",
+   "kind": "numeric",
+   "new": 632.8,
+   "old": 642.8,
+   "rel": -0.015556938394523958
+  },
+  {
+   "abs": 0.0920000000000023,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[29].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 16.265,
+   "old": 16.173,
+   "rel": 0.005688493167625197
+  },
+  {
+   "abs": -9.100000000000023,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[29].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 545.4,
+   "old": 554.5,
+   "rel": -0.016411181244364335
+  },
+  {
+   "abs": 0.0007999999999999952,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[29].trueStrain",
+   "kind": "numeric",
+   "new": 0.1507,
+   "old": 0.1499,
+   "rel": 0.005336891260840528
+  },
+  {
+   "abs": -10.0,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[29].trueStressMPa",
+   "kind": "numeric",
+   "new": 634.2,
+   "old": 644.2,
+   "rel": -0.015523129462899719
+  },
+  {
+   "abs": 0.008999999999999897,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[2].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 1.626,
+   "old": 1.617,
+   "rel": 0.005565862708719788
+  },
+  {
+   "abs": -8.799999999999955,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[2].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 543.6,
+   "old": 552.4,
+   "rel": -0.015930485155684206
+  },
+  {
+   "abs": 9.99999999999994e-05,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[2].trueStrain",
+   "kind": "numeric",
+   "new": 0.0161,
+   "old": 0.016,
+   "rel": 0.006249999999999962
+  },
+  {
+   "abs": -8.899999999999977,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[2].trueStressMPa",
+   "kind": "numeric",
+   "new": 552.4,
+   "old": 561.3,
+   "rel": -0.015856048458934575
+  },
+  {
+   "abs": 0.09499999999999886,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[30].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 16.807,
+   "old": 16.712,
+   "rel": 0.005684538056486289
+  },
+  {
+   "abs": -9.100000000000023,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[30].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 544.0,
+   "old": 553.1,
+   "rel": -0.01645272102693911
+  },
+  {
+   "abs": 0.0009000000000000119,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[30].trueStrain",
+   "kind": "numeric",
+   "new": 0.1554,
+   "old": 0.1545,
+   "rel": 0.005825242718446679
+  },
+  {
+   "abs": -10.0,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[30].trueStressMPa",
+   "kind": "numeric",
+   "new": 635.5,
+   "old": 645.5,
+   "rel": -0.015491866769945779
+  },
+  {
+   "abs": 0.09799999999999898,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[31].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 17.349,
+   "old": 17.251,
+   "rel": 0.005680830096805922
+  },
+  {
+   "abs": -9.0,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[31].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 542.6,
+   "old": 551.6,
+   "rel": -0.016316171138506162
+  },
+  {
+   "abs": 0.0009000000000000119,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[31].trueStrain",
+   "kind": "numeric",
+   "new": 0.16,
+   "old": 0.1591,
+   "rel": 0.005656819610308057
+  },
+  {
+   "abs": -10.099999999999909,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[31].trueStressMPa",
+   "kind": "numeric",
+   "new": 636.7,
+   "old": 646.8,
+   "rel": -0.015615337043908334
+  },
+  {
+   "abs": 0.10099999999999909,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[32].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 17.891,
+   "old": 17.79,
+   "rel": 0.005677346824058409
+  },
+  {
+   "abs": -9.0,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[32].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 541.2,
+   "old": 550.2,
+   "rel": -0.016357688113413302
+  },
+  {
+   "abs": 0.0008999999999999841,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[32].trueStrain",
+   "kind": "numeric",
+   "new": 0.1646,
+   "old": 0.1637,
+   "rel": 0.005497861942577789
+  },
+  {
+   "abs": -10.0,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[32].trueStressMPa",
+   "kind": "numeric",
+   "new": 638.0,
+   "old": 648.0,
+   "rel": -0.015432098765432098
+  },
+  {
+   "abs": 0.1039999999999992,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[33].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 18.433,
+   "old": 18.329,
+   "rel": 0.005674068416171052
+  },
+  {
+   "abs": -9.0,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[33].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 539.7,
+   "old": 548.7,
+   "rel": -0.016402405686167302
+  },
+  {
+   "abs": 0.0008999999999999841,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[33].trueStrain",
+   "kind": "numeric",
+   "new": 0.1692,
+   "old": 0.1683,
+   "rel": 0.0053475935828876065
+  },
+  {
+   "abs": -10.099999999999909,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[33].trueStressMPa",
+   "kind": "numeric",
+   "new": 639.2,
+   "old": 649.3,
+   "rel": -0.01555521330663778
+  },
+  {
+   "abs": 0.10700000000000287,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[34].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 18.975,
+   "old": 18.868,
+   "rel": 0.0056709773160908885
+  },
+  {
+   "abs": -9.0,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[34].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 538.2,
+   "old": 547.2,
+   "rel": -0.01644736842105263
+  },
+  {
+   "abs": 0.0008999999999999841,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[34].trueStrain",
+   "kind": "numeric",
+   "new": 0.1737,
+   "old": 0.1728,
+   "rel": 0.005208333333333241
+  },
+  {
+   "abs": -10.0,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[34].trueStressMPa",
+   "kind": "numeric",
+   "new": 640.4,
+   "old": 650.4,
+   "rel": -0.015375153751537515
+  },
+  {
+   "abs": 0.11100000000000065,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[35].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 19.518,
+   "old": 19.407,
+   "rel": 0.005719585716494082
+  },
+  {
+   "abs": -9.199999999999932,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[35].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 530.1,
+   "old": 539.3,
+   "rel": -0.01705915075097336
+  },
+  {
+   "abs": 0.0008999999999999841,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[35].trueStrain",
+   "kind": "numeric",
+   "new": 0.1783,
+   "old": 0.1774,
+   "rel": 0.005073280721533169
+  },
+  {
+   "abs": -10.100000000000023,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[35].trueStressMPa",
+   "kind": "numeric",
+   "new": 641.5,
+   "old": 651.6,
+   "rel": -0.01550030693677106
+  },
+  {
+   "abs": 0.11399999999999721,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[36].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 20.06,
+   "old": 19.946,
+   "rel": 0.005715431665496701
+  },
+  {
+   "abs": -9.0,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[36].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 520.0,
+   "old": 529.0,
+   "rel": -0.017013232514177693
+  },
+  {
+   "abs": 0.0008999999999999841,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[36].trueStrain",
+   "kind": "numeric",
+   "new": 0.1828,
+   "old": 0.1819,
+   "rel": 0.0049477735019240465
+  },
+  {
+   "abs": -10.0,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[36].trueStressMPa",
+   "kind": "numeric",
+   "new": 642.7,
+   "old": 652.7,
+   "rel": -0.015320974413972727
+  },
+  {
+   "abs": 0.11700000000000088,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[37].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 20.602,
+   "old": 20.485,
+   "rel": 0.005711496216744002
+  },
+  {
+   "abs": -8.899999999999977,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[37].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 509.9,
+   "old": 518.8,
+   "rel": -0.017154973014649147
+  },
+  {
+   "abs": 0.0008999999999999841,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[37].trueStrain",
+   "kind": "numeric",
+   "new": 0.1873,
+   "old": 0.1864,
+   "rel": 0.004828326180257425
+  },
+  {
+   "abs": -10.100000000000023,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[37].trueStressMPa",
+   "kind": "numeric",
+   "new": 643.8,
+   "old": 653.9,
+   "rel": -0.015445786817556236
+  },
+  {
+   "abs": 0.11899999999999977,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[38].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 21.144,
+   "old": 21.025,
+   "rel": 0.005659928656361464
+  },
+  {
+   "abs": -8.700000000000045,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[38].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 499.9,
+   "old": 508.6,
+   "rel": -0.017105780574125137
+  },
+  {
+   "abs": 0.0010000000000000009,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[38].trueStrain",
+   "kind": "numeric",
+   "new": 0.1918,
+   "old": 0.1908,
+   "rel": 0.005241090146750529
+  },
+  {
+   "abs": -10.200000000000045,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[38].trueStressMPa",
+   "kind": "numeric",
+   "new": 644.8,
+   "old": 655.0,
+   "rel": -0.015572519083969534
+  },
+  {
+   "abs": 0.12199999999999989,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[39].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 21.686,
+   "old": 21.564,
+   "rel": 0.005657577443887956
+  },
+  {
+   "abs": -8.5,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[39].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 489.9,
+   "old": 498.4,
+   "rel": -0.017054574638844303
+  },
+  {
+   "abs": 0.0010000000000000009,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[39].trueStrain",
+   "kind": "numeric",
+   "new": 0.1963,
+   "old": 0.1953,
+   "rel": 0.005120327700972867
+  },
+  {
+   "abs": -10.100000000000023,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[39].trueStressMPa",
+   "kind": "numeric",
+   "new": 645.9,
+   "old": 656.0,
+   "rel": -0.015396341463414669
+  },
+  {
+   "abs": 0.0129999999999999,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[3].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 2.169,
+   "old": 2.156,
+   "rel": 0.006029684601113126
+  },
+  {
+   "abs": -9.0,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[3].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 550.6,
+   "old": 559.6,
+   "rel": -0.016082916368834882
+  },
+  {
+   "abs": 0.0001999999999999988,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[3].trueStrain",
+   "kind": "numeric",
+   "new": 0.0215,
+   "old": 0.0213,
+   "rel": 0.00938967136150229
+  },
+  {
+   "abs": -9.100000000000023,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[3].trueStressMPa",
+   "kind": "numeric",
+   "new": 562.6,
+   "old": 571.7,
+   "rel": -0.015917439216372262
+  },
+  {
+   "abs": 0.125,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[40].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 22.228,
+   "old": 22.103,
+   "rel": 0.005655340903949689
+  },
+  {
+   "abs": -8.300000000000011,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[40].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 480.0,
+   "old": 488.3,
+   "rel": -0.01699774728650422
+  },
+  {
+   "abs": 0.0010000000000000009,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[40].trueStrain",
+   "kind": "numeric",
+   "new": 0.2007,
+   "old": 0.1997,
+   "rel": 0.005007511266900355
+  },
+  {
+   "abs": -10.200000000000045,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[40].trueStressMPa",
+   "kind": "numeric",
+   "new": 646.9,
+   "old": 657.1,
+   "rel": -0.01552275148379249
+  },
+  {
+   "abs": 0.12900000000000134,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[41].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 22.771,
+   "old": 22.642,
+   "rel": 0.005697376556841328
+  },
+  {
+   "abs": -8.099999999999966,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[41].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 470.1,
+   "old": 478.2,
+   "rel": -0.016938519447929665
+  },
+  {
+   "abs": 0.0010000000000000009,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[41].trueStrain",
+   "kind": "numeric",
+   "new": 0.2051,
+   "old": 0.2041,
+   "rel": 0.0048995590396864325
+  },
+  {
+   "abs": -10.200000000000045,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[41].trueStressMPa",
+   "kind": "numeric",
+   "new": 647.9,
+   "old": 658.1,
+   "rel": -0.015499164260750714
+  },
+  {
+   "abs": 0.1319999999999979,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[42].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 23.313,
+   "old": 23.181,
+   "rel": 0.005694318623010133
+  },
+  {
+   "abs": -8.0,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[42].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 460.2,
+   "old": 468.2,
+   "rel": -0.01708671507902606
+  },
+  {
+   "abs": 0.0011000000000000176,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[42].trueStrain",
+   "kind": "numeric",
+   "new": 0.2096,
+   "old": 0.2085,
+   "rel": 0.005275779376498885
+  },
+  {
+   "abs": -10.200000000000045,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[42].trueStressMPa",
+   "kind": "numeric",
+   "new": 648.9,
+   "old": 659.1,
+   "rel": -0.015475648611743355
+  },
+  {
+   "abs": 0.13500000000000156,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[43].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 23.855,
+   "old": 23.72,
+   "rel": 0.005691399662731938
+  },
+  {
+   "abs": -7.800000000000011,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[43].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 450.4,
+   "old": 458.2,
+   "rel": -0.01702313400261897
+  },
+  {
+   "abs": 0.0010000000000000009,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[43].trueStrain",
+   "kind": "numeric",
+   "new": 0.2139,
+   "old": 0.2129,
+   "rel": 0.0046970408642555235
+  },
+  {
+   "abs": -10.200000000000045,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[43].trueStressMPa",
+   "kind": "numeric",
+   "new": 649.9,
+   "old": 660.1,
+   "rel": -0.015452204211483177
+  },
+  {
+   "abs": 0.13799999999999812,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[44].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 24.397,
+   "old": 24.259,
+   "rel": 0.005688610412630287
+  },
+  {
+   "abs": -7.600000000000023,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[44].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 440.7,
+   "old": 448.3,
+   "rel": -0.016952933303591395
+  },
+  {
+   "abs": 0.0010999999999999899,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[44].trueStrain",
+   "kind": "numeric",
+   "new": 0.2183,
+   "old": 0.2172,
+   "rel": 0.005064456721915239
+  },
+  {
+   "abs": -10.100000000000023,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[44].trueStressMPa",
+   "kind": "numeric",
+   "new": 650.9,
+   "old": 661.0,
+   "rel": -0.015279878971255708
+  },
+  {
+   "abs": 0.1410000000000018,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[45].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 24.939,
+   "old": 24.798,
+   "rel": 0.005685942414710936
+  },
+  {
+   "abs": -7.399999999999977,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[45].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 431.0,
+   "old": 438.4,
+   "rel": -0.01687956204379557
+  },
+  {
+   "abs": 0.0012000000000000066,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[45].trueStrain",
+   "kind": "numeric",
+   "new": 0.2227,
+   "old": 0.2215,
+   "rel": 0.005417607223476327
+  },
+  {
+   "abs": -10.200000000000045,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[45].trueStressMPa",
+   "kind": "numeric",
+   "new": 651.8,
+   "old": 662.0,
+   "rel": -0.015407854984894328
+  },
+  {
+   "abs": 0.1440000000000019,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[46].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 25.481,
+   "old": 25.337,
+   "rel": 0.005683387930694317
+  },
+  {
+   "abs": -7.300000000000011,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[46].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 421.3,
+   "old": 428.6,
+   "rel": -0.017032197853476462
+  },
+  {
+   "abs": 0.0012000000000000066,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[46].trueStrain",
+   "kind": "numeric",
+   "new": 0.227,
+   "old": 0.2258,
+   "rel": 0.005314437555358754
+  },
+  {
+   "abs": -10.199999999999932,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[46].trueStressMPa",
+   "kind": "numeric",
+   "new": 652.7,
+   "old": 662.9,
+   "rel": -0.015386936189470407
+  },
+  {
+   "abs": 0.1479999999999997,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[47].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 26.024,
+   "old": 25.876,
+   "rel": 0.005719585716494036
+  },
+  {
+   "abs": -7.100000000000023,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[47].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 411.7,
+   "old": 418.8,
+   "rel": -0.01695319961795612
+  },
+  {
+   "abs": 0.0012000000000000066,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[47].trueStrain",
+   "kind": "numeric",
+   "new": 0.2313,
+   "old": 0.2301,
+   "rel": 0.005215123859191684
+  },
+  {
+   "abs": -10.199999999999932,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[47].trueStressMPa",
+   "kind": "numeric",
+   "new": 653.6,
+   "old": 663.8,
+   "rel": -0.015366074118710353
+  },
+  {
+   "abs": 0.1509999999999998,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[48].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 26.566,
+   "old": 26.415,
+   "rel": 0.005716448987317805
+  },
+  {
+   "abs": -6.900000000000034,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[48].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 402.2,
+   "old": 409.1,
+   "rel": -0.016866291860180967
+  },
+  {
+   "abs": 0.0012000000000000066,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[48].trueStrain",
+   "kind": "numeric",
+   "new": 0.2356,
+   "old": 0.2344,
+   "rel": 0.005119453924914704
+  },
+  {
+   "abs": -10.200000000000045,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[48].trueStressMPa",
+   "kind": "numeric",
+   "new": 654.5,
+   "old": 664.7,
+   "rel": -0.015345268542199557
+  },
+  {
+   "abs": 0.15300000000000225,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[49].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 27.108,
+   "old": 26.955,
+   "rel": 0.0056761268781303
+  },
+  {
+   "abs": -6.699999999999989,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[49].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 392.7,
+   "old": 399.4,
+   "rel": -0.016775162744116147
+  },
+  {
+   "abs": 0.0012000000000000066,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[49].trueStrain",
+   "kind": "numeric",
+   "new": 0.2399,
+   "old": 0.2387,
+   "rel": 0.005027230833682474
+  },
+  {
+   "abs": -10.200000000000045,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[49].trueStressMPa",
+   "kind": "numeric",
+   "new": 655.4,
+   "old": 665.6,
+   "rel": -0.015324519230769298
+  },
+  {
+   "abs": 0.016000000000000014,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[4].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 2.711,
+   "old": 2.695,
+   "rel": 0.005936920222634514
+  },
+  {
+   "abs": -9.100000000000023,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[4].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 555.1,
+   "old": 564.2,
+   "rel": -0.016129032258064554
+  },
+  {
+   "abs": 0.00010000000000000286,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[4].trueStrain",
+   "kind": "numeric",
+   "new": 0.0267,
+   "old": 0.0266,
+   "rel": 0.0037593984962407093
+  },
+  {
+   "abs": -9.299999999999955,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[4].trueStressMPa",
+   "kind": "numeric",
+   "new": 570.1,
+   "old": 579.4,
+   "rel": -0.016051087331722395
+  },
+  {
+   "abs": 0.1559999999999988,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[50].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 27.65,
+   "old": 27.494,
+   "rel": 0.005673965228777144
+  },
+  {
+   "abs": -6.600000000000023,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[50].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 383.2,
+   "old": 389.8,
+   "rel": -0.016931759876859985
+  },
+  {
+   "abs": 0.0012000000000000066,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[50].trueStrain",
+   "kind": "numeric",
+   "new": 0.2441,
+   "old": 0.2429,
+   "rel": 0.004940304652120241
+  },
+  {
+   "abs": -10.200000000000045,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[50].trueStressMPa",
+   "kind": "numeric",
+   "new": 656.3,
+   "old": 666.5,
+   "rel": -0.01530382595648919
+  },
+  {
+   "abs": 0.15899999999999892,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[51].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 28.192,
+   "old": 28.033,
+   "rel": 0.005671886704954836
+  },
+  {
+   "abs": -6.399999999999977,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[51].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 373.8,
+   "old": 380.2,
+   "rel": -0.016833245660178794
+  },
+  {
+   "abs": 0.0013000000000000234,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[51].trueStrain",
+   "kind": "numeric",
+   "new": 0.2484,
+   "old": 0.2471,
+   "rel": 0.005261027923917537
+  },
+  {
+   "abs": -10.199999999999932,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[51].trueStressMPa",
+   "kind": "numeric",
+   "new": 657.1,
+   "old": 667.3,
+   "rel": -0.015285478795144511
+  },
+  {
+   "abs": 0.1620000000000026,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[52].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 28.734,
+   "old": 28.572,
+   "rel": 0.005669886602268045
+  },
+  {
+   "abs": -6.300000000000011,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[52].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 364.4,
+   "old": 370.7,
+   "rel": -0.016994874561640172
+  },
+  {
+   "abs": 0.0012999999999999678,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[52].trueStrain",
+   "kind": "numeric",
+   "new": 0.2526,
+   "old": 0.2513,
+   "rel": 0.005173099880620644
+  },
+  {
+   "abs": -10.300000000000068,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[52].trueStressMPa",
+   "kind": "numeric",
+   "new": 657.9,
+   "old": 668.2,
+   "rel": -0.015414546542951314
+  },
+  {
+   "abs": 0.16499999999999915,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[53].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 29.276,
+   "old": 29.111,
+   "rel": 0.00566796056473495
+  },
+  {
+   "abs": -6.099999999999966,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[53].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 355.1,
+   "old": 361.2,
+   "rel": -0.01688815060908075
+  },
+  {
+   "abs": 0.0012999999999999678,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[53].trueStrain",
+   "kind": "numeric",
+   "new": 0.2568,
+   "old": 0.2555,
+   "rel": 0.005088062622309071
+  },
+  {
+   "abs": -10.200000000000045,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[53].trueStressMPa",
+   "kind": "numeric",
+   "new": 658.8,
+   "old": 669.0,
+   "rel": -0.015246636771300516
+  },
+  {
+   "abs": 0.16900000000000048,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[54].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 29.819,
+   "old": 29.65,
+   "rel": 0.005699831365935936
+  },
+  {
+   "abs": -5.900000000000034,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[54].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 345.9,
+   "old": 351.8,
+   "rel": -0.016770892552586795
+  },
+  {
+   "abs": 0.0013000000000000234,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[54].trueStrain",
+   "kind": "numeric",
+   "new": 0.261,
+   "old": 0.2597,
+   "rel": 0.005005775895263856
+  },
+  {
+   "abs": -10.199999999999932,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[54].trueStressMPa",
+   "kind": "numeric",
+   "new": 659.6,
+   "old": 669.8,
+   "rel": -0.015228426395938986
+  },
+  {
+   "abs": 0.1720000000000006,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[55].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 30.361,
+   "old": 30.189,
+   "rel": 0.005697439464705707
+  },
+  {
+   "abs": -5.699999999999989,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[55].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 336.7,
+   "old": 342.4,
+   "rel": -0.01664719626168221
+  },
+  {
+   "abs": 0.0013000000000000234,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[55].trueStrain",
+   "kind": "numeric",
+   "new": 0.2651,
+   "old": 0.2638,
+   "rel": 0.00492797573919645
+  },
+  {
+   "abs": -10.200000000000045,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[55].trueStressMPa",
+   "kind": "numeric",
+   "new": 660.4,
+   "old": 670.6,
+   "rel": -0.015210259469132188
+  },
+  {
+   "abs": 0.17499999999999716,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[56].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 30.903,
+   "old": 30.728,
+   "rel": 0.005695131476177986
+  },
+  {
+   "abs": -5.600000000000023,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[56].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 327.5,
+   "old": 333.1,
+   "rel": -0.016811768237766502
+  },
+  {
+   "abs": 0.0012999999999999678,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[56].trueStrain",
+   "kind": "numeric",
+   "new": 0.2693,
+   "old": 0.268,
+   "rel": 0.0048507462686565965
+  },
+  {
+   "abs": -10.199999999999932,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[56].trueStressMPa",
+   "kind": "numeric",
+   "new": 661.2,
+   "old": 671.4,
+   "rel": -0.01519213583556737
+  },
+  {
+   "abs": 0.17800000000000082,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[57].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 31.445,
+   "old": 31.267,
+   "rel": 0.0056929030607349865
+  },
+  {
+   "abs": -5.400000000000034,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[57].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 318.4,
+   "old": 323.8,
+   "rel": -0.0166769610870909
+  },
+  {
+   "abs": 0.0012999999999999678,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[57].trueStrain",
+   "kind": "numeric",
+   "new": 0.2734,
+   "old": 0.2721,
+   "rel": 0.00477765527379628
+  },
+  {
+   "abs": -10.300000000000068,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[57].trueStressMPa",
+   "kind": "numeric",
+   "new": 661.9,
+   "old": 672.2,
+   "rel": -0.015322820589110484
+  },
+  {
+   "abs": 0.18099999999999739,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[58].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 31.987,
+   "old": 31.806,
+   "rel": 0.005690750172923266
+  },
+  {
+   "abs": -5.2000000000000455,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[58].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 309.4,
+   "old": 314.6,
+   "rel": -0.016528925619834853
+  },
+  {
+   "abs": 0.0013000000000000234,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[58].trueStrain",
+   "kind": "numeric",
+   "new": 0.2775,
+   "old": 0.2762,
+   "rel": 0.004706734250543169
+  },
+  {
+   "abs": -10.299999999999955,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[58].trueStressMPa",
+   "kind": "numeric",
+   "new": 662.7,
+   "old": 673.0,
+   "rel": -0.015304606240713156
+  },
+  {
+   "abs": 0.1840000000000046,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[59].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 32.529,
+   "old": 32.345,
+   "rel": 0.005688669036945575
+  },
+  {
+   "abs": -5.0,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[59].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 300.4,
+   "old": 305.4,
+   "rel": -0.016371971185330715
+  },
+  {
+   "abs": 0.0014000000000000123,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[59].trueStrain",
+   "kind": "numeric",
+   "new": 0.2816,
+   "old": 0.2802,
+   "rel": 0.004996431120628167
+  },
+  {
+   "abs": -10.300000000000068,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[59].trueStressMPa",
+   "kind": "numeric",
+   "new": 663.4,
+   "old": 673.7,
+   "rel": -0.015288704170996092
+  },
+  {
+   "abs": 0.018000000000000238,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[5].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 3.253,
+   "old": 3.235,
+   "rel": 0.005564142194745051
+  },
+  {
+   "abs": -9.199999999999932,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[5].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 558.1,
+   "old": 567.3,
+   "rel": -0.016217169046359833
+  },
+  {
+   "abs": 0.0001999999999999988,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[5].trueStrain",
+   "kind": "numeric",
+   "new": 0.032,
+   "old": 0.0318,
+   "rel": 0.00628930817610059
+  },
+  {
+   "abs": -9.300000000000068,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[5].trueStressMPa",
+   "kind": "numeric",
+   "new": 576.3,
+   "old": 585.6,
+   "rel": -0.01588114754098372
+  },
+  {
+   "abs": 0.020999999999999908,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[6].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 3.795,
+   "old": 3.774,
+   "rel": 0.005564387917329069
+  },
+  {
+   "abs": -9.199999999999932,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[6].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 560.2,
+   "old": 569.4,
+   "rel": -0.01615735862311193
+  },
+  {
+   "abs": 0.0001999999999999988,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[6].trueStrain",
+   "kind": "numeric",
+   "new": 0.0372,
+   "old": 0.037,
+   "rel": 0.005405405405405373
+  },
+  {
+   "abs": -9.399999999999977,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[6].trueStressMPa",
+   "kind": "numeric",
+   "new": 581.5,
+   "old": 590.9,
+   "rel": -0.015907937045185273
+  },
+  {
+   "abs": 0.02400000000000002,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[7].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 4.337,
+   "old": 4.313,
+   "rel": 0.005564572223510323
+  },
+  {
+   "abs": -9.199999999999932,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[7].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 561.6,
+   "old": 570.8,
+   "rel": -0.01611772950245258
+  },
+  {
+   "abs": 0.00030000000000000165,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[7].trueStrain",
+   "kind": "numeric",
+   "new": 0.0425,
+   "old": 0.0422,
+   "rel": 0.007109004739336532
+  },
+  {
+   "abs": -9.399999999999977,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[7].trueStressMPa",
+   "kind": "numeric",
+   "new": 586.0,
+   "old": 595.4,
+   "rel": -0.015787705744037584
+  },
+  {
+   "abs": 0.026999999999999247,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[8].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 4.879,
+   "old": 4.852,
+   "rel": 0.005564715581203472
+  },
+  {
+   "abs": -9.299999999999955,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[8].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 562.5,
+   "old": 571.8,
+   "rel": -0.016264428121720804
+  },
+  {
+   "abs": 0.00020000000000000573,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[8].trueStrain",
+   "kind": "numeric",
+   "new": 0.0476,
+   "old": 0.0474,
+   "rel": 0.004219409282700543
+  },
+  {
+   "abs": -9.5,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[8].trueStressMPa",
+   "kind": "numeric",
+   "new": 590.0,
+   "old": 599.5,
+   "rel": -0.0158465387823186
+  },
+  {
+   "abs": 0.030999999999999694,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[9].engineeringStrainPct",
+   "kind": "numeric",
+   "new": 5.422,
+   "old": 5.391,
+   "rel": 0.005750324615099183
+  },
+  {
+   "abs": -9.199999999999932,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[9].engineeringStressMPa",
+   "kind": "numeric",
+   "new": 563.1,
+   "old": 572.3,
+   "rel": -0.01607548488554942
+  },
+  {
+   "abs": 0.00030000000000000165,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[9].trueStrain",
+   "kind": "numeric",
+   "new": 0.0528,
+   "old": 0.0525,
+   "rel": 0.005714285714285746
+  },
+  {
+   "abs": -9.600000000000023,
+   "key": "scale3_continuumPlasticity.stressStrainCurve[9].trueStressMPa",
+   "kind": "numeric",
+   "new": 593.6,
+   "old": 603.2,
+   "rel": -0.015915119363395264
+  },
+  {
+   "abs": -0.010000000000000009,
+   "key": "scale4_macroComponentFEA.actualSafetyFactor",
+   "kind": "numeric",
+   "new": 0.61,
+   "old": 0.62,
+   "rel": -0.01612903225806453
   },
   {
    "key": "scale4_macroComponentFEA.lefmDamageTolerance.criticalFlawSize_ac_mm",
@@ -135,7 +2155,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "68c364c760adafbf73fb6ed1a7a8dba044ef1fdd",
+ "gitHead": "e61ae23f11a6f7ea2692f26acb0db53acd0c145c",
  "input": {
   "agingTemp_C": 160,
   "agingTime_h": 6,
@@ -167,14 +2187,14 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "icme_multiscale_pipeline_solver",
  "solverFile": "python/icme_multiscale_pipeline_solver.py",
- "solverSha256": "305d1324a6e5e3f8ddc9e321ce64bb6842eeedc3996f2ba5969ecfda58b7f87b",
+ "solverSha256": "3b7ec94b60177228d5cf025c9d6b0eaad0d1ed9fd2c55e663e53c305985894d9",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {
   "caeExportCards": {
-   "abaqus": "*HEADING\n** MetalliX Multi-Scale ICME ILLUSTRATIVE Card (uncalibrated, not validated) for AlSi10Mg Additive Alloy\n*MATERIAL, NAME=ALSI10MG_ADDITIVE_ALLOY\n*DENSITY\n2700.00\n*ELASTIC, TYPE=ISOTROPIC\n71002.64, 0.3300\n*PLASTIC\n441.0, 0.0000\n605.1, 0.0500\n628.2, 0.1000\n650.4, 0.1800\n*RATE DEPENDENT\n0.02800, 0.001\n*TENSILE FAILURE\n0.2685, 0.0, 0.0",
-   "ansys": "! ANSYS APDL Material Card: AlSi10Mg Additive Alloy\n! ILLUSTRATIVE estimate (uncalibrated, not validated)\nMPTEMP,,,,,,,,\nMPTEMP,1,0\nMPDATA,EX,1,,71002.64\nMPDATA,PRXY,1,,0.3300\nMPDATA,DENS,1,,2.7000e-09\nTB,PLAS,1,1,4,MISO\nTBTEMP,25.0\nTBPT,,0.0,441.0\nTBPT,,0.05,605.1\nTBPT,,0.10,628.2\nTBPT,,0.20,654.6",
-   "lsDyna": "$*LS-DYNA MATERIAL DECK: AlSi10Mg Additive Alloy\n$ ILLUSTRATIVE estimate (uncalibrated, not validated)\n*MAT_PIECEWISE_LINEAR_PLASTICITY\n$#     mid        ro         e        pr      sigy      etan      fail      tdel\n         1  2.700e-03  71002.6   0.3300  441.0       0.0  0.2685       0.0\n$#       c         p      lcss      lcsr        vp\n   0.0280       0.0         0         0       0.0"
+   "abaqus": "*HEADING\n** MetalliX Multi-Scale ICME ILLUSTRATIVE Card (uncalibrated, not validated) for AlSi10Mg Additive Alloy\n** Units: mm, N, s, tonne, MPa (density in tonne/mm^3)\n*MATERIAL, NAME=ALSI10MG_ADDITIVE_ALLOY\n*DENSITY\n2.7000e-09\n*ELASTIC, TYPE=ISOTROPIC\n71002.64, 0.3300\n*PLASTIC\n433.0, 0.0000\n594.4, 0.0500\n617.2, 0.1000\n639.1, 0.1800\n*RATE DEPENDENT\n0.02800, 0.001\n*TENSILE FAILURE\n0.2699, 0.0, 0.0",
+   "ansys": "! ANSYS APDL Material Card: AlSi10Mg Additive Alloy\n! ILLUSTRATIVE estimate (uncalibrated, not validated)\nMPTEMP,,,,,,,,\nMPTEMP,1,0\nMPDATA,EX,1,,71002.64\nMPDATA,PRXY,1,,0.3300\nMPDATA,DENS,1,,2.7000e-09\nTB,PLAS,1,1,4,MISO\nTBTEMP,25.0\nTBPT,,0.0,433.0\nTBPT,,0.05,594.4\nTBPT,,0.10,617.2\nTBPT,,0.20,643.3",
+   "lsDyna": "$*LS-DYNA MATERIAL DECK: AlSi10Mg Additive Alloy\n$ ILLUSTRATIVE estimate (uncalibrated, not validated)\n*MAT_PIECEWISE_LINEAR_PLASTICITY\n$#     mid        ro         e        pr      sigy      etan      fail      tdel\n         1  2.700e-03  71002.6   0.3300  433.0       0.0  0.2699       0.0\n$#       c         p      lcss      lcsr        vp\n   0.0280       0.0         0         0       0.0"
   },
   "engine": "MetalliX ICME Multi-Scale Closed-Form Estimator (illustrative; tabulated constants, no DFT/CALPHAD/FEA run)",
   "inputParameters": {
@@ -276,410 +2296,411 @@
    "grainSize_d_um": 0.78,
    "hallPetchStrengthening_MPa": 169.8,
    "precipitationKinetics": {
-    "activeMechanism": "Dislocation Particle Shearing (Friedel-Gere Cutting)",
+    "activeMechanism": "Dislocation Particle Shearing (Brown-Ham weak pair-coupling cutting)",
     "agingTemp_C": 160.0,
     "agingTime_h": 6.0,
-    "effectivePrecipitationStrengthening_MPa": 73.5,
+    "cuttingContributionStatus": null,
+    "effectivePrecipitationStrengthening_MPa": 64.2,
     "interparticleSpacing_nm": 18.7,
     "meanPrecipitateRadius_nm": 1.5,
     "orowanStrength_MPa": 451.5,
-    "shearingStrength_MPa": 73.5,
+    "shearingStrength_MPa": 64.2,
     "volumeFractionPct": 1.0
    },
    "taylorDislocationStrengthening_MPa": 87.3
   },
   "scale3_continuumPlasticity": {
    "johnsonCookParameters": {
-    "A_MPa": 441,
-    "B_MPa": 290,
+    "A_MPa": 433,
+    "B_MPa": 286,
     "C": 0.028,
     "T_melt_C": 660.0,
     "m": 0.9,
-    "n": 0.19
+    "n": 0.191
    },
    "mechanicalProperties": {
     "fractureToughness_K1c_MPa_sqrt_m": null,
     "fractureToughness_K1c_status": "unavailable: the former estimate sqrt(2/3*E*sigma_y*eps_f*n^2) has the unit MPa, not MPa*sqrt(m), and no dimensionally valid, cited toughness relation applies to this model; supply a measured K_Ic",
-    "hollomon_K_MPa": 730.6,
-    "hollomon_n": 0.19,
-    "totalElongationPct": 30.8,
+    "hollomon_K_MPa": 719.5,
+    "hollomon_n": 0.191,
+    "totalElongationPct": 31.0,
     "ultimateTensileStrength_UTS_MPa": null,
     "ultimateTensileStrength_UTS_status": "unavailable: n is a placeholder correlation of the yield strength and the Hollomon K was set so that the engineering UTS equals Rp0.2, so the Considere relation UTS = K*(n/e)^n would only return the yield strength; an independent measured n and K are required",
-    "uniformElongationPct": 19.0,
-    "yieldStrength_Rp02_MPa": 440.6
+    "uniformElongationPct": 19.1,
+    "yieldStrength_Rp02_MPa": 433.3
    },
    "strengtheningContributions_MPa": {
     "deltaSigma_Disloc_Forest": 87.3,
     "deltaSigma_HP_GrainBoundary": 169.8,
-    "deltaSigma_Precip_OrowanCutting": 73.5,
+    "deltaSigma_Precip_OrowanCutting": 64.2,
     "deltaSigma_SS_SolidSolution": 78.2,
     "sigma_0_LatticeFriction": 60.6
    },
    "stressStrainCurve": [
     {
-     "engineeringStrainPct": 0.539,
-     "engineeringStressMPa": 382.8,
+     "engineeringStrainPct": 0.542,
+     "engineeringStressMPa": 384.9,
      "trueStrain": 0.0054,
-     "trueStressMPa": 382.8
+     "trueStressMPa": 384.9
     },
     {
-     "engineeringStrainPct": 1.078,
-     "engineeringStressMPa": 538.9,
-     "trueStrain": 0.0107,
-     "trueStressMPa": 544.7
+     "engineeringStrainPct": 1.084,
+     "engineeringStressMPa": 530.5,
+     "trueStrain": 0.0108,
+     "trueStressMPa": 536.3
     },
     {
-     "engineeringStrainPct": 1.617,
-     "engineeringStressMPa": 552.4,
-     "trueStrain": 0.016,
-     "trueStressMPa": 561.3
+     "engineeringStrainPct": 1.626,
+     "engineeringStressMPa": 543.6,
+     "trueStrain": 0.0161,
+     "trueStressMPa": 552.4
     },
     {
-     "engineeringStrainPct": 2.156,
-     "engineeringStressMPa": 559.6,
-     "trueStrain": 0.0213,
-     "trueStressMPa": 571.7
+     "engineeringStrainPct": 2.169,
+     "engineeringStressMPa": 550.6,
+     "trueStrain": 0.0215,
+     "trueStressMPa": 562.6
     },
     {
-     "engineeringStrainPct": 2.695,
-     "engineeringStressMPa": 564.2,
-     "trueStrain": 0.0266,
-     "trueStressMPa": 579.4
+     "engineeringStrainPct": 2.711,
+     "engineeringStressMPa": 555.1,
+     "trueStrain": 0.0267,
+     "trueStressMPa": 570.1
     },
     {
-     "engineeringStrainPct": 3.235,
-     "engineeringStressMPa": 567.3,
-     "trueStrain": 0.0318,
-     "trueStressMPa": 585.6
+     "engineeringStrainPct": 3.253,
+     "engineeringStressMPa": 558.1,
+     "trueStrain": 0.032,
+     "trueStressMPa": 576.3
     },
     {
-     "engineeringStrainPct": 3.774,
-     "engineeringStressMPa": 569.4,
-     "trueStrain": 0.037,
-     "trueStressMPa": 590.9
+     "engineeringStrainPct": 3.795,
+     "engineeringStressMPa": 560.2,
+     "trueStrain": 0.0372,
+     "trueStressMPa": 581.5
     },
     {
-     "engineeringStrainPct": 4.313,
-     "engineeringStressMPa": 570.8,
-     "trueStrain": 0.0422,
-     "trueStressMPa": 595.4
+     "engineeringStrainPct": 4.337,
+     "engineeringStressMPa": 561.6,
+     "trueStrain": 0.0425,
+     "trueStressMPa": 586.0
     },
     {
-     "engineeringStrainPct": 4.852,
-     "engineeringStressMPa": 571.8,
-     "trueStrain": 0.0474,
-     "trueStressMPa": 599.5
+     "engineeringStrainPct": 4.879,
+     "engineeringStressMPa": 562.5,
+     "trueStrain": 0.0476,
+     "trueStressMPa": 590.0
     },
     {
-     "engineeringStrainPct": 5.391,
-     "engineeringStressMPa": 572.3,
-     "trueStrain": 0.0525,
-     "trueStressMPa": 603.2
+     "engineeringStrainPct": 5.422,
+     "engineeringStressMPa": 563.1,
+     "trueStrain": 0.0528,
+     "trueStressMPa": 593.6
     },
     {
-     "engineeringStrainPct": 5.93,
-     "engineeringStressMPa": 572.6,
-     "trueStrain": 0.0576,
-     "trueStressMPa": 606.5
+     "engineeringStrainPct": 5.964,
+     "engineeringStressMPa": 563.3,
+     "trueStrain": 0.0579,
+     "trueStressMPa": 596.9
     },
     {
-     "engineeringStrainPct": 6.469,
-     "engineeringStressMPa": 572.6,
-     "trueStrain": 0.0627,
-     "trueStressMPa": 609.6
+     "engineeringStrainPct": 6.506,
+     "engineeringStressMPa": 563.3,
+     "trueStrain": 0.063,
+     "trueStressMPa": 600.0
     },
     {
-     "engineeringStrainPct": 7.008,
-     "engineeringStressMPa": 572.4,
-     "trueStrain": 0.0677,
+     "engineeringStrainPct": 7.048,
+     "engineeringStressMPa": 563.1,
+     "trueStrain": 0.0681,
+     "trueStressMPa": 602.8
+    },
+    {
+     "engineeringStrainPct": 7.59,
+     "engineeringStressMPa": 562.7,
+     "trueStrain": 0.0732,
+     "trueStressMPa": 605.4
+    },
+    {
+     "engineeringStrainPct": 8.132,
+     "engineeringStressMPa": 562.2,
+     "trueStrain": 0.0782,
+     "trueStressMPa": 607.9
+    },
+    {
+     "engineeringStrainPct": 8.675,
+     "engineeringStressMPa": 561.5,
+     "trueStrain": 0.0832,
+     "trueStressMPa": 610.2
+    },
+    {
+     "engineeringStrainPct": 9.217,
+     "engineeringStressMPa": 560.8,
+     "trueStrain": 0.0882,
      "trueStressMPa": 612.5
     },
     {
-     "engineeringStrainPct": 7.547,
-     "engineeringStressMPa": 572.0,
-     "trueStrain": 0.0728,
-     "trueStressMPa": 615.1
+     "engineeringStrainPct": 9.759,
+     "engineeringStressMPa": 559.9,
+     "trueStrain": 0.0931,
+     "trueStressMPa": 614.6
     },
     {
-     "engineeringStrainPct": 8.086,
-     "engineeringStressMPa": 571.4,
-     "trueStrain": 0.0778,
-     "trueStressMPa": 617.6
+     "engineeringStrainPct": 10.301,
+     "engineeringStressMPa": 559.0,
+     "trueStrain": 0.098,
+     "trueStressMPa": 616.6
     },
     {
-     "engineeringStrainPct": 8.625,
-     "engineeringStressMPa": 570.8,
-     "trueStrain": 0.0827,
-     "trueStressMPa": 620.0
+     "engineeringStrainPct": 10.843,
+     "engineeringStressMPa": 558.0,
+     "trueStrain": 0.1029,
+     "trueStressMPa": 618.5
     },
     {
-     "engineeringStrainPct": 9.165,
-     "engineeringStressMPa": 570.0,
-     "trueStrain": 0.0877,
-     "trueStressMPa": 622.2
+     "engineeringStrainPct": 11.385,
+     "engineeringStressMPa": 556.9,
+     "trueStrain": 0.1078,
+     "trueStressMPa": 620.3
     },
     {
-     "engineeringStrainPct": 9.704,
-     "engineeringStressMPa": 569.1,
-     "trueStrain": 0.0926,
-     "trueStressMPa": 624.4
+     "engineeringStrainPct": 11.927,
+     "engineeringStressMPa": 555.8,
+     "trueStrain": 0.1127,
+     "trueStressMPa": 622.1
     },
     {
-     "engineeringStrainPct": 10.243,
-     "engineeringStressMPa": 568.2,
-     "trueStrain": 0.0975,
-     "trueStressMPa": 626.4
+     "engineeringStrainPct": 12.47,
+     "engineeringStressMPa": 554.6,
+     "trueStrain": 0.1175,
+     "trueStressMPa": 623.8
     },
     {
-     "engineeringStrainPct": 10.782,
-     "engineeringStressMPa": 567.2,
-     "trueStrain": 0.1024,
-     "trueStressMPa": 628.3
+     "engineeringStrainPct": 13.012,
+     "engineeringStressMPa": 553.4,
+     "trueStrain": 0.1223,
+     "trueStressMPa": 625.4
     },
     {
-     "engineeringStrainPct": 11.321,
-     "engineeringStressMPa": 566.1,
-     "trueStrain": 0.1072,
-     "trueStressMPa": 630.2
+     "engineeringStrainPct": 13.554,
+     "engineeringStressMPa": 552.1,
+     "trueStrain": 0.1271,
+     "trueStressMPa": 627.0
     },
     {
-     "engineeringStrainPct": 11.86,
-     "engineeringStressMPa": 565.0,
-     "trueStrain": 0.1121,
-     "trueStressMPa": 632.0
+     "engineeringStrainPct": 14.096,
+     "engineeringStressMPa": 550.9,
+     "trueStrain": 0.1319,
+     "trueStressMPa": 628.5
     },
     {
-     "engineeringStrainPct": 12.399,
-     "engineeringStressMPa": 563.8,
-     "trueStrain": 0.1169,
-     "trueStressMPa": 633.7
+     "engineeringStrainPct": 14.638,
+     "engineeringStressMPa": 549.5,
+     "trueStrain": 0.1366,
+     "trueStressMPa": 630.0
     },
     {
-     "engineeringStrainPct": 12.938,
-     "engineeringStressMPa": 562.5,
-     "trueStrain": 0.1217,
-     "trueStressMPa": 635.3
+     "engineeringStrainPct": 15.18,
+     "engineeringStressMPa": 548.2,
+     "trueStrain": 0.1413,
+     "trueStressMPa": 631.4
     },
     {
-     "engineeringStrainPct": 13.477,
-     "engineeringStressMPa": 561.3,
-     "trueStrain": 0.1264,
-     "trueStressMPa": 636.9
+     "engineeringStrainPct": 15.723,
+     "engineeringStressMPa": 546.8,
+     "trueStrain": 0.146,
+     "trueStressMPa": 632.8
     },
     {
-     "engineeringStrainPct": 14.016,
-     "engineeringStressMPa": 560.0,
-     "trueStrain": 0.1312,
-     "trueStressMPa": 638.5
+     "engineeringStrainPct": 16.265,
+     "engineeringStressMPa": 545.4,
+     "trueStrain": 0.1507,
+     "trueStressMPa": 634.2
     },
     {
-     "engineeringStrainPct": 14.555,
-     "engineeringStressMPa": 558.6,
-     "trueStrain": 0.1359,
-     "trueStressMPa": 640.0
+     "engineeringStrainPct": 16.807,
+     "engineeringStressMPa": 544.0,
+     "trueStrain": 0.1554,
+     "trueStressMPa": 635.5
     },
     {
-     "engineeringStrainPct": 15.095,
-     "engineeringStressMPa": 557.3,
-     "trueStrain": 0.1406,
-     "trueStressMPa": 641.4
+     "engineeringStrainPct": 17.349,
+     "engineeringStressMPa": 542.6,
+     "trueStrain": 0.16,
+     "trueStressMPa": 636.7
     },
     {
-     "engineeringStrainPct": 15.634,
-     "engineeringStressMPa": 555.9,
-     "trueStrain": 0.1453,
-     "trueStressMPa": 642.8
+     "engineeringStrainPct": 17.891,
+     "engineeringStressMPa": 541.2,
+     "trueStrain": 0.1646,
+     "trueStressMPa": 638.0
     },
     {
-     "engineeringStrainPct": 16.173,
-     "engineeringStressMPa": 554.5,
-     "trueStrain": 0.1499,
-     "trueStressMPa": 644.2
+     "engineeringStrainPct": 18.433,
+     "engineeringStressMPa": 539.7,
+     "trueStrain": 0.1692,
+     "trueStressMPa": 639.2
     },
     {
-     "engineeringStrainPct": 16.712,
-     "engineeringStressMPa": 553.1,
-     "trueStrain": 0.1545,
-     "trueStressMPa": 645.5
+     "engineeringStrainPct": 18.975,
+     "engineeringStressMPa": 538.2,
+     "trueStrain": 0.1737,
+     "trueStressMPa": 640.4
     },
     {
-     "engineeringStrainPct": 17.251,
-     "engineeringStressMPa": 551.6,
-     "trueStrain": 0.1591,
-     "trueStressMPa": 646.8
+     "engineeringStrainPct": 19.518,
+     "engineeringStressMPa": 530.1,
+     "trueStrain": 0.1783,
+     "trueStressMPa": 641.5
     },
     {
-     "engineeringStrainPct": 17.79,
-     "engineeringStressMPa": 550.2,
-     "trueStrain": 0.1637,
-     "trueStressMPa": 648.0
+     "engineeringStrainPct": 20.06,
+     "engineeringStressMPa": 520.0,
+     "trueStrain": 0.1828,
+     "trueStressMPa": 642.7
     },
     {
-     "engineeringStrainPct": 18.329,
-     "engineeringStressMPa": 548.7,
-     "trueStrain": 0.1683,
-     "trueStressMPa": 649.3
+     "engineeringStrainPct": 20.602,
+     "engineeringStressMPa": 509.9,
+     "trueStrain": 0.1873,
+     "trueStressMPa": 643.8
     },
     {
-     "engineeringStrainPct": 18.868,
-     "engineeringStressMPa": 547.2,
-     "trueStrain": 0.1728,
-     "trueStressMPa": 650.4
+     "engineeringStrainPct": 21.144,
+     "engineeringStressMPa": 499.9,
+     "trueStrain": 0.1918,
+     "trueStressMPa": 644.8
     },
     {
-     "engineeringStrainPct": 19.407,
-     "engineeringStressMPa": 539.3,
-     "trueStrain": 0.1774,
-     "trueStressMPa": 651.6
+     "engineeringStrainPct": 21.686,
+     "engineeringStressMPa": 489.9,
+     "trueStrain": 0.1963,
+     "trueStressMPa": 645.9
     },
     {
-     "engineeringStrainPct": 19.946,
-     "engineeringStressMPa": 529.0,
-     "trueStrain": 0.1819,
+     "engineeringStrainPct": 22.228,
+     "engineeringStressMPa": 480.0,
+     "trueStrain": 0.2007,
+     "trueStressMPa": 646.9
+    },
+    {
+     "engineeringStrainPct": 22.771,
+     "engineeringStressMPa": 470.1,
+     "trueStrain": 0.2051,
+     "trueStressMPa": 647.9
+    },
+    {
+     "engineeringStrainPct": 23.313,
+     "engineeringStressMPa": 460.2,
+     "trueStrain": 0.2096,
+     "trueStressMPa": 648.9
+    },
+    {
+     "engineeringStrainPct": 23.855,
+     "engineeringStressMPa": 450.4,
+     "trueStrain": 0.2139,
+     "trueStressMPa": 649.9
+    },
+    {
+     "engineeringStrainPct": 24.397,
+     "engineeringStressMPa": 440.7,
+     "trueStrain": 0.2183,
+     "trueStressMPa": 650.9
+    },
+    {
+     "engineeringStrainPct": 24.939,
+     "engineeringStressMPa": 431.0,
+     "trueStrain": 0.2227,
+     "trueStressMPa": 651.8
+    },
+    {
+     "engineeringStrainPct": 25.481,
+     "engineeringStressMPa": 421.3,
+     "trueStrain": 0.227,
      "trueStressMPa": 652.7
     },
     {
-     "engineeringStrainPct": 20.485,
-     "engineeringStressMPa": 518.8,
-     "trueStrain": 0.1864,
-     "trueStressMPa": 653.9
+     "engineeringStrainPct": 26.024,
+     "engineeringStressMPa": 411.7,
+     "trueStrain": 0.2313,
+     "trueStressMPa": 653.6
     },
     {
-     "engineeringStrainPct": 21.025,
-     "engineeringStressMPa": 508.6,
-     "trueStrain": 0.1908,
-     "trueStressMPa": 655.0
+     "engineeringStrainPct": 26.566,
+     "engineeringStressMPa": 402.2,
+     "trueStrain": 0.2356,
+     "trueStressMPa": 654.5
     },
     {
-     "engineeringStrainPct": 21.564,
-     "engineeringStressMPa": 498.4,
-     "trueStrain": 0.1953,
-     "trueStressMPa": 656.0
+     "engineeringStrainPct": 27.108,
+     "engineeringStressMPa": 392.7,
+     "trueStrain": 0.2399,
+     "trueStressMPa": 655.4
     },
     {
-     "engineeringStrainPct": 22.103,
-     "engineeringStressMPa": 488.3,
-     "trueStrain": 0.1997,
+     "engineeringStrainPct": 27.65,
+     "engineeringStressMPa": 383.2,
+     "trueStrain": 0.2441,
+     "trueStressMPa": 656.3
+    },
+    {
+     "engineeringStrainPct": 28.192,
+     "engineeringStressMPa": 373.8,
+     "trueStrain": 0.2484,
      "trueStressMPa": 657.1
     },
     {
-     "engineeringStrainPct": 22.642,
-     "engineeringStressMPa": 478.2,
-     "trueStrain": 0.2041,
-     "trueStressMPa": 658.1
+     "engineeringStrainPct": 28.734,
+     "engineeringStressMPa": 364.4,
+     "trueStrain": 0.2526,
+     "trueStressMPa": 657.9
     },
     {
-     "engineeringStrainPct": 23.181,
-     "engineeringStressMPa": 468.2,
-     "trueStrain": 0.2085,
-     "trueStressMPa": 659.1
+     "engineeringStrainPct": 29.276,
+     "engineeringStressMPa": 355.1,
+     "trueStrain": 0.2568,
+     "trueStressMPa": 658.8
     },
     {
-     "engineeringStrainPct": 23.72,
-     "engineeringStressMPa": 458.2,
-     "trueStrain": 0.2129,
-     "trueStressMPa": 660.1
+     "engineeringStrainPct": 29.819,
+     "engineeringStressMPa": 345.9,
+     "trueStrain": 0.261,
+     "trueStressMPa": 659.6
     },
     {
-     "engineeringStrainPct": 24.259,
-     "engineeringStressMPa": 448.3,
-     "trueStrain": 0.2172,
-     "trueStressMPa": 661.0
+     "engineeringStrainPct": 30.361,
+     "engineeringStressMPa": 336.7,
+     "trueStrain": 0.2651,
+     "trueStressMPa": 660.4
     },
     {
-     "engineeringStrainPct": 24.798,
-     "engineeringStressMPa": 438.4,
-     "trueStrain": 0.2215,
-     "trueStressMPa": 662.0
+     "engineeringStrainPct": 30.903,
+     "engineeringStressMPa": 327.5,
+     "trueStrain": 0.2693,
+     "trueStressMPa": 661.2
     },
     {
-     "engineeringStrainPct": 25.337,
-     "engineeringStressMPa": 428.6,
-     "trueStrain": 0.2258,
-     "trueStressMPa": 662.9
+     "engineeringStrainPct": 31.445,
+     "engineeringStressMPa": 318.4,
+     "trueStrain": 0.2734,
+     "trueStressMPa": 661.9
     },
     {
-     "engineeringStrainPct": 25.876,
-     "engineeringStressMPa": 418.8,
-     "trueStrain": 0.2301,
-     "trueStressMPa": 663.8
+     "engineeringStrainPct": 31.987,
+     "engineeringStressMPa": 309.4,
+     "trueStrain": 0.2775,
+     "trueStressMPa": 662.7
     },
     {
-     "engineeringStrainPct": 26.415,
-     "engineeringStressMPa": 409.1,
-     "trueStrain": 0.2344,
-     "trueStressMPa": 664.7
-    },
-    {
-     "engineeringStrainPct": 26.955,
-     "engineeringStressMPa": 399.4,
-     "trueStrain": 0.2387,
-     "trueStressMPa": 665.6
-    },
-    {
-     "engineeringStrainPct": 27.494,
-     "engineeringStressMPa": 389.8,
-     "trueStrain": 0.2429,
-     "trueStressMPa": 666.5
-    },
-    {
-     "engineeringStrainPct": 28.033,
-     "engineeringStressMPa": 380.2,
-     "trueStrain": 0.2471,
-     "trueStressMPa": 667.3
-    },
-    {
-     "engineeringStrainPct": 28.572,
-     "engineeringStressMPa": 370.7,
-     "trueStrain": 0.2513,
-     "trueStressMPa": 668.2
-    },
-    {
-     "engineeringStrainPct": 29.111,
-     "engineeringStressMPa": 361.2,
-     "trueStrain": 0.2555,
-     "trueStressMPa": 669.0
-    },
-    {
-     "engineeringStrainPct": 29.65,
-     "engineeringStressMPa": 351.8,
-     "trueStrain": 0.2597,
-     "trueStressMPa": 669.8
-    },
-    {
-     "engineeringStrainPct": 30.189,
-     "engineeringStressMPa": 342.4,
-     "trueStrain": 0.2638,
-     "trueStressMPa": 670.6
-    },
-    {
-     "engineeringStrainPct": 30.728,
-     "engineeringStressMPa": 333.1,
-     "trueStrain": 0.268,
-     "trueStressMPa": 671.4
-    },
-    {
-     "engineeringStrainPct": 31.267,
-     "engineeringStressMPa": 323.8,
-     "trueStrain": 0.2721,
-     "trueStressMPa": 672.2
-    },
-    {
-     "engineeringStrainPct": 31.806,
-     "engineeringStressMPa": 314.6,
-     "trueStrain": 0.2762,
-     "trueStressMPa": 673.0
-    },
-    {
-     "engineeringStrainPct": 32.345,
-     "engineeringStressMPa": 305.4,
-     "trueStrain": 0.2802,
-     "trueStressMPa": 673.7
+     "engineeringStrainPct": 32.529,
+     "engineeringStressMPa": 300.4,
+     "trueStrain": 0.2816,
+     "trueStressMPa": 663.4
     }
    ]
   },
   "scale4_macroComponentFEA": {
-   "actualSafetyFactor": 0.62,
+   "actualSafetyFactor": 0.61,
    "appliedStress_MPa": 710.0,
    "componentName": "Generative LPBF Rocket Engine Swivel Bracket",
    "criticalSectionArea_mm2": 190.0,

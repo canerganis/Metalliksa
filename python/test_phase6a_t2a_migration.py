@@ -217,12 +217,17 @@ class BaseBlobTest(unittest.TestCase):
                     self.assertTrue(rows)  # the value change is visible here
                     # fx-icme: the documented ICME rows (EXPECTED_DOCUMENTED_VALUE_CHANGES) are
                     # verified exactly; every other row must still be a bounded numeric drift.
-                    self.assertEqual(golden.step_b_violations(solver, rows, new["stdout"]), [],
+                    # Physics audit EUQ-9/EUQ-10: rows changed by the documented ICME patch are verified
+                    # against the patched pinned-blob oracle (needs the payload) and leave the bound check.
+                    self.assertEqual(golden.step_b_violations(solver, rows, new["stdout"], payload), [],
                                      drift_report.render(solver, rows, 10))
-                    rows = [r for r in rows if not golden._is_documented_change_row(solver, r["key"])]
-                    self.assertEqual({r["kind"] for r in rows}, {"numeric"},
-                                     drift_report.render(solver, rows, 10))
-                    worst = max(abs(r["rel"]) for r in rows if r["rel"] is not None)
+                    audit_keys = golden.physics_audit_row_keys(solver, payload)
+                    rows = [r for r in rows if not golden._is_documented_change_row(solver, r["key"])
+                            and r["key"] not in audit_keys]
+                    # (every R-drift row of a payload may also be an audit row: then none is left)
+                    self.assertLessEqual({r["kind"] for r in rows}, {"numeric"},
+                                         drift_report.render(solver, rows, 10))
+                    worst = max([abs(r["rel"]) for r in rows if r["rel"] is not None], default=0.0)
                     self.assertLessEqual(worst, self.VALUE_STEP_MAX_REL)
 
     def test_corrosion_kinetics_documented_equivalent_weight_change(self):

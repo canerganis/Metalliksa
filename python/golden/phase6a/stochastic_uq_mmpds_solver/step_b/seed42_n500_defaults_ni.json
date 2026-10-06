@@ -20,186 +20,304 @@
    "old": null
   },
   {
-   "abs": 0.08999999999999986,
-   "key": "aerospaceReliability.hasoferLindBetaIndex",
-   "kind": "numeric",
-   "new": 4.75,
-   "old": 4.66,
-   "rel": 0.019313304721030013
+   "key": "aerospaceReliability.designFactor",
+   "kind": "added",
+   "new": 1.5,
+   "old": null
   },
   {
-   "abs": 0.057,
+   "key": "aerospaceReliability.failureCount",
+   "kind": "added",
+   "new": 0,
+   "old": null
+  },
+  {
+   "key": "aerospaceReliability.generalizedReliabilityIndex",
+   "kind": "added",
+   "new": null,
+   "old": null
+  },
+  {
+   "key": "aerospaceReliability.generalizedReliabilityIndexBound.beta",
+   "kind": "added",
+   "new": 2.51,
+   "old": null
+  },
+  {
+   "key": "aerospaceReliability.generalizedReliabilityIndexBound.pfUpper",
+   "kind": "added",
+   "new": 0.006,
+   "old": null
+  },
+  {
+   "key": "aerospaceReliability.generalizedReliabilityIndexBound.type",
+   "kind": "added",
+   "new": "lower",
+   "old": null
+  },
+  {
+   "key": "aerospaceReliability.generalizedReliabilityIndexBoundMethod",
+   "kind": "added",
+   "new": "No sampled point (or every point) failed, so Pf and beta_G are censored: the bound uses the rule of three (95 %, Pf < 3/N or Pf > 1 - 3/N), which assumes independent samples; the QMC points are not independent, so the bound is approximate",
+   "old": null
+  },
+  {
+   "key": "aerospaceReliability.generalizedReliabilityIndexStatus",
+   "kind": "added",
+   "new": "censored_no_failures",
+   "old": null
+  },
+  {
+   "key": "aerospaceReliability.hasoferLindBetaIndex",
+   "kind": "removed",
+   "new": null,
+   "old": 4.66
+  },
+  {
+   "key": "aerospaceReliability.limitState",
+   "kind": "added",
+   "new": "g = Rp0.2 - 1.5 * max(50 MPa, service stress); Pf = P(g < 0) at design factor 1.5",
+   "old": null
+  },
+  {
+   "key": "aerospaceReliability.probabilityYieldBelowDesignStress_Pf",
+   "kind": "added",
+   "new": 0.0,
+   "old": null
+  },
+  {
+   "key": "aerospaceReliability.reliabilityIndexMethod",
+   "kind": "added",
+   "new": "Generalized reliability index beta_G = Phi^-1(1 - Pf) (Ditlevsen 1979) from the sampled failure count; not the Hasofer-Lind / FORM index (no design-point search is run)",
+   "old": null
+  },
+  {
+   "key": "aerospaceReliability.yieldFailureProbability_Pf",
+   "kind": "removed",
+   "new": null,
+   "old": 0.0
+  },
+  {
+   "abs": -0.008133999999999975,
+   "key": "samplingMetadata.centeredL2Discrepancy",
+   "kind": "numeric",
+   "new": 0.203914,
+   "old": 0.212048,
+   "rel": -0.03835923941749026
+  },
+  {
+   "key": "samplingMetadata.samplingDescription",
+   "kind": "changed",
+   "new": "Local Sobol sequence (Joe & Kuo 2008 new-joe-kuo-6.21201 direction numbers) with optional random digital shift.",
+   "old": "Local Sobol sequence with optional random digital shift."
+  },
+  {
+   "key": "sensitivityMetadata.method",
+   "kind": "changed",
+   "new": "Centered Saltelli first-order / Jansen total-order pick-freeze on a digitally shifted Joe-Kuo Sobol design (A and B from one 2k-dimensional sequence)",
+   "old": "Centered Saltelli first-order / Jansen total-order; seeded pseudo-MC pick-freeze"
+  },
+  {
+   "abs": 0.039,
    "key": "sobolSensitivityAnalysis[0].interactionIndex",
    "kind": "numeric",
-   "new": -0.036,
+   "new": -0.054,
    "old": -0.093,
-   "rel": 0.6129032258064516
+   "rel": 0.41935483870967744
   },
   {
-   "abs": -0.052000000000000046,
+   "abs": 0.04600000000000004,
    "key": "sobolSensitivityAnalysis[0].sobolFirstOrderIndex",
    "kind": "numeric",
-   "new": 0.581,
+   "new": 0.679,
    "old": 0.633,
-   "rel": -0.08214849921011065
+   "rel": 0.07266982622432866
   },
   {
-   "abs": 0.0040000000000000036,
+   "abs": 0.08399999999999996,
    "key": "sobolSensitivityAnalysis[0].sobolTotalOrderIndex",
    "kind": "numeric",
-   "new": 0.545,
+   "new": 0.625,
    "old": 0.541,
-   "rel": 0.0073937153419593405
+   "rel": 0.15526802218114594
   },
   {
-   "abs": -5.199999999999996,
+   "abs": 4.6000000000000085,
    "key": "sobolSensitivityAnalysis[0].varianceContributionPct",
    "kind": "numeric",
-   "new": 58.1,
+   "new": 67.9,
    "old": 63.3,
-   "rel": -0.08214849921011053
+   "rel": 0.07266982622432873
+  },
+  {
+   "key": "sobolSensitivityAnalysis[10].description",
+   "kind": "changed",
+   "new": "Assumed hold duration scatter",
+   "old": "Supplied composition tolerance"
+  },
+  {
+   "abs": -0.003,
+   "key": "sobolSensitivityAnalysis[10].interactionIndex",
+   "kind": "numeric",
+   "new": 0.0,
+   "old": 0.003,
+   "rel": -1.0
   },
   {
    "key": "sobolSensitivityAnalysis[10].parameter",
    "kind": "changed",
-   "new": "Mo (Composition)",
+   "new": "t_age (Aging Time)",
    "old": "Si (Composition)"
   },
   {
-   "abs": -0.001,
+   "abs": 0.002,
    "key": "sobolSensitivityAnalysis[10].sobolFirstOrderIndex",
    "kind": "numeric",
-   "new": -0.003,
+   "new": 0.0,
    "old": -0.002,
-   "rel": -0.5
+   "rel": 1.0
   },
   {
-   "abs": -0.09999999999999998,
+   "abs": 0.2,
    "key": "sobolSensitivityAnalysis[10].varianceContributionPct",
    "kind": "numeric",
-   "new": -0.3,
+   "new": 0.0,
    "old": -0.2,
-   "rel": -0.4999999999999999
+   "rel": 1.0
   },
   {
-   "abs": 0.09999999999999999,
+   "abs": 0.13999999999999999,
    "key": "sobolSensitivityAnalysis[1].interactionIndex",
    "kind": "numeric",
-   "new": -0.048,
+   "new": -0.008,
    "old": -0.148,
-   "rel": 0.6756756756756757
+   "rel": 0.9459459459459459
   },
   {
-   "abs": -0.08800000000000002,
+   "abs": -0.12100000000000002,
    "key": "sobolSensitivityAnalysis[1].sobolFirstOrderIndex",
    "kind": "numeric",
-   "new": 0.253,
+   "new": 0.22,
    "old": 0.341,
-   "rel": -0.2580645161290323
+   "rel": -0.3548387096774194
   },
   {
-   "abs": 0.012999999999999984,
+   "abs": 0.01999999999999999,
    "key": "sobolSensitivityAnalysis[1].sobolTotalOrderIndex",
    "kind": "numeric",
-   "new": 0.205,
+   "new": 0.212,
    "old": 0.192,
-   "rel": 0.06770833333333325
+   "rel": 0.10416666666666662
   },
   {
-   "abs": -8.8,
+   "abs": -12.100000000000001,
    "key": "sobolSensitivityAnalysis[1].varianceContributionPct",
    "kind": "numeric",
-   "new": 25.3,
+   "new": 22.0,
    "old": 34.1,
-   "rel": -0.25806451612903225
+   "rel": -0.3548387096774194
   },
   {
-   "abs": 0.048,
+   "abs": 0.076,
    "key": "sobolSensitivityAnalysis[2].interactionIndex",
    "kind": "numeric",
-   "new": -0.034,
+   "new": -0.006,
    "old": -0.082,
-   "rel": 0.5853658536585366
+   "rel": 0.9268292682926829
   },
   {
-   "abs": -0.04500000000000001,
+   "abs": -0.06600000000000002,
    "key": "sobolSensitivityAnalysis[2].sobolFirstOrderIndex",
    "kind": "numeric",
-   "new": 0.126,
+   "new": 0.105,
    "old": 0.171,
-   "rel": -0.26315789473684215
+   "rel": -0.38596491228070184
   },
   {
-   "abs": 0.0030000000000000027,
+   "abs": 0.010000000000000009,
    "key": "sobolSensitivityAnalysis[2].sobolTotalOrderIndex",
    "kind": "numeric",
-   "new": 0.092,
+   "new": 0.099,
    "old": 0.089,
-   "rel": 0.03370786516853936
+   "rel": 0.11235955056179786
   },
   {
-   "abs": -4.500000000000002,
+   "abs": -6.600000000000001,
    "key": "sobolSensitivityAnalysis[2].varianceContributionPct",
    "kind": "numeric",
-   "new": 12.6,
+   "new": 10.5,
    "old": 17.1,
-   "rel": -0.2631578947368422
+   "rel": -0.3859649122807018
   },
   {
-   "abs": -0.029,
+   "abs": -0.027,
    "key": "sobolSensitivityAnalysis[3].interactionIndex",
    "kind": "numeric",
-   "new": -0.033,
+   "new": -0.031,
    "old": -0.004,
-   "rel": -7.25
+   "rel": -6.75
   },
   {
-   "abs": 0.03300000000000001,
+   "abs": 0.034999999999999996,
    "key": "sobolSensitivityAnalysis[3].sobolFirstOrderIndex",
    "kind": "numeric",
-   "new": 0.084,
+   "new": 0.086,
    "old": 0.051,
-   "rel": 0.647058823529412
+   "rel": 0.6862745098039216
   },
   {
-   "abs": 0.003999999999999997,
+   "abs": 0.008,
    "key": "sobolSensitivityAnalysis[3].sobolTotalOrderIndex",
    "kind": "numeric",
-   "new": 0.051,
+   "new": 0.055,
    "old": 0.047,
-   "rel": 0.08510638297872333
+   "rel": 0.1702127659574468
   },
   {
-   "abs": 3.3000000000000007,
+   "abs": 3.5,
    "key": "sobolSensitivityAnalysis[3].varianceContributionPct",
    "kind": "numeric",
-   "new": 8.4,
+   "new": 8.6,
    "old": 5.1,
-   "rel": 0.6470588235294119
+   "rel": 0.6862745098039216
   },
   {
-   "abs": 0.0020000000000000018,
+   "abs": 0.019,
    "key": "sobolSensitivityAnalysis[4].interactionIndex",
    "kind": "numeric",
-   "new": -0.018,
+   "new": -0.001,
    "old": -0.02,
-   "rel": 0.10000000000000009
+   "rel": 0.95
   },
   {
-   "abs": -0.0020000000000000018,
+   "key": "sobolSensitivityAnalysis[4].parameter",
+   "kind": "changed",
+   "new": "Fe (Composition)",
+   "old": "C (Composition)"
+  },
+  {
+   "abs": -0.023,
    "key": "sobolSensitivityAnalysis[4].sobolFirstOrderIndex",
    "kind": "numeric",
-   "new": 0.022,
+   "new": 0.001,
    "old": 0.024,
-   "rel": -0.08333333333333341
+   "rel": -0.9583333333333333
   },
   {
-   "abs": -0.19999999999999973,
+   "abs": -0.004,
+   "key": "sobolSensitivityAnalysis[4].sobolTotalOrderIndex",
+   "kind": "numeric",
+   "new": 0.0,
+   "old": 0.004,
+   "rel": -1.0
+  },
+  {
+   "abs": -2.3,
    "key": "sobolSensitivityAnalysis[4].varianceContributionPct",
    "kind": "numeric",
-   "new": 2.2,
+   "new": 0.1,
    "old": 2.4,
-   "rel": -0.08333333333333323
+   "rel": -0.9583333333333333
   },
   {
    "key": "sobolSensitivityAnalysis[5].description",
@@ -210,39 +328,33 @@
   {
    "key": "sobolSensitivityAnalysis[5].parameter",
    "kind": "changed",
-   "new": "Fe (Composition)",
+   "new": "Cr (Composition)",
    "old": "T_age (Aging Temp)"
   },
   {
    "key": "sobolSensitivityAnalysis[6].description",
    "kind": "changed",
-   "new": "Assumed furnace temperature scatter",
+   "new": "Supplied composition tolerance",
    "old": "Assumed hold duration scatter"
   },
   {
    "key": "sobolSensitivityAnalysis[6].parameter",
    "kind": "changed",
-   "new": "T_age (Aging Temp)",
+   "new": "Mo (Composition)",
    "old": "t_age (Aging Time)"
   },
   {
-   "key": "sobolSensitivityAnalysis[7].description",
-   "kind": "changed",
-   "new": "Assumed hold duration scatter",
-   "old": "Supplied composition tolerance"
-  },
-  {
-   "abs": -0.001,
+   "abs": 0.002,
    "key": "sobolSensitivityAnalysis[7].interactionIndex",
    "kind": "numeric",
-   "new": 0.0,
+   "new": 0.003,
    "old": 0.001,
-   "rel": -1.0
+   "rel": 2.0
   },
   {
    "key": "sobolSensitivityAnalysis[7].parameter",
    "kind": "changed",
-   "new": "t_age (Aging Time)",
+   "new": "C (Composition)",
    "old": "Fe (Composition)"
   },
   {
@@ -254,6 +366,14 @@
    "rel": 1.0
   },
   {
+   "abs": 0.004,
+   "key": "sobolSensitivityAnalysis[7].sobolTotalOrderIndex",
+   "kind": "numeric",
+   "new": 0.004,
+   "old": 0.0,
+   "rel": null
+  },
+  {
    "abs": 0.1,
    "key": "sobolSensitivityAnalysis[7].varianceContributionPct",
    "kind": "numeric",
@@ -262,50 +382,70 @@
    "rel": 1.0
   },
   {
-   "abs": -0.001,
+   "abs": -0.002,
    "key": "sobolSensitivityAnalysis[8].interactionIndex",
    "kind": "numeric",
-   "new": 0.001,
+   "new": -0.0,
    "old": 0.002,
-   "rel": -0.5
+   "rel": -1.0
   },
   {
-   "abs": 0.001,
+   "key": "sobolSensitivityAnalysis[8].parameter",
+   "kind": "changed",
+   "new": "Si (Composition)",
+   "old": "Cr (Composition)"
+  },
+  {
+   "abs": 0.002,
    "key": "sobolSensitivityAnalysis[8].sobolFirstOrderIndex",
    "kind": "numeric",
-   "new": -0.001,
+   "new": 0.0,
    "old": -0.002,
-   "rel": 0.5
+   "rel": 1.0
   },
   {
-   "abs": 0.1,
+   "abs": 0.2,
    "key": "sobolSensitivityAnalysis[8].varianceContributionPct",
    "kind": "numeric",
-   "new": -0.1,
+   "new": 0.0,
    "old": -0.2,
-   "rel": 0.5
+   "rel": 1.0
+  },
+  {
+   "key": "sobolSensitivityAnalysis[9].description",
+   "kind": "changed",
+   "new": "Assumed furnace temperature scatter",
+   "old": "Supplied composition tolerance"
+  },
+  {
+   "abs": -0.002,
+   "key": "sobolSensitivityAnalysis[9].interactionIndex",
+   "kind": "numeric",
+   "new": 0.0,
+   "old": 0.002,
+   "rel": -1.0
   },
   {
    "key": "sobolSensitivityAnalysis[9].parameter",
    "kind": "changed",
-   "new": "Si (Composition)",
+   "new": "T_age (Aging Temp)",
    "old": "Mo (Composition)"
   },
   {
-   "abs": 0.001,
+   "abs": 0.002,
    "key": "sobolSensitivityAnalysis[9].sobolFirstOrderIndex",
    "kind": "numeric",
-   "new": -0.001,
+   "new": 0.0,
    "old": -0.002,
-   "rel": 0.5
+   "rel": 1.0
   },
   {
-   "abs": 0.1,
+   "abs": 0.2,
    "key": "sobolSensitivityAnalysis[9].varianceContributionPct",
    "kind": "numeric",
-   "new": -0.1,
+   "new": 0.0,
    "old": -0.2,
-   "rel": 0.5
+   "rel": 1.0
   },
   {
    "key": "stochasticProperties.criticalFlawSize_ac",
@@ -6281,7 +6421,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "697ca2c2462d96137381c1044e74131c6618b134",
+ "gitHead": "b0d77480750d9f68679f343d3c6a54d0a500db8c",
  "input": {
   "mcSamples": 500,
   "samplingMethod": "sobol_qmc",
@@ -6304,7 +6444,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "stochastic_uq_mmpds_solver",
  "solverFile": "python/stochastic_uq_mmpds_solver.py",
- "solverSha256": "cfc4a035568f002c982a2e4586ba6a15822c5e7bcae1669e0f2b6f81859e9180",
+ "solverSha256": "352cc21b72f98d60dd7530716004e47224da84e5b6c8a742f4ee273341a2f075",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {
@@ -6315,9 +6455,20 @@
    "criticalFlawMedian_mm": null,
    "criticalFlaw_P10_mm": null,
    "criticalFlaw_status": "unavailable: critical flaw size needs a sourced K_Ic; the former estimate was dimensionally unsupported",
-   "hasoferLindBetaIndex": 4.75,
+   "designFactor": 1.5,
+   "failureCount": 0,
+   "generalizedReliabilityIndex": null,
+   "generalizedReliabilityIndexBound": {
+    "beta": 2.51,
+    "pfUpper": 0.006,
+    "type": "lower"
+   },
+   "generalizedReliabilityIndexBoundMethod": "No sampled point (or every point) failed, so Pf and beta_G are censored: the bound uses the rule of three (95 %, Pf < 3/N or Pf > 1 - 3/N), which assumes independent samples; the QMC points are not independent, so the bound is approximate",
+   "generalizedReliabilityIndexStatus": "censored_no_failures",
+   "limitState": "g = Rp0.2 - 1.5 * max(50 MPa, service stress); Pf = P(g < 0) at design factor 1.5",
+   "probabilityYieldBelowDesignStress_Pf": 0.0,
    "qualificationStatus": "Screening only; qualification not assessed",
-   "yieldFailureProbability_Pf": 0.0
+   "reliabilityIndexMethod": "Generalized reliability index beta_G = Phi^-1(1 - Pf) (Ditlevsen 1979) from the sampled failure count; not the Hasofer-Lind / FORM index (no design-point search is run)"
   },
   "alloyMetadata": {
    "alloyName": "Inconel 718 (Aero LPBF)",
@@ -6350,14 +6501,14 @@
   },
   "sampleSizeN": 500,
   "samplingMetadata": {
-   "centeredL2Discrepancy": 0.212048,
+   "centeredL2Discrepancy": 0.203914,
    "diagnosticsLimitations": "Centered L2 discrepancy compares the first 150 points with one seeded pseudo-random set; it is not an estimator error, variance reduction, effective sample size or measured speedup. The local Sobol implementation skips the origin and allows arbitrary sample counts; balanced-net guarantees are not claimed.",
    "discrepancyReductionPct": 0.0,
    "discrepancySampleSize": 150,
    "effectiveSampleSize": null,
    "pseudoDiscrepancyBenchmark": 0,
    "qmcAccelerationFactor": null,
-   "samplingDescription": "Local Sobol sequence with optional random digital shift.",
+   "samplingDescription": "Local Sobol sequence (Joe & Kuo 2008 new-joe-kuo-6.21201 direction numbers) with optional random digital shift.",
    "samplingMethod": "sobol_qmc",
    "scrambled": true,
    "sobolDimensions": 13,
@@ -6370,58 +6521,82 @@
    "independentInputs": true,
    "indicesNormalized": false,
    "limitations": "Finite-sample model estimates without confidence intervals. Values are not clipped or normalized and may fall outside [0, 1]. All supplied composition factors and cooling/aging distributions are included; service stress and flaw size do not enter yield strength.",
-   "method": "Centered Saltelli first-order / Jansen total-order; seeded pseudo-MC pick-freeze",
+   "method": "Centered Saltelli first-order / Jansen total-order pick-freeze on a digitally shifted Joe-Kuo Sobol design (A and B from one 2k-dimensional sequence)",
    "output": "yieldStrength_Rp02",
    "status": "estimated"
   },
   "sobolSensitivityAnalysis": [
    {
     "description": "Assumed cooling-rate distribution",
-    "interactionIndex": -0.036,
+    "interactionIndex": -0.054,
     "parameter": "dT/dt (Cooling Rate)",
-    "sobolFirstOrderIndex": 0.581,
-    "sobolTotalOrderIndex": 0.545,
-    "varianceContributionPct": 58.1
+    "sobolFirstOrderIndex": 0.679,
+    "sobolTotalOrderIndex": 0.625,
+    "varianceContributionPct": 67.9
    },
    {
     "description": "Supplied composition tolerance",
-    "interactionIndex": -0.048,
+    "interactionIndex": -0.008,
     "parameter": "Nb (Composition)",
-    "sobolFirstOrderIndex": 0.253,
-    "sobolTotalOrderIndex": 0.205,
-    "varianceContributionPct": 25.3
+    "sobolFirstOrderIndex": 0.22,
+    "sobolTotalOrderIndex": 0.212,
+    "varianceContributionPct": 22.0
    },
    {
     "description": "Supplied composition tolerance",
-    "interactionIndex": -0.034,
+    "interactionIndex": -0.006,
     "parameter": "Ti (Composition)",
-    "sobolFirstOrderIndex": 0.126,
-    "sobolTotalOrderIndex": 0.092,
-    "varianceContributionPct": 12.6
+    "sobolFirstOrderIndex": 0.105,
+    "sobolTotalOrderIndex": 0.099,
+    "varianceContributionPct": 10.5
    },
    {
     "description": "Supplied composition tolerance",
-    "interactionIndex": -0.033,
+    "interactionIndex": -0.031,
     "parameter": "Al (Composition)",
-    "sobolFirstOrderIndex": 0.084,
-    "sobolTotalOrderIndex": 0.051,
-    "varianceContributionPct": 8.4
+    "sobolFirstOrderIndex": 0.086,
+    "sobolTotalOrderIndex": 0.055,
+    "varianceContributionPct": 8.6
    },
    {
     "description": "Supplied composition tolerance",
-    "interactionIndex": -0.018,
-    "parameter": "C (Composition)",
-    "sobolFirstOrderIndex": 0.022,
-    "sobolTotalOrderIndex": 0.004,
-    "varianceContributionPct": 2.2
+    "interactionIndex": -0.001,
+    "parameter": "Fe (Composition)",
+    "sobolFirstOrderIndex": 0.001,
+    "sobolTotalOrderIndex": 0.0,
+    "varianceContributionPct": 0.1
+   },
+   {
+    "description": "Supplied composition tolerance",
+    "interactionIndex": -0.0,
+    "parameter": "Cr (Composition)",
+    "sobolFirstOrderIndex": 0.0,
+    "sobolTotalOrderIndex": 0.0,
+    "varianceContributionPct": 0.0
    },
    {
     "description": "Supplied composition tolerance",
     "interactionIndex": 0.0,
-    "parameter": "Fe (Composition)",
+    "parameter": "Mo (Composition)",
     "sobolFirstOrderIndex": -0.0,
     "sobolTotalOrderIndex": 0.0,
     "varianceContributionPct": -0.0
+   },
+   {
+    "description": "Supplied composition tolerance",
+    "interactionIndex": 0.003,
+    "parameter": "C (Composition)",
+    "sobolFirstOrderIndex": 0.0,
+    "sobolTotalOrderIndex": 0.004,
+    "varianceContributionPct": 0.0
+   },
+   {
+    "description": "Supplied composition tolerance",
+    "interactionIndex": -0.0,
+    "parameter": "Si (Composition)",
+    "sobolFirstOrderIndex": 0.0,
+    "sobolTotalOrderIndex": 0.0,
+    "varianceContributionPct": 0.0
    },
    {
     "description": "Assumed furnace temperature scatter",
@@ -6438,30 +6613,6 @@
     "sobolFirstOrderIndex": 0.0,
     "sobolTotalOrderIndex": 0.0,
     "varianceContributionPct": 0.0
-   },
-   {
-    "description": "Supplied composition tolerance",
-    "interactionIndex": 0.001,
-    "parameter": "Cr (Composition)",
-    "sobolFirstOrderIndex": -0.001,
-    "sobolTotalOrderIndex": 0.0,
-    "varianceContributionPct": -0.1
-   },
-   {
-    "description": "Supplied composition tolerance",
-    "interactionIndex": 0.002,
-    "parameter": "Si (Composition)",
-    "sobolFirstOrderIndex": -0.001,
-    "sobolTotalOrderIndex": 0.0,
-    "varianceContributionPct": -0.1
-   },
-   {
-    "description": "Supplied composition tolerance",
-    "interactionIndex": 0.003,
-    "parameter": "Mo (Composition)",
-    "sobolFirstOrderIndex": -0.003,
-    "sobolTotalOrderIndex": 0.0,
-    "varianceContributionPct": -0.3
    }
   ],
   "stochasticProperties": {

@@ -76,7 +76,10 @@ export async function executePythonTafelFit(
     const totalCurrentIcorr_uA =
       iCorr_uA_cm2 === null ? null : Number((iCorr_uA_cm2 * (dataset.metadata.electrodeAreaCm2 || 1.0)).toFixed(4));
 
-    // Map the corrosion rate to the severity union (null without a rate)
+    // Map the corrosion rate to the severity union (null without a rate). These four bands are an in-house
+    // screen shared with the TS fit path (src/utils/tafelParser.ts), not a cited scale: they are NOT Fontana's
+    // six bands, which the engine returns in data.severity (e.g. 0.7 mm/y is Fontana "Fair" but "Severe" here).
+    // Aligning the union with Fontana touches the Tafel UI components and is a tracked follow-up.
     let severity: TafelFitResult["severity"] = null;
     const sevObj = data.severity;
     const crMm = finiteOrNull(data.corrosionRateMmYr);

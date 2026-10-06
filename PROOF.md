@@ -6,6 +6,17 @@
 - TK-5 Scheil: ilk katı görülmeden tüm sıvı tek adımda katılaşırsa adım yarıya bölünür (en az 0,01 °C). Ni-5 at% Al (donma aralığı 0,2 °C): birincil faz `null` → FCC_L12, k(Al) `null` → 0,959.
 - TK-6 ızgara: `effectiveTemperatureRangeC`, `effectiveTemperatureStepC`, `gridAdjustments` (ör. 25–1500 °C / 5 °C → 80 nokta, 18,67 °C). TK-7: boş/sıfır bileşim `OUT_OF_RANGE elements` ile reddedilir (Ni-10Al-10Cr varsayılanı kaldırıldı).
 - Kanıt düzeyi değişmedi (screening/unvalidated); deneysel doğrulama değildir. Donmuş LPBF dosyaları ve parmak izi değişmedi.
+## 2026-10-06 — Fizik denetimi: Tafel, stokastik UQ ve ICME düzeltmeleri (EUQ-3/4/5/6/9/10/11/13, `fix/physics-tafel-uq-icme`)
+
+- EUQ-3 (Tafel birim): birimsiz `current` artık nokta nokta tahmin edilmiyor; `currentUnit` (A/mA/uA/nA) ve isteğe bağlı `currentIsDensity` zorunlu, yoksa `BAD_UNIT`. Eski kuralla 0,0006 uA/cm² Butler-Volmer verisi ~550 uA/cm² (~5,6 mm/y) veriyordu; şimdi 0,0006 uA/cm². Kullanılan birim `currentInput` içinde yankılanır.
+- EUQ-5: verilen 0 °C artık 25 °C'ye dönmüyor (316L, 5 °C satırı Arrhenius çarpanı 0,395 → 1,288); alan/kalınlık/pay için geçersiz değer doğrulama hatası.
+- EUQ-6: bantlar Fontana'nın göreli korozyon direnci ölçeği (Poor 1–5 mm/y eklendi, Unacceptable > 5); NACE SP0169 / ISO 8044 atıfları kaldırıldı; açıklama/öneri metinleri "in-house" olarak etiketli. Hesaplanan hız değişmedi.
+- EUQ-13: Evans kesişim sınırı Python ve TypeScript'te tek değer 0,15 V (sezgisel, ASTM değeri değil); ortak fikstür `tests/fixtures/tafel-intersection-offset.json` iki motorda da aynı E_corr/i_corr.
+- EUQ-4: Sobol yön sayıları Joe & Kuo (2008) new-joe-kuo-6.21201 (scipy'nin tablosuyla birebir; 31 polinomun hepsi ilkel). 1024 noktada en kötü 2-B izdüşüm 256 hücre (eski: 65), en büyük |korelasyon| < 0,05 (eski 0,75). IN718 varsayılanı (M=350, seed 42): S1(Al) 0,102 → 0,067 (ST 0,054); 40 tohumda S1(Al) 0,056 ± 0,006 (eski tablo 0,064 ± 0,048). Akma istatistikleri değişmedi (13 boyut).
+- EUQ-11: `hasoferLindBetaIndex` → `generalizedReliabilityIndex` (Ditlevsen β_G = Φ⁻¹(1−Pf)), Pf 1,5 tasarım çarpanında aşım olasılığı olarak etiketli; 0 veya N hata durumunda ±4,75 yerine null + üç kuralı (rule of three) sınırı (QMC için yaklaşık).
+- EUQ-10: Brown-Ham zayıf çift bağlanma kesme gerilmesine `- f` eklendi (Ardell 1985); IN718 varsayılanı 222,6 → 64,1 MPa, Rp0.2 1191,8 → 1075,1 MPa (illüstratif model, etiket yükseltilmedi; r_s = πr/4 uygulanmadı).
+- EUQ-9: Abaqus kartında yoğunluk tonne/mm³ (8,19e-9) ve birim satırı; eski 8190 (kg/m³) MPa ile 1e12 tutarsızdı.
+- Altınlar: tafel/UQ/ICME step_b dosyaları yeniden kutsandı; her satır `python/tools/physics_audit_changes.py` ile tam doğrulanır (UQ: f41e316 blob + ndtri + Joe-Kuo; ICME: ee431db3 blob + belgelenmiş yama). Sınır: yazılım/sayısal tutarlılık kaydı; deneysel doğrulama iddiası yok.
 
 ## 2026-10-06 — NIST mds2-2525 Ti-6Al-4V sabit spot absorptansı ile screening karşılaştırması (`4fcfd72`)
 

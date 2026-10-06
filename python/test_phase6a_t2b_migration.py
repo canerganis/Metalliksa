@@ -266,9 +266,16 @@ class StochasticTest(unittest.TestCase):
             p = uq.np.asarray(p, dtype=float)
             return uq.np.array([OLD_UQ.norm_ppf(x) for x in p.ravel()]).reshape(p.shape)
 
-        with mock.patch.object(uq, "norm_ppf", OLD_UQ.norm_ppf),                 mock.patch.object(uq, "norm_ppf_array", legacy_ppf_array):
+        # Physics audit EUQ-4: the base blob's (non-Joe-Kuo) Sobol table is put back as well; EUQ-11's
+        # reliability block and the two description strings are applied to the old document.
+        import physics_audit_changes as audit
+        with mock.patch.object(uq, "norm_ppf", OLD_UQ.norm_ppf),                 mock.patch.object(uq, "norm_ppf_array", legacy_ppf_array),                 mock.patch.object(uq.SobolSequenceGenerator, "POLY", OLD_UQ.SobolSequenceGenerator.POLY):
             new = _strip(uq.solve_stochastic_uq({"mcSamples": 500}))
-        old = _strip(OLD_UQ.solve_stochastic_uq({"mcSamples": 500}))
+        old = audit.uq_reliability_and_text_changes(_strip(OLD_UQ.solve_stochastic_uq({"mcSamples": 500})))
+        # The censored-bound beta goes through the (patched) legacy quantile as well: no failures in 500 draws.
+        bound = old["aerospaceReliability"]["generalizedReliabilityIndexBound"]
+        self.assertEqual((bound["type"], bound["pfUpper"]), ("lower", 3.0 / 500))
+        bound["beta"] = round(OLD_UQ.norm_ppf(1.0 - 3.0 / 500), 2)
         # Documented difference: UTS, K_Ic and critical flaw size are null + status (invented laws removed).
         props = old["stochasticProperties"]
         for key, status in (("ultimateTensileStrength_UTS", uq.UTS_UNAVAILABLE_STATUS),
@@ -285,8 +292,12 @@ class StochasticTest(unittest.TestCase):
         new = _strip(uq.solve_stochastic_uq({"mcSamples": 500}))
         old = _strip(OLD_UQ.solve_stochastic_uq({"mcSamples": 500}))
         self.assertNotEqual(json.dumps(new), json.dumps(old))
-        for key in ("success", "engine", "sampleSizeN", "samplingMetadata", "alloyMetadata", "inputUncertainties"):
+        for key in ("success", "engine", "sampleSizeN", "alloyMetadata", "inputUncertainties"):
             self.assertEqual(json.dumps(new[key]), json.dumps(old[key]), key)
+        # Physics audit EUQ-4 (Joe-Kuo Sobol table): the point-set discrepancy and its description changed.
+        audit_keys = {"centeredL2Discrepancy", "samplingDescription"}
+        self.assertEqual({k: v for k, v in new["samplingMetadata"].items() if k not in audit_keys},
+                         {k: v for k, v in old["samplingMetadata"].items() if k not in audit_keys})
         # the corrected normal inputs have sigma 1: the yield spread grows by about 1 / 0.776
         ratio = (new["stochasticProperties"]["yieldStrength_Rp02"]["stdDev"]
                  / old["stochasticProperties"]["yieldStrength_Rp02"]["stdDev"])

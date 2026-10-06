@@ -6,7 +6,9 @@ CPython 3.10+ Scientific Engine for Electrochemical Degradation & Faraday Penetr
 Formulas & Standards:
 - ASTM G102: Standard Practice for Calculation of Corrosion Rates and Related Information from Electrochemical Measurements
 - ASTM G59: Standard Test Method for Conducting Potentiodynamic Polarization Resistance Measurements
-- NACE SP0169 / ISO 8044: Corrosion Rate Classification & Severity Grading
+- Severity bands: Fontana, Corrosion Engineering (3rd ed.), relative corrosion resistance scale in its
+  mm/y equivalents. NACE SP0169 (cathodic protection of buried piping) and ISO 8044 (vocabulary) define
+  no rate bands and are not cited. The description / recommendation texts are in-house guidance.
 """
 
 import sys
@@ -16,7 +18,8 @@ import time
 
 import alloy_registry
 import physical_constants
-from input_validation import NON_FINITE, UNKNOWN_ALLOY, UNKNOWN_ELEMENT, ValidationError, require_known_alloy, validation_envelope
+from input_validation import (BAD_UNIT, NON_FINITE, NON_POSITIVE, OUT_OF_RANGE, UNKNOWN_ALLOY, UNKNOWN_ELEMENT, require_unit,
+                              ValidationError, require_known_alloy, validation_envelope)
 
 # Physical & Electrochemical Constants
 # Phase 6a value step (b): R and F are the exact SI 2019 products N_A*k and N_A*e
@@ -166,10 +169,37 @@ def calculate_equivalent_weight(composition: dict, valencies: dict, atomic_weigh
                               {"reason": "no-equivalent-weight-data"})
     return ew
 
+# Standards that define what this solver computes (EUQ-6: NACE SP0169 and ISO 8044 removed; they
+# define no corrosion-rate bands).
+STANDARDS = ["ASTM G102-89(2015)", "ASTM G59-97(2020)"]
+
+SEVERITY_SCALE_SOURCE = (
+    "Fontana, Corrosion Engineering, 3rd ed., relative corrosion resistance scale (mm/y equivalents): "
+    "Outstanding < 0.02, Excellent 0.02-0.1, Good 0.1-0.5, Fair 0.5-1, Poor 1-5, Unacceptable > 5 mm/y"
+)
+SEVERITY_TEXT_BASIS = (
+    "In-house engineering guidance: the description and recommendation texts are not taken from Fontana or "
+    "from any standard"
+)
+
+
 def classify_corrosion_severity(cr_mm_yr: float) -> dict:
     """
-    Categorizes corrosion rate based on NACE SP0169 / ISO 8044 / Fontana-Greene standards.
+    Categorizes a uniform corrosion rate on Fontana's relative corrosion resistance scale
+    (Corrosion Engineering, 3rd ed.; mm/y equivalents of < 1, 1-5, 5-20, 20-50, 50-200, > 200 mpy).
+
+    EUQ-6: the former docstring cited NACE SP0169 (cathodic protection of buried piping) and ISO 8044
+    (vocabulary); neither defines rate bands. Fontana's Poor band (1-5 mm/y) was merged into
+    'Unacceptable / Critical' (>= 1 mm/y); it is restored, and Unacceptable starts at 5 mm/y.
+    The description / recommendation texts are in-house guidance (SEVERITY_TEXT_BASIS).
     """
+    band = _severity_band(cr_mm_yr)
+    band["scaleSource"] = SEVERITY_SCALE_SOURCE
+    band["textBasis"] = SEVERITY_TEXT_BASIS
+    return band
+
+
+def _severity_band(cr_mm_yr: float) -> dict:
     if cr_mm_yr < 0.02:
         return {
             "level": "Outstanding",
@@ -202,9 +232,17 @@ def classify_corrosion_severity(cr_mm_yr: float) -> dict:
             "description": "Noticeable corrosion penetration. Significant wall thinning occurs within 2 to 5 years if unprotected.",
             "recommendation": "Active cathodic protection (ICCP/sacrificial zinc) and chemical corrosion inhibitor injection mandated."
         }
+    elif cr_mm_yr < 5.00:
+        return {
+            "level": "Poor",
+            "code": "POOR",
+            "color": "red",
+            "description": "High corrosion rate. Usable only for short-life or readily replaced parts with a large corrosion allowance.",
+            "recommendation": "Change the material or the environment, or apply corrosion protection, before service; confirm the rate by immersion or field testing."
+        }
     else:
         return {
-            "level": "Unacceptable / Critical",
+            "level": "Unacceptable",
             "code": "UNACCEPTABLE",
             "color": "rose",
             "description": "Severe catastrophic dissolution. Wall breach and structural failure imminent without immediate mitigation.",
@@ -218,6 +256,36 @@ def _present(data: dict, *keys):
         if value is not None:
             return value
     return None
+
+
+def _scenario_number(data: dict, keys: tuple, default: float, label: str, rule: str) -> float:
+    """A scenario input (area, thickness, allowance, temperature): the first supplied key, else ``default``.
+
+    Replaces the former falsy-``or`` chains, which turned a supplied 0 (e.g. temperatureC = 0 C, the
+    Arrhenius reference) into the default. A supplied value must be a finite number and satisfy ``rule``:
+    "positive" (> 0), "nonzero" (!= 0; the area keeps its documented abs() handling) or
+    "above_absolute_zero" (> -273.15 C). Anything else is a ValidationError, never a silent default.
+    """
+    raw = _present(data, *keys)
+    if raw is None:
+        return default
+    field = next(key for key in keys if data.get(key) is not None)
+    try:
+        if isinstance(raw, bool):
+            raise TypeError
+        value = float(raw)
+    except (TypeError, ValueError):
+        raise ValidationError(NON_FINITE, field, f"{label} must be a number", {"value": repr(raw)})
+    if not math.isfinite(value):
+        raise ValidationError(NON_FINITE, field, f"{label} must be finite", {"value": repr(raw)})
+    if rule == "positive" and value <= 0.0:
+        raise ValidationError(NON_POSITIVE, field, f"{label} must be > 0", {"value": value, "allowZero": False})
+    if rule == "nonzero" and value == 0.0:
+        raise ValidationError(NON_POSITIVE, field, f"{label} must not be 0", {"value": value, "allowZero": False})
+    if rule == "above_absolute_zero" and value <= -ZERO_CELSIUS_K:
+        raise ValidationError(OUT_OF_RANGE, field, f"{label} must be above absolute zero (-273.15 C)",
+                              {"value": value, "lo": -ZERO_CELSIUS_K, "hi": None, "unit": "C"})
+    return value
 
 
 def _supplied_positive(raw, label: str):
@@ -323,10 +391,15 @@ def solve_tafel_corrosion_rate(data: dict) -> dict:
     e_corr_v = None if e_corr_raw is None else float(e_corr_raw)
     beta_a, beta_a_reason = _supplied_positive(_present(data, "betaA", "beta_a"), "betaA")  # V/decade
     beta_c, beta_c_reason = _supplied_positive(_present(data, "betaC", "beta_c"), "betaC")  # V/decade
-    specimen_area_cm2 = float(data.get("specimenAreaCm2") or data.get("area") or 1.0)
-    initial_thickness_mm = float(data.get("initialThicknessMm") or data.get("thicknessMm") or 5.0)
-    allowable_loss_mm = float(data.get("allowableLossMm") or data.get("corrosionAllowanceMm") or 1.5)
-    temp_c = float(data.get("temperatureC") or data.get("tempC") or 25.0)
+    # Scenario inputs: a supplied value is used as given (a supplied 0 is not replaced by the default,
+    # EUQ-5); only an absent key takes the documented default.
+    specimen_area_cm2 = _scenario_number(data, ("specimenAreaCm2", "area"), 1.0, "specimenAreaCm2", "nonzero")
+    initial_thickness_mm = _scenario_number(data, ("initialThicknessMm", "thicknessMm"), 5.0,
+                                            "initialThicknessMm", "positive")
+    allowable_loss_mm = _scenario_number(data, ("allowableLossMm", "corrosionAllowanceMm"), 1.5,
+                                         "allowableLossMm", "positive")
+    # The measurement temperature is the Arrhenius reference T_ref of temperatureSensitivity.
+    temp_c = _scenario_number(data, ("temperatureC", "tempC"), 25.0, "temperatureC", "above_absolute_zero")
 
     # 2. Material Substrate: the alloyId the caller sent (never a default alloy), or the supplied
     # density / equivalentWeight / customComposition; otherwise unavailable with the reason.
@@ -377,7 +450,7 @@ def solve_tafel_corrosion_rate(data: dict) -> dict:
             "success": True,
             "isPythonEngine": True,
             "pythonVersion": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
-            "standards": ["ASTM G102-89(2015)", "ASTM G59-97(2020)", "NACE SP0169", "ISO 8044"],
+            "standards": list(STANDARDS),
             "durationMs": duration_ms,
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
 
@@ -494,7 +567,7 @@ def solve_tafel_corrosion_rate(data: dict) -> dict:
         "success": True,
         "isPythonEngine": True,
         "pythonVersion": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
-        "standards": ["ASTM G102-89(2015)", "ASTM G59-97(2020)", "NACE SP0169", "ISO 8044"],
+        "standards": list(STANDARDS),
         "durationMs": duration_ms,
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         
@@ -575,6 +648,19 @@ def linear_regression_py(x_arr, y_arr):
 
 MIN_BRANCH_POINTS = 3
 
+# Largest accepted distance (V) between the Evans intersection of the fitted branches and the measured
+# current valley; farther away, the valley is used as E_corr (reported, never silent). EUQ-13: one value
+# for both engines; src/utils/tafelParser.ts TAFEL_INTERSECTION_MAX_OFFSET_V must equal it (checked by
+# tests/tafel-intersection-parity.test.ts and python/test_tafel_physics_audit.py). Python used 0.25 V and
+# TypeScript 0.15 V, so data with the intersection 0.15-0.25 V from the valley got E_corr and i_corr
+# differing by 10^(dE/beta_a) between the engines. 0.15 V is a heuristic, not a value from ASTM G102/G59:
+# the default fit windows reach 0.22 V from the valley, and an intersection farther away than 0.15 V
+# usually signals a poor branch fit.
+INTERSECTION_MAX_OFFSET_V = 0.15
+
+# Factor from the stated currentUnit to microamperes (EUQ-3).
+CURRENT_UNIT_TO_UA = {"A": 1e6, "mA": 1e3, "uA": 1.0, "nA": 1e-3}
+
 
 def _branch_unavailable_reason(branch: str, window, pts: list, fit: dict, expect_positive_slope: bool):
     """Reason string when a Tafel branch cannot be fitted from the data, else None.
@@ -613,8 +699,8 @@ def fit_tafel_curve(data: dict) -> dict:
     start_time = time.perf_counter()
     raw_points = data.get("points") or data.get("rawPoints") or []
     file_content = data.get("fileContent") or data.get("fileText") or ""
-    area = float(data.get("electrodeAreaCm2") or data.get("specimenAreaCm2") or 1.0)
-    
+    area = _scenario_number(data, ("electrodeAreaCm2", "specimenAreaCm2"), 1.0, "electrodeAreaCm2", "positive")
+
     # Parse file content if provided as string
     if not raw_points and file_content:
         import re
@@ -638,6 +724,34 @@ def fit_tafel_curve(data: dict) -> dict:
     if not raw_points or len(raw_points) < 5:
         raise ValueError("Insufficient data points for Tafel extrapolation. A minimum of 5 experimental points is required.")
 
+    # Unit of the bare "current" key (EUQ-3). It used to be guessed point by point (|c| < 0.1 and dataset
+    # max < 0.5 -> amperes, else microamperes), so a low-current uA scan was inflated 1e6-fold and a dataset
+    # with max between 0.1 and 0.5 mixed two scales in one curve. No value range identifies the unit, so the
+    # caller must state it once for the whole dataset: currentUnit (A / mA / uA / nA) and, when the values
+    # are already per cm2, currentIsDensity = true. The unit used is echoed in currentInput.
+    uses_bare_current = any(_present(pt, "currentDensity_uA_cm2", "current_uA") is None
+                            and pt.get("current") is not None for pt in raw_points)
+    current_unit = None
+    current_scale_to_uA = None
+    current_is_density = False
+    if uses_bare_current:
+        unit_raw = data.get("currentUnit")
+        if unit_raw is None:
+            raise ValidationError(
+                BAD_UNIT, "currentUnit",
+                "points use the unit-less 'current' key; send currentUnit (one of "
+                f"{sorted(CURRENT_UNIT_TO_UA)}) for the whole dataset, or send currentDensity_uA_cm2. "
+                "The unit is not guessed from the magnitude of the values.",
+                {"unit": None, "allowed": sorted(CURRENT_UNIT_TO_UA)})
+        current_unit = require_unit("currentUnit", unit_raw, sorted(CURRENT_UNIT_TO_UA))
+        current_scale_to_uA = CURRENT_UNIT_TO_UA[current_unit]
+        density_raw = data.get("currentIsDensity", False)
+        if not isinstance(density_raw, bool):
+            raise ValidationError(BAD_UNIT, "currentIsDensity", "currentIsDensity must be true or false",
+                                  {"unit": repr(density_raw), "allowed": [True, False]})
+        current_is_density = density_raw
+    current_keys = set()
+
     norm_points = []
     for idx, pt in enumerate(raw_points):
         pot_raw = _present(pt, "potential", "e", "voltage")
@@ -646,15 +760,15 @@ def fit_tafel_curve(data: dict) -> dict:
                                   "point has no potential value (potential / e / voltage); no value is invented",
                                   {"type": "NoneType", "index": idx})
         pot = float(pot_raw)
-        curr_uA = pt.get("currentDensity_uA_cm2") or pt.get("current_uA")
+        density_key = next((k for k in ("currentDensity_uA_cm2", "current_uA") if pt.get(k) is not None), None)
+        curr_uA = None if density_key is None else pt[density_key]
         if curr_uA is None and pt.get("current") is not None:
             c = float(pt.get("current"))
-            # Auto-detect Amperes vs microamperes
-            if abs(c) < 0.1 and max(abs(float(p.get("current", 0.0))) for p in raw_points) < 0.5:
-                curr_uA = abs(c) * 1e6 / area
-            else:
-                curr_uA = abs(c) / area
+            # One unit decision for the whole dataset (currentUnit / currentIsDensity above).
+            curr_uA = abs(c) * current_scale_to_uA / (1.0 if current_is_density else area)
+            current_keys.add("current")
         elif curr_uA is not None:
+            current_keys.add(density_key)
             curr_uA = float(curr_uA)
         else:
             raise ValidationError(NON_FINITE, f"points[{idx}].current",
@@ -662,7 +776,12 @@ def fit_tafel_curve(data: dict) -> dict:
                                   "no value is invented", {"type": "NoneType", "index": idx})
 
         curr_uA = max(1e-9, curr_uA)
-        log_i = float(pt.get("logCurrentDensity") or math.log10(curr_uA))
+        # A point-level logCurrentDensity is used only next to a density key (currentDensity_uA_cm2 /
+        # current_uA), whose unit is fixed. Next to the bare 'current' key it is ignored: its unit is not
+        # stated, and the fit must follow the dataset's currentUnit (EUQ-3 review). A supplied 0.0 is a
+        # value (1 uA/cm2), not a missing one.
+        log_given = pt.get("logCurrentDensity") if density_key is not None else None
+        log_i = float(log_given) if log_given is not None else math.log10(curr_uA)
         norm_points.append({
             "potential": round(pot, 4),
             "currentDensity_uA_cm2": round(curr_uA, 5),
@@ -716,7 +835,7 @@ def fit_tafel_curve(data: dict) -> dict:
     both_branches = cath_fit is not None and anod_fit is not None
 
     # Intersect (Evans construction): needs both branches. When the intersection is unusable (parallel
-    # branches, or more than 0.25 V from the measured valley) the measured valley is used as E_corr; this
+    # branches, or more than INTERSECTION_MAX_OFFSET_V from the measured valley) the measured valley is used as E_corr; this
     # substitution is REPORTED (intersectionStatus / intersectionNote), never silent.
     extrapolated_ecorr = None
     extrapolated_log_icorr = None
@@ -726,12 +845,12 @@ def fit_tafel_curve(data: dict) -> dict:
         extrapolated_ecorr = raw_ecorr
         if abs(denom) > 1e-6:
             e_inter = (cath_fit["b"] - anod_fit["b"]) / denom
-            if abs(e_inter - raw_ecorr) <= 0.25:
+            if abs(e_inter - raw_ecorr) <= INTERSECTION_MAX_OFFSET_V:
                 extrapolated_ecorr = e_inter
             else:
                 intersection_note = (
                     f"the Evans intersection of the fitted branches is at {e_inter:.3f} V, "
-                    f"{abs(e_inter - raw_ecorr):.3f} V from the measured current valley (limit 0.25 V); the measured "
+                    f"{abs(e_inter - raw_ecorr):.3f} V from the measured current valley (limit {INTERSECTION_MAX_OFFSET_V:.2f} V); the measured "
                     f"valley {raw_ecorr:.4f} V is used as E_corr and i_corr is read from the anodic line there")
         else:
             intersection_note = (
@@ -859,6 +978,13 @@ def fit_tafel_curve(data: dict) -> dict:
         "density_g_cm3": density,
         "equivalentWeight": ew,
         "specimenAreaCm2": area,
+        # EUQ-3: the current unit used for every point (stated, never guessed per point).
+        "currentInput": {
+            "keys": sorted(current_keys),
+            "currentUnit": current_unit,
+            "currentIsDensity": None if current_unit is None else current_is_density,
+            "densityUnit": "uA/cm2",
+        },
         "pointsCount": len(norm_points),
         "minScanE": round(min_scan_e, 4),
         "maxScanE": round(max_scan_e, 4),
