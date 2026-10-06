@@ -85,11 +85,11 @@ A result can only be labelled as strongly as the evidence behind it. Passing sof
 
 | Area | What is in the box |
 | --- | --- |
-| **LPBF process physics** | Transient thermal solvers (Goldak and Eagar-Tsai style heat sources), melt-pool screening, scan-path kinematics, keyhole ray tracing, process-map sweeps, powder-layer analysis, and build-job screening with a persistent Python worker for long runs |
-| **Public-data comparison** | A harness that compares solver output with open datasets (316L, Ti-6Al-4V, IN718) and reports the gap instead of hiding it |
-| **Alloy thermodynamics** | CALPHAD phase diagrams and Scheil solidification on pycalphad with database-scope checks, Pourbaix diagrams from a Gibbs-energy minimisation engine, steel TTT/CCT kinetics |
-| **Properties and fatigue** | Murakami inclusion-based fatigue screening, XRD analysis, elastic constants, hardness conversions following ASTM E140 / ISO 18265, uncertainty quantification |
-| **Electrochemistry** | Tafel and EIS fitting with explicit fallbacks removed rather than silently substituted |
+| **LPBF process physics** | Quasi-steady Rosenthal, Eagar-Tsai and Goldak screening fields, a transient 3D enthalpy solver with a Gaussian source, melt-pool screening, scan-path kinematics, keyhole ray tracing, and build-job screening with a persistent Python worker for long runs. Offline tools for process-map sweeps and powder-layer analysis write their results into `docs/` |
+| **Public-data comparison** | An offline harness compares screening-kernel output with published single-track data for 316L and Ti-6Al-4V and reports the gap instead of hiding it; the app shows the committed comparison record. IN718 records are archived but not yet compared numerically |
+| **Alloy thermodynamics** | CALPHAD phase diagrams and Scheil solidification on pycalphad with database-scope checks, single-element Pourbaix diagrams (25 °C) from a Gibbs-energy minimisation engine, steel TTT/CCT kinetics (steel only, illustrative) |
+| **Properties and fatigue** | Murakami inclusion-based fatigue screening, XRD analysis, an elastic-constants calculator for user-supplied constants, approximate hardness conversions for non-austenitic steels (ASTM E140 / ISO 18265 scope, no extrapolation; tables transcribed from public reproductions), uncertainty quantification on an illustrative strength model |
+| **Electrochemistry** | Tafel fitting with explicit fallbacks removed rather than silently substituted, and EIS analysis |
 | **Evidence and records** | A research registry linking literature, reviewed numeric findings and module output, with a Build, ProcessParams, Sample, Properties, Source chain |
 
 Every module declares what it can and cannot do through a typed module contract, so unsupported alloys and out-of-range inputs produce an honest *unavailable* instead of a plausible-looking guess.
@@ -114,22 +114,24 @@ Express server, typed routes, air-gap guard (server.ts, routes/, server/)
         |
 Python solvers: NumPy / SciPy / pycalphad, persistent LPBF worker (python/)
         |
-SQLite run archives, source registry, evidence records
+SQLite run archives and source registry
 ```
 
-- More than **1,300 automated TypeScript tests** and **1,200 Python tests**, plus bundle-size budgets, a ratcheted dead-code baseline and a CI ceiling-review gate.
-- Cross-language parity checks keep the TypeScript ports of the physics aligned with the Python solvers.
+- More than **1,300 TypeScript tests** and over **1,200 Python tests** in the CI list, plus bundle-size budgets, a ratcheted dead-code baseline and a ceiling-review check in CI.
+- Parity tests keep selected TypeScript ports (for example Pourbaix and the module registry) aligned with their Python counterparts.
 - Lazy-loaded modules and a command palette (Ctrl/Cmd+K); a porcelain light theme designed to feel calm for long working sessions.
 
 ## GPU acceleration with NVIDIA
 
-Metalliksa's heavy LPBF kernels (3D transient thermal fields, keyhole and powder-bed ray tracing) have GPU implementations built on [NVIDIA Warp](https://github.com/NVIDIA/warp) and CUDA. They run on NVIDIA GPUs when Warp is installed, and fall back to CPU reference kernels otherwise, so everything still works on a laptop. GPU and CPU paths are checked against each other in the test suite, and results that depend on the GPU path are labelled as such rather than treated as more accurate.
+Several heavy LPBF kernels (3D transient thermal fields, keyhole and powder-bed ray tracing) have GPU implementations built on [NVIDIA Warp](https://github.com/NVIDIA/warp) and CUDA; some GPU paths use PyTorch CUDA instead. You choose the backend explicitly (`cpu` or `cuda:N`) and there is no silent substitution: an unavailable CUDA device is an error, not a quiet fallback. Keyhole ray tracing also runs on Warp's CPU device, and the powder-bed ray tracer is CUDA-only (if it fails, the thermal solver says so and uses a flat-plate absorptivity). CPU and GPU paths are compared in parity tests that run on machines with a CUDA device and are skipped elsewhere, and GPU-dependent results are labelled as such rather than treated as more accurate.
 
-The optional micrograph machine-learning features use PyTorch on CUDA the same way. Metalliksa is an independent project and is not affiliated with or endorsed by NVIDIA; NVIDIA, CUDA and Warp are trademarks of NVIDIA Corporation.
+We also measured where a GPU would not help: for the stochastic UQ engine at the sample counts the app uses (up to 10,000), the model evaluation is a small share of the run time and a Warp port was not worth its start-up cost, so none was added. The benchmark is in `python/tools/uq_warp_benchmark.py`.
+
+The optional micrograph machine-learning features use PyTorch. Metalliksa is an independent project and is not affiliated with or endorsed by NVIDIA; NVIDIA, CUDA and Warp are trademarks of NVIDIA Corporation.
 
 ## Local first and honest by design
 
-Everything runs on your machine. An air-gap mode blocks outbound calls, and the optional AI features (copilot, micrograph vision, dataset planner) only activate if you provide `OPENAI_API_KEY` on the server.
+Everything runs on your machine. An air-gap mode (`AIRGAPPED=1`) blocks outbound calls, and the optional AI features (copilot, micrograph vision, dataset planner) only activate if you provide `OPENAI_API_KEY` on the server.
 
 ## Getting started
 
@@ -137,9 +139,11 @@ Requirements: Node 22.13 or newer and Python 3.11 or 3.12.
 
 ```bash
 npm ci
-pip install -r python/requirements-lpbf.in
+pip install -r python/requirements-lpbf.in   # CPU LPBF baseline (NumPy, SciPy, pydantic)
 npm run dev
 ```
+
+CALPHAD, micrograph machine learning and CUDA need the full set in `python/requirements.txt` (it pulls PyTorch; install it only if you want those features).
 
 Then open `http://localhost:3000`.
 
