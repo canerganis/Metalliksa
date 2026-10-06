@@ -262,7 +262,15 @@ def main():
     except Exception as e:
         print(json.dumps({'error': f'Invalid JSON: {e}'}))
         sys.exit(1)
-    result = run_bayesian_optimization(
+    # Solver imports (e.g. NVIDIA Warp) print banners to stdout; keep stdout for the one JSON document only.
+    import contextlib
+    with contextlib.redirect_stdout(sys.stderr):
+        result = _run_from_payload(data)
+    print(json.dumps(result, allow_nan=False))
+
+
+def _run_from_payload(data):
+    return run_bayesian_optimization(
         alloy_id=data.get('alloyId'),
         param_bounds=data.get('paramBounds'),
         n_iter=data.get('nIterations', 20),
@@ -271,7 +279,6 @@ def main():
         beam_diameter_um=data.get('beamDiameter_um', DEFAULT_BEAM_DIAMETER_UM),
         preheat_temp_C=data.get('preheatTemp_C', DEFAULT_PREHEAT_TEMP_C),
     )
-    print(json.dumps(result, allow_nan=False))
 
 
 if __name__ == '__main__':

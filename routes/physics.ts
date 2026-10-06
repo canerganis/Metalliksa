@@ -1,7 +1,7 @@
 import { pythonStatusResponse } from "../server/pythonStatus.ts";
 import { Router, Request, Response } from "express";
 import { runPythonScript, pythonIPCSupervisor } from "../server/processOrchestrator.ts";
-import { pythonDispatchStatus } from "../server/pythonDispatchStatus.ts";
+import { parsePythonStdout, pythonDispatchStatus } from "../server/pythonDispatchStatus.ts";
 
 export const physicsRouter = Router();
 
@@ -22,12 +22,7 @@ async function handlePythonDispatch(scriptPath: string, payload: any, res: Respo
         stderr: pyRes.stderr,
       });
     }
-    let parsed: any;
-    try {
-      parsed = JSON.parse(stdout);
-    } catch {
-      parsed = { rawOutput: pyRes.stdout, stderr: pyRes.stderr, durationMs: pyRes.durationMs };
-    }
+    const parsed: any = parsePythonStdout(stdout) ?? { rawOutput: pyRes.stdout, stderr: pyRes.stderr, durationMs: pyRes.durationMs };
     return res.status(pythonDispatchStatus(parsed)).json(parsed);
   } catch (err: any) {
     console.error(`[Python error: ${scriptPath}]`, err);

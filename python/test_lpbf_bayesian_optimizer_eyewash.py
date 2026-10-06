@@ -109,6 +109,18 @@ class TestBayesianOptimizerHonesty(unittest.TestCase):
         self.assertEqual(res["errorKind"], "optimizer")
         self.assertNotIn("Solver", res["error"])
 
+    def test_cli_stdout_is_one_json_document(self):
+        # Solver imports (NVIDIA Warp) print banners; the CLI must keep stdout parseable for the server route.
+        import json, os, subprocess, sys
+        here = os.path.dirname(os.path.abspath(__file__))
+        payload = json.dumps({"alloyId": "in718", "nIterations": 2, "nWarmup": 1, "seed": 1})
+        proc = subprocess.run([sys.executable, "-B", os.path.join(here, "lpbf_bayesian_optimizer.py")],
+                              input=payload, capture_output=True, text=True, timeout=300, cwd=here)
+        doc = json.loads(proc.stdout)
+        self.assertTrue(doc["success"], doc)
+        self.assertEqual(doc["alloyId"], "in718")
+        self.assertEqual(len(doc["iterations"]), 2)
+
     def test_alias_requires_alloy(self):
         with self.assertRaises(TypeError):
             bo.optimize_process_window()

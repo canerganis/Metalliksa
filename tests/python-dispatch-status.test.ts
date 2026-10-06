@@ -173,6 +173,26 @@ test("every route hands the request body to its own script unchanged", async () 
   }
 });
 
+test("a library banner before the solver JSON is skipped (Warp init lines on stdout)", async () => {
+  const banner = [
+    "Warp 1.17.0 initialized:",
+    "   Devices:",
+    "     cpu : x",
+    "Module warp_thermal_solver 67a26eb load on device 'cuda:0' took 2.48 ms  (cached)",
+  ].join("\n");
+  for (const doc of [JSON.stringify({ success: true, value: 7 }), JSON.stringify({ success: true, value: 7 }, null, 2)]) {
+    const stdout = `${banner}\n${doc}\n`;
+    await withRunners({ stdout, exitCode: 0 }, async (h) => {
+      for (const [route] of ROUTES) {
+        const r = await post(h, route, {});
+        assert.equal(r.status, 200, route);
+        assert.equal(r.json.value, 7, route);
+        assert.equal(r.json.rawOutput, undefined, route);
+      }
+    });
+  }
+});
+
 test("non-JSON solver output and runner failures stay visible (rawOutput 200, error 500)", async () => {
   await withRunners({ stdout: "Traceback: not json", exitCode: 1 }, async (h) => {
     for (const [route] of ROUTES) {
