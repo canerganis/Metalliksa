@@ -1,3 +1,10 @@
+## 2026-10-06 — NIST mds2-2525 Ti-6Al-4V sabit spot absorptansı ile screening karşılaştırması (`4fcfd72`)
+
+- Kapsam: `docs/LPBF_NIST_2525_ABSORPTANCE_COMPARISON_2026-10-06.{json,md}`; veri `data/benchmark/nist-mds2-2525-ti64-absorptance/` (8 dosya, NIST NERDm SHA-256 ile bayt eşleşmesi; Wayback edinim yolu kayıtlı; 2 dosya ve 18 arşivlenmemiş bileşen hash'leriyle `unavailable`). Ti64 yalnız `Spot on Bare Metal_*`; `Al_*` tabloları alüminyum (SRM 1241c) ve uygulama malzemesi olmadığından karşılaştırılmadı.
+- Ölçülen (NIST, yerel analiz pencereleri): keyhole öncesi 32,47 ± 1,45 % (0,05–0,80 ms), keyhole 62,01 ± 7,09 % (0,90–2,00 ms), geçiş ≈ 0,85 ms, medyan giriş 101,9 W.
+- Model: Ti-6Al-4V düz yüzey absorptivitesi 0,35 (çözücü sözlüğünden) → +2,53 puan (+7,8 %). Ray tracing derinlik taraması yalnız duyarlılık: ölçülen keyhole ortalaması 100–150 µm öngörülen derinlikler (61,5 / 71,5 %) arasında.
+- Kabul ölçütü yok; bu bir screening karşılaştırmasıdır, ayar yapılmadı, etiket yükseltilmedi. `experimentalValidation=false`. Tarama (700 mm/s) vakası veri yokluğundan çalışmadı.
+
 ## SDK ürün ve giriş güvenilirliği kaydı — 2026-10-05
 
 `2bf52a5` composition/EDS/elasticity sözleşmelerini kaynak bağlı yerel işlemler ve gerçek availability çıktılarıyla kaydeder. Evidence üretmez; pending oracle screening-only tavanı ve remote deadline gereksinimi korunur. Composition finite/range ve callback kopyalama regresyonları yazılım davranışını doğrular; malzeme özelliklerinin deneysel doğruluğunu kanıtlamaz. Staging 1295 PASS, 1 kaynak-eksik SKIP, 1 measured-benchmark TODO; ana merge revizyonunda mevcut CMU kaynaklarıyla Phase 4 arşiv turu ayrıca 1 PASS. Donmuş LPBF modeli değişmedi.
