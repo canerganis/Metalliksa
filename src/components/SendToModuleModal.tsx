@@ -35,8 +35,8 @@ interface SendToModuleModalProps {
 }
 
 // Specimen-store payloads carry null for properties they cannot compute; show that instead of "null MPa".
-const mpaOrUnavailable = (value: number | null | undefined) => (value == null ? "unavailable" : `${value} MPa`);
-const celsiusOrUnavailable = (value: number | null | undefined) => (value == null ? "unavailable" : `${value}°C`);
+export const mpaOrUnavailable = (value: number | null | undefined) => (value == null ? "unavailable" : `${value} MPa`);
+export const celsiusOrUnavailable = (value: number | null | undefined) => (value == null ? "unavailable" : `${value}°C`);
 
 export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
   isOpen,
@@ -111,7 +111,7 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
       highlights: [
         `Alloy: ${payload.name}`,
         `σy: ${mpaOrUnavailable(payload.yieldStrength)}`,
-        "Shared twin vector",
+        "Shared LPBF process vector",
       ],
     },
     {
@@ -125,7 +125,7 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
       badge: "Equilibrium / Ac3",
       description: `Maps equivalent carbon content onto the Iron-Carbon binary phase space to inspect austenite, ferrite, pearlite, and martensite start (Ms) boundaries.`,
       highlights: [
-        `Ac3: ${payload.icmeProfile.criticalAc3_C || 910}°C`,
+        `Ac3: ${celsiusOrUnavailable(payload.icmeProfile.criticalAc3_C ?? null)}`,
         `C-wt: ${(payload.composition.C || 0).toFixed(2)}%`,
         `Solvus: ${celsiusOrUnavailable(payload.icmeProfile.solvusTemp_C)}`,
       ],
@@ -198,7 +198,7 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
             <div className="flex items-center gap-3 text-xs font-mono">
               <div className="text-right">
                 <span className="text-[10px] text-slate-500 block uppercase">Yield / UTS</span>
-                <span className="text-emerald-400 font-bold">{payload.yieldStrength ?? "unavailable"} / {mpaOrUnavailable(payload.tensileStrength)}</span>
+                <span className="text-emerald-400 font-bold">{mpaOrUnavailable(payload.yieldStrength)} / {mpaOrUnavailable(payload.tensileStrength)}</span>
               </div>
               <div className="text-right">
                 <span className="text-[10px] text-slate-500 block uppercase">Hardness</span>

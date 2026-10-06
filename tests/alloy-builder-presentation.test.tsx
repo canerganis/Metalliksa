@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {test} from "node:test";
 import {renderToStaticMarkup} from "react-dom/server";
 import {AlloyBuilder} from "../src/components/AlloyBuilder";
-import {useMaterialStore,deriveProperties,MATERIAL_PRESETS} from "../src/store/useMaterialStore";
+import {useMaterialStore,deriveProperties,MATERIAL_PRESETS,MODIFIED_CATALOGUE_NAME_SUFFIX} from "../src/store/useMaterialStore";
 import {useMaterialSpecimenStore} from "../src/store/useMaterialSpecimenStore";
 import {startMaterialContextBridge} from "../src/services/materialContextBridge";
 
@@ -94,6 +94,11 @@ test("standard designation: catalogue preset only, never inferred from compositi
   m=useMaterialStore.getState().activeMaterialSpecimen.metadata;
   assert.equal(m.standardDesignation,"");
   assert.equal(m.standardDesignationSource,undefined);
+  // The preset name ("Inconel 718 (AMS 5662)") must not keep claiming the catalogue alloy either.
+  const editedName=useMaterialStore.getState().activeMaterialSpecimen.name;
+  assert.equal(editedName,`${MATERIAL_PRESETS.in718.name}${MODIFIED_CATALOGUE_NAME_SUFFIX}`);
+  useMaterialStore.getState().setElement("Nb",3.5);
+  assert.equal(useMaterialStore.getState().activeMaterialSpecimen.name,editedName,"suffix is added once");
   // A designation the user types is the user's and survives composition edits.
   useMaterialStore.getState().updateMetadata({standardDesignation:"User reference X"});
   assert.equal(useMaterialStore.getState().activeMaterialSpecimen.metadata.standardDesignationSource,"user");
@@ -101,4 +106,21 @@ test("standard designation: catalogue preset only, never inferred from compositi
   assert.equal(useMaterialStore.getState().activeMaterialSpecimen.metadata.standardDesignation,"User reference X");
   // The default example preset is not a catalogue alloy and carries none.
   assert.equal(MATERIAL_PRESETS["custom-ni-superalloy"].standard,"");
+});
+
+test("designation handed in with a composition push (Digital Twin Hub) is labelled user, never catalogue",()=>{
+  useMaterialStore.getState().loadPreset("in718");
+  assert.equal(useMaterialStore.getState().activeMaterialSpecimen.metadata.standardDesignationSource,"catalogue");
+  const comp={...MATERIAL_PRESETS.in718.composition,Nb:4};
+  useMaterialStore.getState().updateComposition(comp,"Twin sample",{standardDesignation:"Twin ref 7"},"Digital Twin Hub");
+  let m=useMaterialStore.getState().activeMaterialSpecimen.metadata;
+  assert.equal(m.standardDesignation,"Twin ref 7");
+  assert.equal(m.standardDesignationSource,"user");
+  // An "Unresolved" twin designation is no designation at all.
+  useMaterialStore.getState().loadPreset("in718");
+  useMaterialStore.getState().updateComposition(comp,"Twin sample",{standardDesignation:"Unresolved"},"Digital Twin Hub");
+  m=useMaterialStore.getState().activeMaterialSpecimen.metadata;
+  assert.equal(m.standardDesignation,"");
+  assert.equal(m.standardDesignationSource,undefined);
+  assert.equal(useMaterialStore.getState().activeMaterialSpecimen.name,"Twin sample");
 });

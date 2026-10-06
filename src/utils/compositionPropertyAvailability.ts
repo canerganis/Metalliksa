@@ -37,6 +37,19 @@ export function availableProperty(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
 }
 
+/**
+ * Strengths a converter may load from a specimen record: only real (finite, positive) values. Composition-only records
+ * carry null (unavailable), and then nothing is loaded rather than a placeholder.
+ */
+export function specimenStrengthsToLoad(
+  specimen: { yieldStrength_25C_MPa?: unknown; uts_25C_MPa?: unknown } | null | undefined
+): { yieldMpa: number | null; utsMpa: number | null } {
+  return {
+    yieldMpa: availableProperty(specimen?.yieldStrength_25C_MPa),
+    utsMpa: availableProperty(specimen?.uts_25C_MPa),
+  };
+}
+
 /** Elemental densities (g/cm3, room temperature, CRC Handbook of Chemistry and Physics values). */
 export const ELEMENTAL_DENSITY_GCM3: Readonly<Record<string, number>> = {
   Ni: 8.908,

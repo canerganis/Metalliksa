@@ -3,7 +3,7 @@ import test from 'node:test';
 import { useMaterialSpecimenStore, type ActiveSpecimenState } from '../src/store/useMaterialSpecimenStore';
 import { buildScientificContext } from '../src/utils/scientificContext';
 
-test('Alloy Builder context describes composition estimates independently of process settings', () => {
+test('Alloy Builder context describes the composition editor independently of process settings', () => {
   const specimen = useMaterialSpecimenStore.getInitialState().activeSpecimen;
   const changedProcess: ActiveSpecimenState = {
     ...specimen,
@@ -14,7 +14,7 @@ test('Alloy Builder context describes composition estimates independently of pro
   assert.deepEqual(context, buildScientificContext('alloy-builder', changedProcess));
   assert.deepEqual(Object.keys(context).sort(),
     ['title', 'observation', 'mechanism', 'variables', 'interpretation', 'limitation'].sort());
-  assert.equal(context.title, 'Composition editor and estimate context');
+  assert.equal(context.title, 'Composition editor context');
   const text = [context.observation, context.mechanism, ...context.variables,
     context.interpretation, context.limitation].join(' ');
   assert.match(text, /element percentages.*wt\.%.*at\.%/i);
@@ -79,7 +79,8 @@ test('Elastic Constants context describes form inputs independently of the share
   assert.equal(generic.title, 'Scientific interpretation for this module');
   assert.match(generic.observation, /Shared IN718 fixture; 280 W/);
   assert.deepEqual(generic.variables, [
-    'Composition: Ni 52%, Cr 19%', 'Density: 8.2 g/cm³', 'Solidification range: unavailable (not computed from composition)',
+    // Density is recomputed from the shown composition (52/8.908 + 19/7.19), not the fixture's stored 8.2.
+    'Composition: Ni 52%, Cr 19%', 'Density (inverse rule of mixtures, wt.%): 8.373 g/cm³', 'Solidification range: unavailable (not computed from composition)',
   ]);
 });
 
@@ -138,4 +139,24 @@ test('phase and evidence contexts never print specimen liquidus, solidus or yiel
     assert.doesNotMatch(vars, /1336|1260|900|1000 MPa|80 °C/, id);
   }
   assert.match(buildScientificContext('phase-diagram', specimen).variables.join(' '), /Liquidus \/ solidus \/ solvus: unavailable/);
+});
+
+test('generic context density is unavailable (no 8.0 g/cm³ fallback) for an element without a tabulated density', () => {
+  const specimen = useMaterialSpecimenStore.getInitialState().activeSpecimen;
+  const withOxygen: ActiveSpecimenState = {
+    ...specimen,
+    unit: 'wt_pct',
+    composition: { Ti: 89.8, Al: 6, V: 4, O: 0.2 },
+  };
+  const line = buildScientificContext('database', withOxygen).variables.find((v) => v.startsWith('Density'));
+  assert.ok(line);
+  assert.match(line, /^Density: unavailable \(no tabulated elemental density for O\.\)$/);
+  assert.doesNotMatch(line, /\d+(\.\d+)? g\/cm³/);
+
+  const tabulated: ActiveSpecimenState = { ...withOxygen, composition: { Ni: 100 } };
+  const computed = buildScientificContext('database', tabulated).variables.find((v) => v.startsWith('Density'));
+  assert.equal(computed, 'Density (inverse rule of mixtures, wt.%): 8.908 g/cm³');
+
+  const atomic = buildScientificContext('database', { ...tabulated, unit: 'at_pct' }).variables.find((v) => v.startsWith('Density'));
+  assert.match(atomic ?? '', /^Density: unavailable/);
 });

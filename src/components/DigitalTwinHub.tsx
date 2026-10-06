@@ -37,7 +37,7 @@ import {
 } from "lucide-react";
 import { useDigitalTwin } from "../context/DigitalTwinContext";
 import { useMaterialStore } from "../store/useMaterialStore";
-import { availableProperty } from "../utils/compositionPropertyAvailability";
+import { designationPatchFromTwin, twinFromMaterialSpecimen } from "../utils/digitalTwinMaterialSync";
 import { SampleDigitalTwin, DigitalTwinAttachment } from "../types/digitalTwin";
 import {
   BarChart,
@@ -85,26 +85,7 @@ export const DigitalTwinHub: React.FC<{ onNavigateToModule?: (tab: string) => vo
 
   // Sync active digital twin FROM global shared material specimen
   const handleSyncFromGlobalSpecimen = () => {
-    updateActiveTwin((prev) => ({
-      ...prev,
-      evidence: prev.evidence?.kind === "demo" ? prev.evidence : { ...prev.evidence, kind: "user-supplied", qualification: "not-assessed", note: "Composition synchronized from the material store. The store holds no composition-derived mechanical properties, so yield, UTS and elongation are unresolved; measurement provenance and qualification remain unresolved." },
-      sampleName: activeMaterialSpecimen.name,
-      materialCategory: (activeMaterialSpecimen.metadata?.category || prev.materialCategory) as any,
-      standardDesignation: activeMaterialSpecimen.metadata?.standardDesignation || prev.standardDesignation,
-      chemistry: {
-        ...prev.chemistry,
-        baseElement: activeMaterialSpecimen.metadata?.baseMetal || prev.chemistry.baseElement,
-        nominalComposition: { ...activeMaterialSpecimen.composition },
-        measuredComposition: undefined,
-      },
-      mechanical: {
-        ...prev.mechanical,
-        // null (Unresolved) unless the record really carries a value; never the removed composition heuristics.
-        yieldStrengthMpa: availableProperty(activeMaterialSpecimen.yieldStrength_25C_MPa),
-        ultimateTensileStrengthMpa: availableProperty(activeMaterialSpecimen.uts_25C_MPa),
-        elongationPct: availableProperty(activeMaterialSpecimen.elongation_pct),
-      },
-    }));
+    updateActiveTwin((prev) => twinFromMaterialSpecimen(prev, activeMaterialSpecimen));
     setSyncNotice("Synced twin from shared material store!");
     setTimeout(() => setSyncNotice(null), 3000);
   };
@@ -116,7 +97,7 @@ export const DigitalTwinHub: React.FC<{ onNavigateToModule?: (tab: string) => vo
       activeTwin.sampleName,
       {
         category: activeTwin.materialCategory,
-        standardDesignation: activeTwin.standardDesignation,
+        ...designationPatchFromTwin(activeTwin),
         manufacturingRoute: activeTwin.processHistory.manufacturingRoute,
         condition: activeTwin.processHistory.currentCondition,
         leadMetallurgist: activeTwin.leadMetallurgist,
@@ -646,7 +627,7 @@ Provide an evidence-gap review:
                         activeTwin.sampleName,
                         {
                           category: activeTwin.materialCategory,
-                          standardDesignation: activeTwin.standardDesignation,
+                          ...designationPatchFromTwin(activeTwin),
                         },
                         "Digital Twin Hub (Chemistry Tab)"
                       );

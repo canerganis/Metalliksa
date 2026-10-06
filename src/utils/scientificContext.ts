@@ -1,6 +1,7 @@
 import type { ActiveSpecimenState } from '../store/useMaterialSpecimenStore';
 import type { ModuleId } from '../data/workspaces';
 import { formatDisplayNumber } from './numberFormat';
+import { ruleOfMixturesDensity } from './compositionPropertyAvailability';
 
 export interface ScientificContext {
   title: string;
@@ -16,6 +17,15 @@ const format = formatDisplayNumber;
 // The shared specimen holds no composition-derived temperatures or strengths (COMPOSITION_PROPERTY_UNAVAILABLE_NOTE).
 const COMPOSITION_PROPERTY_UNAVAILABLE_SHORT = 'unavailable (not computed from composition)';
 
+// Display density is recomputed from the shown composition; the store's density_gcm3 keeps an internal 8.0 g/cm³
+// per-element fallback for LPBF inputs and must not be shown as a number.
+function densityContextLine(specimen: ActiveSpecimenState): string {
+  const density = ruleOfMixturesDensity(specimen.composition, specimen.unit);
+  return density.status === 'computed'
+    ? `Density (inverse rule of mixtures, wt.%): ${format(density.density_gcm3, 3)} g/cm³`
+    : `Density: unavailable (${density.note.replace(/^Unavailable: /, '')})`;
+}
+
 export function buildScientificContext(moduleId: ModuleId, specimen: ActiveSpecimenState): ScientificContext {
   if (moduleId === 'materials-project') return {
     title: 'Elastic Constants input context',
@@ -27,7 +37,7 @@ export function buildScientificContext(moduleId: ModuleId, specimen: ActiveSpeci
   };
 
   if (moduleId === 'alloy-builder') return {
-    title: 'Composition editor and estimate context',
+    title: 'Composition editor context',
     observation: 'This editor uses element percentages in the displayed wt.% or at.% unit. Normalize Composition is an explicit action; edits do not automatically make the total 100%.',
     mechanism: 'For weight-percent compositions, density is computed by the inverse rule of mixtures from tabulated elemental densities. No CALPHAD, DFT or LPBF simulation runs here, and no temperature, strength or process window is derived from composition.',
     variables: ['Element content: 0–100%, finite values', 'Computed: density g/cm³ (wt.% only; unavailable when an element has no tabulated density)', 'Unavailable here: liquidus/solidus °C, yield strength and UTS MPa'],
@@ -81,7 +91,7 @@ export function buildScientificContext(moduleId: ModuleId, specimen: ActiveSpeci
     title: 'Scientific interpretation for this module',
     observation: `${shared} The model output shown in this module reflects how input parameters and assumptions map to predicted behavior.`,
     mechanism: 'The model combines constitutive assumptions, material properties, and boundary conditions to generate a testable prediction.',
-    variables: [`Composition: ${Object.entries(specimen.composition).map(([element, value]) => `${element} ${format(value)}%`).join(', ')}`, `Density: ${format(specimen.density_gcm3)} g/cm³`, `Solidification range: ${COMPOSITION_PROPERTY_UNAVAILABLE_SHORT}`],
+    variables: [`Composition: ${Object.entries(specimen.composition).map(([element, value]) => `${element} ${format(value)}%`).join(', ')}`, densityContextLine(specimen), `Solidification range: ${COMPOSITION_PROPERTY_UNAVAILABLE_SHORT}`],
     interpretation: 'Start by checking assumptions, then sensitive inputs, then the evidence type attached to each value.',
     limitation: 'Model output is not a measurement. Uncertainty, coverage, and validation status must always be carried with the result.',
   };

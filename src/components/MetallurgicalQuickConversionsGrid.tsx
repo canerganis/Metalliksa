@@ -31,7 +31,7 @@ import {
 } from "../utils/hardnessConversion";
 import { HARDNESS_PRESETS, HardnessPreset } from "../utils/hardnessPresets";
 import { useMaterialStore } from "../store/useMaterialStore";
-import { availableProperty } from "../utils/compositionPropertyAvailability";
+import { specimenStrengthsToLoad } from "../utils/compositionPropertyAvailability";
 import { StandardInfoIcon } from "./StandardInfoIcon";
 
 interface Props {
@@ -41,7 +41,7 @@ interface Props {
 export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullSuite }) => {
   const { activeMaterialSpecimen } = useMaterialStore();
   // The shared specimen holds no composition-derived yield strength; null disables "Use Specimen Values".
-  const specimenYield = availableProperty(activeMaterialSpecimen?.yieldStrength_25C_MPa);
+  const specimenYield = specimenStrengthsToLoad(activeMaterialSpecimen).yieldMpa;
 
   // Search filter across the conversion grid
   const [searchQuery, setSearchQuery] = useState<string>("");

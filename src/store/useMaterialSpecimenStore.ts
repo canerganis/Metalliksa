@@ -4,7 +4,7 @@ import { materialProfileIdentity } from "../utils/materialProfileIdentity";
 import { materialCategoryForBase } from "../utils/materialCategory";
 import { setActivePipelineMaterial, PipelineMaterialPayload } from "../utils/materialDataPipeline";
 import { estimateSpecimenHardnessHV } from "../utils/hardnessStrengthEstimate";
-import { withoutCompositionHeuristicProperties } from "../utils/compositionPropertyAvailability";
+import { ELEMENTAL_DENSITY_GCM3, withoutCompositionHeuristicProperties } from "../utils/compositionPropertyAvailability";
 
 export type BaseMetalType = "Ni" | "Fe" | "Ti" | "Al" | "Cu" | "Co" | "Mg" | "Refractory" | "Other";
 
@@ -182,33 +182,14 @@ export function detectBaseMetalFromComposition(comp: Record<string, number>): Ba
   return "Other";
 }
 
-// Element standard elemental densities (g/cm^3)
-const ELEMENT_DENSITIES: Record<string, number> = {
-  Ni: 8.908,
-  Fe: 7.874,
-  Cr: 7.19,
-  Co: 8.90,
-  Mo: 10.28,
-  W: 19.25,
-  Ta: 16.69,
-  Al: 2.70,
-  Ti: 4.506,
-  Nb: 8.57,
-  C: 2.26,
-  B: 2.34,
-  Zr: 6.52,
-  Hf: 13.31,
-  V: 6.11,
-  Mn: 7.21,
-  Si: 2.33,
-  Cu: 8.96,
-  Mg: 1.738,
-  Zn: 7.14,
-  Re: 21.02,
-  Sc: 2.985,
-};
+/** Tabulated elemental densities; single source in compositionPropertyAvailability. */
+const ELEMENT_DENSITIES = ELEMENTAL_DENSITY_GCM3;
 
-// Compute rule-of-mixtures density
+/**
+ * Internal LPBF-input density only (feeds lpbf.density_rho_kgm3 and must stay stable): it uses 8.0 g/cm3 for an
+ * element without a tabulated density and 8.2 g/cm3 for an empty composition. These fallbacks are NOT for display;
+ * screens use ruleOfMixturesDensity(), which reports 'unavailable' instead.
+ */
 export function calculateAlloyDensity(comp: Record<string, number>): number {
   let totalMass = 0;
   let totalVolume = 0;
@@ -583,7 +564,8 @@ export const useMaterialSpecimenStore = create<MaterialSpecimenStore>()(
             id: nextSpecimen.id,
             name: nextSpecimen.name,
             category: nextSpecimen.category,
-            standard: "MetalliX Universal Specimen Thread",
+            // The shared specimen carries no standard designation; never a pseudo-standard label.
+            standard: "",
             sourceModule: sourceTab,
             timestamp: Date.now(),
             composition: nextSpecimen.composition,
@@ -604,7 +586,7 @@ export const useMaterialSpecimenStore = create<MaterialSpecimenStore>()(
               id: nextSpecimen.id,
               name: nextSpecimen.name,
               baseMetal: (["Ni", "Fe", "Ti", "Al"].includes(nextSpecimen.baseMetal) ? nextSpecimen.baseMetal : "Ni") as any,
-              standardRef: "Universal Digital Specimen",
+              standardRef: "",
               initialGrainSize_um: 25,
               grainGrowthExponent_n: 2.1,
               activationEnergy_kJ_mol: 285,
@@ -615,7 +597,8 @@ export const useMaterialSpecimenStore = create<MaterialSpecimenStore>()(
               precipitateType: "Intermetallic / Carbides",
               initialPrecipVolFrac: 15,
               precipMeanRadius_nm: 25,
-              hallPetch_ky_MPa_um05: 750,
+              // Unsourced constants (750 MPa·µm^0.5, 65 MPa·√m, L/LT/ST factors) removed: unavailable.
+              hallPetch_ky_MPa_um05: null,
             } as any,
             hardnessProfile: {
               id: nextSpecimen.id,
@@ -641,15 +624,11 @@ export const useMaterialSpecimenStore = create<MaterialSpecimenStore>()(
               poissonsRatio_nu: 0.31,
               poissonsRatio: 0.31,
               uniformElongation_pct: nextSpecimen.elongation_pct,
-              fractureToughness_K1c_MPa_sqrt_m: 65,
-              estimatedK1c_MPam05: 65,
-              anisotropyFactors: {
-                L: { yieldFactor: 1.0, utsFactor: 1.0, elongFactor: 1.0, k1cFactor: 1.0 },
-                LT: { yieldFactor: 0.94, utsFactor: 0.96, elongFactor: 0.88, k1cFactor: 0.91 },
-                ST: { yieldFactor: 0.88, utsFactor: 0.91, elongFactor: 0.72, k1cFactor: 0.82 },
-              },
-              description: `Universal Specimen Thread (${nextSpecimen.chemicalFormula})`,
-              standardRef: "ASTM E8 / E384 Universal Thread",
+              fractureToughness_K1c_MPa_sqrt_m: null,
+              estimatedK1c_MPam05: null,
+              anisotropyFactors: null,
+              description: `Shared specimen composition (${nextSpecimen.chemicalFormula})`,
+              standardRef: "",
             } as any,
             xrdProfile: {
               crystalSystem: nextSpecimen.xrd.crystalSystem,

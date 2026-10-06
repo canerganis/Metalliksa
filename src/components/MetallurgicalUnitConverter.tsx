@@ -56,7 +56,7 @@ import {
 import { SPECIMEN_HARDNESS_NOT_LOADED_NOTE } from "../utils/hardnessStrengthEstimate";
 import { HARDNESS_PRESETS } from "../utils/hardnessPresets";
 import { useMaterialStore } from "../store/useMaterialStore";
-import { availableProperty } from "../utils/compositionPropertyAvailability";
+import { specimenStrengthsToLoad } from "../utils/compositionPropertyAvailability";
 import { StandardInfoIcon } from "./StandardInfoIcon";
 
 // Display text of each unit <option> below, for accessible names (state holds raw keys such as "MPa_m05").
@@ -218,8 +218,7 @@ export const MetallurgicalUnitConverter: React.FC = () => {
   const handleSyncFromActiveSpecimen = () => {
     if (activeMaterialSpecimen) {
       // Composition-only specimen records carry no yield/UTS (null = unavailable); only real values are loaded.
-      const yieldMpa = availableProperty(activeMaterialSpecimen.yieldStrength_25C_MPa);
-      const utsMpa = availableProperty(activeMaterialSpecimen.uts_25C_MPa);
+      const { yieldMpa, utsMpa } = specimenStrengthsToLoad(activeMaterialSpecimen);
       if (yieldMpa !== null) {
         setStressInput(yieldMpa);
         setStressUnit("MPa");

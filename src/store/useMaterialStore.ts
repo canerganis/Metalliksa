@@ -4,7 +4,7 @@ import { setActivePipelineMaterial, PipelineMaterialPayload } from "../utils/mat
 import { estimateSpecimenHardnessHV, type HardnessHVEstimateStatus } from "../utils/hardnessStrengthEstimate";
 import { deriveSpecimenProperties } from "./useMaterialSpecimenStore";
 import { materialCategoryForBase } from "../utils/materialCategory";
-import { withoutCompositionHeuristicProperties } from "../utils/compositionPropertyAvailability";
+import { ELEMENTAL_DENSITY_GCM3, withoutCompositionHeuristicProperties } from "../utils/compositionPropertyAvailability";
 
 export type BaseMetalType = "Ni" | "Fe" | "Ti" | "Al" | "Cu" | "Co" | "Mg" | "Refractory" | "Other";
 
@@ -135,30 +135,8 @@ function isValidCompositionInput(value: unknown): value is Record<string, number
       && percentage >= 0 && percentage <= 100);
 }
 
-export const ELEMENT_DENSITIES: Record<string, number> = {
-  Ni: 8.908,
-  Fe: 7.874,
-  Cr: 7.19,
-  Co: 8.90,
-  Mo: 10.28,
-  W: 19.25,
-  Ta: 16.69,
-  Al: 2.70,
-  Ti: 4.506,
-  Nb: 8.57,
-  C: 2.26,
-  B: 2.34,
-  Zr: 6.52,
-  Hf: 13.31,
-  V: 6.11,
-  Mn: 7.21,
-  Si: 2.33,
-  Cu: 8.96,
-  Mg: 1.738,
-  Zn: 7.14,
-  Re: 21.02,
-  Sc: 2.985,
-};
+/** Tabulated elemental densities; single source in compositionPropertyAvailability. */
+export const ELEMENT_DENSITIES = ELEMENTAL_DENSITY_GCM3;
 
 export function detectBaseMetal(comp: Record<string, number>): BaseMetalType {
   let highestElem = "Ni";
@@ -181,6 +159,11 @@ export function detectBaseMetal(comp: Record<string, number>): BaseMetalType {
   return "Other";
 }
 
+/**
+ * Internal LPBF-input density only (feeds lpbf.density_rho_kgm3 and must stay stable): it uses 8.0 g/cm3 for an
+ * element without a tabulated density and 8.2 g/cm3 for an empty composition. These fallbacks are NOT for display;
+ * screens use ruleOfMixturesDensity(), which reports 'unavailable' instead.
+ */
 export function calculateDensity(comp: Record<string, number>): number {
   let totalMass = 0;
   let totalVolume = 0;
@@ -429,12 +412,41 @@ export function catalogueDesignationFor(composition: Record<string, number> | un
  * A catalogue designation belongs to the catalogue composition: editing the composition away from it clears the
  * designation (unless this edit sets one). A user-typed designation is the user's claim and is kept.
  */
+/** Suffix added to a catalogue preset name once the composition is edited away from that catalogue alloy. */
+export const MODIFIED_CATALOGUE_NAME_SUFFIX = " (modified, not the catalogue alloy)";
+
+/**
+ * The preset names carry the catalogue identity (e.g. "Inconel 718 (AMS 5662)"). When an edit clears the catalogue
+ * designation and the caller keeps that name, mark it so the name does not keep claiming the catalogue alloy.
+ */
+export function nameAfterCompositionEdit(
+  current: Pick<MaterialSpecimen, "name" | "metadata">,
+  requestedName: string | undefined,
+  metadataPatch: Partial<MaterialMetadata> | undefined,
+  designationPatch: Partial<MaterialMetadata>
+): string {
+  const name = requestedName || current.name;
+  const catalogueCleared = current.metadata?.standardDesignationSource === "catalogue"
+    && !(metadataPatch && "standardDesignation" in metadataPatch)
+    && designationPatch.standardDesignation === "";
+  if (!catalogueCleared || name !== current.name || name.endsWith(MODIFIED_CATALOGUE_NAME_SUFFIX)) return name;
+  return `${name}${MODIFIED_CATALOGUE_NAME_SUFFIX}`;
+}
+
 export function designationAfterCompositionEdit(
   current: Pick<MaterialSpecimen, "composition" | "metadata">,
   nextComposition: Record<string, number>,
   metadataPatch?: Partial<MaterialMetadata>
 ): Partial<MaterialMetadata> {
-  if (metadataPatch && "standardDesignation" in metadataPatch) return {};
+  if (metadataPatch && "standardDesignation" in metadataPatch) {
+    if ("standardDesignationSource" in metadataPatch) return {};
+    // A designation handed in without a source (e.g. Digital Twin Hub push) is the user's, not the catalogue's; an
+    // empty or "Unresolved" one carries no source at all.
+    const designation = (metadataPatch.standardDesignation ?? "").trim();
+    return designation && designation !== "Unresolved"
+      ? { standardDesignationSource: "user" }
+      : { standardDesignation: "", standardDesignationSource: undefined };
+  }
   if (current.metadata?.standardDesignationSource !== "catalogue") return {};
   if (sameComposition(current.composition, nextComposition)) return {};
   return { standardDesignation: "", standardDesignationSource: undefined };
@@ -721,14 +733,15 @@ export const useMaterialStore = create<MaterialStore>()(
         const resolvedComp = typeof newComposition === "function" ? newComposition({ ...current.composition }) : newComposition;
         if (!isValidCompositionInput(resolvedComp)) return;
         const designationPatch = designationAfterCompositionEdit(current, resolvedComp, metadataPatch);
+        const nextName = nameAfterCompositionEdit(current, customName, metadataPatch, designationPatch);
         // Atomic-percent edits retain their unit and identity; weight-percent models are not evaluated.
         if (current.unit === "at_pct") {
-          const next: MaterialSpecimen = withHardnessEstimate({...current,composition:resolvedComp,name:customName||current.name,sourceTab,lastModified:Date.now(),isCustomModified:true,metadata:{...current.metadata,...metadataPatch,...designationPatch,source:"Atomic-percent composition; weight-percent property estimates unresolved"}});
+          const next: MaterialSpecimen = withHardnessEstimate({...current,composition:resolvedComp,name:nextName,sourceTab,lastModified:Date.now(),isCustomModified:true,metadata:{...current.metadata,...metadataPatch,...designationPatch,source:"Atomic-percent composition; weight-percent property estimates unresolved"}});
           set({activeMaterialSpecimen:next,activeSpecimen:next});
           return;
         }
         const updatedMetadata = { ...current.metadata, ...metadataPatch, ...designationPatch, lastModified: Date.now() };
-        const derived = deriveProperties(resolvedComp, customName || current.name, undefined, updatedMetadata);
+        const derived = deriveProperties(resolvedComp, nextName, undefined, updatedMetadata);
 
         const nextSpecimen: MaterialSpecimen = {
           id: current.id.startsWith("specimen-") ? current.id : `specimen-${Date.now()}`,
@@ -784,7 +797,8 @@ export const useMaterialStore = create<MaterialStore>()(
               precipitateType: "Intermetallic / Carbides",
               initialPrecipVolFrac: 15,
               precipMeanRadius_nm: 25,
-              hallPetch_ky_MPa_um05: 750,
+              // Unsourced constants (750 MPa·µm^0.5, 65 MPa·√m, L/LT/ST factors) removed: unavailable.
+              hallPetch_ky_MPa_um05: null,
             } as any,
             hardnessProfile: {
               id: nextSpecimen.id,
@@ -807,14 +821,10 @@ export const useMaterialStore = create<MaterialStore>()(
               poissonsRatio_nu: 0.31,
               poissonsRatio: 0.31,
               uniformElongation_pct: nextSpecimen.elongation_pct,
-              fractureToughness_K1c_MPa_sqrt_m: 65,
-              estimatedK1c_MPam05: 65,
-              anisotropyFactors: {
-                L: { yieldFactor: 1.0, utsFactor: 1.0, elongFactor: 1.0, k1cFactor: 1.0 },
-                LT: { yieldFactor: 0.94, utsFactor: 0.96, elongFactor: 0.88, k1cFactor: 0.91 },
-                ST: { yieldFactor: 0.88, utsFactor: 0.91, elongFactor: 0.72, k1cFactor: 0.82 },
-              },
-              description: `Universal Specimen Thread (${nextSpecimen.chemicalFormula})`,
+              fractureToughness_K1c_MPa_sqrt_m: null,
+              estimatedK1c_MPam05: null,
+              anisotropyFactors: null,
+              description: `Shared specimen composition (${nextSpecimen.chemicalFormula})`,
               standardRef: nextSpecimen.metadata.standardDesignation,
             } as any,
             xrdProfile: {
