@@ -166,12 +166,18 @@ export function SourceConditions({ document, preview }: { document: LpbfSourceDo
   const propertySource = document.processScope === 'material-characterization';
   const properties = Array.isArray(context?.property_measurements) ? context.property_measurements.map(object) : [];
   const specimen = object(context?.specimen);
+  const absorptanceSource = context?.publisher_artifact_kind === 'publisher-calibrated-absorptance-and-challenge-tables';
+  const hasAluminiumRows = observations.some(row => typeof row.material === 'string' && row.material.startsWith('aluminium'));
+  const number = (value: unknown) => typeof value === 'number' && Number.isFinite(value) ? String(Number(value.toPrecision(4))) : null;
   const known = (value: unknown, reason?: unknown) => typeof value === 'string' || typeof value === 'number' ? String(value)
+    : typeof reason === 'string' && reason.startsWith('Not applicable') ? reason
     : `Unknown${typeof reason === 'string' ? ` — ${reason}` : ''}`;
   return <div className="space-y-4 border-t border-slate-700 pt-4">
     <h4 className="font-medium">{preview ? 'Preview source conditions' : 'Stored source conditions'}</h4>
     <dl className="grid gap-3 text-sm sm:grid-cols-3">{[
-      ['Material', document.materialId.toUpperCase()], ['Process scope', document.processScope], ['Source version', document.source.version],
+      ['Material', absorptanceSource && hasAluminiumRows
+        ? `${document.materialId.toUpperCase()} (Ti-6Al-4V rows only; aluminium NIST SRM 1241c challenge rows are listed separately and are not an application material)`
+        : document.materialId.toUpperCase()], ['Process scope', document.processScope], ['Source version', document.source.version],
       ['Archived files', String(document.artifacts.length)], ['Total bytes', document.artifacts.reduce((sum, item) => sum + item.byteSize, 0).toLocaleString('en-US')],
     ].map(([label, value]) => <div key={label}><dt className="text-xs text-slate-400">{label}</dt><dd>{value}</dd></div>)}</dl>
     <p className="text-sm">{document.source.citation}</p>
@@ -179,6 +185,8 @@ export function SourceConditions({ document, preview }: { document: LpbfSourceDo
     <div className="text-sm"><h5 className="font-medium">Source use terms</h5><p className="mt-1 text-slate-400">{document.source.terms ?? `Unknown: ${document.source.termsMissingReason}`}</p></div>
     <p className="text-sm text-amber-200">{propertySource
       ? 'Primary thermophysical property evidence — unverified candidate for material admission. Measured, derived and fitted quantities are identified separately. This archive does not update the material model, enable full-transient/build-job calculations or establish melt-pool validation.'
+      : absorptanceSource
+      ? 'NIST measured laser absorptance (integrating sphere) on polished bare Ti-6Al-4V (NIST SRM 654b) and on aluminium (NIST SRM 1241c) challenge tables. Values are measured for the NIST experiment only. The Ti-6Al-4V window means use local analysis windows, not NIST-published phase boundaries. Aluminium has no application material counterpart. This is not validation.'
       : context?.publisher_artifact_kind === 'publisher-workbook-and-readme'
       ? 'These are published NIST bare-plate IN718 measurements with reported expanded uncertainty. Their depth-to-spot-radius ratios are above 3, outside the current conduction-model window, so this source is not eligible for model comparison.'
       : context?.publisher_artifact_kind === 'original-optical-cross-section-micrographs-and-publisher-checksums'
@@ -211,7 +219,26 @@ export function SourceConditions({ document, preview }: { document: LpbfSourceDo
         ['Beam diameter convention', known(measurement.beam_diameter_definition, measurement.beam_diameter_missing_reason)],
         ['Repeat grouping', known(measurement.repeat_group_rule)], ['Evaluation partition', known(context.split)],
       ].map(([label, value]) => <div key={label}><dt className="text-xs text-slate-400">{label}</dt><dd className="mt-1">{value}</dd></div>)}</dl>}
-      {!propertySource && observations.length > 0 && <div className="overflow-x-auto"><h5 className="mb-2 text-sm font-medium">Published optical measurements</h5><table className="w-full text-left text-sm"><thead><tr className="border-b border-slate-700 text-xs text-slate-400"><th className="p-2">Machine / section</th><th className="p-2">Track / conditions</th><th className="p-2">Width (µm)</th><th className="p-2">Depth (µm)</th><th className="p-2">Source locator</th></tr></thead><tbody>{observations.map((row, index) => <tr key={`${String(row.imagePath)}-${index}`} className="border-b border-slate-800"><td className="p-2">{String(row.part ?? 'Unknown')}{typeof row.observationCount === 'number' ? ` · n=${row.observationCount}` : ''}</td><td className="p-2">{String(row.caseAndLine ?? 'Unknown')}</td><td className="p-2">{typeof row.measuredWidth_um === 'number' ? `${row.measuredWidth_um.toFixed(3)}${typeof row.widthUncertainty_k2_um === 'number' ? ` ± ${row.widthUncertainty_k2_um.toFixed(3)} (k=2)` : ''}` : 'Unknown'}</td><td className="p-2">{typeof row.measuredDepth_um === 'number' ? `${row.measuredDepth_um.toFixed(3)}${typeof row.depthUncertainty_k2_um === 'number' ? ` ± ${row.depthUncertainty_k2_um.toFixed(3)} (k=2)` : ''}` : 'Unknown'}</td><td className="p-2 font-mono text-xs">{String(row.imagePath ?? 'Unknown')}</td></tr>)}</tbody></table></div>}
+      {absorptanceSource && observations.length > 0 && <div className="overflow-x-auto"><h5 className="mb-2 text-sm font-medium">Published and locally windowed absorptance observations</h5>
+        <table className="w-full text-left text-sm"><thead><tr className="border-b border-slate-700 text-xs text-slate-400">
+          {['Observation', 'Material', 'Value ± std (unit)', 'Origin / window', 'Comparable with app models'].map(label => <th key={label} className="p-2">{label}</th>)}
+        </tr></thead><tbody>{observations.map((row, index) => {
+          const value = number(row.value);
+          const std = number(row.std_dev);
+          const unit = typeof row.unit === 'string' ? row.unit : null;
+          const stdUnit = typeof row.std_dev_unit === 'string' ? row.std_dev_unit : unit;
+          const window = Array.isArray(row.window_ms) && row.window_ms.length === 2 && row.window_ms.every(item => typeof item === 'number')
+            ? `${row.window_ms[0]}–${row.window_ms[1]} ms` : null;
+          return <tr key={`${String(row.label)}-${index}`} className="border-b border-slate-800">
+            <td className="p-2">{known(row.label)}{typeof row.n === 'number' ? ` · n=${row.n}` : ''}</td>
+            <td className="p-2">{known(row.material)}</td>
+            <td className="p-2">{value === null ? 'Unavailable — no numeric value in the source record'
+              : `${value}${unit ? ` ${unit}` : ''}${std === null ? '' : ` ± ${std}${stdUnit ? ` ${stdUnit}` : ''}`}`}</td>
+            <td className="p-2">{row.derived_locally === true ? `Derived locally${window ? `, window ${window} from first laser-on` : ''}` : row.derived_locally === false ? 'NIST-published table value' : 'Origin not recorded'}</td>
+            <td className="p-2">{row.comparable_to_app_models === true ? 'Yes' : 'No'}{typeof row.comparable_reason === 'string' ? ` — ${row.comparable_reason}` : ''}</td>
+          </tr>;
+        })}</tbody></table></div>}
+      {!propertySource && !absorptanceSource && observations.length > 0 && <div className="overflow-x-auto"><h5 className="mb-2 text-sm font-medium">Published optical measurements</h5><table className="w-full text-left text-sm"><thead><tr className="border-b border-slate-700 text-xs text-slate-400"><th className="p-2">Machine / section</th><th className="p-2">Track / conditions</th><th className="p-2">Width (µm)</th><th className="p-2">Depth (µm)</th><th className="p-2">Source locator</th></tr></thead><tbody>{observations.map((row, index) => <tr key={`${String(row.imagePath)}-${index}`} className="border-b border-slate-800"><td className="p-2">{String(row.part ?? 'Unknown')}{typeof row.observationCount === 'number' ? ` · n=${row.observationCount}` : ''}</td><td className="p-2">{String(row.caseAndLine ?? 'Unknown')}</td><td className="p-2">{typeof row.measuredWidth_um === 'number' ? `${row.measuredWidth_um.toFixed(3)}${typeof row.widthUncertainty_k2_um === 'number' ? ` ± ${row.widthUncertainty_k2_um.toFixed(3)} (k=2)` : ''}` : 'Unknown'}</td><td className="p-2">{typeof row.measuredDepth_um === 'number' ? `${row.measuredDepth_um.toFixed(3)}${typeof row.depthUncertainty_k2_um === 'number' ? ` ± ${row.depthUncertainty_k2_um.toFixed(3)} (k=2)` : ''}` : 'Unknown'}</td><td className="p-2 font-mono text-xs">{String(row.imagePath ?? 'Unknown')}</td></tr>)}</tbody></table></div>}
       {Array.isArray(context.unresolved) && <ul className="list-disc pl-5 space-y-1 text-sm text-amber-200">{context.unresolved.filter(item => typeof item === 'string').map((item, index) => <li key={index}>{String(item)}</li>)}</ul>}
       <details><summary className="cursor-pointer text-sm">Full source context</summary><pre className="mt-2 max-h-80 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-slate-950 p-3 text-xs leading-5 text-slate-300" tabIndex={0} aria-label="Full source context">{JSON.stringify(context, null, 2)}</pre></details></>
       : <p className="text-amber-200">Source context unknown. Measurement conditions have not been established.</p>}

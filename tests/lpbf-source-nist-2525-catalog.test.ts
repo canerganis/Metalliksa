@@ -5,9 +5,13 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
 import express from 'express';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { createLpbfSourcesRouter } from '../routes/lpbfSources';
 import { LpbfSourceArchiveService } from '../server/lpbfSourceArchiveService';
 import { nistMds22525AbsorptanceCatalogEntry } from '../server/lpbfSourceCatalog';
+import type { LpbfSourceDocument } from '../src/types/lpbfSource';
+import { SourceConditions } from '../src/components/LpbfSourceArchivePanel';
 
 const datasetRoot = path.resolve('data/benchmark/nist-mds2-2525-ti64-absorptance');
 const officialRoot = path.join(datasetRoot, 'official');
@@ -84,6 +88,18 @@ test('NIST mds2-2525 absorptance source loads with pinned identity, observations
   assert.match(unresolved, /does not solve keyhole geometry/);
   assert.match(unresolved, /experimentalValidation stays false/);
   assert.match(document.sourceContext.measurement.quantity, /integrating sphere/);
+  const measurement = document.sourceContext.measurement;
+  assert.match(measurement.beam_diameter_definition, /1\/e\^2 diameter 122\.5 ± 3\.0 µm/);
+  assert.equal(measurement.temperature_conversion, null);
+  assert.match(measurement.temperature_conversion_missing_reason, /^Not applicable: integrating-sphere/);
+  assert.match(measurement.repeat_group_rule, /spot solidification rate is the average of 2 measurements/);
+  assert.equal(find(/spot, solidification/)?.n, 2);
+  assert.ok(aluminium.filter(row => !/spot, solidification/.test(row.label)).every(row => row.n === 3));
+  assert.ok(aluminium.every(row => row.derived_locally === false));
+  const nerdm = (document.sourceContext.locally_derived_artifacts as any[])
+    .find(item => item.path === 'official/nerdm-record-mds2-2525.json');
+  assert.equal(nerdm?.published_by_nist, false);
+  assert.match(nerdm.note, /local re-serialisation/);
   assert.ok(new LpbfSourceArchiveService().catalog().sources.some(item => item.datasetId === sourceId));
 });
 
@@ -172,4 +188,31 @@ test('NIST mds2-2525 previews, imports and verifies in the persistent source API
   const verified = await (await post('verify')).json();
   assert.equal(verified.artifactIntegrity, 'verified-now');
   assert.equal(verified.datasetId, sourceId);
+});
+
+test('NIST mds2-2525 source UI shows absorptance rows by material, without camera or optical-table claims', () => {
+  const document = nistMds22525AbsorptanceCatalogEntry(officialRoot).loadDocument() as LpbfSourceDocument;
+  const markup = renderToStaticMarkup(React.createElement(SourceConditions, { document, preview: true }));
+  assert.doesNotMatch(markup, /Raw camera signal|Published optical measurements/);
+  assert.match(markup, /NIST measured laser absorptance \(integrating sphere\)/);
+  assert.match(markup, /This is not validation/);
+  assert.match(markup, /Published and locally windowed absorptance observations/);
+  assert.match(markup, /Ti-6Al-4V rows only; aluminium NIST SRM 1241c/);
+  assert.match(markup, /32\.47 % ± 1\.451 %/);
+  assert.match(markup, /88\.8 micrometer ± 0\.4 micrometer/);
+  assert.match(markup, /Derived locally, window 0\.05–0\.8 ms from first laser-on/);
+  assert.match(markup, /1\/e\^2 diameter 122\.5/);
+  assert.match(markup, /Not applicable: integrating-sphere/);
+  assert.doesNotMatch(markup, /Temperature conversion<\/dt><dd class="mt-1">Unknown|Beam diameter convention<\/dt><dd class="mt-1">Unknown/);
+  const table = markup.slice(markup.indexOf('Published and locally windowed absorptance observations'));
+  const rows = [...table.slice(0, table.indexOf('</table>')).matchAll(/<tr class="border-b border-slate-800">(.*?)<\/tr>/g)].map(match => match[1]);
+  assert.equal(rows.length, 10);
+  assert.equal(rows.filter(row => row.includes('aluminium (NIST SRM 1241c)')).length, 8);
+  assert.equal(rows.filter(row => row.includes('Ti-6Al-4V (NIST SRM 654b)')).length, 2);
+  for (const row of rows) {
+    const cells = [...row.matchAll(/<td[^>]*>(.*?)<\/td>/g)].map(match => match[1]);
+    assert.equal(cells.length, 5);
+    assert.ok(cells.every(cell => !/^Unknown/.test(cell)), row);
+  }
+  assert.ok(rows.filter(row => row.includes('SRM 1241c')).every(row => row.includes('NIST-published table value')));
 });

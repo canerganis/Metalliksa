@@ -567,11 +567,13 @@ export function nistMds22525AbsorptanceCatalogEntry(root = path.resolve('data/be
         throw new Error('NIST mds2-2525 derived summary content mismatch');
       }
       const aluminiumReason = 'Aluminium (NIST SRM 1241c) challenge result; the application has no aluminium material counterpart.';
-      const aluminium = (table: any, sourceFile: string, description: string, label: string, quantity: string, laserPower_W: number) => {
+      const aluminium = (table: any, sourceFile: string, description: string, label: string, quantity: string, laserPower_W: number,
+        n: number) => {
         const row = table.rows.find((item: any) => item.description === description);
         if (!row) throw new Error('NIST mds2-2525 aluminium table row missing');
         return { label, material: 'aluminium (NIST SRM 1241c)', quantity, laser_power_W: laserPower_W,
           value: row.value, unit: row.unit, std_dev: row.std_dev, std_dev_unit: row.std_dev_unit,
+          n, n_source: 'NIST README v2.0.0 table description', derived_locally: false,
           measured: true, comparable_to_app_models: false, comparable_reason: aluminiumReason, source_file: sourceFile };
       };
       const spotAa = 'Al_Spot_AA_ASR_Results.csv';
@@ -592,21 +594,21 @@ export function nistMds22525AbsorptanceCatalogEntry(root = path.resolve('data/be
           window_ms: spot.keyhole_window_ms,
           comparable_reason: 'Stationary beam on a thin polished coupon; the application does not solve keyhole geometry.' },
         aluminium(al.spot_average_absorption, spotAa, 'Average Absorption before keyhole',
-          'Aluminium spot, average absorptance before keyhole (NIST-published)', 'average absorptance, 3 runs', 501),
+          'Aluminium spot, average absorptance before keyhole (NIST-published)', 'average absorptance, 3 runs', 501, 3),
         aluminium(al.spot_average_absorption, spotAa, 'Average Absorption during keyhole',
-          'Aluminium spot, average absorptance during keyhole (NIST-published)', 'average absorptance, 3 runs', 501),
+          'Aluminium spot, average absorptance during keyhole (NIST-published)', 'average absorptance, 3 runs', 501, 3),
         aluminium(al.spot_average_absorption, spotAa, 'Solidification Rate',
-          'Aluminium spot, solidification rate (NIST-published)', 'solidification rate', 501),
+          'Aluminium spot, solidification rate (NIST-published)', 'solidification rate', 501, 2),
         aluminium(al.scan_average_absorption, scanAa, 'Average Absorption before keyhole',
-          'Aluminium scan, average absorptance before keyhole (NIST-published)', 'average absorptance, 3 runs', 473),
+          'Aluminium scan, average absorptance before keyhole (NIST-published)', 'average absorptance, 3 runs', 473, 3),
         aluminium(al.scan_average_absorption, scanAa, 'Average Absorption during keyhole',
-          'Aluminium scan, average absorptance during keyhole (NIST-published)', 'average absorptance, 3 runs', 473),
+          'Aluminium scan, average absorptance during keyhole (NIST-published)', 'average absorptance, 3 runs', 473, 3),
         aluminium(al.scan_average_absorption, scanAa, 'Melt Pool Depth - Maximum',
-          'Aluminium scan, maximum melt-pool depth (NIST-published)', 'maximum melt-pool depth from X-ray imaging', 473),
+          'Aluminium scan, maximum melt-pool depth (NIST-published)', 'maximum melt-pool depth from X-ray imaging', 473, 3),
         aluminium(al.scan_average_absorption, scanAa, 'Melt Pool Width - Maximum',
-          'Aluminium scan, maximum melt-pool width (NIST-published)', 'maximum melt-pool width from X-ray imaging', 473),
+          'Aluminium scan, maximum melt-pool width (NIST-published)', 'maximum melt-pool width from X-ray imaging', 473, 3),
         aluminium(al.scan_average_absorption, scanAa, 'Solidification Rate',
-          'Aluminium scan, solidification rate (NIST-published)', 'solidification rate', 473),
+          'Aluminium scan, solidification rate (NIST-published)', 'solidification rate', 473, 3),
       ];
       const artifacts = [
         ...files.map((file: any) => ({ relativePath: `official/${file.path}`, sha256: file.sha256,
@@ -622,7 +624,9 @@ export function nistMds22525AbsorptanceCatalogEntry(root = path.resolve('data/be
           publisher_artifact_kind: manifest.artifact_kind, checksum_authority: manifest.checksum_authority,
           acquisition: manifest.acquisition,
           locally_derived_artifacts: [{ path: 'derived/ti64-spot-absorptance-summary-v1.json', published_by_nist: false,
-            note: 'Locally derived from the publisher CSV files; the sourceUrl of this artifact is the DOI landing page, not a NIST download.' }],
+            note: 'Locally derived from the publisher CSV files; the sourceUrl of this artifact is the DOI landing page, not a NIST download.' },
+          { path: 'official/nerdm-record-mds2-2525.json', published_by_nist: false,
+            note: 'Content is the NIST NERDm record, but these bytes are a local re-serialisation (sorted keys, indent 1); the bytes served at its sourceUrl will not match. Its SHA-256 is locally authoritative only.' }],
           experiment: { process_scope: 'bare-plate', machine: 'APS 32-ID-B integrating-sphere and X-ray imaging apparatus',
             laser: manifest.experiment.laser, spot_diameter_1_over_e2_um: manifest.experiment.spot_diameter_1_over_e2_um,
             beam_waist_um: manifest.experiment.beam_waist_um, materials: manifest.experiment.materials,
@@ -633,7 +637,10 @@ export function nistMds22525AbsorptanceCatalogEntry(root = path.resolve('data/be
             method: manifest.experiment.absorptance_method, xray_imaging: manifest.experiment.xray_imaging,
             unit_source: 'W and %',
             uncertainty: 'The AbsAbsorptionUncertainty column is the publisher absolute expanded uncertainty in W; the uncertainty analysis PDF is not acquired.',
-            repeat_group_rule: 'Aluminium challenge averages are 3 runs with 1 standard deviation as given by NIST; the Ti-6Al-4V spot file is a single trace.' },
+            beam_diameter_definition: '1/e^2 diameter 122.5 ± 3.0 µm at the sample surface, 2.8 mm below the beam waist (NIST README)',
+            temperature_conversion: null,
+            temperature_conversion_missing_reason: 'Not applicable: integrating-sphere power measurement, no camera or thermal signal.',
+            repeat_group_rule: 'Aluminium before/during-keyhole absorptance averages are 3 runs with 1 standard deviation; the aluminium spot solidification rate is the average of 2 measurements; the aluminium scan maximum melt-pool depth/width and solidification rate are averages of 3 measurements (NIST README). The Ti-6Al-4V spot file is a single trace.' },
           observations, unavailable_files: derived.unavailable,
           not_archived_components: manifest.not_archived_components, split: 'unassigned',
           unresolved: [

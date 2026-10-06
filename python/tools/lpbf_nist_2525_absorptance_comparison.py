@@ -199,8 +199,8 @@ def flat_plate_authority() -> Dict[str, Any]:
     if resolved is None:
         raise ValueError("lpbf_thermal_solver does not resolve Ti-6Al-4V; flat-plate comparison impossible")
     resolved_value = float(resolved["absorptivity_IR"])
-    origin = ("lpbf_thermal_solver.thermal_props('Ti-6Al-4V')['absorptivity_IR'] (four_alloy_materials; first "
-              "lookup in calculate_meltpool_physics)" if primary else
+    origin = ("lpbf_thermal_solver.thermal_props('Ti-6Al-4V')['absorptivity_IR'] (four_alloy_materials)"
+              if primary else
               "lpbf_thermal_solver.SECONDARY_THERMOPHYSICAL_DB['Ti-6Al-4V']['absorptivity_IR'] (fallback table)")
     four = float(thermal_props(name)["absorptivity_IR"])
     reg = float(registry.material(name)["absorptivity"])
@@ -212,6 +212,10 @@ def flat_plate_authority() -> Dict[str, Any]:
     return {
         "absorptivityOfRecord": resolved_value,
         "origin": origin,
+        "solverRole": ("flat-plate eta_base_flat of calculate_meltpool_physics; in the solver's default path "
+                       "eta_base is replaced by powder_bed_raytracer's effective_absorptivity, so this value is "
+                       "the solver's absorptivity only when that powder-bed tracer is pinned off (as in the test "
+                       "that calls the solver)"),
         "fourAlloyMaterials": four,
         "materialRegistry": reg,
         "secondaryInlineTable": {"entries": secondary, "containsTi64": secondary_has_ti64, "note": note},
@@ -291,35 +295,24 @@ def bracket(sweep: List[Dict[str, Any]], measured_pct: float) -> Dict[str, Any]:
                     "not a prediction and not a calibration"}
 
 
+SCAN_NOT_COMPARED_REASON = (
+    "scan CSV present and hash-verified, but no comparison is made: scan-specific analysis windows for a "
+    "700 mm/s trace have not been defined or reviewed (the spot-pulse windows counted from first laser-on do not "
+    "apply), so the thermal solver is not run and no number is reported")
+
+
 def thermal_solver_scan(loader, root: Path) -> Dict[str, Any]:
-    """Ti-6Al-4V scan case, run only if the pinned scan CSV is present (it is checked at run time)."""
+    """Ti-6Al-4V scan case.
+
+    Absent file -> unavailable.  Present file -> verified strictly through the loader (a size/SHA-256 or parse
+    failure raises; the run is refused, never downgraded), then still reported as unavailable because no
+    scan-specific windows exist.  The thermal solver is not run here and sys.modules is never touched.
+    """
     path = Path(root) / SCAN_NAME
     if not path.is_file():
         return unavailable(f"Ti-6Al-4V scan CSV {SCAN_NAME}: {ABSENT_REASON}")
-    try:
-        series = loader.load_ti64_scan_series(root)
-        summary = loader.summarize_ti64_spot(series)
-    except Exception as exc:
-        return unavailable(f"scan CSV present but could not be verified/parsed: {type(exc).__name__}: {exc}")
-    sys.modules["powder_bed_raytracer"] = None  # pin the flat-plate path exactly as lpbf_dataset_comparison.pin_flat_plate
-    import contextlib
-    import io
-    from lpbf_thermal_solver import calculate_meltpool_physics
-    power = summary["input_power_median_W"]
-    with contextlib.redirect_stdout(io.StringIO()):
-        res = calculate_meltpool_physics("Ti-6Al-4V", power, EXPERIMENT["scan_mm_s"],
-                                         EXPERIMENT["spotDiameter1overE2_um"], 20.0, 30.0, 100.0)
-    pp, g = res["processParameters"], res["meltPoolGeometry"]
-    return {"status": "success", "inputs": {"power_W": power, "scan_mm_s": EXPERIMENT["scan_mm_s"],
-                                           "spotDiameter_um": EXPERIMENT["spotDiameter1overE2_um"],
-                                           "preheat_C": 20.0, "layer_um": 30.0, "hatch_um": 100.0,
-                                           "absorptionPath": "flat-plate (powder ray tracer pinned off)"},
-            "eta_base": pp["conductionAbsorptivity"], "eta_eff": pp["effectiveAbsorptivity"],
-            "normalizedEnthalpy": pp["normalizedEnthalpy"], "regime": g["regime"],
-            "width_um": g["width_um"], "depth_um": g["depth_um"],
-            "measured": {"before_keyhole_mean_pct": summary["pre_keyhole_mean_pct"],
-                         "during_keyhole_mean_pct": summary["keyhole_mean_pct"],
-                         "caveat": "spot-pulse local windows applied to the scan trace; not NIST phase boundaries"}}
+    series = loader.load_ti64_scan_series(root)  # raises on hash/size/parse failure
+    return unavailable(SCAN_NOT_COMPARED_REASON, verifiedSamples=len(series["time_s"]))
 
 
 # ---------------------------------------------------------------------------------------------
@@ -406,20 +399,12 @@ def build_document(quick: bool, generated_at: str, root: Path = SOURCE_DIR) -> D
     rows.append({"id": "ti64-spot-pre-keyhole-flat-plate", "quantity": "pre-keyhole absorptance, Ti-6Al-4V stationary pulse",
                  "material": TI64_MATERIAL, "measured": pre, "measuredStd": summary["pre_keyhole_std_pct"],
                  "measuredUnit": "%", "model": model_pct, "modelUnit": "%",
-                 "modelId": "four_alloy_materials.absorptivity_IR (flat plate)", "difference": diff_pp,
+                 "modelId": authority["origin"], "difference": diff_pp,
                  "differenceUnit": "percentage points (model - measured)",
                  "differenceRelative_pct": 100.0 * diff_pp / pre, "status": "compared",
                  "reason": "flat polished surface before any cavity: the like-for-like comparison; 7 deg incidence, "
                            "thin coupon and temperature dependence not represented by the constant"})
     if rt["status"] == "success":
-        d0 = 100.0 * rt["sweep"][0]["absorbed_fraction"]
-        rows.append({"id": "ti64-spot-pre-keyhole-raytracer-flat", "quantity": "pre-keyhole absorptance, ray tracer at depth 0",
-                     "material": TI64_MATERIAL, "measured": pre, "measuredStd": summary["pre_keyhole_std_pct"],
-                     "measuredUnit": "%", "model": d0, "modelUnit": "%", "modelId": rt["model_id"],
-                     "difference": d0 - pre, "differenceUnit": "percentage points (model - measured)",
-                     "differenceRelative_pct": 100.0 * (d0 - pre) / pre, "status": "compared",
-                     "reason": "flat mesh at normal incidence returns the input base absorptivity; not independent of the "
-                               "flat-plate row"})
         sw = rt["sweep"]
         rows.append({"id": "ti64-spot-keyhole-raytracer-sensitivity", "quantity": "keyhole-phase absorptance, prescribed-depth sweep",
                      "material": TI64_MATERIAL, "measured": key, "measuredStd": summary["keyhole_std_pct"],
@@ -441,19 +426,10 @@ def build_document(quick: bool, generated_at: str, root: Path = SOURCE_DIR) -> D
                  "material": TI64_MATERIAL, "measured": key, "measuredUnit": "%", "model": None,
                  "modelId": "lpbf_thermal_solver.calculate_meltpool_physics", "difference": None,
                  "status": "unavailable", "reason": thermal_spot["reason"]})
-    if thermal_scan["status"] == "success":
-        rows.append({"id": "ti64-scan-thermal-solver-eta-eff", "quantity": "Ti-6Al-4V scan eta_eff (700 mm/s)",
-                     "material": TI64_MATERIAL, "measured": thermal_scan["measured"]["during_keyhole_mean_pct"],
-                     "measuredUnit": "%", "model": 100.0 * thermal_scan["eta_eff"], "modelUnit": "%",
-                     "modelId": "lpbf_thermal_solver.calculate_meltpool_physics",
-                     "difference": 100.0 * thermal_scan["eta_eff"] - thermal_scan["measured"]["during_keyhole_mean_pct"],
-                     "differenceUnit": "percentage points (model - measured)", "status": "compared",
-                     "reason": "scan trace summarised with the spot-pulse local windows"})
-    else:
-        rows.append({"id": "ti64-scan-before-during-keyhole", "quantity": "Ti-6Al-4V scan (700 mm/s) before/during-keyhole absorptance",
-                     "material": TI64_MATERIAL, "measured": None, "measuredUnit": "%", "model": None,
-                     "modelId": "lpbf_thermal_solver.calculate_meltpool_physics", "difference": None,
-                     "status": "unavailable", "reason": thermal_scan["reason"]})
+    rows.append({"id": "ti64-scan-before-during-keyhole", "quantity": "Ti-6Al-4V scan (700 mm/s) before/during-keyhole absorptance",
+                 "material": TI64_MATERIAL, "measured": None, "measuredUnit": "%", "model": None,
+                 "modelId": "lpbf_thermal_solver.calculate_meltpool_physics", "difference": None,
+                 "status": "unavailable", "reason": thermal_scan["reason"]})
     rows.append({"id": "ti64-absorption-uncertainty-analysis", "quantity": "NIST published absorptance uncertainty analysis",
                  "material": TI64_MATERIAL, "measured": None, "measuredUnit": None, "model": None, "modelId": None,
                  "difference": None, "status": "unavailable",
@@ -592,7 +568,7 @@ def render_markdown(doc: Dict[str, Any]) -> str:
             (f"Keyhole-phase mean, window {s['keyhole_window_ms']} ms (local)", s["keyhole_mean_pct"], "%"),
             ("Keyhole-phase sample std", s["keyhole_std_pct"], "%"),
             ("Transition time (local rule)", s.get("transition_time_ms"), "ms"),
-            ("Energy coupling, absorbed J / input J", 100.0 * s["energy_coupling_fraction"], "%"),
+            ("Energy coupling, absorbed J / input J (derived locally, trapezoid over laser-on samples)", 100.0 * s["energy_coupling_fraction"], "%"),
             ("Median per-sample absorbed-power uncertainty", m["uncertainty"]["median_W"], "W"),
             ("... as percentage points of median input", m["uncertainty"]["median_as_pp_of_median_input"], "pp")):
         a(f"| {label} | {_fmt(val)} | {unit} |")
@@ -619,7 +595,7 @@ def render_markdown(doc: Dict[str, Any]) -> str:
     a(f"Flat-plate absorptivity of record: {_fmt(fp['value_pct'])} % (origin: {fp['authority']['origin']}). "
       f"Model minus measured = {_fmt(fp['difference_pp'])} percentage points "
       f"({_fmt(fp['difference_relative_pct'])} % relative). "
-      f"Note: {fp['authority']['secondaryInlineTable']['note']}.")
+      f"Note: {fp['authority']['secondaryInlineTable']['note']}. Solver role: {fp['authority']['solverRole']}.")
     a("")
     rt = doc["models"]["keyholeRayTracing"]
     a("## Ray-tracing sensitivity sweep (prescribed Gaussian cavity; SENSITIVITY, not calibration)")

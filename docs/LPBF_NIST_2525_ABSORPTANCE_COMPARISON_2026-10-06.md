@@ -35,7 +35,7 @@ Experiment: Ti-6Al-4V (NIST SRM 654b), 1070 nm, 1/e^2 spot diameter 122.5 um (+/
 | Keyhole-phase mean, window [0.9, 2.0] ms (local) | 62.01 | % |
 | Keyhole-phase sample std | 7.091 | % |
 | Transition time (local rule) | 0.85 | ms |
-| Energy coupling, absorbed J / input J | 49.4 | % |
+| Energy coupling, absorbed J / input J (derived locally, trapezoid over laser-on samples) | 49.4 | % |
 | Median per-sample absorbed-power uncertainty | 1.158 | W |
 | ... as percentage points of median input | 1.137 | pp |
 
@@ -46,10 +46,9 @@ RelativeAbsorption (%) is NIST column 6 ('Percent absorption'; README: input min
 | Quantity | Measured | Model | Difference | Status |
 | --- | ---: | ---: | ---: | --- |
 | pre-keyhole absorptance, Ti-6Al-4V stationary pulse | 32.47 +/- 1.451 % | 35 % | 2.529 (percentage points (model - measured)) | compared |
-| pre-keyhole absorptance, ray tracer at depth 0 | 32.47 +/- 1.451 % | 35 % | 2.529 (percentage points (model - measured)) | compared |
 | keyhole-phase absorptance, prescribed-depth sweep | 62.01 +/- 7.091 % | 35 to 93.56 % (sweep) | - | sensitivity-only |
 
-Flat-plate absorptivity of record: 35 % (origin: lpbf_thermal_solver.thermal_props('Ti-6Al-4V')['absorptivity_IR'] (four_alloy_materials; first lookup in calculate_meltpool_physics)). Model minus measured = 2.529 percentage points (7.788 % relative). Note: the secondary inline table has no Ti-6Al-4V entry, so no legacy value competes with the resolved one.
+Flat-plate absorptivity of record: 35 % (origin: lpbf_thermal_solver.thermal_props('Ti-6Al-4V')['absorptivity_IR'] (four_alloy_materials)). Model minus measured = 2.529 percentage points (7.788 % relative). Note: the secondary inline table has no Ti-6Al-4V entry, so no legacy value competes with the resolved one. Solver role: flat-plate eta_base_flat of calculate_meltpool_physics; in the solver's default path eta_base is replaced by powder_bed_raytracer's effective_absorptivity, so this value is the solver's absorptivity only when that powder-bed tracer is pinned off (as in the test that calls the solver).
 
 ## Ray-tracing sensitivity sweep (prescribed Gaussian cavity; SENSITIVITY, not calibration)
 

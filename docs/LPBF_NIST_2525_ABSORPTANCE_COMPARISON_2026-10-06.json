@@ -15,26 +15,10 @@
     "measuredStd": 1.4509,
     "measuredUnit": "%",
     "model": 35.0,
-    "modelId": "four_alloy_materials.absorptivity_IR (flat plate)",
+    "modelId": "lpbf_thermal_solver.thermal_props('Ti-6Al-4V')['absorptivity_IR'] (four_alloy_materials)",
     "modelUnit": "%",
     "quantity": "pre-keyhole absorptance, Ti-6Al-4V stationary pulse",
     "reason": "flat polished surface before any cavity: the like-for-like comparison; 7 deg incidence, thin coupon and temperature dependence not represented by the constant",
-    "status": "compared"
-   },
-   {
-    "difference": 2.52881,
-    "differenceRelative_pct": 7.78787,
-    "differenceUnit": "percentage points (model - measured)",
-    "id": "ti64-spot-pre-keyhole-raytracer-flat",
-    "material": "Ti-6Al-4V (NIST SRM 654b)",
-    "measured": 32.4712,
-    "measuredStd": 1.4509,
-    "measuredUnit": "%",
-    "model": 35.0,
-    "modelId": "prescribed-cavity-ray-optics-v2",
-    "modelUnit": "%",
-    "quantity": "pre-keyhole absorptance, ray tracer at depth 0",
-    "reason": "flat mesh at normal incidence returns the input base absorptivity; not independent of the flat-plate row",
     "status": "compared"
    },
    {
@@ -699,7 +683,7 @@
     "allEqual": true,
     "fourAlloyMaterials": 0.35,
     "materialRegistry": 0.35,
-    "origin": "lpbf_thermal_solver.thermal_props('Ti-6Al-4V')['absorptivity_IR'] (four_alloy_materials; first lookup in calculate_meltpool_physics)",
+    "origin": "lpbf_thermal_solver.thermal_props('Ti-6Al-4V')['absorptivity_IR'] (four_alloy_materials)",
     "secondaryInlineTable": {
      "containsTi64": false,
      "entries": {
@@ -710,7 +694,8 @@
       "Scalmalloy (Al-Mg-Sc-Zr)": 0.22
      },
      "note": "the secondary inline table has no Ti-6Al-4V entry, so no legacy value competes with the resolved one"
-    }
+    },
+    "solverRole": "flat-plate eta_base_flat of calculate_meltpool_physics; in the solver's default path eta_base is replaced by powder_bed_raytracer's effective_absorptivity, so this value is the solver's absorptivity only when that powder-bed tracer is pinned off (as in the test that calls the solver)"
    },
    "comparedWith": {
     "measuredMean_pct": 32.4712,
