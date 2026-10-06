@@ -358,7 +358,9 @@ def _percentile(sorted_vals: Sequence[float], q: float) -> float:
     return sorted_vals[lo] + (sorted_vals[hi] - sorted_vals[lo]) * (pos - lo)
 
 
-def _ci(vals: List[float]) -> List[float]:
+def _ci(vals: List[float]) -> Optional[List[float]]:
+    if not vals:  # every paired skill draw undefined (baseline error exactly 0): no interval, not a crash
+        return None
     vals.sort()
     return [_percentile(vals, 2.5), _percentile(vals, 97.5)]
 
