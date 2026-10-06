@@ -22,6 +22,12 @@ test("an unsaturated or unlabelled peak keeps its own value as the scale top", (
   assert.equal(colourScalePeak_C(result(2500, undefined), 1336), 2500);
 });
 
+test("a result without surfaceTemperature_C is still capped at the display fallback", () => {
+  assert.equal(colourScalePeak_C(result(35097, undefined), 1336), 3500);
+  // 1.5 * liquidus above the fallback still wins.
+  assert.equal(colourScalePeak_C(result(35097, undefined), 2500), 3750);
+});
+
 test("basis label text, null for results without the Wave B label", () => {
   assert.match(peakTemperatureBasisLabel(result(35097, 2850, "regularised-singular-source-value")) ?? "", /regularised point-source centre value, not a wall temperature/);
   assert.match(peakTemperatureBasisLabel(result(19000, 2850, "distributed-source-conduction-centre-value")) ?? "", /not a wall temperature/);
