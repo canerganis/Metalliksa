@@ -147,7 +147,7 @@ export const MaterialsDatabaseView: React.FC<MaterialsDatabaseViewProps> = ({ on
           </div>
           <h2 className="text-lg font-bold text-white tracking-tight mt-0.5">Searchable Metallurgical Materials Database</h2>
           <p className="text-xs text-slate-400 max-w-3xl mt-0.5">
-            Calibrated chemical compositions, tensile & yield strength, Young&apos;s modulus, density, microstructures, heat treatments, and applications for steels, aluminum, titanium, copper, nickel superalloys, magnesium & refractories.
+            Chemical compositions, tensile & yield strength, Young&apos;s modulus, density, microstructures, heat treatments, and applications for steels, aluminum, titanium, copper, nickel superalloys, magnesium & refractories.
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">

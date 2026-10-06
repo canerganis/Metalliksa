@@ -175,7 +175,7 @@ class TafelSolveRequiredIcorrTest(unittest.TestCase):
         self.assertIn("iCorr_uA_cm2 was not supplied", out["unavailableReason"])
         for key in ("corrosionRateMmYr", "corrosionRateMpy", "corrosionRateUmYr", "massLoss_g_m2_day",
                     "sternGearyB_V", "rp_ohm_cm2", "iCorr_uA_cm2", "eCorr_V", "betaA", "betaC",
-                    "rulUniformYears", "rulPittingYears", "severity", "pythonCode"):
+                    "rulUniformYears", "severity"):
             self.assertIsNone(out[key], key)
         self.assertEqual(out["timelineProjections"], [])
         self.assertEqual(out["temperatureSensitivity"], [])
@@ -205,7 +205,6 @@ class TafelSolveRequiredIcorrTest(unittest.TestCase):
         self.assertIsNone(out["betaA"])
         self.assertIsNone(out["betaC"])
         self.assertAlmostEqual(out["corrosionRateMmYr"] / faraday_rate_mm_yr(1.25, 24.8205, 7.98), 1.0, delta=1e-3)
-        self.assertNotIn("sternGeary", out["pythonCode"].replace("Stern-Geary B and Rp are unavailable", ""))
         json.dumps(out, allow_nan=False)
 
     def test_complete_input_is_unchanged(self):
@@ -442,13 +441,14 @@ class CorrosionKineticsRequiredInputsTest(unittest.TestCase):
         args = dict(self.ALL)
         args.update(over)
         return battery.simulate_corrosion_eis_and_kinetics(
-            args["metal_id"], args["beta_a"], args["beta_c"], args["i0_corr_ua_cm2"], args["e_pit_v"], args["e0_v"], 60)
+            args["metal_id"], args["beta_a"], args["beta_c"], args["i0_corr_ua_cm2"], args["e_pit_v"], args["e0_v"])
 
     def test_complete_input_has_no_status(self):
         out = self.run_kinetics()
         self.assertNotIn("status", out)
         self.assertNotIn("unavailable", out)
-        self.assertEqual(len(out["coatingNyquist"]), 3)
+        self.assertNotIn("coatingNyquist", out)
+        self.assertNotIn("coatingTimeline", out)
 
     def test_nothing_supplied_is_unavailable_with_every_reason(self):
         out = battery.simulate_corrosion_eis_and_kinetics(None, None, None, None, None, None)
@@ -457,9 +457,6 @@ class CorrosionKineticsRequiredInputsTest(unittest.TestCase):
         for key in ("sternGeary_B_V", "polarizationResistance_Rp_Ohm_cm2", "corrosionRate_mm_yr", "corrosionRate_mpy",
                     "deltaE_pit_V", "pittingAssessment", "alloyId", "equivalentWeight_g_eq", "density_g_cm3"):
             self.assertIsNone(out[key], key)
-        self.assertEqual(out["coatingNyquist"], [])
-        # the water-uptake timeline depends on the exposure only, not on any electrochemical input
-        self.assertTrue(out["coatingTimeline"])
         json.dumps(out, allow_nan=False)
 
     def test_each_missing_input_only_removes_what_needs_it(self):
@@ -468,7 +465,6 @@ class CorrosionKineticsRequiredInputsTest(unittest.TestCase):
         self.assertEqual(set(out["unavailable"]), {"betaA"})
         self.assertIsNone(out["sternGeary_B_V"])
         self.assertIsNone(out["polarizationResistance_Rp_Ohm_cm2"])
-        self.assertEqual(out["coatingNyquist"], [])
         self.assertIsNotNone(out["corrosionRate_mm_yr"])
         self.assertIsNotNone(out["deltaE_pit_V"])
         out = self.run_kinetics(i0_corr_ua_cm2=None)
@@ -542,6 +538,29 @@ class TafelSourceGuardTest(unittest.TestCase):
         for pattern in ("or 1.25", "or -0.35", "or 0.120", "or 0.100", "\"r2\": 0.85", "m_fall = -8.33",
                         "m_fall = 10.0", "curr_uA = 1.0"):
             self.assertNotIn(pattern, source)
+
+
+class EyewashRemovalTest(unittest.TestCase):
+    """Fixed-constant coating output, annual-rate script template and pitting x3.5 heuristic are gone."""
+
+    def test_annual_rate_has_no_template_script_or_pitting_heuristic(self):
+        out = tafel.solve_tafel_corrosion_rate({"alloyId": "steel-316l", "iCorr_uA_cm2": 1.25, "betaA": 0.12, "betaC": 0.10})
+        for key in ("pythonCode", "rulPittingYears"):
+            self.assertNotIn(key, out)
+        for row in out["timelineProjections"]:
+            self.assertNotIn("lossPittingMm", row)
+            self.assertNotIn("remainingPittingMm", row)
+
+    def test_corrosion_kinetics_has_no_fixed_constant_coating_model(self):
+        out = battery.simulate_corrosion_eis_and_kinetics("steel-316l", 0.12, 0.10, 0.15, 0.45, 0.08)
+        self.assertNotIn("coatingTimeline", out)
+        self.assertNotIn("coatingNyquist", out)
+        self.assertIsNotNone(out["polarizationResistance_Rp_Ohm_cm2"])
+        self.assertIsNotNone(out["corrosionRate_mm_yr"])
+
+    def test_tafel_solver_method_does_not_claim_a_global_optimiser(self):
+        source = (HERE / "tafel_corrosion_rate_solver.py").read_text(encoding="utf-8")
+        self.assertNotIn("Evans Optimization", source)
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
  * METALLIX WebGL & GLSL Shader Pipeline Engine
  * 
  * Hardware-accelerated GPU shaders for:
- * 1. Ultra-dense Spectrometer data (100,000+ points at 60 FPS with glowing baseline & peak fills)
+ * 1. Dense Spectrometer data (line, optional background overlay and peak fills; no frame-rate guarantee)
  * 2. Real-time EBSD IPF Voronoi crystallographic orientation & KAM dislocation maps
  * 3. Multi-Channel EDS SEM Hyper-Spectral elemental false-color blending
  */

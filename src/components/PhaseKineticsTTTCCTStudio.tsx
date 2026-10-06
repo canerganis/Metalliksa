@@ -208,6 +208,9 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
     () => phaseSlices.slices.map((s) => ({ name: s.name, value: s.value, color: phaseColors[s.key] })),
     [phaseSlices]
   );
+  // The solver currently returns no phase fractions or hardness: say so in the tab label and headings instead of
+  // promising a prediction.
+  const microstructureComputed = pieData.length > 0 || currentCCTMatch?.predictedHardness_HRC != null;
   const modelBanner = kineticsModelBanner(kineticsData?.kineticsModel, kineticsData?.tttIncubationFloor);
   const gap = kineticsData?.calphadVsKineticsGap;
   const lswState = kineticsLswAvailability(
@@ -500,8 +503,8 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
               { id: "ttt", label: "1. TTT Isothermal Diagram", icon: Clock },
               { id: "cct", label: "2. CCT Continuous Cooling", icon: TrendingUp },
               { id: "calphad_vs_kinetics", label: "3. CALPHAD vs. Kinetics Gap", icon: AlertTriangle },
-              { id: "lsw_aging", label: "4. LSW Aging & Orowan", icon: Atom },
-              { id: "microstructure", label: "5. Phase & Hardness", icon: Layers }
+              { id: "lsw_aging", label: "4. LSW Aging & Orowan (illustrative)", icon: Atom },
+              { id: "microstructure", label: microstructureComputed ? "5. Phase & Hardness" : "5. Phase & Hardness (not computed)", icon: Layers }
             ].map((tab) => {
               const Icon = tab.icon;
               return (
@@ -718,9 +721,6 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                     <span className="text-xs font-bold text-sky-300 uppercase tracking-wide">
                       CALPHAD (Equilibrium, $t \rightarrow \infty$)
                     </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-sky-500/10 text-sky-300 border border-sky-500/20">
-                      Gibbs Minimization
-                    </span>
                   </div>
                   <div className="space-y-2 text-xs">
                     <div className="flex justify-between">
@@ -809,7 +809,7 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                     </span>
                   </h3>
                   <p className="text-[11px] text-slate-400 mt-0.5">
-                    Precipitate particle radius growth and transition from Dislocation Cutting to Orowan Looping.
+                    Illustrative only: generic LSW / Orowan constants, not fitted to this alloy's precipitate system. Precipitate particle radius growth and transition from Dislocation Cutting to Orowan Looping.
                   </p>
                 </div>
               </div>
@@ -875,15 +875,18 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
             <div className="p-5 rounded-2xl bg-[#0b1322] border border-slate-800 space-y-5">
               <div>
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <span>Room-Temperature Retained Phase Distribution & Hardness</span>
+                  <span>{microstructureComputed ? "Room-Temperature Retained Phase Distribution & Hardness" : "Phase Fractions & Hardness: not computed"}</span>
                 </h3>
                 <p className="text-[11px] text-slate-400 mt-0.5">
-                  Predicted phase fractions and Vickers/Rockwell hardness at cooling rate {coolingRate} °C/s
+                  {microstructureComputed
+                    ? `Phase fractions and Vickers/Rockwell hardness at cooling rate ${coolingRate} °C/s`
+                    : "This model does not compute phase fractions or hardness; nothing below is a prediction."}
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                 {/* Pie Chart */}
+                {pieData.length > 0 ? (
                 <div className="h-[260px] w-full flex items-center justify-center">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -906,11 +909,14 @@ export const PhaseKineticsTTTCCTStudio: React.FC<PhaseKineticsTTTCCTStudioProps>
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
+                ) : (
+                  <div data-phase-pie-unavailable className="text-[11px] text-slate-400">No phase fractions available.</div>
+                )}
 
                 {/* Hardness & Summary */}
                 <div className="space-y-3">
                   <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
-                    <div className="text-[10px] text-slate-500 uppercase tracking-wider">PREDICTED HARDNESS AT RT</div>
+                    <div className="text-[10px] text-slate-500 uppercase tracking-wider">{microstructureComputed ? "PREDICTED HARDNESS AT RT" : "HARDNESS AT RT"}</div>
                     <div className="flex items-baseline gap-3" title={currentHardness.note}>
                       <span className="text-2xl font-bold font-mono text-emerald-400">
                         {currentHardness.hrc}

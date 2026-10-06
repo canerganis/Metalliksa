@@ -222,3 +222,15 @@ test("the first render uses the supplied result: the solver is not called", () =
   const src = readFileSync(new URL("../src/components/PhaseKineticsTTTCCTStudio.tsx", import.meta.url), "utf8");
   assert.match(src, /if \(initialData\) return;/);
 });
+
+test("Phase & Hardness tab is labelled not computed and renders no empty pie when fractions and hardness are null", () => {
+  for (const key of [...MODELLED, ...UNAVAILABLE]) {
+    const markup = render(key, "microstructure");
+    const t = text(markup);
+    assert.ok(t.includes("5. Phase & Hardness (not computed)"), key);
+    assert.ok(t.includes("This model does not compute phase fractions or hardness"), key);
+    assert.ok(!/Predicted phase fractions|PREDICTED HARDNESS/i.test(t), key);
+    assert.ok(markup.includes("data-phase-pie-unavailable"), key);
+    assert.ok(!markup.includes("recharts-wrapper"), key);
+  }
+});

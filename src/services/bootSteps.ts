@@ -84,10 +84,10 @@ export function buildBootSteps(deps: BootStepDeps): BootStep[] {
       // its size. DESIGN-9 also proposed preloading the first module chunk here; that check was dropped
       // (it would delay boot and module chunk errors are already caught by ModuleBoundary).
       id: "modules",
-      label: "Module registry",
+      label: "Module registry (bundled)",
       run: async () => {
         const n = deps.moduleCount();
-        return n > 0 ? { state: "ok", detail: `Registry loaded · ${n} modules` } : { state: "unavailable", detail: "Registry empty" };
+        return n > 0 ? { state: "ok", detail: `Bundled with the app · ${n} modules (not probed)` } : { state: "unavailable", detail: "Registry empty" };
       },
     },
   ];

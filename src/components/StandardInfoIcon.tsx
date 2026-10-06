@@ -99,16 +99,16 @@ export const METALLURGICAL_STANDARDS: Record<string, StandardDetails> = {
       "Requires recorded calibration traceability to NIST/PTB standards and documented measurement uncertainty.",
   },
   weldability: {
-    standardCode: "AWS D1.1 / IIW Carbon Equivalent",
-    secondaryCodes: ["ISO 17660", "BS 5135", "WES 3001 (Pcm)"],
-    title: "Structural Welding Code - Steel & Carbon Equivalent Criteria",
-    governingBody: "American Welding Society (AWS) / International Institute of Welding (IIW)",
+    standardCode: "IIW Carbon Equivalent / Pcm equations",
+    secondaryCodes: ["WES 3001 (Pcm)"],
+    title: "Carbon Equivalent (IIW CE / Pcm) and in-house preheat heuristic",
+    governingBody: "International Institute of Welding (IIW) / Japan Welding Engineering Society (Pcm)",
     methodology:
-      "Predicts susceptibility to hydrogen-induced cold cracking (HACC) in heat-affected zones (HAZ). Computes IIW CE and Ito-Bessyo Pcm to prescribe minimum preheat and interpass temperatures.",
+      "Computes IIW CE and Ito-Bessyo Pcm as indicators of hydrogen-induced cold cracking susceptibility in heat-affected zones. The preheat temperature shown beside them is an unsourced in-house heuristic, not an AWS D1.1 value or procedure; it does not prescribe preheat or interpass temperatures.",
     equations: "CE(IIW) = C + Mn/6 + (Cr+Mo+V)/5 + (Ni+Cu)/15 | Pcm = C + Si/30 + (Mn+Cu+Cr)/20 + Ni/60 + Mo/15 + V/10 + 5B",
     validRange: "Carbon and low-alloy structural steels (CE: 0.20 to 0.70)",
     criticalNotes:
-      "Preheat recommended when CE > 0.40; mandatory hydrogen-controlled consumables when CE > 0.45.",
+      "Qualify preheat and interpass temperature per the governing code and procedure qualification, not from this tool.",
   },
   diffusion: {
     standardCode: "Fick's 2nd Law / ASTM E1077",
@@ -123,16 +123,16 @@ export const METALLURGICAL_STANDARDS: Record<string, StandardDetails> = {
       "Effective case depth (ECD) is conventionally defined at 0.40% C or 50 HRC / 513 HV per ISO 2639.",
   },
   schaeffler: {
-    standardCode: "AWS A5.4 / WRC-1992 / ISO 8249",
-    secondaryCodes: ["DeLong Diagram", "ASTM A240", "ASME Sec IX"],
-    title: "Constitution Diagram for Stainless Steel Weld Metal & Ferrite Number (FN)",
-    governingBody: "Welding Research Council (WRC) / American Welding Society",
+    standardCode: "Schaeffler-type Cr_eq / Ni_eq equivalents",
+    secondaryCodes: ["Schaeffler (1949) constitution diagram"],
+    title: "Chromium / Nickel equivalents with a coarse rule-based phase class",
+    governingBody: "Not a standard: published Schaeffler-type equivalents",
     methodology:
-      "Calculates Chromium equivalent (ferrite stabilizer) and Nickel equivalent (austenite stabilizer) to predict weld deposit microstructure: Austenite, Ferrite, Martensite, and primary solidification modes to avert hot tearing.",
+      "Calculates Chromium equivalent (ferrite stabilizer) and Nickel equivalent (austenite stabilizer) with Schaeffler-type coefficients and assigns a coarse rule-based phase class. It is not the WRC-1992 formulation and does not predict a measured ferrite number.",
     equations: "Creq = Cr + Mo + 1.5·Si + 0.5·Nb | Nieq = Ni + 30·C + 0.5·Mn + 30·N",
     validRange: "Dissimilar welds and stainless clad steels (Creq: 0 to 40, Nieq: 0 to 35)",
     criticalNotes:
-      "Target 4 to 12 FN in austenitic welds to prevent solidification hot cracking without embrittlement.",
+      "The ferrite value shown is a rule-based class value (0 / 15 / 80 or a linear estimate), not a measured FN; measure FN per AWS A4.2 for qualification.",
   },
   xrd: {
     standardCode: "ASTM E975-13 & Bragg's Law",

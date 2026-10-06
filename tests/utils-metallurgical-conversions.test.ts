@@ -34,13 +34,17 @@ test("temperature: fixed points of the Celsius/Kelvin/Fahrenheit/Rankine scales"
   assert.deepEqual(convertTemperature(273.15, "K"), { C: 0, K: 273.15, F: 32, R: 491.67 });
 });
 
-test("temperature: absolute zero is a hard floor", () => {
+test("temperature: absolute zero is the floor; below it (and non-finite input) is unavailable, never 0 K", () => {
   const zero = { C: -273.15, K: 0, F: -459.67, R: 0 };
   assert.deepEqual(convertTemperature(0, "K"), zero);
-  assert.deepEqual(convertTemperature(-300, "C"), zero);
+  assert.deepEqual(convertTemperature(-273.15, "C"), zero);
   assert.deepEqual(convertTemperature(-459.67, "F"), zero);
-  assert.deepEqual(convertTemperature(-1000, "K"), zero);
-  assert.deepEqual(convertTemperature(NaN, "K"), zero); // NaN -> 0 K
+  const unavailable = (v: ReturnType<typeof convertTemperature>) =>
+    assert.ok(Object.values(v).every((x) => Number.isNaN(x)), JSON.stringify(v));
+  unavailable(convertTemperature(-300, "C"));
+  unavailable(convertTemperature(-1000, "K"));
+  unavailable(convertTemperature(NaN, "K"));
+  unavailable(convertTemperature(Infinity, "C"));
 });
 
 test("temperature: round trip through every unit pair stays within rounding (0.01)", () => {
@@ -406,4 +410,18 @@ test("HBW -> HV -> HBW round trip is the identity on the tabulated range", () =>
     assert.equal(convertSteelHardness(hv, "HV").HBW, hbw, `HBW ${hbw} -> HV ${hv}`);
   }
   for (const hbw of [120, 200]) assert.equal(convertSteelHardness(hbw, "HBW").HV, null);
+});
+
+test("homologous temperature: an invalid temperature is unavailable, never a Hot Working verdict", () => {
+  const below = convertTemperature(-300, "C");
+  assert.ok(Number.isNaN(below.C));
+  const r = calculateHomologousTemperature(below.C, 1538);
+  assert.ok(Number.isNaN(r.th));
+  assert.match(r.regime, /^Unavailable/);
+  assert.equal(r.recommendation, "");
+  assert.equal(r.deformationMechanism, "");
+  assert.doesNotMatch(r.regime, /Hot Working/);
+  // Below absolute zero in degrees C is also rejected when passed directly.
+  assert.match(calculateHomologousTemperature(-300, 1538).regime, /^Unavailable/);
+  assert.match(calculateHomologousTemperature(650, 1538).regime, /Warm|Hot|Cold/);
 });

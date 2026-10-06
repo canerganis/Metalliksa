@@ -450,7 +450,7 @@ export const MODULE_REGISTRY_CORE = {
       "version": "0.0.0",
       "workspace": "materials",
       "label": "Corrosion & Electrochemistry",
-      "description": "Galvanic couples, PREN, Tafel/Stern–Geary corrosion rate, OCP (ASTM G59), Pourbaix diagrams and corrosion EIS; no equivalent-circuit fitting.",
+      "description": "PREN, Tafel/Stern–Geary corrosion rate, OCP (ASTM G59), Pourbaix diagrams and Stern–Geary/Faraday corrosion kinetics; no EIS or equivalent-circuit fitting.",
       "next": "icme-motor",
       "maturity": "Research",
       "navigation": "listed",

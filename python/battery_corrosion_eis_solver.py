@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
 MetalliX Corrosion EIS & Kinetics Solver (corrosion_kinetics action)
-ASTM G59 polarization resistance, ASTM G102 penetration rate and protective
-coating EIS water uptake (Brasher-Kingsbury) for the electrochem-suite
-corrosion-EIS sublab. The battery DRT, P2D, LLI/LAM, Bernardi thermal, SEI
+Stern-Geary polarization resistance (ASTM G59 formulation), ASTM G102 penetration rate and
+the pitting-potential margin for the electrochem-suite corrosion sublab. The former coating
+water-uptake timeline and coating Nyquist spectra were removed: they came from fixed constants
+(no input of the request changed them), so they were not a computation of the user's system. The battery DRT, P2D, LLI/LAM, Bernardi thermal, SEI
 degradation, Nernst-Planck-Poisson, uploaded-EIS and Bisquert TLM actions were
 removed on 2026-10-04 (no UI consumer).
 """
@@ -36,7 +37,7 @@ ASTM_G102_K1_MM_G_UA_CM_YR = (1e-6 * 31557600.0 * 10.0) / F_FARADAY
 ZERO_CELSIUS_K = physical_constants.ZERO_CELSIUS_K.value  # 273.15 K
 
 # ==========================================
-# 3. Corrosion EIS, ASTM G59 & Coating Degradation Model
+# 3. Corrosion kinetics: Stern-Geary Rp, ASTM G102 rate, pitting margin
 # ==========================================
 
 def _supplied_number(raw, label):
@@ -54,10 +55,10 @@ def _supplied_number(raw, label):
     return value, None
 
 
-def simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr_ua_cm2, e_pit_v, e0_v, exposure_days=90):
+def simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr_ua_cm2, e_pit_v, e0_v):
     """
-    Simulates electrochemical corrosion polarization resistance (ASTM G59),
-    Faraday penetration rate (ASTM G102), and protective coating EIS water uptake.
+    Computes the Stern-Geary polarization resistance, the Faraday penetration rate (ASTM G102)
+    and the pitting-potential margin.
 
     The substrate is resolved exactly through alloy_registry (domain "corrosion"), the same
     resolution and the same computed ASTM G102 equivalent weight (elements >= 1 wt %,
@@ -69,9 +70,8 @@ def simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr_ua_cm2
     defaults (steel-316l, betaA 0.12, betaC 0.11, i0 0.18, ePit 0.42, e0 0.08) were invented numbers. A missing
     or invalid input makes only the outputs that need it unavailable (null + reason, `status` "partial", or
     "unavailable" when nothing can be computed): Stern-Geary B and Rp need betaA, betaC, i0; the Faraday rate
-    needs i0 and metalId; the pitting margin needs ePit and e0; the coating Nyquist needs Rp. A metalId that is
-    sent but unknown still raises ValidationError(UNKNOWN_ALLOY). exposureDays keeps its documented default of
-    90 (a scenario setting); the coating constants below are model parameters, not inputs.
+    needs i0 and metalId; the pitting margin needs ePit and e0. A metalId that is
+    sent but unknown still raises ValidationError(UNKNOWN_ALLOY). exposureDays is no longer an input: no output depends on it.
     Corrosion rates are rounded to 6 significant digits (a fixed 5 decimals printed 9e-5 mm/yr with one).
     """
     unavailable = {}
@@ -98,8 +98,6 @@ def simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr_ua_cm2
     e0_v, reason = _supplied_number(e0_v, "e0")
     if reason:
         unavailable["e0"] = reason
-    if exposure_days is None:
-        exposure_days = 90
 
     # Stern-Geary constant B (V) = (beta_a * beta_c) / (ln(10) * (beta_a + beta_c)); needs betaA, betaC
     # Polarization Resistance R_p = B / i_corr (i0 converted from uA/cm2 to A/cm2); needs i0 as well
@@ -124,79 +122,11 @@ def simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr_ua_cm2
     delta_e_pit = pitting_status = None
     if e_pit_v is not None and e0_v is not None:
         delta_e_pit = e_pit_v - e0_v
-        pitting_status = "Immune / Wide Passivity Margin"
+        pitting_status = "Wide passivity margin (dE_pit >= 0.30 V, in-house threshold)"
         if delta_e_pit < 0.10:
             pitting_status = "Severe Chloride Pitting Susceptibility"
         elif delta_e_pit < 0.30:
             pitting_status = "Moderate Passivity / Pitting Risk"
-        
-    # Coating Degradation & Water Uptake (Brasher-Kingsbury Model)
-    # C_t = C_0 * 80^(volume_fraction_water)
-    # R_pore(t) decays exponentially with moisture ingress
-    c_coat_0 = 1.2e-9 # F/cm2 (intact epoxy)
-    r_pore_0 = 5.0e7  # Ohm*cm2
-    
-    coating_timeline = []
-    day_steps = [0, 1, 7, 14, 30, 60, exposure_days]
-    day_steps = sorted(list(set(day_steps)))
-    
-    for d in day_steps:
-        # Moisture absorption saturation function
-        phi_water_pct = min(4.8, 4.8 * (1.0 - math.exp(-d / 12.0)))
-        c_coat_t = c_coat_0 * (80.0 ** (phi_water_pct / 100.0))
-        r_pore_t = r_pore_0 * math.exp(-0.065 * d) + 800.0 # pore resistance drops
-        
-        coating_status = "Intact Dielectric Barrier"
-        if phi_water_pct > 3.0:
-            coating_status = "Severe Electrolyte Infiltration & Blistering"
-        elif phi_water_pct > 1.2:
-            coating_status = "Moisture Absorption & Pore Formation"
-            
-        coating_timeline.append({
-            "day": d,
-            "waterUptakePct": round(phi_water_pct, 2),
-            "coatingCapacitance_nF_cm2": round(c_coat_t * 1e9, 3),
-            "poreResistance_kOhm_cm2": round(r_pore_t / 1000.0, 1),
-            "status": coating_status
-        })
-        
-    # Synthetic Coating Nyquist Spectrum over Time (Day 0 vs Day 30 vs Day 90)
-    coating_nyquist = []
-    test_freqs = [10.0 ** (5.0 - 7.0 * i / 49.0) for i in range(50)] # 100 kHz to 10 mHz
-    
-    for d_target in ([0, min(30, exposure_days), exposure_days] if r_p_ohm_cm2 is not None else []):
-        stage = next((s for s in coating_timeline if s["day"] == d_target), coating_timeline[0])
-        r_s = 20.0
-        r_pore = stage["poreResistance_kOhm_cm2"] * 1000.0
-        c_coat = stage["coatingCapacitance_nF_cm2"] * 1e-9
-        r_ct = r_p_ohm_cm2
-        c_dl = 20.0e-6
-        
-        spectrum = []
-        for f in test_freqs:
-            omega = 2.0 * math.pi * f
-            j = 1j
-            z_rs = complex(r_s, 0.0)
-            
-            # Coating pore loop
-            z_c_coat = 1.0 / (j * omega * c_coat + 1e-30)
-            z_loop1 = (complex(r_pore, 0.0) * z_c_coat) / (complex(r_pore, 0.0) + z_c_coat)
-            
-            # Substrate charge transfer loop
-            z_c_dl = 1.0 / (j * omega * c_dl + 1e-30)
-            z_loop2 = (complex(r_ct, 0.0) * z_c_dl) / (complex(r_ct, 0.0) + z_c_dl)
-            
-            z_total = z_rs + z_loop1 + z_loop2
-            spectrum.append({
-                "frequency": round(f, 3),
-                "zReal": round(z_total.real, 2),
-                "minusZImag": round(-z_total.imag, 2)
-            })
-            
-        coating_nyquist.append({
-            "day": d_target,
-            "spectrum": spectrum
-        })
         
     def _round_sig(value, digits=6):
         if value is None or value == 0 or not math.isfinite(value):
@@ -217,8 +147,6 @@ def simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr_ua_cm2
         "corrosionRate_mpy": _round_sig(cr_mpy),
         "deltaE_pit_V": None if delta_e_pit is None else round(delta_e_pit, 3),
         "pittingAssessment": pitting_status,
-        "coatingTimeline": coating_timeline,
-        "coatingNyquist": coating_nyquist
     }
     if unavailable:
         groups_ok = (b_val is not None and r_p_ohm_cm2 is not None, cr_mm_per_year is not None,
@@ -238,8 +166,7 @@ if __name__ == "__main__":
             "status": "ready",
             "engine": "MetalliX CPython Corrosion EIS & Kinetics Solver",
             "capabilities": [
-                "Corrosion ASTM G59 Polarization Resistance & Penetration Rate",
-                "Brasher-Kingsbury Protective Coating Water Uptake & Degradation"
+                "Stern-Geary Polarization Resistance, ASTM G102 Penetration Rate & Pitting Margin"
             ]
         }))
         sys.exit(0)
@@ -261,8 +188,7 @@ if __name__ == "__main__":
             i0_corr = data.get("i0Corr_uA")
             e_pit = data.get("ePit")
             e0 = data.get("e0")
-            days = data.get("exposureDays", 90)
-            res = simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr, e_pit, e0, days)
+            res = simulate_corrosion_eis_and_kinetics(metal_id, beta_a, beta_c, i0_corr, e_pit, e0)
 
         else:
             res = {"error": f"Unknown action '{action}'"}

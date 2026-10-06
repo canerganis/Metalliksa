@@ -458,7 +458,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                     </button>
                   </div>
                   <div className="text-xl font-black font-mono text-white mt-1">
-                    {item.val} <span className="text-xs font-normal text-sky-400">{item.unit}</span>
+                    {typeof item.val === "number" && !Number.isFinite(item.val) ? "unavailable" : item.val} <span className="text-xs font-normal text-sky-400">{item.unit}</span>
                   </div>
                   <div className="text-[10px] text-slate-500 mt-0.5">{item.sub}</div>
                 </div>
@@ -875,7 +875,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                     </button>
                   </div>
                   <div className="text-2xl font-black font-mono text-white mt-1">
-                    {item.val} <span className="text-xs font-normal text-sky-400">{item.unit}</span>
+                    {Number.isFinite(item.val) ? item.val : "unavailable"} <span className="text-xs font-normal text-sky-400">{item.unit}</span>
                   </div>
                 </div>
               ))}
@@ -911,10 +911,10 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
               <div className="space-y-1.5">
                 <div className="flex justify-between text-xs font-mono">
                   <span className="text-slate-400">
-                    TH = {tempState.K} K / {selectedMelting.tmK} K
+                    TH = {Number.isFinite(tempState.K) ? tempState.K : "unavailable"} K / {selectedMelting.tmK} K
                   </span>
                   <span className={`font-bold ${homologousState.color}`}>
-                    TH = {homologousState.th} ({homologousState.regime})
+                    TH = {Number.isFinite(homologousState.th) ? homologousState.th : "unavailable"} ({homologousState.regime})
                   </span>
                 </div>
 
@@ -927,7 +927,7 @@ Standard Conformance: ASTM E8 / ASTM E18 / ASTM E23 / ASTM E140`;
                         ? "bg-amber-400"
                         : "bg-rose-500"
                     }`}
-                    style={{ width: `${Math.min(100, Math.max(2, homologousState.th * 100))}%` }}
+                    style={{ width: `${Number.isFinite(homologousState.th) ? Math.min(100, Math.max(2, homologousState.th * 100)) : 0}%` }}
                   />
                 </div>
 

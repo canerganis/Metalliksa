@@ -38,7 +38,7 @@ export function erfinv(x: number): number {
 
 // --- 1. Hardness conversion: moved to ./hardnessConversion (convertSteelHardness, shared with the unit converter) ---
 
-// --- 2. Carbon Equivalents & AWS D1.1 Preheat Calculations ---
+// --- 2. Carbon Equivalents & heuristic preheat estimate (NOT an AWS D1.1 procedure) ---
 export interface CompositionInput {
   C: number;
   Mn: number;
@@ -85,6 +85,8 @@ export function calculateCarbonEquivalent(
   );
 
   let weldabilityLevel: CarbonEquivalentResult["weldabilityLevel"] = "Excellent";
+  // recommendedPreheatTemp is an unsourced in-house heuristic keyed on IIW CE bands and thickness. It is not the AWS D1.1
+  // Annex H/I method (those need hydrogen level, restraint and heat input) and must not be presented as a code value.
   let recommendedPreheatTemp = 20; // Room temp
   const riskNotes: string[] = [];
 
@@ -129,7 +131,8 @@ export function calculateSchaeffler(comp: CompositionInput): SchaefflerResult {
   const Nb = comp.Nb || 0;
   const Ni = comp.Ni || 0;
   const Mn = comp.Mn || 0;
-  const N = comp.N || 0.03; // default nitrogen if trace
+  // N is used as supplied; an omitted N counts as 0 (the former `|| 0.03` invented 0.03 wt% and made N = 0 impossible).
+  const N = comp.N ?? 0;
 
   // Schaeffler equivalents
   const crEq = Number((Cr + Mo + 1.5 * Si + 0.5 * Nb).toFixed(2));
@@ -154,7 +157,7 @@ export function calculateSchaeffler(comp: CompositionInput): SchaefflerResult {
     martensiticHardeningRisk = "High";
   } else if (crEq >= 16 && niEq >= 8 && niEq <= 16) {
     primaryPhase = "Austenite + Ferrite";
-    // DeLong / WRC-1992 FN formula approximation
+    // Rule-based linear estimate, not the DeLong / WRC-1992 FN formulation
     ferriteNumberEstimated = Math.max(
       0,
       Math.min(100, Math.round(3.0 * (crEq - 0.93 * niEq - 6.7)))
@@ -190,9 +193,10 @@ export function calculateTransformationTemps(comp: CompositionInput): Transforma
   const Si = comp.Si || 0;
   const V = comp.V || 0;
 
-  // Andrews Formula for Martensite Start: Ms (°C) = 539 - 423*C - 30.4*Mn - 17.7*Ni - 12.1*Cr - 7.5*Mo
+  // Andrews (1965) linear Ms equation: Ms (°C) = 539 - 423*C - 30.4*Mn - 17.7*Ni - 12.1*Cr - 7.5*Mo + 10*Co - 7.5*Si
+  // (K. W. Andrews, J. Iron Steel Inst. 203 (1965) 721-727; wt%, low-alloy steels).
   const ms = Math.round(
-    539 - 423 * C - 30.4 * Mn - 17.7 * Ni - 12.1 * Cr - 7.5 * Mo + 10 * (comp.Co || 0)
+    539 - 423 * C - 30.4 * Mn - 17.7 * Ni - 12.1 * Cr - 7.5 * Mo + 10 * (comp.Co || 0) - 7.5 * Si
   );
 
   // Mf is roughly 150 - 200°C below Ms

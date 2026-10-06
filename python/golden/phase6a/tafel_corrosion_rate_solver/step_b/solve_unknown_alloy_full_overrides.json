@@ -3,13 +3,127 @@
  "driftVsBase": [
   {
    "key": "pythonCode",
-   "kind": "changed",
-   "new": "# =========================================================================\n# ASTM G102 & G59 Automated Annual Corrosion Rate Calculation\n# Grounded in Faraday's Law & Stern-Geary Potentiodynamic Polarization\n# =========================================================================\nimport math\n\n# Inputs determined from Tafel Fit\ni_corr_uA_cm2 = 3.0  # Extrapolated corrosion current density\ne_corr_V = -0.28          # Corrosion potential\nbeta_a = 0.11            # Anodic Tafel slope (V/decade)\nbeta_c = 0.13            # Cathodic Tafel slope (V/decade)\n\n# Substrate properties (2205 Duplex Stainless Steel)\nequivalent_weight = 25.4     # EW (g/equivalent)\ndensity_g_cm3 = 7.8        # Density rho (g/cm^3)\n\n# 1. Stern-Geary Constant B & Polarization Resistance Rp (ASTM G59)\nB = (beta_a * beta_c) / (math.log(10.0) * (beta_a + beta_c))\ni_corr_A_cm2 = i_corr_uA_cm2 * 1e-6\nRp = B / i_corr_A_cm2  # Ohm * cm^2\n\n# 2. Faraday Penetration Rate (ASTM G102)\n# Formula: CR (mm/yr) = K1 * (i_corr * EW) / density, K1 = 1e-6 * (s per year) * 10 / F\nF = 96485.33212331001  # C/mol, exact SI 2019 value N_A * e\nK1 = (1e-6 * 31557600.0 * 10.0) / F  # = 0.0032707148 mm * g / (uA * cm * year)\ncr_mm_yr = (K1 * i_corr_uA_cm2 * equivalent_weight) / density_g_cm3\ncr_mpy = cr_mm_yr * 39.37007874015748  # mils per year (1 mil = 0.0254 mm)\n\nprint(f\"Stern-Geary B: {B:.4f} V\")\nprint(f\"Polarization Resistance Rp: {Rp:.1f} Ohm*cm^2\")\nprint(f\"Annual Corrosion Rate: {cr_mm_yr:.5f} mm/year ({cr_mpy:.3f} mpy)\")\n",
+   "kind": "removed",
+   "new": null,
    "old": "# =========================================================================\n# ASTM G102 & G59 Automated Annual Corrosion Rate Calculation\n# Grounded in Faraday's Law & Stern-Geary Potentiodynamic Polarization\n# =========================================================================\nimport math\n\n# Inputs determined from Tafel Fit\ni_corr_uA_cm2 = 3.0  # Extrapolated corrosion current density\ne_corr_V = -0.28          # Corrosion potential\nbeta_a = 0.11            # Anodic Tafel slope (V/decade)\nbeta_c = 0.13            # Cathodic Tafel slope (V/decade)\n\n# Substrate properties (2205 Duplex Stainless Steel)\nequivalent_weight = 25.4     # EW (g/equivalent)\ndensity_g_cm3 = 7.8        # Density rho (g/cm^3)\n\n# 1. Stern-Geary Constant B & Polarization Resistance Rp (ASTM G59)\nB = (beta_a * beta_c) / (2.302585 * (beta_a + beta_c))\ni_corr_A_cm2 = i_corr_uA_cm2 * 1e-6\nRp = B / i_corr_A_cm2  # Ohm * cm^2\n\n# 2. Faraday Penetration Rate (ASTM G102)\n# Formula: CR (mm/yr) = 0.00327 * (i_corr * EW) / density\nK1 = 0.00327072  # mm * g / (uA * cm * year)\ncr_mm_yr = (K1 * i_corr_uA_cm2 * equivalent_weight) / density_g_cm3\ncr_mpy = cr_mm_yr * 39.3701  # mils per year\n\nprint(f\"Stern-Geary B: {B:.4f} V\")\nprint(f\"Polarization Resistance Rp: {Rp:.1f} Ohm*cm^2\")\nprint(f\"Annual Corrosion Rate: {cr_mm_yr:.5f} mm/year ({cr_mpy:.3f} mpy)\")\n"
+  },
+  {
+   "key": "rulPittingYears",
+   "kind": "removed",
+   "new": null,
+   "old": 17.88
+  },
+  {
+   "key": "timelineProjections[0].lossPittingMm",
+   "kind": "removed",
+   "new": null,
+   "old": 0.1118
+  },
+  {
+   "key": "timelineProjections[0].remainingPittingMm",
+   "kind": "removed",
+   "new": null,
+   "old": 5.888
+  },
+  {
+   "key": "timelineProjections[1].lossPittingMm",
+   "kind": "removed",
+   "new": null,
+   "old": 0.2237
+  },
+  {
+   "key": "timelineProjections[1].remainingPittingMm",
+   "kind": "removed",
+   "new": null,
+   "old": 5.776
+  },
+  {
+   "key": "timelineProjections[2].lossPittingMm",
+   "kind": "removed",
+   "new": null,
+   "old": 0.3355
+  },
+  {
+   "key": "timelineProjections[2].remainingPittingMm",
+   "kind": "removed",
+   "new": null,
+   "old": 5.665
+  },
+  {
+   "key": "timelineProjections[3].lossPittingMm",
+   "kind": "removed",
+   "new": null,
+   "old": 0.5592
+  },
+  {
+   "key": "timelineProjections[3].remainingPittingMm",
+   "kind": "removed",
+   "new": null,
+   "old": 5.441
+  },
+  {
+   "key": "timelineProjections[4].lossPittingMm",
+   "kind": "removed",
+   "new": null,
+   "old": 0.7828
+  },
+  {
+   "key": "timelineProjections[4].remainingPittingMm",
+   "kind": "removed",
+   "new": null,
+   "old": 5.217
+  },
+  {
+   "key": "timelineProjections[5].lossPittingMm",
+   "kind": "removed",
+   "new": null,
+   "old": 1.1183
+  },
+  {
+   "key": "timelineProjections[5].remainingPittingMm",
+   "kind": "removed",
+   "new": null,
+   "old": 4.882
+  },
+  {
+   "key": "timelineProjections[6].lossPittingMm",
+   "kind": "removed",
+   "new": null,
+   "old": 1.6775
+  },
+  {
+   "key": "timelineProjections[6].remainingPittingMm",
+   "kind": "removed",
+   "new": null,
+   "old": 4.323
+  },
+  {
+   "key": "timelineProjections[7].lossPittingMm",
+   "kind": "removed",
+   "new": null,
+   "old": 2.2367
+  },
+  {
+   "key": "timelineProjections[7].remainingPittingMm",
+   "kind": "removed",
+   "new": null,
+   "old": 3.763
+  },
+  {
+   "key": "timelineProjections[8].lossPittingMm",
+   "kind": "removed",
+   "new": null,
+   "old": 2.7958
+  },
+  {
+   "key": "timelineProjections[8].remainingPittingMm",
+   "kind": "removed",
+   "new": null,
+   "old": 3.204
   }
  ],
  "exitCode": 0,
- "gitHead": "348ed5c05b4cd38c32caaf7329dd861acc84dbf2",
+ "gitHead": "67c8afbd7f6e5f3050c3e6fd73423010bb3c686d",
  "input": {
   "activationEnergyJ_mol": 33000.0,
   "allowableLossMm": 2.0,
@@ -40,7 +154,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "tafel_corrosion_rate_solver",
  "solverFile": "python/tafel_corrosion_rate_solver.py",
- "solverSha256": "a48034be77d0cf63ef20cdd12747568eec4e9636ae1361016f15e0d6372d6cc4",
+ "solverSha256": "0e89a02445cac643aae3ef865787e6cb0c7c281d2fa6439d94c1b7c974a1546c",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {
@@ -62,10 +176,8 @@
   "massLoss_g_m2_day": 0.6824,
   "massLoss_kg_m2_yr": 0.2492,
   "massLoss_mdd": 6.824,
-  "pythonCode": "# =========================================================================\n# ASTM G102 & G59 Automated Annual Corrosion Rate Calculation\n# Grounded in Faraday's Law & Stern-Geary Potentiodynamic Polarization\n# =========================================================================\nimport math\n\n# Inputs determined from Tafel Fit\ni_corr_uA_cm2 = 3.0  # Extrapolated corrosion current density\ne_corr_V = -0.28          # Corrosion potential\nbeta_a = 0.11            # Anodic Tafel slope (V/decade)\nbeta_c = 0.13            # Cathodic Tafel slope (V/decade)\n\n# Substrate properties (2205 Duplex Stainless Steel)\nequivalent_weight = 25.4     # EW (g/equivalent)\ndensity_g_cm3 = 7.8        # Density rho (g/cm^3)\n\n# 1. Stern-Geary Constant B & Polarization Resistance Rp (ASTM G59)\nB = (beta_a * beta_c) / (math.log(10.0) * (beta_a + beta_c))\ni_corr_A_cm2 = i_corr_uA_cm2 * 1e-6\nRp = B / i_corr_A_cm2  # Ohm * cm^2\n\n# 2. Faraday Penetration Rate (ASTM G102)\n# Formula: CR (mm/yr) = K1 * (i_corr * EW) / density, K1 = 1e-6 * (s per year) * 10 / F\nF = 96485.33212331001  # C/mol, exact SI 2019 value N_A * e\nK1 = (1e-6 * 31557600.0 * 10.0) / F  # = 0.0032707148 mm * g / (uA * cm * year)\ncr_mm_yr = (K1 * i_corr_uA_cm2 * equivalent_weight) / density_g_cm3\ncr_mpy = cr_mm_yr * 39.37007874015748  # mils per year (1 mil = 0.0254 mm)\n\nprint(f\"Stern-Geary B: {B:.4f} V\")\nprint(f\"Polarization Resistance Rp: {Rp:.1f} Ohm*cm^2\")\nprint(f\"Annual Corrosion Rate: {cr_mm_yr:.5f} mm/year ({cr_mpy:.3f} mpy)\")\n",
   "rp_apparent_ohm": 5750.38,
   "rp_ohm_cm2": 8625.6,
-  "rulPittingYears": 17.88,
   "rulUniformYears": 62.59,
   "severity": {
    "code": "EXCELLENT",
@@ -161,81 +273,63 @@
   "timelineProjections": [
    {
     "exceedsAllowance": false,
-    "lossPittingMm": 0.1118,
     "lossUniformMm": 0.032,
-    "remainingPittingMm": 5.888,
     "remainingWallMm": 5.968,
     "wallLossPct": 0.53,
     "year": 1
    },
    {
     "exceedsAllowance": false,
-    "lossPittingMm": 0.2237,
     "lossUniformMm": 0.0639,
-    "remainingPittingMm": 5.776,
     "remainingWallMm": 5.936,
     "wallLossPct": 1.07,
     "year": 2
    },
    {
     "exceedsAllowance": false,
-    "lossPittingMm": 0.3355,
     "lossUniformMm": 0.0959,
-    "remainingPittingMm": 5.665,
     "remainingWallMm": 5.904,
     "wallLossPct": 1.6,
     "year": 3
    },
    {
     "exceedsAllowance": false,
-    "lossPittingMm": 0.5592,
     "lossUniformMm": 0.1598,
-    "remainingPittingMm": 5.441,
     "remainingWallMm": 5.84,
     "wallLossPct": 2.66,
     "year": 5
    },
    {
     "exceedsAllowance": false,
-    "lossPittingMm": 0.7828,
     "lossUniformMm": 0.2237,
-    "remainingPittingMm": 5.217,
     "remainingWallMm": 5.776,
     "wallLossPct": 3.73,
     "year": 7
    },
    {
     "exceedsAllowance": false,
-    "lossPittingMm": 1.1183,
     "lossUniformMm": 0.3195,
-    "remainingPittingMm": 4.882,
     "remainingWallMm": 5.68,
     "wallLossPct": 5.33,
     "year": 10
    },
    {
     "exceedsAllowance": false,
-    "lossPittingMm": 1.6775,
     "lossUniformMm": 0.4793,
-    "remainingPittingMm": 4.323,
     "remainingWallMm": 5.521,
     "wallLossPct": 7.99,
     "year": 15
    },
    {
     "exceedsAllowance": false,
-    "lossPittingMm": 2.2367,
     "lossUniformMm": 0.639,
-    "remainingPittingMm": 3.763,
     "remainingWallMm": 5.361,
     "wallLossPct": 10.65,
     "year": 20
    },
    {
     "exceedsAllowance": false,
-    "lossPittingMm": 2.7958,
     "lossUniformMm": 0.7988,
-    "remainingPittingMm": 3.204,
     "remainingWallMm": 5.201,
     "wallLossPct": 13.31,
     "year": 25

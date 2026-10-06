@@ -2390,8 +2390,7 @@ export const MODULE_REGISTRY = {
               "required": true,
               "enum": [
                 "alloy-elements",
-                "element-property-binned",
-                "property-correlation"
+                "element-property-binned"
               ],
               "note": null,
               "unitSelector": null,
@@ -2726,34 +2725,6 @@ export const MODULE_REGISTRY = {
           }
         },
         {
-          "id": "select-correlation-cell",
-          "method": null,
-          "route": null,
-          "authority": {
-            "kind": "browser-local",
-            "script": null,
-            "workerMethod": null,
-            "timeoutMs": null,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
-          },
-          "input": [],
-          "undeclaredInput": [
-            "cell"
-          ],
-          "output": {
-            "fields": [
-              "selectedElement",
-              "selectedPropertyKey",
-              "svgPlot"
-            ],
-            "statusKey": null,
-            "transportValues": {},
-            "transportObjects": {}
-          }
-        },
-        {
           "id": "select-scatter-point",
           "method": null,
           "route": null,
@@ -2831,38 +2802,6 @@ export const MODULE_REGISTRY = {
           "input": [],
           "undeclaredInput": [
             "b"
-          ],
-          "output": {
-            "fields": [
-              "hoveredCell",
-              "xLabel",
-              "yLabel",
-              "value",
-              "extraInfo",
-              "xPos",
-              "yPos"
-            ],
-            "statusKey": null,
-            "transportValues": {},
-            "transportObjects": {}
-          }
-        },
-        {
-          "id": "inspect-correlation-cell",
-          "method": null,
-          "route": null,
-          "authority": {
-            "kind": "browser-local",
-            "script": null,
-            "workerMethod": null,
-            "timeoutMs": null,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": "MaterialsDatabaseView reads the bundled MATERIALS_DATABASE and mutates browser-local React/UI state; it has no server route or operation deadline."
-          },
-          "input": [],
-          "undeclaredInput": [
-            "cell"
           ],
           "output": {
             "fields": [
@@ -2963,7 +2902,7 @@ export const MODULE_REGISTRY = {
       "legacyNotes": [
         "This module reads the statically imported MATERIALS_DATABASE array and performs filtering, sorting, selection, comparison, clipboard copy, JSON download, and transfer-payload preparation in the browser. Outputs name local view effects and transfer state; this is not an API request/response surface.",
         "The trimmed, lowercased searchQuery checks material name, standard, category, microstructure, application text, and composition element symbols. Category filtering is exact. Yield strength and Young's modulus are filtered by both min and max state; density is also filtered by both min and max. Only minYield, minModulus, and maxDensity have visible sliders; maxYield, maxModulus, and minDensity remain at their initialized values unless the reset action writes them. Slider limits and steps are control settings, not a material validity domain.",
-        "MaterialSpec stores nominal scalar or min/max composition entries and property values, but has no per-property source citation, condition/temper, applicability, uncertainty, or confidence fields. The catalog header says 'Calibrated'; that UI label is not a record-level evidence link or validation proof.",
+        "MaterialSpec stores nominal scalar or min/max composition entries and property values, but has no per-property source citation, condition/temper, applicability, uncertainty, or confidence fields. The catalog header no longer claims calibrated compositions; no record-level evidence link or validation proof exists.",
         "Selection and comparison callbacks receive MaterialSpec records from local catalog rows. Since the SDK scalar schema cannot describe that nested record/map, these actions record the actual 'material' input as undeclared rather than inventing a record-ID endpoint or object schema.",
         "createPipelinePayloadFromMaterialSpec preserves originalComposition and marks composition as nominal or range-midpoint, while normalizing composition and deriving kinetic, hardness, and XRD profiles. The downstream bridge states that source property values/confidence are not promoted and derived properties remain estimates. Missing Poisson ratio also receives a code fallback in the pipeline; that fallback is software behavior, not a database measurement.",
         "The transfer picker presents Alloy Builder, ICME, LPBF wizard, and Phase Diagram as destinations. Dispatch stores the payload through the browser pipeline utility, then navigates after a 350 ms setTimeout. This is a local cross-module handoff, not provider/server execution or LPBF acceptance.",
@@ -2972,8 +2911,8 @@ export const MODULE_REGISTRY = {
         "Copy calls navigator.clipboard.writeText without awaiting or catching its promise, then immediately sets copied=true and clears that optimistic feedback after 2000 ms. The UI feedback therefore records an attempted copy, not confirmed clipboard success; permission/API failure is not handled here.",
         "Export serializes the full MATERIALS_DATABASE array, independent of active filters; it creates an object URL, clicks a download link, then revokes the URL in the same handler. Lifecycle has no timeout/object-URL resource kind; these are noted as short UI effects rather than invented lifecycle resources.",
         "MaterialsPropertyHeatmapD3 is mounted only while activeTab is \"split\" or \"heatmap\"; catalog mode unmounts it. Its ResizeObserver disconnects on effect dependency change and unmount. The D3-render effect has no cleanup function: redraw removes prior SVG descendants, while normal unmount removes the child DOM. If displayedMaterials becomes empty, that effect returns before clearing the prior SVG, so a previous plot can remain visible until a later nonempty redraw or unmount.",
-        "The child props are materials: MaterialSpec[], selectedMaterial: MaterialSpec, onSelectMaterial(MaterialSpec), categories: string[], activeCategory: string, and optional onSelectCategory(string). The parent passes filteredMaterials and selectedMaterial; the two nested record props are recorded as undeclared on render-heatmap because the scalar SDK schema cannot represent them. Callback effects are captured by selection operations. categories, activeCategory, and onSelectCategory are passed but unused by this child. Child sortAsc is initialized false and searchAlloy empty, but neither has a current UI setter; do not report either as a user-editable control. Heatmap modes, property keys, element selector options, sort keys, and palette options are the source-defined control values only. Correlation mode omits thermalConductivity from its plotted target properties.",
-        "Heatmap cell/axis interactions update local selected material, element, or property state; no plot click submits a calculation. The selection/hover operation inputs use the actual closure values mat, elem, wt, b, prop, and cell where applicable; their nested D3 data shapes are not promoted into a fabricated stable schema. Composition cells show catalog wt-percent values, binned cells summarize current catalog records and select the first member, and correlation cells display a Pearson r computed from displayed records with sample count (fewer than three positive-property pairs are represented as r=0). These are descriptive visualizations of bundled records, not independent measurements, fitted validation, or a physical oracle.",
+        "The child props are materials: MaterialSpec[], selectedMaterial: MaterialSpec, onSelectMaterial(MaterialSpec), categories: string[], activeCategory: string, and optional onSelectCategory(string). The parent passes filteredMaterials and selectedMaterial; the two nested record props are recorded as undeclared on render-heatmap because the scalar SDK schema cannot represent them. Callback effects are captured by selection operations. categories, activeCategory, and onSelectCategory are passed but unused by this child. Child sortAsc is initialized false and searchAlloy empty, but neither has a current UI setter; do not report either as a user-editable control. Heatmap modes, property keys, element selector options, sort keys, and palette options are the source-defined control values only.",
+        "Heatmap cell/axis interactions update local selected material, element, or property state; no plot click submits a calculation. The selection/hover operation inputs use the actual closure values mat, elem, wt, b, prop, and cell where applicable; their nested D3 data shapes are not promoted into a fabricated stable schema. Composition cells show catalog wt-percent values, binned cells summarize current catalog records and select the first member. These are descriptive visualizations of bundled records, not independent measurements, fitted validation, or a physical oracle.",
         "The child SVG export serializes the current SVG into a Blob, creates an object URL, clicks a temporary download anchor named from heatmapMode and selectedPropertyKey, then revokes the URL synchronously. These output names describe transient browser transport effects, not a returned API object. ResizeObserver, timers, and object URLs have no matching lifecycle resource kind in the schema vocabulary and are documented here rather than mislabeled as raf/interval/three/fetch.",
         "No fetch, worker, solver, scheduled job, or source download is initiated by this view or its D3 child. The nested comparison and transfer dialogs are UI children, not background work."
       ],
@@ -2985,7 +2924,7 @@ export const MODULE_REGISTRY = {
         "src/components/MaterialsDatabaseView.tsx:230-245#setShowFilters(!showFilters)",
         "src/components/MaterialsDatabaseView.tsx:250-264#Sort:",
         "src/components/MaterialsDatabaseView.tsx:336-346#Maximum Density (ρ)",
-        "src/components/MaterialsDatabaseView.tsx:150-150#Calibrated chemical compositions",
+        "src/components/MaterialsDatabaseView.tsx:150-150#Chemical compositions, tensile",
         "src/components/MaterialsDatabaseView.tsx:56-56#compareList",
         "src/components/MaterialsDatabaseView.tsx:113-118#compareList.length < 4",
         "src/components/MaterialsDatabaseView.tsx:373-377#MaterialsPropertyHeatmapD3",
@@ -2996,10 +2935,10 @@ export const MODULE_REGISTRY = {
         "src/components/MaterialsPropertyHeatmapD3.tsx::MaterialsPropertyHeatmapD3",
         "src/components/MaterialsPropertyHeatmapD3.tsx::HEATMAP_PROPERTIES",
         "src/components/MaterialsPropertyHeatmapD3.tsx::ALLOYING_ELEMENTS",
-        "src/components/MaterialsPropertyHeatmapD3.tsx:320-345#observer.disconnect()",
-        "src/components/MaterialsPropertyHeatmapD3.tsx:348-348#useEffect(() => {",
-        "src/components/MaterialsPropertyHeatmapD3.tsx:858-868#URL.revokeObjectURL(url)",
-        "src/components/MaterialsPropertyHeatmapD3.tsx:1045-1062#hoveredCell",
+        "src/components/MaterialsPropertyHeatmapD3.tsx:252-275#observer.disconnect()",
+        "src/components/MaterialsPropertyHeatmapD3.tsx:277-277#useEffect(() => {",
+        "src/components/MaterialsPropertyHeatmapD3.tsx:645-656#URL.revokeObjectURL(url)",
+        "src/components/MaterialsPropertyHeatmapD3.tsx:820-840#hoveredCell",
         "src/types.ts:32-63#MaterialSpec",
         "src/data/materialsDatabase.ts:1-28#MATERIALS_DATABASE",
         "src/utils/materialDataPipeline.ts:666-715#createPipelinePayloadFromMaterialSpec",
@@ -4191,7 +4130,7 @@ export const MODULE_REGISTRY = {
         "src/utils/calphadResultDisplay.ts::calphadTemperatureWindow",
         "routes/physics.ts:58-63#physicsRouter.post([\"/api/python/calphad-minimize\"",
         "routes/physics.ts:62-63#physicsRouter.get([\"/api/python/calphad-databases\"",
-        "routes/copilot.ts:23-52#copilotRouter.post([\"/api/metallurgy/consult\"",
+        "routes/copilot.ts:45-82#copilotRouter.post([\"/api/metallurgy/consult\"",
         "server/openaiService.ts::generateGpt6Response",
         "python/calphad_solver.py::list_available_databases",
         "python/calphad_solver.py::normalize_composition",
@@ -4850,7 +4789,7 @@ export const MODULE_REGISTRY = {
         "python/micrograph_measure.py::measure",
         "python/micrograph_measure.py::intercept_statistics",
         "routes/copilot.ts",
-        "server/openaiService.ts:39#request.timeoutMs ?? 60_000",
+        "server/openaiService.ts:42#request.timeoutMs ?? 60_000",
         "src/components/MicrographLab.tsx::MicrographLab",
         "src/components/MicrographAdvisoryDescription.tsx::MicrographAdvisoryDescription",
         "src/components/MicrographMeasureStudio.tsx::MicrographMeasureStudio",
@@ -5171,7 +5110,7 @@ export const MODULE_REGISTRY = {
       "owner": "TODO(maintainer-review): unassigned",
       "workspace": "materials",
       "label": "Corrosion & Electrochemistry",
-      "description": "Galvanic couples, PREN, Tafel/Stern–Geary corrosion rate, OCP (ASTM G59), Pourbaix diagrams and corrosion EIS; no equivalent-circuit fitting.",
+      "description": "PREN, Tafel/Stern–Geary corrosion rate, OCP (ASTM G59), Pourbaix diagrams and Stern–Geary/Faraday corrosion kinetics; no EIS or equivalent-circuit fitting.",
       "next": "icme-motor",
       "maturity": "Research",
       "navigation": "listed",

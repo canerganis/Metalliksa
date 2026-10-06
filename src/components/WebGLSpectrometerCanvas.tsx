@@ -21,7 +21,7 @@ export interface PeakAnnotation {
 
 interface WebGLSpectrometerCanvasProps {
   data: SpectrumDataPoint[];
-  deconvolutionPeaks?: { name: string; color: string; points: SpectrumDataPoint[] }[];
+  backgroundOverlays?: { name: string; color: string; points: SpectrumDataPoint[] }[];
   xLabel?: string;
   yLabel?: string;
   xUnit?: string;
@@ -35,7 +35,7 @@ interface WebGLSpectrometerCanvasProps {
 
 export const WebGLSpectrometerCanvas: React.FC<WebGLSpectrometerCanvasProps> = ({
   data,
-  deconvolutionPeaks = [],
+  backgroundOverlays = [],
   xLabel = "Energy / 2-Theta",
   yLabel = "Intensity / Counts",
   xUnit = "keV",
@@ -155,8 +155,8 @@ export const WebGLSpectrometerCanvas: React.FC<WebGLSpectrometerCanvasProps> = (
     gl.bindBuffer(gl.ARRAY_BUFFER, areaBuf);
     gl.bufferData(gl.ARRAY_BUFFER, areaVertices, gl.STATIC_DRAW);
 
-    // 3. Deconvolution Peak Buffers
-    const peakBufs = deconvolutionPeaks.map((peak) => {
+    // 3. Background overlay buffers
+    const peakBufs = backgroundOverlays.map((peak) => {
       const pLineVertices = new Float32Array(peak.points.length * 2);
       for (let i = 0; i < peak.points.length; i++) {
         pLineVertices[i * 2] = (peak.points[i].x - minX) / rangeX;
@@ -182,7 +182,7 @@ export const WebGLSpectrometerCanvas: React.FC<WebGLSpectrometerCanvasProps> = (
       peakBuffers: peakBufs,
       pointCount: data.length,
     };
-  }, [data, deconvolutionPeaks, minX, maxX, minY, maxY]);
+  }, [data, backgroundOverlays, minX, maxX, minY, maxY]);
 
   // Render Frame onto Canvas via WebGL
   const renderFrame = useCallback(() => {
@@ -337,7 +337,7 @@ export const WebGLSpectrometerCanvas: React.FC<WebGLSpectrometerCanvasProps> = (
             WebGL Shader Core
           </span>
           <span className="text-[10px] text-slate-400 font-mono">
-            {data.length.toLocaleString()} pts @ 60 FPS
+            {data.length.toLocaleString()} pts
           </span>
         </div>
 

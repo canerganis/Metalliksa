@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useMemo } from "react";
-import { axisBottom as d3AxisBottom, axisLeft as d3AxisLeft, interpolateInferno as d3InterpolateInferno, interpolatePlasma as d3InterpolatePlasma, interpolateRdYlGn as d3InterpolateRdYlGn, interpolateTurbo as d3InterpolateTurbo, interpolateViridis as d3InterpolateViridis, interpolateYlGnBu as d3InterpolateYlGnBu, max as d3Max, mean as d3Mean, median as d3Median, min as d3Min, pointer as d3Pointer, scaleBand as d3ScaleBand, scaleDiverging as d3ScaleDiverging, scaleLinear as d3ScaleLinear, scaleSequential as d3ScaleSequential, select as d3Select } from "d3";
+import { axisBottom as d3AxisBottom, axisLeft as d3AxisLeft, interpolateInferno as d3InterpolateInferno, interpolatePlasma as d3InterpolatePlasma, interpolateTurbo as d3InterpolateTurbo, interpolateViridis as d3InterpolateViridis, interpolateYlGnBu as d3InterpolateYlGnBu, max as d3Max, mean as d3Mean, median as d3Median, min as d3Min, pointer as d3Pointer, scaleBand as d3ScaleBand, scaleLinear as d3ScaleLinear, scaleSequential as d3ScaleSequential, select as d3Select } from "d3";
 import {
   Grid,
   Sparkles,
@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { MaterialSpec } from "../types";
 
-export type HeatmapMode = "alloy-elements" | "element-property-binned" | "property-correlation";
+export type HeatmapMode = "alloy-elements" | "element-property-binned";
 export type ColorPaletteKey = "viridis" | "plasma" | "turbo" | "emerald" | "amber-flame";
 
 interface MaterialsPropertyHeatmapD3Props {
@@ -165,68 +165,6 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
     };
   }, [displayedMaterials, selectedPropertyKey]);
 
-  // Correlation Matrix Data Computation (Pearson r between Elements and Properties)
-  const correlationData = useMemo(() => {
-    if (heatmapMode !== "property-correlation") return null;
-
-    const targetProps = HEATMAP_PROPERTIES.filter((p) => p.key !== "thermalConductivity");
-    const matrix: Array<{
-      element: string;
-      propertyKey: string;
-      propertyLabel: string;
-      r: number;
-      sampleCount: number;
-    }> = [];
-
-    activeElements.forEach((elem) => {
-      targetProps.forEach((prop) => {
-        const pairs = displayedMaterials
-          .map((m) => ({
-            elemWt: getElementWt(m, elem),
-            propVal: getPropertyValue(m, prop.key),
-          }))
-          .filter((p) => p.propVal > 0);
-
-        if (pairs.length < 3) {
-          matrix.push({
-            element: elem,
-            propertyKey: prop.key,
-            propertyLabel: prop.shortLabel,
-            r: 0,
-            sampleCount: pairs.length,
-          });
-          return;
-        }
-
-        const meanX = d3Mean(pairs, (d: { elemWt: number; propVal: number }) => d.elemWt) ?? 0;
-        const meanY = d3Mean(pairs, (d: { elemWt: number; propVal: number }) => d.propVal) ?? 0;
-
-        let num = 0;
-        let denX = 0;
-        let denY = 0;
-
-        pairs.forEach((d) => {
-          const dx = d.elemWt - meanX;
-          const dy = d.propVal - meanY;
-          num += dx * dy;
-          denX += dx * dx;
-          denY += dy * dy;
-        });
-
-        const r = denX * denY > 0 ? num / Math.sqrt(denX * denY) : 0;
-        matrix.push({
-          element: elem,
-          propertyKey: prop.key,
-          propertyLabel: prop.shortLabel,
-          r: parseFloat(r.toFixed(3)),
-          sampleCount: pairs.length,
-        });
-      });
-    });
-
-    return matrix;
-  }, [heatmapMode, displayedMaterials, activeElements]);
-
   // Element vs Property Binned Distribution (2D Binning)
   const binnedDistributionData = useMemo(() => {
     if (heatmapMode !== "element-property-binned") return null;
@@ -294,14 +232,7 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
   }, [heatmapMode, displayedMaterials, selectedElement, selectedPropertyKey]);
 
   // Color interpolators
-  const getColorScale = (minVal: number, maxVal: number, diverging = false) => {
-    if (diverging) {
-      // Diverging for correlation: -1 (Rose/Crimson) -> 0 (Dark Slate) -> +1 (Emerald/Cyan)
-      return d3ScaleDiverging<string>()
-        .domain([-1, 0, 1])
-        .interpolator(d3InterpolateRdYlGn);
-    }
-
+  const getColorScale = (minVal: number, maxVal: number) => {
     if (colorPalette === "viridis") {
       return d3ScaleSequential(d3InterpolateViridis).domain([minVal, maxVal]);
     }
@@ -330,8 +261,6 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
           let h = 480;
           if (heatmapMode === "alloy-elements") {
             h = Math.max(380, Math.min(850, displayedMaterials.length * 24 + 110));
-          } else if (heatmapMode === "property-correlation") {
-            h = Math.max(360, activeElements.length * 28 + 120);
           } else {
             h = 420;
           }
@@ -700,147 +629,6 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
 
       g.selectAll(".domain, .tick line").attr("stroke", "#162032");
     }
-
-    // --- MODE 3: ALLOYING ELEMENT VS MECHANICAL PROPERTIES CORRELATION HEATMAP ---
-    else if (heatmapMode === "property-correlation" && correlationData) {
-      const margin = { top: 65, right: 60, bottom: 35, left: 60 };
-      const innerWidth = width - margin.left - margin.right;
-      const innerHeight = height - margin.top - margin.bottom;
-
-      if (innerWidth <= 0 || innerHeight <= 0) return;
-
-      const g = svg
-        .attr("width", width)
-        .attr("height", height)
-        .append("g")
-        .attr("transform", `translate(${margin.left},${margin.top})`);
-
-      const xProps = HEATMAP_PROPERTIES.filter((p) => p.key !== "thermalConductivity");
-      const yElements = activeElements;
-
-      const xScale = d3ScaleBand().domain(xProps.map((p) => p.key)).range([0, innerWidth]).padding(0.08);
-      const yScale = d3ScaleBand().domain(yElements).range([0, innerHeight]).padding(0.08);
-
-      const colorDiverging = getColorScale(-1, 1, true);
-
-      // X Axis (Properties on top)
-      const xAxisG = g.append("g").attr("class", "x-axis");
-      xProps.forEach((prop) => {
-        const xPos = (xScale(prop.key) ?? 0) + xScale.bandwidth() / 2;
-        xAxisG
-          .append("text")
-          .attr("x", xPos)
-          .attr("y", -14)
-          .attr("text-anchor", "middle")
-          .attr("fill", prop.key === selectedPropertyKey ? "#38bdf8" : "#cbd5e1")
-          .attr("font-family", "monospace")
-          .attr("font-size", "10px")
-          .attr("font-weight", prop.key === selectedPropertyKey ? "bold" : "600")
-          .attr("cursor", "pointer")
-          .text(prop.shortLabel)
-          .on("click", () => setSelectedPropertyKey(prop.key));
-      });
-
-      xAxisG
-        .append("text")
-        .attr("x", innerWidth / 2)
-        .attr("y", -38)
-        .attr("text-anchor", "middle")
-        .attr("fill", "#38bdf8")
-        .attr("font-family", "monospace")
-        .attr("font-size", "11px")
-        .attr("font-weight", "bold")
-        .text("Pearson Correlation Coefficient (r) Matrix: Alloying Element vs Property");
-
-      // Y Axis (Elements on left)
-      const yAxisG = g.append("g").attr("class", "y-axis");
-      yElements.forEach((elem) => {
-        const yPos = (yScale(elem) ?? 0) + yScale.bandwidth() / 2;
-        yAxisG
-          .append("text")
-          .attr("x", -12)
-          .attr("y", yPos + 4)
-          .attr("text-anchor", "end")
-          .attr("fill", elem === selectedElement ? "#38bdf8" : "#94a3b8")
-          .attr("font-family", "monospace")
-          .attr("font-size", "11px")
-          .attr("font-weight", "bold")
-          .attr("cursor", "pointer")
-          .text(elem)
-          .on("click", () => setSelectedElement(elem));
-      });
-
-      // Heatmap Cells
-      const cellsG = g.append("g").attr("class", "corr-cells");
-
-      correlationData.forEach((cell) => {
-        const x0 = xScale(cell.propertyKey) ?? 0;
-        const y0 = yScale(cell.element) ?? 0;
-        const colWidth = xScale.bandwidth();
-        const rowHeight = yScale.bandwidth();
-
-        // Cell Color (Diverging Red to Green)
-        const cellColor = cell.sampleCount > 2 ? colorDiverging(cell.r) : "#0c1322";
-
-        const rect = cellsG
-          .append("rect")
-          .attr("x", x0)
-          .attr("y", y0)
-          .attr("width", colWidth)
-          .attr("height", rowHeight)
-          .attr("fill", cellColor)
-          .attr("stroke", "rgba(255,255,255,0.08)")
-          .attr("stroke-width", 0.75)
-          .attr("rx", 4)
-          .attr("cursor", "pointer")
-          .on("click", () => {
-            setSelectedElement(cell.element);
-            setSelectedPropertyKey(cell.propertyKey);
-          })
-          .on("pointerenter", function (event: MouseEvent) {
-            d3Select(this).attr("stroke", "#ffffff").attr("stroke-width", 1.8);
-            const [mx, my] = d3Pointer(event, svgRef.current);
-            const rDesc =
-              cell.r > 0.6
-                ? "Strong Positive Correlation"
-                : cell.r > 0.25
-                ? "Moderate Positive Correlation"
-                : cell.r < -0.6
-                ? "Strong Negative Correlation"
-                : cell.r < -0.25
-                ? "Moderate Negative Correlation"
-                : "Weak / No Correlation";
-
-            setHoveredCell({
-              xLabel: `Element [${cell.element}]`,
-              yLabel: cell.propertyLabel,
-              value: `r = ${cell.r > 0 ? "+" : ""}${cell.r}`,
-              extraInfo: `${rDesc} (n=${cell.sampleCount} alloys)`,
-              xPos: mx,
-              yPos: my,
-            });
-          })
-          .on("pointerleave", function () {
-            d3Select(this).attr("stroke", "rgba(255,255,255,0.08)").attr("stroke-width", 0.75);
-            setHoveredCell(null);
-          });
-
-        // Numeric text label in cell
-        if (colWidth > 32 && rowHeight > 14) {
-          cellsG
-            .append("text")
-            .attr("x", x0 + colWidth / 2)
-            .attr("y", y0 + rowHeight / 2 + 3.5)
-            .attr("text-anchor", "middle")
-            .attr("fill", Math.abs(cell.r) > 0.4 ? "#ffffff" : "#cbd5e1")
-            .attr("font-family", "monospace")
-            .attr("font-size", "9.5px")
-            .attr("font-weight", "bold")
-            .attr("pointer-events", "none")
-            .text(cell.r > 0 ? `+${cell.r.toFixed(2)}` : cell.r.toFixed(2));
-        }
-      });
-    }
   }, [
     dimensions,
     displayedMaterials,
@@ -850,7 +638,6 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
     selectedPropertyKey,
     selectedElement,
     colorPalette,
-    correlationData,
     binnedDistributionData,
     onSelectMaterial,
   ]);
@@ -886,7 +673,7 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              Visualize multi-element alloying concentrations (% wt) against mechanical properties and calculate Pearson correlation coefficients.
+              Visualize multi-element alloying concentrations (% wt) against mechanical properties.
             </p>
           </div>
         </div>
@@ -915,18 +702,6 @@ export const MaterialsPropertyHeatmapD3: React.FC<MaterialsPropertyHeatmapD3Prop
             }`}
           >
             2D Property Binned Map
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setHeatmapMode("property-correlation")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition whitespace-nowrap ${
-              heatmapMode === "property-correlation"
-                ? "bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-[0_0_10px_rgba(168,85,247,0.25)]"
-                : "text-slate-400 hover:text-white border border-transparent"
-            }`}
-          >
-            Element Correlation (r) Matrix
           </button>
         </div>
       </div>

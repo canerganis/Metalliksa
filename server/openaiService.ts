@@ -2,7 +2,9 @@ import { assertNotAirgapped } from "./airgap";
 
 export type Gpt6Model = "gpt-6-astra" | "gpt-6-sol" | "gpt-6-luna";
 
-type Gpt6Input = string | {
+export interface Gpt6ChatMessage { role: "user" | "assistant"; content: string }
+
+type Gpt6Input = string | { messages: Gpt6ChatMessage[] } | {
   imageBase64: string;
   mimeType: "image/jpeg" | "image/png" | "image/webp" | "image/gif";
   prompt: string;
@@ -17,6 +19,7 @@ export interface Gpt6Request {
 
 function responseInput(input: Gpt6Input) {
   if (typeof input === "string") return input;
+  if ("messages" in input) return input.messages.map(({ role, content }) => ({ role, content }));
   const image = input.imageBase64.replace(/^data:image\/[a-z]+;base64,/, "");
   return [{
     role: "user",

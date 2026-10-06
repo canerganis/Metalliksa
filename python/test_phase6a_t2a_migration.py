@@ -244,13 +244,19 @@ class BaseBlobTest(unittest.TestCase):
         self.assertEqual((old["exitCode"], new["exitCode"]), (0, 0), new["stderr"])
         rows = drift_report.diff(old["stdout"], new["stdout"])
         by_key = {r["key"]: r for r in rows}
-        nyquist = re.compile(r"coatingNyquist\[\d+\]\.spectrum\[\d+\]\.(zReal|minusZImag)")
+        # eyewash removal: the fixed-constant coating timeline and Nyquist spectra are gone from the output
+        nyquist = re.compile(r"coating(Nyquist|Timeline).*")
         fixed = {"corrosionRate_mm_yr", "corrosionRate_mpy", "polarizationResistance_Rp_Ohm_cm2", "alloyId",
-                 "equivalentWeight_g_eq", "density_g_cm3", "equivalentWeightNote"}
+                 "equivalentWeight_g_eq", "density_g_cm3", "equivalentWeightNote",
+                 # eyewash removal: "Immune / Wide Passivity Margin" claimed immunity from an in-house threshold
+                 "pittingAssessment"}
         self.assertEqual({k for k in by_key if not nyquist.fullmatch(k)}, fixed,
                          drift_report.render("battery_corrosion_eis_solver", rows, 20))
         for key in ("alloyId", "equivalentWeight_g_eq", "density_g_cm3", "equivalentWeightNote"):
             self.assertEqual(by_key[key]["kind"], "added", key)
+        self.assertTrue(all(r["kind"] == "removed" for k, r in by_key.items() if nyquist.fullmatch(k)))
+        self.assertEqual(old["stdout"]["pittingAssessment"], "Immune / Wide Passivity Margin")
+        self.assertEqual(new["stdout"]["pittingAssessment"], "Wide passivity margin (dE_pit >= 0.30 V, in-house threshold)")
         k1 = (1e-6 * 31557600.0 * 10.0) / pc.FARADAY.value
 
         def sig6(x):
@@ -276,9 +282,7 @@ class BaseBlobTest(unittest.TestCase):
             new["stdout"]["equivalentWeightNote"],
             "ASTM G102 EW computed in alloy_registry (corrosion domain) from the alloy composition: "
             "elements >= 1 wt % counted, mass fractions renormalised, in-house valences (no per-value citation).")
-        # the Nyquist rows only follow the 1.8e-4 change of B (Rp)
-        worst = max(abs(r["rel"]) for k, r in by_key.items() if nyquist.fullmatch(k) and r["rel"] is not None)
-        self.assertLess(worst, 5e-4)
+        # the former Nyquist/timeline rows are only "removed" rows (asserted above), nothing numeric is left to bound
 
     def test_changed_inputs_succeeded_with_a_default_before(self):
         changed = [
@@ -534,7 +538,9 @@ class EnvelopeAndProvenanceTest(unittest.TestCase):
         self.assertEqual(out["errorKind"], "internal")
 
     def test_battery_internal_error_and_error_returns_report_success_false(self):
-        code, out = _run("battery_corrosion_eis_solver.py", {"action": "corrosion_kinetics", "exposureDays": "long"})
+        # exposureDays no longer feeds any output (the coating timeline was removed), so a non-object payload is the
+        # unexpected-input case that still raises inside the solver.
+        code, out = _run("battery_corrosion_eis_solver.py", ["not", "an", "object"])
         self.assertEqual(code, 1)
         self.assertEqual(out["errorKind"], "internal")
         # V1 follow-up: the former success:true masking (pinned here until now) is gone.

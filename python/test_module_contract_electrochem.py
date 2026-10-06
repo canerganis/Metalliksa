@@ -36,11 +36,11 @@ class ElectrochemContractTests(unittest.TestCase):
 
     def test_reachable_views_and_solver_routes_are_distinct_and_exact(self):
         self.assertEqual(set(self.operations), {
-            "select-corrosion-view", "calculate-galvanic-pair", "calculate-pren-cpt", "apply-pren-alloy-preset",
-            "import-tafel-dataset", "select-tafel-benchmark", "estimate-tafel-locally", "export-tafel-csv",
+            "select-corrosion-view", "calculate-pren", "apply-pren-alloy-preset",
+            "import-tafel-dataset", "estimate-tafel-locally", "export-tafel-csv",
             "copy-tafel-summary", "sync-tafel-to-digital-twin", "fit-tafel-python", "calculate-annual-corrosion-rate",
             "manage-pourbaix-test-points", "select-pourbaix-alloy-element", "set-pourbaix-overlay-display",
-            "solve-pourbaix", "simulate-corrosion-eis", "select-eis-visualization",
+            "solve-pourbaix", "simulate-corrosion-eis",
         })
         self.assertEqual(self.operations["solve-pourbaix"].route, "/api/python/pourbaix-diagram")
         self.assertEqual(self.operations["solve-pourbaix"].method, "POST")
@@ -59,7 +59,7 @@ class ElectrochemContractTests(unittest.TestCase):
             self.assertEqual(operation.authority.script, script)
             self.assertEqual(operation.authority.timeout_ms, 15000)
             self.assertTrue(operation.authority.warm)
-        for operation_id in ("select-corrosion-view", "calculate-galvanic-pair", "calculate-pren-cpt", "estimate-tafel-locally"):
+        for operation_id in ("select-corrosion-view", "calculate-pren", "estimate-tafel-locally"):
             operation = self.operations[operation_id]
             self.assertIsNone(operation.route)
             self.assertEqual(operation.authority.kind, "browser-local")
