@@ -1,0 +1,532 @@
+{
+ "after": {
+  "generatedAt": "2026-10-07",
+  "implementationHash": "f3ba98969a723702d9dbe15ae623d28f1327356441919ffdd6edf4e74a6a150d"
+ },
+ "before": {
+  "generatedAt": "2026-10-06",
+  "implementationHash": "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932"
+ },
+ "honesty": {
+  "experimentalValidation": false,
+  "statement": "Comparison against published single-track measurements; not validation; nothing fitted."
+ },
+ "kernels": {
+  "eagar-tsai": {
+   "computedRowsInSummaryScope": {
+    "after": 757,
+    "before": 757
+   },
+   "groups": {
+    "all-datasets": {
+     "depth": {
+      "after": {
+       "bias_pct": 15.1,
+       "mape_pct": 36.0
+      },
+      "before": {
+       "bias_pct": 9.8,
+       "mape_pct": 33.9
+      }
+     },
+     "n": 838,
+     "width": {
+      "after": {
+       "bias_pct": -2.7,
+       "mape_pct": 12.0
+      },
+      "before": {
+       "bias_pct": -9.0,
+       "mape_pct": 13.9
+      }
+     }
+    },
+    "hofmann-316l-2026": {
+     "depth": {
+      "after": {
+       "bias_pct": 20.4,
+       "mape_pct": 36.9
+      },
+      "before": {
+       "bias_pct": 14.5,
+       "mape_pct": 34.3
+      }
+     },
+     "n": 677,
+     "width": {
+      "after": {
+       "bias_pct": -4.2,
+       "mape_pct": 10.7
+      },
+      "before": {
+       "bias_pct": -10.5,
+       "mape_pct": 13.5
+      }
+     }
+    },
+    "ku-leuven-316l-2021": {
+     "depth": {
+      "after": {
+       "bias_pct": -12.9,
+       "mape_pct": 29.0
+      },
+      "before": {
+       "bias_pct": -12.9,
+       "mape_pct": 29.0
+      }
+     },
+     "n": 44,
+     "width": {
+      "after": {
+       "bias_pct": 12.2,
+       "mape_pct": 16.7
+      },
+      "before": {
+       "bias_pct": 3.7,
+       "mape_pct": 12.5
+      }
+     }
+    },
+    "ku-leuven-ti64-2021": {
+     "depth": {
+      "after": {
+       "bias_pct": 21.2,
+       "mape_pct": 28.6
+      },
+      "before": {
+       "bias_pct": 21.2,
+       "mape_pct": 28.6
+      }
+     },
+     "n": 14,
+     "width": {
+      "after": {
+       "bias_pct": -7.8,
+       "mape_pct": 8.4
+      },
+      "before": {
+       "bias_pct": -13.7,
+       "mape_pct": 13.7
+      }
+     }
+    },
+    "lane-in625-2020": {
+     "depth": {
+      "after": {
+       "bias_pct": -14.2,
+       "mape_pct": 25.2
+      },
+      "before": {
+       "bias_pct": -26.4,
+       "mape_pct": 27.5
+      }
+     },
+     "n": 23,
+     "width": {
+      "after": {
+       "bias_pct": 15.3,
+       "mape_pct": 20.1
+      },
+      "before": {
+       "bias_pct": 7.8,
+       "mape_pct": 15.5
+      }
+     }
+    },
+    "pooled-summary-scope": {
+     "depth": {
+      "after": {
+       "bias_pct": 17.5,
+       "mape_pct": 36.8
+      },
+      "before": {
+       "bias_pct": 12.0,
+       "mape_pct": 34.4
+      }
+     },
+     "n": 757,
+     "width": {
+      "after": {
+       "bias_pct": -4.0,
+       "mape_pct": 11.6
+      },
+      "before": {
+       "bias_pct": -10.2,
+       "mape_pct": 13.9
+      }
+     }
+    },
+    "totis-ti64-2021": {
+     "depth": {
+      "after": {
+       "bias_pct": -7.1,
+       "mape_pct": 36.5
+      },
+      "before": {
+       "bias_pct": -9.3,
+       "mape_pct": 35.4
+      }
+     },
+     "n": 80,
+     "width": {
+      "after": {
+       "bias_pct": -2.2,
+       "mape_pct": 18.7
+      },
+      "before": {
+       "bias_pct": -8.1,
+       "mape_pct": 18.1
+      }
+     }
+    }
+   }
+  },
+  "goldak": {
+   "computedRowsInSummaryScope": {
+    "after": 753,
+    "before": 745
+   },
+   "groups": {
+    "all-datasets": {
+     "depth": {
+      "after": {
+       "bias_pct": 21.5,
+       "mape_pct": 40.7
+      },
+      "before": {
+       "bias_pct": 16.4,
+       "mape_pct": 37.5
+      }
+     },
+     "n": 817,
+     "width": {
+      "after": {
+       "bias_pct": -9.5,
+       "mape_pct": 15.7
+      },
+      "before": {
+       "bias_pct": -16.7,
+       "mape_pct": 19.8
+      }
+     }
+    },
+    "hofmann-316l-2026": {
+     "depth": {
+      "after": {
+       "bias_pct": 27.4,
+       "mape_pct": 42.0
+      },
+      "before": {
+       "bias_pct": 21.7,
+       "mape_pct": 38.3
+      }
+     },
+     "n": 665,
+     "width": {
+      "after": {
+       "bias_pct": -11.0,
+       "mape_pct": 15.2
+      },
+      "before": {
+       "bias_pct": -18.2,
+       "mape_pct": 20.1
+      }
+     }
+    },
+    "ku-leuven-316l-2021": {
+     "depth": {
+      "after": {
+       "bias_pct": -12.9,
+       "mape_pct": 29.0
+      },
+      "before": {
+       "bias_pct": -12.9,
+       "mape_pct": 29.0
+      }
+     },
+     "n": 44,
+     "width": {
+      "after": {
+       "bias_pct": 11.0,
+       "mape_pct": 16.1
+      },
+      "before": {
+       "bias_pct": 2.4,
+       "mape_pct": 12.6
+      }
+     }
+    },
+    "ku-leuven-ti64-2021": {
+     "depth": {
+      "after": {
+       "bias_pct": 21.2,
+       "mape_pct": 28.6
+      },
+      "before": {
+       "bias_pct": 21.2,
+       "mape_pct": 28.6
+      }
+     },
+     "n": 14,
+     "width": {
+      "after": {
+       "bias_pct": -10.6,
+       "mape_pct": 11.0
+      },
+      "before": {
+       "bias_pct": -16.6,
+       "mape_pct": 16.6
+      }
+     }
+    },
+    "lane-in625-2020": {
+     "depth": {
+      "after": {
+       "bias_pct": -13.7,
+       "mape_pct": 39.2
+      },
+      "before": {
+       "bias_pct": -24.1,
+       "mape_pct": 37.6
+      }
+     },
+     "n": 14,
+     "width": {
+      "after": {
+       "bias_pct": -14.9,
+       "mape_pct": 14.9
+      },
+      "before": {
+       "bias_pct": -24.2,
+       "mape_pct": 24.2
+      }
+     }
+    },
+    "pooled-summary-scope": {
+     "depth": {
+      "after": {
+       "bias_pct": 24.2,
+       "mape_pct": 41.6
+      },
+      "before": {
+       "bias_pct": 18.8,
+       "mape_pct": 38.2
+      }
+     },
+     "n": 745,
+     "width": {
+      "after": {
+       "bias_pct": -10.6,
+       "mape_pct": 15.8
+      },
+      "before": {
+       "bias_pct": -17.7,
+       "mape_pct": 20.2
+      }
+     }
+    },
+    "totis-ti64-2021": {
+     "depth": {
+      "after": {
+       "bias_pct": -2.9,
+       "mape_pct": 39.1
+      },
+      "before": {
+       "bias_pct": -5.3,
+       "mape_pct": 37.8
+      }
+     },
+     "n": 80,
+     "width": {
+      "after": {
+       "bias_pct": -6.9,
+       "mape_pct": 20.6
+      },
+      "before": {
+       "bias_pct": -13.3,
+       "mape_pct": 21.1
+      }
+     }
+    }
+   }
+  },
+  "rosenthal": {
+   "computedRowsInSummaryScope": {
+    "after": 750,
+    "before": 679
+   },
+   "groups": {
+    "all-datasets": {
+     "depth": {
+      "after": {
+       "bias_pct": 47.1,
+       "mape_pct": 56.3
+      },
+      "before": {
+       "bias_pct": 37.4,
+       "mape_pct": 50.1
+      }
+     },
+     "n": 743,
+     "width": {
+      "after": {
+       "bias_pct": 19.5,
+       "mape_pct": 30.5
+      },
+      "before": {
+       "bias_pct": 12.5,
+       "mape_pct": 32.3
+      }
+     }
+    },
+    "hofmann-316l-2026": {
+     "depth": {
+      "after": {
+       "bias_pct": 55.6,
+       "mape_pct": 59.4
+      },
+      "before": {
+       "bias_pct": 44.5,
+       "mape_pct": 52.0
+      }
+     },
+     "n": 604,
+     "width": {
+      "after": {
+       "bias_pct": 13.7,
+       "mape_pct": 25.8
+      },
+      "before": {
+       "bias_pct": 5.9,
+       "mape_pct": 28.1
+      }
+     }
+    },
+    "ku-leuven-316l-2021": {
+     "depth": {
+      "after": {
+       "bias_pct": -8.4,
+       "mape_pct": 44.0
+      },
+      "before": {
+       "bias_pct": -9.5,
+       "mape_pct": 43.4
+      }
+     },
+     "n": 44,
+     "width": {
+      "after": {
+       "bias_pct": 57.7,
+       "mape_pct": 57.7
+      },
+      "before": {
+       "bias_pct": 56.2,
+       "mape_pct": 56.2
+      }
+     }
+    },
+    "ku-leuven-ti64-2021": {
+     "depth": {
+      "after": {
+       "bias_pct": 66.8,
+       "mape_pct": 69.0
+      },
+      "before": {
+       "bias_pct": 62.8,
+       "mape_pct": 65.2
+      }
+     },
+     "n": 14,
+     "width": {
+      "after": {
+       "bias_pct": 37.0,
+       "mape_pct": 37.0
+      },
+      "before": {
+       "bias_pct": 33.7,
+       "mape_pct": 33.7
+      }
+     }
+    },
+    "lane-in625-2020": {
+     "depth": {
+      "after": {
+       "bias_pct": -29.4,
+       "mape_pct": 29.4
+      },
+      "before": {
+       "bias_pct": -38.5,
+       "mape_pct": 38.5
+      }
+     },
+     "n": 6,
+     "width": {
+      "after": {
+       "bias_pct": -10.4,
+       "mape_pct": 10.4
+      },
+      "before": {
+       "bias_pct": -23.2,
+       "mape_pct": 23.2
+      }
+     }
+    },
+    "pooled-summary-scope": {
+     "depth": {
+      "after": {
+       "bias_pct": 51.0,
+       "mape_pct": 57.1
+      },
+      "before": {
+       "bias_pct": 40.6,
+       "mape_pct": 50.3
+      }
+     },
+     "n": 679,
+     "width": {
+      "after": {
+       "bias_pct": 16.9,
+       "mape_pct": 28.8
+      },
+      "before": {
+       "bias_pct": 9.5,
+       "mape_pct": 30.8
+      }
+     }
+    },
+    "totis-ti64-2021": {
+     "depth": {
+      "after": {
+       "bias_pct": 13.9,
+       "mape_pct": 38.5
+      },
+      "before": {
+       "bias_pct": 9.9,
+       "mape_pct": 36.6
+      }
+     },
+     "n": 75,
+     "width": {
+      "after": {
+       "bias_pct": 43.1,
+       "mape_pct": 53.1
+      },
+      "before": {
+       "bias_pct": 38.9,
+       "mape_pct": 52.7
+      }
+     }
+    }
+   }
+  }
+ },
+ "rule": "per kernel, rows with extentStatus == 'computed' in BOTH records; ratio = model / measured",
+ "schema": "lpbf-dataset-common-subset-1",
+ "summaryScopeDatasets": [
+  "cmu-ti64-mt-2026",
+  "cmu-ti64-st-2026",
+  "hofmann-316l-2026",
+  "ku-leuven-in718-2021",
+  "totis-ti64-2021"
+ ]
+}

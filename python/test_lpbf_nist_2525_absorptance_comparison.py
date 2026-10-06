@@ -161,9 +161,10 @@ class ComparisonToolTest(unittest.TestCase):
         except Exception as exc:  # the committed record was produced with the ray tracer available
             self.skipTest(f"SKIPPED: warp not importable ({type(exc).__name__}); use the locked interpreter")
         docs = PYTHON_DIR.parent / "docs"
-        # Current record (fingerprint ddd8358a, tier-2 physics bump); the 11b04b8f record is kept as history.
-        stem = "LPBF_NIST_2525_ABSORPTANCE_COMPARISON_2026-10-06_tier2-physics"
-        doc = tool.build_document(False, "2026-10-06")
+        # Current record (fingerprint f3ba9896, Wave B physics bump); the 11b04b8f and ddd8358a (tier-2)
+        # records are kept as history.
+        stem = "LPBF_NIST_2525_ABSORPTANCE_COMPARISON_2026-10-07_waveb-physics"
+        doc = tool.build_document(False, "2026-10-07")
         fresh_json = json.dumps(doc, sort_keys=True, indent=1, ensure_ascii=False) + "\n"
         self.assertEqual((docs / f"{stem}.json").read_bytes().replace(b"\r\n", b"\n"),
                          fresh_json.encode("utf-8"))
