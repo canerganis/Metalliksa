@@ -14,3 +14,7 @@ test("optimizer alloy: unmapped or unsupported alloys are refused, not guessed",
   assert.equal(resolveOptimizerAlloy("Inconel 625").ok, false);
   assert.equal(resolveOptimizerAlloy(null).ok, false);
 });
+
+test("optimizer alloy: material-profile style names without an alloy token are refused", () => {
+  assert.equal(resolveOptimizerAlloy("material-profile:[custom-edited-composition]").ok, false);
+});

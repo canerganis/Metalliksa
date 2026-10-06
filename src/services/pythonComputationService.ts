@@ -503,12 +503,17 @@ export interface PythonKineticsResult {
 export interface PythonBayesianOptimizationResult {
   success: boolean;
   error?: string;
-  errorKind?: "validation" | "solver";
+  errorKind?: "validation" | "solver" | "optimizer";
   alloyId: string;
   beamDiameter_um?: number;
   preheatTemp_C?: number;
   nWarmup?: number;
+  surrogateSteps?: number;
   objective?: string;
+  bestVerdict?: string | null;
+  noPositiveScore?: boolean;
+  nInconclusive?: number;
+  verdictCounts?: Record<string, number>;
   bestParams?: {
     laserPower_W: number;
     scanSpeed_mms: number;
