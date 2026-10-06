@@ -116,9 +116,11 @@ for (const [unit, current, density] of [['A', '-1e-6', -0.5], ['mA', '-0.001', -
   });
 }
 
-// BUG 1 regression guard: the module imports, lists no fabricated benchmark curves, and the fabrication helper still refuses.
-test('tafelParser module imports without fabricating benchmark curves', () => {
-  assert.deepEqual(tafel.TAFEL_BENCHMARK_DATASETS, []);
-  assert.throws(() => tafel.createBenchmarkDataset({} as Parameters<typeof tafel.createBenchmarkDataset>[0]),
-    /Fabrication of Tafel potentiodynamic polarization curves via PRNG noise is disabled/);
+// BUG 1 regression guard: the module imports and no longer exports a benchmark list or a curve-fabrication helper
+// (both were removed: no measured benchmark curves are bundled, and PRNG-noise curves must not stand in for them).
+test('tafelParser module imports without a benchmark list or curve-fabrication helper', () => {
+  for (const name of ['TAFEL_BENCHMARK_DATASETS', 'createBenchmarkDataset']) {
+    assert.equal(name in tafel, false, `${name} must not be exported`);
+  }
+  assert.equal(typeof tafel.autoFitTafel, 'function');
 });

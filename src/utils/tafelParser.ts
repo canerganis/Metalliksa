@@ -772,37 +772,6 @@ export function autoFitTafel(
 }
 
 /**
- * Benchmark datasets. Empty: the former entries were Tafel curves fabricated with PRNG
- * noise by createBenchmarkDataset(), which is disabled (see below). They were built at
- * module load, so importing this module threw (BUG 1); no measured benchmark curves
- * exist to replace them, so none are listed. Consumers must handle an empty list.
- */
-export const TAFEL_BENCHMARK_DATASETS: TafelDataset[] = [];
-
-export interface BenchmarkParams {
-  id: string;
-  name: string;
-  material: AlloyMaterialPreset;
-  eCorrTrue: number;
-  iCorrTrue: number;
-  betaA: number;
-  betaC: number;
-  eStart: number;
-  eEnd: number;
-  nPoints: number;
-  hasPitting: boolean;
-  ePit?: number;
-  noiseLevel: number;
-}
-
-// Disabled on purpose: synthetic (PRNG-noise) polarization curves must not be presented
-// as benchmark data. Nothing calls it any more; it is kept so that the refusal stays
-// explicit if a caller is ever reintroduced.
-export function createBenchmarkDataset(_params: BenchmarkParams): TafelDataset {
-  throw new Error("Fabrication of Tafel potentiodynamic polarization curves via PRNG noise is disabled.");
-}
-
-/**
  * Exports Tafel dataset and fit result as an ASTM-compliant CSV report
  */
 export function exportTafelToCSV(dataset: TafelDataset, fitResult: TafelFitResult): string {
