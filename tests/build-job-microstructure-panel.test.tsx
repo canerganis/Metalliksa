@@ -49,10 +49,10 @@ test("screening-fallback: amber note with Python's reason, tail-length-fallback 
 });
 
 test("degenerate-floor: rendered like unavailable (reason, no PDAS/SDAS/morphology/cooling as results)", () => {
-  const block = BLOCKS.degenerate_floor_in718_285_1200;
+  const block = BLOCKS.degenerate_floor_in718_100_960;
   assert.equal(block.status, "degenerate-floor");
   assert.equal(block.coolingRate_K_s, 1);
-  const markup = html("degenerate_floor_in718_285_1200");
+  const markup = html("degenerate_floor_in718_100_960");
   const t = text(markup);
   assert.match(markup, /data-micro-status="degenerate-floor"/);
   assert.match(markup, /data-micro-note="degenerate-floor"/);
@@ -61,7 +61,7 @@ test("degenerate-floor: rendered like unavailable (reason, no PDAS/SDAS/morpholo
   assert.doesNotMatch(markup, /data-micro-metric=/);
   assert.doesNotMatch(markup, /data-micro-provenance/);
   // The clamp-floor numbers and the labels derived from them are not shown.
-  assert.ok(!t.includes("19.64") && !t.includes("1.29") && !t.includes("Planar"), t);
+  assert.ok(!t.includes("19.64") && !t.includes("1.77") && !t.includes("Planar"), t);
 });
 
 test("unavailable: reason only, no numbers, no PDAS/SDAS tiles", () => {

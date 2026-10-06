@@ -92,8 +92,11 @@ def _four_alloy_capability(alloy_id):
             "check": comparison["check"],
             "source": comparison["source"],
             "doi": comparison["doi"],
+            "widthDepthBasis": comparison.get("widthDepthBasis"),
+            # True only for a cited, measured track; typical or asymptotic W/D are not "published".
             "publishedWidthDepthPresent": (comparison["publishedWidth_um"] is not None
-                                           and comparison["publishedDepth_um"] is not None),
+                                           and comparison["publishedDepth_um"] is not None
+                                           and comparison.get("widthDepthBasis") == "published-measurement"),
             "evidenceStatus": "screening-fixture-not-independent-validation",
         },
         "crossModelAbsorptivity": {

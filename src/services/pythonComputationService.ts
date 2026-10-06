@@ -1666,6 +1666,9 @@ export interface PythonLPBFResult {
     heatSource?: string;
     conductionAbsorptivity?: number;
     fabbroAbsorptivity?: number;
+    /** "flat-plate" on every machine unless the GPU powder ray tracer was requested explicitly. */
+    absorptionModel?: "flat-plate" | "powder-raytrace";
+    thermalSliceBackend?: "cpu" | "warp";
   };
   meltPoolGeometry: {
     length_um: number;
@@ -1678,6 +1681,10 @@ export interface PythonLPBFResult {
     /** Only "computed" is a closed, unfloored liquidus isotherm (python/lpbf_thermal_solver.py). */
     extentStatus: MeltPoolExtentStatus;
     extentNote: string | null;
+    /** x of the axial field maximum the liquidus extent search and the yz cross-sections are anchored at (negative = behind the beam). */
+    peakOffset_um?: number;
+    /** Axial (y = z = 0) field maximum at peakOffset_um; hydrodynamicsAndRecoil.peakTemperature_C stays T(0,0,0). */
+    axialFieldMaximum_C?: number;
     goldakParameters: {
       semiAxis_af_front_um: number;
       semiAxis_ar_rear_um: number;
@@ -1704,12 +1711,13 @@ export interface PythonLPBFResult {
     tOverD?: number;
     keyholePorosityRisk: string;
     ballingInstabilityRisk: string;
-    /** Band on distortionIndex (1.2 / 2.0); heuristic, see src/utils/distortionHeuristic.ts. */
+    /** "Not evaluated from scan parameters (...)" since the 2026-10-06 tier-2 bump: the index is alloy/layer/preheat-only. */
     recoaterCrashRisk: string;
     /** Heuristic 0.72·E·α·ΔT/(1−ν) with fixed uncited constants; not a stress solve. */
     effectiveResidualStress_MPa: number;
     /** Heuristic index σ_eff·(layer/40 µm)/420 MPa with fixed uncited constants. */
     distortionIndex: number;
+    distortionIndexBasis?: string;
   };
   solidificationKinetics: {
     modelId?: string;

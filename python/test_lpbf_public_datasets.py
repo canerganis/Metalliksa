@@ -203,11 +203,11 @@ class AbsorptionPinTests(unittest.TestCase):
         with self.assertRaises(ImportError):
             from powder_bed_raytracer import calculate_powder_bed_absorptivity  # noqa: F401
 
-    def test_pinned_solver_call_takes_flat_plate_and_counts_the_warning(self):
+    def test_pinned_solver_call_takes_flat_plate_and_counts_it(self):
         row = {"material": "316L Stainless Steel", "power_W": 200.0, "speed_mm_s": 800.0,
                "beamDiameter_um": 80.0, "preheat_C": 20.0, "layer_um": 30.0, "hatch_um": 100.0}
         res = cmp._predict({"row": row, "kernel": "eagar-tsai"})
-        self.assertGreaterEqual(res["_fallbackWarnings"], 1)
+        self.assertEqual(res["_flatPlateCalls"], 1)  # result reports absorptionModel 'flat-plate'
         self.assertIsNotNone(res["width_um"])
 
 

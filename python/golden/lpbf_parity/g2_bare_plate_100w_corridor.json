@@ -4,9 +4,9 @@
  "group": "G2",
  "description": "Real bare-plate 100 W corridor job 7ec9dc57...; compared with the in-repo fixture (~106 s)",
  "slow": true,
- "recordedImplementationHash": "11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359",
+ "recordedImplementationHash": "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "783c655bfb4fb9781c9e4e8a81a660d43a70fa7d",
+ "recordedGitHead": "68e386015aad2f4c060e6b7832a2eea1e5155830",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,8 +68,8 @@
   }
  },
  "recordedRuns_s": [
-  95.7,
-  89.9
+  104.1,
+  95.1
  ],
  "recordedTwice": true,
  "observations": {

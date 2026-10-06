@@ -34,7 +34,7 @@ def synth_kernel(task):
     w, d = synth_kernel_geometry(a, row["power_W"], row["speed_mm_s"], row["beamDiameter_um"])
     ok = a >= MIN_RESOLVED_A
     return {"width_um": round(w, 3), "depth_um": round(d, 3), "included": ok,
-            "extentStatus": "computed" if ok else "heuristic-width-fallback", "fallbackWarnings": 1}
+            "extentStatus": "computed" if ok else "heuristic-width-fallback", "flatPlateCalls": 1}
 
 
 def _class(power_W, speed_mm_s):

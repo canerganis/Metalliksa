@@ -17,7 +17,7 @@ test("available and screening-fallback pass through with their status", () => {
 });
 
 test("degenerate-floor yields Python's reason flagged degenerate and never a result", () => {
-  const block = BLOCKS.degenerate_floor_in718_285_1200;
+  const block = BLOCKS.degenerate_floor_in718_100_960;
   assert.equal(block.status, "degenerate-floor");
   const out = solidificationOutcome(as(block));
   assert.deepEqual(out, { error: block.reason, degenerate: true });

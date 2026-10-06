@@ -212,10 +212,9 @@ def flat_plate_authority() -> Dict[str, Any]:
     return {
         "absorptivityOfRecord": resolved_value,
         "origin": origin,
-        "solverRole": ("flat-plate eta_base_flat of calculate_meltpool_physics; in the solver's default path "
-                       "eta_base is replaced by powder_bed_raytracer's effective_absorptivity, so this value is "
-                       "the solver's absorptivity only when that powder-bed tracer is pinned off (as in the test "
-                       "that calls the solver)"),
+        "solverRole": ("flat-plate eta_base_flat of calculate_meltpool_physics: the solver's default absorptivity "
+                       "on every machine since the 2026-10-06 tier-2 bump (powder_bed_raytracer's effective "
+                       "absorptivity is used only with an explicit absorption_model='powder-raytrace')"),
         "fourAlloyMaterials": four,
         "materialRegistry": reg,
         "secondaryInlineTable": {"entries": secondary, "containsTi64": secondary_has_ti64, "note": note},

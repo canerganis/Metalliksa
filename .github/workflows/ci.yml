@@ -113,7 +113,7 @@ jobs:
           test_lpbf_process_map test_lpbf_powder_layer_analysis test_lpbf_additional_datasets test_pourbaix_ticrmo
           test_goldak_power_normalization test_lpbf_boiling_cap
           test_lpbf_graded_mesh_stretching test_lpbf_graded_mesh_and_evaporation
-          test_lpbf_meltpool_consumer_pins
+          test_lpbf_meltpool_consumer_pins test_lpbf_tier2_physics_bump
           test_lpbf_public_datasets test_lpbf_wave2_datasets test_lpbf_process_map test_lpbf_powder_layer_analysis
           test_phase7 test_phase8 test_keyhole_contract
           test_lpbf_transient_3d_gpu test_lpbf_phase22_energy_ledger test_lpbf_phase22_full_field_cuda_parity

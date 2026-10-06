@@ -13,8 +13,8 @@ Usage (from python/, locked interpreter, PYTHONDONTWRITEBYTECODE=1):
     python -B tools/lpbf_dataset_comparison.py --quick --out <json>        # first 40 rows of each dataset
 Options: --jobs N (worker processes, default 6), --ref-budget-s S (reference-transient total budget,
 default 900), --skip-reference, --reuse-reference <record.json> (copy that record's referenceTransient block
-instead of re-running the wall-clock-budgeted transient), --allow-raytracer (do NOT pin the flat-plate
-absorption path), --view-out <path> (slim view record, default <out>.view.json), --include-wave2 (add the
+instead of re-running the wall-clock-budgeted transient), --allow-raytracer (request the GPU powder ray
+tracer explicitly, absorption_model="powder-raytrace"; default flat-plate), --view-out <path> (slim view record, default <out>.view.json), --include-wave2 (add the
 2026-10-06 datasets: KU Leuven 316L/Ti-6Al-4V condition means and Lane 2020 IN625 tracks through the same kernels,
 plus the NIST AMB2022-03 thermal and Simonds 2018 absorptance tables as reference targets whose model comparison
 is recorded as unavailable). The companion .md is written next to the json.
@@ -61,16 +61,18 @@ REF_POWER_LIMIT_W = 100.0
 CI_REPLICATES = 1000
 CI_SEED = 0
 RAYTRACER_MODULE = "powder_bed_raytracer"
+# Kept for older callers; since the 2026-10-06 tier-2 bump the solver never prints this message.
 FALLBACK_WARNING_TEXT = "GPU Powder Bed Ray Tracing failed"
 PYTHON_DIR = Path(__file__).resolve().parent.parent
 RAYTRACER_STUB_NOTE = "reviewer stub: Eagar-Tsai hofmann-0001 171.0/119.6 -> 209.2/143.6 um at effective 0.65"
 
 
 def pin_flat_plate(allow_raytracer: bool = False) -> None:
-    """Force calculate_meltpool_physics onto its flat-plate branch without editing the solver.
+    """Defence in depth for the flat-plate path.
 
-    The solver does `from powder_bed_raytracer import ...` inside a try/except Exception; a None entry in
-    sys.modules makes that import raise ImportError, so the except branch (flat-plate absorptivity) is taken.
+    Since the 2026-10-06 tier-2 bump calculate_meltpool_physics uses the flat-plate absorptivity unless
+    absorption_model="powder-raytrace" is passed (this harness passes it only with --allow-raytracer). A None
+    entry in sys.modules additionally makes any powder_bed_raytracer import fail loudly.
     """
     if not allow_raytracer:
         sys.modules[RAYTRACER_MODULE] = None
@@ -225,9 +227,11 @@ def sensitivity_mape(rows: Sequence[Dict[str, Any]], by_value: Dict[float, Dict[
 # solver calls
 # ---------------------------------------------------------------------------------------------
 def _predict(task: Dict[str, Any]) -> Dict[str, Any]:
-    """Worker: one row, one kernel. Solver stdout is captured; the ray-tracer fallback warnings are counted
-    (returned as `_fallbackWarnings`, popped by the caller, never stored in the prediction)."""
+    """Worker: one row, one kernel. Solver stdout is captured; calls whose result reports
+    processParameters.absorptionModel == "flat-plate" are counted (returned as `_flatPlateCalls`, popped by
+    the caller, never stored in the prediction)."""
     pin_flat_plate(bool(task.get("allowRaytracer")))
+    absorption_model = "powder-raytrace" if task.get("allowRaytracer") else "flat-plate"
     from lpbf_thermal_solver import calculate_meltpool_physics
     row, kernel, overrides = task["row"], task["kernel"], task.get("overrides")
     layer = row["layer_um"] if row["layer_um"] and row["layer_um"] > 0 else NOMINAL_LAYER_FOR_BARE_UM
@@ -237,17 +241,17 @@ def _predict(task: Dict[str, Any]) -> Dict[str, Any]:
             res = calculate_meltpool_physics(
                 row["material"], row["power_W"], row["speed_mm_s"], row["beamDiameter_um"],
                 row["preheat_C"], layer, row["hatch_um"] or DEFAULT_HATCH_UM,
-                heat_source=kernel, prop_overrides=overrides)
+                heat_source=kernel, prop_overrides=overrides, absorption_model=absorption_model)
         g = res["meltPoolGeometry"]
         status = g.get("extentStatus")
         return {"width_um": round(float(g["width_um"]), 3), "depth_um": round(float(g["depth_um"]), 3),
                 "length_um": round(float(g["length_um"]), 3), "extentStatus": status,
                 "extentNote": g.get("extentNote"), "included": status == "computed",
-                "_fallbackWarnings": captured.getvalue().count(FALLBACK_WARNING_TEXT)}
+                "_flatPlateCalls": int(res["processParameters"].get("absorptionModel") == "flat-plate")}
     except Exception as exc:  # recorded as data
         return {"width_um": None, "depth_um": None, "length_um": None,
                 "extentStatus": f"error: {type(exc).__name__}", "extentNote": str(exc)[:300], "included": False,
-                "_fallbackWarnings": captured.getvalue().count(FALLBACK_WARNING_TEXT)}
+                "_flatPlateCalls": 0}
 
 
 def _map(tasks: List[Dict[str, Any]], jobs: int) -> List[Dict[str, Any]]:
@@ -369,8 +373,8 @@ def probe_raytracer_importable() -> bool:
         return False
 
 
-def _pop_warnings(preds: Sequence[Dict[str, Any]]) -> int:
-    return sum(int(p.pop("_fallbackWarnings", 0) or 0) for p in preds)
+def _pop_flat_plate(preds: Sequence[Dict[str, Any]]) -> int:
+    return sum(int(p.pop("_flatPlateCalls", 0) or 0) for p in preds)
 
 
 def build_limits(out_rows: Sequence[Dict[str, Any]], summary: Dict[str, Any],
@@ -463,7 +467,7 @@ def build_document(quick: bool, jobs: int, ref_budget_s: float, skip_reference: 
 
     tasks = [{"row": r, "kernel": k, "allowRaytracer": allow_raytracer} for r in data_rows for k in KERNELS]
     preds = _map(tasks, jobs)
-    warn_by_kernel = {k: _pop_warnings(preds[j::len(KERNELS)]) for j, k in enumerate(KERNELS)}
+    warn_by_kernel = {k: _pop_flat_plate(preds[j::len(KERNELS)]) for j, k in enumerate(KERNELS)}
     out_rows = []
     for i, r in enumerate(data_rows):
         p = {k: preds[i * len(KERNELS) + j] for j, k in enumerate(KERNELS)}
@@ -528,7 +532,7 @@ def build_document(quick: bool, jobs: int, ref_budget_s: float, skip_reference: 
         stasks = [{"row": cond_data[r["rowId"]], "kernel": k, "overrides": {"absorptivity_IR": a},
                    "allowRaytracer": allow_raytracer} for r in cond_rows for k in KERNELS]
         sp = _map(stasks, jobs)
-        sens_warnings += _pop_warnings(sp)
+        sens_warnings += _pop_flat_plate(sp)
         by_value[a] = {r["rowId"]: {k: sp[i * len(KERNELS) + j] for j, k in enumerate(KERNELS)}
                        for i, r in enumerate(cond_rows)}
     sens = sensitivity_mape(cond_rows, by_value)
@@ -538,33 +542,33 @@ def build_document(quick: bool, jobs: int, ref_budget_s: float, skip_reference: 
     sens["rows"] = len(cond_rows)
 
     n_calls = len(tasks) + len(ABSORPTIVITY_VALUES) * len(cond_rows) * len(KERNELS)
-    n_warn = sum(warn_by_kernel.values()) + sens_warnings
+    n_flat = sum(warn_by_kernel.values()) + sens_warnings
     abs_by_material = {pr["material"].replace(" Stainless Steel", ""): thermal_props(pr["material"])["absorptivity_IR"]
                        for pr in (h["provenance"], t["provenance"])}
     if w2:
         abs_by_material["Inconel 625"] = pd.screening_props("Inconel 625")["absorptivity_IR"]
     absorption = {
-        "path": "flat-plate" if not allow_raytracer else "unpinned (solver's own choice)",
+        "path": "flat-plate" if not allow_raytracer else "powder-raytrace (explicit opt-in)",
         "pinned": not allow_raytracer,
-        "howPinned": ("sys.modules['powder_bed_raytracer'] = None is set in the main process and in every worker "
-                      "before lpbf_thermal_solver is imported, so the solver's `from powder_bed_raytracer import ...` "
-                      "raises ImportError and its except branch (flat-plate absorptivity) is taken; the solver is "
-                      "not edited" if not allow_raytracer else
-                      "not pinned (--allow-raytracer): the solver imports the ray tracer if it can"),
+        "howPinned": ("calculate_meltpool_physics(absorption_model='flat-plate'), the solver default on every machine "
+                      "since the 2026-10-06 tier-2 bump; sys.modules['powder_bed_raytracer'] = None is also set in "
+                      "the main process and in every worker so any ray-tracer import fails loudly" if not allow_raytracer
+                      else "--allow-raytracer: calculate_meltpool_physics(absorption_model='powder-raytrace'); the "
+                      "ray tracer's errors propagate (no silent fallback)"),
         "raytracerModulePresent": (PYTHON_DIR / f"{RAYTRACER_MODULE}.py").is_file(),
         "raytracerImportable": probe_raytracer_importable(),
         "absorptivity_by_material": abs_by_material,
-        "fallbackWarnings": n_warn,
-        "fallbackWarningsByKernel": warn_by_kernel,
-        "fallbackWarningsSensitivityRuns": sens_warnings,
+        "flatPlateCalls": n_flat,
+        "flatPlateCallsByKernel": warn_by_kernel,
+        "flatPlateCallsSensitivityRuns": sens_warnings,
         "solverCalls": n_calls,
         "note": ("flat-plate absorptivity_IR; the GPU powder ray tracer was not used; with it the predictions change "
-                 f"({RAYTRACER_STUB_NOTE}). fallbackWarnings counts the solver's 'GPU Powder Bed Ray Tracing "
-                 "failed' messages (captured, not suppressed): with the pin it fires once per solver call "
-                 "(solverCalls), which confirms the flat-plate branch was the realized path."
+                 f"({RAYTRACER_STUB_NOTE}). flatPlateCalls counts the solver results that report "
+                 "processParameters.absorptionModel == 'flat-plate'; equal to solverCalls when every call took the "
+                 "flat-plate path (failed calls report none)."
                  if not allow_raytracer else
-                 "ray-tracer path not pinned; fallbackWarnings of solverCalls calls fell back to flat-plate; "
-                 "calls without a fallback warning used the ray tracer."),
+                 "ray tracer requested explicitly (absorption_model='powder-raytrace'); flatPlateCalls is 0 when "
+                 "every call used it."),
     }
 
     doc: Dict[str, Any] = {
@@ -587,14 +591,12 @@ def build_document(quick: bool, jobs: int, ref_budget_s: float, skip_reference: 
             "preheat_C": "20 C assumed (not given by either dataset)",
             "absorptivity": "the repo's estimated absorptivity_IR (316L 0.42, Ti-6Al-4V 0.35), flat-plate",
             "inclusionRule": "a row counts for statistics only when extentStatus == 'computed'",
-            "powderBedRayTracer": ("calculate_meltpool_physics tries the optional GPU powder ray tracer and falls "
-                                   "back to the flat-plate absorptivity on any exception. This harness pins the "
-                                   "flat-plate path (sys.modules['powder_bed_raytracer'] = None before the solver "
-                                   "import; --allow-raytracer unpins), so the ray tracer was not used; see "
-                                   "`absorption`" if not allow_raytracer else
-                                   "calculate_meltpool_physics tries the optional GPU powder ray tracer and falls "
-                                   "back to the flat-plate absorptivity on any exception; --allow-raytracer: path "
-                                   "not pinned, see `absorption`"),
+            "powderBedRayTracer": ("calculate_meltpool_physics runs the optional GPU powder ray tracer only when "
+                                   "absorption_model='powder-raytrace' is requested (tier-2 bump 2026-10-06); the "
+                                   "default and this harness use the flat-plate absorptivity, so the ray tracer was "
+                                   "not used; see `absorption`" if not allow_raytracer else
+                                   "--allow-raytracer: the GPU powder ray tracer was requested explicitly "
+                                   "(absorption_model='powder-raytrace'); see `absorption`"),
         },
         "absorption": absorption,
         "limits": build_limits(pooled_rows, summary, absorption, include_wave2=bool(w2)),
@@ -754,14 +756,14 @@ def wave2_catalog(pd: Any, w2: Dict[str, Any], out_rows: Sequence[Dict[str, Any]
 def _rerun_summary(rows: Sequence[Dict[str, Any]], jobs: int, allow_raytracer: bool,
                    accounting: Optional[Dict[str, int]] = None) -> Dict[str, Any]:
     """Kernel statistics for a variant of the input rows (same kernels, same statistics, no fitting).
-    Solver calls and captured ray-tracer fallback warnings are added to `accounting` when given."""
+    Solver calls and flat-plate calls are added to `accounting` when given."""
     import lpbf_public_datasets as pd
     tasks = [{"row": r, "kernel": k, "allowRaytracer": allow_raytracer} for r in rows for k in KERNELS]
     preds = _map(tasks, jobs)
-    n_warn = _pop_warnings(preds)
+    n_flat = _pop_flat_plate(preds)
     if accounting is not None:
         accounting["solverCalls"] += len(tasks)
-        accounting["fallbackWarnings"] += n_warn
+        accounting["flatPlateCalls"] += n_flat
     out_rows = []
     for i, r in enumerate(rows):
         regime = pd.classify_regime(r["material"], r["power_W"], r["speed_mm_s"], r["beamDiameter_um"],
@@ -804,7 +806,7 @@ def build_wave2_block(pd: Any, w2: Dict[str, Any], out_rows: Sequence[Dict[str, 
     all_ids = {r["rowId"] for r in out_rows}
     ku_rows = [r for r in ku_rows if r["rowId"] in all_ids]
     nominal = [r for r in nominal if r["rowId"] in all_ids]
-    acct = {"solverCalls": 0, "fallbackWarnings": 0}
+    acct = {"solverCalls": 0, "flatPlateCalls": 0}
     ku_sens = {ds: _rerun_summary([r for r in ku_rows if r["dataset"] == ds], jobs, allow_raytracer, acct)
                for ds in ("ku-leuven-316l-2021", "ku-leuven-ti64-2021") if any(r["dataset"] == ds for r in ku_rows)}
     lane_sens = _rerun_summary(nominal, jobs, allow_raytracer, acct) if nominal else None
@@ -822,7 +824,7 @@ def build_wave2_block(pd: Any, w2: Dict[str, Any], out_rows: Sequence[Dict[str, 
             "rows": len(nominal), "summary": lane_sens},
         "sensitivityRunAccounting": dict(acct, note=(
             "solver calls of the two wave 2 sensitivity re-runs, not included in absorption.solverCalls; "
-            "fallbackWarnings counts the captured ray-tracer fallback messages of those calls")),
+            "flatPlateCalls counts those calls whose result reports absorptionModel 'flat-plate'")),
         "kuRegimeLabelCrosstab": {
             "label": ("rows: KU Leuven authors' published label; columns: the repo's screening classifier at the "
                       "primary inputs. Counts only; the published label is not a measured regime boundary."),
@@ -883,8 +885,12 @@ def render_markdown(doc: Dict[str, Any], view_name: Optional[str] = None,
           f"Ray-tracer module present: {ab['raytracerModulePresent']}; importable in a separate probe process: "
           f"{ab['raytracerImportable']}. Absorptivity by material: "
           + ", ".join(f"{m} {a}" for m, a in ab["absorptivity_by_material"].items()) + ". "
-          f"Fallback warnings captured: {ab['fallbackWarnings']} of {ab['solverCalls']} solver calls "
-          f"(by kernel, main run: " + ", ".join(f"{k} {v}" for k, v in ab["fallbackWarningsByKernel"].items()) + ").", "",
+          + (f"Flat-plate calls: {ab['flatPlateCalls']} of {ab['solverCalls']} solver calls "
+             f"(by kernel, main run: " + ", ".join(f"{k} {v}" for k, v in ab["flatPlateCallsByKernel"].items()) + ")."
+             if "flatPlateCalls" in ab else  # records written before the 2026-10-06 tier-2 bump
+             f"Fallback warnings captured: {ab['fallbackWarnings']} of {ab['solverCalls']} solver calls "
+             f"(by kernel, main run: " + ", ".join(f"{k} {v}" for k, v in ab["fallbackWarningsByKernel"].items()) + ")."),
+          "",
           ab["note"], "", "## Limits", ""]
     for x in doc["limits"]:
         L.append(f"- {x}")
@@ -971,8 +977,12 @@ def render_wave2_markdown(w: Dict[str, Any]) -> List[str]:
         L += _summary_table(f"Lane AMMT at nominal power ({lp['rows']} rows)", lp["summary"])
     acct = w.get("sensitivityRunAccounting")
     if acct:
-        L += [f"Sensitivity re-runs: {acct['solverCalls']} solver calls, {acct['fallbackWarnings']} captured "
-              f"ray-tracer fallback warnings ({acct['note']}).", ""]
+        if "flatPlateCalls" in acct:
+            L += [f"Sensitivity re-runs: {acct['solverCalls']} solver calls, {acct['flatPlateCalls']} flat-plate "
+                  f"calls ({acct['note']}).", ""]
+        else:  # records written before the 2026-10-06 tier-2 bump
+            L += [f"Sensitivity re-runs: {acct['solverCalls']} solver calls, {acct['fallbackWarnings']} captured "
+                  f"ray-tracer fallback warnings ({acct['note']}).", ""]
     ct = w["kuRegimeLabelCrosstab"]
     cols = sorted({c for v in ct["counts"].values() for c in v})
     L += ["### KU Leuven published regime label vs screening classifier", "", ct["label"], "",
@@ -1039,7 +1049,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("--skip-reference", action="store_true")
     ap.add_argument("--generated-at", default=GENERATED_AT_DEFAULT)
     ap.add_argument("--allow-raytracer", action="store_true",
-                    help="do not pin the flat-plate absorption path (default: pinned)")
+                    help="request the GPU powder ray tracer explicitly (default: flat-plate)")
     ap.add_argument("--reuse-reference", default=None,
                     help="copy referenceTransient from this earlier record instead of re-running it")
     ap.add_argument("--view-out", default=None, help="slim view record path (default <out>.view.json)")

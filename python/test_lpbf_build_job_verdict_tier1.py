@@ -3,7 +3,8 @@
 - The frozen balling flag (steady-Rosenthal L/W > 3.8) makes a verdict risky, never do-not-print.
 - Recoater / distortion flags are alloy/layer advisories independent of P, v and hatch: reported, never
   verdict-driving, never the dominant gate.
-- The keyhole rule (High and dH > 35 -> do-not-print) is unchanged.
+- The keyhole rule (High and dH > 35 -> do-not-print) is unchanged; since the 2026-10-06 tier-2 bump dH uses
+  the flat-plate absorptivity on every machine, so the IN718 280/940 end-to-end case is risky everywhere.
 
 Thermal inputs are real calculate_meltpool_physics output (in-repo frozen solver); only the defect
 flags under test are overwritten so each case isolates one gate.
@@ -125,13 +126,11 @@ class In718EndToEnd(unittest.TestCase):
                "enableUq": False, "includeAmbench": False}
 
     def setUp(self):
-        # Another test in a combined run can leave a None entry for the tracer (a "module unavailable" stub);
-        # these tests patch the real module, so give each one a clean import table and restore it after.
+        # Give each test a clean import table and restore it after (the tests below install their own
+        # powder_bed_raytracer stand-ins; nothing touches the real GPU module).
         patcher = mock.patch.dict(sys.modules)
         patcher.start()
         self.addCleanup(patcher.stop)
-        if sys.modules.get("powder_bed_raytracer", 0) is None:
-            del sys.modules["powder_bed_raytracer"]
 
     def _check(self, res):
         self.assertTrue(res["success"], res.get("error"))
@@ -148,46 +147,31 @@ class In718EndToEnd(unittest.TestCase):
         self.assertTrue(set(v["blockingGates"]) <= {"keyhole"}, v["blockingGates"])
         return v, dh
 
-    def test_in718_280_940_keyhole_is_the_only_blocking_gate(self):
-        v, dh = self._check(solve_lpbf_build_job(dict(self.PAYLOAD)))
-        if dh > 35:
-            # Powder ray-traced absorptivity path (dH ~47.3): do-not-print from keyhole alone.
-            self.assertEqual(v["verdict"], "do-not-print")
-            self.assertEqual(v["blockingGates"], ["keyhole"])
-            self.assertEqual(v["dominantGate"], "keyhole")
-            blocking_reasons = [r for r in v["reasons"]
-                                if not r.startswith("Advisory:") and "not a demonstrated balling" not in r
-                                and "literature box" not in r]
-            self.assertEqual(len(blocking_reasons), 1, v["reasons"])
-            self.assertTrue(blocking_reasons[0].startswith("Keyhole porosity"), blocking_reasons)
-        else:
-            self.assertEqual(v["verdict"], "risky", (dh, v["reasons"]))
-            self.assertEqual(v["blockingGates"], [])
-
-    def test_in718_280_940_flat_absorptivity_path_is_risky(self):
-        # Ray tracer unavailable -> frozen solver falls back to flat-plate absorptivity (dH ~30): risky.
-        import powder_bed_raytracer as pbr
-        with mock.patch.object(pbr, "calculate_powder_bed_absorptivity", side_effect=RuntimeError("no ray tracer")):
-            v, dh = self._check(solve_lpbf_build_job(dict(self.PAYLOAD)))
-        self.assertLessEqual(dh, 35.0)
-        self.assertEqual(v["verdict"], "risky")
+    def _assert_flat_risky(self, v, dh):
+        # Tier-2 bump (2026-10-06): dH uses the flat-plate absorptivity on every machine: ~30.6 -> risky.
+        self.assertAlmostEqual(dh, 30.58, delta=0.01)
+        self.assertEqual(v["verdict"], "risky", (dh, v["reasons"]))
         self.assertEqual(v["blockingGates"], [])
 
-    def test_in718_280_940_ray_traced_absorptivity_path_is_keyhole_do_not_print(self):
-        # Runs the do-not-print branch on every machine: the frozen ray tracer is patched (not edited) to
-        # return the effective absorptivity it produced for IN718 / 80 um beam (0.588, recorded in the
-        # STATUS diagnosis for 280 W / 940 mm/s), so dH ~47.3 > 35 regardless of GPU availability.
-        import powder_bed_raytracer as pbr
-        with mock.patch.object(pbr, "calculate_powder_bed_absorptivity",
-                               return_value={"effective_absorptivity": 0.588}):
-            v, dh = self._check(solve_lpbf_build_job(dict(self.PAYLOAD)))
-        self.assertGreater(dh, 35.0)
-        self.assertEqual(v["verdict"], "do-not-print")
-        self.assertEqual(v["blockingGates"], ["keyhole"])
-        self.assertEqual(v["dominantGate"], "keyhole")
-        gates = {g["id"]: g["status"] for g in v["gates"]}
-        self.assertEqual([gid for gid, st in gates.items() if st == "fail"], ["keyhole"])
+    def test_in718_280_940_keyhole_warns_but_does_not_block(self):
+        v, dh = self._check(solve_lpbf_build_job(dict(self.PAYLOAD)))
+        self._assert_flat_risky(v, dh)
 
+    def test_in718_280_940_without_ray_tracer_is_risky(self):
+        sys.modules["powder_bed_raytracer"] = None  # GPU module not importable
+        v, dh = self._check(solve_lpbf_build_job(dict(self.PAYLOAD)))
+        self._assert_flat_risky(v, dh)
+
+    def test_in718_280_940_importable_ray_tracer_is_not_used_by_default(self):
+        # Before the tier-2 bump an importable tracer (0.588 for IN718 / 80 um) silently raised dH to ~47.3
+        # (do-not-print on CUDA hosts only). It is now an explicit opt-in that the build job does not request.
+        import types
+        stub = types.ModuleType("powder_bed_raytracer")
+        stub.calculate_powder_bed_absorptivity = mock.Mock(return_value={"effective_absorptivity": 0.588})
+        sys.modules["powder_bed_raytracer"] = stub
+        v, dh = self._check(solve_lpbf_build_job(dict(self.PAYLOAD)))
+        stub.calculate_powder_bed_absorptivity.assert_not_called()
+        self._assert_flat_risky(v, dh)
 
 if __name__ == "__main__":
     unittest.main()

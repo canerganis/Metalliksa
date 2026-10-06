@@ -33,10 +33,11 @@ _SPEC.loader.exec_module(parity)
 PRE_BUMP_FINGERPRINT = "7482697c458b6c1aa2a77829f2fbce0c4ce4ac9466e9a3583e97b9a799b5e483"
 # Main before the 5c bump (design 5c stage B); that bump record's "from" side.
 PRE_BUMP_REVISION = "520903802a5cb89e368af60f68e53f232c99046d"
-# The goldens are recorded at this implementation (after the 5c bump, B5 step 2), and
-# GOLDEN_REVISION is a main commit carrying it: the "from" side of the next bump.
-GOLDEN_FINGERPRINT = "11b04b8fa3de1a6b2cf46afb67e6c439f05ca9d0ab2affec92f1e5b239eb3359"
-GOLDEN_REVISION = "783c655bfb4fb9781c9e4e8a81a660d43a70fa7d"
+# The goldens are recorded at this implementation (re-recorded after the 2026-10-06 tier-2 physics
+# bump 11b04b8f -> ddd8358a), and GOLDEN_REVISION is a commit carrying it (the re-pin commit of
+# feat/lpbf-physics-bump-flat-absorptivity): the "from" side of the next bump.
+GOLDEN_FINGERPRINT = "ddd8358abd68652f4ff0dfd20fb50fcee200826021bd70f511aacce42265c932"
+GOLDEN_REVISION = "231d92138f472dc8c1767984f04b595206c45d03"
 SLOW = os.environ.get("LPBF_PARITY_SLOW") == "1"
 # Off the reference machine every case test is skipped (the goldens are bit-exact for one
 # environment). METALLIKSA_REQUIRE_PARITY=1 turns such a "NOT VERIFIED" skip into a failure,
@@ -131,6 +132,11 @@ class ParityHarnessTests(unittest.TestCase):
                          [False, False, True])
         self.assertEqual(in625["in625.snapshot.latentHeat_J_kg"][0], 290000.0)
         self.assertEqual(in625["in625.transientSpecification.latentHeat_J_kg"][0], 227000.0)
+        # Tier-2 bump (2026-10-06): peak-anchored extents; the reported peak stays T(0,0,0).
+        g11 = json.loads(parity.golden_path(parity.CASE_BY_ID["g11_build_job_meltpool"]).read_text(
+            encoding="utf-8"))["rawValues"]
+        self.assertEqual(g11["meltpool.0.geometry_um"], [144.7, 104.2, 755.3, 33.2])
+        self.assertEqual(g11["meltpool.0.peakTemperature_C"], 2500.2)
         emissivity = json.loads(parity.golden_path(parity.CASE_BY_ID["g19_emissivity_echo"]).read_text(
             encoding="utf-8"))["observations"]
         for name in ("Ti-6Al-4V", "316L Stainless Steel", "AlSi10Mg", "Inconel 718"):

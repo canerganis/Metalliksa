@@ -221,8 +221,8 @@ def kernel_sensitivity(rows: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
                 with contextlib.redirect_stdout(cap):
                     out = calculate_meltpool_physics(r["material"], r["power_W"], r["speed_mm_s"],
                                                      r["beamDiameter_um"], r["preheat_C"], layer, 100.0,
-                                                     heat_source=kernel)
-                fallback += cap.getvalue().count("GPU Powder Bed Ray Tracing failed")
+                                                     heat_source=kernel, absorption_model="flat-plate")
+                fallback += int(out["processParameters"].get("absorptionModel") == "flat-plate")
                 g = out["meltPoolGeometry"]
                 res[f"{layer:g}"] = {k: float(g[k]) for k in ("width_um", "depth_um", "length_um")}
             base = res[f"{KERNEL_LAYERS_UM[0]:g}"]
@@ -236,10 +236,11 @@ def kernel_sensitivity(rows: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
             cases.append({"rowId": r["rowId"], "power_W": r["power_W"], "speed_mm_s": r["speed_mm_s"],
                           "beamDiameter_um": r["beamDiameter_um"], "kernel": kernel, "byLayer_um": res,
                           "maxRelativeDifference": rel})
-    return {"method": "calculate_meltpool_physics at layer 10/30/60 um, hatch 100 um, preheat 20 C, flat-plate pin "
-                      "(sys.modules['powder_bed_raytracer'] = None); relative difference = |x(layer) - x(10)| / x(10)",
+    return {"method": "calculate_meltpool_physics at layer 10/30/60 um, hatch 100 um, preheat 20 C, flat-plate "
+                      "absorption (absorption_model='flat-plate'; sys.modules['powder_bed_raytracer'] = None as well); "
+                      "relative difference = |x(layer) - x(10)| / x(10)",
             "layers_um": list(KERNEL_LAYERS_UM), "kernels": list(KERNELS), "cases": cases,
-            "maxRelativeDifference": max_rel, "layerIgnored": max_rel == 0.0, "fallbackWarnings": fallback,
+            "maxRelativeDifference": max_rel, "layerIgnored": max_rel == 0.0, "flatPlateCalls": fallback,
             "solverCalls": len(rows) * len(KERNELS) * len(KERNEL_LAYERS_UM)}
 
 
@@ -604,7 +605,7 @@ def render_markdown(doc: Dict[str, Any]) -> str:
     a("")
     ks = doc["kernelSensitivity"]
     a(f"{ks['method']}. {len(ks['cases'])} (row, kernel) cases, {ks['solverCalls']} solver calls; flat-plate "
-      f"fallback warnings counted: {ks['fallbackWarnings']}. Max relative difference across layers: "
+      f"calls counted: {ks['flatPlateCalls']}. Max relative difference across layers: "
       f"**{ks['maxRelativeDifference']:g}** -> layer ignored by all three kernels: **{ks['layerIgnored']}**.")
     a("")
     a("## 3. Reference-transient sensitivity (bounded)")
