@@ -1647,8 +1647,10 @@ export interface PythonLPBFResult {
     /** Only "computed" is a closed, unfloored liquidus isotherm (python/lpbf_thermal_solver.py). */
     extentStatus: MeltPoolExtentStatus;
     extentNote: string | null;
-    /** x of the axial field maximum the liquidus extent search is anchored at (negative = behind the beam). */
+    /** x of the axial field maximum the liquidus extent search and the yz cross-sections are anchored at (negative = behind the beam). */
     peakOffset_um?: number;
+    /** Axial (y = z = 0) field maximum at peakOffset_um; hydrodynamicsAndRecoil.peakTemperature_C stays T(0,0,0). */
+    axialFieldMaximum_C?: number;
     goldakParameters: {
       semiAxis_af_front_um: number;
       semiAxis_ar_rear_um: number;

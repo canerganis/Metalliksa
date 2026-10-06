@@ -1,9 +1,10 @@
 """Peak output must come from the selected heat-source field.
 
-Since the 2026-10-06 tier-2 bump the reported peak is the axial (y = z = 0) maximum of the selected
-field, max(T(0,0,0), T(x_peak,0,0)), because the regularised moving-source fields peak behind the
-beam centre at high speed. Every sample is recorded from the selected field only, so a peak taken
-from another kernel would not match.
+The reported peak (and the surface/recoil proxy that reads it) stays the beam-centre value T(0,0,0)
+of the selected field. Since the 2026-10-06 tier-2 bump the axial (y = z = 0) maximum of the same
+field, which lies behind the beam at high speed and anchors the extent search and cross-sections, is
+reported separately as meltPoolGeometry.axialFieldMaximum_C at peakOffset_um. Every sample is recorded
+from the selected field only, so a value taken from another kernel would not match.
 """
 import unittest
 from unittest.mock import patch
@@ -15,9 +16,11 @@ class PeakTemperatureConsistency(unittest.TestCase):
     def _assert_peak(self, result, center_values, axial_values):
         self.assertTrue(center_values, "the selected field was not sampled at the beam center")
         peak = result["hydrodynamicsAndRecoil"]["peakTemperature_C"]
-        self.assertGreaterEqual(peak, round(center_values[0], 1))
-        # The reported peak is the axial maximum of the same field (ternary refinement: within rounding).
-        self.assertAlmostEqual(peak, round(max(axial_values), 1), delta=0.11)
+        self.assertEqual(peak, round(center_values[0], 1))
+        axial_max = result["meltPoolGeometry"]["axialFieldMaximum_C"]
+        self.assertGreaterEqual(axial_max, peak)
+        # The axial maximum of the same field (ternary refinement: within rounding).
+        self.assertAlmostEqual(axial_max, round(max(axial_values), 1), delta=0.11)
         offset_um = result["meltPoolGeometry"]["peakOffset_um"]
         self.assertLessEqual(offset_um, 0.0)
 

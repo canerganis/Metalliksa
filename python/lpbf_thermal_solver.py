@@ -475,11 +475,13 @@ def calculate_meltpool_physics(
     search_len = max(d_beam * 3.0, w_analytical * 4.5, 80e-6)
     search_depth = max(d_beam * 2.2, w_analytical * 2.0, 40e-6, fabbro["depth_m"] * 1.35)
 
+    # Reported peak / surface proxy: beam-centre value T(0,0,0) as before the tier-2 bump (recoil,
+    # Marangoni and denudation read it). No artificial 3900 °C display ceiling (may exceed boiling).
     t_peak_C = float(T_field(0.0, 0.0, 0.0))
-    # Axial field maximum: the extent search is anchored there (it lies behind x = 0 at high speed).
+    # Axial field maximum: only the extent search and the cross-section plane are anchored there (it
+    # lies behind x = 0 at high speed); its value is reported separately as axialFieldMaximum_C.
     x_peak = _axial_peak_x(T_field, -search_len * 1.4 * 8.0, search_len)
-    t_peak_C = max(t_peak_C, float(T_field(x_peak, 0.0, 0.0)))
-    # No artificial 3900 °C display ceiling — report the field peak (may exceed boiling).
+    t_axial_max_C = max(t_peak_C, float(T_field(x_peak, 0.0, 0.0)))
 
     # 4. Liquidus extents from the conduction field (Rosenthal or Eagar–Tsai). The search box is a
     # seed, not a cap: when the isotherm is still liquid at the box edge the box is doubled (up to
@@ -728,7 +730,9 @@ def calculate_meltpool_physics(
     for i in range(33):
         phi = (math.pi * i) / 32.0
         y_m = (goldak_b_um * 1e-6) * math.cos(phi)
-        z_iso = _binary_extent(lambda z: T_field(0.0, y_m, z) >= T_liq, 0.0, search_depth)
+        # Cross-section plane at the axial peak x_peak (x = 0 when the field peaks at the beam centre),
+        # consistent with the anchored extent search; a pool behind the beam is otherwise missed.
+        z_iso = _binary_extent(lambda z: T_field(x_peak, y_m, z) >= T_liq, 0.0, search_depth)
         if regime.startswith("Keyhole"):
             z_pt = z_iso * depth_scale * (max(0.05, math.sin(phi)) ** 0.75)
         else:
@@ -748,7 +752,7 @@ def calculate_meltpool_physics(
         return T_field(x_um * 1e-6, 0.0, z_um * 1e-6)
 
     def T_yz(y_um, z_um):
-        return T_field(0.0, y_um * 1e-6, z_um * 1e-6)
+        return T_field(x_peak, y_um * 1e-6, z_um * 1e-6)
 
     if thermal_slice_backend == "warp":
         # Explicit opt-in only (float32 GPU sampler, not bit-equal to the CPU sampler); errors propagate.
@@ -758,7 +762,7 @@ def calculate_meltpool_physics(
         y_span_m = (y_span[0] * 1e-6, y_span[1] * 1e-6)
 
         slice_xz = compute_rosenthal_slice_warp(x_span_m, z_span_m, nx_s, nz_s, 1, 0.0, T_preheat, P_geom, k_th, v_scan, alpha_th, r_reg)
-        slice_yz = compute_rosenthal_slice_warp(y_span_m, z_span_m, ny_s, nz_s, 2, 0.0, T_preheat, P_geom, k_th, v_scan, alpha_th, r_reg)
+        slice_yz = compute_rosenthal_slice_warp(y_span_m, z_span_m, ny_s, nz_s, 2, x_peak, T_preheat, P_geom, k_th, v_scan, alpha_th, r_reg)
     else:
         slice_xz = sample_thermal_slice(T_xz, x_span, z_span, nx_s, nz_s)
         slice_yz = sample_thermal_slice(T_yz, y_span, z_span, ny_s, nz_s)
@@ -891,6 +895,7 @@ def calculate_meltpool_physics(
             "extentStatus": extent_status,
             "extentNote": extent_note,
             "peakOffset_um": round(x_peak * 1e6, 1),
+            "axialFieldMaximum_C": round(t_axial_max_C, 1),
             "goldakParameters": {
                 "semiAxis_af_front_um": round(goldak_af_um, 1),
                 "semiAxis_ar_rear_um": round(goldak_ar_um, 1),

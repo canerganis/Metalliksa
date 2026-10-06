@@ -23,9 +23,11 @@ GPU_MODULES = ("powder_bed_raytracer", "warp_thermal_solver")
 @contextlib.contextmanager
 def gpu_modules(mode):
     """mode 'absent': imports fail (no Warp). mode 'stub': importable fakes that return values a
-    silent GPU branch would pick up (raytraced A = 0.9, slices of 9999 C) and count their calls."""
+    silent GPU branch would pick up (raytraced A = 0.9, slices of 9999 C) and count their calls; the
+    stub's (plane, plane_value) arguments are left in gpu_modules.slice_planes on exit."""
     saved = {name: sys.modules.get(name, KeyError) for name in GPU_MODULES}
     calls = {"raytrace": 0, "slice": 0}
+    slice_planes = []
     try:
         if mode == "absent":
             for name in GPU_MODULES:
@@ -39,14 +41,16 @@ def gpu_modules(mode):
             rt.calculate_powder_bed_absorptivity = calculate_powder_bed_absorptivity
             ws = types.ModuleType("warp_thermal_solver")
 
-            def compute_rosenthal_slice_warp(span_a, span_b, na, nb, *args):
+            def compute_rosenthal_slice_warp(span_a, span_b, na, nb, plane, plane_value, *args):
                 calls["slice"] += 1
+                slice_planes.append((plane, plane_value))
                 return [9999.0] * (na * nb)
             ws.compute_rosenthal_slice_warp = compute_rosenthal_slice_warp
             sys.modules["powder_bed_raytracer"] = rt
             sys.modules["warp_thermal_solver"] = ws
         yield calls
     finally:
+        gpu_modules.slice_planes = list(slice_planes)
         for name, value in saved.items():
             if value is KeyError:
                 sys.modules.pop(name, None)
@@ -123,6 +127,11 @@ class FlatDefaultTest(unittest.TestCase):
         self.assertEqual(calls["slice"], 2)
         self.assertEqual(result["processParameters"]["thermalSliceBackend"], "warp")
         self.assertEqual(set(result["thermalSlices"]["xz"]["T_C"]), {9999.0})
+        # xz at y = 0; the yz plane sits at the axial peak x_peak, like the CPU sampler.
+        planes = gpu_modules.slice_planes
+        self.assertEqual(planes[0], (1, 0.0))
+        self.assertEqual(planes[1][0], 2)
+        self.assertAlmostEqual(planes[1][1] * 1e6, result["meltPoolGeometry"]["peakOffset_um"], delta=0.06)
 
 
 class HostIndependenceTest(unittest.TestCase):
@@ -164,9 +173,11 @@ class PeakAnchoredExtentTest(unittest.TestCase):
         self.assertAlmostEqual(g["width_um"], 148.3, delta=0.2)
         self.assertAlmostEqual(g["depth_um"], 116.6, delta=0.2)
         self.assertAlmostEqual(g["length_um"], 1191.7, delta=0.5)
-        # T(0,0,0) is below liquidus here; the peak behind the beam centre is above it.
-        self.assertGreater(result["hydrodynamicsAndRecoil"]["peakTemperature_C"],
-                           solver.THERMOPHYSICAL_DB["Inconel 718"]["liquidus_C"])
+        # T(0,0,0) (the reported peak / surface proxy, unchanged by the bump) is below liquidus here;
+        # the axial maximum behind the beam centre is above it.
+        t_liq = solver.THERMOPHYSICAL_DB["Inconel 718"]["liquidus_C"]
+        self.assertLess(result["hydrodynamicsAndRecoil"]["peakTemperature_C"], t_liq)
+        self.assertGreater(g["axialFieldMaximum_C"], t_liq)
         self.assertNotEqual(compose_verdict(result, "in718")["verdict"], "inconclusive")
 
     def test_in718_280_940_geometry(self):
@@ -190,8 +201,35 @@ class PeakAnchoredExtentTest(unittest.TestCase):
         result, _ = run("Inconel 718", 20.0, 2000.0, 80.0, 80.0, 40.0, 100.0)
         g = result["meltPoolGeometry"]
         self.assertEqual(g["extentStatus"], "heuristic-width-fallback")
-        self.assertLess(result["hydrodynamicsAndRecoil"]["peakTemperature_C"],
+        self.assertLess(result["meltPoolGeometry"]["axialFieldMaximum_C"],
                         solver.THERMOPHYSICAL_DB["Inconel 718"]["liquidus_C"])
+
+    def test_reported_peak_stays_beam_centre(self):
+        # Surface/recoil proxy reads T(0,0,0) as before the bump (IN718 200/800/80 Rosenthal, G11 payload).
+        result, _ = run("Inconel 718", 200.0, 800.0, 80.0, 80.0, 40.0, 110.0)
+        h = result["hydrodynamicsAndRecoil"]
+        self.assertAlmostEqual(h["peakTemperature_C"], 2500.2, delta=0.11)
+        self.assertGreater(result["meltPoolGeometry"]["axialFieldMaximum_C"], h["peakTemperature_C"])
+
+    def test_cross_sections_anchored_at_axial_peak(self):
+        # Whenever the extent is computed, the transverse contour, the hatch-overlap contours and the
+        # yz thermal slice must show the melt pool (they are taken at x_peak, not at x = 0).
+        cases = (
+            dict(args=IN718_287),
+            dict(args=IN718_280),
+            dict(args=("Inconel 718", 200.0, 800.0, 80.0, 80.0, 40.0, 110.0)),
+            dict(args=IN718_287, kwargs={"heat_source": "eagar-tsai"}),
+            dict(args=IN718_287, kwargs={"heat_source": "goldak"}),
+        )
+        t_liq = solver.THERMOPHYSICAL_DB["Inconel 718"]["liquidus_C"]
+        for case in cases:
+            result, _ = run(*case["args"], **case.get("kwargs", {}))
+            self.assertEqual(result["meltPoolGeometry"]["extentStatus"], "computed", case)
+            contours = result["geometricContours"]
+            self.assertGreater(max(p["z_depth_um"] for p in contours["transverseYZ"]), 0.0, case)
+            for track in contours["multiTrackHatchOverlap"]:
+                self.assertGreater(max(p["z_depth_um"] for p in track["contour"]), 0.0, case)
+            self.assertGreaterEqual(max(result["thermalSlices"]["yz"]["T_C"]), t_liq, case)
 
 
 class DistortionLabelAndDoiTest(unittest.TestCase):
