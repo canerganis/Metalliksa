@@ -18,19 +18,46 @@ export interface CouponTestSpecimen {
   evidenceOrigin?: "synthetic" | "user-reported" | "unknown";
 }
 
+/**
+ * Provenance of a preset's reference minimums. `status` is never "cited" unless the exact table, product form and
+ * condition were checked against the specification text; none of the bundled presets meet that bar.
+ */
+export interface SpecMinimumSource {
+  status: "unverified-reference" | "no-source";
+  // "no-source": the preset carries no minimums at all (they are null) and every comparison is unavailable.
+  /** What the minimums are claimed to refer to, and what was not verified. */
+  citation: string;
+}
+
+export const SPEC_MINIMUM_LABEL = "Reference minimums (unverified)";
+export const SPEC_MINIMUM_UNAVAILABLE = "No sourced minimum; comparison unavailable";
+export const SPEC_MINIMUM_BADGE_BASIS = "vs reference minimum (unverified, not a specification check)";
+
 export interface MaterialDataset {
   id: string;
+  /**
+   * Neutral slug for user-visible file names. Optional: `id` is a stable lookup key shared with the Python alias map
+   * (python/alloy_data_kinetics_uq_fatigue.py) and for two presets embeds a specification number that is not verified,
+   * so it must not be shown to users.
+   */
+  displaySlug?: string;
   name: string;
   materialClass: "Superalloy" | "Titanium" | "Aluminum" | "Steel" | "Additive Metal";
   baseMetal: "Ni" | "Fe" | "Ti" | "Al";
   specification: string;
-  mmpdsChapter: string;
+  /** MMPDS chapter that covers this alloy family, or null when no MMPDS chapter is cited for the preset. */
+  mmpdsChapter: string | null;
   productForm: string;
   heatTreatment: string;
-  specMinYieldMPa: number;
-  specMinUTSMPa: number;
-  specMinElongationPct: number;
-  specMinReductionAreaPct: number;
+  /**
+   * Reference minimums carried with the preset (used as solver inputs and for the per-coupon comparison).
+   * They are NOT tied to a verified table of the named specification; see `specMinSource`.
+   */
+  specMinYieldMPa: number | null;
+  specMinUTSMPa: number | null;
+  specMinElongationPct: number | null;
+  specMinReductionAreaPct: number | null;
+  specMinSource: SpecMinimumSource;
   nominalChemistry: Record<string, number>;
   chemicalTolerances: Record<string, number>;
   nominalThermal: {
@@ -155,7 +182,7 @@ function empiricalHistogram(values: number[], min: number, max: number): MMPDSEm
  */
 export function computeMMPDSEmpiricalStats(
   values: (number | null)[],
-  specMin: number,
+  specMin: number | null,
   lotIds: string[] = []
 ): MMPDSEmpiricalAllowableStats {
   const n = values.length;
@@ -185,7 +212,9 @@ export function computeMMPDSEmpiricalStats(
     issues.push("Every selected property value must be finite and present; no rows were excluded.");
     result.status = "invalid-data";
   }
-  if (!Number.isFinite(specMin)) {
+  // null = no sourced minimum: descriptive statistics still run, minimum-based outputs (Cpl, conformance, margin) stay unavailable.
+  const minimum = specMin === null ? null : specMin;
+  if (minimum !== null && !Number.isFinite(minimum)) {
     issues.push("The lower specification limit must be finite.");
     result.status = "invalid-data";
   }
@@ -224,7 +253,7 @@ export function computeMMPDSEmpiricalStats(
     mean, min, max, range, variance, stdDev,
     median: n % 2 === 0 ? sorted[n / 2 - 1] + (sorted[n / 2] - sorted[n / 2 - 1]) / 2 : sorted[Math.floor(n / 2)],
     covPct: stdDev !== null && mean !== 0 ? finiteOrNull(stdDev / Math.abs(mean) * 100) : null,
-    conformancePct: numericValues.filter(value => value >= specMin).length / n * 100,
+    conformancePct: minimum === null ? null : numericValues.filter(value => value >= minimum).length / n * 100,
     histogram: empiricalHistogram(numericValues, min, max),
   });
   if (stdDev !== null && stdDev > 0) {
@@ -233,7 +262,7 @@ export function computeMMPDSEmpiricalStats(
     result.skewness = n >= 3 ? finiteOrNull(n / ((n - 1) * (n - 2)) * z.reduce((sum, value) => sum + value ** 3, 0)) : null;
     result.kurtosis = n >= 4 ? finiteOrNull(n * (n + 1) / ((n - 1) * (n - 2) * (n - 3))
       * z.reduce((sum, value) => sum + value ** 4, 0) - 3 * (n - 1) ** 2 / ((n - 2) * (n - 3))) : null;
-    result.cpl = finiteOrNull((mean - specMin) / (3 * stdDev));
+    result.cpl = minimum === null ? null : finiteOrNull((mean - minimum) / (3 * stdDev));
   }
   if (n < 3) issues.push("At least three observations are needed for the approximate tolerance calculation.");
   if (stdDev === 0) issues.push("Zero sample variance cannot establish a tolerance limit or capability index.");
@@ -247,7 +276,7 @@ export function computeMMPDSEmpiricalStats(
         status: "ready", toleranceEligible: true,
         mmpds_kA: kA, mmpds_kB: kB,
         aBasisAllowable: aBasis, bBasisAllowable: bBasis,
-        marginOfSafetyPct: specMin > 0 ? finiteOrNull((aBasis - specMin) / specMin * 100) : null,
+        marginOfSafetyPct: minimum !== null && minimum > 0 ? finiteOrNull((aBasis - minimum) / minimum * 100) : null,
       });
       if (n <= 10) issues.push("For n <= 10, this approximation can differ materially from the exact noncentral-t method.");
     } else {
@@ -256,6 +285,15 @@ export function computeMMPDSEmpiricalStats(
   }
   return result;
 }
+/** True only when the preset carries all three minimums; otherwise every minimum-based comparison is unavailable. */
+export function hasSourcedMinimums(dataset: Pick<MaterialDataset, "specMinYieldMPa" | "specMinUTSMPa" | "specMinElongationPct">): boolean {
+  return dataset.specMinYieldMPa !== null && dataset.specMinUTSMPa !== null && dataset.specMinElongationPct !== null;
+}
+
+export function datasetExportSlug(dataset: Pick<MaterialDataset, "id" | "displaySlug">): string {
+  return dataset.displaySlug ?? dataset.id;
+}
+
 export function isSyntheticCouponDataset(dataset: MaterialDataset): boolean {
   return dataset.couponSource === "synthetic" || dataset.coupons.some(c => c.evidenceOrigin === "synthetic");
 }
@@ -272,13 +310,14 @@ export const AEROSPACE_MATERIAL_DATASETS: MaterialDataset[] = [
     materialClass: "Superalloy",
     baseMetal: "Ni",
     specification: "AMS 5664 / MMPDS-01 Ch. 6",
-    mmpdsChapter: "Chapter 6 (Nickel & Cobalt Alloys)",
+    mmpdsChapter: null, // MMPDS chapter title/number not verified against the handbook; none is cited.
     productForm: "Forged Bar & Ring (Section <= 5.00 in)",
     heatTreatment: "Solution 980°C / 1h + Age 720°C / 8h + Furnace Cool to 620°C / 8h",
     specMinYieldMPa: 1103, // 160 ksi
     specMinUTSMPa: 1379, // 200 ksi
     specMinElongationPct: 12.0,
     specMinReductionAreaPct: 15.0,
+    specMinSource: { status: "unverified-reference", citation: "AMS 5664 (SAE), Inconel 718 forgings/bar: values are preset reference numbers; the governing table, product form and test direction were not verified against the specification text. Confirm against the controlling document before use." },
     nominalChemistry: { Cr: 19.0, Fe: 18.0, Nb: 5.1, Mo: 3.05, Ti: 0.95, Al: 0.52, C: 0.04, Si: 0.18 },
     chemicalTolerances: { Cr: 1.0, Fe: 1.0, Nb: 0.35, Mo: 0.30, Ti: 0.15, Al: 0.10, C: 0.015, Si: 0.08 },
     nominalThermal: {
@@ -299,13 +338,14 @@ export const AEROSPACE_MATERIAL_DATASETS: MaterialDataset[] = [
     materialClass: "Titanium",
     baseMetal: "Ti",
     specification: "AMS 4928 / MIL-T-9047",
-    mmpdsChapter: "Chapter 5 (Titanium & Titanium Alloys)",
+    mmpdsChapter: null, // MMPDS chapter title/number not verified against the handbook; none is cited.
     productForm: "Rolled & Annealed Airframe Structural Billet",
     heatTreatment: "Alpha-Beta Anneal 730°C / 2h Air Cool",
     specMinYieldMPa: 828, // 120 ksi
     specMinUTSMPa: 896, // 130 ksi
     specMinElongationPct: 10.0,
     specMinReductionAreaPct: 25.0,
+    specMinSource: { status: "unverified-reference", citation: "AMS 4928 (SAE), Ti-6Al-4V annealed bar: values are preset reference numbers; the governing table, product form and test direction were not verified against the specification text. Confirm against the controlling document before use." },
     nominalChemistry: { Al: 6.1, V: 4.05, Fe: 0.22, C: 0.035, O: 0.16, N: 0.015 },
     chemicalTolerances: { Al: 0.35, V: 0.30, Fe: 0.08, C: 0.015, O: 0.03, N: 0.008 },
     nominalThermal: {
@@ -326,13 +366,14 @@ export const AEROSPACE_MATERIAL_DATASETS: MaterialDataset[] = [
     materialClass: "Aluminum",
     baseMetal: "Al",
     specification: "AMS 4045 / MMPDS-01 Ch. 3",
-    mmpdsChapter: "Chapter 3 (Aluminum Alloys)",
+    mmpdsChapter: null, // MMPDS chapter title/number not verified against the handbook; none is cited.
     productForm: "Stretched & Artificially Aged Plate (t = 1.000 to 2.000 in)",
     heatTreatment: "Solution 470°C / Water Quench + Age 120°C / 24h",
     specMinYieldMPa: 462, // 67 ksi (L)
     specMinUTSMPa: 538, // 78 ksi (L)
     specMinElongationPct: 7.0,
     specMinReductionAreaPct: 14.0,
+    specMinSource: { status: "unverified-reference", citation: "AMS 4045 (SAE), Al 7075-T651 plate; the (L) direction note refers to longitudinal minimums: values are preset reference numbers; the governing table, product form and test direction were not verified against the specification text. Confirm against the controlling document before use." },
     nominalChemistry: { Zn: 5.6, Mg: 2.5, Cu: 1.6, Cr: 0.23, Fe: 0.28, Si: 0.18, Mn: 0.10 },
     chemicalTolerances: { Zn: 0.40, Mg: 0.25, Cu: 0.20, Cr: 0.05, Fe: 0.08, Si: 0.06, Mn: 0.04 },
     nominalThermal: {
@@ -353,13 +394,14 @@ export const AEROSPACE_MATERIAL_DATASETS: MaterialDataset[] = [
     materialClass: "Steel",
     baseMetal: "Fe",
     specification: "AMS 6414 / MMPDS-01 Ch. 2",
-    mmpdsChapter: "Chapter 2 (Steel Alloys)",
+    mmpdsChapter: null, // MMPDS chapter title/number not verified against the handbook; none is cited.
     productForm: "Vacuum Arc Remelted (VAR) Landing Gear Bar Stock",
     heatTreatment: "Austenitize 845°C / Oil Quench + Temper 480°C / 2h",
     specMinYieldMPa: 1379, // 200 ksi
     specMinUTSMPa: 1517, // 220 ksi
     specMinElongationPct: 9.0,
     specMinReductionAreaPct: 35.0,
+    specMinSource: { status: "unverified-reference", citation: "AMS 6414 (SAE), 4340 VAR bar: values are preset reference numbers; the governing table, product form and test direction were not verified against the specification text. Confirm against the controlling document before use." },
     nominalChemistry: { C: 0.40, Cr: 0.82, Ni: 1.82, Mo: 0.26, Mn: 0.72, Si: 0.25 },
     chemicalTolerances: { C: 0.03, Cr: 0.10, Ni: 0.15, Mo: 0.05, Mn: 0.08, Si: 0.05 },
     nominalThermal: {
@@ -375,18 +417,20 @@ export const AEROSPACE_MATERIAL_DATASETS: MaterialDataset[] = [
     couponSource: "none"
   },
   {
-    id: "alsi10mg-lpbf-ams4215",
+    id: "alsi10mg-lpbf-ams4215", // stable key shared with the Python alias map and golden case; not shown to users (see displaySlug)
+    displaySlug: "alsi10mg-lpbf",
     name: "AlSi10Mg Additive LPBF As-Built & SR (ASTM F3318)",
     materialClass: "Additive Metal",
     baseMetal: "Al",
-    specification: "ASTM F3318",
-    mmpdsChapter: "Additive Qualification Protocol (MMPDS Sec. 9)",
+    specification: "ASTM F3318 (AlSi10Mg powder bed fusion; minimums not sourced)",
+    mmpdsChapter: null, // No MMPDS chapter is cited for this additive preset.
     productForm: "Laser Powder Bed Fusion (LPBF) Additive Build Jobs",
     heatTreatment: "Stress Relief 300°C / 2h Air Cool (Retaining fine cellular Si-eutectic)",
-    specMinYieldMPa: 220,
-    specMinUTSMPa: 330,
-    specMinElongationPct: 5.0,
-    specMinReductionAreaPct: 8.0,
+    specMinYieldMPa: null,
+    specMinUTSMPa: null,
+    specMinElongationPct: null,
+    specMinReductionAreaPct: null,
+    specMinSource: { status: "no-source", citation: "No sourced minimum is known for this preset: ASTM F3318 was not checked, so no minimum is shown, no coupon is graded and no Cpl or margin is computed." },
     nominalChemistry: { Si: 10.0, Mg: 0.45, Fe: 0.14, Ti: 0.04, Mn: 0.02 },
     chemicalTolerances: { Si: 0.50, Mg: 0.08, Fe: 0.04, Ti: 0.02, Mn: 0.01 },
     nominalThermal: {
@@ -402,18 +446,20 @@ export const AEROSPACE_MATERIAL_DATASETS: MaterialDataset[] = [
     couponSource: "none"
   },
   {
-    id: "hastelloy-x-ams5754",
-    name: "Hastelloy X Combustor Sheet (AMS 5754)",
+    id: "hastelloy-x-ams5754", // stable key; not shown to users (see displaySlug)
+    displaySlug: "hastelloy-x-sheet",
+    name: "Hastelloy X Combustor Sheet",
     materialClass: "Superalloy",
     baseMetal: "Ni",
-    specification: "AMS 5754 / MMPDS-01 Ch. 6",
-    mmpdsChapter: "Chapter 6 (Solid Solution Superalloys)",
+    specification: "Hastelloy X sheet (governing specification not verified)",
+    mmpdsChapter: null, // MMPDS chapter title/number not verified against the handbook; none is cited.
     productForm: "Cold Rolled & Solution Heat Treated Sheet (t = 0.063 in)",
     heatTreatment: "Solution Anneal 1177°C / Rapid Air Cool",
-    specMinYieldMPa: 310, // 45 ksi
-    specMinUTSMPa: 717, // 104 ksi
-    specMinElongationPct: 35.0,
-    specMinReductionAreaPct: 40.0,
+    specMinYieldMPa: null,
+    specMinUTSMPa: null,
+    specMinElongationPct: null,
+    specMinReductionAreaPct: null,
+    specMinSource: { status: "no-source", citation: "No sourced minimum: the former AMS 5754 pairing is dropped because that specification is understood to cover bar, forgings and rings, not the sheet form of this preset, and no sheet specification table was checked. No minimum is shown, no coupon is graded and no Cpl or margin is computed." },
     nominalChemistry: { Cr: 22.0, Fe: 18.5, Mo: 9.0, Co: 1.5, W: 0.6, C: 0.08, Si: 0.40 },
     chemicalTolerances: { Cr: 1.2, Fe: 1.2, Mo: 0.6, Co: 0.4, W: 0.2, C: 0.02, Si: 0.15 },
     nominalThermal: {

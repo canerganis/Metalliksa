@@ -37,7 +37,7 @@ mem.set(STORAGE_KEY, JSON.stringify({
   },
 }));
 
-test("version-2 specimen blob hydrates as version 3: heuristic properties null, live LPBF vector intact", async () => {
+test("version-2 specimen blob hydrates as version 4: heuristic properties null, live LPBF vector intact", async () => {
   const { useMaterialSpecimenStore } = await import("../src/store/useMaterialSpecimenStore");
   assert.equal(useMaterialSpecimenStore.persist.hasHydrated(), true);
   const s = useMaterialSpecimenStore.getState().activeSpecimen;
@@ -45,10 +45,13 @@ test("version-2 specimen blob hydrates as version 3: heuristic properties null, 
   for (const field of ["liquidus_C", "solidus_C", "freezingRange_C", "solvus_C", "yieldStrength_25C_MPa", "uts_25C_MPa", "youngsModulus_GPa", "elongation_pct"] as const) {
     assert.equal(s[field], null, field);
   }
-  assert.deepEqual(s.lpbf, lpbf);
+  // Legacy record: values untouched; fields still equal to a fallback or derived heuristic are flagged, edited ones (beam 70, island) are not.
+  const { defaultsApplied, ...values } = s.lpbf;
+  assert.deepEqual(values, lpbf);
+  assert.deepEqual(defaultsApplied, ["specificHeat_Cp_JkgK", "laserAbsorptivity", "thermalExpansion_CTE_10e6", "criticalGradient_G_Km", "beamProfile"]);
   useMaterialSpecimenStore.getState().updateLpbfProcess({ laserPower_W: 312 });
   const blob = JSON.parse(mem.get(STORAGE_KEY)!);
-  assert.equal(blob.version, 3);
+  assert.equal(blob.version, 4);
   assert.equal(blob.state.activeSpecimen.yieldStrength_25C_MPa, null);
   assert.equal(blob.state.activeSpecimen.lpbf.laserPower_W, 312);
 });

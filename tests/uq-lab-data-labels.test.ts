@@ -15,8 +15,9 @@ test("AlSi10Mg LPBF UQ dataset does not claim SAE AMS 4215 (a C355.0 casting spe
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import * as uqLabData from "../src/components/uqLabData";
-import { computeMMPDSEmpiricalStats, isSyntheticCouponDataset, parseCSVToCoupons } from "../src/components/uqLabData";
+import { computeMMPDSEmpiricalStats, datasetExportSlug, hasSourcedMinimums, isSyntheticCouponDataset, parseCSVToCoupons } from "../src/components/uqLabData";
 import {
+  CouponMinimumBadge,
   CouponSummary,
   CouponWorksheet,
   UQ_ILLUSTRATIVE_MODEL_NOTE,
@@ -141,4 +142,68 @@ test("uploaded-coupon CSV statistics are unchanged: pinned values for a fixed CS
   assert.equal(stats.conformancePct, 100);
   assert.equal(stats.normality.status, "not-tested");
   assert.equal(stats.andersonDarlingPVal, null);
+});
+
+test("every preset's minimums carry a provenance record; none claims a verified citation and unsourced ones are null", () => {
+  for (const d of AEROSPACE_MATERIAL_DATASETS) {
+    assert.ok(d.specMinSource && d.specMinSource.citation.length > 20, d.id);
+    assert.ok(["unverified-reference", "no-source"].includes(d.specMinSource.status), d.id);
+    assert.match(d.specMinSource.citation, /not verified|not checked|No sourced minimum/, d.id);
+    const mins = [d.specMinYieldMPa, d.specMinUTSMPa, d.specMinElongationPct, d.specMinReductionAreaPct];
+    if (d.specMinSource.status === "no-source") assert.ok(mins.every(m => m === null), `${d.id}: no-source preset must not carry numbers`);
+    else assert.ok(mins.every(m => typeof m === "number"), d.id);
+    assert.equal(d.mmpdsChapter, null, `${d.id}: MMPDS chapter titles were not verified and are not cited`);
+    assert.equal(hasSourcedMinimums(d), d.specMinSource.status !== "no-source", d.id);
+  }
+});
+
+test("AlSi10Mg and Hastelloy X presets carry no minimums, no invented chapter, no AMS 5754 sheet pairing", () => {
+  const al = AEROSPACE_MATERIAL_DATASETS.find(x => x.id === "alsi10mg-lpbf-ams4215")!;
+  assert.equal(al.specMinSource.status, "no-source");
+  assert.doesNotMatch(JSON.stringify(al), /Additive Qualification Protocol|MMPDS Sec\. 9/);
+  const hx = AEROSPACE_MATERIAL_DATASETS.find(x => x.id === "hastelloy-x-ams5754")!;
+  assert.equal(hx.specMinSource.status, "no-source");
+  assert.doesNotMatch(`${hx.name} ${hx.specification}`, /AMS 5754|Solid Solution Superalloys/);
+});
+
+test("export file names use a neutral slug, not the unverified id, and no MMPDS_ prefix", () => {
+  const al = AEROSPACE_MATERIAL_DATASETS.find(x => x.id === "alsi10mg-lpbf-ams4215")!;
+  assert.equal(datasetExportSlug(al), "alsi10mg-lpbf");
+  assert.doesNotMatch(datasetExportSlug(al), /4215/);
+  const ui = readSrc("src/components/UQLab.tsx");
+  assert.match(ui, /datasetExportSlug\(activeDataset\)/);
+  assert.doesNotMatch(ui, /MMPDS_Dataset/);
+});
+
+test("no sourced minimum: coupon badge and minimum-based statistics are unavailable, descriptive statistics still run", () => {
+  const al = AEROSPACE_MATERIAL_DATASETS.find(x => x.id === "alsi10mg-lpbf-ams4215")!;
+  const html = renderToStaticMarkup(React.createElement(CouponMinimumBadge, { dataset: al, coupon: { yieldStrengthMPa: 100, utsMPa: 100, elongationPct: 1 } }));
+  assert.match(html, /No sourced minimum; comparison unavailable/);
+  assert.doesNotMatch(html, /ref\. min|PASS|OUT-OF-SPEC/);
+  const inconel = AEROSPACE_MATERIAL_DATASETS.find(x => x.id === "inconel718-ams5664")!;
+  assert.match(renderToStaticMarkup(React.createElement(CouponMinimumBadge, { dataset: inconel, coupon: { yieldStrengthMPa: 1, utsMPa: 1, elongationPct: 1 } })), /below ref\. min/);
+  const stats = computeMMPDSEmpiricalStats([200, 210, 205, 215, 208], null, ["a", "a", "b", "b", "c"]);
+  assert.equal(stats.status, "ready");
+  assert.equal(stats.cpl, null);
+  assert.equal(stats.conformancePct, null);
+  assert.equal(stats.marginOfSafetyPct, null);
+  assert.ok(stats.mean !== null && stats.aBasisAllowable !== null);
+  // the worksheet text states the minimum is unavailable instead of printing a number
+  const csvRows = ["Yield_Strength_MPa,UTS_MPa,Elongation_pct,Heat_Lot_ID", "200,300,5,A", "210,310,6,A", "205,305,5.5,B"].join("\n");
+  const withCoupons = { ...al, coupons: parseCSVToCoupons(csvRows, al.id) };
+  const text = couponWorksheetText(withCoupons);
+  assert.match(text, /selected minimum=No sourced minimum; comparison unavailable/);
+  assert.doesNotMatch(text, /selected minimum=\d/);
+});
+
+test("UQ Lab UI labels minimums and the coupon badge as unverified reference comparisons", () => {
+  const ui = readSrc("src/components/UQLab.tsx");
+  assert.doesNotMatch(ui, />\s*PASS\s*</);
+  assert.doesNotMatch(ui, /OUT-OF-SPEC|Spec Minimums:|F_ty ≥|Spec Status/);
+  assert.match(ui, /uq-spec-min-source/);
+  assert.match(ui, /CouponMinimumBadge/);
+  assert.match(readSrc("src/components/UqCouponReport.tsx"), /below ref\. min/);
+  // "Speedup not estimated" is neutral, not a success badge.
+  const i = ui.indexOf("Speedup not estimated");
+  assert.doesNotMatch(ui.slice(i - 260, i), /emerald/);
 });

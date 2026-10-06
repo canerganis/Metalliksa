@@ -6,5 +6,8 @@ const html = renderToStaticMarkup(<ExperimentalValidationLab />);
 assert.match(html, /Melt Pool vs Measurements/);
 assert.match(html, /Compare traceable measurements/);
 assert.match(html, /Loading experimental data.../);
+assert.match(html, /multi-track, powder-entrained/);
+assert.match(html, /STMeasurements.csv is not plotted because it has no power column/);
+assert.match(html, /no simulation result is loaded/);
 assert.doesNotMatch(html, /<input|Run Traceability Pipeline|value="1.6"/);
 console.log('PASS: ExperimentalValidationLab renders correctly');

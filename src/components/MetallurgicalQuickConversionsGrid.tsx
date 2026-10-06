@@ -305,7 +305,7 @@ export const MetallurgicalQuickConversionsGrid: React.FC<Props> = ({ onOpenFullS
             <p className="text-xs text-slate-400 mt-0.5">
               Instant bidirectional conversion grid for <strong>MPa ⇄ ksi</strong>,{" "}
               <strong>RC (HRC) ⇄ HV</strong>, and{" "}
-              <strong>Celsius ⇄ Kelvin ⇄ Rankine</strong> with searchable fields &amp; live outputs.
+              <strong>Celsius ⇄ Kelvin ⇄ Rankine</strong> with searchable fields &amp; outputs that update as you type.
             </p>
           </div>
         </div>

@@ -26,7 +26,7 @@ export const MetallurgyCopilot: React.FC = () => {
     {
       id: "welcome-1",
       role: "assistant",
-      content: `Hello! I am your **AI Pocket Metallurgy & Materials Science Copilot**, powered by GPT-6 Sol.
+      content: `Hello! I am your **AI Pocket Metallurgy & Materials Science Copilot**.
 
 You can consult me on:
 - **Phase Equilibria & Solidification**: Fe-C, Ti-Al, Ni-base phase diagrams, TTT/CCT cooling curves, eutectics, and peritectics.

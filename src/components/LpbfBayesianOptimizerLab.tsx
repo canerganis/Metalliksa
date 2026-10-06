@@ -6,7 +6,7 @@ import {
   RefreshCw,
   Settings,
   Target,
-  Trophy,
+  ListOrdered,
   AlertTriangle
 } from "lucide-react";
 import {
@@ -199,7 +199,7 @@ export const LpbfBayesianOptimizerLab: React.FC = () => {
             <>
               <div className={`rounded-xl border p-5 ${result.bestParams ? "border-emerald-500/30 bg-emerald-950/20" : "border-amber-500/30 bg-amber-950/20"}`}>
                 <h3 className={`text-sm font-semibold mb-4 flex items-center gap-2 ${result.bestParams ? "text-emerald-300" : "text-amber-300"}`}>
-                  <Trophy className="w-4 h-4" />
+                  <ListOrdered className="w-4 h-4" />
                   Highest screening score among evaluated candidates
                 </h3>
                 {result.bestParams ? (

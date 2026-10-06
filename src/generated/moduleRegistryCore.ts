@@ -138,7 +138,7 @@ export const MODULE_REGISTRY_CORE = {
       "version": "0.0.0",
       "workspace": "lpbf",
       "label": "Melt Pool vs Measurements",
-      "description": "Plots measured single-track melt-pool width and depth (CMU Ti-6Al-4V, 370 W) against the current workflow result; a comparison, not validation.",
+      "description": "Plots measured multi-track, powder-entrained melt-pool width and depth (CMU Ti-6Al-4V, 370 W) against the current workflow result; a comparison, not validation.",
       "next": "toolpath-studio",
       "maturity": "Research",
       "navigation": "listed",

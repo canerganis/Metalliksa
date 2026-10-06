@@ -1,3 +1,4 @@
+import { CMU_MT_SCOPE, parseCmuMeasurementsCsv } from './cmuMeasurements';
 import { createHash } from 'node:crypto';
 import { in625GeorgiaTechPropertyCatalogEntry, in625NasaPropertyCatalogEntry } from './lpbfPropertySourceCatalog';
 import { lstatSync, readFileSync } from 'node:fs';
@@ -143,22 +144,7 @@ export class LpbfSourceArchiveService {
       if (!artifact) throw new Error('MTMeasurements.csv not found');
       const filename = path.join(this.storageRoot, 'artifacts', 'objects', artifact.sha256.slice(0, 2), artifact.sha256);
       const csv = readFileSync(filename, 'utf8');
-      const lines = csv.trim().split('\n').slice(1);
-      return {
-        datasetId,
-        data: lines.map((line: string) => {
-          const parts = line.split(',');
-          return {
-            slice: Number(parts[0]),
-            orientation: Number(parts[1]),
-            power_W: Number(parts[2]),
-            velocity_mms: Number(parts[3]),
-            width_um: Number(parts[4]),
-            depth_um: Number(parts[5]),
-            cap_um: Number(parts[6])
-          };
-        })
-      };
+      return { datasetId, scope: CMU_MT_SCOPE, data: parseCmuMeasurementsCsv(csv) };
     }
     return { datasetId, data: [] };
   }
