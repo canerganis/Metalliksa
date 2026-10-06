@@ -37,8 +37,9 @@ class CrossingVerification(unittest.TestCase):
     def test_liquidus_crossing_at_search_boundary_remains_valid(self):
         liquidus = 1700.0
 
-        def boundary_crossing(_x, _y, z):
-            return liquidus + 1.0 - 125000.0 * z
+        def boundary_crossing(x, _y, z):
+            # Weak +x gradient (500 K/m): n_x > 0, a solidifying trailing front; the crossing moves < 0.1 um.
+            return liquidus + 1.0 - 125000.0 * z + 500.0 * x
 
         mapped = map_solidification_front(
             boundary_crossing,

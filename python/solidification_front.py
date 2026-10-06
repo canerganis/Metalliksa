@@ -19,7 +19,7 @@ import math
 from typing import Any, Callable, Dict, List, Optional
 
 MODEL_ID = "solidification-front-v1"
-HUNT_DOI = "10.1016/0025-5416(84)90201-X"
+HUNT_DOI = "10.1016/0025-5416(84)90201-5"
 AHMED_RACK_DOI = "10.1016/S0921-5093(97)00802-2"
 
 # Hunt 1984 morphology vs G/R (K s / m²). Screening bands, not alloy K_col.
@@ -146,12 +146,22 @@ def map_solidification_front(
     cos_theta: float = 1.0,
     n_samples: int = 9,
 ) -> Optional[Dict[str, Any]]:
-    """Sample the rear liquidus in the x–z plane (y=0) and return G, R, Tdot stats."""
+    """Sample the rear liquidus in the x–z plane (y=0) and return G, R, Tdot stats.
+
+    Only solidifying samples (n_x > 0, behind the deepest liquidus point) are kept, and every
+    median is taken over that same set; fewer than 3 such samples -> None (fallback path)."""
     x_rear = max(4e-6, float(x_rear))
     z_hi = max(8e-6, float(search_depth))
     n_samples = max(5, min(16, int(n_samples)))
     incline = max(0.05, float(cos_theta))
-    xs = [-x_rear * (0.92 - 0.70 * i / max(1, n_samples - 1)) for i in range(n_samples)]
+    # Solidifying part of the rear liquidus: from the deepest liquidus point (n_x = 0) back to the tail.
+    scan = [-x_rear * (0.98 - 0.96 * j / 32.0) for j in range(33)]
+    depths = [(_binary_z_liquidus(T_fn, xb, T_liq, z_hi), xb) for xb in scan]
+    z_b, x_b = max(depths)
+    if z_b < 0.0:
+        x_b = -0.22 * x_rear
+    span = -x_rear - x_b
+    xs = [x_b + span * (0.08 + 0.84 * i / max(1, n_samples - 1)) for i in range(n_samples)]
     samples: List[Dict[str, float]] = []
     for x in xs:
         z = _binary_z_liquidus(T_fn, x, T_liq, z_hi)
@@ -162,7 +172,11 @@ def map_solidification_front(
         if g_mag < 1.0:
             continue
         nx = gx / g_mag
-        R_loc = max(0.0, float(v_scan) * nx) * incline
+        if nx <= 0.0:
+            # Ahead of the deepest liquidus point the isotherm advances into solid (melting side):
+            # R_n = v n_x is a solidification rate only where n_x > 0 (Kou §6.1 geometry).
+            continue
+        R_loc = float(v_scan) * nx * incline
         samples.append({
             "x_um": round(x * 1e6, 1),
             "z_um": round(z * 1e6, 1),
