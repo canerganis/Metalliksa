@@ -125,8 +125,8 @@ ELECTROCHEM_OPERATIONS: Tuple[Operation, ...] = (
             undeclared=("action", "metalId", "betaA", "betaC", "i0Corr_uA", "ePit", "eCorr", "ePitReference",
                         "eCorrReference"),
             outputs=("status", "unavailable", "unavailableReason", "polarizationResistance_Rp_Ohm_cm2",
-                     "corrosionRate_mm_yr", "corrosionRate_mpy", "deltaE_pit_V", "pittingAssessment",
-                     "pythonDurationMs"),
+                     "corrosionRate_mm_yr", "corrosionRate_mpy", "deltaE_pit_V", "deltaE_pit_definition",
+                     "pittingReferenceElectrode", "pittingAssessment", "ignoredInputs", "pythonDurationMs"),
             transport_values=_RUN_STATUS),
 )
 

@@ -1485,8 +1485,18 @@ def _param_value(p):
     return float(p["fittedValue"] if p.get("fittedValue") is not None else p.get("value"))
 
 
-def _cpe_capacitance_row(cpe_id, cpe_name, q_val, n_val, r_solution, r_parallel, area):
+_LADDER_REASON = ("ladder (nested) topology: Brug and Hsu-Mansfeld assume a single (R || CPE) loop in series "
+                  "with Rs; which resistances they would take here is not defined, so no value is given")
+_VOIGT_CHAIN_NOTE = ("Voigt chain (several (R || CPE) loops in series): Rs is the series resistance of the circuit "
+                     "for every loop; the formulas are applied loop by loop as if each loop were alone")
+
+
+def _cpe_capacitance_row(cpe_id, cpe_name, q_val, n_val, r_solution, r_parallel, area,
+                         ladder_reason=None, topology_note=None):
     """Brug and Hsu-Mansfeld effective capacitances of one CPE from the given (fitted) R values.
+
+    ladder_reason: when set, neither formula applies; both values are null with that reason.
+    topology_note: an informational note on how the resistances were assigned.
 
     Brug et al., J. Electroanal. Chem. 176 (1984) 275: C = Q^(1/n) (Rs Rct / (Rs + Rct))^((1-n)/n);
     blocking electrode (no parallel R): C = Q^(1/n) Rs^((1-n)/n).
@@ -1494,14 +1504,20 @@ def _cpe_capacitance_row(cpe_id, cpe_name, q_val, n_val, r_solution, r_parallel,
     A missing input makes the value that needs it null with a reason; nothing is defaulted."""
     unavailable = {}
     c_brug = c_hsu = tau_ms = None
-    if r_solution is None:
+    if ladder_reason is not None:
+        r_solution = r_parallel = None
+        unavailable["cBrug"] = ladder_reason
+        unavailable["cHsuMansfeld"] = ladder_reason
+    elif r_solution is None:
         unavailable["cBrug"] = "no series (solution) resistance in the circuit; the Brug formula needs Rs"
     elif r_parallel is None:
         c_brug = (q_val ** (1.0 / n_val)) * (r_solution ** ((1.0 - n_val) / n_val))
     else:
         r_comb = (r_solution * r_parallel) / max(1e-12, (r_solution + r_parallel))
         c_brug = (q_val ** (1.0 / n_val)) * (r_comb ** ((1.0 - n_val) / n_val))
-    if r_parallel is None:
+    if ladder_reason is not None:
+        pass
+    elif r_parallel is None:
         unavailable["cHsuMansfeld"] = "no resistance in parallel with the CPE (blocking); Hsu-Mansfeld needs it"
     else:
         c_hsu = (q_val * (r_parallel ** (1.0 - n_val))) ** (1.0 / n_val)
@@ -1536,6 +1552,8 @@ def _cpe_capacitance_row(cpe_id, cpe_name, q_val, n_val, r_solution, r_parallel,
         "modelApplied": "Brug (2D Surface Distribution)",
         "physicsNote": physics_note,
     }
+    if topology_note is not None:
+        row["topologyNote"] = topology_note
     if unavailable:
         row["unavailable"] = unavailable
     return row
@@ -1559,7 +1577,12 @@ def calculate_cpe_effective_capacitances(params, topology_data, electrode_area=N
     initial-guess values while Q and n were fitted, and presets returned no rows.
     Custom topology: Rs is the sum of the resistors of the top-level series branches; the parallel
     resistance of a CPE is the parallel combination of the resistors in its parallel branch (a series
-    sub-branch contributes the sum of its resistors). electrode_area (cm²) is required for the
+    sub-branch contributes the DC resistance of that sub-branch, the sum of its resistors). A CPE placed
+    directly in a top-level series branch is a blocking element (Brug blocking formula, Hsu-Mansfeld null).
+    A CPE in a ladder (its parallel branch nested inside another branch, or holding a sub-branch that
+    itself contains a parallel loop) gets a row with both values null and the reason: the single-loop
+    formulas do not say which resistances to use there. Several top-level loops in series (Voigt chain)
+    are evaluated loop by loop with the circuit Rs and carry a topologyNote. electrode_area (cm²) is required for the
     area-normalised value and the physics note; when it is None they are null with a reason.
     """
     cpe_results = []
@@ -1596,20 +1619,56 @@ def calculate_cpe_effective_capacitances(params, topology_data, electrode_area=N
         series_r = [r for r in series_r if r is not None]
         r_solution = sum(series_r) if series_r else None
 
-        def parallel_branches(branch):
+        def contains_parallel(branch):
+            for item in branch.get("elements", []):
+                if _is_sub_branch(item) and (item.get("connection", "series") == "parallel"
+                                             or contains_parallel(item)):
+                    return True
+            return False
+
+        def parallel_branches(branch, nested):
+            # yields (parallel branch, True when it sits inside another parallel loop)
             if branch.get("connection", "series") == "parallel":
-                yield branch
+                yield branch, nested
+                nested = True
             for item in branch.get("elements", []):
                 if _is_sub_branch(item):
-                    yield from parallel_branches(item)
+                    yield from parallel_branches(item, nested)
 
+        loops = [(b, nested) for top in branches for b, nested in parallel_branches(top, False)]
+        voigt_note = _VOIGT_CHAIN_NOTE if sum(1 for _, nested in loops if not nested) > 1 else None
+
+        def cpe_inputs(el):
+            q_val = value_of(el, "value")
+            n_val = value_of(el, "exponent")
+            if q_val is None or n_val is None:
+                return None
+            return max(1e-15, q_val), max(0.1, min(1.0, n_val))
+
+        # A CPE directly in a top-level series branch: blocking electrode (Rs + CPE).
         for top in branches:
-            for branch in parallel_branches(top):
+            if top.get("connection", "series") != "series":
+                continue
+            for el in top.get("elements", []):
+                if _is_sub_branch(el) or el.get("type") not in _CPE_TYPES:
+                    continue
+                qn = cpe_inputs(el)
+                if qn is None:
+                    continue
+                cpe_results.append(_cpe_capacitance_row(
+                    el.get("id"), el.get("name"), qn[0], qn[1], r_solution, None, area))
+
+        for branch, nested in loops:
+            ladder = nested or any(_is_sub_branch(item) and contains_parallel(item)
+                                   for item in branch.get("elements", []))
+            r_parallel = None
+            if not ladder:
                 conductance = 0.0
                 for item in branch.get("elements", []):
                     if _is_sub_branch(item):
                         if item.get("connection", "series") != "series":
                             continue
+                        # no parallel loop below this sub-branch (else ladder): its DC resistance
                         rs_sub = [value_of(el, "value") for el in _leaf_elements(item)
                                   if el.get("type") in _RESISTOR_TYPES]
                         rs_sub = [r for r in rs_sub if r is not None]
@@ -1620,28 +1679,31 @@ def calculate_cpe_effective_capacitances(params, topology_data, electrode_area=N
                         if r is not None and r > 0:
                             conductance += 1.0 / r
                 r_parallel = 1.0 / conductance if conductance > 0 else None
-                for el in branch.get("elements", []):
-                    if _is_sub_branch(el) or el.get("type") not in _CPE_TYPES:
-                        continue
-                    q_val = value_of(el, "value")
-                    n_val = value_of(el, "exponent")
-                    if q_val is None or n_val is None:
-                        continue
-                    cpe_results.append(_cpe_capacitance_row(
-                        el.get("id"), el.get("name"), max(1e-15, q_val), max(0.1, min(1.0, n_val)),
-                        r_solution, r_parallel, area))
+            for el in branch.get("elements", []):
+                if _is_sub_branch(el) or el.get("type") not in _CPE_TYPES:
+                    continue
+                qn = cpe_inputs(el)
+                if qn is None:
+                    continue
+                cpe_results.append(_cpe_capacitance_row(
+                    el.get("id"), el.get("name"), qn[0], qn[1], r_solution, r_parallel, area,
+                    ladder_reason=_LADDER_REASON if ladder else None,
+                    topology_note=None if ladder else voigt_note))
         return cpe_results
 
     topology_id = topology_data if isinstance(topology_data, str) else (
         topology_data.get("id") if isinstance(topology_data, dict) else None)
-    for q_name, n_name, rp_name, rs_name in _PRESET_CPE_ROLES.get(topology_id, ()):
+    preset_roles = _PRESET_CPE_ROLES.get(topology_id, ())
+    preset_note = _VOIGT_CHAIN_NOTE if len(preset_roles) > 1 else None
+    for q_name, n_name, rp_name, rs_name in preset_roles:
         if q_name not in by_name or n_name not in by_name:
             continue  # the CPE itself was not supplied: no row is invented
         r_parallel = by_name.get(rp_name)
         r_solution = by_name.get(rs_name)
         cpe_results.append(_cpe_capacitance_row(
             q_name, q_name, max(1e-15, by_name[q_name]), max(0.1, min(1.0, by_name[n_name])),
-            r_solution, r_parallel if r_parallel is not None and r_parallel > 0 else None, area))
+            r_solution, r_parallel if r_parallel is not None and r_parallel > 0 else None, area,
+            topology_note=preset_note))
     return cpe_results
 
 

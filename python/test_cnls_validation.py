@@ -414,6 +414,64 @@ class CpeCapacitanceFittedResistanceTests(unittest.TestCase):
         self.assertIsNone(row["associatedRct"])  # was an invented 100 Ohm
         self.assertIn("cHsuMansfeld", row["unavailable"])
 
+    def test_cpe_directly_in_series_is_a_blocking_electrode(self):
+        # review: Rs + CPE in one series branch returned [] (no row, no reason); at b0d77480 it had a row
+        topology = {"branches": [series({"id": "rs", "name": "Rs", "type": "R", "value": self.RS},
+                                        {"id": "q", "name": "Q", "type": "CPE", "value": self.Q,
+                                         "exponent": self.N})]}
+        rows = solver.calculate_cpe_effective_capacitances([], topology)
+        self.assertEqual(len(rows), 1)
+        row = rows[0]
+        blocking = self.Q ** (1 / self.N) * self.RS ** ((1 - self.N) / self.N)  # Brug 1984, 5.028 uF
+        self.assertAlmostEqual(row["cBrug_F"] / blocking, 1.0, delta=1e-12)
+        self.assertAlmostEqual(row["cBrug_uF"], 5.0278, delta=1e-3)
+        self.assertEqual(row["associatedRs"], self.RS)
+        self.assertIsNone(row["associatedRct"])
+        self.assertIsNone(row["cHsuMansfeld_F"])
+        self.assertIn("cHsuMansfeld", row["unavailable"])
+
+    def test_nested_ladder_is_unavailable_not_a_number(self):
+        # Rs + (Qcoat || (Rpore + (Qdl || Rct))): the coating CPE used to get Rpore+Rct = 5300 Ohm and
+        # the inner CPE Rs only; neither is the single-loop Brug/Hsu-Mansfeld quantity.
+        topology = {"branches": [
+            series({"id": "rs", "name": "Rs", "type": "R", "value": self.RS}),
+            parallel({"id": "qc", "name": "Qcoat", "type": "CPE", "value": 1e-6, "exponent": 0.9},
+                     series({"id": "rp", "name": "Rpore", "type": "R", "value": 300.0},
+                            parallel({"id": "qdl", "name": "Qdl", "type": "CPE", "value": self.Q,
+                                      "exponent": self.N},
+                                     {"id": "rct", "name": "Rct", "type": "R", "value": self.RCT})))]}
+        rows = {r["cpeElementId"]: r for r in solver.calculate_cpe_effective_capacitances([], topology)}
+        self.assertEqual(set(rows), {"qc", "qdl"})
+        for row in rows.values():
+            self.assertIsNone(row["cBrug_F"])
+            self.assertIsNone(row["cHsuMansfeld_F"])
+            self.assertIsNone(row["associatedRct"])  # qc was 5300
+            self.assertIn("ladder", row["unavailable"]["cBrug"])
+            self.assertIn("ladder", row["unavailable"]["cHsuMansfeld"])
+
+    def test_series_sub_branch_without_a_loop_still_counts_its_dc_resistance(self):
+        topology = {"branches": [
+            series({"id": "rs", "name": "Rs", "type": "R", "value": self.RS}),
+            parallel({"id": "q", "name": "Q", "type": "CPE", "value": self.Q, "exponent": self.N},
+                     series({"id": "ra", "name": "Ra", "type": "R", "value": 3000.0},
+                            {"id": "rb", "name": "Rb", "type": "R", "value": 2000.0}))]}
+        row = solver.calculate_cpe_effective_capacitances([], topology)[0]
+        self.assertEqual(row["associatedRct"], self.RCT)
+        self.assertAlmostEqual(row["cHsuMansfeld_F"] / self.hsu_mansfeld(), 1.0, delta=1e-12)
+        self.assertNotIn("topologyNote", row)
+
+    def test_voigt_chain_rows_carry_a_note(self):
+        values = {"Rs": self.RS, "Rpore": 300.0, "Qcoat": 1e-6, "ncoat": 0.9,
+                  "Rct": self.RCT, "Qdl": self.Q, "ndl": self.N}
+        params = [{"paramName": k, "value": v} for k, v in values.items()]
+        rows = solver.calculate_cpe_effective_capacitances(params, "two_time_constants")
+        self.assertEqual(len(rows), 2)
+        for row in rows:
+            self.assertIn("Voigt chain", row["topologyNote"])
+            self.assertEqual(row["associatedRs"], self.RS)
+        single = solver.calculate_cpe_effective_capacitances(params, "randles_cpe")
+        self.assertNotIn("topologyNote", single[0])
+
     def test_invalid_area_is_refused(self):
         for area in (0.0, -1.0, float("nan"), True):
             with self.subTest(area=area), self.assertRaises(ValueError):
