@@ -110,6 +110,25 @@ class TestPhase12ToolpathKinematics(unittest.TestCase):
         self.assertEqual(res["no_cruise_segment_count"], 1)
         self.assertTrue(res["laser_never_fires"])
         self.assertTrue(any("never fires" in w for w in res["warnings"]))
+        # Duty cycle must describe the same exposure as the energy total.
+        self.assertEqual(res["total_laser_on_time_s"], 0.0)
+        self.assertEqual(res["duty_cycle_pct"], 0.0)
+
+    def test_laser_time_matches_energy_without_skywriting(self):
+        self.engine.profile.skywriting_enabled = False
+        vectors = [ToolpathVector(0.0, 0.0, 40.0, 0.0, "hatch", 280.0, 1000.0)]
+        res = self.engine.simulate_toolpath(vectors)
+        self.assertAlmostEqual(res["total_energy_input_J"], 280.0 * res["total_laser_on_time_s"], places=1)
+
+    def test_laser_time_is_cruise_only_with_skywriting(self):
+        self.engine.profile.skywriting_enabled = True
+        vectors = [ToolpathVector(0.0, 0.0, 40.0, 0.0, "hatch", 280.0, 1000.0)]
+        res = self.engine.simulate_toolpath(vectors)
+        a = self.engine.profile.accel_max_mms2
+        ramp_mm = 2.0 * (1000.0 ** 2) / (2.0 * a)
+        t_cruise = (40.0 - ramp_mm) / 1000.0
+        self.assertAlmostEqual(res["total_laser_on_time_s"], t_cruise, places=4)
+        self.assertAlmostEqual(res["total_energy_input_J"], 280.0 * t_cruise, places=2)
 
     def test_skywriting_with_cruise_has_no_warning(self):
         self.engine.profile.skywriting_enabled = True

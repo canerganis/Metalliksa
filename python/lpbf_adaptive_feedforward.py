@@ -74,7 +74,7 @@ class AdaptiveFeedforwardMitigator:
         speed_ratio = min(1.0, seg.v_peak_mms / vec.nominal_speed_mms)
         compensated_power = vec.nominal_power_W * speed_ratio
 
-        # Mitigated linear energy density during peak cruise
+        # Linear energy density at the scaled power and peak speed
         mitigated_led = compensated_power / max(seg.v_peak_mms, 1e-4)
 
         is_mitigated = speed_ratio < 0.99
@@ -135,7 +135,7 @@ class AdaptiveFeedforwardMitigator:
         total_nominal_energy_J = 0.0
         total_mitigated_energy_J = 0.0
         gcode_lines = [
-            f"; Metalliksa Phase 15 Mitigated Toolpath (Layer {layer_index})",
+            f"; Metalliksa per-vector power-scaled toolpath (Layer {layer_index})",
             f"; Rotation: {math.degrees(rot_angle_rad):.1f} deg | Open-loop per-vector power scaling",
             "; NOT machine-validated: review S-words, travel moves and controller laser mode before use",
             "M3 S0"
@@ -157,7 +157,7 @@ class AdaptiveFeedforwardMitigator:
                 total_mitigated_energy_J += mseg.compensated_power_W * t_nom
 
         gcode_lines.append("M5")
-        gcode_lines.append("; End of layer mitigation")
+        gcode_lines.append("; End of power-scaled layer")
 
         overall_energy_reduction_pct = (
             ((total_nominal_energy_J - total_mitigated_energy_J) / max(total_nominal_energy_J, 1e-4)) * 100.0

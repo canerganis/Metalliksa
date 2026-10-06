@@ -296,13 +296,19 @@ class GalvanometerKinematicsEngine:
             segments.append(seg)
             total_time_s += seg.t_total_s
             if seg.laser_active:
-                total_laser_time_s += (seg.t_acc_s + seg.t_cruise_s + seg.t_dec_s)
+                # Count only the time the energy model actually charges, so the
+                # duty cycle and the energy total describe the same exposure.
+                if self.profile.skywriting_enabled:
+                    total_laser_time_s += seg.t_cruise_s
+                else:
+                    total_laser_time_s += (seg.t_acc_s + seg.t_cruise_s + seg.t_dec_s
+                                           + self.profile.laser_on_delay_us * 1e-6)
                 total_energy_J += seg.effective_energy_J
                 total_mark_dist_mm += seg.distance_mm
             else:
                 total_jump_dist_mm += seg.distance_mm
 
-        # Identification of localized thermal overheating hotspots (LED spikes at turnarounds)
+        # Average-LED screen flags: segments whose average LED exceeds 1.25x nominal (no thermal field is solved)
         hotspots = []
         for i, s in enumerate(segments):
             if s.laser_active:

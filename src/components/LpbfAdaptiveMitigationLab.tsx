@@ -4,7 +4,7 @@ import {
 } from 'recharts';
 import { pythonComputationService } from '../services/pythonComputationService';
 
-const SAMPLE_GCODE = `; LPBF Turnaround Overheating Test Pattern
+const SAMPLE_GCODE = `; LPBF short-vector test pattern (vectors too short to reach the commanded speed)
 G0 X0.0 Y0.0
 M3 S280
 G1 X15.0 Y0.0 F60000
@@ -19,6 +19,20 @@ G0 X0.0 Y0.0
 /** Rotation the engine applies: 67° × layer index when enabled, else 0. */
 export function rotationPreviewDeg(enabled: boolean, layerIndex: number): number {
   return enabled ? Math.round(67 * layerIndex * 10) / 10 : 0;
+}
+
+/** Text for the rotation preview under the layer index control. */
+export function rotationPreviewText(enabled: boolean, layerIndex: number): string {
+  if (!enabled) return 'Rotation disabled (0°)';
+  return `Rotation applied = 67° × ${layerIndex} = ${rotationPreviewDeg(true, layerIndex)}°`;
+}
+
+/** Signed text for the total commanded energy change (engine reports a reduction in %). */
+export function energyChangeLabel(reductionPct: unknown): string {
+  const pct = Number(reductionPct);
+  if (!Number.isFinite(pct)) return 'unavailable';
+  if (pct <= 0) return '0 % (no vector scaled)';
+  return `−${pct} %`;
 }
 
 export const LpbfAdaptiveMitigationLab: React.FC = () => {
@@ -47,7 +61,7 @@ export const LpbfAdaptiveMitigationLab: React.FC = () => {
       });
       setResult(res);
     } catch (err: any) {
-      setError(err.message || 'Mitigation computation failed');
+      setError(err.message || 'Power scaling computation failed');
     } finally {
       setIsLoading(false);
     }
@@ -134,11 +148,11 @@ export const LpbfAdaptiveMitigationLab: React.FC = () => {
                 value={layerIndex} disabled={!apply67Deg}
                 onChange={e => setLayerIndex(Math.max(0, Math.round(Number(e.target.value) || 0)))}
                 className="w-full mt-1 bg-gray-950 border border-gray-700 rounded p-1 font-mono text-white disabled:opacity-50" />
-              <span className="text-[10px] text-gray-500 block mt-1">Rotation applied = 67° × {layerIndex} = {rotationPreviewDeg(apply67Deg, layerIndex)}°</span>
+              <span className="text-[10px] text-gray-500 block mt-1">{rotationPreviewText(apply67Deg, layerIndex)}</span>
             </label>
 
             <p className="text-[10px] text-gray-500">
-              Power is scaled once per vector as P × min(1, v_peak / v_nominal). One S-word is written per vector; power is not ramped along the acceleration and deceleration phases inside a vector.
+              Power is scaled once per vector as P × min(1, v_peak / v_nominal), so only vectors that never reach their commanded speed are scaled; vectors that do reach it keep nominal power at their deceleration ends. One S-word is written per vector; power is not ramped along the acceleration and deceleration phases inside a vector.
             </p>
           </div>
         </div>
@@ -170,7 +184,7 @@ export const LpbfAdaptiveMitigationLab: React.FC = () => {
                 <div className="p-3 bg-gray-800 border border-gray-700 rounded flex flex-col items-center">
                   <span className="text-xs text-gray-400 mb-1 text-center">Total Commanded Energy Change</span>
                   <span className="text-xl font-mono font-bold text-indigo-400">
-                    -{result.overall_energy_reduction_pct} %
+                    {energyChangeLabel(result.overall_energy_reduction_pct)}
                   </span>
                   <span className="text-[10px] text-gray-500 text-center mt-1">Σ P·L/v_nominal, scaled vs nominal power; not a peak or local energy value</span>
                 </div>
@@ -198,8 +212,8 @@ export const LpbfAdaptiveMitigationLab: React.FC = () => {
                     <YAxis stroke="#9ca3af" label={{ value: 'Laser Power (W)', angle: -90, position: 'insideLeft', fill: '#9ca3af' }} />
                     <Tooltip contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#f3f4f6' }} />
                     <Legend />
-                    <Bar dataKey="nominal_power_W" name="Unmitigated Power (W)" fill="#ef4444" />
-                    <Bar dataKey="compensated_power_W" name="Adaptive Power (W)" fill="#10b981" />
+                    <Bar dataKey="nominal_power_W" name="Nominal Power (W)" fill="#ef4444" />
+                    <Bar dataKey="compensated_power_W" name="Scaled Power (W)" fill="#10b981" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

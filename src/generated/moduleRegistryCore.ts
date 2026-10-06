@@ -216,7 +216,7 @@ export const MODULE_REGISTRY_CORE = {
       "version": "0.1.0",
       "workspace": "lpbf",
       "label": "Corner Power Compensation",
-      "description": "Open-loop feed-forward: laser power scaled down where the modelled scanner slows, 67° layer rotation and G-code export; no sensor feedback, no defect prediction.",
+      "description": "Open-loop feed-forward: laser power scaled per vector when the vector cannot reach its commanded speed, 67° layer rotation and G-code export; no sensor feedback, no defect prediction.",
       "next": "keyhole-raytracing",
       "maturity": "Research",
       "navigation": "listed",

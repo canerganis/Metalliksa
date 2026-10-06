@@ -176,6 +176,8 @@ export function ICMEMultiScalePipelineStudio() {
       setPipelineResult(res);
     } catch (err: any) {
       console.error("ICME pipeline execution failed:", err);
+      // Never leave a result computed from earlier inputs under rejected ones.
+      setPipelineResult(null);
       setErrorMsg(err.message || "Failed to execute ICME multi-scale Python solver.");
     } finally {
       setIsLoading(false);
@@ -276,6 +278,12 @@ export function ICMEMultiScalePipelineStudio() {
           </div>
         )}
       </div>
+
+      {errorMsg && (
+        <div role="alert" data-testid="icme-error" className="p-4 rounded-2xl bg-rose-950/60 border border-rose-700 text-rose-200 text-xs">
+          <span className="font-semibold">Pipeline not computed:</span> {errorMsg}
+        </div>
+      )}
 
       {/* INPUT PARAMETER CONTROLS */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">

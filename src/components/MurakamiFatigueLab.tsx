@@ -9,18 +9,31 @@ const AVAILABLE_ALLOYS = ["Ti-6Al-4V", "316L SS", "Inconel 718", "AlSi10Mg"];
 /** Paris-law life label without any safety verdict. */
 export function parisLifeLabel(paris: { status: string; cycles_to_failure: number }): string {
   if (paris.status === 'non_propagating') return 'ΔK < ΔK_th (no growth computed)';
-  if (paris.status === 'runout') return `> ${paris.cycles_to_failure.toLocaleString('en-US')} cycles (integration limit)`;
+  if (paris.status === 'runout') {
+    return `No fracture when integration stopped at N = ${paris.cycles_to_failure.toLocaleString('en-US')} cycles (cycle limit or negligible growth rate)`;
+  }
   return `${paris.cycles_to_failure.toLocaleString('en-US')} cycles`;
+}
+
+export interface FatigueRequestInputs {
+  stressAmplitude_MPa: number;
+}
+
+/** Attach the inputs a result was computed from, so later slider moves cannot be mixed with it. */
+export function withRequestInputs<T extends object>(result: T, inputs: FatigueRequestInputs): T & { requestInputs: FatigueRequestInputs } {
+  return { ...result, requestInputs: { ...inputs } };
 }
 
 /**
  * The fatigue-limit criterion (σ_a vs corrected limit) and the Paris threshold criterion
  * (ΔK vs ΔK_th) are independent; return a message when they point in opposite directions.
+ * Uses the σ_a the result was computed with (result.requestInputs), never the live slider.
  */
-export function fatigueCriteriaDisagreement(result: any, stressAmplitude_MPa: number): string | null {
+export function fatigueCriteriaDisagreement(result: any): string | null {
   const limit = result?.fatigue_limit?.fatigue_limit_corrected_MPa;
   const status = result?.paris_crack_growth?.status;
-  if (typeof limit !== 'number' || !status) return null;
+  const stressAmplitude_MPa = result?.requestInputs?.stressAmplitude_MPa;
+  if (typeof limit !== 'number' || !status || typeof stressAmplitude_MPa !== 'number') return null;
   const aboveLimit = stressAmplitude_MPa > limit;
   const grows = status !== 'non_propagating';
   if (aboveLimit && !grows) {
@@ -53,8 +66,9 @@ export const MurakamiFatigueLab: React.FC = () => {
         stressRatio_R: stressRatio,
         stressAmplitude_MPa: stressAmplitude,
       });
-      setResult(res);
+      setResult(withRequestInputs(res, { stressAmplitude_MPa: stressAmplitude }));
     } catch (err: any) {
+      setResult(null);
       setError(err.message || 'Fatigue computation failed');
     } finally {
       setIsLoading(false);
@@ -199,7 +213,7 @@ export const MurakamiFatigueLab: React.FC = () => {
               </div>
 
               {(() => {
-                const disagreement = fatigueCriteriaDisagreement(result, stressAmplitude);
+                const disagreement = fatigueCriteriaDisagreement(result);
                 return disagreement ? (
                   <div role="alert" data-testid="murakami-criteria-disagree" className="p-3 bg-amber-900/30 border border-amber-700 rounded text-xs text-amber-200">
                     Criteria disagree: {disagreement}
@@ -232,9 +246,13 @@ export const MurakamiFatigueLab: React.FC = () => {
                   <div className="p-3 bg-gray-900 border border-gray-700 rounded text-xs text-gray-300">
                     The initial defect gives a stress intensity range (ΔK) below the tabulated threshold ΔK_th, so the Paris integration does not start. This is a screening result with unsourced constants, not a life guarantee.
                   </div>
+                ) : result.paris_crack_growth.status === 'runout' ? (
+                  <div className="p-3 bg-gray-900 border border-gray-700 rounded text-xs text-gray-300">
+                    ΔK exceeds threshold ΔK_th, but the critical crack size was not reached: {parisLifeLabel(result.paris_crack_growth)}. Not a life guarantee.
+                  </div>
                 ) : (
                   <div className="p-3 bg-amber-950/30 border border-amber-800 rounded text-xs text-amber-300">
-                    ΔK exceeds threshold ΔK_th. Fatigue crack growth occurs from initial pore until critical unstable fracture at <strong>{result.paris_crack_growth.cycles_to_failure.toLocaleString()} cycles</strong>.
+                    ΔK exceeds threshold ΔK_th. The Paris integration reaches the critical crack size (K_max = K_IC) at <strong>{result.paris_crack_growth.cycles_to_failure.toLocaleString('en-US')} cycles</strong> (unsourced constants).
                   </div>
                 )}
               </div>

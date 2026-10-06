@@ -647,12 +647,12 @@ Provide an evidence-gap review:
                         },
                         "Specimen Records (Chemistry Tab)"
                       );
-                      setSyncNotice("Broadcast chemistry to universal store!");
+                      setSyncNotice("Sent composition to the shared material store.");
                       setTimeout(() => setSyncNotice(null), 3000);
                     }}
                     className="text-[10px] text-sky-400 hover:text-sky-300 font-semibold underline cursor-pointer"
                   >
-                    Broadcast Chemistry to Store
+                    Send Composition to Store
                   </button>
                 </div>
                 <div className="flex flex-wrap gap-2">

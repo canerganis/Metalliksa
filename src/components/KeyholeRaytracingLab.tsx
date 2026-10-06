@@ -15,11 +15,32 @@ interface RaytracingResult {
   total_missed_W: number;
   mesh_aperture_half_extent_um: number;
   absorption_efficiency: number;
+  absorption_efficiency_of_intercepted: number | null;
+  missed_fraction: number;
   energy_balance_relative_error: number;
   sampling: { seed: number; num_rays: number; absorption_efficiency_standard_error: number; uncertainty_scope: string };
   limitations: string[];
   mesh: { vertices: number[]; indices: number[] };
   ray_paths: { points: [number, number, number][]; powers: number[] }[];
+}
+
+const MESH_NODES = 64;
+const MIN_MESH_SPACING_M = 2e-6;
+
+/**
+ * Mesh sized from the beam so the aperture half-extent is at least 3x the beam radius
+ * (64 nodes; spacing never below the solver's 2 µm default). Without this the fixed
+ * ±63 µm default mesh lets most of a wide beam miss the cavity.
+ */
+export function keyholeMeshForBeam(beamRadius_um: number): { nx: number; ny: number; dx: number; dy: number } {
+  const spacing = Math.max(MIN_MESH_SPACING_M, (6 * beamRadius_um * 1e-6) / (MESH_NODES - 1));
+  return { nx: MESH_NODES, ny: MESH_NODES, dx: spacing, dy: spacing };
+}
+
+/** Warning text when a noticeable share of the input never reaches the mesh, else null. */
+export function missedPowerWarning(missedFraction: number): string | null {
+  if (!Number.isFinite(missedFraction) || missedFraction <= 0.01) return null;
+  return `${(missedFraction * 100).toFixed(1)}% of the input power falls outside the mesh and never reaches the cavity; absorption of total input is reduced by this geometry artefact.`;
 }
 
 export const KeyholeRaytracingLab: React.FC = () => {
@@ -30,7 +51,8 @@ export const KeyholeRaytracingLab: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [attempt, setAttempt] = useState(0);
-  const request = JSON.stringify({ ...optics, power_W: process.laserPower_W, beam_radius_um: process.beamDiameter_um / 2, ui_ray_limit: 150 });
+  const beamRadius_um = process.beamDiameter_um / 2;
+  const request = JSON.stringify({ ...optics, ...keyholeMeshForBeam(beamRadius_um), power_W: process.laserPower_W, beam_radius_um: beamRadius_um, ui_ray_limit: 150 });
   // Hide old results in the same render that changes the inputs.
   const result = reply?.request === request ? reply.data : null;
 
@@ -102,7 +124,8 @@ export const KeyholeRaytracingLab: React.FC = () => {
         {error && <div role="alert" className="rounded border border-red-700 p-3 text-sm text-red-300">{error}<button className="ml-3 underline" onClick={() => setAttempt(value => value + 1)}>Retry</button></div>}
         {result && <>
           <dl className="grid grid-cols-2 gap-2 text-sm">
-            <dt>Absorption</dt><dd>{(result.absorption_efficiency * 100).toFixed(2)}%</dd>
+            <dt>Absorption (of total input)</dt><dd>{(result.absorption_efficiency * 100).toFixed(2)}%</dd>
+            <dt>Absorption (of intercepted power)</dt><dd>{result.absorption_efficiency_of_intercepted == null ? 'unavailable: no ray reached the mesh' : `${(result.absorption_efficiency_of_intercepted * 100).toFixed(2)}%`}</dd>
             <dt>Absorbed power</dt><dd>{result.total_absorbed_W.toFixed(3)} W</dd>
             <dt>Escaped power (reflected out)</dt><dd>{result.total_escaped_W.toFixed(3)} W</dd>
             <dt>Missed power (outside mesh)</dt><dd>{result.total_missed_W.toFixed(3)} W</dd>
@@ -111,7 +134,8 @@ export const KeyholeRaytracingLab: React.FC = () => {
             <dt>Sampling standard error</dt><dd>{(result.sampling.absorption_efficiency_standard_error * 100).toFixed(3)} pp</dd>
             <dt>Solve time</dt><dd>{result.solve_time_ms.toFixed(1)} ms</dd>
           </dl>
-          <p className="text-xs text-gray-400">Mesh aperture ±{result.mesh_aperture_half_extent_um.toFixed(0)} µm; beam radius {(process.beamDiameter_um / 2).toFixed(0)} µm. Rays starting outside the aperture never reach the cavity and are counted as missed, not escaped.</p>
+          {missedPowerWarning(result.missed_fraction) && <p role="alert" className="rounded border border-amber-700 bg-amber-900/30 p-2 text-xs text-amber-200">{missedPowerWarning(result.missed_fraction)}</p>}
+          <p className="text-xs text-gray-400">Mesh is sized from the beam: aperture ±{result.mesh_aperture_half_extent_um.toFixed(0)} µm for beam radius {beamRadius_um.toFixed(0)} µm (at least 3x the radius, 64 x 64 nodes). Rays starting outside the aperture never reach the cavity and are counted as missed, not escaped.</p>
           <p className="text-xs text-gray-400">{result.model_id} · seed {result.sampling.seed} · {result.sampling.num_rays} rays</p>
           <p className="text-xs text-gray-400">{result.sampling.uncertainty_scope}</p>
           <ul className="list-disc space-y-1 pl-4 text-xs text-amber-300">{result.limitations.map(limit => <li key={limit}>{limit}</li>)}</ul>

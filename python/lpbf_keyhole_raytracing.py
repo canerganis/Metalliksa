@@ -143,8 +143,12 @@ def compute_keyhole_raytracing(params):
     if missed_w > 0:
         limitations.append(
             f"{missed_w / power * 100:.2f}% of the input power falls outside the {2 * half_extent_um:.0f} um mesh "
-            "aperture and never reaches the cavity; enlarge the mesh (nx*dx, ny*dy) to at least 3x the beam radius")
+            "aperture and never reaches the cavity; absorption of total input is reduced by this geometry "
+            "artefact (a mesh aperture of at least 3x the beam radius avoids it)")
     efficiency = absorbed_w / power if power else 0.0
+    intercepted_w = power - missed_w
+    # Absorption of the power that actually reaches the mesh; None when nothing reaches it.
+    intercepted_efficiency = absorbed_w / intercepted_w if intercepted_w > 0 else None
     fractions = absorbed / (power / count) if power else np.zeros(count)
     se = float(np.std(fractions, ddof=1) / np.sqrt(count))
     # UI stream never changes physics samples.
@@ -160,6 +164,8 @@ def compute_keyhole_raytracing(params):
         "energy_balance_relative_error": (abs(power - absorbed_w - escaped_w - truncated_w - missed_w) / power
                                           if power else 0.0),
         "absorption_efficiency": efficiency,
+        "absorption_efficiency_of_intercepted": intercepted_efficiency,
+        "missed_fraction": (missed_w / power) if power else 0.0,
         "sampling": {"method": "equal-power Gaussian Monte Carlo", "generator": "PCG64",
                      "seed": seed, "num_rays": count, "beam_radius_definition": "1/e^2 intensity",
                      "absorption_efficiency_standard_error": se,
