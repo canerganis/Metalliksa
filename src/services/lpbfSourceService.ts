@@ -146,7 +146,11 @@ export class SourceNotImportedError extends Error {
 
 export async function sourceMeasurements(datasetId: string, signal: AbortSignal): Promise<{datasetId:string; data:any[]; scope?: { trackScope?: string; file?: string; rationale?: string; unresolved?: readonly string[] }}> {
   const response = await fetch(`/api/lpbf/sources/${encodeURIComponent(datasetId)}/measurements`, { signal, cache: 'no-store' });
-  if (response.status === 404) throw new SourceNotImportedError(datasetId);
-  if (!response.ok) throw new Error('Failed to load experimental measurements');
+  if (!response.ok) {
+    const serverMessage = (await response.json().catch(() => null))?.error;
+    const message = typeof serverMessage === 'string' && serverMessage ? serverMessage : '';
+    if (response.status === 404 && message === 'Source dataset has not been imported.') throw new SourceNotImportedError(datasetId);
+    throw new Error(message || 'Failed to load experimental measurements');
+  }
   return response.json();
 }

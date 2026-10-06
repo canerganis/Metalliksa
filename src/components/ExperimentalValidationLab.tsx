@@ -28,10 +28,14 @@ export const DepthRow: React.FC<{ q: NonNullable<Residual['depth']> | undefined 
   </tr>
 );
 
+export const toLoadError = (err: unknown): { message: string; notImported: boolean } => ({
+  message: err instanceof Error ? err.message : String(err), notImported: err instanceof SourceNotImportedError });
+
 export const SourceLoadStatus: React.FC<{ error: { message: string; notImported: boolean } }> = ({ error }) => error.notImported ? (
   <div role="status" className="text-amber-200 space-y-1">
     <p className="font-semibold">The CMU Ti-6Al-4V measurement source is not imported in this installation.</p>
-    <p className="text-sm">To import it, open LPBF Engineering, go to the Experimental Comparison stage, and use the Source Archive panel: select the CMU source, choose Preview, then Import previewed source. Then reopen this view.</p>
+    <p className="text-sm">Prerequisite: download the raw files listed in data/benchmark/cmu-ti64-meltpool-v1/manifest.json into that folder's raw/ directory (see its README); the importer does not download anything.</p>
+    <p className="text-sm">Then open LPBF Engineering, go to the Experimental Comparison stage, and use the Source Archive panel: under Local source select "CMU Single/Multi-track Meltpool Dimensions", choose Preview local source, then Import previewed source. Then reopen this view.</p>
   </div>
 ) : <p className="text-rose-400">Failed to load experimental data: {error.message}</p>;
 
@@ -46,7 +50,7 @@ export const ExperimentalValidationLab: React.FC = () => {
     const controller = new AbortController();
     sourceMeasurements('cmu-ti64-meltpool-v1', controller.signal)
       .then(res => { if (!controller.signal.aborted) { setData(res.data); setUnresolved(res.scope?.unresolved ?? []); setLoaded(true); } })
-      .catch(err => { if (!controller.signal.aborted) setError({ message: err.message, notImported: err instanceof SourceNotImportedError }); });
+      .catch(err => { if (!controller.signal.aborted) setError(toLoadError(err)); });
     return () => controller.abort();
   }, []);
 
