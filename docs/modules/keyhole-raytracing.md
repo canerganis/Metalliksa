@@ -35,7 +35,7 @@ Authority: lpbf-worker `keyhole-raytracing`; timeout 20000 ms; GPU optional; war
 — = not established from the authority code or a source; the contract states no bound.
 All keys are optional at the authority, which applies the listed default when a key is absent.
 
-Output fields (no status key, so the output carries no evidence status): `status`, `model_id`, `device`, `warp_version`, `solve_time_ms`, `total_input_W`, `total_absorbed_W`, `total_escaped_W`, `total_truncated_W`, `total_missed_W`, `mesh_aperture_half_extent_um`, `energy_balance_relative_error`, `absorption_efficiency`, `sampling`, `inputs`, `limitations`, `mesh`, `ray_paths`.
+Output fields (no status key, so the output carries no evidence status): `status`, `model_id`, `device`, `warp_version`, `solve_time_ms`, `total_input_W`, `total_absorbed_W`, `total_escaped_W`, `total_truncated_W`, `total_missed_W`, `mesh_aperture_half_extent_um`, `energy_balance_relative_error`, `absorption_efficiency`, `absorption_efficiency_of_intercepted`, `missed_fraction`, `sampling`, `inputs`, `limitations`, `mesh`, `ray_paths`.
 
 `status` is a transport field, not an evidence status; values: `success`.
 

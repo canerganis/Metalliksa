@@ -272,7 +272,8 @@ _KEYHOLE_OUTPUT = OutputSchema(
     fields=("status", "model_id", "device", "warp_version", "solve_time_ms", "total_input_W",
             "total_absorbed_W", "total_escaped_W", "total_truncated_W", "total_missed_W",
             "mesh_aperture_half_extent_um", "energy_balance_relative_error",
-            "absorption_efficiency", "sampling", "inputs", "limitations", "mesh", "ray_paths"),
+            "absorption_efficiency", "absorption_efficiency_of_intercepted", "missed_fraction",
+            "sampling", "inputs", "limitations", "mesh", "ray_paths"),
     status_key=None,
     # The solver returns the literal "success"; failures raise and reach the route as errors.
     transport_values=(("status", ("success",)),),

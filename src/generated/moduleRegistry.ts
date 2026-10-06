@@ -1554,6 +1554,8 @@ export const MODULE_REGISTRY = {
               "mesh_aperture_half_extent_um",
               "energy_balance_relative_error",
               "absorption_efficiency",
+              "absorption_efficiency_of_intercepted",
+              "missed_fraction",
               "sampling",
               "inputs",
               "limitations",
