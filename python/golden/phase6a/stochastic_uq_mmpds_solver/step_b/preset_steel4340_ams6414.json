@@ -2,12 +2,22 @@
  "case": "preset_steel4340_ams6414",
  "driftVsBase": [
   {
-   "abs": -0.7999999999999998,
+   "key": "aerospaceReliability.criticalFlawMedian_mm",
+   "kind": "changed",
+   "new": null,
+   "old": 6.6
+  },
+  {
    "key": "aerospaceReliability.criticalFlaw_P10_mm",
-   "kind": "numeric",
-   "new": 5.5,
-   "old": 6.3,
-   "rel": -0.12698412698412695
+   "kind": "changed",
+   "new": null,
+   "old": 6.3
+  },
+  {
+   "key": "aerospaceReliability.criticalFlaw_status",
+   "kind": "added",
+   "new": "unavailable: critical flaw size needs a sourced K_Ic; the former estimate was dimensionally unsupported",
+   "old": null
   },
   {
    "abs": -0.08999999999999986,
@@ -280,1060 +290,1216 @@
    "rel": null
   },
   {
-   "abs": -0.7999999999999998,
+   "key": "stochasticProperties.criticalFlawSize_ac",
+   "kind": "added",
+   "new": null,
+   "old": null
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.P01",
+   "kind": "removed",
+   "new": null,
+   "old": 4.7
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.P10",
-   "kind": "numeric",
-   "new": 5.5,
-   "old": 6.3,
-   "rel": -0.12698412698412695
+   "kind": "removed",
+   "new": null,
+   "old": 6.3
   },
   {
-   "abs": 1.299999999999999,
    "key": "stochasticProperties.criticalFlawSize_ac.P90",
-   "kind": "numeric",
-   "new": 8.2,
-   "old": 6.9,
-   "rel": 0.1884057971014491
+   "kind": "removed",
+   "new": null,
+   "old": 6.9
   },
   {
-   "abs": -0.5,
+   "key": "stochasticProperties.criticalFlawSize_ac.P99",
+   "kind": "removed",
+   "new": null,
+   "old": 9.8
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.aBasisAllowable",
-   "kind": "numeric",
-   "new": 4.0,
-   "old": 4.5,
-   "rel": -0.1111111111111111
+   "kind": "removed",
+   "new": null,
+   "old": 4.5
   },
   {
-   "abs": -0.2999999999999998,
+   "key": "stochasticProperties.criticalFlawSize_ac.aBasisConfidenceInterval95",
+   "kind": "removed",
+   "new": null,
+   "old": null
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.allowableStandardError_A",
+   "kind": "removed",
+   "new": null,
+   "old": null
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.allowableStandardError_B",
+   "kind": "removed",
+   "new": null,
+   "old": null
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.allowableUncertaintyMethod",
+   "kind": "removed",
+   "new": null,
+   "old": "unavailable: independent randomized QMC replicates required"
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.bBasisAllowable",
-   "kind": "numeric",
-   "new": 5.2,
-   "old": 5.5,
-   "rel": -0.054545454545454515
+   "kind": "removed",
+   "new": null,
+   "old": 5.5
   },
   {
-   "abs": 3.3200000000000003,
+   "key": "stochasticProperties.criticalFlawSize_ac.bBasisConfidenceInterval95",
+   "kind": "removed",
+   "new": null,
+   "old": null
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.ci95Lower_P2_5",
+   "kind": "removed",
+   "new": null,
+   "old": 5.0
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.ci95Upper_P97_5",
+   "kind": "removed",
+   "new": null,
+   "old": 9.3
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.conformancePct",
+   "kind": "removed",
+   "new": null,
+   "old": 100.0
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.covPct",
-   "kind": "numeric",
-   "new": 16.61,
-   "old": 13.29,
-   "rel": 0.24981188863807377
+   "kind": "removed",
+   "new": null,
+   "old": 13.29
   },
   {
-   "abs": -0.41999999999999993,
    "key": "stochasticProperties.criticalFlawSize_ac.cpk",
-   "kind": "numeric",
-   "new": 1.71,
-   "old": 2.13,
-   "rel": -0.19718309859154928
+   "kind": "removed",
+   "new": null,
+   "old": 2.13
   },
   {
-   "abs": -0.10000000000000053,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[0].binCenter",
+   "kind": "removed",
+   "new": null,
+   "old": 4.5
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[0].binEnd",
-   "kind": "numeric",
-   "new": 4.6,
-   "old": 4.7,
-   "rel": -0.021276595744680965
+   "kind": "removed",
+   "new": null,
+   "old": 4.7
   },
   {
-   "abs": -0.10000000000000053,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[0].binStart",
-   "kind": "numeric",
-   "new": 4.3,
-   "old": 4.4,
-   "rel": -0.022727272727272846
+   "kind": "removed",
+   "new": null,
+   "old": 4.4
   },
   {
-   "abs": -0.0006529999999999973,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[0].count",
+   "kind": "removed",
+   "new": null,
+   "old": 4
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[0].cumulativePct",
+   "kind": "removed",
+   "new": null,
+   "old": 0.8
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[0].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.026648,
-   "old": 0.027301,
-   "rel": -0.023918537782498712
+   "kind": "removed",
+   "new": null,
+   "old": 0.027301
   },
   {
-   "abs": 0.025051000000000004,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[0].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.046149,
-   "old": 0.021098,
-   "rel": 1.187363731159352
+   "kind": "removed",
+   "new": null,
+   "old": 0.021098
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[10].binCenter",
-   "kind": "numeric",
-   "new": 7.5,
-   "old": 7.4,
-   "rel": 0.013513513513513466
+   "kind": "removed",
+   "new": null,
+   "old": 7.4
   },
   {
-   "abs": 34,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[10].binEnd",
+   "kind": "removed",
+   "new": null,
+   "old": 7.6
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[10].binStart",
+   "kind": "removed",
+   "new": null,
+   "old": 7.3
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[10].count",
-   "kind": "numeric",
-   "new": 34,
-   "old": 0,
-   "rel": null
+   "kind": "removed",
+   "new": null,
+   "old": 0
   },
   {
-   "abs": -11.400000000000006,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[10].cumulativePct",
-   "kind": "numeric",
-   "new": 80.6,
-   "old": 92.0,
-   "rel": -0.12391304347826093
+   "kind": "removed",
+   "new": null,
+   "old": 92.0
   },
   {
-   "abs": 0.22651,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[10].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.22651,
-   "old": 0.0,
-   "rel": null
+   "kind": "removed",
+   "new": null,
+   "old": 0.0
   },
   {
-   "abs": -0.033889,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[10].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.287023,
-   "old": 0.320912,
-   "rel": -0.10560215884728526
+   "kind": "removed",
+   "new": null,
+   "old": 0.320912
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[11].binCenter",
-   "kind": "numeric",
-   "new": 7.8,
-   "old": 7.7,
-   "rel": 0.012987012987012941
+   "kind": "removed",
+   "new": null,
+   "old": 7.7
   },
   {
-   "abs": 28,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[11].binEnd",
+   "kind": "removed",
+   "new": null,
+   "old": 7.9
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[11].binStart",
+   "kind": "removed",
+   "new": null,
+   "old": 7.6
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[11].count",
-   "kind": "numeric",
-   "new": 28,
-   "old": 0,
-   "rel": null
+   "kind": "removed",
+   "new": null,
+   "old": 0
   },
   {
-   "abs": -5.799999999999997,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[11].cumulativePct",
-   "kind": "numeric",
-   "new": 86.2,
-   "old": 92.0,
-   "rel": -0.06304347826086953
+   "kind": "removed",
+   "new": null,
+   "old": 92.0
   },
   {
-   "abs": 0.186537,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[11].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.186537,
-   "old": 0.0,
-   "rel": null
+   "kind": "removed",
+   "new": null,
+   "old": 0.0
   },
   {
-   "abs": 1.6999999999989246e-05,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[11].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.232543,
-   "old": 0.232526,
-   "rel": 7.311010381630117e-05
+   "kind": "removed",
+   "new": null,
+   "old": 0.232526
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[12].binCenter",
-   "kind": "numeric",
-   "new": 8.1,
-   "old": 8.0,
-   "rel": 0.012499999999999956
+   "kind": "removed",
+   "new": null,
+   "old": 8.0
   },
   {
-   "abs": 22,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[12].binEnd",
+   "kind": "removed",
+   "new": null,
+   "old": 8.2
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[12].binStart",
+   "kind": "removed",
+   "new": null,
+   "old": 7.9
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[12].count",
-   "kind": "numeric",
-   "new": 22,
-   "old": 0,
-   "rel": null
+   "kind": "removed",
+   "new": null,
+   "old": 0
   },
   {
-   "abs": -1.4000000000000057,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[12].cumulativePct",
-   "kind": "numeric",
-   "new": 90.6,
-   "old": 92.0,
-   "rel": -0.015217391304347887
+   "kind": "removed",
+   "new": null,
+   "old": 92.0
   },
   {
-   "abs": 0.146565,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[12].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.146565,
-   "old": 0.0,
-   "rel": null
+   "kind": "removed",
+   "new": null,
+   "old": 0.0
   },
   {
-   "abs": 0.024179000000000006,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[12].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.175404,
-   "old": 0.151225,
-   "rel": 0.15988758472474793
+   "kind": "removed",
+   "new": null,
+   "old": 0.151225
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[13].binCenter",
-   "kind": "numeric",
-   "new": 8.4,
-   "old": 8.3,
-   "rel": 0.012048192771084293
+   "kind": "removed",
+   "new": null,
+   "old": 8.3
   },
   {
-   "abs": 10,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[13].binEnd",
+   "kind": "removed",
+   "new": null,
+   "old": 8.5
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[13].binStart",
+   "kind": "removed",
+   "new": null,
+   "old": 8.2
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[13].count",
-   "kind": "numeric",
-   "new": 12,
-   "old": 2,
-   "rel": 5.0
+   "kind": "removed",
+   "new": null,
+   "old": 2
   },
   {
-   "abs": 0.5999999999999943,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[13].cumulativePct",
-   "kind": "numeric",
-   "new": 93.0,
-   "old": 92.4,
-   "rel": 0.0064935064935064315
+   "kind": "removed",
+   "new": null,
+   "old": 92.4
   },
   {
-   "abs": 0.066294,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[13].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.079945,
-   "old": 0.013651,
-   "rel": 4.856347520328182
+   "kind": "removed",
+   "new": null,
+   "old": 0.013651
   },
   {
-   "abs": 0.03489700000000001,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[13].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.123174,
-   "old": 0.088277,
-   "rel": 0.395312482300033
+   "kind": "removed",
+   "new": null,
+   "old": 0.088277
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[14].binCenter",
-   "kind": "numeric",
-   "new": 8.7,
-   "old": 8.6,
-   "rel": 0.011627906976744146
+   "kind": "removed",
+   "new": null,
+   "old": 8.6
   },
   {
-   "abs": -2,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[14].binEnd",
+   "kind": "removed",
+   "new": null,
+   "old": 8.8
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[14].binStart",
+   "kind": "removed",
+   "new": null,
+   "old": 8.5
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[14].count",
-   "kind": "numeric",
-   "new": 12,
-   "old": 14,
-   "rel": -0.14285714285714285
+   "kind": "removed",
+   "new": null,
+   "old": 14
   },
   {
-   "abs": 0.20000000000000284,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[14].cumulativePct",
-   "kind": "numeric",
-   "new": 95.4,
-   "old": 95.2,
-   "rel": 0.0021008403361344836
+   "kind": "removed",
+   "new": null,
+   "old": 95.2
   },
   {
-   "abs": -0.015609999999999999,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[14].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.079945,
-   "old": 0.095555,
-   "rel": -0.16336141489194703
+   "kind": "removed",
+   "new": null,
+   "old": 0.095555
   },
   {
-   "abs": 0.034277,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[14].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.080529,
-   "old": 0.046252,
-   "rel": 0.7410922770907205
+   "kind": "removed",
+   "new": null,
+   "old": 0.046252
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[15].binCenter",
-   "kind": "numeric",
-   "new": 9.0,
-   "old": 8.9,
-   "rel": 0.011235955056179735
+   "kind": "removed",
+   "new": null,
+   "old": 8.9
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[15].binEnd",
-   "kind": "numeric",
-   "new": 9.1,
-   "old": 9.0,
-   "rel": 0.011111111111111072
+   "kind": "removed",
+   "new": null,
+   "old": 9.0
   },
   {
-   "abs": 1,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[15].binStart",
+   "kind": "removed",
+   "new": null,
+   "old": 8.8
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[15].count",
-   "kind": "numeric",
-   "new": 7,
-   "old": 6,
-   "rel": 0.16666666666666666
+   "kind": "removed",
+   "new": null,
+   "old": 6
   },
   {
-   "abs": 0.3999999999999915,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[15].cumulativePct",
-   "kind": "numeric",
-   "new": 96.8,
-   "old": 96.4,
-   "rel": 0.004149377593360907
+   "kind": "removed",
+   "new": null,
+   "old": 96.4
   },
   {
-   "abs": 0.0056819999999999996,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[15].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.046634,
-   "old": 0.040952,
-   "rel": 0.1387478023051377
+   "kind": "removed",
+   "new": null,
+   "old": 0.040952
   },
   {
-   "abs": 0.027263000000000003,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[15].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.049015,
-   "old": 0.021752,
-   "rel": 1.253356013240162
+   "kind": "removed",
+   "new": null,
+   "old": 0.021752
   },
   {
-   "abs": 0.10000000000000142,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[16].binCenter",
-   "kind": "numeric",
-   "new": 9.3,
-   "old": 9.2,
-   "rel": 0.01086956521739146
+   "kind": "removed",
+   "new": null,
+   "old": 9.2
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[16].binEnd",
-   "kind": "numeric",
-   "new": 9.4,
-   "old": 9.3,
-   "rel": 0.010752688172042972
+   "kind": "removed",
+   "new": null,
+   "old": 9.3
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[16].binStart",
-   "kind": "numeric",
-   "new": 9.1,
-   "old": 9.0,
-   "rel": 0.011111111111111072
+   "kind": "removed",
+   "new": null,
+   "old": 9.0
   },
   {
-   "abs": -1,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[16].count",
-   "kind": "numeric",
-   "new": 5,
-   "old": 6,
-   "rel": -0.16666666666666666
+   "kind": "removed",
+   "new": null,
+   "old": 6
   },
   {
-   "abs": 0.20000000000000284,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[16].cumulativePct",
-   "kind": "numeric",
-   "new": 97.8,
-   "old": 97.6,
-   "rel": 0.0020491803278688816
+   "kind": "removed",
+   "new": null,
+   "old": 97.6
   },
   {
-   "abs": -0.007642000000000003,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[16].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.03331,
-   "old": 0.040952,
-   "rel": -0.1866087126391874
+   "kind": "removed",
+   "new": null,
+   "old": 0.040952
   },
   {
-   "abs": 0.018594,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[16].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.027775,
-   "old": 0.009181,
-   "rel": 2.02526957847729
+   "kind": "removed",
+   "new": null,
+   "old": 0.009181
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[17].binCenter",
-   "kind": "numeric",
-   "new": 9.6,
-   "old": 9.5,
-   "rel": 0.010526315789473648
+   "kind": "removed",
+   "new": null,
+   "old": 9.5
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[17].binEnd",
-   "kind": "numeric",
-   "new": 9.7,
-   "old": 9.6,
-   "rel": 0.01041666666666663
+   "kind": "removed",
+   "new": null,
+   "old": 9.6
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[17].binStart",
-   "kind": "numeric",
-   "new": 9.4,
-   "old": 9.3,
-   "rel": 0.010752688172042972
+   "kind": "removed",
+   "new": null,
+   "old": 9.3
   },
   {
-   "abs": 0.19999999999998863,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[17].count",
+   "kind": "removed",
+   "new": null,
+   "old": 4
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[17].cumulativePct",
-   "kind": "numeric",
-   "new": 98.6,
-   "old": 98.4,
-   "rel": 0.0020325203252031365
+   "kind": "removed",
+   "new": null,
+   "old": 98.4
   },
   {
-   "abs": -0.0006529999999999973,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[17].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.026648,
-   "old": 0.027301,
-   "rel": -0.023918537782498712
+   "kind": "removed",
+   "new": null,
+   "old": 0.027301
   },
   {
-   "abs": 0.011174,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[17].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.014653,
-   "old": 0.003479,
-   "rel": 3.211842483472262
+   "kind": "removed",
+   "new": null,
+   "old": 0.003479
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[18].binCenter",
-   "kind": "numeric",
-   "new": 9.9,
-   "old": 9.8,
-   "rel": 0.010204081632653024
+   "kind": "removed",
+   "new": null,
+   "old": 9.8
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[18].binEnd",
-   "kind": "numeric",
-   "new": 10.0,
-   "old": 9.9,
-   "rel": 0.010101010101010065
+   "kind": "removed",
+   "new": null,
+   "old": 9.9
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[18].binStart",
-   "kind": "numeric",
-   "new": 9.7,
-   "old": 9.6,
-   "rel": 0.01041666666666663
+   "kind": "removed",
+   "new": null,
+   "old": 9.6
   },
   {
-   "abs": 0.20000000000000284,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[18].count",
+   "kind": "removed",
+   "new": null,
+   "old": 3
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[18].cumulativePct",
-   "kind": "numeric",
-   "new": 99.2,
-   "old": 99.0,
-   "rel": 0.002020202020202049
+   "kind": "removed",
+   "new": null,
+   "old": 99.0
   },
   {
-   "abs": -0.0004900000000000009,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[18].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.019986,
-   "old": 0.020476,
-   "rel": -0.02393045516702485
+   "kind": "removed",
+   "new": null,
+   "old": 0.020476
   },
   {
-   "abs": 0.006014,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[18].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.007197,
-   "old": 0.001183,
-   "rel": 5.083685545224007
+   "kind": "removed",
+   "new": null,
+   "old": 0.001183
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[19].binCenter",
-   "kind": "numeric",
-   "new": 10.2,
-   "old": 10.1,
-   "rel": 0.009900990099009866
+   "kind": "removed",
+   "new": null,
+   "old": 10.1
   },
   {
-   "abs": 0.10000000000000142,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[19].binEnd",
-   "kind": "numeric",
-   "new": 10.3,
-   "old": 10.2,
-   "rel": 0.009803921568627591
+   "kind": "removed",
+   "new": null,
+   "old": 10.2
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[19].binStart",
-   "kind": "numeric",
-   "new": 10.0,
-   "old": 9.9,
-   "rel": 0.010101010101010065
+   "kind": "removed",
+   "new": null,
+   "old": 9.9
   },
   {
-   "abs": -1,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[19].count",
-   "kind": "numeric",
-   "new": 0,
-   "old": 1,
-   "rel": -1.0
+   "kind": "removed",
+   "new": null,
+   "old": 1
   },
   {
-   "abs": -0.006825,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[19].cumulativePct",
+   "kind": "removed",
+   "new": null,
+   "old": 99.2
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[19].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.0,
-   "old": 0.006825,
-   "rel": -1.0
+   "kind": "removed",
+   "new": null,
+   "old": 0.006825
   },
   {
-   "abs": 0.0029300000000000003,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[19].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.003291,
-   "old": 0.000361,
-   "rel": 8.11634349030471
+   "kind": "removed",
+   "new": null,
+   "old": 0.000361
   },
   {
-   "abs": -0.10000000000000053,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[1].binCenter",
+   "kind": "removed",
+   "new": null,
+   "old": 4.8
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[1].binEnd",
+   "kind": "removed",
+   "new": null,
+   "old": 4.9
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[1].binStart",
-   "kind": "numeric",
-   "new": 4.6,
-   "old": 4.7,
-   "rel": -0.021276595744680965
+   "kind": "removed",
+   "new": null,
+   "old": 4.7
   },
   {
-   "abs": -0.0013069999999999957,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[1].count",
+   "kind": "removed",
+   "new": null,
+   "old": 8
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[1].cumulativePct",
+   "kind": "removed",
+   "new": null,
+   "old": 2.4
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[1].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.053296,
-   "old": 0.054603,
-   "rel": -0.02393641375016017
+   "kind": "removed",
+   "new": null,
+   "old": 0.054603
   },
   {
-   "abs": 0.031387,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[1].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.076432,
-   "old": 0.045045,
-   "rel": 0.6967920967920967
+   "kind": "removed",
+   "new": null,
+   "old": 0.045045
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[20].binCenter",
-   "kind": "numeric",
-   "new": 10.5,
-   "old": 10.4,
-   "rel": 0.009615384615384581
+   "kind": "removed",
+   "new": null,
+   "old": 10.4
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[20].binEnd",
-   "kind": "numeric",
-   "new": 10.6,
-   "old": 10.5,
-   "rel": 0.00952380952380949
+   "kind": "removed",
+   "new": null,
+   "old": 10.5
   },
   {
-   "abs": 0.10000000000000142,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[20].binStart",
-   "kind": "numeric",
-   "new": 10.3,
-   "old": 10.2,
-   "rel": 0.009803921568627591
+   "kind": "removed",
+   "new": null,
+   "old": 10.2
   },
   {
-   "abs": -0.00032699999999999917,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[20].count",
+   "kind": "removed",
+   "new": null,
+   "old": 2
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[20].cumulativePct",
+   "kind": "removed",
+   "new": null,
+   "old": 99.6
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[20].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.013324,
-   "old": 0.013651,
-   "rel": -0.023954289063072242
+   "kind": "removed",
+   "new": null,
+   "old": 0.013651
   },
   {
-   "abs": 0.001302,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[20].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.001401,
-   "old": 9.9e-05,
-   "rel": 13.151515151515152
+   "kind": "removed",
+   "new": null,
+   "old": 9.9e-05
   },
   {
-   "abs": 0.10000000000000142,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[21].binCenter",
-   "kind": "numeric",
-   "new": 10.8,
-   "old": 10.7,
-   "rel": 0.009345794392523497
+   "kind": "removed",
+   "new": null,
+   "old": 10.7
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[21].binEnd",
-   "kind": "numeric",
-   "new": 10.9,
-   "old": 10.8,
-   "rel": 0.009259259259259226
+   "kind": "removed",
+   "new": null,
+   "old": 10.8
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[21].binStart",
-   "kind": "numeric",
-   "new": 10.6,
-   "old": 10.5,
-   "rel": 0.00952380952380949
+   "kind": "removed",
+   "new": null,
+   "old": 10.5
   },
   {
-   "abs": 0.000531,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[21].count",
+   "kind": "removed",
+   "new": null,
+   "old": 0
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[21].cumulativePct",
+   "kind": "removed",
+   "new": null,
+   "old": 99.6
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[21].empiricalPdf",
+   "kind": "removed",
+   "new": null,
+   "old": 0.0
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[21].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.000555,
-   "old": 2.4e-05,
-   "rel": 22.125
+   "kind": "removed",
+   "new": null,
+   "old": 2.4e-05
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[22].binCenter",
-   "kind": "numeric",
-   "new": 11.1,
-   "old": 11.0,
-   "rel": 0.00909090909090906
+   "kind": "removed",
+   "new": null,
+   "old": 11.0
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[22].binEnd",
-   "kind": "numeric",
-   "new": 11.2,
-   "old": 11.1,
-   "rel": 0.009009009009008978
+   "kind": "removed",
+   "new": null,
+   "old": 11.1
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[22].binStart",
-   "kind": "numeric",
-   "new": 10.9,
-   "old": 10.8,
-   "rel": 0.009259259259259226
+   "kind": "removed",
+   "new": null,
+   "old": 10.8
   },
   {
-   "abs": -0.00016299999999999995,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[22].count",
+   "kind": "removed",
+   "new": null,
+   "old": 1
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[22].cumulativePct",
+   "kind": "removed",
+   "new": null,
+   "old": 99.8
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[22].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.006662,
-   "old": 0.006825,
-   "rel": -0.023882783882783875
+   "kind": "removed",
+   "new": null,
+   "old": 0.006825
   },
   {
-   "abs": 0.00019999999999999998,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[22].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.000205,
-   "old": 5e-06,
-   "rel": 39.99999999999999
+   "kind": "removed",
+   "new": null,
+   "old": 5e-06
   },
   {
-   "abs": 0.20000000000000107,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[23].binCenter",
-   "kind": "numeric",
-   "new": 11.4,
-   "old": 11.2,
-   "rel": 0.017857142857142953
+   "kind": "removed",
+   "new": null,
+   "old": 11.2
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[23].binEnd",
-   "kind": "numeric",
-   "new": 11.5,
-   "old": 11.4,
-   "rel": 0.008771929824561372
+   "kind": "removed",
+   "new": null,
+   "old": 11.4
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[23].binStart",
-   "kind": "numeric",
-   "new": 11.2,
-   "old": 11.1,
-   "rel": 0.009009009009008978
+   "kind": "removed",
+   "new": null,
+   "old": 11.1
   },
   {
-   "abs": 6.9e-05,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[23].count",
+   "kind": "removed",
+   "new": null,
+   "old": 0
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[23].cumulativePct",
+   "kind": "removed",
+   "new": null,
+   "old": 99.8
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[23].empiricalPdf",
+   "kind": "removed",
+   "new": null,
+   "old": 0.0
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[23].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 7e-05,
-   "old": 1e-06,
-   "rel": 69.0
+   "kind": "removed",
+   "new": null,
+   "old": 1e-06
   },
   {
-   "abs": 0.1999999999999993,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[24].binCenter",
-   "kind": "numeric",
-   "new": 11.7,
-   "old": 11.5,
-   "rel": 0.017391304347826025
+   "kind": "removed",
+   "new": null,
+   "old": 11.5
   },
   {
-   "abs": 0.10000000000000142,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[24].binEnd",
-   "kind": "numeric",
-   "new": 11.8,
-   "old": 11.7,
-   "rel": 0.00854700854700867
+   "kind": "removed",
+   "new": null,
+   "old": 11.7
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[24].binStart",
-   "kind": "numeric",
-   "new": 11.5,
-   "old": 11.4,
-   "rel": 0.008771929824561372
+   "kind": "removed",
+   "new": null,
+   "old": 11.4
   },
   {
-   "abs": 0.20000000000000284,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[24].count",
+   "kind": "removed",
+   "new": null,
+   "old": 1
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[24].cumulativePct",
-   "kind": "numeric",
-   "new": 100.0,
-   "old": 99.8,
-   "rel": 0.0020040080160320926
+   "kind": "removed",
+   "new": null,
+   "old": 99.8
   },
   {
-   "abs": -0.00016299999999999995,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[24].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.006662,
-   "old": 0.006825,
-   "rel": -0.023882783882783875
+   "kind": "removed",
+   "new": null,
+   "old": 0.006825
   },
   {
-   "abs": 2.3e-05,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[24].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 2.3e-05,
-   "old": 0.0,
-   "rel": null
+   "kind": "removed",
+   "new": null,
+   "old": 0.0
   },
   {
-   "abs": -1,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[2].binCenter",
+   "kind": "removed",
+   "new": null,
+   "old": 5.1
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[2].binEnd",
+   "kind": "removed",
+   "new": null,
+   "old": 5.2
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[2].binStart",
+   "kind": "removed",
+   "new": null,
+   "old": 4.9
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[2].count",
-   "kind": "numeric",
-   "new": 16,
-   "old": 17,
-   "rel": -0.058823529411764705
+   "kind": "removed",
+   "new": null,
+   "old": 17
   },
   {
-   "abs": -0.20000000000000018,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[2].cumulativePct",
-   "kind": "numeric",
-   "new": 5.6,
-   "old": 5.8,
-   "rel": -0.03448275862068969
+   "kind": "removed",
+   "new": null,
+   "old": 5.8
   },
   {
-   "abs": -0.009438000000000002,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[2].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.106593,
-   "old": 0.116031,
-   "rel": -0.08134033146314348
+   "kind": "removed",
+   "new": null,
+   "old": 0.116031
   },
   {
-   "abs": 0.031528,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[2].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.117851,
-   "old": 0.086323,
-   "rel": 0.3652329043244558
+   "kind": "removed",
+   "new": null,
+   "old": 0.086323
   },
   {
-   "abs": 21,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[3].binCenter",
+   "kind": "removed",
+   "new": null,
+   "old": 5.4
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[3].binEnd",
+   "kind": "removed",
+   "new": null,
+   "old": 5.5
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[3].binStart",
+   "kind": "removed",
+   "new": null,
+   "old": 5.2
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[3].count",
-   "kind": "numeric",
-   "new": 32,
-   "old": 11,
-   "rel": 1.9090909090909092
+   "kind": "removed",
+   "new": null,
+   "old": 11
   },
   {
-   "abs": 4.0,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[3].cumulativePct",
-   "kind": "numeric",
-   "new": 12.0,
-   "old": 8.0,
-   "rel": 0.5
+   "kind": "removed",
+   "new": null,
+   "old": 8.0
   },
   {
-   "abs": 0.13810699999999998,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[3].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.213186,
-   "old": 0.075079,
-   "rel": 1.839489071511341
+   "kind": "removed",
+   "new": null,
+   "old": 0.075079
   },
   {
-   "abs": 0.02069499999999999,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[3].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.169176,
-   "old": 0.148481,
-   "rel": 0.1393781022487725
+   "kind": "removed",
+   "new": null,
+   "old": 0.148481
   },
   {
-   "abs": 47,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[4].binCenter",
+   "kind": "removed",
+   "new": null,
+   "old": 5.7
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[4].binEnd",
+   "kind": "removed",
+   "new": null,
+   "old": 5.8
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[4].binStart",
+   "kind": "removed",
+   "new": null,
+   "old": 5.5
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[4].count",
-   "kind": "numeric",
-   "new": 47,
-   "old": 0,
-   "rel": null
+   "kind": "removed",
+   "new": null,
+   "old": 0
   },
   {
-   "abs": 13.399999999999999,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[4].cumulativePct",
-   "kind": "numeric",
-   "new": 21.4,
-   "old": 8.0,
-   "rel": 1.6749999999999998
+   "kind": "removed",
+   "new": null,
+   "old": 8.0
   },
   {
-   "abs": 0.313116,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[4].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.313116,
-   "old": 0.0,
-   "rel": null
+   "kind": "removed",
+   "new": null,
+   "old": 0.0
   },
   {
-   "abs": -0.003141000000000005,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[4].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.226096,
-   "old": 0.229237,
-   "rel": -0.013701976557013069
+   "kind": "removed",
+   "new": null,
+   "old": 0.229237
   },
   {
-   "abs": 51,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[5].binCenter",
+   "kind": "removed",
+   "new": null,
+   "old": 6.0
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[5].binEnd",
+   "kind": "removed",
+   "new": null,
+   "old": 6.1
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[5].binStart",
+   "kind": "removed",
+   "new": null,
+   "old": 5.8
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[5].count",
-   "kind": "numeric",
-   "new": 51,
-   "old": 0,
-   "rel": null
+   "kind": "removed",
+   "new": null,
+   "old": 0
   },
   {
-   "abs": 23.6,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[5].cumulativePct",
-   "kind": "numeric",
-   "new": 31.6,
-   "old": 8.0,
-   "rel": 2.95
+   "kind": "removed",
+   "new": null,
+   "old": 8.0
   },
   {
-   "abs": 0.339765,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[5].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.339765,
-   "old": 0.0,
-   "rel": null
+   "kind": "removed",
+   "new": null,
+   "old": 0.0
   },
   {
-   "abs": -0.03634699999999996,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[5].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.281316,
-   "old": 0.317663,
-   "rel": -0.11441999855192442
+   "kind": "removed",
+   "new": null,
+   "old": 0.317663
   },
   {
-   "abs": -22,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[6].binCenter",
+   "kind": "removed",
+   "new": null,
+   "old": 6.3
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[6].binEnd",
+   "kind": "removed",
+   "new": null,
+   "old": 6.4
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[6].binStart",
+   "kind": "removed",
+   "new": null,
+   "old": 6.1
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[6].count",
-   "kind": "numeric",
-   "new": 60,
-   "old": 82,
-   "rel": -0.2682926829268293
+   "kind": "removed",
+   "new": null,
+   "old": 82
   },
   {
-   "abs": 19.200000000000003,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[6].cumulativePct",
-   "kind": "numeric",
-   "new": 43.6,
-   "old": 24.4,
-   "rel": 0.7868852459016396
+   "kind": "removed",
+   "new": null,
+   "old": 24.4
   },
   {
-   "abs": -0.15995399999999999,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[6].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.399723,
-   "old": 0.559677,
-   "rel": -0.28579698647612817
+   "kind": "removed",
+   "new": null,
+   "old": 0.559677
   },
   {
-   "abs": -0.06923800000000002,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[6].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.32587,
-   "old": 0.395108,
-   "rel": -0.17523816273019027
+   "kind": "removed",
+   "new": null,
+   "old": 0.395108
   },
   {
-   "abs": -106,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[7].binCenter",
+   "kind": "removed",
+   "new": null,
+   "old": 6.6
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[7].binEnd",
+   "kind": "removed",
+   "new": null,
+   "old": 6.7
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[7].binStart",
+   "kind": "removed",
+   "new": null,
+   "old": 6.4
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[7].count",
-   "kind": "numeric",
-   "new": 53,
-   "old": 159,
-   "rel": -0.6666666666666666
+   "kind": "removed",
+   "new": null,
+   "old": 159
   },
   {
-   "abs": -2.0,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[7].cumulativePct",
-   "kind": "numeric",
-   "new": 54.2,
-   "old": 56.2,
-   "rel": -0.03558718861209964
+   "kind": "removed",
+   "new": null,
+   "old": 56.2
   },
   {
-   "abs": -0.7321390000000001,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[7].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.353089,
-   "old": 1.085228,
-   "rel": -0.6746407206596218
+   "kind": "removed",
+   "new": null,
+   "old": 1.085228
   },
   {
-   "abs": -0.08966299999999999,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[7].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.351432,
-   "old": 0.441095,
-   "rel": -0.20327367120461576
+   "kind": "removed",
+   "new": null,
+   "old": 0.441095
   },
   {
-   "abs": -121,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[8].binCenter",
+   "kind": "removed",
+   "new": null,
+   "old": 6.9
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[8].binEnd",
+   "kind": "removed",
+   "new": null,
+   "old": 7.0
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[8].binStart",
+   "kind": "removed",
+   "new": null,
+   "old": 6.7
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[8].count",
-   "kind": "numeric",
-   "new": 52,
-   "old": 173,
-   "rel": -0.6994219653179191
+   "kind": "removed",
+   "new": null,
+   "old": 173
   },
   {
-   "abs": -26.200000000000003,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[8].cumulativePct",
-   "kind": "numeric",
-   "new": 64.6,
-   "old": 90.8,
-   "rel": -0.28854625550660795
+   "kind": "removed",
+   "new": null,
+   "old": 90.8
   },
   {
-   "abs": -0.8343559999999999,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[8].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.346427,
-   "old": 1.180783,
-   "rel": -0.7066124766362659
+   "kind": "removed",
+   "new": null,
+   "old": 1.180783
   },
   {
-   "abs": -0.089148,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[8].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.352846,
-   "old": 0.441994,
-   "rel": -0.20169504563410365
+   "kind": "removed",
+   "new": null,
+   "old": 0.441994
   },
   {
-   "abs": 0.10000000000000053,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[9].binCenter",
-   "kind": "numeric",
-   "new": 7.2,
-   "old": 7.1,
-   "rel": 0.014084507042253596
+   "kind": "removed",
+   "new": null,
+   "old": 7.1
   },
   {
-   "abs": 40,
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[9].binEnd",
+   "kind": "removed",
+   "new": null,
+   "old": 7.3
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.histogram[9].binStart",
+   "kind": "removed",
+   "new": null,
+   "old": 7.0
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[9].count",
-   "kind": "numeric",
-   "new": 46,
-   "old": 6,
-   "rel": 6.666666666666667
+   "kind": "removed",
+   "new": null,
+   "old": 6
   },
   {
-   "abs": -18.200000000000003,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[9].cumulativePct",
-   "kind": "numeric",
-   "new": 73.8,
-   "old": 92.0,
-   "rel": -0.19782608695652176
+   "kind": "removed",
+   "new": null,
+   "old": 92.0
   },
   {
-   "abs": 0.265502,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[9].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.306454,
-   "old": 0.040952,
-   "rel": 6.483248681383083
+   "kind": "removed",
+   "new": null,
+   "old": 0.040952
   },
   {
-   "abs": -0.06770700000000002,
    "key": "stochasticProperties.criticalFlawSize_ac.histogram[9].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.32982,
-   "old": 0.397527,
-   "rel": -0.17032050653163186
+   "kind": "removed",
+   "new": null,
+   "old": 0.397527
   },
   {
-   "abs": -5.004,
    "key": "stochasticProperties.criticalFlawSize_ac.kurtosis",
-   "kind": "numeric",
-   "new": 1.1,
-   "old": 6.104,
-   "rel": -0.8197903014416775
+   "kind": "removed",
+   "new": null,
+   "old": 6.104
   },
   {
-   "abs": 0.10000000000000142,
    "key": "stochasticProperties.criticalFlawSize_ac.max",
-   "kind": "numeric",
-   "new": 11.8,
-   "old": 11.7,
-   "rel": 0.00854700854700867
+   "kind": "removed",
+   "new": null,
+   "old": 11.7
   },
   {
-   "abs": 0.09999999999999964,
    "key": "stochasticProperties.criticalFlawSize_ac.mean",
-   "kind": "numeric",
-   "new": 6.8,
-   "old": 6.7,
-   "rel": 0.014925373134328304
+   "kind": "removed",
+   "new": null,
+   "old": 6.7
   },
   {
-   "abs": -0.10000000000000053,
+   "key": "stochasticProperties.criticalFlawSize_ac.median_P50",
+   "kind": "removed",
+   "new": null,
+   "old": 6.6
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.min",
-   "kind": "numeric",
-   "new": 4.3,
-   "old": 4.4,
-   "rel": -0.022727272727272846
+   "kind": "removed",
+   "new": null,
+   "old": 4.4
   },
   {
-   "abs": -0.841,
+   "key": "stochasticProperties.criticalFlawSize_ac.mmpds_kA",
+   "kind": "removed",
+   "new": null,
+   "old": 2.475
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac.mmpds_kB",
+   "kind": "removed",
+   "new": null,
+   "old": 1.385
+  },
+  {
    "key": "stochasticProperties.criticalFlawSize_ac.skewness",
-   "kind": "numeric",
-   "new": 0.776,
-   "old": 1.617,
-   "rel": -0.5200989486703772
+   "kind": "removed",
+   "new": null,
+   "old": 1.617
   },
   {
-   "abs": 0.2300000000000001,
    "key": "stochasticProperties.criticalFlawSize_ac.stdDev",
-   "kind": "numeric",
-   "new": 1.12,
-   "old": 0.89,
-   "rel": 0.2584269662921349
+   "kind": "removed",
+   "new": null,
+   "old": 0.89
+  },
+  {
+   "key": "stochasticProperties.criticalFlawSize_ac_status",
+   "kind": "added",
+   "new": "unavailable: critical flaw size needs a sourced K_Ic; the former estimate was dimensionally unsupported",
+   "old": null
   },
   {
    "abs": 0.10000000000000142,
@@ -2224,2748 +2390,2428 @@
    "rel": 0.3
   },
   {
-   "abs": -0.10000000000002274,
+   "key": "stochasticProperties.fractureToughness_K1c",
+   "kind": "added",
+   "new": null,
+   "old": null
+  },
+  {
    "key": "stochasticProperties.fractureToughness_K1c.P01",
-   "kind": "numeric",
-   "new": 151.7,
-   "old": 151.8,
-   "rel": -0.0006587615283268955
+   "kind": "removed",
+   "new": null,
+   "old": 151.8
   },
   {
-   "abs": -0.30000000000001137,
    "key": "stochasticProperties.fractureToughness_K1c.P10",
-   "kind": "numeric",
-   "new": 152.6,
-   "old": 152.9,
-   "rel": -0.0019620667102682233
+   "kind": "removed",
+   "new": null,
+   "old": 152.9
   },
   {
-   "abs": 0.30000000000001137,
    "key": "stochasticProperties.fractureToughness_K1c.P90",
-   "kind": "numeric",
-   "new": 154.5,
-   "old": 154.2,
-   "rel": 0.0019455252918288677
+   "kind": "removed",
+   "new": null,
+   "old": 154.2
   },
   {
-   "abs": 0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.P99",
-   "kind": "numeric",
-   "new": 155.4,
-   "old": 155.3,
-   "rel": 0.0006439150032195384
+   "kind": "removed",
+   "new": null,
+   "old": 155.3
   },
   {
-   "abs": -0.5,
    "key": "stochasticProperties.fractureToughness_K1c.aBasisAllowable",
-   "kind": "numeric",
-   "new": 151.6,
-   "old": 152.1,
-   "rel": -0.003287310979618672
+   "kind": "removed",
+   "new": null,
+   "old": 152.1
   },
   {
-   "abs": -0.19999999999998863,
+   "key": "stochasticProperties.fractureToughness_K1c.aBasisConfidenceInterval95",
+   "kind": "removed",
+   "new": null,
+   "old": null
+  },
+  {
+   "key": "stochasticProperties.fractureToughness_K1c.allowableStandardError_A",
+   "kind": "removed",
+   "new": null,
+   "old": null
+  },
+  {
+   "key": "stochasticProperties.fractureToughness_K1c.allowableStandardError_B",
+   "kind": "removed",
+   "new": null,
+   "old": null
+  },
+  {
+   "key": "stochasticProperties.fractureToughness_K1c.allowableUncertaintyMethod",
+   "kind": "removed",
+   "new": null,
+   "old": "unavailable: independent randomized QMC replicates required"
+  },
+  {
    "key": "stochasticProperties.fractureToughness_K1c.bBasisAllowable",
-   "kind": "numeric",
-   "new": 152.5,
-   "old": 152.7,
-   "rel": -0.0013097576948263828
+   "kind": "removed",
+   "new": null,
+   "old": 152.7
   },
   {
-   "abs": -0.09999999999999432,
+   "key": "stochasticProperties.fractureToughness_K1c.bBasisConfidenceInterval95",
+   "kind": "removed",
+   "new": null,
+   "old": null
+  },
+  {
    "key": "stochasticProperties.fractureToughness_K1c.ci95Lower_P2_5",
-   "kind": "numeric",
-   "new": 152.0,
-   "old": 152.1,
-   "rel": -0.000657462195923697
+   "kind": "removed",
+   "new": null,
+   "old": 152.1
   },
   {
-   "abs": 0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.ci95Upper_P97_5",
-   "kind": "numeric",
-   "new": 155.0,
-   "old": 154.9,
-   "rel": 0.0006455777921239142
+   "kind": "removed",
+   "new": null,
+   "old": 154.9
   },
   {
-   "abs": 0.12,
+   "key": "stochasticProperties.fractureToughness_K1c.conformancePct",
+   "kind": "removed",
+   "new": null,
+   "old": 100.0
+  },
+  {
    "key": "stochasticProperties.fractureToughness_K1c.covPct",
-   "kind": "numeric",
-   "new": 0.51,
-   "old": 0.39,
-   "rel": 0.30769230769230765
+   "kind": "removed",
+   "new": null,
+   "old": 0.39
   },
   {
-   "abs": -12.629999999999995,
    "key": "stochasticProperties.fractureToughness_K1c.cpk",
-   "kind": "numeric",
-   "new": 40.09,
-   "old": 52.72,
-   "rel": -0.23956752655538688
+   "kind": "removed",
+   "new": null,
+   "old": 52.72
   },
   {
-   "abs": -0.19999999999998863,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[0].binCenter",
-   "kind": "numeric",
-   "new": 151.5,
-   "old": 151.7,
-   "rel": -0.0013183915622939264
+   "kind": "removed",
+   "new": null,
+   "old": 151.7
   },
   {
-   "abs": -0.19999999999998863,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[0].binEnd",
-   "kind": "numeric",
-   "new": 151.5,
-   "old": 151.7,
-   "rel": -0.0013183915622939264
+   "kind": "removed",
+   "new": null,
+   "old": 151.7
   },
   {
-   "abs": -0.19999999999998863,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[0].binStart",
-   "kind": "numeric",
-   "new": 151.4,
-   "old": 151.6,
-   "rel": -0.0013192612137202418
+   "kind": "removed",
+   "new": null,
+   "old": 151.6
   },
   {
-   "abs": 1,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[0].count",
-   "kind": "numeric",
-   "new": 3,
-   "old": 2,
-   "rel": 0.5
+   "kind": "removed",
+   "new": null,
+   "old": 2
   },
   {
-   "abs": 0.19999999999999996,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[0].cumulativePct",
-   "kind": "numeric",
-   "new": 0.6,
-   "old": 0.4,
-   "rel": 0.4999999999999999
+   "kind": "removed",
+   "new": null,
+   "old": 0.4
   },
   {
-   "abs": 0.00895,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[0].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.032958,
-   "old": 0.024008,
-   "rel": 0.37279240253248913
+   "kind": "removed",
+   "new": null,
+   "old": 0.024008
   },
   {
-   "abs": 0.009690999999999998,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[0].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.014103,
-   "old": 0.004412,
-   "rel": 2.1965095194922934
+   "kind": "removed",
+   "new": null,
+   "old": 0.004412
   },
   {
-   "abs": -52,
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[10].binCenter",
+   "kind": "removed",
+   "new": null,
+   "old": 153.3
+  },
+  {
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[10].binEnd",
+   "kind": "removed",
+   "new": null,
+   "old": 153.4
+  },
+  {
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[10].binStart",
+   "kind": "removed",
+   "new": null,
+   "old": 153.2
+  },
+  {
    "key": "stochasticProperties.fractureToughness_K1c.histogram[10].count",
-   "kind": "numeric",
-   "new": 43,
-   "old": 95,
-   "rel": -0.5473684210526316
+   "kind": "removed",
+   "new": null,
+   "old": 95
   },
   {
-   "abs": 8.0,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[10].cumulativePct",
-   "kind": "numeric",
-   "new": 41.4,
-   "old": 33.4,
-   "rel": 0.23952095808383234
+   "kind": "removed",
+   "new": null,
+   "old": 33.4
   },
   {
-   "abs": -0.6679660000000001,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[10].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.472392,
-   "old": 1.140358,
-   "rel": -0.5857511413082559
+   "kind": "removed",
+   "new": null,
+   "old": 1.140358
   },
   {
-   "abs": -0.14928000000000002,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[10].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.484091,
-   "old": 0.633371,
-   "rel": -0.23569124573117498
+   "kind": "removed",
+   "new": null,
+   "old": 0.633371
   },
   {
-   "abs": -0.09999999999999432,
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[11].binCenter",
+   "kind": "removed",
+   "new": null,
+   "old": 153.5
+  },
+  {
    "key": "stochasticProperties.fractureToughness_K1c.histogram[11].binEnd",
-   "kind": "numeric",
-   "new": 153.5,
-   "old": 153.6,
-   "rel": -0.0006510416666666297
+   "kind": "removed",
+   "new": null,
+   "old": 153.6
   },
   {
-   "abs": -59,
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[11].binStart",
+   "kind": "removed",
+   "new": null,
+   "old": 153.4
+  },
+  {
    "key": "stochasticProperties.fractureToughness_K1c.histogram[11].count",
-   "kind": "numeric",
-   "new": 48,
-   "old": 107,
-   "rel": -0.5514018691588785
+   "kind": "removed",
+   "new": null,
+   "old": 107
   },
   {
-   "abs": -3.799999999999997,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[11].cumulativePct",
-   "kind": "numeric",
-   "new": 51.0,
-   "old": 54.8,
-   "rel": -0.06934306569343061
+   "kind": "removed",
+   "new": null,
+   "old": 54.8
   },
   {
-   "abs": -0.7570819999999999,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[11].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.527321,
-   "old": 1.284403,
-   "rel": -0.5894427216379905
+   "kind": "removed",
+   "new": null,
+   "old": 1.284403
   },
   {
-   "abs": -0.16264299999999998,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[11].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.510054,
-   "old": 0.672697,
-   "rel": -0.241777501609194
+   "kind": "removed",
+   "new": null,
+   "old": 0.672697
   },
   {
-   "abs": -0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[12].binCenter",
-   "kind": "numeric",
-   "new": 153.6,
-   "old": 153.7,
-   "rel": -0.0006506180871827868
+   "kind": "removed",
+   "new": null,
+   "old": 153.7
   },
   {
-   "abs": -0.09999999999999432,
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[12].binEnd",
+   "kind": "removed",
+   "new": null,
+   "old": 153.7
+  },
+  {
    "key": "stochasticProperties.fractureToughness_K1c.histogram[12].binStart",
-   "kind": "numeric",
-   "new": 153.5,
-   "old": 153.6,
-   "rel": -0.0006510416666666297
+   "kind": "removed",
+   "new": null,
+   "old": 153.6
   },
   {
-   "abs": -81,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[12].count",
-   "kind": "numeric",
-   "new": 44,
-   "old": 125,
-   "rel": -0.648
+   "kind": "removed",
+   "new": null,
+   "old": 125
   },
   {
-   "abs": -20.0,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[12].cumulativePct",
-   "kind": "numeric",
-   "new": 59.8,
-   "old": 79.8,
-   "rel": -0.2506265664160401
+   "kind": "removed",
+   "new": null,
+   "old": 79.8
   },
   {
-   "abs": -1.0170940000000002,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[12].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.483377,
-   "old": 1.500471,
-   "rel": -0.6778498218226144
+   "kind": "removed",
+   "new": null,
+   "old": 1.500471
   },
   {
-   "abs": -0.15120500000000003,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[12].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.508757,
-   "old": 0.659962,
-   "rel": -0.22911167612680733
+   "kind": "removed",
+   "new": null,
+   "old": 0.659962
   },
   {
-   "abs": 8,
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[13].binCenter",
+   "kind": "removed",
+   "new": null,
+   "old": 153.8
+  },
+  {
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[13].binEnd",
+   "kind": "removed",
+   "new": null,
+   "old": 153.9
+  },
+  {
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[13].binStart",
+   "kind": "removed",
+   "new": null,
+   "old": 153.7
+  },
+  {
    "key": "stochasticProperties.fractureToughness_K1c.histogram[13].count",
-   "kind": "numeric",
-   "new": 46,
-   "old": 38,
-   "rel": 0.21052631578947367
+   "kind": "removed",
+   "new": null,
+   "old": 38
   },
   {
-   "abs": -18.400000000000006,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[13].cumulativePct",
-   "kind": "numeric",
-   "new": 69.0,
-   "old": 87.4,
-   "rel": -0.21052631578947373
+   "kind": "removed",
+   "new": null,
+   "old": 87.4
   },
   {
-   "abs": 0.04920600000000003,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[13].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.505349,
-   "old": 0.456143,
-   "rel": 0.10787406580831017
+   "kind": "removed",
+   "new": null,
+   "old": 0.456143
   },
   {
-   "abs": -0.11766800000000005,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[13].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.480407,
-   "old": 0.598075,
-   "rel": -0.19674455544873143
+   "kind": "removed",
+   "new": null,
+   "old": 0.598075
   },
   {
-   "abs": 29,
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[14].binCenter",
+   "kind": "removed",
+   "new": null,
+   "old": 154.0
+  },
+  {
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[14].binEnd",
+   "kind": "removed",
+   "new": null,
+   "old": 154.1
+  },
+  {
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[14].binStart",
+   "kind": "removed",
+   "new": null,
+   "old": 153.9
+  },
+  {
    "key": "stochasticProperties.fractureToughness_K1c.histogram[14].count",
-   "kind": "numeric",
-   "new": 35,
-   "old": 6,
-   "rel": 4.833333333333333
+   "kind": "removed",
+   "new": null,
+   "old": 6
   },
   {
-   "abs": -12.599999999999994,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[14].cumulativePct",
-   "kind": "numeric",
-   "new": 76.0,
-   "old": 88.6,
-   "rel": -0.14221218961625276
+   "kind": "removed",
+   "new": null,
+   "old": 88.6
   },
   {
-   "abs": 0.312482,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[14].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.384505,
-   "old": 0.072023,
-   "rel": 4.3386418227510655
+   "kind": "removed",
+   "new": null,
+   "old": 0.072023
   },
   {
-   "abs": -0.07119500000000001,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[14].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.429451,
-   "old": 0.500646,
-   "rel": -0.14220626949980625
+   "kind": "removed",
+   "new": null,
+   "old": 0.500646
   },
   {
-   "abs": 0.10000000000002274,
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[15].binCenter",
+   "kind": "removed",
+   "new": null,
+   "old": 154.2
+  },
+  {
    "key": "stochasticProperties.fractureToughness_K1c.histogram[15].binEnd",
-   "kind": "numeric",
-   "new": 154.3,
-   "old": 154.2,
-   "rel": 0.0006485084306097455
+   "kind": "removed",
+   "new": null,
+   "old": 154.2
   },
   {
-   "abs": 17,
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[15].binStart",
+   "kind": "removed",
+   "new": null,
+   "old": 154.1
+  },
+  {
    "key": "stochasticProperties.fractureToughness_K1c.histogram[15].count",
-   "kind": "numeric",
-   "new": 31,
-   "old": 14,
-   "rel": 1.2142857142857142
+   "kind": "removed",
+   "new": null,
+   "old": 14
   },
   {
-   "abs": -9.200000000000003,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[15].cumulativePct",
-   "kind": "numeric",
-   "new": 82.2,
-   "old": 91.4,
-   "rel": -0.10065645514223197
+   "kind": "removed",
+   "new": null,
+   "old": 91.4
   },
   {
-   "abs": 0.172508,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[15].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.340561,
-   "old": 0.168053,
-   "rel": 1.0265094940286694
+   "kind": "removed",
+   "new": null,
+   "old": 0.168053
   },
   {
-   "abs": -0.02368600000000004,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[15].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.363432,
-   "old": 0.387118,
-   "rel": -0.061185478329605025
+   "kind": "removed",
+   "new": null,
+   "old": 0.387118
   },
   {
-   "abs": 0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[16].binCenter",
-   "kind": "numeric",
-   "new": 154.4,
-   "old": 154.3,
-   "rel": 0.0006480881399870014
+   "kind": "removed",
+   "new": null,
+   "old": 154.3
   },
   {
-   "abs": 0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[16].binEnd",
-   "kind": "numeric",
-   "new": 154.5,
-   "old": 154.4,
-   "rel": 0.0006476683937823466
+   "kind": "removed",
+   "new": null,
+   "old": 154.4
   },
   {
-   "abs": 0.10000000000002274,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[16].binStart",
-   "kind": "numeric",
-   "new": 154.3,
-   "old": 154.2,
-   "rel": 0.0006485084306097455
+   "kind": "removed",
+   "new": null,
+   "old": 154.2
   },
   {
-   "abs": 22,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[16].count",
-   "kind": "numeric",
-   "new": 26,
-   "old": 4,
-   "rel": 5.5
+   "kind": "removed",
+   "new": null,
+   "old": 4
   },
   {
-   "abs": -4.799999999999997,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[16].cumulativePct",
-   "kind": "numeric",
-   "new": 87.4,
-   "old": 92.2,
-   "rel": -0.05206073752711494
+   "kind": "removed",
+   "new": null,
+   "old": 92.2
   },
   {
-   "abs": 0.237617,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[16].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.285632,
-   "old": 0.048015,
-   "rel": 4.948807664271581
+   "kind": "removed",
+   "new": null,
+   "old": 0.048015
   },
   {
-   "abs": 0.014664999999999984,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[16].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.291164,
-   "old": 0.276499,
-   "rel": 0.0530381665033146
+   "kind": "removed",
+   "new": null,
+   "old": 0.276499
   },
   {
-   "abs": 0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[17].binCenter",
-   "kind": "numeric",
-   "new": 154.6,
-   "old": 154.5,
-   "rel": 0.0006472491909384746
+   "kind": "removed",
+   "new": null,
+   "old": 154.5
   },
   {
-   "abs": 0.09999999999999432,
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[17].binEnd",
+   "kind": "removed",
+   "new": null,
+   "old": 154.6
+  },
+  {
    "key": "stochasticProperties.fractureToughness_K1c.histogram[17].binStart",
-   "kind": "numeric",
-   "new": 154.5,
-   "old": 154.4,
-   "rel": 0.0006476683937823466
+   "kind": "removed",
+   "new": null,
+   "old": 154.4
   },
   {
-   "abs": 15,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[17].count",
-   "kind": "numeric",
-   "new": 24,
-   "old": 9,
-   "rel": 1.6666666666666667
+   "kind": "removed",
+   "new": null,
+   "old": 9
   },
   {
-   "abs": -1.7999999999999972,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[17].cumulativePct",
-   "kind": "numeric",
-   "new": 92.2,
-   "old": 94.0,
-   "rel": -0.019148936170212735
+   "kind": "removed",
+   "new": null,
+   "old": 94.0
   },
   {
-   "abs": 0.155626,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[17].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.26366,
-   "old": 0.108034,
-   "rel": 1.440527981931614
+   "kind": "removed",
+   "new": null,
+   "old": 0.108034
   },
   {
-   "abs": 0.038405999999999996,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[17].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.22083,
-   "old": 0.182424,
-   "rel": 0.2105315090119721
+   "kind": "removed",
+   "new": null,
+   "old": 0.182424
   },
   {
-   "abs": 0.10000000000002274,
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[18].binCenter",
+   "kind": "removed",
+   "new": null,
+   "old": 154.7
+  },
+  {
    "key": "stochasticProperties.fractureToughness_K1c.histogram[18].binEnd",
-   "kind": "numeric",
-   "new": 154.8,
-   "old": 154.7,
-   "rel": 0.0006464124111184405
+   "kind": "removed",
+   "new": null,
+   "old": 154.7
   },
   {
-   "abs": 5,
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[18].binStart",
+   "kind": "removed",
+   "new": null,
+   "old": 154.6
+  },
+  {
    "key": "stochasticProperties.fractureToughness_K1c.histogram[18].count",
-   "kind": "numeric",
-   "new": 14,
-   "old": 9,
-   "rel": 0.5555555555555556
+   "kind": "removed",
+   "new": null,
+   "old": 9
   },
   {
-   "abs": -0.7999999999999972,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[18].cumulativePct",
-   "kind": "numeric",
-   "new": 95.0,
-   "old": 95.8,
-   "rel": -0.008350730688935253
+   "kind": "removed",
+   "new": null,
+   "old": 95.8
   },
   {
-   "abs": 0.04576799999999999,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[18].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.153802,
-   "old": 0.108034,
-   "rel": 0.4236444082418497
+   "kind": "removed",
+   "new": null,
+   "old": 0.108034
   },
   {
-   "abs": 0.047381000000000006,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[18].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.158556,
-   "old": 0.111175,
-   "rel": 0.4261839442320666
+   "kind": "removed",
+   "new": null,
+   "old": 0.111175
   },
   {
-   "abs": 0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[19].binCenter",
-   "kind": "numeric",
-   "new": 154.9,
-   "old": 154.8,
-   "rel": 0.0006459948320413069
+   "kind": "removed",
+   "new": null,
+   "old": 154.8
   },
   {
-   "abs": 0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[19].binEnd",
-   "kind": "numeric",
-   "new": 155.0,
-   "old": 154.9,
-   "rel": 0.0006455777921239142
+   "kind": "removed",
+   "new": null,
+   "old": 154.9
   },
   {
-   "abs": 0.10000000000002274,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[19].binStart",
-   "kind": "numeric",
-   "new": 154.8,
-   "old": 154.7,
-   "rel": 0.0006464124111184405
+   "kind": "removed",
+   "new": null,
+   "old": 154.7
   },
   {
-   "abs": 4,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[19].count",
-   "kind": "numeric",
-   "new": 11,
-   "old": 7,
-   "rel": 0.5714285714285714
+   "kind": "removed",
+   "new": null,
+   "old": 7
   },
   {
-   "abs": 0.03681799999999999,
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[19].cumulativePct",
+   "kind": "removed",
+   "new": null,
+   "old": 97.2
+  },
+  {
    "key": "stochasticProperties.fractureToughness_K1c.histogram[19].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.120844,
-   "old": 0.084026,
-   "rel": 0.43817389855520894
+   "kind": "removed",
+   "new": null,
+   "old": 0.084026
   },
   {
-   "abs": 0.04518899999999999,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[19].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.107774,
-   "old": 0.062585,
-   "rel": 0.7220420228489254
+   "kind": "removed",
+   "new": null,
+   "old": 0.062585
   },
   {
-   "abs": -0.20000000000001705,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[1].binCenter",
-   "kind": "numeric",
-   "new": 151.6,
-   "old": 151.8,
-   "rel": -0.0013175230566536036
+   "kind": "removed",
+   "new": null,
+   "old": 151.8
   },
   {
-   "abs": -0.20000000000001705,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[1].binEnd",
-   "kind": "numeric",
-   "new": 151.7,
-   "old": 151.9,
-   "rel": -0.0013166556945359911
+   "kind": "removed",
+   "new": null,
+   "old": 151.9
   },
   {
-   "abs": -0.19999999999998863,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[1].binStart",
-   "kind": "numeric",
-   "new": 151.5,
-   "old": 151.7,
-   "rel": -0.0013183915622939264
+   "kind": "removed",
+   "new": null,
+   "old": 151.7
   },
   {
-   "abs": -4,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[1].count",
-   "kind": "numeric",
-   "new": 2,
-   "old": 6,
-   "rel": -0.6666666666666666
+   "kind": "removed",
+   "new": null,
+   "old": 6
   },
   {
-   "abs": -0.6000000000000001,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[1].cumulativePct",
-   "kind": "numeric",
-   "new": 1.0,
-   "old": 1.6,
-   "rel": -0.37500000000000006
+   "kind": "removed",
+   "new": null,
+   "old": 1.6
   },
   {
-   "abs": -0.050051000000000005,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[1].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.021972,
-   "old": 0.072023,
-   "rel": -0.694930785998917
+   "kind": "removed",
+   "new": null,
+   "old": 0.072023
   },
   {
-   "abs": 0.015340000000000001,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[1].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.025701,
-   "old": 0.010361,
-   "rel": 1.4805520702634882
+   "kind": "removed",
+   "new": null,
+   "old": 0.010361
   },
   {
-   "abs": 0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[20].binCenter",
-   "kind": "numeric",
-   "new": 155.1,
-   "old": 155.0,
-   "rel": 0.000645161290322544
+   "kind": "removed",
+   "new": null,
+   "old": 155.0
   },
   {
-   "abs": 0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[20].binEnd",
-   "kind": "numeric",
-   "new": 155.2,
-   "old": 155.1,
-   "rel": 0.0006447453255963528
+   "kind": "removed",
+   "new": null,
+   "old": 155.1
   },
   {
-   "abs": 0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[20].binStart",
-   "kind": "numeric",
-   "new": 155.0,
-   "old": 154.9,
-   "rel": 0.0006455777921239142
+   "kind": "removed",
+   "new": null,
+   "old": 154.9
   },
   {
-   "abs": 4,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[20].count",
-   "kind": "numeric",
-   "new": 6,
-   "old": 2,
-   "rel": 2.0
+   "kind": "removed",
+   "new": null,
+   "old": 2
   },
   {
-   "abs": 0.8000000000000114,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[20].cumulativePct",
-   "kind": "numeric",
-   "new": 98.4,
-   "old": 97.6,
-   "rel": 0.008196721311475526
+   "kind": "removed",
+   "new": null,
+   "old": 97.6
   },
   {
-   "abs": 0.041907,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[20].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.065915,
-   "old": 0.024008,
-   "rel": 1.7455431522825724
+   "kind": "removed",
+   "new": null,
+   "old": 0.024008
   },
   {
-   "abs": 0.036806,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[20].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.06935,
-   "old": 0.032544,
-   "rel": 1.1309611602753196
+   "kind": "removed",
+   "new": null,
+   "old": 0.032544
   },
   {
-   "abs": 0.10000000000002274,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[21].binCenter",
-   "kind": "numeric",
-   "new": 155.3,
-   "old": 155.2,
-   "rel": 0.0006443298969073631
+   "kind": "removed",
+   "new": null,
+   "old": 155.2
   },
   {
-   "abs": 0.20000000000001705,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[21].binEnd",
-   "kind": "numeric",
-   "new": 155.4,
-   "old": 155.2,
-   "rel": 0.001288659793814543
+   "kind": "removed",
+   "new": null,
+   "old": 155.2
   },
   {
-   "abs": 0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[21].binStart",
-   "kind": "numeric",
-   "new": 155.2,
-   "old": 155.1,
-   "rel": 0.0006447453255963528
+   "kind": "removed",
+   "new": null,
+   "old": 155.1
   },
   {
-   "abs": -4,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[21].count",
-   "kind": "numeric",
-   "new": 1,
-   "old": 5,
-   "rel": -0.8
+   "kind": "removed",
+   "new": null,
+   "old": 5
   },
   {
-   "abs": -0.04903300000000001,
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[21].cumulativePct",
+   "kind": "removed",
+   "new": null,
+   "old": 98.6
+  },
+  {
    "key": "stochasticProperties.fractureToughness_K1c.histogram[21].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.010986,
-   "old": 0.060019,
-   "rel": -0.8169579633116181
+   "kind": "removed",
+   "new": null,
+   "old": 0.060019
   },
   {
-   "abs": 0.026614,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[21].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.042246,
-   "old": 0.015632,
-   "rel": 1.7025332650972365
+   "kind": "removed",
+   "new": null,
+   "old": 0.015632
   },
   {
-   "abs": 0.19999999999998863,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[22].binCenter",
-   "kind": "numeric",
-   "new": 155.5,
-   "old": 155.3,
-   "rel": 0.0012878300064390767
+   "kind": "removed",
+   "new": null,
+   "old": 155.3
   },
   {
-   "abs": 0.19999999999998863,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[22].binEnd",
-   "kind": "numeric",
-   "new": 155.6,
-   "old": 155.4,
-   "rel": 0.0012870012870012139
+   "kind": "removed",
+   "new": null,
+   "old": 155.4
   },
   {
-   "abs": 0.20000000000001705,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[22].binStart",
-   "kind": "numeric",
-   "new": 155.4,
-   "old": 155.2,
-   "rel": 0.001288659793814543
+   "kind": "removed",
+   "new": null,
+   "old": 155.2
   },
   {
-   "abs": -0.005090000000000004,
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[22].count",
+   "kind": "removed",
+   "new": null,
+   "old": 5
+  },
+  {
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[22].cumulativePct",
+   "kind": "removed",
+   "new": null,
+   "old": 99.6
+  },
+  {
    "key": "stochasticProperties.fractureToughness_K1c.histogram[22].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.054929,
-   "old": 0.060019,
-   "rel": -0.08480647794864966
+   "kind": "removed",
+   "new": null,
+   "old": 0.060019
   },
   {
-   "abs": 0.017426999999999998,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[22].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.024363,
-   "old": 0.006936,
-   "rel": 2.5125432525951554
+   "kind": "removed",
+   "new": null,
+   "old": 0.006936
   },
   {
-   "abs": 0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[23].binCenter",
-   "kind": "numeric",
-   "new": 155.6,
-   "old": 155.5,
-   "rel": 0.0006430868167202207
+   "kind": "removed",
+   "new": null,
+   "old": 155.5
   },
   {
-   "abs": 0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[23].binEnd",
-   "kind": "numeric",
-   "new": 155.7,
-   "old": 155.6,
-   "rel": 0.0006426735218508633
+   "kind": "removed",
+   "new": null,
+   "old": 155.6
   },
   {
-   "abs": 0.19999999999998863,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[23].binStart",
-   "kind": "numeric",
-   "new": 155.6,
-   "old": 155.4,
-   "rel": 0.0012870012870012139
+   "kind": "removed",
+   "new": null,
+   "old": 155.4
   },
   {
-   "abs": -0.0010180000000000015,
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[23].count",
+   "kind": "removed",
+   "new": null,
+   "old": 1
+  },
+  {
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[23].cumulativePct",
+   "kind": "removed",
+   "new": null,
+   "old": 99.8
+  },
+  {
    "key": "stochasticProperties.fractureToughness_K1c.histogram[23].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.010986,
-   "old": 0.012004,
-   "rel": -0.08480506497834067
+   "kind": "removed",
+   "new": null,
+   "old": 0.012004
   },
   {
-   "abs": 0.010458,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[23].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.013301,
-   "old": 0.002843,
-   "rel": 3.6785086176574042
+   "kind": "removed",
+   "new": null,
+   "old": 0.002843
   },
   {
-   "abs": 0.10000000000002274,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[24].binCenter",
-   "kind": "numeric",
-   "new": 155.8,
-   "old": 155.7,
-   "rel": 0.0006422607578678404
+   "kind": "removed",
+   "new": null,
+   "old": 155.7
   },
   {
-   "abs": 0.20000000000001705,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[24].binEnd",
-   "kind": "numeric",
-   "new": 155.9,
-   "old": 155.7,
-   "rel": 0.0012845215157354982
+   "kind": "removed",
+   "new": null,
+   "old": 155.7
   },
   {
-   "abs": 0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[24].binStart",
-   "kind": "numeric",
-   "new": 155.7,
-   "old": 155.6,
-   "rel": 0.0006426735218508633
+   "kind": "removed",
+   "new": null,
+   "old": 155.6
   },
   {
-   "abs": -0.0010180000000000015,
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[24].count",
+   "kind": "removed",
+   "new": null,
+   "old": 1
+  },
+  {
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[24].cumulativePct",
+   "kind": "removed",
+   "new": null,
+   "old": 100.0
+  },
+  {
    "key": "stochasticProperties.fractureToughness_K1c.histogram[24].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.010986,
-   "old": 0.012004,
-   "rel": -0.08480506497834067
+   "kind": "removed",
+   "new": null,
+   "old": 0.012004
   },
   {
-   "abs": 0.005798,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[24].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.006874,
-   "old": 0.001076,
-   "rel": 5.388475836431227
+   "kind": "removed",
+   "new": null,
+   "old": 0.001076
   },
   {
-   "abs": -0.19999999999998863,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[2].binCenter",
-   "kind": "numeric",
-   "new": 151.8,
-   "old": 152.0,
-   "rel": -0.0013157894736841357
+   "kind": "removed",
+   "new": null,
+   "old": 152.0
   },
   {
-   "abs": -0.19999999999998863,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[2].binEnd",
-   "kind": "numeric",
-   "new": 151.9,
-   "old": 152.1,
-   "rel": -0.001314924391847394
+   "kind": "removed",
+   "new": null,
+   "old": 152.1
   },
   {
-   "abs": -0.20000000000001705,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[2].binStart",
-   "kind": "numeric",
-   "new": 151.7,
-   "old": 151.9,
-   "rel": -0.0013166556945359911
+   "kind": "removed",
+   "new": null,
+   "old": 151.9
   },
   {
-   "abs": 3,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[2].count",
-   "kind": "numeric",
-   "new": 6,
-   "old": 3,
-   "rel": 1.0
+   "kind": "removed",
+   "new": null,
+   "old": 3
   },
   {
-   "abs": 0.029904,
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[2].cumulativePct",
+   "kind": "removed",
+   "new": null,
+   "old": 2.2
+  },
+  {
    "key": "stochasticProperties.fractureToughness_K1c.histogram[2].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.065915,
-   "old": 0.036011,
-   "rel": 0.8304129293826886
+   "kind": "removed",
+   "new": null,
+   "old": 0.036011
   },
   {
-   "abs": 0.021862999999999997,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[2].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.04434,
-   "old": 0.022477,
-   "rel": 0.9726831872580859
+   "kind": "removed",
+   "new": null,
+   "old": 0.022477
   },
   {
-   "abs": -0.19999999999998863,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[3].binCenter",
-   "kind": "numeric",
-   "new": 152.0,
-   "old": 152.2,
-   "rel": -0.0013140604467804773
+   "kind": "removed",
+   "new": null,
+   "old": 152.2
   },
   {
-   "abs": -0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[3].binEnd",
-   "kind": "numeric",
-   "new": 152.1,
-   "old": 152.2,
-   "rel": -0.0006570302233902387
+   "kind": "removed",
+   "new": null,
+   "old": 152.2
   },
   {
-   "abs": -0.19999999999998863,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[3].binStart",
-   "kind": "numeric",
-   "new": 151.9,
-   "old": 152.1,
-   "rel": -0.001314924391847394
+   "kind": "removed",
+   "new": null,
+   "old": 152.1
   },
   {
-   "abs": -2,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[3].count",
-   "kind": "numeric",
-   "new": 5,
-   "old": 7,
-   "rel": -0.2857142857142857
+   "kind": "removed",
+   "new": null,
+   "old": 7
   },
   {
-   "abs": -0.3999999999999999,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[3].cumulativePct",
-   "kind": "numeric",
-   "new": 3.2,
-   "old": 3.6,
-   "rel": -0.11111111111111108
+   "kind": "removed",
+   "new": null,
+   "old": 3.6
   },
   {
-   "abs": -0.029097000000000005,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[3].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.054929,
-   "old": 0.084026,
-   "rel": -0.3462856734820175
+   "kind": "removed",
+   "new": null,
+   "old": 0.084026
   },
   {
-   "abs": 0.027378999999999994,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[3].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.072418,
-   "old": 0.045039,
-   "rel": 0.6078953795599368
+   "kind": "removed",
+   "new": null,
+   "old": 0.045039
   },
   {
-   "abs": -0.10000000000002274,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[4].binCenter",
-   "kind": "numeric",
-   "new": 152.2,
-   "old": 152.3,
-   "rel": -0.0006565988181222766
+   "kind": "removed",
+   "new": null,
+   "old": 152.3
   },
   {
-   "abs": -0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[4].binEnd",
-   "kind": "numeric",
-   "new": 152.3,
-   "old": 152.4,
-   "rel": -0.0006561679790025874
+   "kind": "removed",
+   "new": null,
+   "old": 152.4
   },
   {
-   "abs": -0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[4].binStart",
-   "kind": "numeric",
-   "new": 152.1,
-   "old": 152.2,
-   "rel": -0.0006570302233902387
+   "kind": "removed",
+   "new": null,
+   "old": 152.2
   },
   {
-   "abs": 1,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[4].count",
-   "kind": "numeric",
-   "new": 10,
-   "old": 9,
-   "rel": 0.1111111111111111
+   "kind": "removed",
+   "new": null,
+   "old": 9
   },
   {
-   "abs": -0.20000000000000018,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[4].cumulativePct",
-   "kind": "numeric",
-   "new": 5.2,
-   "old": 5.4,
-   "rel": -0.03703703703703707
+   "kind": "removed",
+   "new": null,
+   "old": 5.4
   },
   {
-   "abs": 0.0018239999999999923,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[4].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.109858,
-   "old": 0.108034,
-   "rel": 0.016883573689764262
+   "kind": "removed",
+   "new": null,
+   "old": 0.108034
   },
   {
-   "abs": 0.028605000000000005,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[4].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.11197,
-   "old": 0.083365,
-   "rel": 0.34312961074791587
+   "kind": "removed",
+   "new": null,
+   "old": 0.083365
   },
   {
-   "abs": -0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[5].binCenter",
-   "kind": "numeric",
-   "new": 152.4,
-   "old": 152.5,
-   "rel": -0.0006557377049179955
+   "kind": "removed",
+   "new": null,
+   "old": 152.5
   },
   {
-   "abs": -0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[5].binEnd",
-   "kind": "numeric",
-   "new": 152.5,
-   "old": 152.6,
-   "rel": -0.0006553079947574989
+   "kind": "removed",
+   "new": null,
+   "old": 152.6
   },
   {
-   "abs": -0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[5].binStart",
-   "kind": "numeric",
-   "new": 152.3,
-   "old": 152.4,
-   "rel": -0.0006561679790025874
+   "kind": "removed",
+   "new": null,
+   "old": 152.4
   },
   {
-   "abs": 5,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[5].count",
-   "kind": "numeric",
-   "new": 15,
-   "old": 10,
-   "rel": 0.5
+   "kind": "removed",
+   "new": null,
+   "old": 10
   },
   {
-   "abs": 0.7999999999999989,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[5].cumulativePct",
-   "kind": "numeric",
-   "new": 8.2,
-   "old": 7.4,
-   "rel": 0.10810810810810796
+   "kind": "removed",
+   "new": null,
+   "old": 7.4
   },
   {
-   "abs": 0.044749999999999984,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[5].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.164788,
-   "old": 0.120038,
-   "rel": 0.3727986137723053
+   "kind": "removed",
+   "new": null,
+   "old": 0.120038
   },
   {
-   "abs": 0.021358000000000016,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[5].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.163892,
-   "old": 0.142534,
-   "rel": 0.14984494927526076
+   "kind": "removed",
+   "new": null,
+   "old": 0.142534
   },
   {
-   "abs": -0.19999999999998863,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[6].binCenter",
-   "kind": "numeric",
-   "new": 152.5,
-   "old": 152.7,
-   "rel": -0.0013097576948263828
+   "kind": "removed",
+   "new": null,
+   "old": 152.7
   },
   {
-   "abs": -0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[6].binEnd",
-   "kind": "numeric",
-   "new": 152.6,
-   "old": 152.7,
-   "rel": -0.0006548788474131914
+   "kind": "removed",
+   "new": null,
+   "old": 152.7
   },
   {
-   "abs": -0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[6].binStart",
-   "kind": "numeric",
-   "new": 152.5,
-   "old": 152.6,
-   "rel": -0.0006553079947574989
+   "kind": "removed",
+   "new": null,
+   "old": 152.6
   },
   {
-   "abs": 15,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[6].count",
-   "kind": "numeric",
-   "new": 18,
-   "old": 3,
-   "rel": 5.0
+   "kind": "removed",
+   "new": null,
+   "old": 3
   },
   {
-   "abs": 3.8000000000000007,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[6].cumulativePct",
-   "kind": "numeric",
-   "new": 11.8,
-   "old": 8.0,
-   "rel": 0.4750000000000001
+   "kind": "removed",
+   "new": null,
+   "old": 8.0
   },
   {
-   "abs": 0.161734,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[6].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.197745,
-   "old": 0.036011,
-   "rel": 4.491238788148065
+   "kind": "removed",
+   "new": null,
+   "old": 0.036011
   },
   {
-   "abs": 0.0019949999999999968,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[6].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.227103,
-   "old": 0.225108,
-   "rel": 0.00886241270856654
+   "kind": "removed",
+   "new": null,
+   "old": 0.225108
   },
   {
-   "abs": -0.10000000000002274,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[7].binCenter",
-   "kind": "numeric",
-   "new": 152.7,
-   "old": 152.8,
-   "rel": -0.0006544502617802535
+   "kind": "removed",
+   "new": null,
+   "old": 152.8
   },
   {
-   "abs": -0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[7].binEnd",
-   "kind": "numeric",
-   "new": 152.8,
-   "old": 152.9,
-   "rel": -0.0006540222367560125
+   "kind": "removed",
+   "new": null,
+   "old": 152.9
   },
   {
-   "abs": -0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[7].binStart",
-   "kind": "numeric",
-   "new": 152.6,
-   "old": 152.7,
-   "rel": -0.0006548788474131914
+   "kind": "removed",
+   "new": null,
+   "old": 152.7
   },
   {
-   "abs": 18,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[7].count",
-   "kind": "numeric",
-   "new": 27,
-   "old": 9,
-   "rel": 2.0
+   "kind": "removed",
+   "new": null,
+   "old": 9
   },
   {
-   "abs": 7.399999999999999,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[7].cumulativePct",
-   "kind": "numeric",
-   "new": 17.2,
-   "old": 9.8,
-   "rel": 0.7551020408163264
+   "kind": "removed",
+   "new": null,
+   "old": 9.8
   },
   {
-   "abs": 0.18858399999999997,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[7].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.296618,
-   "old": 0.108034,
-   "rel": 1.745598607845678
+   "kind": "removed",
+   "new": null,
+   "old": 0.108034
   },
   {
-   "abs": -0.03048400000000001,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[7].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.297914,
-   "old": 0.328398,
-   "rel": -0.09282638749322471
+   "kind": "removed",
+   "new": null,
+   "old": 0.328398
   },
   {
-   "abs": -0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[8].binCenter",
-   "kind": "numeric",
-   "new": 152.9,
-   "old": 153.0,
-   "rel": -0.0006535947712417929
+   "kind": "removed",
+   "new": null,
+   "old": 153.0
   },
   {
-   "abs": -0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[8].binEnd",
-   "kind": "numeric",
-   "new": 153.0,
-   "old": 153.1,
-   "rel": -0.0006531678641410472
+   "kind": "removed",
+   "new": null,
+   "old": 153.1
   },
   {
-   "abs": -0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[8].binStart",
-   "kind": "numeric",
-   "new": 152.8,
-   "old": 152.9,
-   "rel": -0.0006540222367560125
+   "kind": "removed",
+   "new": null,
+   "old": 152.9
   },
   {
-   "abs": 24,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[8].count",
-   "kind": "numeric",
-   "new": 36,
-   "old": 12,
-   "rel": 2.0
+   "kind": "removed",
+   "new": null,
+   "old": 12
   },
   {
-   "abs": 12.2,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[8].cumulativePct",
-   "kind": "numeric",
-   "new": 24.4,
-   "old": 12.2,
-   "rel": 1.0
+   "kind": "removed",
+   "new": null,
+   "old": 12.2
   },
   {
-   "abs": 0.25144599999999995,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[8].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.395491,
-   "old": 0.144045,
-   "rel": 1.7456072755041823
+   "kind": "removed",
+   "new": null,
+   "old": 0.144045
   },
   {
-   "abs": -0.07256799999999997,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[8].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.369968,
-   "old": 0.442536,
-   "rel": -0.16398213930618066
+   "kind": "removed",
+   "new": null,
+   "old": 0.442536
   },
   {
-   "abs": -0.09999999999999432,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[9].binCenter",
-   "kind": "numeric",
-   "new": 153.1,
-   "old": 153.2,
-   "rel": -0.0006527415143602762
+   "kind": "removed",
+   "new": null,
+   "old": 153.2
   },
   {
-   "abs": -0.09999999999999432,
+   "key": "stochasticProperties.fractureToughness_K1c.histogram[9].binEnd",
+   "kind": "removed",
+   "new": null,
+   "old": 153.2
+  },
+  {
    "key": "stochasticProperties.fractureToughness_K1c.histogram[9].binStart",
-   "kind": "numeric",
-   "new": 153.0,
-   "old": 153.1,
-   "rel": -0.0006531678641410472
+   "kind": "removed",
+   "new": null,
+   "old": 153.1
   },
   {
-   "abs": 31,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[9].count",
-   "kind": "numeric",
-   "new": 42,
-   "old": 11,
-   "rel": 2.8181818181818183
+   "kind": "removed",
+   "new": null,
+   "old": 11
   },
   {
-   "abs": 18.4,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[9].cumulativePct",
-   "kind": "numeric",
-   "new": 32.8,
-   "old": 14.4,
-   "rel": 1.2777777777777777
+   "kind": "removed",
+   "new": null,
+   "old": 14.4
   },
   {
-   "abs": 0.329365,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[9].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.461406,
-   "old": 0.132041,
-   "rel": 2.4944146136427325
+   "kind": "removed",
+   "new": null,
+   "old": 0.132041
   },
   {
-   "abs": -0.115898,
    "key": "stochasticProperties.fractureToughness_K1c.histogram[9].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.434954,
-   "old": 0.550852,
-   "rel": -0.21039771118195086
+   "kind": "removed",
+   "new": null,
+   "old": 0.550852
   },
   {
-   "abs": -2.628,
    "key": "stochasticProperties.fractureToughness_K1c.kurtosis",
-   "kind": "numeric",
-   "new": -0.091,
-   "old": 2.537,
-   "rel": -1.0358691367757193
+   "kind": "removed",
+   "new": null,
+   "old": 2.537
   },
   {
-   "abs": 0.20000000000001705,
    "key": "stochasticProperties.fractureToughness_K1c.max",
-   "kind": "numeric",
-   "new": 155.9,
-   "old": 155.7,
-   "rel": 0.0012845215157354982
+   "kind": "removed",
+   "new": null,
+   "old": 155.7
   },
   {
-   "abs": -0.19999999999998863,
+   "key": "stochasticProperties.fractureToughness_K1c.mean",
+   "kind": "removed",
+   "new": null,
+   "old": 153.5
+  },
+  {
+   "key": "stochasticProperties.fractureToughness_K1c.median_P50",
+   "kind": "removed",
+   "new": null,
+   "old": 153.5
+  },
+  {
    "key": "stochasticProperties.fractureToughness_K1c.min",
-   "kind": "numeric",
-   "new": 151.4,
-   "old": 151.6,
-   "rel": -0.0013192612137202418
+   "kind": "removed",
+   "new": null,
+   "old": 151.6
   },
   {
-   "abs": -0.043,
+   "key": "stochasticProperties.fractureToughness_K1c.mmpds_kA",
+   "kind": "removed",
+   "new": null,
+   "old": 2.475
+  },
+  {
+   "key": "stochasticProperties.fractureToughness_K1c.mmpds_kB",
+   "kind": "removed",
+   "new": null,
+   "old": 1.385
+  },
+  {
    "key": "stochasticProperties.fractureToughness_K1c.skewness",
-   "kind": "numeric",
-   "new": 0.018,
-   "old": 0.061,
-   "rel": -0.7049180327868853
+   "kind": "removed",
+   "new": null,
+   "old": 0.061
   },
   {
-   "abs": 0.19000000000000006,
    "key": "stochasticProperties.fractureToughness_K1c.stdDev",
-   "kind": "numeric",
-   "new": 0.78,
-   "old": 0.59,
-   "rel": 0.3220338983050849
+   "kind": "removed",
+   "new": null,
+   "old": 0.59
   },
   {
-   "abs": -0.7999999999999545,
+   "key": "stochasticProperties.fractureToughness_K1c_status",
+   "kind": "added",
+   "new": "unavailable: no sourced fracture-toughness law (the former K_Ic clamp of 18-160 MPa*sqrt(m) was invented); see the ICME solver",
+   "old": null
+  },
+  {
+   "key": "stochasticProperties.ultimateTensileStrength_UTS",
+   "kind": "added",
+   "new": null,
+   "old": null
+  },
+  {
    "key": "stochasticProperties.ultimateTensileStrength_UTS.P01",
-   "kind": "numeric",
-   "new": 1284.4,
-   "old": 1285.2,
-   "rel": -0.0006224712107064694
+   "kind": "removed",
+   "new": null,
+   "old": 1285.2
   },
   {
-   "abs": -3.0,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.P10",
-   "kind": "numeric",
-   "new": 1292.8,
-   "old": 1295.8,
-   "rel": -0.0023151720944590217
+   "kind": "removed",
+   "new": null,
+   "old": 1295.8
   },
   {
-   "abs": 3.2999999999999545,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.P90",
-   "kind": "numeric",
-   "new": 1311.1,
-   "old": 1307.8,
-   "rel": 0.0025233216088086517
+   "kind": "removed",
+   "new": null,
+   "old": 1307.8
   },
   {
-   "abs": 1.099999999999909,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.P99",
-   "kind": "numeric",
-   "new": 1319.0,
-   "old": 1317.9,
-   "rel": 0.0008346612034296297
+   "kind": "removed",
+   "new": null,
+   "old": 1317.9
   },
   {
-   "abs": -4.2999999999999545,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.aBasisAllowable",
-   "kind": "numeric",
-   "new": 1284.0,
-   "old": 1288.3,
-   "rel": -0.003337731894744978
+   "kind": "removed",
+   "new": null,
+   "old": 1288.3
   },
   {
-   "abs": -2.3999999999998636,
+   "key": "stochasticProperties.ultimateTensileStrength_UTS.aBasisConfidenceInterval95",
+   "kind": "removed",
+   "new": null,
+   "old": null
+  },
+  {
+   "key": "stochasticProperties.ultimateTensileStrength_UTS.allowableStandardError_A",
+   "kind": "removed",
+   "new": null,
+   "old": null
+  },
+  {
+   "key": "stochasticProperties.ultimateTensileStrength_UTS.allowableStandardError_B",
+   "kind": "removed",
+   "new": null,
+   "old": null
+  },
+  {
+   "key": "stochasticProperties.ultimateTensileStrength_UTS.allowableUncertaintyMethod",
+   "kind": "removed",
+   "new": null,
+   "old": "unavailable: independent randomized QMC replicates required"
+  },
+  {
    "key": "stochasticProperties.ultimateTensileStrength_UTS.bBasisAllowable",
-   "kind": "numeric",
-   "new": 1291.9,
-   "old": 1294.3,
-   "rel": -0.0018542841690488013
+   "kind": "removed",
+   "new": null,
+   "old": 1294.3
   },
   {
-   "abs": -0.2999999999999545,
+   "key": "stochasticProperties.ultimateTensileStrength_UTS.bBasisConfidenceInterval95",
+   "kind": "removed",
+   "new": null,
+   "old": null
+  },
+  {
    "key": "stochasticProperties.ultimateTensileStrength_UTS.ci95Lower_P2_5",
-   "kind": "numeric",
-   "new": 1288.0,
-   "old": 1288.3,
-   "rel": -0.00023286501591240747
+   "kind": "removed",
+   "new": null,
+   "old": 1288.3
   },
   {
-   "abs": 1.2000000000000455,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.ci95Upper_P97_5",
-   "kind": "numeric",
-   "new": 1316.4,
-   "old": 1315.2,
-   "rel": 0.0009124087591241221
+   "kind": "removed",
+   "new": null,
+   "old": 1315.2
   },
   {
-   "abs": 0.13000000000000006,
+   "key": "stochasticProperties.ultimateTensileStrength_UTS.conformancePct",
+   "kind": "removed",
+   "new": null,
+   "old": 0.0
+  },
+  {
    "key": "stochasticProperties.ultimateTensileStrength_UTS.covPct",
-   "kind": "numeric",
-   "new": 0.56,
-   "old": 0.43,
-   "rel": 0.302325581395349
+   "kind": "removed",
+   "new": null,
+   "old": 0.43
   },
   {
-   "abs": 3.1499999999999986,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.cpk",
-   "kind": "numeric",
-   "new": -9.97,
-   "old": -13.12,
-   "rel": 0.24009146341463405
+   "kind": "removed",
+   "new": null,
+   "old": -13.12
   },
   {
-   "abs": -1.5,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[0].binCenter",
-   "kind": "numeric",
-   "new": 1280.8,
-   "old": 1282.3,
-   "rel": -0.0011697730640255791
+   "kind": "removed",
+   "new": null,
+   "old": 1282.3
   },
   {
-   "abs": -1.3999999999998636,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[0].binEnd",
-   "kind": "numeric",
-   "new": 1281.7,
-   "old": 1283.1,
-   "rel": -0.0010911074740860911
+   "kind": "removed",
+   "new": null,
+   "old": 1283.1
   },
   {
-   "abs": -1.599999999999909,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[0].binStart",
-   "kind": "numeric",
-   "new": 1280.0,
-   "old": 1281.6,
-   "rel": -0.0012484394506865708
+   "kind": "removed",
+   "new": null,
+   "old": 1281.6
   },
   {
-   "abs": -0.00010900000000000016,
+   "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[0].count",
+   "kind": "removed",
+   "new": null,
+   "old": 1
+  },
+  {
+   "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[0].cumulativePct",
+   "kind": "removed",
+   "new": null,
+   "old": 0.2
+  },
+  {
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[0].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.001174,
-   "old": 0.001283,
-   "rel": -0.08495713172252545
+   "kind": "removed",
+   "new": null,
+   "old": 0.001283
   },
   {
-   "abs": 0.00068,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[0].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.000813,
-   "old": 0.000133,
-   "rel": 5.112781954887218
+   "kind": "removed",
+   "new": null,
+   "old": 0.000133
   },
   {
-   "abs": -0.09999999999990905,
+   "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[10].binCenter",
+   "kind": "removed",
+   "new": null,
+   "old": 1297.9
+  },
+  {
+   "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[10].binEnd",
+   "kind": "removed",
+   "new": null,
+   "old": 1298.7
+  },
+  {
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[10].binStart",
-   "kind": "numeric",
-   "new": 1297.0,
-   "old": 1297.1,
-   "rel": -7.709505820669884e-05
+   "kind": "removed",
+   "new": null,
+   "old": 1297.1
   },
   {
-   "abs": 32,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[10].count",
-   "kind": "numeric",
-   "new": 40,
-   "old": 8,
-   "rel": 4.0
+   "kind": "removed",
+   "new": null,
+   "old": 8
   },
   {
-   "abs": 19.2,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[10].cumulativePct",
-   "kind": "numeric",
-   "new": 32.4,
-   "old": 13.2,
-   "rel": 1.4545454545454546
+   "kind": "removed",
+   "new": null,
+   "old": 13.2
   },
   {
-   "abs": 0.036687,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[10].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.04695,
-   "old": 0.010263,
-   "rel": 3.574685764396375
+   "kind": "removed",
+   "new": null,
+   "old": 0.010263
   },
   {
-   "abs": -0.008268999999999999,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[10].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.046722,
-   "old": 0.054991,
-   "rel": -0.1503700605553636
+   "kind": "removed",
+   "new": null,
+   "old": 0.054991
   },
   {
-   "abs": 0.09999999999990905,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[11].binCenter",
-   "kind": "numeric",
-   "new": 1299.6,
-   "old": 1299.5,
-   "rel": 7.695267410535517e-05
+   "kind": "removed",
+   "new": null,
+   "old": 1299.5
   },
   {
-   "abs": 0.10000000000013642,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[11].binEnd",
-   "kind": "numeric",
-   "new": 1300.4,
-   "old": 1300.3,
-   "rel": 7.6905329539442e-05
+   "kind": "removed",
+   "new": null,
+   "old": 1300.3
   },
   {
-   "abs": -7,
+   "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[11].binStart",
+   "kind": "removed",
+   "new": null,
+   "old": 1298.7
+  },
+  {
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[11].count",
-   "kind": "numeric",
-   "new": 45,
-   "old": 52,
-   "rel": -0.1346153846153846
+   "kind": "removed",
+   "new": null,
+   "old": 52
   },
   {
-   "abs": 17.799999999999997,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[11].cumulativePct",
-   "kind": "numeric",
-   "new": 41.4,
-   "old": 23.6,
-   "rel": 0.7542372881355931
+   "kind": "removed",
+   "new": null,
+   "old": 23.6
   },
   {
-   "abs": -0.013889000000000006,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[11].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.052819,
-   "old": 0.066708,
-   "rel": -0.20820591233435276
+   "kind": "removed",
+   "new": null,
+   "old": 0.066708
   },
   {
-   "abs": -0.013124999999999998,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[11].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.05186,
-   "old": 0.064985,
-   "rel": -0.20196968531199505
+   "kind": "removed",
+   "new": null,
+   "old": 0.064985
   },
   {
-   "abs": 0.2999999999999545,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[12].binCenter",
-   "kind": "numeric",
-   "new": 1301.3,
-   "old": 1301.0,
-   "rel": 0.0002305918524211795
+   "kind": "removed",
+   "new": null,
+   "old": 1301.0
   },
   {
-   "abs": 0.2999999999999545,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[12].binEnd",
-   "kind": "numeric",
-   "new": 1302.1,
-   "old": 1301.8,
-   "rel": 0.00023045014595172417
+   "kind": "removed",
+   "new": null,
+   "old": 1301.8
   },
   {
-   "abs": 0.10000000000013642,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[12].binStart",
-   "kind": "numeric",
-   "new": 1300.4,
-   "old": 1300.3,
-   "rel": 7.6905329539442e-05
+   "kind": "removed",
+   "new": null,
+   "old": 1300.3
   },
   {
-   "abs": -80,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[12].count",
-   "kind": "numeric",
-   "new": 44,
-   "old": 124,
-   "rel": -0.6451612903225806
+   "kind": "removed",
+   "new": null,
+   "old": 124
   },
   {
-   "abs": 1.8000000000000043,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[12].cumulativePct",
-   "kind": "numeric",
-   "new": 50.2,
-   "old": 48.4,
-   "rel": 0.03719008264462819
+   "kind": "removed",
+   "new": null,
+   "old": 48.4
   },
   {
-   "abs": -0.107427,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[12].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.051645,
-   "old": 0.159072,
-   "rel": -0.6753356970428486
+   "kind": "removed",
+   "new": null,
+   "old": 0.159072
   },
   {
-   "abs": -0.016449,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[12].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.0545,
-   "old": 0.070949,
-   "rel": -0.23184259115702827
+   "kind": "removed",
+   "new": null,
+   "old": 0.070949
   },
   {
-   "abs": 0.40000000000009095,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[13].binCenter",
-   "kind": "numeric",
-   "new": 1303.0,
-   "old": 1302.6,
-   "rel": 0.00030707815138959847
+   "kind": "removed",
+   "new": null,
+   "old": 1302.6
   },
   {
-   "abs": 0.5,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[13].binEnd",
-   "kind": "numeric",
-   "new": 1303.9,
-   "old": 1303.4,
-   "rel": 0.00038361209145312255
+   "kind": "removed",
+   "new": null,
+   "old": 1303.4
   },
   {
-   "abs": 0.2999999999999545,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[13].binStart",
-   "kind": "numeric",
-   "new": 1302.1,
-   "old": 1301.8,
-   "rel": 0.00023045014595172417
+   "kind": "removed",
+   "new": null,
+   "old": 1301.8
   },
   {
-   "abs": -64,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[13].count",
-   "kind": "numeric",
-   "new": 49,
-   "old": 113,
-   "rel": -0.5663716814159292
+   "kind": "removed",
+   "new": null,
+   "old": 113
   },
   {
-   "abs": -11.0,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[13].cumulativePct",
-   "kind": "numeric",
-   "new": 60.0,
-   "old": 71.0,
-   "rel": -0.15492957746478872
+   "kind": "removed",
+   "new": null,
+   "old": 71.0
   },
   {
-   "abs": -0.087447,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[13].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.057514,
-   "old": 0.144961,
-   "rel": -0.6032450107270231
+   "kind": "removed",
+   "new": null,
+   "old": 0.144961
   },
   {
-   "abs": -0.017339,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[13].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.054226,
-   "old": 0.071565,
-   "rel": -0.24228323901348423
+   "kind": "removed",
+   "new": null,
+   "old": 0.071565
   },
   {
-   "abs": 0.5,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[14].binCenter",
-   "kind": "numeric",
-   "new": 1304.7,
-   "old": 1304.2,
-   "rel": 0.00038337678270203957
+   "kind": "removed",
+   "new": null,
+   "old": 1304.2
   },
   {
-   "abs": 0.6999999999998181,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[14].binEnd",
-   "kind": "numeric",
-   "new": 1305.6,
-   "old": 1304.9,
-   "rel": 0.0005364395739135704
+   "kind": "removed",
+   "new": null,
+   "old": 1304.9
   },
   {
-   "abs": 0.5,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[14].binStart",
-   "kind": "numeric",
-   "new": 1303.9,
-   "old": 1303.4,
-   "rel": 0.00038361209145312255
+   "kind": "removed",
+   "new": null,
+   "old": 1303.4
   },
   {
-   "abs": -34,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[14].count",
-   "kind": "numeric",
-   "new": 39,
-   "old": 73,
-   "rel": -0.4657534246575342
+   "kind": "removed",
+   "new": null,
+   "old": 73
   },
   {
-   "abs": -17.799999999999997,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[14].cumulativePct",
-   "kind": "numeric",
-   "new": 67.8,
-   "old": 85.6,
-   "rel": -0.20794392523364483
+   "kind": "removed",
+   "new": null,
+   "old": 85.6
   },
   {
-   "abs": -0.047871,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[14].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.045776,
-   "old": 0.093647,
-   "rel": -0.5111856226040343
+   "kind": "removed",
+   "new": null,
+   "old": 0.093647
   },
   {
-   "abs": -0.015608999999999998,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[14].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.051083,
-   "old": 0.066692,
-   "rel": -0.2340460624962514
+   "kind": "removed",
+   "new": null,
+   "old": 0.066692
   },
   {
-   "abs": 0.7000000000000455,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[15].binCenter",
-   "kind": "numeric",
-   "new": 1306.4,
-   "old": 1305.7,
-   "rel": 0.0005361108983687259
+   "kind": "removed",
+   "new": null,
+   "old": 1305.7
   },
   {
-   "abs": 0.7999999999999545,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[15].binEnd",
-   "kind": "numeric",
-   "new": 1307.3,
-   "old": 1306.5,
-   "rel": 0.0006123230003826671
+   "kind": "removed",
+   "new": null,
+   "old": 1306.5
   },
   {
-   "abs": 0.6999999999998181,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[15].binStart",
-   "kind": "numeric",
-   "new": 1305.6,
-   "old": 1304.9,
-   "rel": 0.0005364395739135704
+   "kind": "removed",
+   "new": null,
+   "old": 1304.9
   },
   {
-   "abs": 31,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[15].count",
-   "kind": "numeric",
-   "new": 44,
-   "old": 13,
-   "rel": 2.3846153846153846
+   "kind": "removed",
+   "new": null,
+   "old": 13
   },
   {
-   "abs": -11.600000000000009,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[15].cumulativePct",
-   "kind": "numeric",
-   "new": 76.6,
-   "old": 88.2,
-   "rel": -0.13151927437641733
+   "kind": "removed",
+   "new": null,
+   "old": 88.2
   },
   {
-   "abs": 0.034968,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[15].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.051645,
-   "old": 0.016677,
-   "rel": 2.0967799964022307
+   "kind": "removed",
+   "new": null,
+   "old": 0.016677
   },
   {
-   "abs": -0.011858,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[15].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.045562,
-   "old": 0.05742,
-   "rel": -0.20651340996168582
+   "kind": "removed",
+   "new": null,
+   "old": 0.05742
   },
   {
-   "abs": 0.7999999999999545,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[16].binCenter",
-   "kind": "numeric",
-   "new": 1308.1,
-   "old": 1307.3,
-   "rel": 0.000611948290369429
+   "kind": "removed",
+   "new": null,
+   "old": 1307.3
   },
   {
-   "abs": 0.900000000000091,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[16].binEnd",
-   "kind": "numeric",
-   "new": 1309.0,
-   "old": 1308.1,
-   "rel": 0.0006880207935173847
+   "kind": "removed",
+   "new": null,
+   "old": 1308.1
   },
   {
-   "abs": 0.7999999999999545,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[16].binStart",
-   "kind": "numeric",
-   "new": 1307.3,
-   "old": 1306.5,
-   "rel": 0.0006123230003826671
+   "kind": "removed",
+   "new": null,
+   "old": 1306.5
   },
   {
-   "abs": 26,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[16].count",
-   "kind": "numeric",
-   "new": 36,
-   "old": 10,
-   "rel": 2.6
+   "kind": "removed",
+   "new": null,
+   "old": 10
   },
   {
-   "abs": -6.400000000000006,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[16].cumulativePct",
-   "kind": "numeric",
-   "new": 83.8,
-   "old": 90.2,
-   "rel": -0.0709534368070954
+   "kind": "removed",
+   "new": null,
+   "old": 90.2
   },
   {
-   "abs": 0.029427000000000002,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[16].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.042255,
-   "old": 0.012828,
-   "rel": 2.2939663236669783
+   "kind": "removed",
+   "new": null,
+   "old": 0.012828
   },
   {
-   "abs": -0.007198999999999997,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[16].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.038475,
-   "old": 0.045674,
-   "rel": -0.1576170250032841
+   "kind": "removed",
+   "new": null,
+   "old": 0.045674
   },
   {
-   "abs": 1.0,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[17].binCenter",
-   "kind": "numeric",
-   "new": 1309.8,
-   "old": 1308.8,
-   "rel": 0.0007640586797066015
+   "kind": "removed",
+   "new": null,
+   "old": 1308.8
   },
   {
-   "abs": 1.1000000000001364,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[17].binEnd",
-   "kind": "numeric",
-   "new": 1310.7,
-   "old": 1309.6,
-   "rel": 0.0008399511301161702
+   "kind": "removed",
+   "new": null,
+   "old": 1309.6
   },
   {
-   "abs": 0.900000000000091,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[17].binStart",
-   "kind": "numeric",
-   "new": 1309.0,
-   "old": 1308.1,
-   "rel": 0.0006880207935173847
+   "kind": "removed",
+   "new": null,
+   "old": 1308.1
   },
   {
-   "abs": 17,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[17].count",
-   "kind": "numeric",
-   "new": 26,
-   "old": 9,
-   "rel": 1.8888888888888888
+   "kind": "removed",
+   "new": null,
+   "old": 9
   },
   {
-   "abs": -3.0,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[17].cumulativePct",
-   "kind": "numeric",
-   "new": 89.0,
-   "old": 92.0,
-   "rel": -0.03260869565217391
+   "kind": "removed",
+   "new": null,
+   "old": 92.0
   },
   {
-   "abs": 0.018972,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[17].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.030518,
-   "old": 0.011546,
-   "rel": 1.6431664645764765
+   "kind": "removed",
+   "new": null,
+   "old": 0.011546
   },
   {
-   "abs": -0.0028049999999999985,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[17].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.030761,
-   "old": 0.033566,
-   "rel": -0.08356670440326516
+   "kind": "removed",
+   "new": null,
+   "old": 0.033566
   },
   {
-   "abs": 1.099999999999909,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[18].binCenter",
-   "kind": "numeric",
-   "new": 1311.5,
-   "old": 1310.4,
-   "rel": 0.00083943833943827
+   "kind": "removed",
+   "new": null,
+   "old": 1310.4
   },
   {
-   "abs": 1.2000000000000455,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[18].binEnd",
-   "kind": "numeric",
-   "new": 1312.4,
-   "old": 1311.2,
-   "rel": 0.0009151921903600102
+   "kind": "removed",
+   "new": null,
+   "old": 1311.2
   },
   {
-   "abs": 1.1000000000001364,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[18].binStart",
-   "kind": "numeric",
-   "new": 1310.7,
-   "old": 1309.6,
-   "rel": 0.0008399511301161702
+   "kind": "removed",
+   "new": null,
+   "old": 1309.6
   },
   {
-   "abs": 12,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[18].count",
-   "kind": "numeric",
-   "new": 15,
-   "old": 3,
-   "rel": 4.0
+   "kind": "removed",
+   "new": null,
+   "old": 3
   },
   {
-   "abs": -0.5999999999999943,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[18].cumulativePct",
-   "kind": "numeric",
-   "new": 92.0,
-   "old": 92.6,
-   "rel": -0.006479481641468622
+   "kind": "removed",
+   "new": null,
+   "old": 92.6
   },
   {
-   "abs": 0.013757,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[18].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.017606,
-   "old": 0.003849,
-   "rel": 3.5741751104182904
+   "kind": "removed",
+   "new": null,
+   "old": 0.003849
   },
   {
-   "abs": 0.0004949999999999989,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[18].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.023285,
-   "old": 0.02279,
-   "rel": 0.021720052654673052
+   "kind": "removed",
+   "new": null,
+   "old": 0.02279
   },
   {
-   "abs": 1.2000000000000455,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[19].binCenter",
-   "kind": "numeric",
-   "new": 1313.2,
-   "old": 1312.0,
-   "rel": 0.000914634146341498
+   "kind": "removed",
+   "new": null,
+   "old": 1312.0
   },
   {
-   "abs": 1.3999999999998636,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[19].binEnd",
-   "kind": "numeric",
-   "new": 1314.1,
-   "old": 1312.7,
-   "rel": 0.001066504151748201
+   "kind": "removed",
+   "new": null,
+   "old": 1312.7
   },
   {
-   "abs": 1.2000000000000455,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[19].binStart",
-   "kind": "numeric",
-   "new": 1312.4,
-   "old": 1311.2,
-   "rel": 0.0009151921903600102
+   "kind": "removed",
+   "new": null,
+   "old": 1311.2
   },
   {
-   "abs": 2,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[19].count",
-   "kind": "numeric",
-   "new": 14,
-   "old": 12,
-   "rel": 0.16666666666666666
+   "kind": "removed",
+   "new": null,
+   "old": 12
   },
   {
-   "abs": -0.20000000000000284,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[19].cumulativePct",
-   "kind": "numeric",
-   "new": 94.8,
-   "old": 95.0,
-   "rel": -0.0021052631578947667
+   "kind": "removed",
+   "new": null,
+   "old": 95.0
   },
   {
-   "abs": 0.001039,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[19].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.016433,
-   "old": 0.015394,
-   "rel": 0.06749382876445369
+   "kind": "removed",
+   "new": null,
+   "old": 0.015394
   },
   {
-   "abs": 0.0023920000000000018,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[19].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.016688,
-   "old": 0.014296,
-   "rel": 0.16731952993844446
+   "kind": "removed",
+   "new": null,
+   "old": 0.014296
   },
   {
-   "abs": -1.300000000000182,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[1].binCenter",
-   "kind": "numeric",
-   "new": 1282.6,
-   "old": 1283.9,
-   "rel": -0.0010125399174391945
+   "kind": "removed",
+   "new": null,
+   "old": 1283.9
   },
   {
-   "abs": -1.2999999999999545,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[1].binEnd",
-   "kind": "numeric",
-   "new": 1283.4,
-   "old": 1284.7,
-   "rel": -0.001011909395189503
+   "kind": "removed",
+   "new": null,
+   "old": 1284.7
   },
   {
-   "abs": -1.3999999999998636,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[1].binStart",
-   "kind": "numeric",
-   "new": 1281.7,
-   "old": 1283.1,
-   "rel": -0.0010911074740860911
+   "kind": "removed",
+   "new": null,
+   "old": 1283.1
   },
   {
-   "abs": -0.00010900000000000016,
+   "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[1].count",
+   "kind": "removed",
+   "new": null,
+   "old": 1
+  },
+  {
+   "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[1].cumulativePct",
+   "kind": "removed",
+   "new": null,
+   "old": 0.4
+  },
+  {
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[1].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.001174,
-   "old": 0.001283,
-   "rel": -0.08495713172252545
+   "kind": "removed",
+   "new": null,
+   "old": 0.001283
   },
   {
-   "abs": 0.001213,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[1].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.00156,
-   "old": 0.000347,
-   "rel": 3.4956772334293955
+   "kind": "removed",
+   "new": null,
+   "old": 0.000347
   },
   {
-   "abs": 1.400000000000091,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[20].binCenter",
-   "kind": "numeric",
-   "new": 1314.9,
-   "old": 1313.5,
-   "rel": 0.0010658545869814168
+   "kind": "removed",
+   "new": null,
+   "old": 1313.5
   },
   {
-   "abs": 1.5,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[20].binEnd",
-   "kind": "numeric",
-   "new": 1315.8,
-   "old": 1314.3,
-   "rel": 0.0011412919424788862
+   "kind": "removed",
+   "new": null,
+   "old": 1314.3
   },
   {
-   "abs": 1.3999999999998636,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[20].binStart",
-   "kind": "numeric",
-   "new": 1314.1,
-   "old": 1312.7,
-   "rel": 0.001066504151748201
+   "kind": "removed",
+   "new": null,
+   "old": 1312.7
   },
   {
-   "abs": 3,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[20].count",
-   "kind": "numeric",
-   "new": 10,
-   "old": 7,
-   "rel": 0.42857142857142855
+   "kind": "removed",
+   "new": null,
+   "old": 7
   },
   {
-   "abs": 0.3999999999999915,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[20].cumulativePct",
-   "kind": "numeric",
-   "new": 96.8,
-   "old": 96.4,
-   "rel": 0.004149377593360907
+   "kind": "removed",
+   "new": null,
+   "old": 96.4
   },
   {
-   "abs": 0.002758,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[20].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.011738,
-   "old": 0.00898,
-   "rel": 0.3071269487750557
+   "kind": "removed",
+   "new": null,
+   "old": 0.00898
   },
   {
-   "abs": 0.003039,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[20].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.011324,
-   "old": 0.008285,
-   "rel": 0.3668074834037417
+   "kind": "removed",
+   "new": null,
+   "old": 0.008285
   },
   {
-   "abs": 1.5,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[21].binCenter",
-   "kind": "numeric",
-   "new": 1316.6,
-   "old": 1315.1,
-   "rel": 0.0011405976731807467
+   "kind": "removed",
+   "new": null,
+   "old": 1315.1
   },
   {
-   "abs": 1.599999999999909,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[21].binEnd",
-   "kind": "numeric",
-   "new": 1317.5,
-   "old": 1315.9,
-   "rel": 0.0012158978645793062
+   "kind": "removed",
+   "new": null,
+   "old": 1315.9
   },
   {
-   "abs": 1.5,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[21].binStart",
-   "kind": "numeric",
-   "new": 1315.8,
-   "old": 1314.3,
-   "rel": 0.0011412919424788862
+   "kind": "removed",
+   "new": null,
+   "old": 1314.3
   },
   {
-   "abs": -2,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[21].count",
-   "kind": "numeric",
-   "new": 5,
-   "old": 7,
-   "rel": -0.2857142857142857
+   "kind": "removed",
+   "new": null,
+   "old": 7
   },
   {
-   "abs": -0.003111,
+   "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[21].cumulativePct",
+   "kind": "removed",
+   "new": null,
+   "old": 97.8
+  },
+  {
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[21].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.005869,
-   "old": 0.00898,
-   "rel": -0.3464365256124722
+   "kind": "removed",
+   "new": null,
+   "old": 0.00898
   },
   {
-   "abs": 0.0028390000000000004,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[21].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.007275,
-   "old": 0.004436,
-   "rel": 0.6399909828674483
+   "kind": "removed",
+   "new": null,
+   "old": 0.004436
   },
   {
-   "abs": 1.7000000000000455,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[22].binCenter",
-   "kind": "numeric",
-   "new": 1318.3,
-   "old": 1316.6,
-   "rel": 0.0012912046179553742
+   "kind": "removed",
+   "new": null,
+   "old": 1316.6
   },
   {
-   "abs": 1.7999999999999545,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[22].binEnd",
-   "kind": "numeric",
-   "new": 1319.2,
-   "old": 1317.4,
-   "rel": 0.0013663276149992064
+   "kind": "removed",
+   "new": null,
+   "old": 1317.4
   },
   {
-   "abs": 1.599999999999909,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[22].binStart",
-   "kind": "numeric",
-   "new": 1317.5,
-   "old": 1315.9,
-   "rel": 0.0012158978645793062
+   "kind": "removed",
+   "new": null,
+   "old": 1315.9
   },
   {
-   "abs": 3,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[22].count",
-   "kind": "numeric",
-   "new": 6,
-   "old": 3,
-   "rel": 1.0
+   "kind": "removed",
+   "new": null,
+   "old": 3
   },
   {
-   "abs": 0.5999999999999943,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[22].cumulativePct",
-   "kind": "numeric",
-   "new": 99.0,
-   "old": 98.4,
-   "rel": 0.006097560975609698
+   "kind": "removed",
+   "new": null,
+   "old": 98.4
   },
   {
-   "abs": 0.003194,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[22].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.007043,
-   "old": 0.003849,
-   "rel": 0.8298259288126786
+   "kind": "removed",
+   "new": null,
+   "old": 0.003849
   },
   {
-   "abs": 0.002231,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[22].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.004425,
-   "old": 0.002194,
-   "rel": 1.0168641750227894
+   "kind": "removed",
+   "new": null,
+   "old": 0.002194
   },
   {
-   "abs": 1.7999999999999545,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[23].binCenter",
-   "kind": "numeric",
-   "new": 1320.0,
-   "old": 1318.2,
-   "rel": 0.0013654984069184908
+   "kind": "removed",
+   "new": null,
+   "old": 1318.2
   },
   {
-   "abs": 1.900000000000091,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[23].binEnd",
-   "kind": "numeric",
-   "new": 1320.9,
-   "old": 1319.0,
-   "rel": 0.0014404852160728513
+   "kind": "removed",
+   "new": null,
+   "old": 1319.0
   },
   {
-   "abs": 1.7999999999999545,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[23].binStart",
-   "kind": "numeric",
-   "new": 1319.2,
-   "old": 1317.4,
-   "rel": 0.0013663276149992064
+   "kind": "removed",
+   "new": null,
+   "old": 1317.4
   },
   {
-   "abs": -4,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[23].count",
-   "kind": "numeric",
-   "new": 2,
-   "old": 6,
-   "rel": -0.6666666666666666
+   "kind": "removed",
+   "new": null,
+   "old": 6
   },
   {
-   "abs": -0.19999999999998863,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[23].cumulativePct",
-   "kind": "numeric",
-   "new": 99.4,
-   "old": 99.6,
-   "rel": -0.002008032128513942
+   "kind": "removed",
+   "new": null,
+   "old": 99.6
   },
   {
-   "abs": -0.005349,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[23].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.002348,
-   "old": 0.007697,
-   "rel": -0.6949460828894374
+   "kind": "removed",
+   "new": null,
+   "old": 0.007697
   },
   {
-   "abs": 0.001545,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[23].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.002548,
-   "old": 0.001003,
-   "rel": 1.5403788634097706
+   "kind": "removed",
+   "new": null,
+   "old": 0.001003
   },
   {
-   "abs": 1.900000000000091,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[24].binCenter",
-   "kind": "numeric",
-   "new": 1321.7,
-   "old": 1319.8,
-   "rel": 0.001439612062433771
+   "kind": "removed",
+   "new": null,
+   "old": 1319.8
   },
   {
-   "abs": 2.099999999999909,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[24].binEnd",
-   "kind": "numeric",
-   "new": 1322.6,
-   "old": 1320.5,
-   "rel": 0.0015903067020067467
+   "kind": "removed",
+   "new": null,
+   "old": 1320.5
   },
   {
-   "abs": 1.900000000000091,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[24].binStart",
-   "kind": "numeric",
-   "new": 1320.9,
-   "old": 1319.0,
-   "rel": 0.0014404852160728513
+   "kind": "removed",
+   "new": null,
+   "old": 1319.0
   },
   {
-   "abs": 1,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[24].count",
-   "kind": "numeric",
-   "new": 3,
-   "old": 2,
-   "rel": 0.5
+   "kind": "removed",
+   "new": null,
+   "old": 2
   },
   {
-   "abs": 0.0009549999999999997,
+   "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[24].cumulativePct",
+   "kind": "removed",
+   "new": null,
+   "old": 100.0
+  },
+  {
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[24].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.003521,
-   "old": 0.002566,
-   "rel": 0.3721745908028058
+   "kind": "removed",
+   "new": null,
+   "old": 0.002566
   },
   {
-   "abs": 0.000967,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[24].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.00139,
-   "old": 0.000423,
-   "rel": 2.286052009456265
+   "kind": "removed",
+   "new": null,
+   "old": 0.000423
   },
   {
-   "abs": -1.2000000000000455,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[2].binCenter",
-   "kind": "numeric",
-   "new": 1284.3,
-   "old": 1285.5,
-   "rel": -0.0009334889148191719
+   "kind": "removed",
+   "new": null,
+   "old": 1285.5
   },
   {
-   "abs": -1.1000000000001364,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[2].binEnd",
-   "kind": "numeric",
-   "new": 1285.1,
-   "old": 1286.2,
-   "rel": -0.0008552324677345175
+   "kind": "removed",
+   "new": null,
+   "old": 1286.2
   },
   {
-   "abs": -1.2999999999999545,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[2].binStart",
-   "kind": "numeric",
-   "new": 1283.4,
-   "old": 1284.7,
-   "rel": -0.001011909395189503
+   "kind": "removed",
+   "new": null,
+   "old": 1284.7
   },
   {
-   "abs": -0.0005450000000000003,
+   "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[2].count",
+   "kind": "removed",
+   "new": null,
+   "old": 5
+  },
+  {
+   "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[2].cumulativePct",
+   "kind": "removed",
+   "new": null,
+   "old": 1.4
+  },
+  {
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[2].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.005869,
-   "old": 0.006414,
-   "rel": -0.08497037729965705
+   "kind": "removed",
+   "new": null,
+   "old": 0.006414
   },
   {
-   "abs": 0.001996,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[2].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.002832,
-   "old": 0.000836,
-   "rel": 2.38755980861244
+   "kind": "removed",
+   "new": null,
+   "old": 0.000836
   },
   {
-   "abs": -1.0,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[3].binCenter",
-   "kind": "numeric",
-   "new": 1286.0,
-   "old": 1287.0,
-   "rel": -0.000777000777000777
+   "kind": "removed",
+   "new": null,
+   "old": 1287.0
   },
   {
-   "abs": -1.0,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[3].binEnd",
-   "kind": "numeric",
-   "new": 1286.8,
-   "old": 1287.8,
-   "rel": -0.000776518092871564
+   "kind": "removed",
+   "new": null,
+   "old": 1287.8
   },
   {
-   "abs": -1.1000000000001364,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[3].binStart",
-   "kind": "numeric",
-   "new": 1285.1,
-   "old": 1286.2,
-   "rel": -0.0008552324677345175
+   "kind": "removed",
+   "new": null,
+   "old": 1286.2
   },
   {
-   "abs": -4,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[3].count",
-   "kind": "numeric",
-   "new": 1,
-   "old": 5,
-   "rel": -0.8
+   "kind": "removed",
+   "new": null,
+   "old": 5
   },
   {
-   "abs": -0.7999999999999998,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[3].cumulativePct",
-   "kind": "numeric",
-   "new": 1.6,
-   "old": 2.4,
-   "rel": -0.33333333333333326
+   "kind": "removed",
+   "new": null,
+   "old": 2.4
   },
   {
-   "abs": -0.005240000000000001,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[3].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.001174,
-   "old": 0.006414,
-   "rel": -0.8169628936700967
+   "kind": "removed",
+   "new": null,
+   "old": 0.006414
   },
   {
-   "abs": 0.003007,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[3].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.004869,
-   "old": 0.001862,
-   "rel": 1.6149301825993556
+   "kind": "removed",
+   "new": null,
+   "old": 0.001862
   },
   {
-   "abs": -0.8999999999998636,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[4].binCenter",
-   "kind": "numeric",
-   "new": 1287.7,
-   "old": 1288.6,
-   "rel": -0.0006984324072635913
+   "kind": "removed",
+   "new": null,
+   "old": 1288.6
   },
   {
-   "abs": -0.7999999999999545,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[4].binEnd",
-   "kind": "numeric",
-   "new": 1288.5,
-   "old": 1289.3,
-   "rel": -0.00062049173970368
+   "kind": "removed",
+   "new": null,
+   "old": 1289.3
   },
   {
-   "abs": -1.0,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[4].binStart",
-   "kind": "numeric",
-   "new": 1286.8,
-   "old": 1287.8,
-   "rel": -0.000776518092871564
+   "kind": "removed",
+   "new": null,
+   "old": 1287.8
   },
   {
-   "abs": 3,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[4].count",
-   "kind": "numeric",
-   "new": 7,
-   "old": 4,
-   "rel": 0.75
+   "kind": "removed",
+   "new": null,
+   "old": 4
   },
   {
-   "abs": -0.20000000000000018,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[4].cumulativePct",
-   "kind": "numeric",
-   "new": 3.0,
-   "old": 3.2,
-   "rel": -0.06250000000000006
+   "kind": "removed",
+   "new": null,
+   "old": 3.2
   },
   {
-   "abs": 0.003084999999999999,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[4].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.008216,
-   "old": 0.005131,
-   "rel": 0.6012473202104851
+   "kind": "removed",
+   "new": null,
+   "old": 0.005131
   },
   {
-   "abs": 0.004094,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[4].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.007924,
-   "old": 0.00383,
-   "rel": 1.0689295039164493
+   "kind": "removed",
+   "new": null,
+   "old": 0.00383
   },
   {
-   "abs": -0.6999999999998181,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[5].binCenter",
-   "kind": "numeric",
-   "new": 1289.4,
-   "old": 1290.1,
-   "rel": -0.0005425935973954098
+   "kind": "removed",
+   "new": null,
+   "old": 1290.1
   },
   {
-   "abs": -0.7000000000000455,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[5].binEnd",
-   "kind": "numeric",
-   "new": 1290.2,
-   "old": 1290.9,
-   "rel": -0.0005422573398404566
+   "kind": "removed",
+   "new": null,
+   "old": 1290.9
   },
   {
-   "abs": -0.7999999999999545,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[5].binStart",
-   "kind": "numeric",
-   "new": 1288.5,
-   "old": 1289.3,
-   "rel": -0.00062049173970368
+   "kind": "removed",
+   "new": null,
+   "old": 1289.3
   },
   {
-   "abs": 6,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[5].count",
-   "kind": "numeric",
-   "new": 13,
-   "old": 7,
-   "rel": 0.8571428571428571
+   "kind": "removed",
+   "new": null,
+   "old": 7
   },
   {
-   "abs": 1.0,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[5].cumulativePct",
-   "kind": "numeric",
-   "new": 5.6,
-   "old": 4.6,
-   "rel": 0.2173913043478261
+   "kind": "removed",
+   "new": null,
+   "old": 4.6
   },
   {
-   "abs": 0.006279,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[5].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.015259,
-   "old": 0.00898,
-   "rel": 0.6992204899777282
+   "kind": "removed",
+   "new": null,
+   "old": 0.00898
   },
   {
-   "abs": 0.004934,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[5].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.012211,
-   "old": 0.007277,
-   "rel": 0.6780266593376392
+   "kind": "removed",
+   "new": null,
+   "old": 0.007277
   },
   {
-   "abs": -0.6000000000001364,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[6].binCenter",
-   "kind": "numeric",
-   "new": 1291.1,
-   "old": 1291.7,
-   "rel": -0.0004645041418287036
+   "kind": "removed",
+   "new": null,
+   "old": 1291.7
   },
   {
-   "abs": -0.599999999999909,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[6].binEnd",
-   "kind": "numeric",
-   "new": 1291.9,
-   "old": 1292.5,
-   "rel": -0.00046421663442933
+   "kind": "removed",
+   "new": null,
+   "old": 1292.5
   },
   {
-   "abs": -0.7000000000000455,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[6].binStart",
-   "kind": "numeric",
-   "new": 1290.2,
-   "old": 1290.9,
-   "rel": -0.0005422573398404566
+   "kind": "removed",
+   "new": null,
+   "old": 1290.9
   },
   {
-   "abs": 3,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[6].count",
-   "kind": "numeric",
-   "new": 11,
-   "old": 8,
-   "rel": 0.375
+   "kind": "removed",
+   "new": null,
+   "old": 8
   },
   {
-   "abs": 1.5999999999999996,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[6].cumulativePct",
-   "kind": "numeric",
-   "new": 7.8,
-   "old": 6.2,
-   "rel": 0.2580645161290322
+   "kind": "removed",
+   "new": null,
+   "old": 6.2
   },
   {
-   "abs": 0.002648000000000001,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[6].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.012911,
-   "old": 0.010263,
-   "rel": 0.25801422585988515
+   "kind": "removed",
+   "new": null,
+   "old": 0.010263
   },
   {
-   "abs": 0.005039999999999999,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[6].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.017816,
-   "old": 0.012776,
-   "rel": 0.3944896681277395
+   "kind": "removed",
+   "new": null,
+   "old": 0.012776
   },
   {
-   "abs": -0.40000000000009095,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[7].binCenter",
-   "kind": "numeric",
-   "new": 1292.8,
-   "old": 1293.2,
-   "rel": -0.0003093102381689537
+   "kind": "removed",
+   "new": null,
+   "old": 1293.2
   },
   {
-   "abs": -0.40000000000009095,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[7].binEnd",
-   "kind": "numeric",
-   "new": 1293.6,
-   "old": 1294.0,
-   "rel": -0.00030911901081923565
+   "kind": "removed",
+   "new": null,
+   "old": 1294.0
   },
   {
-   "abs": -0.599999999999909,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[7].binStart",
-   "kind": "numeric",
-   "new": 1291.9,
-   "old": 1292.5,
-   "rel": -0.00046421663442933
+   "kind": "removed",
+   "new": null,
+   "old": 1292.5
   },
   {
-   "abs": 18,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[7].count",
-   "kind": "numeric",
-   "new": 26,
-   "old": 8,
-   "rel": 2.25
+   "kind": "removed",
+   "new": null,
+   "old": 8
   },
   {
-   "abs": 5.2,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[7].cumulativePct",
-   "kind": "numeric",
-   "new": 13.0,
-   "old": 7.8,
-   "rel": 0.6666666666666667
+   "kind": "removed",
+   "new": null,
+   "old": 7.8
   },
   {
-   "abs": 0.020255000000000002,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[7].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.030518,
-   "old": 0.010263,
-   "rel": 1.9735944655558806
+   "kind": "removed",
+   "new": null,
+   "old": 0.010263
   },
   {
-   "abs": 0.003886999999999998,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[7].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.024609,
-   "old": 0.020722,
-   "rel": 0.1875784190715181
+   "kind": "removed",
+   "new": null,
+   "old": 0.020722
   },
   {
-   "abs": -0.2999999999999545,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[8].binCenter",
-   "kind": "numeric",
-   "new": 1294.5,
-   "old": 1294.8,
-   "rel": -0.00023169601482850982
+   "kind": "removed",
+   "new": null,
+   "old": 1294.8
   },
   {
-   "abs": -0.2999999999999545,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[8].binEnd",
-   "kind": "numeric",
-   "new": 1295.3,
-   "old": 1295.6,
-   "rel": -0.00023155294844084173
+   "kind": "removed",
+   "new": null,
+   "old": 1295.6
   },
   {
-   "abs": -0.40000000000009095,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[8].binStart",
-   "kind": "numeric",
-   "new": 1293.6,
-   "old": 1294.0,
-   "rel": -0.00030911901081923565
+   "kind": "removed",
+   "new": null,
+   "old": 1294.0
   },
   {
-   "abs": 17,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[8].count",
-   "kind": "numeric",
-   "new": 26,
-   "old": 9,
-   "rel": 1.8888888888888888
+   "kind": "removed",
+   "new": null,
+   "old": 9
   },
   {
-   "abs": 8.6,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[8].cumulativePct",
-   "kind": "numeric",
-   "new": 18.2,
-   "old": 9.6,
-   "rel": 0.8958333333333334
+   "kind": "removed",
+   "new": null,
+   "old": 9.6
   },
   {
-   "abs": 0.018972,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[8].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.030518,
-   "old": 0.011546,
-   "rel": 1.6431664645764765
+   "kind": "removed",
+   "new": null,
+   "old": 0.011546
   },
   {
-   "abs": 0.0011319999999999976,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[8].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.032185,
-   "old": 0.031053,
-   "rel": 0.036453804785366875
+   "kind": "removed",
+   "new": null,
+   "old": 0.031053
   },
   {
-   "abs": -0.20000000000004547,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[9].binCenter",
-   "kind": "numeric",
-   "new": 1296.2,
-   "old": 1296.4,
-   "rel": -0.00015427337241595608
+   "kind": "removed",
+   "new": null,
+   "old": 1296.4
   },
   {
-   "abs": -0.09999999999990905,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[9].binEnd",
-   "kind": "numeric",
-   "new": 1297.0,
-   "old": 1297.1,
-   "rel": -7.709505820669884e-05
+   "kind": "removed",
+   "new": null,
+   "old": 1297.1
   },
   {
-   "abs": -0.2999999999999545,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[9].binStart",
-   "kind": "numeric",
-   "new": 1295.3,
-   "old": 1295.6,
-   "rel": -0.00023155294844084173
+   "kind": "removed",
+   "new": null,
+   "old": 1295.6
   },
   {
-   "abs": 21,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[9].count",
-   "kind": "numeric",
-   "new": 31,
-   "old": 10,
-   "rel": 2.1
+   "kind": "removed",
+   "new": null,
+   "old": 10
   },
   {
-   "abs": 12.799999999999999,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[9].cumulativePct",
-   "kind": "numeric",
-   "new": 24.4,
-   "old": 11.6,
-   "rel": 1.103448275862069
+   "kind": "removed",
+   "new": null,
+   "old": 11.6
   },
   {
-   "abs": 0.023558000000000003,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[9].empiricalPdf",
-   "kind": "numeric",
-   "new": 0.036386,
-   "old": 0.012828,
-   "rel": 1.836451512316807
+   "kind": "removed",
+   "new": null,
+   "old": 0.012828
   },
   {
-   "abs": -0.003139000000000003,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.histogram[9].fittedNormalPdf",
-   "kind": "numeric",
-   "new": 0.039853,
-   "old": 0.042992,
-   "rel": -0.07301358392259032
+   "kind": "removed",
+   "new": null,
+   "old": 0.042992
   },
   {
-   "abs": -2.62,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.kurtosis",
-   "kind": "numeric",
-   "new": -0.093,
-   "old": 2.527,
-   "rel": -1.036802532647408
+   "kind": "removed",
+   "new": null,
+   "old": 2.527
   },
   {
-   "abs": 2.099999999999909,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.max",
-   "kind": "numeric",
-   "new": 1322.6,
-   "old": 1320.5,
-   "rel": 0.0015903067020067467
+   "kind": "removed",
+   "new": null,
+   "old": 1320.5
   },
   {
-   "abs": 0.1999999999998181,
+   "key": "stochasticProperties.ultimateTensileStrength_UTS.mean",
+   "kind": "removed",
+   "new": null,
+   "old": 1302.0
+  },
+  {
    "key": "stochasticProperties.ultimateTensileStrength_UTS.median_P50",
-   "kind": "numeric",
-   "new": 1302.1,
-   "old": 1301.9,
-   "rel": 0.0001536216299253538
+   "kind": "removed",
+   "new": null,
+   "old": 1301.9
   },
   {
-   "abs": -1.599999999999909,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.min",
-   "kind": "numeric",
-   "new": 1280.0,
-   "old": 1281.6,
-   "rel": -0.0012484394506865708
+   "kind": "removed",
+   "new": null,
+   "old": 1281.6
   },
   {
-   "abs": 0.024,
+   "key": "stochasticProperties.ultimateTensileStrength_UTS.mmpds_kA",
+   "kind": "removed",
+   "new": null,
+   "old": 2.475
+  },
+  {
+   "key": "stochasticProperties.ultimateTensileStrength_UTS.mmpds_kB",
+   "kind": "removed",
+   "new": null,
+   "old": 1.385
+  },
+  {
    "key": "stochasticProperties.ultimateTensileStrength_UTS.skewness",
-   "kind": "numeric",
-   "new": 0.007,
-   "old": -0.017,
-   "rel": 1.4117647058823528
+   "kind": "removed",
+   "new": null,
+   "old": -0.017
   },
   {
-   "abs": 1.75,
    "key": "stochasticProperties.ultimateTensileStrength_UTS.stdDev",
-   "kind": "numeric",
-   "new": 7.29,
-   "old": 5.54,
-   "rel": 0.315884476534296
+   "kind": "removed",
+   "new": null,
+   "old": 5.54
+  },
+  {
+   "key": "stochasticProperties.ultimateTensileStrength_UTS_status",
+   "kind": "added",
+   "new": "unavailable: no sourced UTS / work-hardening law (the former UTS = YS*(1+2.15n) was invented); see the ICME solver",
+   "old": null
   },
   {
    "abs": -0.8000000000000682,
@@ -6401,7 +6247,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "50315d628980d8a4924bc5cf6e4c67a8a5b347ed",
+ "gitHead": "697ca2c2462d96137381c1044e74131c6618b134",
  "input": {
   "agingTemp_nominal": 480,
   "agingTemp_stdDev": 5.0,
@@ -6452,7 +6298,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "stochastic_uq_mmpds_solver",
  "solverFile": "python/stochastic_uq_mmpds_solver.py",
- "solverSha256": "5a33ee81596d82a937a9d2b5e4a669e7672c0483ad05a1c1db97b4c2b49babe7",
+ "solverSha256": "cfc4a035568f002c982a2e4586ba6a15822c5e7bcae1669e0f2b6f81859e9180",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {
@@ -6460,8 +6306,9 @@
    "aBasisConforming": false,
    "bBasisConforming": false,
    "cpkConforming": false,
-   "criticalFlawMedian_mm": 6.6,
-   "criticalFlaw_P10_mm": 5.5,
+   "criticalFlawMedian_mm": null,
+   "criticalFlaw_P10_mm": null,
+   "criticalFlaw_status": "unavailable: critical flaw size needs a sourced K_Ic; the former estimate was dimensionally unsupported",
    "hasoferLindBetaIndex": -4.75,
    "qualificationStatus": "Screening only; qualification not assessed",
    "yieldFailureProbability_Pf": 1.0
@@ -6594,260 +6441,8 @@
    }
   ],
   "stochasticProperties": {
-   "criticalFlawSize_ac": {
-    "P01": 4.7,
-    "P10": 5.5,
-    "P90": 8.2,
-    "P99": 9.8,
-    "aBasisAllowable": 4.0,
-    "aBasisConfidenceInterval95": null,
-    "allowableStandardError_A": null,
-    "allowableStandardError_B": null,
-    "allowableUncertaintyMethod": "unavailable: independent randomized QMC replicates required",
-    "bBasisAllowable": 5.2,
-    "bBasisConfidenceInterval95": null,
-    "ci95Lower_P2_5": 5.0,
-    "ci95Upper_P97_5": 9.3,
-    "conformancePct": 100.0,
-    "covPct": 16.61,
-    "cpk": 1.71,
-    "histogram": [
-     {
-      "binCenter": 4.5,
-      "binEnd": 4.6,
-      "binStart": 4.3,
-      "count": 4,
-      "cumulativePct": 0.8,
-      "empiricalPdf": 0.026648,
-      "fittedNormalPdf": 0.046149
-     },
-     {
-      "binCenter": 4.8,
-      "binEnd": 4.9,
-      "binStart": 4.6,
-      "count": 8,
-      "cumulativePct": 2.4,
-      "empiricalPdf": 0.053296,
-      "fittedNormalPdf": 0.076432
-     },
-     {
-      "binCenter": 5.1,
-      "binEnd": 5.2,
-      "binStart": 4.9,
-      "count": 16,
-      "cumulativePct": 5.6,
-      "empiricalPdf": 0.106593,
-      "fittedNormalPdf": 0.117851
-     },
-     {
-      "binCenter": 5.4,
-      "binEnd": 5.5,
-      "binStart": 5.2,
-      "count": 32,
-      "cumulativePct": 12.0,
-      "empiricalPdf": 0.213186,
-      "fittedNormalPdf": 0.169176
-     },
-     {
-      "binCenter": 5.7,
-      "binEnd": 5.8,
-      "binStart": 5.5,
-      "count": 47,
-      "cumulativePct": 21.4,
-      "empiricalPdf": 0.313116,
-      "fittedNormalPdf": 0.226096
-     },
-     {
-      "binCenter": 6.0,
-      "binEnd": 6.1,
-      "binStart": 5.8,
-      "count": 51,
-      "cumulativePct": 31.6,
-      "empiricalPdf": 0.339765,
-      "fittedNormalPdf": 0.281316
-     },
-     {
-      "binCenter": 6.3,
-      "binEnd": 6.4,
-      "binStart": 6.1,
-      "count": 60,
-      "cumulativePct": 43.6,
-      "empiricalPdf": 0.399723,
-      "fittedNormalPdf": 0.32587
-     },
-     {
-      "binCenter": 6.6,
-      "binEnd": 6.7,
-      "binStart": 6.4,
-      "count": 53,
-      "cumulativePct": 54.2,
-      "empiricalPdf": 0.353089,
-      "fittedNormalPdf": 0.351432
-     },
-     {
-      "binCenter": 6.9,
-      "binEnd": 7.0,
-      "binStart": 6.7,
-      "count": 52,
-      "cumulativePct": 64.6,
-      "empiricalPdf": 0.346427,
-      "fittedNormalPdf": 0.352846
-     },
-     {
-      "binCenter": 7.2,
-      "binEnd": 7.3,
-      "binStart": 7.0,
-      "count": 46,
-      "cumulativePct": 73.8,
-      "empiricalPdf": 0.306454,
-      "fittedNormalPdf": 0.32982
-     },
-     {
-      "binCenter": 7.5,
-      "binEnd": 7.6,
-      "binStart": 7.3,
-      "count": 34,
-      "cumulativePct": 80.6,
-      "empiricalPdf": 0.22651,
-      "fittedNormalPdf": 0.287023
-     },
-     {
-      "binCenter": 7.8,
-      "binEnd": 7.9,
-      "binStart": 7.6,
-      "count": 28,
-      "cumulativePct": 86.2,
-      "empiricalPdf": 0.186537,
-      "fittedNormalPdf": 0.232543
-     },
-     {
-      "binCenter": 8.1,
-      "binEnd": 8.2,
-      "binStart": 7.9,
-      "count": 22,
-      "cumulativePct": 90.6,
-      "empiricalPdf": 0.146565,
-      "fittedNormalPdf": 0.175404
-     },
-     {
-      "binCenter": 8.4,
-      "binEnd": 8.5,
-      "binStart": 8.2,
-      "count": 12,
-      "cumulativePct": 93.0,
-      "empiricalPdf": 0.079945,
-      "fittedNormalPdf": 0.123174
-     },
-     {
-      "binCenter": 8.7,
-      "binEnd": 8.8,
-      "binStart": 8.5,
-      "count": 12,
-      "cumulativePct": 95.4,
-      "empiricalPdf": 0.079945,
-      "fittedNormalPdf": 0.080529
-     },
-     {
-      "binCenter": 9.0,
-      "binEnd": 9.1,
-      "binStart": 8.8,
-      "count": 7,
-      "cumulativePct": 96.8,
-      "empiricalPdf": 0.046634,
-      "fittedNormalPdf": 0.049015
-     },
-     {
-      "binCenter": 9.3,
-      "binEnd": 9.4,
-      "binStart": 9.1,
-      "count": 5,
-      "cumulativePct": 97.8,
-      "empiricalPdf": 0.03331,
-      "fittedNormalPdf": 0.027775
-     },
-     {
-      "binCenter": 9.6,
-      "binEnd": 9.7,
-      "binStart": 9.4,
-      "count": 4,
-      "cumulativePct": 98.6,
-      "empiricalPdf": 0.026648,
-      "fittedNormalPdf": 0.014653
-     },
-     {
-      "binCenter": 9.9,
-      "binEnd": 10.0,
-      "binStart": 9.7,
-      "count": 3,
-      "cumulativePct": 99.2,
-      "empiricalPdf": 0.019986,
-      "fittedNormalPdf": 0.007197
-     },
-     {
-      "binCenter": 10.2,
-      "binEnd": 10.3,
-      "binStart": 10.0,
-      "count": 0,
-      "cumulativePct": 99.2,
-      "empiricalPdf": 0.0,
-      "fittedNormalPdf": 0.003291
-     },
-     {
-      "binCenter": 10.5,
-      "binEnd": 10.6,
-      "binStart": 10.3,
-      "count": 2,
-      "cumulativePct": 99.6,
-      "empiricalPdf": 0.013324,
-      "fittedNormalPdf": 0.001401
-     },
-     {
-      "binCenter": 10.8,
-      "binEnd": 10.9,
-      "binStart": 10.6,
-      "count": 0,
-      "cumulativePct": 99.6,
-      "empiricalPdf": 0.0,
-      "fittedNormalPdf": 0.000555
-     },
-     {
-      "binCenter": 11.1,
-      "binEnd": 11.2,
-      "binStart": 10.9,
-      "count": 1,
-      "cumulativePct": 99.8,
-      "empiricalPdf": 0.006662,
-      "fittedNormalPdf": 0.000205
-     },
-     {
-      "binCenter": 11.4,
-      "binEnd": 11.5,
-      "binStart": 11.2,
-      "count": 0,
-      "cumulativePct": 99.8,
-      "empiricalPdf": 0.0,
-      "fittedNormalPdf": 7e-05
-     },
-     {
-      "binCenter": 11.7,
-      "binEnd": 11.8,
-      "binStart": 11.5,
-      "count": 1,
-      "cumulativePct": 100.0,
-      "empiricalPdf": 0.006662,
-      "fittedNormalPdf": 2.3e-05
-     }
-    ],
-    "kurtosis": 1.1,
-    "max": 11.8,
-    "mean": 6.8,
-    "median_P50": 6.6,
-    "min": 4.3,
-    "mmpds_kA": 2.475,
-    "mmpds_kB": 1.385,
-    "skewness": 0.776,
-    "stdDev": 1.12
-   },
+   "criticalFlawSize_ac": null,
+   "criticalFlawSize_ac_status": "unavailable: critical flaw size needs a sourced K_Ic; the former estimate was dimensionally unsupported",
    "elongationPct": {
     "P01": 16.3,
     "P10": 16.5,
@@ -7102,514 +6697,10 @@
     "skewness": 0.016,
     "stdDev": 0.13
    },
-   "fractureToughness_K1c": {
-    "P01": 151.7,
-    "P10": 152.6,
-    "P90": 154.5,
-    "P99": 155.4,
-    "aBasisAllowable": 151.6,
-    "aBasisConfidenceInterval95": null,
-    "allowableStandardError_A": null,
-    "allowableStandardError_B": null,
-    "allowableUncertaintyMethod": "unavailable: independent randomized QMC replicates required",
-    "bBasisAllowable": 152.5,
-    "bBasisConfidenceInterval95": null,
-    "ci95Lower_P2_5": 152.0,
-    "ci95Upper_P97_5": 155.0,
-    "conformancePct": 100.0,
-    "covPct": 0.51,
-    "cpk": 40.09,
-    "histogram": [
-     {
-      "binCenter": 151.5,
-      "binEnd": 151.5,
-      "binStart": 151.4,
-      "count": 3,
-      "cumulativePct": 0.6,
-      "empiricalPdf": 0.032958,
-      "fittedNormalPdf": 0.014103
-     },
-     {
-      "binCenter": 151.6,
-      "binEnd": 151.7,
-      "binStart": 151.5,
-      "count": 2,
-      "cumulativePct": 1.0,
-      "empiricalPdf": 0.021972,
-      "fittedNormalPdf": 0.025701
-     },
-     {
-      "binCenter": 151.8,
-      "binEnd": 151.9,
-      "binStart": 151.7,
-      "count": 6,
-      "cumulativePct": 2.2,
-      "empiricalPdf": 0.065915,
-      "fittedNormalPdf": 0.04434
-     },
-     {
-      "binCenter": 152.0,
-      "binEnd": 152.1,
-      "binStart": 151.9,
-      "count": 5,
-      "cumulativePct": 3.2,
-      "empiricalPdf": 0.054929,
-      "fittedNormalPdf": 0.072418
-     },
-     {
-      "binCenter": 152.2,
-      "binEnd": 152.3,
-      "binStart": 152.1,
-      "count": 10,
-      "cumulativePct": 5.2,
-      "empiricalPdf": 0.109858,
-      "fittedNormalPdf": 0.11197
-     },
-     {
-      "binCenter": 152.4,
-      "binEnd": 152.5,
-      "binStart": 152.3,
-      "count": 15,
-      "cumulativePct": 8.2,
-      "empiricalPdf": 0.164788,
-      "fittedNormalPdf": 0.163892
-     },
-     {
-      "binCenter": 152.5,
-      "binEnd": 152.6,
-      "binStart": 152.5,
-      "count": 18,
-      "cumulativePct": 11.8,
-      "empiricalPdf": 0.197745,
-      "fittedNormalPdf": 0.227103
-     },
-     {
-      "binCenter": 152.7,
-      "binEnd": 152.8,
-      "binStart": 152.6,
-      "count": 27,
-      "cumulativePct": 17.2,
-      "empiricalPdf": 0.296618,
-      "fittedNormalPdf": 0.297914
-     },
-     {
-      "binCenter": 152.9,
-      "binEnd": 153.0,
-      "binStart": 152.8,
-      "count": 36,
-      "cumulativePct": 24.4,
-      "empiricalPdf": 0.395491,
-      "fittedNormalPdf": 0.369968
-     },
-     {
-      "binCenter": 153.1,
-      "binEnd": 153.2,
-      "binStart": 153.0,
-      "count": 42,
-      "cumulativePct": 32.8,
-      "empiricalPdf": 0.461406,
-      "fittedNormalPdf": 0.434954
-     },
-     {
-      "binCenter": 153.3,
-      "binEnd": 153.4,
-      "binStart": 153.2,
-      "count": 43,
-      "cumulativePct": 41.4,
-      "empiricalPdf": 0.472392,
-      "fittedNormalPdf": 0.484091
-     },
-     {
-      "binCenter": 153.5,
-      "binEnd": 153.5,
-      "binStart": 153.4,
-      "count": 48,
-      "cumulativePct": 51.0,
-      "empiricalPdf": 0.527321,
-      "fittedNormalPdf": 0.510054
-     },
-     {
-      "binCenter": 153.6,
-      "binEnd": 153.7,
-      "binStart": 153.5,
-      "count": 44,
-      "cumulativePct": 59.8,
-      "empiricalPdf": 0.483377,
-      "fittedNormalPdf": 0.508757
-     },
-     {
-      "binCenter": 153.8,
-      "binEnd": 153.9,
-      "binStart": 153.7,
-      "count": 46,
-      "cumulativePct": 69.0,
-      "empiricalPdf": 0.505349,
-      "fittedNormalPdf": 0.480407
-     },
-     {
-      "binCenter": 154.0,
-      "binEnd": 154.1,
-      "binStart": 153.9,
-      "count": 35,
-      "cumulativePct": 76.0,
-      "empiricalPdf": 0.384505,
-      "fittedNormalPdf": 0.429451
-     },
-     {
-      "binCenter": 154.2,
-      "binEnd": 154.3,
-      "binStart": 154.1,
-      "count": 31,
-      "cumulativePct": 82.2,
-      "empiricalPdf": 0.340561,
-      "fittedNormalPdf": 0.363432
-     },
-     {
-      "binCenter": 154.4,
-      "binEnd": 154.5,
-      "binStart": 154.3,
-      "count": 26,
-      "cumulativePct": 87.4,
-      "empiricalPdf": 0.285632,
-      "fittedNormalPdf": 0.291164
-     },
-     {
-      "binCenter": 154.6,
-      "binEnd": 154.6,
-      "binStart": 154.5,
-      "count": 24,
-      "cumulativePct": 92.2,
-      "empiricalPdf": 0.26366,
-      "fittedNormalPdf": 0.22083
-     },
-     {
-      "binCenter": 154.7,
-      "binEnd": 154.8,
-      "binStart": 154.6,
-      "count": 14,
-      "cumulativePct": 95.0,
-      "empiricalPdf": 0.153802,
-      "fittedNormalPdf": 0.158556
-     },
-     {
-      "binCenter": 154.9,
-      "binEnd": 155.0,
-      "binStart": 154.8,
-      "count": 11,
-      "cumulativePct": 97.2,
-      "empiricalPdf": 0.120844,
-      "fittedNormalPdf": 0.107774
-     },
-     {
-      "binCenter": 155.1,
-      "binEnd": 155.2,
-      "binStart": 155.0,
-      "count": 6,
-      "cumulativePct": 98.4,
-      "empiricalPdf": 0.065915,
-      "fittedNormalPdf": 0.06935
-     },
-     {
-      "binCenter": 155.3,
-      "binEnd": 155.4,
-      "binStart": 155.2,
-      "count": 1,
-      "cumulativePct": 98.6,
-      "empiricalPdf": 0.010986,
-      "fittedNormalPdf": 0.042246
-     },
-     {
-      "binCenter": 155.5,
-      "binEnd": 155.6,
-      "binStart": 155.4,
-      "count": 5,
-      "cumulativePct": 99.6,
-      "empiricalPdf": 0.054929,
-      "fittedNormalPdf": 0.024363
-     },
-     {
-      "binCenter": 155.6,
-      "binEnd": 155.7,
-      "binStart": 155.6,
-      "count": 1,
-      "cumulativePct": 99.8,
-      "empiricalPdf": 0.010986,
-      "fittedNormalPdf": 0.013301
-     },
-     {
-      "binCenter": 155.8,
-      "binEnd": 155.9,
-      "binStart": 155.7,
-      "count": 1,
-      "cumulativePct": 100.0,
-      "empiricalPdf": 0.010986,
-      "fittedNormalPdf": 0.006874
-     }
-    ],
-    "kurtosis": -0.091,
-    "max": 155.9,
-    "mean": 153.5,
-    "median_P50": 153.5,
-    "min": 151.4,
-    "mmpds_kA": 2.475,
-    "mmpds_kB": 1.385,
-    "skewness": 0.018,
-    "stdDev": 0.78
-   },
-   "ultimateTensileStrength_UTS": {
-    "P01": 1284.4,
-    "P10": 1292.8,
-    "P90": 1311.1,
-    "P99": 1319.0,
-    "aBasisAllowable": 1284.0,
-    "aBasisConfidenceInterval95": null,
-    "allowableStandardError_A": null,
-    "allowableStandardError_B": null,
-    "allowableUncertaintyMethod": "unavailable: independent randomized QMC replicates required",
-    "bBasisAllowable": 1291.9,
-    "bBasisConfidenceInterval95": null,
-    "ci95Lower_P2_5": 1288.0,
-    "ci95Upper_P97_5": 1316.4,
-    "conformancePct": 0.0,
-    "covPct": 0.56,
-    "cpk": -9.97,
-    "histogram": [
-     {
-      "binCenter": 1280.8,
-      "binEnd": 1281.7,
-      "binStart": 1280.0,
-      "count": 1,
-      "cumulativePct": 0.2,
-      "empiricalPdf": 0.001174,
-      "fittedNormalPdf": 0.000813
-     },
-     {
-      "binCenter": 1282.6,
-      "binEnd": 1283.4,
-      "binStart": 1281.7,
-      "count": 1,
-      "cumulativePct": 0.4,
-      "empiricalPdf": 0.001174,
-      "fittedNormalPdf": 0.00156
-     },
-     {
-      "binCenter": 1284.3,
-      "binEnd": 1285.1,
-      "binStart": 1283.4,
-      "count": 5,
-      "cumulativePct": 1.4,
-      "empiricalPdf": 0.005869,
-      "fittedNormalPdf": 0.002832
-     },
-     {
-      "binCenter": 1286.0,
-      "binEnd": 1286.8,
-      "binStart": 1285.1,
-      "count": 1,
-      "cumulativePct": 1.6,
-      "empiricalPdf": 0.001174,
-      "fittedNormalPdf": 0.004869
-     },
-     {
-      "binCenter": 1287.7,
-      "binEnd": 1288.5,
-      "binStart": 1286.8,
-      "count": 7,
-      "cumulativePct": 3.0,
-      "empiricalPdf": 0.008216,
-      "fittedNormalPdf": 0.007924
-     },
-     {
-      "binCenter": 1289.4,
-      "binEnd": 1290.2,
-      "binStart": 1288.5,
-      "count": 13,
-      "cumulativePct": 5.6,
-      "empiricalPdf": 0.015259,
-      "fittedNormalPdf": 0.012211
-     },
-     {
-      "binCenter": 1291.1,
-      "binEnd": 1291.9,
-      "binStart": 1290.2,
-      "count": 11,
-      "cumulativePct": 7.8,
-      "empiricalPdf": 0.012911,
-      "fittedNormalPdf": 0.017816
-     },
-     {
-      "binCenter": 1292.8,
-      "binEnd": 1293.6,
-      "binStart": 1291.9,
-      "count": 26,
-      "cumulativePct": 13.0,
-      "empiricalPdf": 0.030518,
-      "fittedNormalPdf": 0.024609
-     },
-     {
-      "binCenter": 1294.5,
-      "binEnd": 1295.3,
-      "binStart": 1293.6,
-      "count": 26,
-      "cumulativePct": 18.2,
-      "empiricalPdf": 0.030518,
-      "fittedNormalPdf": 0.032185
-     },
-     {
-      "binCenter": 1296.2,
-      "binEnd": 1297.0,
-      "binStart": 1295.3,
-      "count": 31,
-      "cumulativePct": 24.4,
-      "empiricalPdf": 0.036386,
-      "fittedNormalPdf": 0.039853
-     },
-     {
-      "binCenter": 1297.9,
-      "binEnd": 1298.7,
-      "binStart": 1297.0,
-      "count": 40,
-      "cumulativePct": 32.4,
-      "empiricalPdf": 0.04695,
-      "fittedNormalPdf": 0.046722
-     },
-     {
-      "binCenter": 1299.6,
-      "binEnd": 1300.4,
-      "binStart": 1298.7,
-      "count": 45,
-      "cumulativePct": 41.4,
-      "empiricalPdf": 0.052819,
-      "fittedNormalPdf": 0.05186
-     },
-     {
-      "binCenter": 1301.3,
-      "binEnd": 1302.1,
-      "binStart": 1300.4,
-      "count": 44,
-      "cumulativePct": 50.2,
-      "empiricalPdf": 0.051645,
-      "fittedNormalPdf": 0.0545
-     },
-     {
-      "binCenter": 1303.0,
-      "binEnd": 1303.9,
-      "binStart": 1302.1,
-      "count": 49,
-      "cumulativePct": 60.0,
-      "empiricalPdf": 0.057514,
-      "fittedNormalPdf": 0.054226
-     },
-     {
-      "binCenter": 1304.7,
-      "binEnd": 1305.6,
-      "binStart": 1303.9,
-      "count": 39,
-      "cumulativePct": 67.8,
-      "empiricalPdf": 0.045776,
-      "fittedNormalPdf": 0.051083
-     },
-     {
-      "binCenter": 1306.4,
-      "binEnd": 1307.3,
-      "binStart": 1305.6,
-      "count": 44,
-      "cumulativePct": 76.6,
-      "empiricalPdf": 0.051645,
-      "fittedNormalPdf": 0.045562
-     },
-     {
-      "binCenter": 1308.1,
-      "binEnd": 1309.0,
-      "binStart": 1307.3,
-      "count": 36,
-      "cumulativePct": 83.8,
-      "empiricalPdf": 0.042255,
-      "fittedNormalPdf": 0.038475
-     },
-     {
-      "binCenter": 1309.8,
-      "binEnd": 1310.7,
-      "binStart": 1309.0,
-      "count": 26,
-      "cumulativePct": 89.0,
-      "empiricalPdf": 0.030518,
-      "fittedNormalPdf": 0.030761
-     },
-     {
-      "binCenter": 1311.5,
-      "binEnd": 1312.4,
-      "binStart": 1310.7,
-      "count": 15,
-      "cumulativePct": 92.0,
-      "empiricalPdf": 0.017606,
-      "fittedNormalPdf": 0.023285
-     },
-     {
-      "binCenter": 1313.2,
-      "binEnd": 1314.1,
-      "binStart": 1312.4,
-      "count": 14,
-      "cumulativePct": 94.8,
-      "empiricalPdf": 0.016433,
-      "fittedNormalPdf": 0.016688
-     },
-     {
-      "binCenter": 1314.9,
-      "binEnd": 1315.8,
-      "binStart": 1314.1,
-      "count": 10,
-      "cumulativePct": 96.8,
-      "empiricalPdf": 0.011738,
-      "fittedNormalPdf": 0.011324
-     },
-     {
-      "binCenter": 1316.6,
-      "binEnd": 1317.5,
-      "binStart": 1315.8,
-      "count": 5,
-      "cumulativePct": 97.8,
-      "empiricalPdf": 0.005869,
-      "fittedNormalPdf": 0.007275
-     },
-     {
-      "binCenter": 1318.3,
-      "binEnd": 1319.2,
-      "binStart": 1317.5,
-      "count": 6,
-      "cumulativePct": 99.0,
-      "empiricalPdf": 0.007043,
-      "fittedNormalPdf": 0.004425
-     },
-     {
-      "binCenter": 1320.0,
-      "binEnd": 1320.9,
-      "binStart": 1319.2,
-      "count": 2,
-      "cumulativePct": 99.4,
-      "empiricalPdf": 0.002348,
-      "fittedNormalPdf": 0.002548
-     },
-     {
-      "binCenter": 1321.7,
-      "binEnd": 1322.6,
-      "binStart": 1320.9,
-      "count": 3,
-      "cumulativePct": 100.0,
-      "empiricalPdf": 0.003521,
-      "fittedNormalPdf": 0.00139
-     }
-    ],
-    "kurtosis": -0.093,
-    "max": 1322.6,
-    "mean": 1302.0,
-    "median_P50": 1302.1,
-    "min": 1280.0,
-    "mmpds_kA": 2.475,
-    "mmpds_kB": 1.385,
-    "skewness": 0.007,
-    "stdDev": 7.29
-   },
+   "fractureToughness_K1c": null,
+   "fractureToughness_K1c_status": "unavailable: no sourced fracture-toughness law (the former K_Ic clamp of 18-160 MPa*sqrt(m) was invented); see the ICME solver",
+   "ultimateTensileStrength_UTS": null,
+   "ultimateTensileStrength_UTS_status": "unavailable: no sourced UTS / work-hardening law (the former UTS = YS*(1+2.15n) was invented); see the ICME solver",
    "yieldStrength_Rp02": {
     "P01": 857.8,
     "P10": 865.6,

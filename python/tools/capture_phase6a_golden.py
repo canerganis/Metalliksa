@@ -426,21 +426,56 @@ def _uq_scipy_oracle_stdout(payload: Dict[str, Any]) -> Dict[str, Any]:
     return _UQ_ORACLE_CACHE[cache_key]
 
 
+# Unsupported-output removal (lane uqlab): the pinned pre-fix solver computed UTS = YS*(1+2.15n), a clamped
+# K_Ic and a critical flaw size from invented laws. The current solver reports them as null with a status
+# string. The strings are pinned here literally (not imported from the solver) so a later solver edit cannot
+# match its own oracle.
+_UQ_UTS_STATUS = ("unavailable: no sourced UTS / work-hardening law (the former UTS = YS*(1+2.15n) was invented); "
+                  "see the ICME solver")
+_UQ_K1C_STATUS = ("unavailable: no sourced fracture-toughness law (the former K_Ic clamp of 18-160 MPa*sqrt(m) "
+                  "was invented); see the ICME solver")
+_UQ_FLAW_STATUS = ("unavailable: critical flaw size needs a sourced K_Ic; the former estimate was dimensionally "
+                   "unsupported")
+_UQ_REMOVED_ROW = re.compile(r"stochasticProperties\.(ultimateTensileStrength_UTS|fractureToughness_K1c|"
+                             r"criticalFlawSize_ac)(_status|\..+)?|"
+                             r"aerospaceReliability\.criticalFlaw(Median_mm|_P10_mm|_status)")
+
+
+def _uq_without_unsupported_outputs(doc: Dict[str, Any]) -> Dict[str, Any]:
+    """The oracle document with the three invented-law outputs replaced by null + status."""
+    import copy
+    out = copy.deepcopy(doc)
+    props = out["stochasticProperties"]
+    props["ultimateTensileStrength_UTS"] = None
+    props["ultimateTensileStrength_UTS_status"] = _UQ_UTS_STATUS
+    props["fractureToughness_K1c"] = None
+    props["fractureToughness_K1c_status"] = _UQ_K1C_STATUS
+    props["criticalFlawSize_ac"] = None
+    props["criticalFlawSize_ac_status"] = _UQ_FLAW_STATUS
+    rel = out["aerospaceReliability"]
+    rel["criticalFlawMedian_mm"] = None
+    rel["criticalFlaw_P10_mm"] = None
+    rel["criticalFlaw_status"] = _UQ_FLAW_STATUS
+    return out
+
+
 def _uq_sampler_violation(row: Dict[str, Any], new_stdout: Optional[Dict[str, Any]],
                           payload: Optional[Dict[str, Any]]) -> Optional[str]:
-    """None when the row belongs to the norm_ppf sign fix and the whole new document is the oracle run."""
+    """None when the row belongs to the norm_ppf sign fix (or the removal of the invented-law outputs)
+    and the whole new document is the oracle run with those outputs replaced by null + status."""
     key = row["key"]
     if new_stdout is None or payload is None:
         return f"{key}: documented change needs the re-blessed document and the case payload to be verified"
-    if row["kind"] not in ("numeric", "changed"):
+    removal_row = bool(_UQ_REMOVED_ROW.fullmatch(key))
+    if row["kind"] not in ("numeric", "changed") and not (removal_row and row["kind"] in ("added", "removed")):
         return f"{key}: {row['kind']} row is not a value change of the sampler fix"
     try:
-        expected = _uq_scipy_oracle_stdout(payload)
+        expected = _uq_without_unsupported_outputs(_uq_scipy_oracle_stdout(payload))
     except (ImportError, RuntimeError) as exc:
         return f"{key}: UQ oracle unavailable ({exc})"
     if canonical(new_stdout) != canonical(expected):
         return (f"{key}: re-blessed document differs from the pinned {UQ_ORACLE_REVISION} solver run with "
-                "scipy.special.ndtri as inverse normal")
+                "scipy.special.ndtri as inverse normal and the invented-law outputs replaced by null + status")
     return None
 
 

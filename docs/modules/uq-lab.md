@@ -27,10 +27,8 @@ Authority: python-ipc `python/stochastic_uq_mmpds_solver.py`; timeout 25000 ms; 
 | `agingTime_stdDev` | Aging time standard deviation | number | h | — | — | — | 0.25 | — |
 | `serviceStress_nominal` | Nominal service stress | number | MPa | — | — | — | 720.0 | No bound is enforced; each draw is floored at 50 MPa. |
 | `serviceStress_cov` | Service-stress coefficient of variation | number | 1 | — | — | — | 0.08 | — |
-| `initialFlawSize_um_mean` | Initial flaw size mean | number | µm | — | — | — | 45.0 | No bound is enforced; each draw is floored at 5 µm. |
-| `initialFlawSize_um_std` | Initial flaw size standard deviation | number | µm | — | — | — | 15.0 | — |
 | `specMinYield_MPa` | Specification minimum yield strength | number | MPa | — | — | — | 1100.0 | — |
-| `specMinUTS_MPa` | Specification minimum UTS | number | MPa | — | — | — | 1350.0 | — |
+| `specMinUTS_MPa` | Specification minimum UTS | number | MPa | — | — | — | 1350.0 | Echoed in alloyMetadata only; no UTS is computed (the UTS output is unavailable). |
 | `specMinElongation_pct` | Specification minimum elongation | number | % | — | — | — | 12.0 | — |
 | `mcSamples` | Sample count | integer | 1 | 500 | 10000 | 1 | 2500 | The authority clamps values outside [500, 10000] instead of rejecting them; the contract declares [500, 10000] as its hard range. |
 | `samplingMethod` | Sampling method | enum ['sobol_qmc'] | — | — | — | — | sobol_qmc | The authority rejects 'pseudo_mc' with a ValueError; the view still offers it. |
@@ -52,7 +50,7 @@ Output fields (no status key, so the output carries no evidence status): `succes
 - Oracle: pending (ceiling capped at screening-only)
 - Oracle scope: none
 - Oracle in CI: none (oracle pending)
-- Note: Emits no evidence status: the output has no status key. aerospaceReliability.qualificationStatus is the fixed text 'Screening only; qualification not assessed' and sensitivityMetadata.status is 'estimated' or 'unavailable_zero_variance'; neither is an evidence status. Ceiling: the pending-oracle cap (screening-only). Simulated populations from a heuristic strengthening model are not coupon evidence or allowables.
+- Note: Emits no evidence status: the output has no status key. stochasticProperties UTS, K_Ic and critical flaw size (and aerospaceReliability.criticalFlawMedian_mm / criticalFlaw_P10_mm) are null with an 'unavailable: ...' *_status string because their former laws were invented; they are not evidence. aerospaceReliability.qualificationStatus is the fixed text 'Screening only; qualification not assessed' and sensitivityMetadata.status is 'estimated' or 'unavailable_zero_variance'; neither is an evidence status. Ceiling: the pending-oracle cap (screening-only). Simulated populations from a heuristic strengthening model are not coupon evidence or allowables.
 
 ## Validity domain
 
@@ -66,8 +64,9 @@ Background work: none; resources: fetch.
 
 - alloyName and standardSpec are free-text labels echoed in alloyMetadata; composition_wt and composition_tolerances are element -> wt% maps (a missing tolerance defaults to 10 % of the nominal). The Field schema cannot describe them, so they are recorded as undeclaredInput.
 - More than 13 composition elements exceed the 32-dimension Sobol table in the sensitivity pass (2 x (elements + 3) dimensions) and the authority raises a ValueError.
-- The view offers 'Pseudo-MC', which the authority rejects; python/test_stochastic_uq_evidence.py still expects pseudo_mc to succeed and errors in setUpClass (observed in Phase 7 wave 1).
-- Coupon statistics over uploaded or synthetic coupons (computeMMPDSEmpiricalStats in src/components/uqLabData.ts) run in the browser: recorded single-authority debt, not bound as an operation because the code declares no route or deadline for it.
+- The view fixes the engine to Sobol QMC (the authority rejects 'pseudo_mc'). The solver run is on-demand and illustrative: the strength model is an uncalibrated toy superposition, so only relative Sobol indices are shown in the view.
+- Coupon statistics over uploaded coupon CSV rows only (computeMMPDSEmpiricalStats in src/components/uqLabData.ts; no coupons are bundled and none are generated) run in the browser: recorded single-authority debt, not bound as an operation because the code declares no route or deadline for it.
+- Known removal: UTS, K_Ic and critical flaw size were removed from the response (null + unavailable status); the initialFlawSize_um_* inputs no longer exist.
 - No validity domain is declared: no source-backed applicability range exists for the strengthening model or the input distributions.
 - warm: true is the best case: python/persistent_ipc_service.py pre-imports the solver (WARM_MODULE_NAMES). When the IPC daemon is unreachable, server/processOrchestrator.ts falls back to a cold ad-hoc spawn; each attempt (socket, HTTP, spawn) gets the 25000 ms timeout separately, so the total wait can exceed it.
 

@@ -314,11 +314,9 @@ _UQ_FIELDS = (
     _num("serviceStress_nominal", "Nominal service stress", "MPa", "stress", 720.0,
          note="No bound is enforced; each draw is floored at 50 MPa."),
     _num("serviceStress_cov", "Service-stress coefficient of variation", "1", "coefficient-of-variation", 0.08),
-    _num("initialFlawSize_um_mean", "Initial flaw size mean", _MICRO, "length", 45.0,
-         note="No bound is enforced; each draw is floored at 5 µm."),
-    _num("initialFlawSize_um_std", "Initial flaw size standard deviation", _MICRO, "length", 15.0),
     _num("specMinYield_MPa", "Specification minimum yield strength", "MPa", "stress", 1100.0),
-    _num("specMinUTS_MPa", "Specification minimum UTS", "MPa", "stress", 1350.0),
+    _num("specMinUTS_MPa", "Specification minimum UTS", "MPa", "stress", 1350.0,
+         note="Echoed in alloyMetadata only; no UTS is computed (the UTS output is unavailable)."),
     _num("specMinElongation_pct", "Specification minimum elongation", "%", "strain", 12.0),
     _num("mcSamples", "Sample count", "1", "count", 2500, 500, 10000, integer=True,
          note="The authority clamps values outside [500, 10000] instead of rejecting them; the contract "
@@ -340,7 +338,10 @@ _UQ_OUTPUT = OutputSchema(
 )
 
 _UQ_EVIDENCE_NOTE = (
-    "Emits no evidence status: the output has no status key. aerospaceReliability.qualificationStatus is "
+    "Emits no evidence status: the output has no status key. stochasticProperties UTS, K_Ic and critical "
+    "flaw size (and aerospaceReliability.criticalFlawMedian_mm / criticalFlaw_P10_mm) are null with an "
+    "'unavailable: ...' *_status string because their former laws were invented; they are not evidence. "
+    "aerospaceReliability.qualificationStatus is "
     "the fixed text 'Screening only; qualification not assessed' and sensitivityMetadata.status is "
     "'estimated' or 'unavailable_zero_variance'; neither is an evidence status. Ceiling: the pending-oracle "
     "cap (screening-only). Simulated populations from a heuristic strengthening model are not coupon "
@@ -416,11 +417,15 @@ def _uq_contract(row: Dict[str, str]) -> ModuleContract:
                       "nominal). The Field schema cannot describe them, so they are recorded as undeclaredInput.",
                       "More than 13 composition elements exceed the 32-dimension Sobol table in the sensitivity "
                       "pass (2 x (elements + 3) dimensions) and the authority raises a ValueError.",
-                      "The view offers 'Pseudo-MC', which the authority rejects; python/test_stochastic_uq_evidence.py "
-                      "still expects pseudo_mc to succeed and errors in setUpClass (observed in Phase 7 wave 1).",
-                      "Coupon statistics over uploaded or synthetic coupons (computeMMPDSEmpiricalStats in "
-                      "src/components/uqLabData.ts) run in the browser: recorded single-authority debt, not bound as "
-                      "an operation because the code declares no route or deadline for it.",
+                      "The view fixes the engine to Sobol QMC (the authority rejects 'pseudo_mc'). The solver run is "
+                      "on-demand and illustrative: the strength model is an uncalibrated toy superposition, so only "
+                      "relative Sobol indices are shown in the view.",
+                      "Coupon statistics over uploaded coupon CSV rows only (computeMMPDSEmpiricalStats in "
+                      "src/components/uqLabData.ts; no coupons are bundled and none are generated) run in the "
+                      "browser: recorded single-authority debt, not bound as an operation because the code "
+                      "declares no route or deadline for it.",
+                      "Known removal: UTS, K_Ic and critical flaw size were removed from the response (null + "
+                      "unavailable status); the initialFlawSize_um_* inputs no longer exist.",
                       "No validity domain is declared: no source-backed applicability range exists for the "
                       "strengthening model or the input distributions.",
                       _UQ_WARM_NOTE,

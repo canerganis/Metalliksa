@@ -1151,8 +1151,6 @@ class PythonComputationService {
     agingTime_stdDev?: number;
     serviceStress_nominal?: number;
     serviceStress_cov?: number;
-    initialFlawSize_um_mean?: number;
-    initialFlawSize_um_std?: number;
     specMinYield_MPa?: number;
     specMinUTS_MPa?: number;
     specMinElongation_pct?: number;
@@ -1800,10 +1798,16 @@ export interface PythonStochasticUQResult {
   };
   stochasticProperties: {
     yieldStrength_Rp02: StochasticPropertyStats;
-    ultimateTensileStrength_UTS: StochasticPropertyStats;
+    /** null = unavailable (see ultimateTensileStrength_UTS_status); the former UTS law was invented. */
+    ultimateTensileStrength_UTS: StochasticPropertyStats | null;
+    ultimateTensileStrength_UTS_status: string;
     elongationPct: StochasticPropertyStats;
-    fractureToughness_K1c: StochasticPropertyStats;
-    criticalFlawSize_ac: StochasticPropertyStats;
+    /** null = unavailable (see fractureToughness_K1c_status); the former K_Ic law was invented. */
+    fractureToughness_K1c: StochasticPropertyStats | null;
+    fractureToughness_K1c_status: string;
+    /** null = unavailable (see criticalFlawSize_ac_status); it needed the invented K_Ic. */
+    criticalFlawSize_ac: StochasticPropertyStats | null;
+    criticalFlawSize_ac_status: string;
   };
   sensitivityMetadata?: {
     method: string;
@@ -1832,8 +1836,10 @@ export interface PythonStochasticUQResult {
     aBasisConforming: boolean;
     bBasisConforming: boolean;
     cpkConforming: boolean;
-    criticalFlawMedian_mm: number;
-    criticalFlaw_P10_mm: number;
+    /** null = unavailable (see criticalFlaw_status). */
+    criticalFlawMedian_mm: number | null;
+    criticalFlaw_P10_mm: number | null;
+    criticalFlaw_status: string;
   };
 }
 

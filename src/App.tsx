@@ -176,7 +176,7 @@ export default function App() {
       case 'research-hub': return <AdvancedResearchHub />;
       case 'experimental-data': return <EvidenceWorkspace mode="experimental" />;
       case 'traceability': return <EvidenceWorkspace mode="traceability" />;
-      case 'uq-lab': return <UQLab onNavigate={navigate} />;
+      case 'uq-lab': return <UQLab />;
       case 'digital-twin': return <DigitalTwinHub onNavigateToModule={navigate} />;
       case 'electrochem-suite': return <CorrosionEngineeringLab />;
       case 'ttt-cct-kinetics': return <PhaseKineticsTTTCCTStudio onSendToModule={navigate} />;

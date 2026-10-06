@@ -24,8 +24,31 @@ class SamplingEvidenceTests(unittest.TestCase):
             self.assertEqual(result['sampleSizeN'], 500)
             self.assertNotIn('Certified', result['aerospaceReliability']['qualificationStatus'])
 
+    def test_invented_law_outputs_are_unavailable_not_numeric(self):
+        # UTS = YS*(1+2.15n), the clamped K_Ic and the critical flaw size had no source (the ICME solver
+        # reports them as unavailable): the response carries null + a status, never a number.
+        props = self.qmc['stochasticProperties']
+        for key in ('ultimateTensileStrength_UTS', 'fractureToughness_K1c', 'criticalFlawSize_ac'):
+            self.assertIsNone(props[key], key)
+            self.assertTrue(props[key + '_status'].startswith('unavailable:'), key)
+        rel = self.qmc['aerospaceReliability']
+        for key in ('criticalFlawMedian_mm', 'criticalFlaw_P10_mm'):
+            self.assertIsNone(rel[key], key)
+        self.assertTrue(rel['criticalFlaw_status'].startswith('unavailable:'))
+        # no number anywhere under those keys, and the rest of stochasticProperties still holds real stats
+        self.assertIsInstance(props['yieldStrength_Rp02']['mean'], float)
+        self.assertIsInstance(props['elongationPct']['mean'], float)
+        text = json.dumps(self.qmc)
+        for banned in ('uts_MPa', 'k1c_MPa_m', 'critical_flaw_ac_mm', 'margin_flaw_mm'):
+            self.assertNotIn(banned, text)
+
+    def test_realization_kernel_returns_no_invented_law_values(self):
+        res = solver.solve_single_realization('Ni', {'Nb': 5.0}, 1.5e5, 720.0, 8.0, 700.0)
+        self.assertEqual(set(res), {'yield_MPa', 'elongation_pct', 'margin_yield_MPa', 'delta_sigma_ss',
+                                    'delta_sigma_hp', 'delta_sigma_ppt', 'grain_size_um', 'applied_stress'})
+
     def test_qmc_uncertainty_is_unavailable_without_replicates(self):
-        for stats in self.qmc['stochasticProperties'].values():
+        for stats in (self.qmc['stochasticProperties'][k] for k in ('yieldStrength_Rp02', 'elongationPct')):
             for key in ('aBasisConfidenceInterval95', 'bBasisConfidenceInterval95',
                         'allowableStandardError_A', 'allowableStandardError_B'):
                 self.assertIsNone(stats[key])
@@ -67,7 +90,7 @@ class SamplingEvidenceTests(unittest.TestCase):
     def test_constant_population_has_no_invented_sensitivity_or_cpk(self):
         result = solver.solve_stochastic_uq({'mcSamples': 500, 'composition_wt': {},
             'coolingRate_cov': 0, 'agingTemp_stdDev': 0, 'agingTime_stdDev': 0,
-            'serviceStress_cov': 0, 'initialFlawSize_um_std': 0})
+            'serviceStress_cov': 0})
         self.assertEqual(result['sensitivityMetadata']['status'], 'unavailable_zero_variance')
         for row in result['sobolSensitivityAnalysis']:
             self.assertIsNone(row['sobolFirstOrderIndex'])
@@ -85,7 +108,7 @@ class SamplingEvidenceTests(unittest.TestCase):
 
 
 class NormalQuantileTests(unittest.TestCase):
-    """norm_ppf feeds every normal input (composition, process, stress, flaw, Saltelli)."""
+    """norm_ppf feeds every normal input (composition, process, stress, Saltelli)."""
 
     @staticmethod
     def _grid():

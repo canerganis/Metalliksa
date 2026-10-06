@@ -830,6 +830,29 @@ def _strip(doc):
     return {k: v for k, v in doc.items() if k != "computeTimeMs"}
 
 
+def _without_unsupported(doc):
+    """The scalar reference document with the three invented-law outputs (UTS, K_Ic, critical flaw size)
+    replaced by null + the solver's unavailable status: the only intended difference to the reference."""
+    out = json.loads(json.dumps(doc))
+    props = out["stochasticProperties"]
+    props["ultimateTensileStrength_UTS"] = None
+    props["ultimateTensileStrength_UTS_status"] = solver.UTS_UNAVAILABLE_STATUS
+    props["fractureToughness_K1c"] = None
+    props["fractureToughness_K1c_status"] = solver.K1C_UNAVAILABLE_STATUS
+    props["criticalFlawSize_ac"] = None
+    props["criticalFlawSize_ac_status"] = solver.CRITICAL_FLAW_UNAVAILABLE_STATUS
+    rel = out["aerospaceReliability"]
+    rel["criticalFlawMedian_mm"] = None
+    rel["criticalFlaw_P10_mm"] = None
+    rel["criticalFlaw_status"] = solver.CRITICAL_FLAW_UNAVAILABLE_STATUS
+    return out
+
+
+def _legacy_kernel_subset(legacy_result, new_result):
+    """The reference realisation restricted to the keys the current kernel still returns."""
+    return {k: v for k, v in legacy_result.items() if k in new_result}
+
+
 # Production rounding (decimals) per result field; floats of these fields may differ by one unit
 # in the last rounded digit (a different ulp in numpy exp/log/pow can flip a rounding). Every
 # other float must agree to 1e-12 relative.
@@ -953,8 +976,8 @@ class NonFinitePopulationTests(unittest.TestCase):
                         {"mcSamples": 500, "serviceStress_nominal": float("nan")}):
             with self.subTest(payload=payload):
                 new = _strip(solver.solve_stochastic_uq(dict(payload)))
-                old = _strip(LEGACY.solve_stochastic_uq(dict(payload)))
-                self.assertEqual(json.dumps(new), json.dumps(old))
+                old = _without_unsupported(_strip(LEGACY.solve_stochastic_uq(dict(payload))))
+                self.assertEqual(json.dumps(new, sort_keys=True), json.dumps(old, sort_keys=True))
 
 
 class QuantileParityTests(unittest.TestCase):
@@ -989,9 +1012,9 @@ class PhysicsKernelParityTests(unittest.TestCase):
         temp = rng.uniform(150.0, 1000.0, n)  # below 200 C and into the Arrhenius clamp
         time_h = rng.uniform(0.05, 40.0, n)
         stress = rng.uniform(10.0, 1500.0, n)
-        flaw = rng.uniform(1.0, 200.0, n)
+        flaw = rng.uniform(1.0, 200.0, n)  # only the reference kernel still takes a flaw size
         for base in ("Ni", "Fe", "Ti", "Al", "Zz", None):
-            vec = solver.solve_realizations_vec(base, comp, cr, temp, time_h, stress, flaw)
+            vec = solver.solve_realizations_vec(base, comp, cr, temp, time_h, stress)
             for key, column in vec.items():
                 column = np.broadcast_to(np.asarray(column, dtype=float), (n,))
                 for i in range(n):
@@ -1003,7 +1026,8 @@ class PhysicsKernelParityTests(unittest.TestCase):
 
     def test_scalar_reference_still_matches_legacy_exactly(self):
         args = ("Ni", {"Nb": 5.0, "Ti": 0.9, "Al": 0.5, "Zr": 0.3, "Mg": 0.1}, 1.5e5, 720.0, 8.0, 700.0, 40.0)
-        self.assertEqual(repr(solver.solve_single_realization(*args)), repr(LEGACY.solve_single_realization(*args)))
+        new = solver.solve_single_realization(*args[:-1])
+        self.assertEqual(repr(new), repr(_legacy_kernel_subset(LEGACY.solve_single_realization(*args), new)))
 
 
 class ResultParityTests(unittest.TestCase):
@@ -1011,7 +1035,7 @@ class ResultParityTests(unittest.TestCase):
         for name, payload in CASES.items():
             with self.subTest(case=name):
                 new = _strip(solver.solve_stochastic_uq(dict(payload)))
-                old = _strip(LEGACY.solve_stochastic_uq(dict(payload)))
+                old = _without_unsupported(_strip(LEGACY.solve_stochastic_uq(dict(payload))))
                 self.assertEqual(_diffs(new, old), [])
 
     def test_recorded_scalar_baselines_hold(self):
