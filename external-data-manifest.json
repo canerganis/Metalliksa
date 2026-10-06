@@ -123,7 +123,8 @@
      "status": "downloaded",
      "retrieved": "2026-09-15",
      "waybackTimestamp": "20241215233912",
-     "note": "Canonical local copy: data/benchmark/nist-amb2022-03/raw/ (git-ignored; acquired 2026-09-15). Size and sha256 equal the NIST NERDm record v1.3.1 (data/benchmark/nist-amb2022-03/official/nerdm-record-mds2-2716.json); Internet Archive copies (web.archive.org) re-verified byte-identical on 2026-10-06. Larger than the 200 MB single-file download limit and the tool's default 300 MB cap, so --fetch refuses it; place a copy by hand and run --verify."
+     "note": "Canonical local copy: data/benchmark/nist-amb2022-03/raw/ (git-ignored; acquired 2026-09-15). Size and sha256 equal the NIST NERDm record v1.3.1 (data/benchmark/nist-amb2022-03/official/nerdm-record-mds2-2716.json); Internet Archive copies (web.archive.org) re-verified byte-identical on 2026-10-06. Larger than the 200 MB single-file download limit, so it is flagged manualPlacementOnly: --fetch skips it before any network access; place a copy by hand and run --verify.",
+     "manualPlacementOnly": true
     },
     {
      "name": "AMB2022-03-AMMT-718-Pad_XYPT.h5",

@@ -19,7 +19,9 @@ Honesty rules enforced here:
 - X/Y/P in the scan-strategy file are commanded galvo positions and power
   (GalvoCal_Applied/LaserCal_Applied 'false'); T is a trigger command, not
   time. The 10 us sample interval is not stored and is inferred.
-- Comparison, not validation: nothing here validates the application.
+- Signal-unit metrics only, not validation: this module runs no model comparison
+  (that is python/tools/lpbf_nist_2716_thermography_comparison.py) and nothing
+  here validates the application.
 
 Raw files are never committed. Resolution order for the data directory:
 explicit ``data_dir`` argument, ``$METALLIKSA_NIST_2716_DIR``,
@@ -478,6 +480,7 @@ def _pixel_metrics(trace):
         tail = trace[last + 1:]
         for t in DECAY_TARGETS_DL:
             below = np.flatnonzero(tail < t)
+            # None = right-censored: the signal never fell below the target before the video ended.
             out["decay"][t] = int(below[0] + 1) if below.size else None
         zero = np.flatnonzero(tail == 0)
         if zero.size and (tail[zero[0]:] > 0).any():
@@ -525,11 +528,24 @@ def line_metrics(signal, scan_speed_mm_s, frame_rate_hz=FRAME_RATE_HZ, steady_fr
                                   if thr == SAT_DL else "frames with signal >= threshold")}
     decay = {}
     for t in DECAY_TARGETS_DL:
-        st = _stats([p["decay"][t] for p in pix if p["saturated"]])
-        decay["4095to%d" % t] = ({"frames": st, "seconds_median": st["median"] * dt, "status": "measured-signal",
-                                  "note": "frames from the last saturated frame to the first frame below the target "
-                                          "(relative signal-decay metric, NOT a cooling rate)"}
-                                 if st else _unavailable("no saturated steady-state pixel"))
+        sat_pix = [p for p in pix if p["saturated"]]
+        censored = sum(1 for p in sat_pix if p["decay"][t] is None)
+        st = _stats([p["decay"][t] for p in sat_pix])
+        if st:
+            decay["4095to%d" % t] = {
+                "frames": st, "seconds_median": st["median"] * dt, "status": "measured-signal",
+                "nSaturatedPixels": len(sat_pix), "nRightCensored": censored, "rightCensored": censored > 0,
+                "note": ("frames from the last saturated frame to the first frame below the target "
+                         "(relative signal-decay metric, NOT a cooling rate); right-censored pixels (signal still "
+                         ">= target when the video ends) are excluded from the statistics and counted in "
+                         "nRightCensored")}
+        elif sat_pix:
+            decay["4095to%d" % t] = _unavailable(
+                "every saturated steady-state pixel is right-censored (signal still >= %d DL when the video ends)" % t,
+                nSaturatedPixels=len(sat_pix), nRightCensored=censored, rightCensored=True)
+        else:
+            decay["4095to%d" % t] = _unavailable("no saturated steady-state pixel", nSaturatedPixels=0,
+                                                 nRightCensored=0, rightCensored=False)
     # Spatial saturated length in steady frames (leading edge inside the steady window).
     sat = signal[:, :, cols] >= SAT_DL
     steady_frames = [int(fr) for fr, ld in zip(frames, lead) if s_lo <= ld <= s_hi]
@@ -611,7 +627,13 @@ def aggregate_cases(lines):
         rows = sorted(cases[cid], key=lambda r: r["repeat"])
         first = rows[0]
         metrics = {k: _mean_sd([_get(r["metrics"], p) for r in rows]) for k, p in CASE_METRICS.items()}
-        out.append({"caseId": cid, "laserPower_W": first["laserPower_W"], "scanSpeed_mm_s": first["scanSpeed_mm_s"],
+        censored = {"4095to%d" % t: sum(_get(r["metrics"], ("decayFromSaturation", "4095to%d" % t, "nRightCensored")) or 0
+                                        for r in rows) for t in DECAY_TARGETS_DL}
+        out.append({"decayRightCensoredPixels": censored,
+                    "decayRightCensoredNote": ("steady-state pixels, summed over the repeats, whose signal had not "
+                                               "fallen below the decay target when the video ended; excluded from "
+                                               "the decay statistics"),
+                    "caseId": cid, "laserPower_W": first["laserPower_W"], "scanSpeed_mm_s": first["scanSpeed_mm_s"],
                     "spotD4s_um": first["spotD4s_um"], "repeats": [r["name"] for r in rows],
                     "nRepeatsWithMetrics": sum(1 for r in rows if r["metrics"]["track"]["status"] != "unavailable"),
                     "metrics": metrics, "status": "measured-signal"})
@@ -718,9 +740,40 @@ def build_checks(attrs, lines, pads):
                                  "applied flags 'false': %s" % (n, within, flags)})
     checks.append({"id": "A8-pad-alignment", "result": "skipped",
                    "detail": "pad camera analysis not run in v1 (see unavailable list)"})
-    checks.append({"id": "A9-no-temperature", "result": "pass",
-                   "detail": "no DL-to-temperature conversion is implemented in this module"})
     return checks
+
+
+TEMPERATURE_KEY = re.compile(r"temperature|coolingrate|_C$|_K$|_K_s$", re.I)
+TEMPERATURE_KEYS_ALLOWED = ("temperatureConversion", "temperatureConversionMissingReason")
+
+
+def temperature_key_paths(obj, prefix=""):
+    """Paths of keys in ``obj`` that look like a temperature or cooling-rate value (check A9).
+
+    Only the two label keys stating that no conversion exists are allowed, and ``temperatureConversion``
+    must be null.
+    """
+    found = []
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            path = prefix + k
+            if TEMPERATURE_KEY.search(k) and (k not in TEMPERATURE_KEYS_ALLOWED
+                                              or (k == "temperatureConversion" and v is not None)):
+                found.append(path)
+            found.extend(temperature_key_paths(v, path + "."))
+    elif isinstance(obj, list):
+        for i, v in enumerate(obj):
+            found.extend(temperature_key_paths(v, "%s%d." % (prefix, i)))
+    return found
+
+
+def no_temperature_check(record):
+    """A9, computed by scanning the keys of the assembled record."""
+    found = temperature_key_paths(record)
+    return {"id": "A9-no-temperature", "result": "pass" if not found else "fail",
+            "detail": ("scanned every key of the assembled record for temperature, cooling-rate, _C, _K or _K_s "
+                       "names (allowed: temperatureConversion = null and its missing reason): %d offending key(s)%s"
+                       % (len(found), (": " + ", ".join(found[:10])) if found else ""))}
 
 
 def build_metrics(data_dir=None, lines_only=None, verify=True):
@@ -749,7 +802,10 @@ def build_metrics(data_dir=None, lines_only=None, verify=True):
     pads = {}
     for pad, ch in xypt.items():
         tracks = segment_tracks(ch, commanded_speed_mm_s=960.0)
-        pads[pad] = {"nSamples": int(len(ch["P"])), "cameraTriggerIndex": camera_trigger_index(ch),
+        trigger = camera_trigger_index(ch)
+        pads[pad] = {"nSamples": int(len(ch["P"])), "cameraTriggerIndex": trigger,
+                     "cameraTriggerHighSamples": int(((np.asarray(ch["T"]).astype(np.int64) >> 2) & 1).sum()),
+                     "cameraTriggerAtFirstLaserOn": bool(tracks) and trigger == tracks[0]["startSample"],
                      "firstLaserOnIndex": tracks[0]["startSample"] if tracks else None,
                      "galvoCalApplied": ch["galvoCalApplied"], "laserCalApplied": ch["laserCalApplied"],
                      "powerLevels_W": sorted({float(v) for v in np.unique(ch["P"])}),
@@ -758,12 +814,10 @@ def build_metrics(data_dir=None, lines_only=None, verify=True):
     record = {
         "checks": build_checks(attrs, lines, pads),
         "schema": SCHEMA, "schemaVersion": 1, "datasetId": DATASET_ID, "sourceDatasetId": SOURCE_DATASET_ID,
-        "source": {"doi": "10.18434/mds2-2716", "nerdmVersion": "1.3.1", "license": "https://www.nist.gov/open/license",
-                   "citation": ("Deisenroth, D., Lane, B., et al. (2022). AM Bench 2022 in-situ thermography and scan "
-                                "strategy for laser-scanned single tracks and pads on bare IN718 (AMB2022-03). "
-                                "https://doi.org/10.18434/mds2-2716")},
-        "headline": ("Comparison, not validation: raw camera signal in digital levels (DL); no temperature conversion "
-                     "executed; derived values are signal-unit metrics for NIST's experiment only; nothing tuned."),
+        "source": source_from_nerdm(),
+        "headline": ("Signal-unit metrics only, not validation: raw camera signal in digital levels (DL); no "
+                     "temperature conversion executed; no model comparison is run in this record; derived values are "
+                     "for NIST's experiment only; nothing tuned."),
         "evidence": {"experimentalValidation": False, "opticalOperatorMatched": False, "modelAcceptance": False,
                      "temperatureConversion": None, "temperatureConversionMissingReason": TEMPERATURE_UNAVAILABLE_REASON,
                      "evidenceKindMeasuredFor": "NIST experiment only (raw camera signal, DL)",
@@ -780,6 +834,10 @@ def build_metrics(data_dir=None, lines_only=None, verify=True):
             "beamDiameter": "spot_size attribute, measure 'D4s' as stored by NIST",
             "xyptSamplePeriod_s": XYPT_DT_ASSUMED_S,
             "xyptSamplePeriodStatus": "derived-inferred (not stored in the file)",
+            "cameraTrigger": ("XYPT T bit 2 (StaringCamera trigger command, not time) is checked against the first "
+                              "laser-on sample (P > 0) per pad: see scanStrategy.<pad>.cameraTriggerAtFirstLaserOn "
+                              "and cameraTriggerHighSamples. In the NIST file it is a single-sample pulse at the "
+                              "first laser-on sample (Xpad 497, Ypad 182), not one sample before laser-on."),
         },
         "groups": group_table,
         "lines": lines,
@@ -788,6 +846,7 @@ def build_metrics(data_dir=None, lines_only=None, verify=True):
         "scanStrategy": pads,
         "unavailable": UNAVAILABLE,
     }
+    record["checks"].append(no_temperature_check(record))
     return _round(record)
 
 
@@ -812,6 +871,31 @@ def nerdm_component_pins(path=NERDM_PATH):
     rec = json.loads(Path(path).read_text(encoding="utf-8"))
     return {c["filepath"]: (c.get("size"), c["checksum"]["hash"]) for c in rec.get("components", [])
             if c.get("filepath") and isinstance(c.get("checksum"), dict) and c["checksum"].get("hash")}
+
+
+def _initial(given):
+    return " ".join(part[0] + "." for part in given.replace("-", " ").split() if part)
+
+
+def source_from_nerdm(path=NERDM_PATH):
+    """Dataset identity and citation built only from the committed NERDm record (no hand-typed fields)."""
+    rec = json.loads(Path(path).read_text(encoding="utf-8"))
+    authors = [{"familyName": a["familyName"], "givenName": a["givenName"], "orcid": a.get("orcid")}
+               for a in rec["authors"]]
+    releases = {r["version"]: r["issued"][:10] for r in rec["releaseHistory"]["hasRelease"]}
+    version = rec["version"]
+    first = min(releases.values())
+    issued = releases[version]
+    names = ["%s, %s" % (a["familyName"], _initial(a["givenName"])) for a in authors]
+    joined = names[0] if len(names) == 1 else ", ".join(names[:-1]) + ", & " + names[-1]
+    doi = rec["doi"].replace("doi:", "")
+    citation = ("%s (%s). %s (Version %s; first released %s) [Data set]. %s. https://doi.org/%s"
+                % (joined, issued[:4], rec["title"], version, first, rec["publisher"]["name"], doi))
+    return {"doi": doi, "title": rec["title"], "authors": authors, "nerdmVersion": version,
+            "versionIssued": issued, "firstReleased": first, "publisher": rec["publisher"]["name"],
+            "license": rec["license"], "citation": citation,
+            "citationBasis": ("constructed from data/benchmark/nist-amb2022-03/official/nerdm-record-mds2-2716.json "
+                              "(authors in record order, title, version, release history, publisher, DOI)")}
 
 
 def build_derived_manifest(derived_bytes, record):

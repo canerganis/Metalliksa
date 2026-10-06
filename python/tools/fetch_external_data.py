@@ -13,6 +13,9 @@ into DIR (default: $METALLIKSA_EXTERNAL_DATA or <repo>/external-data, git
 ignored), never executes anything, refuses files above the entry's maxBytes and
 refuses a sha256 mismatch when the manifest records one. Entries without a
 recorded hash print the observed sha256 so the manifest can be updated by hand.
+Files flagged "manualPlacementOnly": true (above the 200 MB single-file download
+limit) are never downloaded by --fetch: they are skipped before any network
+access and must be placed by hand; --verify still checks them.
 """
 
 from __future__ import annotations
@@ -76,6 +79,10 @@ def fetch(manifest: dict, base: Path, only: set[str] | None) -> int:
             continue
         for f in ds["files"]:
             url = f["url"]
+            if f.get("manualPlacementOnly"):
+                print("SKIP    %s: manual placement only (%s bytes); place it by hand and run --verify"
+                      % (url, f.get("sizeBytes")))
+                continue
             u = urllib.parse.urlparse(url)
             if u.scheme != "https" or u.hostname not in ALLOWED_HOSTS:
                 print("REFUSED %s: host/scheme not allow-listed" % url)

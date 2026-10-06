@@ -7,7 +7,9 @@ manifest and the publisher NERDm record committed under official/. Tests that
 need the 550 MB NIST raw file skip with an explicit reason when it is absent.
 """
 
+import contextlib
 import hashlib
+import io
 import json
 import math
 import os
@@ -131,6 +133,30 @@ def assert_no_temperature(test, obj):
             test.assertIn(key, ("temperatureConversion", "temperatureConversionMissingReason"), path)
             if key == "temperatureConversion":
                 test.assertIsNone(value, path)
+    test.assertEqual(m.temperature_key_paths(obj), [])
+
+
+class NoTemperatureCheckTests(unittest.TestCase):
+    """A9 is computed from the record's keys, not asserted."""
+
+    def test_regex_matches_test_helper(self):
+        self.assertEqual(m.TEMPERATURE_KEY.pattern, TEMPERATURE_KEY.pattern)
+
+    def test_clean_record_passes(self):
+        rec = {"evidence": {"temperatureConversion": None, "temperatureConversionMissingReason": "x"},
+               "lines": [{"tat": 3, "power_W": 285}]}
+        out = m.no_temperature_check(rec)
+        self.assertEqual(out["result"], "pass")
+        self.assertIn("0 offending key(s)", out["detail"])
+
+    def test_planted_temperature_keys_fail_and_are_named(self):
+        rec = {"evidence": {"temperatureConversion": "sakuma-hattori"},
+               "lines": [{"peak_C": 1400.0}, {"m": {"coolingRate_K_s": 1e6}}]}
+        out = m.no_temperature_check(rec)
+        self.assertEqual(out["result"], "fail")
+        self.assertIn("3 offending key(s)", out["detail"])
+        self.assertEqual(m.temperature_key_paths(rec),
+                         ["evidence.temperatureConversion", "lines.0.peak_C", "lines.1.m.coolingRate_K_s"])
 
 
 class GroupNameTests(unittest.TestCase):
@@ -233,7 +259,27 @@ class PinGateTests(unittest.TestCase):
             self.assertEqual((files[name]["sizeBytes"], files[name]["sha256"]),
                              (m.PINNED[local]["bytes"], m.PINNED[local]["sha256"]), name)
             self.assertEqual(files[name]["status"], "downloaded")
-        self.assertNotIn("maxBytes", files[m.THERMO_NAME])  # the fetch tool's 300 MB default cap refuses it
+        # Above the 200 MB single-file rule: explicitly never fetched, only verified after manual placement.
+        self.assertIs(files[m.THERMO_NAME]["manualPlacementOnly"], True)
+        self.assertNotIn("manualPlacementOnly", files[m.XYPT_NAME])
+
+    def test_fetch_tool_skips_manual_placement_file_without_network(self):
+        sys.path.insert(0, str(m.REPO / "python" / "tools"))
+        import fetch_external_data as fx  # noqa: PLC0415
+        pin = m.PINNED[m.THERMO_NAME]
+        manifest = {"datasets": [{"id": m.EXTERNAL_ID, "files": [
+            {"name": m.THERMO_NAME, "url": pin["source_url"], "sizeBytes": pin["bytes"], "sha256": pin["sha256"],
+             "status": "downloaded", "manualPlacementOnly": True}]}]}
+        out = io.StringIO()
+        with mock.patch.object(fx.urllib.request, "urlopen", side_effect=AssertionError("network used")),                 contextlib.redirect_stdout(out):
+            self.assertEqual(fx.fetch(manifest, self.dir, None), 0)
+        self.assertIn("manual placement only", out.getvalue())
+        self.assertFalse((self.dir / m.EXTERNAL_ID / m.THERMO_NAME).exists())
+
+    def test_external_data_directory_is_git_ignored(self):
+        # resolve_data_dir looks in <repo>/external-data/nist-mds2-2716; a 550 MB copy there must not be committable.
+        lines = (m.REPO / ".gitignore").read_text(encoding="utf-8").splitlines()
+        self.assertIn("/external-data/", [line.strip() for line in lines])
 
     def test_pins_match_publisher_nerdm_record(self):
         comps = m.nerdm_component_pins()
@@ -303,6 +349,35 @@ class LineMetricTests(unittest.TestCase):
         tr = m.locate_track(sig)
         self.assertEqual(tr["status"], "unavailable")
         self.assertRegex(tr["reason"], "not linear|rejected as outliers")
+
+    def test_right_censored_decay_is_counted_and_reasoned(self):
+        trace = np.array([0, 4095, 4095, 3000, 1500, 600, 300, 200], dtype=np.uint16)
+        pm = m._pixel_metrics(trace)
+        self.assertEqual((pm["decay"][2000], pm["decay"][500]), (2, 4))
+        self.assertIsNone(pm["decay"][100])  # still >= 100 DL when the video ends
+        clean = m.line_metrics(synthetic_line(), 960.0)
+        for key, entry in clean["decayFromSaturation"].items():
+            self.assertEqual((entry["nRightCensored"], entry["rightCensored"]), (0, False), key)
+            self.assertEqual(entry["nSaturatedPixels"], clean["steadyWindow"]["nPixels"])
+        # Every touched pixel keeps 200 DL until the end of the video: decay to 100 DL is never observed.
+        sig = synthetic_line()
+        touched = np.maximum.accumulate(sig > 0, axis=0)
+        held = np.maximum(sig, np.where(touched, 200, 0)).astype(np.uint16)
+        out = m.line_metrics(held, 960.0)
+        self.assertEqual(out["track"]["status"], "measured-signal")
+        n = out["steadyWindow"]["nPixels"]
+        d100 = out["decayFromSaturation"]["4095to100"]
+        self.assertEqual(d100["status"], "unavailable")
+        self.assertIn("right-censored", d100["reason"])
+        self.assertEqual((d100["nRightCensored"], d100["nSaturatedPixels"], d100["rightCensored"]), (n, n, True))
+        d500 = out["decayFromSaturation"]["4095to500"]
+        self.assertEqual((d500["status"], d500["nRightCensored"], d500["frames"]["median"]), ("measured-signal", 0, 21))
+        rows = [{"caseId": "0", "repeat": r, "name": "Line_0_%d" % r, "laserPower_W": 285.0, "scanSpeed_mm_s": 960.0,
+                 "spotD4s_um": 67.0, "metrics": out} for r in (1, 2, 3)]
+        case = m.aggregate_cases(rows)[0]
+        self.assertEqual(case["decayRightCensoredPixels"]["4095to100"], 3 * n)
+        self.assertEqual(case["decayRightCensoredPixels"]["4095to500"], 0)
+        self.assertIsNone(case["metrics"]["decay4095to100_frames"])
 
     def test_floor_reentry_is_counted_not_smoothed(self):
         trace = np.array([0, 4095, 4095, 2500, 900, 0, 0, 150, 0], dtype=np.uint16)
@@ -397,6 +472,9 @@ class SyntheticPipelineTests(unittest.TestCase):
         self.assertEqual(case["repeats"], ["Line_0_1", "Line_0_2", "Line_0_3"])
         self.assertEqual(case["metrics"]["tat4095_frames"]["mean"], 10)
         self.assertEqual(case["metrics"]["tat4095_frames"]["sd"], 0)
+        self.assertEqual(case["decayRightCensoredPixels"], {"4095to2000": 0, "4095to1000": 0, "4095to500": 0,
+                                                            "4095to100": 0})
+        self.assertEqual(rec["source"]["nerdmVersion"], "1.3.1")
         checks = {c["id"]: c["result"] for c in rec["checks"]}
         self.assertEqual(checks["A3-attributes"], "pass")
         self.assertEqual(checks["A6-repeats"], "pass")
@@ -487,6 +565,53 @@ class CommittedDerivedTests(unittest.TestCase):
                                   "A4-speed-pitch-consistency": "pass", "A5-track-length": "pass",
                                   "A6-repeats": "pass", "A7-xypt": "pass", "A8-pad-alignment": "skipped",
                                   "A9-no-temperature": "pass"})
+
+    def test_citation_matches_nerdm_record(self):
+        nerdm = json.loads(m.NERDM_PATH.read_text(encoding="utf-8"))
+        src = self.rec["source"]
+        self.assertEqual(src, m.source_from_nerdm())
+        self.assertEqual([a["familyName"] for a in src["authors"]], [a["familyName"] for a in nerdm["authors"]])
+        self.assertEqual([a["familyName"] for a in src["authors"]],
+                         ["Deisenroth", "Mekhontsev", "Lane", "Weaver", "Yeung"])
+        self.assertEqual(src["title"], nerdm["title"])
+        self.assertEqual(src["nerdmVersion"], nerdm["version"])
+        self.assertEqual("doi:" + src["doi"], nerdm["doi"])
+        self.assertEqual((src["versionIssued"], src["firstReleased"]), ("2026-01-06", "2022-07-15"))
+        cite = src["citation"]
+        self.assertIn(nerdm["title"], cite)
+        self.assertNotIn("et al.", cite)
+        positions = [cite.index(a["familyName"] + ", ") for a in nerdm["authors"]]
+        self.assertEqual(positions, sorted(positions))
+        self.assertIn("(2026)", cite)
+        self.assertIn("Version 1.3.1; first released 2022-07-15", cite)
+        self.assertIn("National Institute of Standards and Technology", cite)
+        self.assertTrue(cite.endswith("https://doi.org/10.18434/mds2-2716"))
+
+    def test_headline_does_not_claim_a_comparison(self):
+        self.assertTrue(self.rec["headline"].startswith("Signal-unit metrics only, not validation"))
+        self.assertIn("no model comparison is run in this record", self.rec["headline"])
+
+    def test_trigger_is_single_sample_at_first_laser_on(self):
+        for pad, expect in (("Xpad", 497), ("Ypad", 182)):
+            info = self.rec["scanStrategy"][pad]
+            self.assertEqual(info["cameraTriggerIndex"], expect)
+            self.assertEqual(info["firstLaserOnIndex"], expect)
+            self.assertEqual(info["cameraTriggerHighSamples"], 1)
+            self.assertIs(info["cameraTriggerAtFirstLaserOn"], True)
+        self.assertIn("not one sample before laser-on", self.rec["conventions"]["cameraTrigger"])
+
+    def test_right_censoring_reported_per_metric(self):
+        for line in self.rec["lines"]:
+            for key, entry in line["metrics"]["decayFromSaturation"].items():
+                self.assertIn("nRightCensored", entry, (line["name"], key))
+                self.assertIs(entry["rightCensored"], entry["nRightCensored"] > 0)
+        for case in self.rec["cases"]:
+            self.assertEqual(set(case["decayRightCensoredPixels"]), {"4095to%d" % t for t in m.DECAY_TARGETS_DL})
+
+    def test_a9_detail_is_computed(self):
+        a9 = next(c for c in self.rec["checks"] if c["id"] == "A9-no-temperature")
+        self.assertIn("0 offending key(s)", a9["detail"])
+        self.assertEqual(m.temperature_key_paths(self.rec), [])
 
     def test_case_stats_use_all_three_repeats(self):
         for case in self.rec["cases"]:

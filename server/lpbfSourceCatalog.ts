@@ -665,10 +665,10 @@ export function nistIn718ThermographyDerivedCatalogEntry(root = path.resolve('da
   const datasetId = 'nist-mds2-2716-thermography-signal-v1';
   const doiUrl = 'https://doi.org/10.18434/mds2-2716';
   const nerdmUrl = 'https://data.nist.gov/rmm/records?@id=ark:/88434/mds2-2716';
-  const manifestSha256 = 'ad2cc0a7d3481feddfd4757b7121cd0657c99196f077dbee1e0c27855c55975e';
+  const manifestSha256 = 'ef3fb4b1dfc028d6f1a40ba0bb4f4ee565bf9895b8f1e289b1334f086480d7bc';
   const derivedName = 'thermography-signal-metrics-v1.json';
-  const derivedSha256 = '8698d71ea615ff17d4123982adde657ec1f47cfe46edf28465194f5e469f8819';
-  const derivedBytes = 160242;
+  const derivedSha256 = '7b34b3b304a95aab0dccd9481d8d944d066bfddb087bd05bd409a949b021d76a';
+  const derivedBytes = 182588;
   const nerdmSha256 = '9e53e0f906763192087de331ad5eebaa29f98d9ee11ac4b1fa709ac0d9fa24c8';
   const nerdmBytes = 14033;
   const base = 'https://data.nist.gov/od/ds/ark:/88434/mds2-2716/';

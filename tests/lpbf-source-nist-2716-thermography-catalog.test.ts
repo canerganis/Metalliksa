@@ -43,6 +43,18 @@ test('NIST mds2-2716 thermography metrics load with pinned identity and no tempe
   assert.equal(document.source.url, 'https://doi.org/10.18434/mds2-2716');
   assert.equal(document.source.version, '1.3.1');
   assert.equal(document.source.terms, 'NIST Open License: https://www.nist.gov/open/license');
+  // The citation shown in the UI is built from the committed NERDm record: all authors in record order, exact title.
+  const nerdm = JSON.parse(readFileSync(path.join(datasetRoot, 'official/nerdm-record-mds2-2716.json'), 'utf8'));
+  const citation: string = document.source.citation;
+  assert.ok(citation.includes(nerdm.title), 'citation carries the exact NERDm title');
+  assert.ok(!citation.includes('et al.'));
+  const positions = nerdm.authors.map((author: any) => citation.indexOf(`${author.familyName}, `));
+  assert.deepEqual(nerdm.authors.map((author: any) => author.familyName), ['Deisenroth', 'Mekhontsev', 'Lane', 'Weaver', 'Yeung']);
+  assert.ok(positions.every((position: number) => position >= 0));
+  assert.deepEqual([...positions].sort((a: number, b: number) => a - b), positions);
+  assert.match(citation, /Version 1\.3\.1; first released 2022-07-15/);
+  assert.ok(citation.endsWith('https://doi.org/10.18434/mds2-2716'));
+  assert.match(document.sourceContext.headline, /^Signal-unit metrics only, not validation/);
   for (const artifact of document.artifacts) {
     const bytes = readFileSync(path.join(datasetRoot, artifact.relativePath));
     assert.equal(artifact.byteSize, bytes.length, artifact.relativePath);
