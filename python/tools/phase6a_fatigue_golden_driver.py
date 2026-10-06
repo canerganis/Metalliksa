@@ -14,6 +14,7 @@ The harness puts the module under test first on PYTHONPATH (a git blob extracted
 to a temp dir for --from-revision captures), then python/.
 """
 
+import inspect
 import json
 import sys
 
@@ -27,6 +28,11 @@ def run(payload):
     sqrt_area = float(payload.get("sqrtArea_um", 45.0))
     location = payload.get("location", "internal")
     r_ratio = float(payload.get("stressRatio_R", -1.0))
+    paris_kwargs = {}
+    # KS-3: the production caller passes the defect location to the Paris integration. The
+    # d33b6f5 base blob (re-captured by the binding tests) has no such parameter.
+    if "location" in inspect.signature(engine.simulate_paris_crack_growth).parameters:
+        paris_kwargs["location"] = location
     return {
         "fatigue_limit": engine.calculate_fatigue_limit(sqrt_area, location, r_ratio),
         "kitagawa_takahashi_curve": engine.generate_kitagawa_takahashi_curve(location, r_ratio, n_points=30),
@@ -34,6 +40,7 @@ def run(payload):
             initial_defect_sqrt_area_um=sqrt_area,
             cyclic_stress_amplitude_MPa=float(payload.get("stressAmplitude_MPa", 220.0)),
             stress_ratio_R=r_ratio,
+            **paris_kwargs,
         ),
     }
 

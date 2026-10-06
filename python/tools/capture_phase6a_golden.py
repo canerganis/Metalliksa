@@ -747,6 +747,10 @@ def documented_change_violation(solver: str, row: Dict[str, Any],
         return kdc.row_violation(row, new_stdout)
     if solver == "stochastic_uq_mmpds_solver":
         return _uq_sampler_violation(row, new_stdout, payload)
+    if solver == "lpbf_fatigue_fracture":
+        # Physics audit KS-2 / KS-3: independent oracle in tools/fatigue_documented_changes.py.
+        import fatigue_documented_changes as fdc  # noqa: E402 (tools/ module)
+        return fdc.row_violation(row, new_stdout, payload, old_stdout)
     if solver == "icme_multiscale_pipeline_solver":
         return _icme_documented_violation(row, rows, new_stdout)
     if solver != "kinetics_ttt_cct_solver" or not _KINETICS_HV_ROW.fullmatch(key):

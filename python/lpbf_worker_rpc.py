@@ -69,7 +69,8 @@ def _rpc_fatigue_fracture(request):
     paris_res = engine.simulate_paris_crack_growth(
         initial_defect_sqrt_area_um=sqrt_area,
         cyclic_stress_amplitude_MPa=float(payload.get("stressAmplitude_MPa", 220.0)),
-        stress_ratio_R=r_ratio
+        stress_ratio_R=r_ratio,
+        location=location,
     )
     data = {
         "fatigue_limit": fatigue_res,

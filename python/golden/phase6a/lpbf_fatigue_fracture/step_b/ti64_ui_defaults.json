@@ -1,0 +1,512 @@
+{
+ "case": "ti64_ui_defaults",
+ "driftVsBase": [
+  {
+   "abs": 37.6,
+   "key": "fatigue_limit.el_haddad_a0_um",
+   "kind": "numeric",
+   "new": 50.13,
+   "old": 12.53,
+   "rel": 3.0007980845969677
+  },
+  {
+   "key": "fatigue_limit.el_haddad_geometry_factor_Y",
+   "kind": "added",
+   "new": 0.5,
+   "old": null
+  },
+  {
+   "abs": 132.2,
+   "key": "fatigue_limit.fatigue_limit_R_minus_1_MPa",
+   "kind": "numeric",
+   "new": 370.2,
+   "old": 238.0,
+   "rel": 0.5554621848739495
+  },
+  {
+   "abs": 132.2,
+   "key": "fatigue_limit.fatigue_limit_corrected_MPa",
+   "kind": "numeric",
+   "new": 370.2,
+   "old": 238.0,
+   "rel": 0.5554621848739495
+  },
+  {
+   "abs": 1.5,
+   "key": "kitagawa_takahashi_curve[0].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 509.5,
+   "old": 508.0,
+   "rel": 0.002952755905511811
+  },
+  {
+   "abs": 30.899999999999977,
+   "key": "kitagawa_takahashi_curve[10].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 498.2,
+   "old": 467.3,
+   "rel": 0.06612454526000423
+  },
+  {
+   "abs": 40.10000000000002,
+   "key": "kitagawa_takahashi_curve[11].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 494.0,
+   "old": 453.9,
+   "rel": 0.08834545053976653
+  },
+  {
+   "abs": 51.30000000000001,
+   "key": "kitagawa_takahashi_curve[12].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 488.5,
+   "old": 437.2,
+   "rel": 0.1173376029277219
+  },
+  {
+   "abs": 64.10000000000002,
+   "key": "kitagawa_takahashi_curve[13].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 481.1,
+   "old": 417.0,
+   "rel": 0.15371702637889695
+  },
+  {
+   "abs": 78.10000000000002,
+   "key": "kitagawa_takahashi_curve[14].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 471.5,
+   "old": 393.4,
+   "rel": 0.19852567361464166
+  },
+  {
+   "abs": 92.5,
+   "key": "kitagawa_takahashi_curve[15].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 459.1,
+   "old": 366.6,
+   "rel": 0.25231860338243317
+  },
+  {
+   "abs": 106.30000000000001,
+   "key": "kitagawa_takahashi_curve[16].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 443.7,
+   "old": 337.4,
+   "rel": 0.31505631298162423
+  },
+  {
+   "abs": 118.10000000000002,
+   "key": "kitagawa_takahashi_curve[17].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 424.8,
+   "old": 306.7,
+   "rel": 0.3850668405608087
+  },
+  {
+   "abs": 126.79999999999995,
+   "key": "kitagawa_takahashi_curve[18].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 402.4,
+   "old": 275.6,
+   "rel": 0.46008708272859195
+  },
+  {
+   "abs": 131.7,
+   "key": "kitagawa_takahashi_curve[19].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 376.7,
+   "old": 245.0,
+   "rel": 0.5375510204081633
+  },
+  {
+   "abs": 2.1000000000000227,
+   "key": "kitagawa_takahashi_curve[1].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 509.3,
+   "old": 507.2,
+   "rel": 0.004140378548895944
+  },
+  {
+   "abs": 132.3,
+   "key": "kitagawa_takahashi_curve[20].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 348.3,
+   "old": 216.0,
+   "rel": 0.6125
+  },
+  {
+   "abs": 129.1,
+   "key": "kitagawa_takahashi_curve[21].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 318.0,
+   "old": 188.9,
+   "rel": 0.6834303864478559
+  },
+  {
+   "abs": 122.59999999999997,
+   "key": "kitagawa_takahashi_curve[22].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 286.9,
+   "old": 164.3,
+   "rel": 0.7461959829580034
+  },
+  {
+   "abs": 113.90000000000003,
+   "key": "kitagawa_takahashi_curve[23].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 256.1,
+   "old": 142.2,
+   "rel": 0.8009845288326304
+  },
+  {
+   "abs": 103.80000000000001,
+   "key": "kitagawa_takahashi_curve[24].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 226.4,
+   "old": 122.6,
+   "rel": 0.8466557911908648
+  },
+  {
+   "abs": 93.1,
+   "key": "kitagawa_takahashi_curve[25].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 198.5,
+   "old": 105.4,
+   "rel": 0.883301707779886
+  },
+  {
+   "abs": 82.5,
+   "key": "kitagawa_takahashi_curve[26].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 173.0,
+   "old": 90.5,
+   "rel": 0.9116022099447514
+  },
+  {
+   "abs": 72.4,
+   "key": "kitagawa_takahashi_curve[27].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 149.9,
+   "old": 77.5,
+   "rel": 0.9341935483870969
+  },
+  {
+   "abs": 63.2,
+   "key": "kitagawa_takahashi_curve[28].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 129.5,
+   "old": 66.3,
+   "rel": 0.9532428355957768
+  },
+  {
+   "abs": 54.7,
+   "key": "kitagawa_takahashi_curve[29].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 111.4,
+   "old": 56.7,
+   "rel": 0.9647266313932981
+  },
+  {
+   "abs": 2.8000000000000114,
+   "key": "kitagawa_takahashi_curve[2].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 509.0,
+   "old": 506.2,
+   "rel": 0.0055314105096799905
+  },
+  {
+   "abs": 3.8999999999999773,
+   "key": "kitagawa_takahashi_curve[3].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 508.7,
+   "old": 504.8,
+   "rel": 0.007725832012678243
+  },
+  {
+   "abs": 5.300000000000011,
+   "key": "kitagawa_takahashi_curve[4].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 508.2,
+   "old": 502.9,
+   "rel": 0.010538874527739136
+  },
+  {
+   "abs": 7.199999999999989,
+   "key": "kitagawa_takahashi_curve[5].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 507.5,
+   "old": 500.3,
+   "rel": 0.014391365180891442
+  },
+  {
+   "abs": 9.800000000000011,
+   "key": "kitagawa_takahashi_curve[6].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 506.6,
+   "old": 496.8,
+   "rel": 0.019726247987117574
+  },
+  {
+   "abs": 13.199999999999989,
+   "key": "kitagawa_takahashi_curve[7].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 505.4,
+   "old": 492.2,
+   "rel": 0.026818366517675718
+  },
+  {
+   "abs": 17.69999999999999,
+   "key": "kitagawa_takahashi_curve[8].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 503.7,
+   "old": 486.0,
+   "rel": 0.03641975308641973
+  },
+  {
+   "abs": 23.599999999999966,
+   "key": "kitagawa_takahashi_curve[9].fatigue_limit_MPa",
+   "kind": "numeric",
+   "new": 501.4,
+   "old": 477.8,
+   "rel": 0.04939305148597732
+  },
+  {
+   "key": "paris_crack_growth.crack_growth_curve[0].delta_K_MPa_m",
+   "kind": "added",
+   "new": 1.43,
+   "old": null
+  },
+  {
+   "key": "paris_crack_growth.critical_sqrt_area_um",
+   "kind": "added",
+   "new": 66867.18,
+   "old": null
+  },
+  {
+   "key": "paris_crack_growth.delta_K_convention",
+   "kind": "added",
+   "new": "ASTM E647: Delta_K = K_max for R <= 0, K_max - K_min for R > 0",
+   "old": null
+  },
+  {
+   "key": "paris_crack_growth.delta_K_initial_MPa_m",
+   "kind": "added",
+   "new": 1.427,
+   "old": null
+  },
+  {
+   "key": "paris_crack_growth.delta_sigma_eff_MPa",
+   "kind": "added",
+   "new": 240.0,
+   "old": null
+  },
+  {
+   "abs": 22.5,
+   "key": "paris_crack_growth.final_crack_size_um",
+   "kind": "numeric",
+   "new": 45.0,
+   "old": 22.5,
+   "rel": 1.0
+  },
+  {
+   "key": "paris_crack_growth.geometry_factor_Y",
+   "kind": "added",
+   "new": 0.5,
+   "old": null
+  },
+  {
+   "key": "paris_crack_growth.integration",
+   "kind": "added",
+   "new": "closed-form Paris integral in x = sqrt(area) (constant Murakami Y)",
+   "old": null
+  },
+  {
+   "key": "paris_crack_growth.location",
+   "kind": "added",
+   "new": "internal",
+   "old": null
+  }
+ ],
+ "exitCode": 0,
+ "gitHead": "96477b5e073807b2148c31f8c9956497a85b5f81",
+ "input": {
+  "alloyName": "Ti-6Al-4V",
+  "location": "internal",
+  "sqrtArea_um": 45,
+  "stressAmplitude_MPa": 240,
+  "stressRatio_R": -1.0
+ },
+ "invocation": "python -B lpbf_fatigue_fracture.py < input (cwd python/)",
+ "label": "phase6a-step-b",
+ "provenance": null,
+ "schema": "phase6a-step-b-golden-1",
+ "solver": "lpbf_fatigue_fracture",
+ "solverFile": "python/lpbf_fatigue_fracture.py",
+ "solverSha256": "b4125c251bb1db6dea1b252533362b05fcc59ba30ab98ce7f2ca32da4553ba6f",
+ "solverSha256Normalization": "CRLF->LF (git blob form)",
+ "solverSource": "worktree",
+ "stdout": {
+  "fatigue_limit": {
+   "el_haddad_a0_um": 50.13,
+   "el_haddad_geometry_factor_Y": 0.5,
+   "fatigue_limit_R_minus_1_MPa": 370.2,
+   "fatigue_limit_corrected_MPa": 370.2,
+   "hardness_HV": 340.0,
+   "location": "internal",
+   "murakami_raw_MPa": 380.5,
+   "sqrt_area_um": 45.0,
+   "stress_ratio_R": -1.0
+  },
+  "kitagawa_takahashi_curve": [
+   {
+    "defect_sqrt_area_um": 0.1,
+    "fatigue_limit_MPa": 509.5
+   },
+   {
+    "defect_sqrt_area_um": 0.14,
+    "fatigue_limit_MPa": 509.3
+   },
+   {
+    "defect_sqrt_area_um": 0.19,
+    "fatigue_limit_MPa": 509.0
+   },
+   {
+    "defect_sqrt_area_um": 0.26,
+    "fatigue_limit_MPa": 508.7
+   },
+   {
+    "defect_sqrt_area_um": 0.36,
+    "fatigue_limit_MPa": 508.2
+   },
+   {
+    "defect_sqrt_area_um": 0.49,
+    "fatigue_limit_MPa": 507.5
+   },
+   {
+    "defect_sqrt_area_um": 0.67,
+    "fatigue_limit_MPa": 506.6
+   },
+   {
+    "defect_sqrt_area_um": 0.92,
+    "fatigue_limit_MPa": 505.4
+   },
+   {
+    "defect_sqrt_area_um": 1.27,
+    "fatigue_limit_MPa": 503.7
+   },
+   {
+    "defect_sqrt_area_um": 1.74,
+    "fatigue_limit_MPa": 501.4
+   },
+   {
+    "defect_sqrt_area_um": 2.4,
+    "fatigue_limit_MPa": 498.2
+   },
+   {
+    "defect_sqrt_area_um": 3.29,
+    "fatigue_limit_MPa": 494.0
+   },
+   {
+    "defect_sqrt_area_um": 4.52,
+    "fatigue_limit_MPa": 488.5
+   },
+   {
+    "defect_sqrt_area_um": 6.21,
+    "fatigue_limit_MPa": 481.1
+   },
+   {
+    "defect_sqrt_area_um": 8.53,
+    "fatigue_limit_MPa": 471.5
+   },
+   {
+    "defect_sqrt_area_um": 11.72,
+    "fatigue_limit_MPa": 459.1
+   },
+   {
+    "defect_sqrt_area_um": 16.1,
+    "fatigue_limit_MPa": 443.7
+   },
+   {
+    "defect_sqrt_area_um": 22.12,
+    "fatigue_limit_MPa": 424.8
+   },
+   {
+    "defect_sqrt_area_um": 30.39,
+    "fatigue_limit_MPa": 402.4
+   },
+   {
+    "defect_sqrt_area_um": 41.75,
+    "fatigue_limit_MPa": 376.7
+   },
+   {
+    "defect_sqrt_area_um": 57.36,
+    "fatigue_limit_MPa": 348.3
+   },
+   {
+    "defect_sqrt_area_um": 78.8,
+    "fatigue_limit_MPa": 318.0
+   },
+   {
+    "defect_sqrt_area_um": 108.26,
+    "fatigue_limit_MPa": 286.9
+   },
+   {
+    "defect_sqrt_area_um": 148.74,
+    "fatigue_limit_MPa": 256.1
+   },
+   {
+    "defect_sqrt_area_um": 204.34,
+    "fatigue_limit_MPa": 226.4
+   },
+   {
+    "defect_sqrt_area_um": 280.72,
+    "fatigue_limit_MPa": 198.5
+   },
+   {
+    "defect_sqrt_area_um": 385.66,
+    "fatigue_limit_MPa": 173.0
+   },
+   {
+    "defect_sqrt_area_um": 529.83,
+    "fatigue_limit_MPa": 149.9
+   },
+   {
+    "defect_sqrt_area_um": 727.9,
+    "fatigue_limit_MPa": 129.5
+   },
+   {
+    "defect_sqrt_area_um": 1000.0,
+    "fatigue_limit_MPa": 111.4
+   }
+  ],
+  "paris_crack_growth": {
+   "crack_growth_curve": [
+    {
+     "crack_length_um": 45.0,
+     "cycles": 0,
+     "delta_K_MPa_m": 1.43
+    }
+   ],
+   "critical_sqrt_area_um": 66867.18,
+   "cycles_to_failure": 10000000,
+   "delta_K_convention": "ASTM E647: Delta_K = K_max for R <= 0, K_max - K_min for R > 0",
+   "delta_K_initial_MPa_m": 1.427,
+   "delta_sigma_eff_MPa": 240.0,
+   "final_crack_size_um": 45.0,
+   "geometry_factor_Y": 0.5,
+   "initial_crack_size_um": 45.0,
+   "integration": "closed-form Paris integral in x = sqrt(area) (constant Murakami Y)",
+   "location": "internal",
+   "status": "non_propagating"
+  }
+ },
+ "supersedes": "ti64_ui_defaults.json (d33b6f5)",
+ "volatileKeysStripped": [
+  "computeTimeMs",
+  "durationMs",
+  "pythonDurationMs",
+  "pythonVersion",
+  "timestamp"
+ ]
+}

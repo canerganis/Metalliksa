@@ -46,6 +46,31 @@ class T2bGoldenRegressionTest(unittest.TestCase):
                          "tools/phase6a_fatigue_golden_driver.py")
 
 
+class FatigueKs2Ks3OracleTest(unittest.TestCase):
+    """Physics audit KS-2 / KS-3: the documented-change oracle accepts the re-blessed fatigue documents and
+    rejects the d33b6f5 ones (Y = 1 El-Haddad, Paris from sqrt(area)/2), so it is not vacuous."""
+
+    def test_oracle_separates_old_and_new_documents(self):
+        import fatigue_documented_changes as fdc
+        for case, payload in golden.CASES["lpbf_fatigue_fracture"].items():
+            if (("lpbf_fatigue_fracture", case) in golden.step_b_excluded_cases()):
+                continue
+            with self.subTest(case=case):
+                self.assertEqual(fdc.document_problems(golden.load_expected("lpbf_fatigue_fracture", case)["stdout"],
+                                                       payload), [])
+                self.assertTrue(fdc.document_problems(golden.load_golden("lpbf_fatigue_fracture", case)["stdout"],
+                                                      payload))
+
+    def test_ui_default_case_values(self):
+        out = golden.load_expected("lpbf_fatigue_fracture", "ti64_ui_defaults")["stdout"]
+        # Ti-6Al-4V internal 45 um, R = -1: a0 = (1/pi)(3.2/(0.5*510))^2 = 50.13 um (was 12.53, Y = 1).
+        self.assertEqual(out["fatigue_limit"]["el_haddad_a0_um"], 50.13)
+        self.assertEqual(out["fatigue_limit"]["fatigue_limit_R_minus_1_MPa"], 370.2)  # was 238.0
+        # dK0 = 0.5 * 240 * sqrt(pi * 45e-6) = 1.427 < 3.2 (E647 Kmax at R = -1).
+        self.assertEqual(out["paris_crack_growth"]["status"], "non_propagating")
+        self.assertEqual(out["paris_crack_growth"]["delta_K_initial_MPa_m"], 1.427)
+
+
 class ProofBaselineTest(unittest.TestCase):
     """PROOF.md:1044 Seed42/N500 QMC baseline as recorded at d33b6f5 (with the norm_ppf sign
     error: normal draws had sigma 0.776), and the current expectation after the fix (same

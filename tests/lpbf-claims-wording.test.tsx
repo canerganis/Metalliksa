@@ -84,7 +84,12 @@ test("murakami fatigue: no safety verdict, R handling stated, criteria disagreem
   assert.doesNotMatch(parisLifeLabel({ status: "non_propagating", cycles_to_failure: 10_000_000 }), /Safe/);
   const runout = parisLifeLabel({ status: "runout", cycles_to_failure: 4_200_000 });
   assert.match(runout, /No fracture when integration stopped at N = 4,200,000 cycles/);
-  assert.match(runout, /cycle limit or negligible growth rate/);
+  assert.match(runout, /\(cycle limit reached\)/);
+  assert.doesNotMatch(runout, /negligible growth rate/);
+  assert.match(
+    parisLifeLabel({ status: "runout", cycles_to_failure: 4_200_000, final_crack_size_um: 812.5 }),
+    /cycle limit reached; crack size 812\.5 µm/,
+  );
   assert.doesNotMatch(runout, /^>/);
   assert.equal(parisLifeLabel({ status: "fractured", cycles_to_failure: 12345 }), "12,345 cycles");
 
