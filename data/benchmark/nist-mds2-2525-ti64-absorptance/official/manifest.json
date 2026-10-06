@@ -1,0 +1,191 @@
+{
+  "schema_version": 1,
+  "dataset_id": "nist-mds2-2525-ti64-absorptance-v1",
+  "version": "1.3.2",
+  "readme_document_version": "2.0.0",
+  "material": "Ti-6Al-4V",
+  "material_note": "Spot/Scan on Bare Metal files are Ti-6Al-4V (NIST SRM 654b). The Al_* challenge tables are results for aluminium (NIST SRM 1241c) from the A-AMB2022-01 challenge and are not Ti-6Al-4V.",
+  "process_scope": "bare-plate",
+  "artifact_kind": "publisher-calibrated-absorptance-and-challenge-tables",
+  "doi": "10.18434/mds2-2525",
+  "landing_page": "https://data.nist.gov/od/id/mds2-2525",
+  "title": "Asynchronous AM Bench 2022 Challenge Data: Real-time, simultaneous absorptance and high-speed Xray imaging",
+  "license": "https://www.nist.gov/open/license",
+  "citation": "Simonds, Brian J, Tanner, Jack, Artusio-Glimpse, Alexandra, Williams, Paul A., Parab, Niranjan, Zhao, Cang, Sun, Tao (2022), Asynchronous AM Bench 2022 Challenge Data: Real-time, simultaneous absorptance and high-speed x-ray imaging, Version 1.0.0, National Institute of Standards and Technology, https://doi.org/10.18434/mds2-2525",
+  "checksum_authority": "SHA-256 values published in the NIST NERDm record for ark:/88434/mds2-2525; local bytes recomputed and matched",
+  "acquisition": {
+    "route": "Internet Archive Wayback Machine snapshots of the NIST download URLs (data.nist.gov timed out on 2026-10-06)",
+    "verified_on": "2026-10-06",
+    "note": "Each archived file's SHA-256 and byte count match the NERDm record. The NERDm record file is a local re-serialisation (sorted keys, indent 1) and its checksum authority is local."
+  },
+  "files": [
+    {
+      "path": "2525_README_v200.txt",
+      "source_url": "https://data.nist.gov/od/ds/ark:/88434/mds2-2525/2525_README_v200.txt",
+      "bytes": 21907,
+      "sha256": "936f4c166b448f4b5a27d1e2b2465f9c2db1be073a7bffd54d45eb4259120a65",
+      "wayback_timestamp": "20241217170746",
+      "kind": "readme"
+    },
+    {
+      "path": "Spot on Bare Metal_Calibrated Absorption Data.csv",
+      "source_url": "https://data.nist.gov/od/ds/mds2-2525/Spot%20on%20Bare%20Metal_Calibrated%20Absorption%20Data.csv",
+      "bytes": 6497288,
+      "sha256": "0e96b220852d762fde846e406cc44c6fc874cef22e7e41db7f4025dbcc9ca274",
+      "wayback_timestamp": "20241217170645",
+      "kind": "ti64-spot-absorptance-timeseries"
+    },
+    {
+      "path": "Al_Spot_TDA_Results.csv",
+      "source_url": "https://data.nist.gov/od/ds/ark:/88434/mds2-2525/Al_Spot_TDA_Results.csv",
+      "bytes": 2292050,
+      "sha256": "3f0b6812f98535f5ffbb0e2fed31f084ad9a7f9cc393c04a43ed57f0bb14bf69",
+      "wayback_timestamp": "20241217170821",
+      "kind": "al-challenge-table"
+    },
+    {
+      "path": "Al_Scan_TDA_v2_Results.csv",
+      "source_url": "https://data.nist.gov/od/ds/ark:/88434/mds2-2525/Al_Scan_TDA_v2_Results.csv",
+      "bytes": 2493685,
+      "sha256": "3af3478b463b867ed3c78ef6e60c75f9d613607b236933f3f9df08113884a6a8",
+      "wayback_timestamp": "20241217170831",
+      "kind": "al-challenge-table"
+    },
+    {
+      "path": "Al_Spot_TDW_Results.csv",
+      "source_url": "https://data.nist.gov/od/ds/ark:/88434/mds2-2525/Al_Spot_TDW_Results.csv",
+      "bytes": 2169,
+      "sha256": "06b280222eab5f82eb9dcfb0689f20a5011c16e115548cd94ce120e5a97b4f5c",
+      "wayback_timestamp": "20241217170826",
+      "kind": "al-challenge-table"
+    },
+    {
+      "path": "Al_Spot_AA_ASR_Results.csv",
+      "source_url": "https://data.nist.gov/od/ds/ark:/88434/mds2-2525/Al_Spot_AA_ASR_Results.csv",
+      "bytes": 242,
+      "sha256": "4429f08ff3f571ab871fdbaf072e0c67aaef346259a3f2ca8744927ad6419ffb",
+      "wayback_timestamp": "20241217170715",
+      "kind": "al-challenge-table"
+    },
+    {
+      "path": "Al_Scan_AA_MWD_ASR_Results.csv",
+      "source_url": "https://data.nist.gov/od/ds/ark:/88434/mds2-2525/Al_Scan_AA_MWD_ASR_Results.csv",
+      "bytes": 364,
+      "sha256": "d3732fcddaaee046105aa90eb82547ffd0fe61edb425fc1e8f019c6f73ed0b4d",
+      "wayback_timestamp": "20241217170730",
+      "kind": "al-challenge-table"
+    },
+    {
+      "path": "NIST SRM 654b Ti64 data sheet.pdf",
+      "source_url": "https://data.nist.gov/od/ds/mds2-2525/NIST%20SRM%20654b%20Ti64%20data%20sheet.pdf",
+      "bytes": 67521,
+      "sha256": "57a8295d6db46e723cb3f0eb63844a98527dc8c61bedfa934dba549bffe13740",
+      "wayback_timestamp": "20241217170629",
+      "kind": "srm-datasheet"
+    },
+    {
+      "path": "nerdm-record-mds2-2525.json",
+      "source_url": "https://data.nist.gov/rmm/records?@id=ark:/88434/mds2-2525",
+      "bytes": 39359,
+      "sha256": "8388c6a21a7e4432ee23bfca17a45d3cd160ddfaf194d9607e5961d2eff03695",
+      "wayback_timestamp": null,
+      "kind": "nerdm-record"
+    }
+  ],
+  "absent_files": [
+    {
+      "path": "Scan on Bare Metal_Calibrated Absorption Data.csv",
+      "source_url": "https://data.nist.gov/od/ds/mds2-2525/Scan%20on%20Bare%20Metal_Calibrated%20Absorption%20Data.csv",
+      "bytes": 6657476,
+      "sha256": "1c64f24e84c274d9f9ae27fb09e79b86cda2fda5bee4b67da3567c8a59ca499d",
+      "kind": "ti64-scan-absorptance-timeseries",
+      "status": "unavailable",
+      "reason": "NIST download timed out; no Internet Archive snapshot with the official SHA-256 was available on 2026-10-06"
+    },
+    {
+      "path": "Absorption_Uncertainty_Analysis.pdf",
+      "source_url": "https://data.nist.gov/od/ds/mds2-2525/Absorption_Uncertainty_Analysis.pdf",
+      "bytes": 388131,
+      "sha256": "98ead678e3a8f6696650302dbf29660f2a886a62ba677453dd130c222755e28d",
+      "kind": "uncertainty-analysis-pdf",
+      "status": "unavailable",
+      "reason": "NIST download timed out; no Internet Archive snapshot with the official SHA-256 was available on 2026-10-06"
+    }
+  ],
+  "experiment": {
+    "laser": "1070 nm Yb-doped fibre laser, galvanometer scanner, 7 degree angle of incidence to the sample surface normal",
+    "spot_diameter_1_over_e2_um": {
+      "value": 122.5,
+      "uncertainty": 3.0,
+      "note": "calculated at the sample surface, 2.8 mm below the beam waist"
+    },
+    "beam_waist_um": {
+      "value": 49.5,
+      "uncertainty": 5.0
+    },
+    "materials": {
+      "ti64": "Ti-6Al-4V from NIST SRM 654b, wire-EDM machined and polished to ~300 um thickness, specular polished laser-incident surface, bare metal (no powder)",
+      "aluminium": "NIST SRM 1241c, ~1 mm thick (A-AMB2022-01 challenge results only)"
+    },
+    "atmosphere": "argon backfilled to room pressure after vacuum pumping",
+    "pulse_duration_ms": 2.0,
+    "scan_case": {
+      "speed_mm_s": 700,
+      "strategy": "sky-write (constant speed while laser on)"
+    },
+    "absorptance_method": "calibrated integrating sphere, 1070 nm bandpass photodiode, energy balance between input and backscattered power, zero transmission assumed; calibration repeated between laser exposures; oscilloscope time resolution 40 ns",
+    "xray_imaging": "APS 32-ID-B, 50000 frames per second, 2.5 us exposure",
+    "aluminium_challenge_values_as_published": {
+      "spot": {
+        "laser_power_W": 501,
+        "absorption_before_keyhole_pct": [
+          23.9,
+          0.3
+        ],
+        "absorption_during_keyhole_pct": [
+          64.1,
+          3.9
+        ],
+        "solidification_rate_m_s": [
+          0.46,
+          0.03
+        ]
+      },
+      "scan": {
+        "laser_power_W": 473,
+        "scan_speed_mm_s": 700,
+        "absorption_before_keyhole_pct": [
+          23.8,
+          0.08
+        ],
+        "absorption_during_keyhole_pct": [
+          43.3,
+          1.5
+        ],
+        "max_depth_um": [
+          88.8,
+          0.4
+        ],
+        "max_width_um": [
+          326,
+          16.08
+        ],
+        "solidification_rate_m_s": [
+          0.191,
+          0.019
+        ]
+      },
+      "statistics": "average of 3 runs, value then 1 standard deviation as given by NIST"
+    },
+    "data_collected": "2019-06-12 to 2019-06-13"
+  },
+  "derived_tables": [
+    {
+      "path": "../derived/ti64-spot-absorptance-summary-v1.json",
+      "bytes": 13381,
+      "sha256": "da814016f93f1c54742d9bdd9828780c94ee883d21d35cc44387ad6ca9d4389b",
+      "generator": "python/lpbf_nist_mds2_2525_absorptance.py --write",
+      "provenance": "locally derived from the files above; not published by NIST; analysis windows are local choices"
+    }
+  ]
+}

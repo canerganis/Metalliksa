@@ -1,0 +1,1068 @@
+{
+ "@context": [
+  "https://data.nist.gov/od/dm/nerdm-pub-context.jsonld",
+  {
+   "@base": "ark:/88434/mds2-2525"
+  }
+ ],
+ "@id": "ark:/88434/mds2-2525",
+ "@type": [
+  "nrdp:DataPublication",
+  "nrdp:PublicDataResource",
+  "dcat:Dataset"
+ ],
+ "_editStatus": "done",
+ "_extensionSchemas": [
+  "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/PublicDataResource"
+ ],
+ "_schema": "https://data.nist.gov/od/dm/nerdm-schema/v0.7#",
+ "accessLevel": "public",
+ "annotated": "2026-01-07T12:01:24.772970",
+ "authors": [
+  {
+   "@type": "foaf:Person",
+   "affiliation": [
+    {
+     "@id": "ror:05xpvk416",
+     "@type": "org:Organization",
+     "title": "National Institute of Standards and Technology"
+    }
+   ],
+   "familyName": "Simonds",
+   "fn": "Brian J Simonds",
+   "givenName": "Brian",
+   "middleName": "J",
+   "orcid": "0000-0002-9758-0704"
+  },
+  {
+   "@type": "foaf:Person",
+   "affiliation": [
+    {
+     "@id": "ror:05xpvk416",
+     "@type": "org:Organization",
+     "title": "National Institute of Standards and Technology"
+    }
+   ],
+   "familyName": "Tanner",
+   "fn": "Jack  Tanner",
+   "givenName": "Jack",
+   "middleName": "",
+   "orcid": "0000-0001-9468-8966"
+  },
+  {
+   "@type": "foaf:Person",
+   "affiliation": [
+    {
+     "@id": "ror:05xpvk416",
+     "@type": "org:Organization",
+     "title": "National Institute of Standards and Technology"
+    }
+   ],
+   "familyName": "Artusio-Glimpse",
+   "fn": "Alexandra  Artusio-Glimpse",
+   "givenName": "Alexandra",
+   "middleName": "",
+   "orcid": "0000-0002-8289-2393"
+  },
+  {
+   "@type": "foaf:Person",
+   "affiliation": [
+    {
+     "@id": "ror:05xpvk416",
+     "@type": "org:Organization",
+     "title": "National Institute of Standards and Technology"
+    }
+   ],
+   "familyName": "Williams",
+   "fn": "Paul A. Williams",
+   "givenName": "Paul",
+   "middleName": "A.",
+   "orcid": "0000-0001-8419-7434"
+  },
+  {
+   "@type": "foaf:Person",
+   "affiliation": [
+    {
+     "@id": "ror:05xpvk416",
+     "@type": "org:Organization",
+     "title": "National Institute of Standards and Technology"
+    }
+   ],
+   "familyName": "Parab",
+   "fn": "Niranjan  Parab",
+   "givenName": "Niranjan",
+   "middleName": "",
+   "orcid": "0000-0002-3215-1466"
+  },
+  {
+   "@type": "foaf:Person",
+   "affiliation": [
+    {
+     "@id": "ror:05xpvk416",
+     "@type": "org:Organization",
+     "title": "National Institute of Standards and Technology"
+    }
+   ],
+   "familyName": "Zhao",
+   "fn": "Cang  Zhao",
+   "givenName": "Cang",
+   "middleName": "",
+   "orcid": "0000-0002-2464-2409"
+  },
+  {
+   "@type": "foaf:Person",
+   "affiliation": [
+    {
+     "@id": "ror:05xpvk416",
+     "@type": "org:Organization",
+     "title": "National Institute of Standards and Technology"
+    }
+   ],
+   "familyName": "Sun",
+   "fn": "Tao  Sun",
+   "givenName": "Tao",
+   "middleName": "",
+   "orcid": "0000-0002-4881-9774"
+  }
+ ],
+ "bureauCode": [
+  "006:55"
+ ],
+ "components": [
+  {
+   "@id": "cmps/Beam Profile Imaging.ipynb",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "a243ecba6cb4d9de962383c66fac9124e8889e5b340c9348104d16a74fad11d0"
+   },
+   "description": "This is a script for visualizing the beam profile data given in the above file. The user should adjust the \"LaserPower\" parameter to be equal to the value specified for the absorption data. The user also needs to input an appropriate value for the data file location.",
+   "downloadURL": "https://data.nist.gov/od/ds/mds2-2525/Beam%20Profile%20Imaging.ipynb",
+   "filepath": "Beam Profile Imaging.ipynb",
+   "mediaType": "application/octet-stream",
+   "size": 22735,
+   "title": "Laser Beam Profile Script"
+  },
+  {
+   "@id": "cmps/Scan on Bare Metal_XrayImages_processed_wAbsorption.zip",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "a760c5a5fa79f654961653bb3d6df4bd6b0f7f29a431f709efd557e6b93ee637"
+   },
+   "description": "Frames containing processed Xray images along with a time series plot of the measured laser absorption up to the time that the Xray image as captured.",
+   "downloadURL": "https://data.nist.gov/od/ds/mds2-2525/Scan%20on%20Bare%20Metal_XrayImages_processed_wAbsorption.zip",
+   "filepath": "Scan on Bare Metal_XrayImages_processed_wAbsorption.zip",
+   "mediaType": "application/x-zip-compressed",
+   "size": 40167037,
+   "title": "Scan on Bare Metal_XrayImages_processed_wAbsorption"
+  },
+  {
+   "@id": "cmps/Scan on Bare Metal_XrayImages_processed_captioned.zip",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "df3c427ce190aca03ed4c025b1ea63e3ec587f7264e9c21d11a6e18e402bfb9c"
+   },
+   "description": "Processed Xray images prepared using the methods described in [3]. Time stamps are also overlayed on the images.",
+   "downloadURL": "https://data.nist.gov/od/ds/mds2-2525/Scan%20on%20Bare%20Metal_XrayImages_processed_captioned.zip",
+   "filepath": "Scan on Bare Metal_XrayImages_processed_captioned.zip",
+   "mediaType": "application/x-zip-compressed",
+   "size": 27294367,
+   "title": "Scan on Bare Metal_XrayImages_processed_captioned"
+  },
+  {
+   "@id": "cmps/Al_Spot_TDA_Results.csv.sha256",
+   "@type": [
+    "nrdp:ChecksumFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/ChecksumFile"
+   ],
+   "algorithm": {
+    "@type": "Thing",
+    "tag": "sha256"
+   },
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "8578e4d82b84ed9e5f85babc739e7c4a7f3411a5ccd70cafc930dd34ee268701"
+   },
+   "describes": "cmps/Al_Spot_TDA_Results.csv",
+   "description": "Results for AM Bench challenge problems for time-dependent absorption during a stationary laser spot on aluminum.",
+   "downloadURL": "https://data.nist.gov/od/ds/ark:/88434/mds2-2525/Al_Spot_TDA_Results.csv.sha256",
+   "filepath": "Al_Spot_TDA_Results.csv.sha256",
+   "mediaType": "text/plain",
+   "size": 64,
+   "title": "Al_Spot_TDA_Results.csv",
+   "valid": true
+  },
+  {
+   "@id": "cmps/NIST SRM 654b Ti64 data sheet.pdf",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "57a8295d6db46e723cb3f0eb63844a98527dc8c61bedfa934dba549bffe13740"
+   },
+   "description": "Composition datasheet for NIST standard reference material (SRM) 654b, a Ti-6Al-4V alloy. The samples used in this study were cut from this feedstock. Additional information found at https://www-s.nist.gov/srmors/view_detail.cfm?srm=654B",
+   "downloadURL": "https://data.nist.gov/od/ds/mds2-2525/NIST%20SRM%20654b%20Ti64%20data%20sheet.pdf",
+   "filepath": "NIST SRM 654b Ti64 data sheet.pdf",
+   "mediaType": "application/pdf",
+   "size": 67521,
+   "title": "NIST SRM 654b Ti64 data sheet"
+  },
+  {
+   "@id": "cmps/Absorption_Uncertainty_Analysis.pdf",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "98ead678e3a8f6696650302dbf29660f2a886a62ba677453dd130c222755e28d"
+   },
+   "description": "This document contains the uncertainty analysis calculations for the absorptivity data given in this dataset. The relevant measurement equations are given along with uncertainty equations for the reflected power, absorbed power, and laser coupling efficiency. An example calculation is also presented using the \"Spot on Bare Metal\" data set.",
+   "downloadURL": "https://data.nist.gov/od/ds/mds2-2525/Absorption_Uncertainty_Analysis.pdf",
+   "filepath": "Absorption_Uncertainty_Analysis.pdf",
+   "mediaType": "application/pdf",
+   "size": 388131,
+   "title": "Absorption Uncertainty Analysis"
+  },
+  {
+   "@id": "cmps/Data Synchronization Example.ipynb",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "7db1c0bdf7030d2db41f247e0942af03f1aeacbc55d585d5c866793b6ab02a1f"
+   },
+   "description": "This is a sample script for comparing raw and processed Xray images along with the absorption at a particular time. The time is selected by the user by a choice of image frame to display.",
+   "downloadURL": "https://data.nist.gov/od/ds/mds2-2525/Data%20Synchronization%20Example.ipynb",
+   "filepath": "Data Synchronization Example.ipynb",
+   "mediaType": "application/octet-stream",
+   "size": 59556,
+   "title": "Data Synchronization Example"
+  },
+  {
+   "@id": "cmps/Al_Spot_TDW_Results.csv.sha256",
+   "@type": [
+    "nrdp:ChecksumFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/ChecksumFile"
+   ],
+   "algorithm": {
+    "@type": "Thing",
+    "tag": "sha256"
+   },
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "8bda2ae5540e9e5caa7ab16a01dddcc08d6d3397969b7b22765fbd1b9a157c14"
+   },
+   "describes": "cmps/Al_Spot_TDW_Results.csv",
+   "description": "Results for AM Bench challenge problems for time-dependent width during  a stationary laser exposure on aluminum.",
+   "downloadURL": "https://data.nist.gov/od/ds/ark:/88434/mds2-2525/Al_Spot_TDW_Results.csv.sha256",
+   "filepath": "Al_Spot_TDW_Results.csv.sha256",
+   "mediaType": "text/plain",
+   "size": 64,
+   "title": "Al_Spot_TDW_Results.csv",
+   "valid": true
+  },
+  {
+   "@id": "cmps/Al_Spot_AA_ASR_Results.csv.sha256",
+   "@type": [
+    "nrdp:ChecksumFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/ChecksumFile"
+   ],
+   "algorithm": {
+    "@type": "Thing",
+    "tag": "sha256"
+   },
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "3a61198c1a10a6b2e27dc1f8f31b8b7973980c6dfb172ac3d79d976e001efa27"
+   },
+   "describes": "cmps/Al_Spot_AA_ASR_Results.csv",
+   "description": "Results for AM Bench challenge problems for average absorption and average solidification rate of a stationary laser spot on aluminum. ",
+   "downloadURL": "https://data.nist.gov/od/ds/ark:/88434/mds2-2525/Al_Spot_AA_ASR_Results.csv.sha256",
+   "filepath": "Al_Spot_AA_ASR_Results.csv.sha256",
+   "mediaType": "text/plain",
+   "size": 64,
+   "title": "Al_Spot_AA_ASR_Results.csv",
+   "valid": true
+  },
+  {
+   "@id": "cmps/Al_Spot_AA_ASR_Results.csv",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "4429f08ff3f571ab871fdbaf072e0c67aaef346259a3f2ca8744927ad6419ffb"
+   },
+   "description": "Results for AM Bench challenge problems for average absorption and average solidification rate of a stationary laser spot on aluminum. ",
+   "downloadURL": "https://data.nist.gov/od/ds/ark:/88434/mds2-2525/Al_Spot_AA_ASR_Results.csv",
+   "filepath": "Al_Spot_AA_ASR_Results.csv",
+   "mediaType": "text/csv",
+   "size": 242,
+   "title": "Al_Spot_AA_ASR_Results.csv"
+  },
+  {
+   "@id": "cmps/2525_README_v200.txt.sha256",
+   "@type": [
+    "nrdp:ChecksumFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/ChecksumFile"
+   ],
+   "algorithm": {
+    "@type": "Thing",
+    "tag": "sha256"
+   },
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "c43f79af89d2ab722e6295d89d13bd7da3410fcc052ffe4fec6bef6fb009602f"
+   },
+   "describes": "cmps/2525_README_v200.txt",
+   "description": "A text file containing references to data, experimental information, and descriptions of all files available for download.",
+   "downloadURL": "https://data.nist.gov/od/ds/ark:/88434/mds2-2525/2525_README_v200.txt.sha256",
+   "filepath": "2525_README_v200.txt.sha256",
+   "mediaType": "text/plain",
+   "size": 64,
+   "title": "2525_README_v200.txt",
+   "valid": true
+  },
+  {
+   "@id": "cmps/2525_README_v200.txt",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "936f4c166b448f4b5a27d1e2b2465f9c2db1be073a7bffd54d45eb4259120a65"
+   },
+   "description": "A text file containing references to data, experimental information, and descriptions of all files available for download.",
+   "downloadURL": "https://data.nist.gov/od/ds/ark:/88434/mds2-2525/2525_README_v200.txt",
+   "filepath": "2525_README_v200.txt",
+   "mediaType": "text/plain",
+   "size": 21907,
+   "title": "2525_README_v200.txt"
+  },
+  {
+   "@id": "cmps/Spot on Bare Metal_Xray with Absorption.avi",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "86e3203f9e47b99dbdd0422037ff525962d7d0837d1acd4280d3919ee66ad462"
+   },
+   "description": "An example movie made from the frames in ?Spot on Bare Metal_XrayImages_processed_wAbsorption?.",
+   "downloadURL": "https://data.nist.gov/od/ds/mds2-2525/Spot%20on%20Bare%20Metal_Xray%20with%20Absorption.avi",
+   "filepath": "Spot on Bare Metal_Xray with Absorption.avi",
+   "mediaType": "video/example",
+   "size": 10736314,
+   "title": "Spot on Bare Metal_Xray with Absorption"
+  },
+  {
+   "@id": "cmps/Scan on Bare Metal_Calibrated Absorption Data.csv",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "1c64f24e84c274d9f9ae27fb09e79b86cda2fda5bee4b67da3567c8a59ca499d"
+   },
+   "description": "File containing time-dependent absorption and camera timing data. Nine columns.  1: Numerical index. 2: ?Time? ? in seconds. 3: ?InputLaser? ? Temporal profile of laser pulse. Sharp peak for first few hundred nanoseconds is an artifact and is to be ignored. 4: ?AbsoluteAbsorption? ? The calculated absolute absorbed power in units of Watts. See [1] and [4] for discussion of how this is calculated. 5: ?AbsAbsorptionUncertainty? ? Absolute expanded uncertainty in the absorbed power in units of Watts. See additional documentation for how this is calculated. 6: ?RelativeAbsorption? ? Percent absorption. 7: ?CameraTrigger? ? TTL pulse when camera was triggered to start capturing images. 8: ?FrameTrigger? ? Camera output pulse where leading edge is start of frame exposure. 9: ?FrameNumber? ? The frame number is given at the start of each frame. ",
+   "downloadURL": "https://data.nist.gov/od/ds/mds2-2525/Scan%20on%20Bare%20Metal_Calibrated%20Absorption%20Data.csv",
+   "filepath": "Scan on Bare Metal_Calibrated Absorption Data.csv",
+   "mediaType": "application/vnd.ms-excel",
+   "size": 6657476,
+   "title": "Scan on Bare Metal_Calibrated Absorption Data"
+  },
+  {
+   "@id": "cmps/Spot on Bare Metal_Calibrated Absorption Data.csv",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "0e96b220852d762fde846e406cc44c6fc874cef22e7e41db7f4025dbcc9ca274"
+   },
+   "description": "File containing time-dependent absorption and camera timing data. Nine columns.  1: Numerical index. 2: \"Time\" in seconds. 3: \"InputLaser\" Temporal profile of laser pulse. Sharp peak for first few hundred nanoseconds is an artifact and is to be ignored. 4: \"AbsoluteAbsorption\" The calculated absolute absorbed power in units of Watts. See [1] and [4] for discussion of how this is calculated. 5: \"AbsAbsorptionUncertainty\" Absolute expanded uncertainty in the absorbed power in units of Watts. See additional documentation for how this is calculated. 6: \"RelativeAbsorption\" Percent absorption. 7: \"CameraTrigger\" TTL pulse when camera was triggered to start capturing images. 8: \"FrameTrigger\" Camera output pulse where leading edge is start of frame exposure. 9: \"FrameNumber\" The frame number is given at the start of each frame. ",
+   "downloadURL": "https://data.nist.gov/od/ds/mds2-2525/Spot%20on%20Bare%20Metal_Calibrated%20Absorption%20Data.csv",
+   "filepath": "Spot on Bare Metal_Calibrated Absorption Data.csv",
+   "mediaType": "application/vnd.ms-excel",
+   "size": 6497288,
+   "title": "Spot on Bare Metal_Calibrated Absorption Data"
+  },
+  {
+   "@id": "cmps/Al_Spot_TDW_Results.csv",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "06b280222eab5f82eb9dcfb0689f20a5011c16e115548cd94ce120e5a97b4f5c"
+   },
+   "description": "Results for AM Bench challenge problems for time-dependent width during  a stationary laser exposure on aluminum.",
+   "downloadURL": "https://data.nist.gov/od/ds/ark:/88434/mds2-2525/Al_Spot_TDW_Results.csv",
+   "filepath": "Al_Spot_TDW_Results.csv",
+   "mediaType": "text/csv",
+   "size": 2169,
+   "title": "Al_Spot_TDW_Results.csv"
+  },
+  {
+   "@id": "cmps/Spot on Bare Metal_XrayImages_processed_wAbsorption.zip",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "75a63c58bd25062a1122a080f169661e578ff260f49ab5fb1b959298d340b7e6"
+   },
+   "description": "Frames containing processed Xray images along with a time series plot of the measured laser absorption up to the time that the Xray image as captured.",
+   "downloadURL": "https://data.nist.gov/od/ds/mds2-2525/Spot%20on%20Bare%20Metal_XrayImages_processed_wAbsorption.zip",
+   "filepath": "Spot on Bare Metal_XrayImages_processed_wAbsorption.zip",
+   "mediaType": "application/x-zip-compressed",
+   "size": 21764959,
+   "title": "Spot on Bare Metal_XrayImages_processed_wAbsorption"
+  },
+  {
+   "@id": "cmps/Al_Scan_AA_MWD_ASR_Results.csv",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "d3732fcddaaee046105aa90eb82547ffd0fe61edb425fc1e8f019c6f73ed0b4d"
+   },
+   "description": "Results from the AM Bench challenge problems for average absorption, melt pool width, melt pool depth, and average solidification rate for a scanned laser on aluminium.",
+   "downloadURL": "https://data.nist.gov/od/ds/ark:/88434/mds2-2525/Al_Scan_AA_MWD_ASR_Results.csv",
+   "filepath": "Al_Scan_AA_MWD_ASR_Results.csv",
+   "mediaType": "text/csv",
+   "size": 364,
+   "title": "Al_Scan_AA_MWD_ASR_Results.csv"
+  },
+  {
+   "@id": "cmps/Scan on Bare Metal_Xray with Absorption.avi",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "b63bb936d9b80e2480162415bcd4caf6cf4fc4896c4472bbe57852ecf0b4c640"
+   },
+   "description": "An example movie made from the frames in \"Scan on Bare Metal_XrayImages_processed_wAbsorption\".",
+   "downloadURL": "https://data.nist.gov/od/ds/mds2-2525/Scan%20on%20Bare%20Metal_Xray%20with%20Absorption.avi",
+   "filepath": "Scan on Bare Metal_Xray with Absorption.avi",
+   "mediaType": "video/example",
+   "size": 9293776,
+   "title": "Scan on Bare Metal_Xray with Absorption"
+  },
+  {
+   "@id": "cmps/Scan on Bare Metal_XrayImages_Raw.zip",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "734870226b6fa5ec30e93becd3d8c7c032c3fbc36e39aed16a7b99841aa779ae"
+   },
+   "description": "Unprocessed (raw) Xray images.",
+   "downloadURL": "https://data.nist.gov/od/ds/mds2-2525/Scan%20on%20Bare%20Metal_XrayImages_Raw.zip",
+   "filepath": "Scan on Bare Metal_XrayImages_Raw.zip",
+   "mediaType": "application/x-zip-compressed",
+   "size": 210482529,
+   "title": "Scan on Bare Metal_XrayImages_Raw"
+  },
+  {
+   "@id": "cmps/Al_Spot_TDA_Results.csv",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "3f0b6812f98535f5ffbb0e2fed31f084ad9a7f9cc393c04a43ed57f0bb14bf69"
+   },
+   "description": "Results for AM Bench challenge problems for time-dependent absorption during a stationary laser spot on aluminum.",
+   "downloadURL": "https://data.nist.gov/od/ds/ark:/88434/mds2-2525/Al_Spot_TDA_Results.csv",
+   "filepath": "Al_Spot_TDA_Results.csv",
+   "mediaType": "text/csv",
+   "size": 2292050,
+   "title": "Al_Spot_TDA_Results.csv"
+  },
+  {
+   "@id": "cmps/Sample Diagram_V110.pdf",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "8b6b84cdaf0f79dcd80ce636e92e7709c9760fb65a1926aad76ef7dac0b29eeb"
+   },
+   "description": "This file contains diagrams of the experimental setup and sample configuration. ",
+   "downloadURL": "https://data.nist.gov/od/ds/mds2-2525/Sample%20Diagram_V110.pdf",
+   "filepath": "Sample Diagram_V110.pdf",
+   "mediaType": "application/pdf",
+   "size": 309253,
+   "title": "Sample Diagram"
+  },
+  {
+   "@id": "cmps/Al_Scan_TDA_v2_Results.csv.sha256",
+   "@type": [
+    "nrdp:ChecksumFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/ChecksumFile"
+   ],
+   "algorithm": {
+    "@type": "Thing",
+    "tag": "sha256"
+   },
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "4d15152c1c0847f07601a831828214b139b6cbfeecf18d162a27c27cf09db31e"
+   },
+   "describes": "cmps/Al_Scan_TDA_v2_Results.csv",
+   "description": "Results from the AM Bench challenge problems for time dependent absorption during scanned laser on aluminium.",
+   "downloadURL": "https://data.nist.gov/od/ds/ark:/88434/mds2-2525/Al_Scan_TDA_v2_Results.csv.sha256",
+   "filepath": "Al_Scan_TDA_v2_Results.csv.sha256",
+   "mediaType": "text/plain",
+   "size": 64,
+   "title": "Al_Scan_TDA_v2_Results.csv",
+   "valid": true
+  },
+  {
+   "@id": "cmps/Al_Scan_TDA_v2_Results.csv",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "3af3478b463b867ed3c78ef6e60c75f9d613607b236933f3f9df08113884a6a8"
+   },
+   "description": "Results from the AM Bench challenge problems for time dependent absorption during scanned laser on aluminium.",
+   "downloadURL": "https://data.nist.gov/od/ds/ark:/88434/mds2-2525/Al_Scan_TDA_v2_Results.csv",
+   "filepath": "Al_Scan_TDA_v2_Results.csv",
+   "mediaType": "text/csv",
+   "size": 2493685,
+   "title": "Al_Scan_TDA_v2_Results.csv"
+  },
+  {
+   "@id": "cmps/Spot on Bare Metal_XrayImages_processed_captioned.zip",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "4d683cf48c4a15458d60dd32b759528a672ba1d6908cc537c43c9e25854c2a98"
+   },
+   "description": "Spot on Bare Metal_XrayImages_processed_captioned",
+   "downloadURL": "https://data.nist.gov/od/ds/mds2-2525/Spot%20on%20Bare%20Metal_XrayImages_processed_captioned.zip",
+   "filepath": "Spot on Bare Metal_XrayImages_processed_captioned.zip",
+   "mediaType": "application/x-zip-compressed",
+   "size": 8849453,
+   "title": "Spot on Bare Metal_XrayImages_processed_captioned"
+  },
+  {
+   "@id": "cmps/Al_Scan_AA_MWD_ASR_Results.csv.sha256",
+   "@type": [
+    "nrdp:ChecksumFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/ChecksumFile"
+   ],
+   "algorithm": {
+    "@type": "Thing",
+    "tag": "sha256"
+   },
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "b2765b23892c4e55e1b9b55a9ddac5f4fe6d761eacbe6ed6bbc132fe4e212371"
+   },
+   "describes": "cmps/Al_Scan_AA_MWD_ASR_Results.csv",
+   "description": "Results from the AM Bench challenge problems for average absorption, melt pool width, melt pool depth, and average solidification rate for a scanned laser on aluminium.",
+   "downloadURL": "https://data.nist.gov/od/ds/ark:/88434/mds2-2525/Al_Scan_AA_MWD_ASR_Results.csv.sha256",
+   "filepath": "Al_Scan_AA_MWD_ASR_Results.csv.sha256",
+   "mediaType": "text/plain",
+   "size": 64,
+   "title": "Al_Scan_AA_MWD_ASR_Results.csv",
+   "valid": true
+  },
+  {
+   "@id": "cmps/Spot on Bare Metal_XrayImages_Raw.zip",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "9b2bf101742fb2bfd175a2e237da3b10ae4de512c3daa983133aae36eda949e3"
+   },
+   "description": "Unprocessed (raw) Xray images.",
+   "downloadURL": "https://data.nist.gov/od/ds/mds2-2525/Spot%20on%20Bare%20Metal_XrayImages_Raw.zip",
+   "filepath": "Spot on Bare Metal_XrayImages_Raw.zip",
+   "mediaType": "application/x-zip-compressed",
+   "size": 178878695,
+   "title": "Spot on Bare Metal_XrayImages_Raw"
+  },
+  {
+   "@id": "cmps/Beam Profile_5p5micron pixels_Normalized Integral.csv",
+   "@type": [
+    "nrdp:DataFile",
+    "nrdp:DownloadableFile",
+    "dcat:Distribution"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/pub/v0.7#/definitions/DataFile"
+   ],
+   "checksum": {
+    "algorithm": {
+     "@type": "Thing",
+     "tag": "sha256"
+    },
+    "hash": "c6f60469a629350dfb5af39fd484cb06ccf986c7d926361592f05b549e8246ff"
+   },
+   "description": "Beam profile data whose integral is normalized to 1. Therefore, multiplying these data by the laser power gives the correct integrated laser power. An example Python script is given as ?Beam Profile Imaging.ipynb? This data was obtained at focal plane of laser. The data is in units of pixels and the pixel pitch is 5.5 micrometers square.",
+   "downloadURL": "https://data.nist.gov/od/ds/mds2-2525/Beam%20Profile_5p5micron%20pixels_Normalized%20Integral.csv",
+   "filepath": "Beam Profile_5p5micron pixels_Normalized Integral.csv",
+   "mediaType": "application/vnd.ms-excel",
+   "size": 73643,
+   "title": "Beam Profile_5p5micron pixels_Normalized integral"
+  }
+ ],
+ "contactPoint": {
+  "fn": "Brian Simonds",
+  "hasEmail": "mailto:brian.simonds@nist.gov"
+ },
+ "description": [
+  "The absolute laser absorption was measured simultaneously with X-ray imaging during laser melting of Ti-6Al-4V solid metal. The data included here are the time-resolved absolute absorbed power and the Xray images acquired at the same time, along with timing data for synchronization. Also included is information about the experimental configuration including applied laser power, laser beam spatial profile, and the experimental setup. A text document is included that describes all files. There are datasets from two experimental configurations: 1) A stationary, 2.0 ms laser pulse and 2) a 700 mm/s scanned laser."
+ ],
+ "doi": "doi:10.18434/mds2-2525",
+ "ediid": "ark:/88434/mds2-2525",
+ "isPartOf": [
+  {
+   "@id": "ark:/88434/pdr0-0003",
+   "@type": [
+    "nrda:ScienceTheme",
+    "nrdp:PublicDataResource"
+   ],
+   "title": "Additive Manufacturing Data"
+  }
+ ],
+ "issued": "2022-01-10T16:09:24",
+ "keyword": [
+  "Additive Manufacturing",
+  "Laser Welding"
+ ],
+ "landingPage": "https://data.nist.gov/od/id/mds2-2525",
+ "language": [
+  "en"
+ ],
+ "license": "https://www.nist.gov/open/license",
+ "modified": "2022-01-03 00:00:00",
+ "programCode": [
+  "006:052"
+ ],
+ "publisher": {
+  "@type": "org:Organization",
+  "name": "National Institute of Standards and Technology"
+ },
+ "references": [
+  {
+   "@id": "#ref:10.1016/j.apmt.2021.101049",
+   "@type": [
+    "npg:Document"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/bib/v0.7#/definitions/DCiteReference"
+   ],
+   "citation": "Simonds, B. J., Tanner, J., Artusio-Glimpse, A., Williams, P. A., Parab, N., Zhao, C., & Sun, T. (2021). The causal relationship between melt pool geometry and energy absorption measured in real time during laser-based manufacturing. Applied Materials Today, 23, 101049. doi:10.1016/j.apmt.2021.101049\n",
+   "issued": "2021-06",
+   "location": "https://doi.org/10.1016/j.apmt.2021.101049",
+   "refType": "IsSupplementTo",
+   "title": "The causal relationship between melt pool geometry and energy absorption measured in real time during laser-based manufacturing"
+  },
+  {
+   "@id": "#ref:10.1016/j.addlet.2021.100002",
+   "@type": [
+    "npg:Document"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/bib/v0.7#/definitions/DCiteReference"
+   ],
+   "citation": "Khairallah, S. A., Sun, T., & Simonds, B. J. (2021). Onset of periodic oscillations as a precursor of a transition to pore-generating turbulence in laser melting. Additive Manufacturing Letters, 1, 100002. doi:10.1016/j.addlet.2021.100002\n",
+   "issued": "2021-12",
+   "location": "https://doi.org/10.1016/j.addlet.2021.100002",
+   "refType": "IsSupplementTo",
+   "title": "Onset of periodic oscillations as a precursor of a transition to pore-generating turbulence in laser melting"
+  },
+  {
+   "@id": "#ref:10.1016/j.procir.2020.09.135",
+   "@type": [
+    "npg:Document"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/bib/v0.7#/definitions/DCiteReference"
+   ],
+   "citation": "Simonds, B. J., Tanner, J., Artusio-Glimpse, A., Williams, P. A., Parab, N., Zhao, C., & Sun, T. (2020). Simultaneous high-speed x-ray transmission imaging and absolute dynamic absorptance measurements during high-power laser-metal processing. Procedia CIRP, 94, 775-779. doi:10.1016/j.procir.2020.09.135\n",
+   "issued": "2020",
+   "location": "https://doi.org/10.1016/j.procir.2020.09.135",
+   "refType": "IsSupplementTo",
+   "title": "Simultaneous high-speed x-ray transmission imaging and absolute dynamic absorptance measurements during high-power laser-metal processing"
+  },
+  {
+   "@id": "#ref:10.1016/j.jallcom.2021.163494",
+   "@type": [
+    "npg:Document"
+   ],
+   "_extensionSchemas": [
+    "https://data.nist.gov/od/dm/nerdm-schema/bib/v0.7#/definitions/DCiteReference"
+   ],
+   "citation": "Derimow, N., Schwalbach, E. J., Benzing, J. T., Killgore, J. P., Artusio-Glimpse, A. B., Hrabe, N., & Simonds, B. J. (2021). In situ absorption synchrotron measurements, predictive modeling, microstructural analysis, and scanning probe measurements of laser melted Ti-6Al-4V single tracks for additive manufacturing applications. Journal of Alloys and Compounds, 163494. doi:10.1016/j.jallcom.2021.163494\n",
+   "issued": "2021-12",
+   "location": "https://doi.org/10.1016/j.jallcom.2021.163494",
+   "refType": "IsSupplementTo",
+   "title": "In situ absorption synchrotron measurements, predictive modeling, microstructural analysis, and scanning probe measurements of laser melted Ti-6Al-4V single tracks for additive manufacturing applications"
+  }
+ ],
+ "releaseHistory": {
+  "@id": "ark:/88434/mds2-2525/pdr:v",
+  "@type": [
+   "nrdr:ReleaseHistory"
+  ],
+  "hasRelease": [
+   {
+    "@id": "ark:/88434/mds2-2525/pdr:v/1.1.0",
+    "description": "data update",
+    "issued": "2022-01-03 00:00:00",
+    "location": "https://data.nist.gov/od/id/ark:/88434/mds2-2525/pdr:v/1.1.0",
+    "version": "1.1.0"
+   },
+   {
+    "@id": "ark:/88434/mds2-2525/pdr:v/1.1.1",
+    "description": "metadata update",
+    "issued": "2022-01-03 00:00:00",
+    "location": "https://data.nist.gov/od/id/ark:/88434/mds2-2525/pdr:v/1.1.1",
+    "version": "1.1.1"
+   },
+   {
+    "@id": "ark:/88434/mds2-2525/pdr:v/1.2.0",
+    "description": "data update",
+    "issued": "2022-01-03 00:00:00",
+    "location": "https://data.nist.gov/od/id/ark:/88434/mds2-2525/pdr:v/1.2.0",
+    "version": "1.2.0"
+   },
+   {
+    "@id": "ark:/88434/mds2-2525/pdr:v/1.2.1",
+    "description": "metadata update",
+    "issued": "2022-01-03",
+    "location": "https://data.nist.gov/od/id/ark:/88434/mds2-2525/pdr:v/1.2.1",
+    "version": "1.2.1"
+   },
+   {
+    "@id": "ark:/88434/mds2-2525/pdr:v/1.2.2",
+    "description": "metadata update",
+    "issued": "2022-01-03 00:00:00",
+    "location": "https://data.nist.gov/od/id/ark:/88434/mds2-2525/pdr:v/1.2.2",
+    "version": "1.2.2"
+   },
+   {
+    "@id": "ark:/88434/mds2-2525/pdr:v/1.3.0",
+    "description": "data update",
+    "issued": "2022-01-03 00:00:00",
+    "location": "https://data.nist.gov/od/id/ark:/88434/mds2-2525/pdr:v/1.3.0",
+    "version": "1.3.0"
+   },
+   {
+    "@id": "ark:/88434/mds2-2525/pdr:v/1.3.1",
+    "description": "missing sizes and checksum added in by curator",
+    "issued": "2022-07-22",
+    "location": "https://data.nist.gov/od/id/ark:/88434/mds2-2525/pdr:v/1.3.1",
+    "version": "1.3.1"
+   },
+   {
+    "@id": "ark:/88434/mds2-2525/pdr:v/1.3.2",
+    "description": "added to additiveman collection",
+    "issued": "2026-01-07",
+    "location": "https://data.nist.gov/od/id/ark:/88434/mds2-2525/pdr:v/1.3.2",
+    "version": "1.3.2"
+   }
+  ]
+ },
+ "revised": "2022-07-07T19:58:53.685241",
+ "status": "available",
+ "theme": [
+  "Manufacturing: Additive manufacturing"
+ ],
+ "title": "Asynchronous AM Bench 2022 Challenge Data: Real-time, simultaneous absorptance and high-speed Xray imaging",
+ "topic": [
+  {
+   "@type": "Concept",
+   "scheme": "https://data.nist.gov/od/dm/nist-themes/v1.1",
+   "tag": "Manufacturing: Additive manufacturing"
+  },
+  {
+   "@type": "Concept",
+   "scheme": "https://data.nist.gov/od/dm/nist-themes-additivemanufacturing/v1.0",
+   "tag": "Materials: Metals"
+  },
+  {
+   "@type": "Concept",
+   "scheme": "https://data.nist.gov/od/dm/nist-themes-additivemanufacturing/v1.0",
+   "tag": "Build Process: Process mapping"
+  },
+  {
+   "@type": "Concept",
+   "scheme": "https://data.nist.gov/od/dm/nist-themes-additivemanufacturing/v1.0",
+   "tag": "Build Process: Powder bed fusion: Laser"
+  },
+  {
+   "@type": "Concept",
+   "scheme": "https://data.nist.gov/od/dm/nist-themes-additivemanufacturing/v1.0",
+   "tag": "Microstructure: In-situ characterization"
+  },
+  {
+   "@type": "Concept",
+   "scheme": "https://data.nist.gov/od/dm/nist-themes-additivemanufacturing/v1.0",
+   "tag": "Properties: Optical"
+  },
+  {
+   "@type": "Concept",
+   "scheme": "https://data.nist.gov/od/dm/nist-themes-additivemanufacturing/v1.0",
+   "tag": "Characterization Approach: In-situ"
+  },
+  {
+   "@type": "Concept",
+   "scheme": "https://data.nist.gov/od/dm/nist-themes-additivemanufacturing/v1.0",
+   "tag": "Characterization Approach: Radiography"
+  },
+  {
+   "@type": "Concept",
+   "scheme": "https://data.nist.gov/od/dm/nist-themes-additivemanufacturing/v1.0",
+   "tag": "Computation and Analysis: Process simulation"
+  },
+  {
+   "@type": "Concept",
+   "scheme": "https://data.nist.gov/od/dm/nist-themes-additivemanufacturing/v1.0",
+   "tag": "Collaboration: AM-Bench"
+  }
+ ],
+ "version": "1.3.2",
+ "versionHistory": [
+  {
+   "@id": "ark:/88434/mds2-2525",
+   "description": "missing sizes and checksum added in by curator",
+   "issued": "2022-07-22",
+   "location": "https://data.nist.gov/od/id/ark:/88434/mds2-2525",
+   "version": "1.3.1"
+  }
+ ]
+}

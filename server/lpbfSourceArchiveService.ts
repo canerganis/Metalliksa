@@ -6,7 +6,8 @@ import { artifactDirectory, LpbfArtifactStore } from './lpbfArtifactStore';
 import { LpbfSourceRepository, validateSourceDocument } from './lpbfSourceRepository';
 import { dryRunSourceImport, importSource } from './lpbfSourceImport';
 import { nistIn718CatalogEntry, cmuTi64CatalogEntry, nistOpticalTable4CatalogEntry, nistOpticalOfficialWorkbookCatalogEntry,
-  nistSupplementalIn718CatalogEntry, nistOpticalCase0MicrographsCatalogEntry, in625BareplateScreeningCatalogEntry,
+  nistSupplementalIn718CatalogEntry, nistMds22525AbsorptanceCatalogEntry, nistOpticalCase0MicrographsCatalogEntry,
+  in625BareplateScreeningCatalogEntry,
   type LpbfSourceCatalogEntry } from './lpbfSourceCatalog';
 
 export class LpbfSourceArchiveError extends Error {
@@ -18,7 +19,7 @@ export class LpbfSourceArchiveService {
   private busy = false;
   constructor(private readonly storageRoot = path.resolve(process.env.METALLIKSA_LPBF_SOURCE_ROOT || '.lpbf-sources'),
     private readonly entries: LpbfSourceCatalogEntry[] = [nistIn718CatalogEntry(), cmuTi64CatalogEntry(), nistOpticalTable4CatalogEntry(),
-      nistOpticalOfficialWorkbookCatalogEntry(), nistSupplementalIn718CatalogEntry(),
+      nistOpticalOfficialWorkbookCatalogEntry(), nistSupplementalIn718CatalogEntry(), nistMds22525AbsorptanceCatalogEntry(),
       nistOpticalCase0MicrographsCatalogEntry(), in625BareplateScreeningCatalogEntry(),
       in625GeorgiaTechPropertyCatalogEntry(), in625NasaPropertyCatalogEntry()]) {}
 
