@@ -7,10 +7,12 @@ import { pythonComputationService } from '../services/pythonComputationService';
 const AVAILABLE_ALLOYS = ["Ti-6Al-4V", "316L SS", "Inconel 718", "AlSi10Mg"];
 
 /** Paris-law life label without any safety verdict. */
-export function parisLifeLabel(paris: { status: string; cycles_to_failure: number }): string {
+export function parisLifeLabel(paris: { status: string; cycles_to_failure: number; final_crack_size_um?: number }): string {
   if (paris.status === 'non_propagating') return 'ΔK < ΔK_th (no growth computed)';
   if (paris.status === 'runout') {
-    return `No fracture when integration stopped at N = ${paris.cycles_to_failure.toLocaleString('en-US')} cycles (cycle limit or negligible growth rate)`;
+    // Closed-form Paris life: a runout only means the cycle limit was reached before K_max = K_IC.
+    const size = typeof paris.final_crack_size_um === 'number' ? `; crack size ${paris.final_crack_size_um} µm` : '';
+    return `No fracture when integration stopped at N = ${paris.cycles_to_failure.toLocaleString('en-US')} cycles (cycle limit reached${size})`;
   }
   return `${paris.cycles_to_failure.toLocaleString('en-US')} cycles`;
 }
@@ -81,7 +83,7 @@ export const MurakamiFatigueLab: React.FC = () => {
         <div>
           <h2 className="text-lg font-bold text-white">Defect Fatigue & Crack Growth</h2>
           <p className="text-sm text-gray-400">Phase 13: Kitagawa-Takahashi Diagram, El-Haddad Short Cracks & Paris Law Life</p>
-          <p data-testid="murakami-not-statement" className="text-xs text-amber-300">Steel-derived formula; surface roughness not modelled. R enters only through an empirical power-law factor on the fatigue limit, the peak stress used for the critical crack size and the ASTM E647 range convention (ΔK = K_max for R ≤ 0); the Paris growth rate has no further R (mean-stress) correction. ΔK uses Murakami's √area factor (Y = 0.65 surface/sub-surface, 0.5 internal) from the defect size.</p>
+          <p data-testid="murakami-not-statement" className="text-xs text-amber-300">Steel-derived formula; surface roughness not modelled. R enters only through an empirical power-law factor on the fatigue limit, the peak stress used for the critical crack size and the ASTM E647 range convention (ΔK = K_max for R ≤ 0); the Paris growth rate has no further R (mean-stress) correction. ΔK uses Murakami's √area factor (Y = 0.65 surface/sub-surface, 0.5 internal) from the defect size; a sub-surface defect is treated as a surface defect of the same √area (no ligament / virtual-area input).</p>
           <p data-testid="murakami-unsourced-constants" className="text-xs text-amber-300">Unsourced constants: per-alloy hardness, smooth fatigue limit, ΔK_th, K_IC and Paris C, m are internal table values (alloy_registry fatigue_fracture domain) with no literature citation.</p>
         </div>
         <button

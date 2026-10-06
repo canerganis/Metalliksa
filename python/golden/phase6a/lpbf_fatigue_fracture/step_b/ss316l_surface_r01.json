@@ -329,7 +329,7 @@
   }
  ],
  "exitCode": 0,
- "gitHead": "b0d77480750d9f68679f343d3c6a54d0a500db8c",
+ "gitHead": "96477b5e073807b2148c31f8c9956497a85b5f81",
  "input": {
   "alloyName": "316L SS",
   "location": "surface",
@@ -343,7 +343,7 @@
  "schema": "phase6a-step-b-golden-1",
  "solver": "lpbf_fatigue_fracture",
  "solverFile": "python/lpbf_fatigue_fracture.py",
- "solverSha256": "d1131d8c6ff534911ce0a09287705ce71cf5ec5148b043528987b8c8c3ac9ad9",
+ "solverSha256": "b4125c251bb1db6dea1b252533362b05fcc59ba30ab98ce7f2ca32da4553ba6f",
  "solverSha256Normalization": "CRLF->LF (git blob form)",
  "solverSource": "worktree",
  "stdout": {

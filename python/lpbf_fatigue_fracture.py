@@ -97,7 +97,13 @@ PARIS_CURVE_POINTS = 50
 
 
 def murakami_sif_geometry_factor(location: str) -> float:
-    """Y of K_I,max = Y * sigma * sqrt(pi * sqrt(area)) for ``location`` (ValidationError if unknown)."""
+    """Y of K_I,max = Y * sigma * sqrt(pi * sqrt(area)) for ``location`` (ValidationError if unknown).
+
+    Sub-surface defects take the surface value 0.65 on the defect's own sqrt(area): Murakami applies it
+    to a virtual area that includes the ligament to the free surface, and no ligament input exists here,
+    so a sub-surface defect is treated as a surface defect of the same sqrt(area) (screening assumption,
+    consistent with the C = 1.41 Murakami branch).
+    """
     return MURAKAMI_SIF_Y[murakami_constants.classify_location(location)]
 
 
@@ -283,15 +289,17 @@ class MurakamiFatigueEngine:
         start_point = [{"cycles": 0, "crack_length_um": initial_defect_sqrt_area_um,
                         "delta_K_MPa_m": round(dk0, 2)}]
 
-        # Below threshold at the initial defect: no growth (infinite life within the model)
-        if dk0 < delta_k_th:
-            result.update({"status": "non_propagating", "cycles_to_failure": cycles_max,
-                           "final_crack_size_um": round(x0 * 1e6, 2), "crack_growth_curve": start_point})
-            return result
-
+        # Static fracture is checked first: at high R a defect can sit below Delta_K_th while
+        # K_max already exceeds K_IC, and that must not be reported as infinite life.
         if x0 >= x_final:
             # K_max >= K_IC already at the initial defect: fracture on the first load cycle.
             result.update({"status": "fractured", "cycles_to_failure": 0,
+                           "final_crack_size_um": round(x0 * 1e6, 2), "crack_growth_curve": start_point})
+            return result
+
+        # Below threshold at the initial defect: no growth (infinite life within the model)
+        if dk0 < delta_k_th:
+            result.update({"status": "non_propagating", "cycles_to_failure": cycles_max,
                            "final_crack_size_um": round(x0 * 1e6, 2), "crack_growth_curve": start_point})
             return result
 

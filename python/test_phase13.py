@@ -165,6 +165,16 @@ class TestPhysicsAuditKS3ParisMurakamiSif(unittest.TestCase):
         self.assertGreater(res["final_crack_size_um"], 400.0)
         self.assertLess(res["final_crack_size_um"], res["critical_sqrt_area_um"])
 
+    def test_static_fracture_checked_before_threshold_at_high_r(self):
+        # R = 0.99, sigma_a = 10 MPa, 3000 um surface defect: dK0 = 0.65*20*sqrt(pi*3e-3) = 1.26 < dKth
+        # but K_max = 0.65*2000*sqrt(pi*3e-3) = 126 MPa sqrt(m) > K_IC. Before the reorder the engine
+        # returned 'non_propagating' with cycles_max (infinite life for a defect already above K_IC).
+        res = self.engine.simulate_paris_crack_growth(3000.0, 10.0, 0.99, location="surface")
+        self.assertLess(res["delta_K_initial_MPa_m"], self.DKTH)
+        self.assertGreater(0.65 * 2000.0 * math.sqrt(math.pi * 3000e-6), self.KIC)
+        self.assertEqual((res["status"], res["cycles_to_failure"]), ("fractured", 0))
+        self.assertLess(res["critical_sqrt_area_um"], 3000.0)
+
     def test_unknown_location_is_rejected(self):
         import input_validation
         with self.assertRaises(input_validation.ValidationError):
