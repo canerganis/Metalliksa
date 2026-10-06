@@ -3565,6 +3565,10 @@ export const MODULE_REGISTRY = {
               "provenance",
               "isPythonEngine",
               "pythonUnavailable",
+              "activityReferenceStates",
+              "effectiveTemperatureRangeC",
+              "effectiveTemperatureStepC",
+              "gridAdjustments",
               "error",
               "errorKind",
               "field",
@@ -5605,7 +5609,7 @@ export const MODULE_REGISTRY = {
           "productionReady",
           "airworthy"
         ],
-        "note": "No evidence status is emitted. status and directionalYoungsModuliStatus are availability (available/unavailable), not evidence; acousticAndThermalProperties.status is also availability. Top-level availability keys are explicitly declared transport values with no evidence status key. referenceStatus=supplied-by-caller is provenance, not measurement. Contract oracle pending; existing algebraic/regression tests do not establish experimental validation or an applicability domain."
+        "note": "No evidence status is emitted. status and directionalYoungsModuliStatus are availability (available/unavailable), not evidence; acousticAndThermalProperties.status, voigtReussHillModuli.status and mechanicalIntegrityIndices.status are also availability. Top-level availability keys are explicitly declared transport values with no evidence status key. referenceStatus=supplied-by-caller is provenance, not measurement. Contract oracle pending; existing algebraic/regression tests do not establish experimental validation or an applicability domain."
       },
       "lifecycle": {
         "backgroundWork": "none",

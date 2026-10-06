@@ -134,12 +134,37 @@ export interface PythonCalphadSolveResult
   phacompAnalysis?: {
     status: "screening-tabulated-values" | "unavailable";
     reason?: string;
+    /** Bulk-composition Nv (Sims 1968 values); not compared with the residual-matrix 2.49 limit. */
     n_v_bar: number | null;
+    /** Bulk-composition Md (Morinaga 1984 Table 1); the risk class compares it with the sourced critical Md. */
     m_d_bar: number | null;
     tcpEmbrittlementRisk: "Low" | "Moderate" | "High" | null;
     tcpSigmaRiskTemperatureC: number | null;
     thermodynamicStabilityIndex: number | null;
+    compositionBasis?: string | null;
+    /** C / B left out of both averages (no Md / Nv; carbides / borides), the rest renormalised. */
+    excludedElements?: string[] | null;
+    riskBasis?: string | null;
+    criticalMd?: Array<{ temperatureK: number; criticalMd_eV: number }> | null;
+    nvNote?: string | null;
+    tcpSigmaRiskTemperatureReason?: string | null;
+    thermodynamicStabilityIndexReason?: string | null;
+    sources?: { Md: string; Nv: string } | null;
   };
+  /** pycalphad only: reference state of each component's activity (pure element, SER phase, same T). */
+  activityReferenceStates?: Record<string, {
+    phase: string | null;
+    temperature: string;
+    pressurePa: number;
+    status: "available" | "unavailable";
+    reason: string | null;
+    definition: string;
+  }>;
+  /** pycalphad only: the grid actually computed and every clamp that acted on the requested one. */
+  effectiveTemperatureRangeC?: [number, number];
+  effectiveTemperatureStepC?: number | null;
+  gridAdjustments?: Array<{ field: string; requested: number; used: number | null; reason: string;
+    requestedPoints?: number | null; usedPoints?: number }>;
 }
 
 export interface DFTStructureInput {
@@ -208,7 +233,8 @@ export interface PythonDFTResult {
     is_metal: boolean | null;
   };
   elasticStiffnessMatrix_Cij_GPa: number[][];
-  elasticComplianceMatrix_Sij_1_over_GPa: number[][];
+  /** null when C_ij is singular or nearly singular (the inverse does not exist). */
+  elasticComplianceMatrix_Sij_1_over_GPa: number[][] | null;
   bornStability?: {
     isMechanicallyStable: boolean;
     minimumEigenvalueGPa: number;
@@ -222,25 +248,33 @@ export interface PythonDFTResult {
       physicalMeaning: string;
     }>;
   };
+  /**
+   * Reuss / Hill values, E, nu and the P-wave modulus are null (status "unavailable", with `reason`) for a
+   * mechanically unstable or singular C_ij; the Voigt values are then the formal average of that tensor.
+   */
   voigtReussHillModuli: {
+    status?: "available" | "unavailable";
+    reason?: string | null;
     bulkModulus_K_Voigt_GPa: number;
-    bulkModulus_K_Reuss_GPa: number;
-    bulkModulus_K_VRH_GPa: number;
+    bulkModulus_K_Reuss_GPa: number | null;
+    bulkModulus_K_VRH_GPa: number | null;
     shearModulus_G_Voigt_GPa: number;
-    shearModulus_G_Reuss_GPa: number;
-    shearModulus_G_VRH_GPa: number;
-    youngsModulus_E_VRH_GPa: number;
-    poissonsRatio_nu: number;
-    pWaveModulus_GPa: number;
+    shearModulus_G_Reuss_GPa: number | null;
+    shearModulus_G_VRH_GPa: number | null;
+    youngsModulus_E_VRH_GPa: number | null;
+    poissonsRatio_nu: number | null;
+    pWaveModulus_GPa: number | null;
   };
   mechanicalIntegrityIndices: {
-    pughRatio_B_over_G: number;
+    status?: "available" | "unavailable";
+    reason?: string | null;
+    pughRatio_B_over_G: number | null;
     cauchyPressure_C12_minus_C44_GPa: number;
-    ductilityVerdict: string;
-    universalAnisotropyIndex_AU: number;
-    /** null for non-cubic crystals: the Zener ratio is defined for cubic crystals only. */
+    ductilityVerdict: string | null;
+    universalAnisotropyIndex_AU: number | null;
+    /** null for non-cubic crystals (defined for cubic crystals only) and for an unstable C_ij. */
     zenerAnisotropyFactor_AZ: number | null;
-    isIsotropic: boolean;
+    isIsotropic: boolean | null;
   };
   /** Every number is null (with `reason`) when it cannot be computed without a default or a guess. */
   acousticAndThermalProperties: {

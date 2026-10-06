@@ -83,6 +83,16 @@ test("unstable tensor: velocities and E(n) are Unavailable with the reason", () 
   assert.ok(!out.includes("NaN") && !out.includes("undefined") && !out.includes("null"));
 });
 
+test("singular tensor: VRH moduli, Pugh ratio and A^U are Unavailable with the reason (audit TK-3)", () => {
+  const out = text(panel(outcome("unstableCubic", 2)));
+  assert.ok(out.includes("the compliance tensor S_ij does not exist"));
+  assert.ok(/Bulk Modulus K Unavailable/.test(out));
+  assert.ok(/Poisson's Ratio ν Unavailable/.test(out));
+  assert.ok(/Pugh's Ratio \(B\/G\) Unavailable/.test(out));
+  assert.ok(/Universal Anisotropy \(A\^U\) Unavailable/.test(out));
+  assert.ok(!out.includes("Ductile"), "no ductility verdict for a tensor without polycrystalline moduli");
+});
+
 test("computing state and empty state do not show a result", () => {
   assert.ok(text(panel(null, true)).includes("Homogenising the 6x6 stiffness tensor"));
   assert.ok(!text(panel(null, false)).includes("Stiffness Tensor"));

@@ -33,7 +33,10 @@ export interface PhaseEquilibriumPoint {
   /** null for a grid point whose equilibrium did not converge (status "not-converged"). */
   totalGibbsEnergy_kJ_mol: number | null;
   status?: "converged" | "not-converged";
-  thermodynamicActivities?: { [element: string]: number } | null;
+  /** a_i against pure i in its reference phase at the same T; null where that reference is unavailable. */
+  thermodynamicActivities?: { [element: string]: number | null } | null;
+  /** Reason for each null activity (missing reference state or exponent overflow). */
+  activityNullReasons?: { [element: string]: string };
   chemicalPotentials_J_mol?: { [element: string]: number } | null;
   phaseCompositions?: { [phaseId: string]: { [element: string]: number } };
 }

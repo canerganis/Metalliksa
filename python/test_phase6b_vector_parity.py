@@ -210,6 +210,30 @@ DFT_DEFAULT_ECHOES = {"materialInfo.band_gap": 0.0, "materialInfo.energy_above_h
                       "materialInfo.formation_energy_per_atom": -0.45, "materialInfo.is_metal": True,
                       "materialInfo.is_stable": True, "materialInfo.space_group": "Pnma"}
 _DFT_UNSTABLE_CASES = ("singular_custom_cij_fallback", "tetragonal_c11_eq_c12_marginal")
+# Physics audit TK-3: polycrystalline averages of an unstable / singular C_ij (both unstable cases also took
+# the 1/C_ii diagonal compliance fallback). The faa6684 values below become null with a reason; the compliance
+# matrix (the fallback diagonal, not an inverse) becomes null. Hill (1952); Mouhat & Coudert, PRB 90 (2014).
+DFT_SINGULAR_REASON = ("the stiffness tensor is singular or nearly singular (a pivot below 1e-12): the compliance "
+                       "tensor S_ij does not exist, so the Reuss and Hill averages, E, nu, the Pugh ratio and the "
+                       "anisotropy indices are not defined")
+_DUCTILE = "Ductile (Metallic dislocation slip favored; high shear compliance)"
+DFT_UNSTABLE_OLD_AVERAGES = {
+    "singular_custom_cij_fallback": {
+        "voigtReussHillModuli": {"bulkModulus_K_Reuss_GPa": 50.0, "bulkModulus_K_VRH_GPa": 100.0,
+                                 "pWaveModulus_GPa": 167.48, "poissonsRatio_nu": 0.283,
+                                 "shearModulus_G_Reuss_GPa": 65.22, "shearModulus_G_VRH_GPa": 50.61,
+                                 "youngsModulus_E_VRH_GPa": 129.91},
+        "mechanicalIntegrityIndices": {"ductilityVerdict": _DUCTILE, "isIsotropic": True, "pughRatio_B_over_G": 1.976,
+                                       "universalAnisotropyIndex_AU": 0.0, "zenerAnisotropyFactor_AZ": 1200000.0}},
+    "tetragonal_c11_eq_c12_marginal": {
+        "voigtReussHillModuli": {"bulkModulus_K_Reuss_GPa": 71.08, "bulkModulus_K_VRH_GPa": 112.21,
+                                 "pWaveModulus_GPa": 196.68, "poissonsRatio_nu": 0.262,
+                                 "shearModulus_G_Reuss_GPa": 72.72, "shearModulus_G_VRH_GPa": 63.36,
+                                 "youngsModulus_E_VRH_GPa": 159.97},
+        # (its Zener 1200000.0 -> null is the non-cubic rule below)
+        "mechanicalIntegrityIndices": {"ductilityVerdict": _DUCTILE, "isIsotropic": True, "pughRatio_B_over_G": 1.771,
+                                       "universalAnisotropyIndex_AU": 0.0}},
+}
 
 
 # Fix round: the Ni3Al library constants became the sourced Kayser & Stassis (1981) values
@@ -361,7 +385,18 @@ def _dft_rules(case):
                   ("kappa", "changed", r"acousticAndThermalProperties\.minimumThermalConductivity_W_mK", _eq(1.417),
                    _is_none),
                   ("zener", "changed", r"mechanicalIntegrityIndices\.zenerAnisotropyFactor_AZ", _eq(1.334), _is_none)]
+    for block in ("voigtReussHillModuli", "mechanicalIntegrityIndices"):
+        rules.append((f"{block}.status", "added", rf"{block}\.status", _is_none,
+                      _eq("unavailable" if unstable else "available")))
+        rules.append((f"{block}.reason", "added", rf"{block}\.reason", _is_none,
+                      _eq(DFT_SINGULAR_REASON) if unstable else _is_none))
     if unstable:
+        for block, fields in DFT_UNSTABLE_OLD_AVERAGES[case].items():
+            for field, old in fields.items():
+                rules.append((f"{block}.{field}", "changed", rf"{block}\.{field}", _eq(old), _is_none))
+        rules.append(("compliance.removed", "removed", r"elasticComplianceMatrix_Sij_1_over_GPa\[\d\]\[\d\]",
+                      _anything, _is_none))
+        rules.append(("compliance.null", "added", r"elasticComplianceMatrix_Sij_1_over_GPa", _is_none, _is_none))
         for field, old in DFT_UNSTABLE_OLD_ACOUSTIC[case].items():
             rules.append((field, "changed", rf"acousticAndThermalProperties\.{field}", _eq(old), _is_none))
         rules.append(("directional.removed", "removed",

@@ -956,56 +956,79 @@ def _calculate_elasticity(payload: dict, start_time: float, formula) -> dict:
         + 3.0 * (c_matrix[3][3] + c_matrix[4][4] + c_matrix[5][5])
     ) / 15.0
 
-    # 5. Reuss Homogenization Bounds
-    # 1/K_R = (S11 + S22 + S33) + 2*(S12 + S23 + S13)
-    s_k_sum = (s_matrix[0][0] + s_matrix[1][1] + s_matrix[2][2]) + 2.0 * (s_matrix[0][1] + s_matrix[1][2] + s_matrix[0][2])
-    k_reuss = 1.0 / max(1e-7, s_k_sum)
+    # Polycrystalline averages need a positive-definite C_ij (Hill, Proc. Phys. Soc. A 65 (1952) 349;
+    # Mouhat & Coudert, PRB 90, 224104 (2014)); A^U >= 0 holds only then (Ranganathan & Ostoja-Starzewski,
+    # PRL 101, 055504 (2008)). For an unstable tensor, or one so close to singular that the inversion took
+    # the diagonal 1/C_ii fallback (not the compliance tensor), the Reuss/Hill moduli, E, nu, P-wave modulus,
+    # Pugh ratio, ductility verdict, A^U and Zener ratio are null with a reason; nothing is clamped (audit TK-3).
+    compliance_fallback = not _min_partial_pivot_exceeds_floor(np.asarray(c_matrix, dtype=np.float64))
+    stable = bool(stability_results["isMechanicallyStable"])
+    averages_reason = None
+    if compliance_fallback:
+        averages_reason = ("the stiffness tensor is singular or nearly singular (a pivot below 1e-12): the compliance "
+                           "tensor S_ij does not exist, so the Reuss and Hill averages, E, nu, the Pugh ratio and the "
+                           "anisotropy indices are not defined")
+    elif not stable:
+        averages_reason = ("the stiffness tensor is not mechanically stable (Born criteria / positive definiteness): "
+                           "polycrystalline Reuss and Hill moduli, E, nu, the Pugh ratio and the anisotropy indices "
+                           "are not defined (the Voigt values are the formal average of the unstable tensor)")
 
-    # 15/G_R = 4*(S11 + S22 + S33) - 4*(S12 + S23 + S13) + 3*(S44 + S55 + S66)
-    s_g_sum = (
-        4.0 * ((s_matrix[0][0] + s_matrix[1][1] + s_matrix[2][2]) - (s_matrix[0][1] + s_matrix[1][2] + s_matrix[0][2]))
-        + 3.0 * (s_matrix[3][3] + s_matrix[4][4] + s_matrix[5][5])
-    )
-    g_reuss = 15.0 / max(1e-7, s_g_sum)
+    k_reuss = g_reuss = k_calc_vrh = g_calc_vrh = youngs_e = poisson_nu = p_wave_modulus = None
+    pugh_ratio = ductility_verdict = universal_anisotropy = zener_anisotropy = is_isotropic = None
+    cauchy_pressure = c_matrix[0][1] - c_matrix[3][3]  # C12 - C44 (GPa): a tensor combination, always defined
+    if averages_reason is None:
+        # 5. Reuss Homogenization Bounds
+        # 1/K_R = (S11 + S22 + S33) + 2*(S12 + S23 + S13)
+        s_k_sum = ((s_matrix[0][0] + s_matrix[1][1] + s_matrix[2][2])
+                   + 2.0 * (s_matrix[0][1] + s_matrix[1][2] + s_matrix[0][2]))
+        k_reuss = 1.0 / s_k_sum
 
-    # 6. Hill Averages
-    k_calc_vrh = max(1.0, (k_voigt + k_reuss) / 2.0)
-    g_calc_vrh = max(1.0, (g_voigt + g_reuss) / 2.0)
+        # 15/G_R = 4*(S11 + S22 + S33) - 4*(S12 + S23 + S13) + 3*(S44 + S55 + S66)
+        s_g_sum = (
+            4.0 * ((s_matrix[0][0] + s_matrix[1][1] + s_matrix[2][2]) - (s_matrix[0][1] + s_matrix[1][2] + s_matrix[0][2]))
+            + 3.0 * (s_matrix[3][3] + s_matrix[4][4] + s_matrix[5][5])
+        )
+        g_reuss = 15.0 / s_g_sum
 
-    # 7. Young's Modulus & Poisson's Ratio
-    youngs_e = (9.0 * k_calc_vrh * g_calc_vrh) / max(1e-6, (3.0 * k_calc_vrh + g_calc_vrh))
-    poisson_nu = (3.0 * k_calc_vrh - 2.0 * g_calc_vrh) / max(1e-6, (2.0 * (3.0 * k_calc_vrh + g_calc_vrh)))
-    p_wave_modulus = k_calc_vrh + (4.0 / 3.0) * g_calc_vrh
+        # 6. Hill Averages
+        k_calc_vrh = (k_voigt + k_reuss) / 2.0
+        g_calc_vrh = (g_voigt + g_reuss) / 2.0
 
-    # 8. Pugh Ductility Ratio (B/G) and Cauchy Pressure
-    pugh_ratio = k_calc_vrh / max(0.1, g_calc_vrh)
-    cauchy_pressure = c_matrix[0][1] - c_matrix[3][3]  # C12 - C44 (GPa)
+        # 7. Young's Modulus & Poisson's Ratio
+        youngs_e = (9.0 * k_calc_vrh * g_calc_vrh) / (3.0 * k_calc_vrh + g_calc_vrh)
+        poisson_nu = (3.0 * k_calc_vrh - 2.0 * g_calc_vrh) / (2.0 * (3.0 * k_calc_vrh + g_calc_vrh))
+        p_wave_modulus = k_calc_vrh + (4.0 / 3.0) * g_calc_vrh
 
-    # Ductility assessment based on Pugh (B/G > 1.75), Cauchy pressure, and Poisson's ratio (Frantsevich > 0.26)
-    is_ductile = pugh_ratio > 1.75 and poisson_nu > 0.26
-    ductility_verdict = (
-        "Ductile (Metallic dislocation slip favored; high shear compliance)"
-        if is_ductile
-        else "Brittle (Directional covalent/ionic bonding; cleavage failure prone)"
-    )
+        # 8. Pugh Ductility Ratio (B/G)
+        pugh_ratio = k_calc_vrh / g_calc_vrh
 
-    # 9. Anisotropy Indices
-    # Universal Anisotropy Index A^U = 5*(G_V / G_R) + (K_V / K_R) - 6
-    universal_anisotropy = max(0.0, 5.0 * (g_voigt / max(1e-4, g_reuss)) + (k_voigt / max(1e-4, k_reuss)) - 6.0)
+        # Ductility assessment based on Pugh (B/G > 1.75) and Poisson's ratio (Frantsevich > 0.26)
+        is_ductile = pugh_ratio > 1.75 and poisson_nu > 0.26
+        ductility_verdict = (
+            "Ductile (Metallic dislocation slip favored; high shear compliance)"
+            if is_ductile
+            else "Brittle (Directional covalent/ionic bonding; cleavage failure prone)"
+        )
 
-    # Zener Anisotropy Ratio 2*C44 / (C11 - C12): defined for cubic crystals (and trivially 1 for isotropic)
-    if family in ("cubic", "isotropic"):
-        denom_zener = c_matrix[0][0] - c_matrix[0][1]
-        zener_anisotropy = round((2.0 * c_matrix[3][3]) / max(1e-4, abs(denom_zener)), 3)
-    else:
-        zener_anisotropy = None
+        # 9. Anisotropy Indices
+        # Universal Anisotropy Index A^U = 5*(G_V / G_R) + (K_V / K_R) - 6 (>= 0 for a positive-definite C_ij;
+        # only floating-point noise around an exactly isotropic tensor is set to 0)
+        universal_anisotropy = 5.0 * (g_voigt / g_reuss) + (k_voigt / k_reuss) - 6.0
+        if abs(universal_anisotropy) < 1e-12:
+            universal_anisotropy = 0.0
+        is_isotropic = universal_anisotropy < 0.05
+
+        # Zener Anisotropy Ratio 2*C44 / (C11 - C12): defined for cubic crystals (and trivially 1 for isotropic);
+        # C11 - C12 > 0 for a stable cubic tensor, so the signed value is used
+        if family in ("cubic", "isotropic"):
+            zener_anisotropy = round((2.0 * c_matrix[3][3]) / (c_matrix[0][0] - c_matrix[0][1]), 3)
 
     # 10. Acoustic Sound Velocities & Debye Temperature. Only for a mechanically stable tensor (an
     # unstable one has imaginary acoustic modes) and only with a supplied or library density; nothing is
     # clamped or defaulted.
     acoustic, directional_moduli, directional_status, directional_reason = _acoustic_and_directional(
         stability_results["isMechanicallyStable"], density, formula, payload, k_calc_vrh, g_calc_vrh,
-        youngs_e, poisson_nu, s_matrix, family)
+        youngs_e, poisson_nu, s_matrix, family, averages_reason)
 
     elapsed_ms = round((time.time() - start_time) * 1000.0, 2)
 
@@ -1033,26 +1056,31 @@ def _calculate_elasticity(payload: dict, start_time: float, formula) -> dict:
             "is_metal": None if band_gap is None else band_gap < 0.05
         },
         "elasticStiffnessMatrix_Cij_GPa": [[round(val, 2) for val in row] for row in c_matrix],
-        "elasticComplianceMatrix_Sij_1_over_GPa": [[round(val, 6) for val in row] for row in s_matrix],
+        "elasticComplianceMatrix_Sij_1_over_GPa": (None if compliance_fallback
+                                                   else [[round(val, 6) for val in row] for row in s_matrix]),
         "bornStability": stability_results,
         "voigtReussHillModuli": {
+            "status": "available" if averages_reason is None else "unavailable",
+            "reason": averages_reason,
             "bulkModulus_K_Voigt_GPa": round(k_voigt, 2),
-            "bulkModulus_K_Reuss_GPa": round(k_reuss, 2),
-            "bulkModulus_K_VRH_GPa": round(k_calc_vrh, 2),
+            "bulkModulus_K_Reuss_GPa": _round_or_none(k_reuss, 2),
+            "bulkModulus_K_VRH_GPa": _round_or_none(k_calc_vrh, 2),
             "shearModulus_G_Voigt_GPa": round(g_voigt, 2),
-            "shearModulus_G_Reuss_GPa": round(g_reuss, 2),
-            "shearModulus_G_VRH_GPa": round(g_calc_vrh, 2),
-            "youngsModulus_E_VRH_GPa": round(youngs_e, 2),
-            "poissonsRatio_nu": round(poisson_nu, 3),
-            "pWaveModulus_GPa": round(p_wave_modulus, 2)
+            "shearModulus_G_Reuss_GPa": _round_or_none(g_reuss, 2),
+            "shearModulus_G_VRH_GPa": _round_or_none(g_calc_vrh, 2),
+            "youngsModulus_E_VRH_GPa": _round_or_none(youngs_e, 2),
+            "poissonsRatio_nu": _round_or_none(poisson_nu, 3),
+            "pWaveModulus_GPa": _round_or_none(p_wave_modulus, 2)
         },
         "mechanicalIntegrityIndices": {
-            "pughRatio_B_over_G": round(pugh_ratio, 3),
+            "status": "available" if averages_reason is None else "unavailable",
+            "reason": averages_reason,
+            "pughRatio_B_over_G": _round_or_none(pugh_ratio, 3),
             "cauchyPressure_C12_minus_C44_GPa": round(cauchy_pressure, 2),
             "ductilityVerdict": ductility_verdict,
-            "universalAnisotropyIndex_AU": round(universal_anisotropy, 4),
+            "universalAnisotropyIndex_AU": _round_or_none(universal_anisotropy, 4),
             "zenerAnisotropyFactor_AZ": zener_anisotropy,
-            "isIsotropic": universal_anisotropy < 0.05
+            "isIsotropic": is_isotropic
         },
         "acousticAndThermalProperties": acoustic,
         "directionalYoungsModuli": directional_moduli,
@@ -1061,9 +1089,17 @@ def _calculate_elasticity(payload: dict, start_time: float, formula) -> dict:
     }
 
 
+def _round_or_none(value, digits):
+    return None if value is None else round(value, digits)
+
+
 def _acoustic_and_directional(stable: bool, density, formula, payload: dict, k_vrh: float, g_vrh: float,
-                              youngs_e: float, poisson_nu: float, s_matrix, family):
-    """Acoustic/thermal block and the E(n) list; every value is a number or None with a reason."""
+                              youngs_e: float, poisson_nu: float, s_matrix, family, averages_reason=None):
+    """Acoustic/thermal block and the E(n) list; every value is a number or None with a reason.
+
+    ``averages_reason`` (set when the polycrystalline averages are unavailable, e.g. the compliance tensor
+    does not exist) withholds the block as well: velocities and E(n) need K, G, E and S_ij.
+    """
     acoustic = {
         "status": "unavailable", "reason": None,
         "longitudinalSoundVelocity_m_s": None, "transverseSoundVelocity_m_s": None,
@@ -1076,6 +1112,9 @@ def _acoustic_and_directional(stable: bool, density, formula, payload: dict, k_v
                   "acoustic velocities and the Debye temperature are not defined")
         acoustic["reason"] = reason
         return acoustic, None, "unavailable", reason
+    if averages_reason is not None:
+        acoustic["reason"] = averages_reason
+        return acoustic, None, "unavailable", averages_reason
     directional = []
     for hkl, label, is_axis in _DIRECTIONS:
         e_dir = calculate_directional_youngs_modulus_general(s_matrix, hkl)

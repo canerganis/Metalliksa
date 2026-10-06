@@ -60,7 +60,8 @@ def build_elasticity_contract(seed) -> ModuleContract:
         lifecycle=Lifecycle(background_work='none', resources=('fetch',)),
         evidence=Evidence(emits=(), ceiling='screening-only', forbidden_claims=FORBIDDEN_CLAIM_KEYS,
             note='No evidence status is emitted. status and directionalYoungsModuliStatus are availability '
-                 '(available/unavailable), not evidence; acousticAndThermalProperties.status is also availability. '
+                 '(available/unavailable), not evidence; acousticAndThermalProperties.status, '
+                 'voigtReussHillModuli.status and mechanicalIntegrityIndices.status are also availability. '
                  'Top-level availability keys are explicitly declared transport values with no evidence status key. '
                  'referenceStatus=supplied-by-caller is provenance, not '
                  'measurement. Contract oracle pending; existing algebraic/regression tests do not establish '

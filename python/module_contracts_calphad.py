@@ -142,7 +142,8 @@ def build_calphad_contract(seed) -> ModuleContract:
                     "multiElementScheilStatus", "multiElementScheilNote", "scheilSolidification", "thermodynamicStabilityIndex",
                     "tcpEmbrittlementRisk", "nonConvergedPoints", "boundaryRefinement", "phaseNameNotes",
                     "computeTimeMs", "timingsMs", "modelCache", "provenance", "isPythonEngine",
-                    "pythonUnavailable",
+                    "pythonUnavailable", "activityReferenceStates", "effectiveTemperatureRangeC",
+                    "effectiveTemperatureStepC", "gridAdjustments",
                     "error", "errorKind", "field", "extra", "rawOutput", "stderr", "script"),
             status_key=None, transport_values=(
                 ("status", ("unavailable",)),

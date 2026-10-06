@@ -344,8 +344,8 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
       };
       if (point.thermodynamicActivities) {
         Object.entries(point.thermodynamicActivities).forEach(([el, val]) => {
-          const numVal = Number(val) || 0;
-          entry[`act_${el}`] = numVal > 0 ? +numVal.toExponential(3) : 0;
+          // null = no reference state for this element: no point is drawn (never a 0)
+          entry[`act_${el}`] = typeof val === "number" && val > 0 ? +val.toExponential(3) : null;
         });
       }
       if (point.chemicalPotentials_J_mol) {
@@ -856,7 +856,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
                     : "bg-rose-500/10 text-rose-400 border border-rose-500/30"
                 }`}
               >
-                <span title={solveResult.phacompAnalysis?.reason ?? ""}>TCP Risk: {solveResult.tcpEmbrittlementRisk ?? "Unavailable"}</span>
+                <span title={solveResult.phacompAnalysis?.reason ?? solveResult.phacompAnalysis?.riskBasis ?? ""}>TCP Risk: {solveResult.tcpEmbrittlementRisk ?? "Unavailable"}</span>
               </span>
             </div>
 
@@ -1320,7 +1320,8 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
                   {activeComponentsList.map((elem) => {
-                    const act = currentEquilibriumPoint.thermodynamicActivities?.[elem] ?? 0;
+                    const act = currentEquilibriumPoint.thermodynamicActivities?.[elem] ?? null;
+                    const refState = solveResult.activityReferenceStates?.[elem];
                     const muJ = currentEquilibriumPoint.chemicalPotentials_J_mol?.[elem] ?? 0;
                     const muKJ = (muJ / 1000.0).toFixed(2);
                     return (
@@ -1330,10 +1331,12 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
                       >
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-white text-xs">{elem}</span>
-                          <span className="text-[10px] text-slate-500">Ref: Pure</span>
+                          <span className="text-[10px] text-slate-500" title={refState?.definition ?? ""}>
+                            Ref: pure {elem}{refState?.phase ? ` (${refState.phase}, same T)` : ""}
+                          </span>
                         </div>
                         <div className="text-slate-400">
-                          a_{elem} = <strong className="text-sky-300">{act > 0 ? (act < 0.001 ? act.toExponential(2) : act.toFixed(4)) : "0.0000"}</strong>
+                          a_{elem} = <strong className="text-sky-300" title={act === null ? (refState?.reason ?? "") : ""}>{act === null ? "Unavailable" : act > 0 ? (act < 0.001 ? act.toExponential(2) : act.toFixed(4)) : "0.0000"}</strong>
                         </div>
                         <div className="text-slate-400">
                           μ_{elem} = <strong className="text-purple-300">{muKJ} kJ/mol</strong>

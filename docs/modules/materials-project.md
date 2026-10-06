@@ -42,7 +42,7 @@ Output fields (no status key, so the output carries no evidence status): `succes
 - Oracle: pending (ceiling capped at screening-only)
 - Oracle scope: none
 - Oracle in CI: none (oracle pending)
-- Note: No evidence status is emitted. status and directionalYoungsModuliStatus are availability (available/unavailable), not evidence; acousticAndThermalProperties.status is also availability. Top-level availability keys are explicitly declared transport values with no evidence status key. referenceStatus=supplied-by-caller is provenance, not measurement. Contract oracle pending; existing algebraic/regression tests do not establish experimental validation or an applicability domain.
+- Note: No evidence status is emitted. status and directionalYoungsModuliStatus are availability (available/unavailable), not evidence; acousticAndThermalProperties.status, voigtReussHillModuli.status and mechanicalIntegrityIndices.status are also availability. Top-level availability keys are explicitly declared transport values with no evidence status key. referenceStatus=supplied-by-caller is provenance, not measurement. Contract oracle pending; existing algebraic/regression tests do not establish experimental validation or an applicability domain.
 
 ## Validity domain
 
