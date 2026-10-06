@@ -62,6 +62,8 @@ test('NIST mds2-2525 absorptance source loads with pinned identity, observations
   assert.ok(Math.abs(ti64[0].value - 32.5) < 0.5);
   assert.ok(ti64[1].value > 60 && ti64[1].value < 66);
   assert.ok(ti64.every(row => row.derived_locally === true && /not NIST-published|not NIST-published phase/.test(row.window_definition)));
+  assert.match(ti64[0].comparable_reason, /screening comparison/);
+  assert.match(ti64[1].comparable_reason, /does not solve keyhole geometry/);
   const aluminium = observations.filter(row => row.material === 'aluminium (NIST SRM 1241c)');
   assert.equal(aluminium.length, 8);
   assert.ok(aluminium.every(row => typeof row.comparable_reason === 'string' && row.comparable_reason.length > 0));
@@ -96,6 +98,25 @@ test('NIST mds2-2525 lists the two absent files as unavailable with their offici
   ]);
   assert.ok(unavailable.every(item => /timed out/.test(item.reason)));
   assert.ok(document.artifacts.every((item: any) => !/Scan on Bare Metal|Absorption_Uncertainty/.test(item.relativePath)));
+});
+
+test('NIST mds2-2525 lists out-of-scope record components as not archived, never as artifacts', () => {
+  const document = nistMds22525AbsorptanceCatalogEntry(officialRoot).loadDocument() as any;
+  const record = JSON.parse(readFileSync(path.join(officialRoot, 'nerdm-record-mds2-2525.json'), 'utf8'));
+  const notArchived = document.sourceContext.not_archived_components.components as any[];
+  const archived = new Set((JSON.parse(readFileSync(path.join(officialRoot, 'manifest.json'), 'utf8')).files as any[])
+    .map(item => item.path));
+  const absent = new Set((document.sourceContext.unavailable_files as any[]).map(item => item.file));
+  const recordFiles = (record.components as any[]).filter(item => item.filepath);
+  assert.equal(recordFiles.length, archived.size - 1 + absent.size + notArchived.length);
+  for (const component of recordFiles) {
+    if (archived.has(component.filepath) || absent.has(component.filepath)) continue;
+    const listed = notArchived.find(item => item.path === component.filepath);
+    assert.ok(listed, component.filepath);
+    assert.equal(listed.sha256, component.checksum.hash);
+    assert.equal(listed.bytes, component.size);
+  }
+  assert.ok(document.artifacts.every((item: any) => !notArchived.some(entry => item.relativePath.endsWith(entry.path))));
 });
 
 test('NIST mds2-2525 rejects a tampered manifest copy', t => {

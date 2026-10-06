@@ -89,6 +89,15 @@ class ComparisonToolTest(unittest.TestCase):
             self.assertIn("SRM 1241c", r["material"])
         self.assertIn("SRM 1241c", self.doc["measuredOnly"]["material"])
 
+    def test_g_flat_plate_value_is_the_solver_resolution(self):
+        import lpbf_thermal_solver as solver
+        expected = (solver.thermal_props("Ti-6Al-4V")
+                    or solver.SECONDARY_THERMOPHYSICAL_DB.get("Ti-6Al-4V"))["absorptivity_IR"]
+        authority = self.doc["models"]["flatPlateAbsorptivity"]["authority"]
+        self.assertAlmostEqual(authority["absorptivityOfRecord"], expected, places=9)
+        self.assertEqual(self.doc["loaderUsed"], "lpbf_nist_mds2_2525_absorptance")
+        self.assertIn("not recomputed", self.doc["measured"]["definition"])
+
     def test_f_ti64_scan_unavailable_when_absent(self):
         if (tool.SOURCE_DIR / tool.SCAN_NAME).is_file():
             self.skipTest("scan CSV is present; branch exercised instead")

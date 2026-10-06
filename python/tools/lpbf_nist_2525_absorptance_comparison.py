@@ -142,68 +142,9 @@ def verify_inputs(root: Path = SOURCE_DIR) -> Dict[str, Dict[str, Any]]:
 
 
 def _load_loader():
-    try:
-        import lpbf_nist_mds2_2525_absorptance as loader  # noqa: WPS433
-        needed = ("verified_bytes", "load_ti64_spot_series", "summarize_ti64_spot", "load_al_tables")
-        if all(hasattr(loader, n) for n in needed):
-            return loader
-    except Exception:  # not importable yet: private reading path is used
-        pass
-    return None
-
-
-# ---------------------------------------------------------------------------------------------
-# private (loader-free) CSV reading, used only when the WP1 loader is not importable
-# ---------------------------------------------------------------------------------------------
-def _private_spot_summary(data: bytes) -> Dict[str, Any]:
-    import csv
-    import io
-    rows = list(csv.reader(io.StringIO(data.decode("utf-8-sig"), newline="")))
-    body = rows[1:]
-    t = [float(r[1]) for r in body]
-    p = [float(r[2]) for r in body]
-    a = [float(r[3]) for r in body]
-    rel = [float(r[5]) for r in body]
-    unc = [float(r[4]) for r in body if r[4].strip() not in ("--", "")]
-    on = [k for k, v in enumerate(p) if v > 50.0]
-    first, last = on[0], on[-1]
-    start = t[first]
-
-    def window(lo, hi):
-        v = [rel[k] for k in range(first, last + 1) if lo <= (t[k] - start) * 1e3 < hi]
-        return mean(v), stdev(v), len(v)
-
-    def trapz(x):
-        return sum((t[k + 1] - t[k]) * (x[k] + x[k + 1]) / 2.0 for k in range(first, last))
-
-    srt = sorted(p[first:last + 1])
-    pre, key = window(0.05, 0.80), window(0.90, 2.00)
-    ein, eabs = trapz(p), trapz(a)
-    return {
-        "laser_on_threshold_W": 50.0, "laser_on_start_s": start, "laser_on_end_s": t[last],
-        "input_power_median_W": median(srt), "input_power_p10_W": srt[int(0.10 * (len(srt) - 1))],
-        "input_power_p90_W": srt[int(0.90 * (len(srt) - 1))],
-        "input_energy_J": ein, "absorbed_energy_J": eabs, "energy_coupling_fraction": eabs / ein,
-        "pre_keyhole_window_ms": [0.05, 0.80], "pre_keyhole_mean_pct": pre[0],
-        "pre_keyhole_std_pct": pre[1], "pre_keyhole_n": pre[2],
-        "keyhole_window_ms": [0.90, 2.00], "keyhole_mean_pct": key[0], "keyhole_std_pct": key[1],
-        "keyhole_n": key[2], "transition_time_ms": None, "transition_rule": "not computed (private reader)",
-        "absorbed_uncertainty_median_W": median(unc) if unc else None,
-        "window_definition": ("Windows are measured from the first sample with input power above the "
-                              "laser-on threshold; local analysis windows, not NIST-published phase boundaries."),
-    }
-
-
-def _private_al_rows(data: bytes) -> List[Dict[str, Any]]:
-    import csv
-    import io
-    rows = list(csv.reader(io.StringIO(data.decode("utf-8-sig"), newline="")))
-    out = []
-    for r in rows[1:]:
-        if len(r) >= 5 and r[0].strip():
-            out.append({"description": r[0].strip(), "value": float(r[1]), "unit": r[2].strip(),
-                        "std_dev": float(r[3]), "std_dev_unit": r[4].strip()})
-    return out
+    """The verified loader is required; there is no unvalidated private CSV reader."""
+    import lpbf_nist_mds2_2525_absorptance as loader  # noqa: WPS433
+    return loader
 
 
 # ---------------------------------------------------------------------------------------------
@@ -241,30 +182,40 @@ def run_fingerprint_test() -> bool:
 # models
 # ---------------------------------------------------------------------------------------------
 def flat_plate_authority() -> Dict[str, Any]:
-    """Which Ti-6Al-4V absorptivity_IR calculate_meltpool_physics resolves, found programmatically."""
+    """Which Ti-6Al-4V absorptivity_IR calculate_meltpool_physics resolves, found programmatically.
+
+    The solver resolves material properties as ``thermal_props(name) or
+    SECONDARY_THERMOPHYSICAL_DB.get(name)``; the same lookup is repeated here
+    through the solver module's own namespace, so a change in either table is
+    reflected in the record without editing this tool.
+    """
     from four_alloy_materials import thermal_props
     import lpbf_thermal_solver as solver
     import lpbf_material_registry as registry
-    four = float(thermal_props("Ti-6Al-4V")["absorptivity_IR"])
-    resolved = solver.THERMOPHYSICAL_DB.get("ti6al4v") or solver.THERMOPHYSICAL_DB.get("Ti-6Al-4V")
-    solver_db = float(resolved["absorptivity_IR"]) if resolved else None
-    secondary = {name: v.get("absorptivity_IR") for name, v in solver.SECONDARY_THERMOPHYSICAL_DB.items()}
-    secondary_has_ti64 = any("ti" in name.lower() and "6al" in name.lower().replace("-", "")
-                             for name in secondary)
-    reg = float(registry.material("Ti-6Al-4V")["absorptivity"])
-    # calculate_meltpool_physics resolves `thermal_props(name) or SECONDARY_THERMOPHYSICAL_DB.get(name)`
-    resolved_value = four
+    name = "Ti-6Al-4V"
+    primary = solver.thermal_props(name)
+    fallback = solver.SECONDARY_THERMOPHYSICAL_DB.get(name)
+    resolved = primary or fallback
+    if resolved is None:
+        raise ValueError("lpbf_thermal_solver does not resolve Ti-6Al-4V; flat-plate comparison impossible")
+    resolved_value = float(resolved["absorptivity_IR"])
+    origin = ("lpbf_thermal_solver.thermal_props('Ti-6Al-4V')['absorptivity_IR'] (four_alloy_materials; first "
+              "lookup in calculate_meltpool_physics)" if primary else
+              "lpbf_thermal_solver.SECONDARY_THERMOPHYSICAL_DB['Ti-6Al-4V']['absorptivity_IR'] (fallback table)")
+    four = float(thermal_props(name)["absorptivity_IR"])
+    reg = float(registry.material(name)["absorptivity"])
+    secondary = {key: v.get("absorptivity_IR") for key, v in solver.SECONDARY_THERMOPHYSICAL_DB.items()}
+    secondary_has_ti64 = name in solver.SECONDARY_THERMOPHYSICAL_DB
+    note = ("the secondary inline table has no Ti-6Al-4V entry, so no legacy value competes with the resolved one"
+            if not secondary_has_ti64 else
+            "the secondary inline table also lists Ti-6Al-4V; it is used only if thermal_props returns nothing")
     return {
         "absorptivityOfRecord": resolved_value,
-        "origin": "four_alloy_materials.thermal_props('Ti-6Al-4V')['absorptivity_IR'] (first lookup in "
-                  "lpbf_thermal_solver.calculate_meltpool_physics; the secondary table is only a fallback)",
+        "origin": origin,
         "fourAlloyMaterials": four,
-        "solverThermophysicalDb": solver_db,
         "materialRegistry": reg,
-        "secondaryInlineTable": {"entries": secondary, "containsTi64": secondary_has_ti64,
-                                 "note": "the 0.38 in lpbf_thermal_solver.py belongs to Inconel 625, not Ti-6Al-4V; "
-                                         "there is no legacy 0.38 Ti-6Al-4V value in the authority actually used"},
-        "allEqual": len({four, solver_db, reg}) == 1,
+        "secondaryInlineTable": {"entries": secondary, "containsTi64": secondary_has_ti64, "note": note},
+        "allEqual": len({resolved_value, four, reg}) == 1,
     }
 
 
@@ -325,7 +276,7 @@ def bracket(sweep: List[Dict[str, Any]], measured_pct: float) -> Dict[str, Any]:
     pts = [(r["keyhole_depth_um"], 100.0 * r["absorbed_fraction"]) for r in sweep]
     intervals = []
     for (d0, e0), (d1, e1) in zip(pts, pts[1:]):
-        if (e0 - measured_pct) * (e1 - measured_pct) <= 0.0 and not (e0 == e1 == measured_pct and False):
+        if (e0 - measured_pct) * (e1 - measured_pct) <= 0.0:
             intervals.append([d0, d1])
     lo, hi = min(e for _, e in pts), max(e for _, e in pts)
     if intervals:
@@ -345,8 +296,6 @@ def thermal_solver_scan(loader, root: Path) -> Dict[str, Any]:
     path = Path(root) / SCAN_NAME
     if not path.is_file():
         return unavailable(f"Ti-6Al-4V scan CSV {SCAN_NAME}: {ABSENT_REASON}")
-    if loader is None or not hasattr(loader, "load_ti64_scan_series"):
-        return unavailable("scan CSV present but the verified loader is not importable; not read privately")
     try:
         series = loader.load_ti64_scan_series(root)
         summary = loader.summarize_ti64_spot(series)
@@ -379,17 +328,9 @@ def thermal_solver_scan(loader, root: Path) -> Dict[str, Any]:
 def build_document(quick: bool, generated_at: str, root: Path = SOURCE_DIR) -> Dict[str, Any]:
     hashes = verify_inputs(root)  # refuse to run on any mismatch
     loader = _load_loader()
-    if loader is not None:
-        spot_bytes = loader.verified_bytes(SPOT_NAME, root)
-        summary = loader.summarize_ti64_spot(loader.load_ti64_spot_series(root))
-        al = loader.load_al_tables(root)
-        loader_used = "lpbf_nist_mds2_2525_absorptance"
-    else:
-        spot_bytes = read_verified(SPOT_NAME, root)
-        summary = _private_spot_summary(spot_bytes)
-        al = None
-        loader_used = "private-csv-reader"
-    del spot_bytes
+    summary = loader.summarize_ti64_spot(loader.load_ti64_spot_series(root))
+    al = loader.load_al_tables(root)
+    loader_used = "lpbf_nist_mds2_2525_absorptance"
 
     pre, key = summary["pre_keyhole_mean_pct"], summary["keyhole_mean_pct"]
     med_power = summary["input_power_median_W"]
@@ -397,35 +338,28 @@ def build_document(quick: bool, generated_at: str, root: Path = SOURCE_DIR) -> D
 
     measured = {
         "material": TI64_MATERIAL, "file": SPOT_NAME, "evidenceKind": "measured (NIST experiment only)",
-        "definition": "RelativeAbsorption(%) = AbsoluteAbsorption(W) / InputLaser(W) x 100 per 40 ns sample "
-                      "(NIST column 6); window means are plain means of that column inside local windows",
+        "definition": "RelativeAbsorption (%) is NIST column 6 ('Percent absorption'; README: input minus "
+                      "backscattered power, divided by input power, x 100) per 40 ns sample, used as published "
+                      "and not recomputed here; window means are plain means of that column inside local windows",
         "summary": {k: v for k, v in summary.items()},
         "uncertainty": {
-            "column": "AbsAbsorptionUncertainty (W), NIST column 5 ('--' before laser on)",
+            "column": "AbsAbsorptionUncertainty (W), NIST column 5: absolute expanded uncertainty of the absorbed "
+                      "power per the README ('--' before laser on)",
             "median_W": unc_w,
             "median_as_pp_of_median_input": (100.0 * unc_w / med_power) if unc_w is not None else None,
             "note": "the NIST uncertainty-analysis PDF is not acquired; this is the per-sample column median only",
         },
     }
 
-    measured_only: Dict[str, Any]
-    if al is not None:
-        measured_only = {
-            "material": AL_MATERIAL,
-            "spotAverageAbsorption": {"material": AL_MATERIAL, "rows": al["spot_average_absorption"]["rows"]},
-            "scanAverageAbsorptionAndMeltPool": {"material": AL_MATERIAL, "rows": al["scan_average_absorption"]["rows"]},
-            "spotMeltPoolWidthSeries": {"material": AL_MATERIAL, "rows": len(al["spot_melt_pool_width"]["time_s"]),
-                                        "max_width_um": max(al["spot_melt_pool_width"]["melt_pool_width_um"])},
-            "spotTdaLocalSummary": al["spot_tda_summary"],
-            "scanTdaLocalSummary": al["scan_tda_summary"],
-        }
-    else:
-        measured_only = {
-            "material": AL_MATERIAL,
-            "spotAverageAbsorption": {"material": AL_MATERIAL, "rows": _private_al_rows(read_verified(AL_SPOT_AA, root))},
-            "scanAverageAbsorptionAndMeltPool": {"material": AL_MATERIAL,
-                                                 "rows": _private_al_rows(read_verified(AL_SCAN_AA, root))},
-        }
+    measured_only: Dict[str, Any] = {
+        "material": AL_MATERIAL,
+        "spotAverageAbsorption": {"material": AL_MATERIAL, "rows": al["spot_average_absorption"]["rows"]},
+        "scanAverageAbsorptionAndMeltPool": {"material": AL_MATERIAL, "rows": al["scan_average_absorption"]["rows"]},
+        "spotMeltPoolWidthSeries": {"material": AL_MATERIAL, "rows": len(al["spot_melt_pool_width"]["time_s"]),
+                                    "max_width_um": max(al["spot_melt_pool_width"]["melt_pool_width_um"])},
+        "spotTdaLocalSummary": al["spot_tda_summary"],
+        "scanTdaLocalSummary": al["scan_tda_summary"],
+    }
     measured_only["note"] = ("aluminium NIST SRM 1241c; not Ti-6Al-4V and not any alloy of the application; "
                              "retrievable here only, never compared with a model")
 
@@ -529,33 +463,23 @@ def build_document(quick: bool, generated_at: str, root: Path = SOURCE_DIR) -> D
                  "model": None, "modelId": None, "difference": None, "status": "unavailable",
                  "reason": "no model counterpart: the application has no time-resolved stationary-pulse absorption model"})
     # aluminium
-    if al is not None:
-        sp = {r["description"]: r for r in al["spot_average_absorption"]["rows"]}
-        sc = {r["description"]: r for r in al["scan_average_absorption"]["rows"]}
-        for rid, quantity, tbl, desc in (
-                ("al-spot-before-keyhole", "Al spot absorptance before keyhole", sp, "Average Absorption before keyhole"),
-                ("al-spot-during-keyhole", "Al spot absorptance during keyhole", sp, "Average Absorption during keyhole"),
-                ("al-scan-before-keyhole", "Al scan absorptance before keyhole", sc, "Average Absorption before keyhole"),
-                ("al-scan-during-keyhole", "Al scan absorptance during keyhole", sc, "Average Absorption during keyhole"),
-                ("al-scan-max-depth", "Al scan maximum melt-pool depth", sc, "Melt Pool Depth - Maximum"),
-                ("al-scan-max-width", "Al scan maximum melt-pool width", sc, "Melt Pool Width - Maximum")):
-            r = tbl[desc]
-            row = al_row(rid, quantity, r["value"], r["unit"])
-            row["measuredStd"] = r["std_dev"]
-            rows.append(row)
-        w = al["spot_melt_pool_width"]
-        rows.append(al_row("al-spot-melt-pool-width-vs-time", "Al spot melt-pool width vs time (TDW; value shown is the series maximum)",
-                           max(w["melt_pool_width_um"]), "micrometer",
-                           "; additionally a stationary source is not representable by the moving-source kernels"))
-    else:
-        for rid, q in (("al-spot-before-keyhole", "Al spot absorptance before keyhole"),
-                       ("al-spot-during-keyhole", "Al spot absorptance during keyhole"),
-                       ("al-scan-before-keyhole", "Al scan absorptance before keyhole"),
-                       ("al-scan-during-keyhole", "Al scan absorptance during keyhole"),
-                       ("al-scan-max-depth", "Al scan maximum melt-pool depth"),
-                       ("al-scan-max-width", "Al scan maximum melt-pool width"),
-                       ("al-spot-melt-pool-width-vs-time", "Al spot melt-pool width vs time (TDW)")):
-            rows.append(al_row(rid, q, None, None))
+    sp = {r["description"]: r for r in al["spot_average_absorption"]["rows"]}
+    sc = {r["description"]: r for r in al["scan_average_absorption"]["rows"]}
+    for rid, quantity, tbl, desc in (
+            ("al-spot-before-keyhole", "Al spot absorptance before keyhole", sp, "Average Absorption before keyhole"),
+            ("al-spot-during-keyhole", "Al spot absorptance during keyhole", sp, "Average Absorption during keyhole"),
+            ("al-scan-before-keyhole", "Al scan absorptance before keyhole", sc, "Average Absorption before keyhole"),
+            ("al-scan-during-keyhole", "Al scan absorptance during keyhole", sc, "Average Absorption during keyhole"),
+            ("al-scan-max-depth", "Al scan maximum melt-pool depth", sc, "Melt Pool Depth - Maximum"),
+            ("al-scan-max-width", "Al scan maximum melt-pool width", sc, "Melt Pool Width - Maximum")):
+        r = tbl[desc]
+        row = al_row(rid, quantity, r["value"], r["unit"])
+        row["measuredStd"] = r["std_dev"]
+        rows.append(row)
+    w = al["spot_melt_pool_width"]
+    rows.append(al_row("al-spot-melt-pool-width-vs-time", "Al spot melt-pool width vs time (TDW; value shown is the series maximum)",
+                       max(w["melt_pool_width_um"]), "micrometer",
+                       "; additionally a stationary source is not representable by the moving-source kernels"))
 
     limits = [
         "The NIST coupon is ~300 um thin; the application's conduction kernels and the flat-plate absorptivity "
@@ -582,10 +506,6 @@ def build_document(quick: bool, generated_at: str, root: Path = SOURCE_DIR) -> D
         "Sampling standard errors of the ray tracer exclude geometry, bounce truncation and model error.",
         "No model input was tuned to the data; any disagreement above is the application's, reported as found.",
     ]
-
-    if loader is not None:
-        # recompute-and-record hashes also for files read through the loader were checked above
-        pass
 
     dataset = {
         "id": "nist-mds2-2525",

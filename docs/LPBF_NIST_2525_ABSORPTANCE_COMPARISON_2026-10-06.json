@@ -308,7 +308,7 @@
  ],
  "loaderUsed": "lpbf_nist_mds2_2525_absorptance",
  "measured": {
-  "definition": "RelativeAbsorption(%) = AbsoluteAbsorption(W) / InputLaser(W) x 100 per 40 ns sample (NIST column 6); window means are plain means of that column inside local windows",
+  "definition": "RelativeAbsorption (%) is NIST column 6 ('Percent absorption'; README: input minus backscattered power, divided by input power, x 100) per 40 ns sample, used as published and not recomputed here; window means are plain means of that column inside local windows",
   "evidenceKind": "measured (NIST experiment only)",
   "file": "Spot on Bare Metal_Calibrated Absorption Data.csv",
   "material": "Ti-6Al-4V (NIST SRM 654b)",
@@ -549,7 +549,7 @@
    "window_definition": "Windows are measured from the first sample with input power above the laser-on threshold. They are local analysis windows chosen in this module, not NIST-published phase boundaries; NIST publishes before/during-keyhole averages only for the aluminium challenge tables."
   },
   "uncertainty": {
-   "column": "AbsAbsorptionUncertainty (W), NIST column 5 ('--' before laser on)",
+   "column": "AbsAbsorptionUncertainty (W), NIST column 5: absolute expanded uncertainty of the absorbed power per the README ('--' before laser on)",
    "median_W": 1.15838,
    "median_as_pp_of_median_input": 1.13713,
    "note": "the NIST uncertainty-analysis PDF is not acquired; this is the per-sample column median only"
@@ -699,7 +699,7 @@
     "allEqual": true,
     "fourAlloyMaterials": 0.35,
     "materialRegistry": 0.35,
-    "origin": "four_alloy_materials.thermal_props('Ti-6Al-4V')['absorptivity_IR'] (first lookup in lpbf_thermal_solver.calculate_meltpool_physics; the secondary table is only a fallback)",
+    "origin": "lpbf_thermal_solver.thermal_props('Ti-6Al-4V')['absorptivity_IR'] (four_alloy_materials; first lookup in calculate_meltpool_physics)",
     "secondaryInlineTable": {
      "containsTi64": false,
      "entries": {
@@ -709,9 +709,8 @@
       "Pure Copper (Cu-OF)": 0.08,
       "Scalmalloy (Al-Mg-Sc-Zr)": 0.22
      },
-     "note": "the 0.38 in lpbf_thermal_solver.py belongs to Inconel 625, not Ti-6Al-4V; there is no legacy 0.38 Ti-6Al-4V value in the authority actually used"
-    },
-    "solverThermophysicalDb": 0.35
+     "note": "the secondary inline table has no Ti-6Al-4V entry, so no legacy value competes with the resolved one"
+    }
    },
    "comparedWith": {
     "measuredMean_pct": 32.4712,

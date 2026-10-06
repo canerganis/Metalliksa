@@ -39,7 +39,7 @@ Experiment: Ti-6Al-4V (NIST SRM 654b), 1070 nm, 1/e^2 spot diameter 122.5 um (+/
 | Median per-sample absorbed-power uncertainty | 1.158 | W |
 | ... as percentage points of median input | 1.137 | pp |
 
-RelativeAbsorption(%) = AbsoluteAbsorption(W) / InputLaser(W) x 100 per 40 ns sample (NIST column 6); window means are plain means of that column inside local windows. Windows are measured from the first sample with input power above the laser-on threshold. They are local analysis windows chosen in this module, not NIST-published phase boundaries; NIST publishes before/during-keyhole averages only for the aluminium challenge tables.
+RelativeAbsorption (%) is NIST column 6 ('Percent absorption'; README: input minus backscattered power, divided by input power, x 100) per 40 ns sample, used as published and not recomputed here; window means are plain means of that column inside local windows. Windows are measured from the first sample with input power above the laser-on threshold. They are local analysis windows chosen in this module, not NIST-published phase boundaries; NIST publishes before/during-keyhole averages only for the aluminium challenge tables.
 
 ## Headline comparison (measured vs model)
 
@@ -49,7 +49,7 @@ RelativeAbsorption(%) = AbsoluteAbsorption(W) / InputLaser(W) x 100 per 40 ns sa
 | pre-keyhole absorptance, ray tracer at depth 0 | 32.47 +/- 1.451 % | 35 % | 2.529 (percentage points (model - measured)) | compared |
 | keyhole-phase absorptance, prescribed-depth sweep | 62.01 +/- 7.091 % | 35 to 93.56 % (sweep) | - | sensitivity-only |
 
-Flat-plate absorptivity of record: 35 % (origin: four_alloy_materials.thermal_props('Ti-6Al-4V')['absorptivity_IR'] (first lookup in lpbf_thermal_solver.calculate_meltpool_physics; the secondary table is only a fallback)). Model minus measured = 2.529 percentage points (7.788 % relative). Note: the 0.38 in lpbf_thermal_solver.py belongs to Inconel 625, not Ti-6Al-4V; there is no legacy 0.38 Ti-6Al-4V value in the authority actually used.
+Flat-plate absorptivity of record: 35 % (origin: lpbf_thermal_solver.thermal_props('Ti-6Al-4V')['absorptivity_IR'] (four_alloy_materials; first lookup in calculate_meltpool_physics)). Model minus measured = 2.529 percentage points (7.788 % relative). Note: the secondary inline table has no Ti-6Al-4V entry, so no legacy value competes with the resolved one.
 
 ## Ray-tracing sensitivity sweep (prescribed Gaussian cavity; SENSITIVITY, not calibration)
 
