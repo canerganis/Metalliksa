@@ -158,7 +158,7 @@ export default function App() {
     void refreshStatus(false);
     const onHash = () => {
       if (isHome(window.location.hash)) { showHome(); return; }
-      // Legacy id: rewrite the hash first, then re-announce it so an already mounted module (its tab) follows.
+      // Legacy id: rewrite the hash first, then re-announce it so a mounted module (its tab) follows; activate runs twice on purpose (idempotent).
       if (legacyRedirectHash(window.location.hash)) {
         rewriteLegacyHash();
         activate(moduleFromHash(window.location.hash) ?? '3d-distortion-lab');
