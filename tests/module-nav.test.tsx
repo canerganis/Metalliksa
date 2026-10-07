@@ -3,7 +3,7 @@ import { test } from "node:test";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ModuleNav, navTabStop, syncNavFocus } from "../src/components/ModuleNav";
-import { MODULES } from "../src/data/workspaces";
+import { LAB_MODULES, MODULES } from "../src/data/workspaces";
 
 const mods = [
   { id: "a", workspace: "lpbf" },
@@ -32,10 +32,11 @@ test("syncNavFocus: A -> B -> A (back button) does not revive the entry remember
 });
 
 test("rendered navigation has exactly one Tab stop, on the aria-current module", () => {
-  const active = MODULES[3];
+  // A lab module is active, so the Labs group is expanded and every module has a button.
+  const active = LAB_MODULES[0];
   const html = renderToStaticMarkup(<ModuleNav modules={[...MODULES]} activeTab={active.id} activeWorkspace={active.workspace} onNavigate={() => undefined} />);
   const buttons = [...html.matchAll(/<button[^>]*>/g)].map(m => m[0]);
-  assert.ok(buttons.length > MODULES.length, "module buttons plus workspace headings");
+  assert.ok(buttons.length > MODULES.length, "module buttons plus workspace headings and the Labs toggle");
   const stops = buttons.filter(b => /tabindex="0"/.test(b));
   assert.equal(stops.length, 1);
   assert.match(stops[0], /aria-current="page"/);
@@ -43,7 +44,7 @@ test("rendered navigation has exactly one Tab stop, on the aria-current module",
 });
 
 test("every module entry is described by the hint AND its own description; headings by the hint", () => {
-  const html = renderToStaticMarkup(<ModuleNav modules={[...MODULES]} activeTab={MODULES[0].id} activeWorkspace={MODULES[0].workspace} onNavigate={() => undefined} />);
+  const html = renderToStaticMarkup(<ModuleNav modules={[...MODULES]} activeTab={LAB_MODULES[0].id} activeWorkspace={LAB_MODULES[0].workspace} onNavigate={() => undefined} />);
   const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
   for (const module of MODULES) {
     assert.match(html, new RegExp(`aria-describedby="module-nav-hint nav-desc-${module.id}"`), module.id);

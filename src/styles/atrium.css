@@ -229,3 +229,15 @@
 @media (min-width: 37.5rem) and (max-width: 63.99rem) {
   .mk-at-art .f-frame { top: auto; bottom: 0; left: 0; right: 0; width: 100%; height: auto; transform: none; }
 }
+
+/* Flagship LPBF flow: four numbered steps (registry labels), a primary CTA and the screening-only note. */
+.mk-at-flagship { margin: 1.6rem 0 0; font-family: var(--mk-font-mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mk-ice); }
+.mk-at-flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem; margin: 0.8rem 0 0; padding: 0; list-style: none; }
+.mk-at-flow button { display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem; width: 100%; height: 100%; padding: 0.8rem 0.9rem; border: 1px solid var(--mk-border-bright); border-radius: 12px; background: rgba(255, 255, 255, 0.82); color: var(--mk-text-soft); text-align: left; font-size: 0.8125rem; line-height: 1.35; }
+.mk-at-flow button:hover { background: var(--mk-surface-raised); color: var(--mk-text-strong); }
+.mk-at-flow-num { font-family: var(--mk-font-mono); font-size: 10.5px; letter-spacing: 0.2em; color: var(--mk-laser); }
+.mk-at-flow-verb { font-size: 0.75rem; color: var(--mk-text-dim); }
+.mk-at-flow-label { font-weight: 500; color: var(--mk-text-strong); overflow-wrap: anywhere; }
+.mk-at-cta:focus-visible, .mk-at-ghost:focus-visible, .mk-at-flow button:focus-visible { outline: 2px solid var(--mk-ice); outline-offset: 2px; }
+@media (max-width: 63.99rem) { .mk-at-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 29.99rem) { .mk-at-flow { grid-template-columns: minmax(0, 1fr); } .mk-at-actions { flex-direction: column; align-items: stretch; } }

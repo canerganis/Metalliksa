@@ -6,7 +6,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { ArrowRight, Pause, Play, Search } from 'lucide-react';
-import { MATURITY_BADGE_TITLE, MODULES, WORKSPACES, type ModuleId, type ModuleScope } from '../data/workspaces';
+import { CORE_FLOW, CORE_MODULE_IDS, LAB_MODULES, MATURITY_BADGE_TITLE, MODULES, WORKSPACES, type ModuleId, type ModuleScope } from '../data/workspaces';
 import type { PythonEngineStatus } from '../services/pythonComputationService';
 import { FoundryStage } from './FoundryStage';
 import '../styles/foundry.css';
@@ -79,9 +79,28 @@ export function Atrium({ continueId, engine, engineChecking, shortcutLabel, onNa
           <p className="mk-at-kicker">Metalliksa · Local research workstation · Laser powder-bed fusion</p>
           <h2 id="atrium-title" className="mk-at-title"><span>Built by light,</span> <span>layer by layer.</span></h2>
           <p className="mk-at-lede">LPBF engineering, materials intelligence and evidence &amp; qualification. Traceable thermal research, material characterization and reviewed literature evidence.</p>
+          <p className="mk-at-flagship">Flagship - LPBF melt-pool and process screening</p>
+          <ol className="mk-at-flow" aria-label="LPBF screening flow">
+            {CORE_FLOW.map((step, index) => {
+              const module = MODULES.find((m) => m.id === step.id);
+              if (!module) return null;
+              return (
+                <li key={step.id}><button type="button" onClick={() => onNavigate(step.id)}>
+                  <span className="mk-at-flow-num" aria-hidden="true">{two(index + 1)}</span>
+                  <span className="mk-at-flow-verb">{step.verb}</span>
+                  <span className="mk-at-flow-label">{module.label}</span>
+                  <span className="mk-at-scope" title={MATURITY_BADGE_TITLE}>{module.scope}</span>
+                </button></li>
+              );
+            })}
+          </ol>
+          <p className="mk-at-note">Screening only. No result in this flow is experimental validation.</p>
           <div className="mk-at-actions">
-            <button type="button" className="mk-at-cta" onClick={() => onNavigate(resume.id)}>
-              <span className="mk-at-cta-dot" aria-hidden="true" />Continue · {resume.label}<ArrowRight className="h-4 w-4" aria-hidden="true" />
+            <button type="button" className="mk-at-cta" onClick={() => onNavigate(CORE_MODULE_IDS[0])}>
+              <span className="mk-at-cta-dot" aria-hidden="true" />Start the LPBF flow<ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </button>
+            <button type="button" className="mk-at-ghost" onClick={() => onNavigate(resume.id)}>
+              Continue · {resume.label}
             </button>
             <button type="button" className="mk-at-ghost" onClick={onSearch} aria-haspopup="dialog">
               <Search className="h-4 w-4" aria-hidden="true" />Search modules<kbd aria-hidden="true">{shortcutLabel}</kbd>
@@ -103,17 +122,19 @@ export function Atrium({ continueId, engine, engineChecking, shortcutLabel, onNa
       </div>
 
       <div className="mk-at-section">
-        <p className="mk-at-section-label"><span>{two(WORKSPACES.length)}</span>Workspaces</p>
+        <p className="mk-at-section-label"><span>{two(WORKSPACES.length)}</span>Labs</p>
       </div>
       <div className="mk-at-grid">
         {WORKSPACES.map((workspace, index) => {
-          const entries = MODULES.filter((m) => m.workspace === workspace.id);
+          const entries = LAB_MODULES.filter((m) => m.workspace === workspace.id);
+          if (!entries.length) return null;
+          const enter = entries.some((m) => m.id === workspace.defaultModule) ? workspace.defaultModule : entries[0].id;
           const shown = entries.slice(0, 4);
           return (
             <article key={workspace.id} className="mk-at-card" onPointerMove={tilt} onPointerLeave={untilt}>
               <div className="mk-at-card-top">
                 <span className="mk-at-code">WS·{two(index + 1)}</span>
-                <span className="mk-at-count">{two(entries.length)} modules</span>
+                <span className="mk-at-count">{two(entries.length)} labs</span>
               </div>
               <Motif id={workspace.id} />
               <h3 className="mk-at-card-title">{workspace.label}</h3>
@@ -122,9 +143,9 @@ export function Atrium({ continueId, engine, engineChecking, shortcutLabel, onNa
                 {shown.map((m) => (
                   <li key={m.id}><button type="button" onClick={() => onNavigate(m.id)}>{m.label}<span className="mk-at-scope" title={MATURITY_BADGE_TITLE}>{m.scope}</span></button></li>
                 ))}
-                {entries.length > shown.length && <li className="mk-at-more">+{entries.length - shown.length} more in this workspace</li>}
+                {entries.length > shown.length && <li className="mk-at-more">+{entries.length - shown.length} more in this lab group</li>}
               </ul>
-              <button type="button" className="mk-at-enter" onClick={() => onNavigate(workspace.defaultModule)}>
+              <button type="button" className="mk-at-enter" onClick={() => onNavigate(enter)}>
                 Enter workspace<ArrowRight className="h-4 w-4" aria-hidden="true" />
               </button>
             </article>
