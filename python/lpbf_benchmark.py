@@ -71,7 +71,9 @@ EVIDENCE_LABEL = "Screening benchmark: predictions scored on published single tr
 HONESTY = ("Screening benchmark of melt-pool width and depth predictions against published single tracks; not "
            "experimental validation; no per-row measurement uncertainty exists in any source; the built-in entries "
            "are the frozen screening kernels at their default absorptivity; scores are per (material, source) block "
-           "and are never combined into one cross-material rank; experimentalValidation=false")
+           "and are never combined into one cross-material rank; skill is measured against the Rosenthal kernel at "
+           "default absorptivity for every entry, unlike the scorecard where each kernel is compared with its own "
+           "default; experimentalValidation=false")
 MAX_SUBMISSION_ROWS = 5000
 
 
@@ -488,7 +490,11 @@ def score_submission(root: Path, csv_bytes: bytes, meta_raw: Any, table: Dict[st
     meta = check_meta(meta_raw)
     rows_t = _ordered(loaded["trainable"], TRAINABLE_SOURCES)
     rows_c = _ordered(loaded["catalog"], CATALOG_SOURCES)
-    preds = parse_submission(csv_bytes.decode("utf-8").replace("\r\n", "\n"), [r["rowId"] for r in rows_t + rows_c])
+    try:
+        csv_text = csv_bytes.decode("utf-8-sig")
+    except UnicodeDecodeError as exc:
+        raise BenchmarkError(f"submission CSV is not valid UTF-8: {exc}") from exc
+    preds = parse_submission(csv_text.replace("\r\n", "\n"), [r["rowId"] for r in rows_t + rows_c])
     slug = slugify(meta["name"], meta["version"])
     entry = entry_for(f"submission:{slug}", "local-submission", meta, rows_t, rows_c, preds, table, manifest, fp,
                       {"submissionCsvSha256": sha256_bytes(csv_bytes),
@@ -597,7 +603,9 @@ def write_leaderboard(root: Path, doc: Dict[str, Any]) -> Path:
 
 def check_leaderboard(root: Path, loaded: Dict[str, Any], fp: str, table: Optional[Dict[str, Any]] = None) -> List[str]:
     """Problems found when re-deriving the newest committed leaderboard: input/manifest drift, a changed config or
-    implementation, edited or stale submission scores, and (with a table) any difference in the built-in entries."""
+    implementation, stale submission scores (manifest, config or implementation changed), and (with a table) any
+    difference in the built-in entries. Submission score numbers are NOT re-derived (the submission CSV is not kept),
+    so a hand-edited score file with intact provenance hashes is not detected."""
     problems: List[str] = []
     p = newest_leaderboard(root)
     if p is None:

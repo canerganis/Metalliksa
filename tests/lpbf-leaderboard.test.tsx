@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { LpbfCalibrationScorecardLab } from '../src/components/LpbfCalibrationScorecardLab';
 import { LpbfLeaderboardPanel } from '../src/components/LpbfLeaderboardPanel';
 import {
-  checkedLeaderboard, groupRows, nextSort, sortRows, SORT_KEYS,
+  checkedLeaderboard, DEFAULT_SORT, groupRows, nextSort, sortRows, SORT_KEYS,
   type LeaderboardCell, type LeaderboardEntry, type LpbfLeaderboardDocument,
 } from '../src/data/lpbfLeaderboard';
 
@@ -16,8 +16,8 @@ import {
 const SHA_B = 'a'.repeat(64);
 const SHA_S = 'b'.repeat(64);
 const cell = (source: string, extra: Partial<LeaderboardCell>, quantity: 'width' | 'depth' = 'width'): LeaderboardCell => ({
-  material: '316L Stainless Steel', quantity, heldOutSource: source, status: 'scored', nRows: 40, nSets: 12, nResolved: 40,
-  unresolved: 0, mapePct: 20, meanAbsLn: 0.18, mapeUnresolvedAsFailPct: 20, skill: 0, skillCi95: [0, 0], coverage90: null, ...extra,
+  material: '316L Stainless Steel', quantity, heldOutSource: source, status: 'scored', nRows: extra.nRows ?? 40, nSets: 12, nResolved: extra.nRows ?? 40,
+  unresolved: 0, mapePct: 20, meanAbsLn: 0.18, mapeUnresolvedAsFailPct: extra.mapePct ?? 20, skill: 0, skillCi95: [0, 0], coverage90: null, ...extra,
 });
 const prov = { manifestSha256: 'c'.repeat(64), implementationHash: 'd'.repeat(64), baselineKernel: 'rosenthal' };
 const builtin: LeaderboardEntry = {
@@ -32,7 +32,7 @@ const submission: LeaderboardEntry = {
   description: 'fixture', url: 'example.org/my-model', trainedOnSources: ['ku-leuven-316l-2021'],
   provenance: { ...prov, submissionCsvSha256: SHA_S, metaSha256: 'e'.repeat(64) },
   cells: [
-    cell('hofmann-316l-2026', { mapePct: 9.5, skill: 0.31, skillCi95: [0.2, 0.4], unresolved: 3, coverage90: { k: 30, n: 40, coverage: 0.75, wilson95: [0.6, 0.86] } }),
+    cell('hofmann-316l-2026', { mapePct: 9.5, mapeUnresolvedAsFailPct: 16.4, nResolved: 37, skill: 0.31, skillCi95: [0.2, 0.4], unresolved: 3, coverage90: { k: 30, n: 40, coverage: 0.75, wilson95: [0.6, 0.86] } }),
     { material: '316L Stainless Steel', quantity: 'width', heldOutSource: 'ku-leuven-316l-2021', status: 'excluded-trained-on', nRows: 44, nSets: 44, reason: 'trained on this source' },
   ],
   sentinels: [cell('guo-316l-2024', { mapePct: 30, nRows: 4 })],
@@ -91,9 +91,26 @@ test('column headers are keyboard-operable buttons with aria-sort', () => {
   const group = html.split('data-testid="leaderboard-group"')[1].split('</thead>')[0];
   const buttons = [...group.matchAll(/<button type="button" data-sort-key="([a-zA-Z]+)"/g)].map((m) => m[1]);
   assert.deepEqual(buttons, [...SORT_KEYS]);
-  assert.match(group, /<th scope="col" aria-sort="ascending"[^>]*><button type="button" data-sort-key="mapePct"/);
+  assert.match(group, /<th scope="col" aria-sort="ascending"[^>]*><button type="button" data-sort-key="mapeFail"/);
   assert.equal([...group.matchAll(/aria-sort="none"/g)].length, SORT_KEYS.length - 1);
   assert.match(group, /focus-visible:ring-2/);
+});
+
+test('default order counts unresolved as 100 %: a partial submission does not outrank a complete one and is flagged', () => {
+  const d = clone(FIXTURE);
+  // the submission predicted only 5 of 40 rows: tiny MAPE on resolved rows, but 35 unresolved
+  (d.entries[1].cells as LeaderboardCell[])[0] = cell('hofmann-316l-2026', { mapePct: 1.2, nResolved: 5, unresolved: 35, mapeUnresolvedAsFailPct: 88.2 });
+  const rows = groupRows(d)[0].rows;
+  const byFail = sortRows(rows, DEFAULT_SORT);
+  assert.equal(DEFAULT_SORT.key, 'mapeFail');
+  const hof = byFail.filter((r) => r.cell.heldOutSource === 'hofmann-316l-2026').map((r) => r.entryName);
+  assert.deepEqual(hof, ['Rosenthal screening kernel', 'My model']);
+  const html = render(d);
+  assert.match(html, /data-testid="partial-flag"[^>]*>partial: 5 of 40 rows/);
+  assert.match(html, /Skill vs Rosenthal \(default eta\), CI95/);
+  assert.match(html, /MAPE, unresolved = 100 %, %/);
+  assert.equal([...mainBlock(render(FIXTURE)).matchAll(/data-testid="partial-flag"/g)].length, 1, 'the fixture submission has 3 unresolved rows');
+  assert.equal([...mainBlock(render(d)).matchAll(/data-testid="partial-flag"/g)].length, 1);
 });
 
 test('sorting: header press toggles direction, excluded and missing values stay last, order follows initialSort', () => {

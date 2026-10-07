@@ -46,7 +46,11 @@ def cmd_score(a: argparse.Namespace) -> int:
     root = Path(a.repo_root).resolve()
     fp = _fingerprint()
     loaded = bm.load_truth()
-    meta = json.loads(Path(a.meta).read_text(encoding="utf-8"))
+    try:
+        meta = json.loads(Path(a.meta).read_text(encoding="utf-8-sig"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        print(f"REFUSED: meta file is not valid UTF-8 JSON: {exc}", file=sys.stderr)
+        return 2
     csv_bytes = Path(a.submission).read_bytes()
     try:
         bm.verify_manifest(root, loaded)
@@ -56,6 +60,15 @@ def cmd_score(a: argparse.Namespace) -> int:
         print(f"REFUSED: {exc}", file=sys.stderr)
         return 2
     out = bm.bench_dir(root) / bm.SUBMISSIONS_DIR / f"{slug}.score.json"
+    if out.is_file() and not a.overwrite:
+        try:
+            old = json.loads(out.read_text(encoding="utf-8"))["entry"]["provenance"].get("submissionCsvSha256")
+        except (ValueError, KeyError):
+            old = None
+        if old != doc["entry"]["provenance"]["submissionCsvSha256"]:
+            print(f"REFUSED: {out.name} already exists for a different submission file (same name/version or same slug); "
+                  "use a new version or pass --overwrite", file=sys.stderr)
+            return 2
     bm.write_text(out, bm.dumps(json.loads(bm.canonical_json(bm.st.round_sig(doc, 6)))))
     unresolved = sum(c.get("unresolved", 0) for c in doc["entry"]["cells"] if c["status"] == "scored")
     print(f"wrote {out} ({doc['entry']['provenance']['rowsSubmitted']} rows submitted; unresolved cells-rows: {unresolved})",
@@ -101,6 +114,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         p.add_argument("--repo-root", default=str(REPO_ROOT))
         p.set_defaults(fn=fn)
         if name == "score":
+            p.add_argument("--overwrite", action="store_true", help="replace an existing score file of a different submission")
             p.add_argument("--submission", required=True, help="CSV: row_id,width_um,depth_um[,width_lo90,width_hi90,depth_lo90,depth_hi90]")
             p.add_argument("--meta", required=True, help="JSON: name, version, author, description, url, trainedOnSources")
         else:

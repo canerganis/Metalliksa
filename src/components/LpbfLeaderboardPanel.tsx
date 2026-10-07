@@ -6,6 +6,7 @@ import {
   KIND_LABEL,
   fmtFixed,
   groupRows,
+  isPartial,
   nextSort,
   sortRows,
   type LeaderboardGroup,
@@ -24,8 +25,9 @@ const COLUMNS: ReadonlyArray<{ key: SortKey; label: string }> = [
   { key: "kind", label: "Kind" },
   { key: "heldOutSource", label: "Held-out source" },
   { key: "nRows", label: "Rows / sets" },
-  { key: "mapePct", label: "MAPE, %" },
-  { key: "skill", label: "Skill vs baseline, CI95" },
+  { key: "mapeFail", label: "MAPE, unresolved = 100 %, %" },
+  { key: "mapePct", label: "MAPE, resolved rows only, %" },
+  { key: "skill", label: "Skill vs Rosenthal (default eta), CI95" },
   { key: "coverage", label: "Coverage 90 %" },
   { key: "unresolved", label: "Unresolved" },
 ];
@@ -87,7 +89,7 @@ function GroupTable({ group, sort, onSort, testId }: { group: LeaderboardGroup; 
                   <td className="p-2 align-top">{KIND_LABEL[row.kind]}</td>
                   <td className="p-2 align-top">{c.heldOutSource}</td>
                   <td className="p-2 align-top tabular-nums">{c.nRows} / {c.nSets}</td>
-                  <td className="p-2 align-top" colSpan={4}>Excluded: the submission declares it trained on this source, so it is not held out.</td>
+                  <td className="p-2 align-top" colSpan={5}>Excluded: the submission declares it trained on this source, so it is not held out.</td>
                   <td className="p-2 align-top"><code title={row.sha}>{row.sha.slice(0, 12)}</code></td>
                 </tr>
               );
@@ -98,6 +100,7 @@ function GroupTable({ group, sort, onSort, testId }: { group: LeaderboardGroup; 
                 <td className="p-2 align-top">{KIND_LABEL[row.kind]}</td>
                 <td className="p-2 align-top">{c.heldOutSource}</td>
                 <td className="p-2 align-top tabular-nums">{c.nRows} / {c.nSets}</td>
+                <td className="p-2 align-top tabular-nums">{fmtFixed(c.mapeUnresolvedAsFailPct, 1)}{isPartial(c) ? <span data-testid="partial-flag" className="ml-1 rounded border border-amber-400 bg-amber-100 px-1 font-semibold text-amber-900">partial: {c.nResolved ?? c.nRows - (c.unresolved ?? 0)} of {c.nRows} rows</span> : null}</td>
                 <td className="p-2 align-top tabular-nums">{fmtFixed(c.mapePct, 1)}</td>
                 <td className="p-2 align-top tabular-nums">{skillText(row)}</td>
                 <td className="p-2 align-top tabular-nums">{coverageText(row)}</td>
@@ -142,7 +145,7 @@ export function LpbfLeaderboardPanel({ document: doc = COMMITTED_LEADERBOARD, in
               Generated {doc.generatedAt}; implementation fingerprint <code>{doc.implementationHash}</code>; manifest sha256 <code>{doc.manifestSha256}</code>. {doc.calibratedRung.note}
             </p>
             <p className="text-xs text-slate-700">{doc.honesty}</p>
-            <p className="text-xs text-slate-600">Use the column header buttons to sort every table; rows are never combined into one cross-material rank. Excluded and unresolved values stay at the bottom.</p>
+            <p className="text-xs text-slate-600">Use the column header buttons to sort every table; rows are never combined into one cross-material rank. Excluded and unresolved values stay at the bottom. The default order uses MAPE with unresolved rows counted as 100 %, so predicting only easy rows does not help. The skill baseline is the Rosenthal kernel at default eta for every entry, which differs from the scorecard (each kernel against its own default).</p>
             {groupRows(doc).map((g) => (
               <GroupTable key={`${g.material}|${g.quantity}`} group={g} sort={sort} onSort={onSort} testId="leaderboard-group" />
             ))}

@@ -87,7 +87,9 @@ The kernel table is either the scorecard cache or a default-only table (about 19
 refused.
 
 `--check` re-derives the newest committed record and fails on drift: changed inputs or manifest, a changed config,
-a different implementation fingerprint, or an edited or stale submission score. When a kernel table is available
+a different implementation fingerprint, or a stale submission score (manifest, config or implementation changed).
+Submission score numbers are not re-derived (the submission CSV is not kept), so a hand-edited score file whose provenance
+hashes are intact is not detected; treat local submission scores as self-reported. When a kernel table is available
 (`--table-cache`, or the default cache path) the built-in entries are recomputed and compared as well; without a table
 the built-in numbers are taken from the record and are **not** re-verified, and the tool says so. No network is used by
 any command.
@@ -109,3 +111,13 @@ no demo or placeholder entries.
 * A submission's `trainedOnSources` is a declaration, not something the tool can verify. A submission that trains on a
   source and does not declare it is not held out on that source.
 * Local submissions are scored on the submitter's machine; the record is a committed file, not a hosted service.
+
+## Reading the leaderboard
+
+- The default order uses MAPE with unresolved rows counted as 100 %, so a submission that predicts only the easy rows of a
+  block cannot outrank a complete one. Partial submissions are flagged ("partial: n of N rows"). MAPE on resolved rows
+  only is shown in its own column.
+- Skill is measured against the Rosenthal kernel at default absorptivity for **every** entry. The calibration scorecard
+  instead compares each kernel with its own default, so Eagar-Tsai or Goldak skill here is not skill over their own default.
+- A submission CSV may carry a UTF-8 BOM. A submission with the same name and version as an existing score file but a
+  different CSV is refused unless `--overwrite` is given.

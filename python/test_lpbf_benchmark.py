@@ -331,6 +331,10 @@ class LeaderboardTests(Base):
         self.assertEqual(doc["manifestSha256"], bm.sha256_text(bm.dumps(bm.build_inputs(self.loaded)[2])))
         self.assertEqual(doc["configSha256"], fit.config_sha256())
         self.assertEqual(doc["calibratedRung"]["enabledCells"], 0)
+        import lpbf_simulation
+        fp = lpbf_simulation.implementation_fingerprint()
+        self.assertEqual(doc["implementationHash"], fp, "record is stale: kernels changed, regenerate the leaderboard")
+        self.assertEqual(bm.check_leaderboard(bm.REPO_ROOT, self.loaded, fp), [])
 
 
 class CliTests(Base):
@@ -353,6 +357,43 @@ class CliTests(Base):
         self.assertEqual(cli.main(["score", "--submission", str(sub), "--meta", str(meta)] + common), 2)
         doc = json.loads(bm.newest_leaderboard(self.tmp).read_text(encoding="utf-8"))
         self.assertEqual(len(doc["entries"]), 4)
+
+    def _env(self):
+        import lpbf_simulation
+        fp = lpbf_simulation.implementation_fingerprint()
+        cache = self.tmp / "table.json"
+        cache.write_text(json.dumps(stub_table(self.loaded, fp)), encoding="utf-8")
+        meta = self.tmp / "s.json"
+        meta.write_text(json.dumps(META), encoding="utf-8")
+        return ["--table-cache", str(cache), "--repo-root", str(self.tmp)], meta
+
+    def test_bom_csv_is_accepted(self):
+        common, meta = self._env()
+        sub = self.tmp / "s.csv"
+        sub.write_bytes(b"\xef\xbb\xbf" + csv_for(self.rows_t + self.rows_c).encode("utf-8"))
+        self.assertEqual(cli.main(["score", "--submission", str(sub), "--meta", str(meta)] + common), 0)
+
+    def test_non_utf8_csv_and_bad_meta_are_refused_not_tracebacks(self):
+        common, meta = self._env()
+        sub = self.tmp / "s.csv"
+        sub.write_bytes(b"row_id,width_um,depth_um\n\xff\xfe,1,1\n")
+        self.assertEqual(cli.main(["score", "--submission", str(sub), "--meta", str(meta)] + common), 2)
+        sub.write_text(csv_for(self.rows_t + self.rows_c), encoding="utf-8")
+        meta.write_text("{not json", encoding="utf-8")
+        self.assertEqual(cli.main(["score", "--submission", str(sub), "--meta", str(meta)] + common), 2)
+        meta.write_bytes(b"\xff\xfe\x00")
+        self.assertEqual(cli.main(["score", "--submission", str(sub), "--meta", str(meta)] + common), 2)
+
+    def test_same_slug_different_submission_is_refused_unless_overwrite(self):
+        common, meta = self._env()
+        sub = self.tmp / "s.csv"
+        base = ["score", "--submission", str(sub), "--meta", str(meta)] + common
+        sub.write_text(csv_for(self.rows_t + self.rows_c, scale_w=1.2), encoding="utf-8")
+        self.assertEqual(cli.main(base), 0)
+        self.assertEqual(cli.main(base), 0, "re-scoring the identical file is idempotent")
+        sub.write_text(csv_for(self.rows_t + self.rows_c, scale_w=1.3), encoding="utf-8")
+        self.assertEqual(cli.main(base), 2)
+        self.assertEqual(cli.main(base + ["--overwrite"]), 0)
 
 
 if __name__ == "__main__":

@@ -221,11 +221,11 @@ export function groupRows(doc: LpbfLeaderboardDocument, block: "cells" | "sentin
   return [...groups.values()].sort((a, b) => a.material.localeCompare(b.material) || (a.quantity === b.quantity ? 0 : a.quantity === "width" ? -1 : 1));
 }
 
-export const SORT_KEYS = ["entry", "kind", "heldOutSource", "nRows", "mapePct", "skill", "coverage", "unresolved"] as const;
+export const SORT_KEYS = ["entry", "kind", "heldOutSource", "nRows", "mapeFail", "mapePct", "skill", "coverage", "unresolved"] as const;
 export type SortKey = (typeof SORT_KEYS)[number];
 export type SortDir = "asc" | "desc";
 export interface SortState { readonly key: SortKey; readonly dir: SortDir }
-export const DEFAULT_SORT: SortState = { key: "mapePct", dir: "asc" };
+export const DEFAULT_SORT: SortState = { key: "mapeFail", dir: "asc" };
 
 /** Clicking the active header flips the direction; a new header starts ascending. */
 export function nextSort(state: SortState, key: SortKey): SortState {
@@ -240,6 +240,7 @@ function sortValue(row: LeaderboardRow, key: SortKey): number | string | null {
     case "heldOutSource": return c.heldOutSource;
     case "nRows": return c.nRows;
     case "mapePct": return c.mapePct ?? null;
+    case "mapeFail": return c.mapeUnresolvedAsFailPct ?? null;
     case "skill": return c.skill ?? null;
     case "coverage": return c.coverage90?.coverage ?? null;
     case "unresolved": return c.unresolved ?? null;
@@ -260,6 +261,11 @@ export function sortRows(rows: readonly LeaderboardRow[], state: SortState): Lea
     if (va !== null && vb !== null && va !== vb) return (va < vb ? -1 : 1) * sign;
     return a.entryName.localeCompare(b.entryName) || a.cell.heldOutSource.localeCompare(b.cell.heldOutSource);
   });
+}
+
+/** True when the entry predicted fewer rows than the held-out block holds (missing rows are unresolved). */
+export function isPartial(cell: LeaderboardCell): boolean {
+  return cell.status === "scored" && ((cell.unresolved ?? 0) > 0 || (cell.nResolved !== undefined && cell.nResolved < cell.nRows));
 }
 
 export function fmtFixed(value: number | null | undefined, digits: number): string {

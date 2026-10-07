@@ -1005,7 +1005,7 @@
   "statement": "Screening benchmark: predictions scored on published single tracks; not validation"
  },
  "generatedAt": "2026-10-07",
- "honesty": "Screening benchmark of melt-pool width and depth predictions against published single tracks; not experimental validation; no per-row measurement uncertainty exists in any source; the built-in entries are the frozen screening kernels at their default absorptivity; scores are per (material, source) block and are never combined into one cross-material rank; experimentalValidation=false",
+ "honesty": "Screening benchmark of melt-pool width and depth predictions against published single tracks; not experimental validation; no per-row measurement uncertainty exists in any source; the built-in entries are the frozen screening kernels at their default absorptivity; scores are per (material, source) block and are never combined into one cross-material rank; skill is measured against the Rosenthal kernel at default absorptivity for every entry, unlike the scorecard where each kernel is compared with its own default; experimentalValidation=false",
  "implementationHash": "d92d1a3ae85cd4c1adab6dc734eaae589ef4c275c33f09015aff639998f10ddd",
  "manifestSha256": "060defe33793a4cf0ee69b8f8f77c0c28a5247dc616a293994d71ed97fba8026",
  "protocol": {
