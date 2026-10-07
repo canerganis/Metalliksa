@@ -1961,6 +1961,54 @@ def serialize_result(result: Dict[str, Any]) -> str:
         }, allow_nan=False)
 
 
+LITERATURE_ALLOY_IDS = ("in718", "in625")
+LITERATURE_SOLIDIFICATION_SOURCE = (
+    "Literature (weld and DTA studies: gas tungsten arc / GMAW welds and DTA samples), not LPBF; the numbers come "
+    "from python/lpbf_solidification_segregation.py and are not a CALPHAD result")
+LITERATURE_RAPID_NOTE = (
+    "The k values below are equilibrium (weld/DTA) partition coefficients, so the fractions are upper bounds. A "
+    "rapid-solidification estimate with solute trapping k(V) exists in the segregation block of a build job "
+    "(LPBF Distortion Lab); it is not computed here.")
+
+
+def literature_solidification_block(alloy_id: Any) -> Optional[Dict[str, Any]]:
+    """Read-only literature segregation view for an unavailable IN718 / IN625 request, else None.
+
+    Only the ids in LITERATURE_ALLOY_IDS are accepted (anything else is refused with None). The numbers are the
+    existing segregation_estimate block's own; none is computed here and none is a CALPHAD result.
+    """
+    aid = str(alloy_id or "").strip().lower()
+    if aid not in LITERATURE_ALLOY_IDS:
+        return None
+    import lpbf_solidification_segregation as seg
+    block = seg.segregation_estimate(aid)
+    if block.get("status") != "available":
+        return {"status": "unavailable", "alloyId": aid, "isCalphad": False, "reason": block.get("reason")}
+    k_values = []
+    for key, c in (block.get("constants") or {}).items():
+        if key.startswith("k_gamma"):
+            k_values.append({"id": key, "value": c["value"], "unit": c.get("unit"),
+                             "citation": c.get("sourceCitation"), "locator": c.get("locator"),
+                             "verified": c.get("verified")})
+    return {
+        "status": "available",
+        "alloyId": aid,
+        "isCalphad": False,
+        "evidenceLabel": block["evidenceLabel"],
+        "source": LITERATURE_SOLIDIFICATION_SOURCE,
+        "primarySource": block.get("source"),
+        "secondarySource": block.get("secondarySource"),
+        "kValues": k_values,
+        "kSensitivity": block.get("kSensitivity"),
+        "band": block.get("band"),
+        "bandNote": block.get("bandNote"),
+        "quantity": block.get("quantity"),
+        "upperBoundNote": block.get("upperBoundNote"),
+        "rapidSolidificationNote": LITERATURE_RAPID_NOTE,
+        "validity": block.get("validity"),
+    }
+
+
 def main():
     """CLI and JSON pipe entrypoint for Python process / IPC daemon."""
     try:
@@ -2028,6 +2076,11 @@ def main():
             scheil=scheil,
             scheil_step_c=scheil_step,
         )
+        # Unavailable IN718 / IN625 requests also carry the read-only literature estimate (CALPHAD fields unchanged).
+        if result.get("status") == "unavailable":
+            literature = literature_solidification_block(payload.get("literatureAlloyId"))
+            if literature is not None:
+                result["literatureSolidification"] = literature
         # Phase 6a provenance (constants version, the R actually used, domain data)
         result["provenance"] = {
             "constantsVersion": physical_constants.CONSTANTS_VERSION,

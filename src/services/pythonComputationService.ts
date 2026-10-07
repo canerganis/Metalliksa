@@ -125,6 +125,8 @@ export interface PythonCalphadSolveResult
   multiElementScheilNote?: string;
   /** Set when the Python CALPHAD engine answered "unavailable"; the numbers are then the client screening model's. */
   pythonUnavailable?: CalphadUnavailable;
+  /** Unavailable IN718 / IN625 only: read-only literature solidification estimate (weld/DTA studies; not CALPHAD). */
+  literatureSolidification?: unknown;
   activeComponents?: string[];
   unsupportedElements?: string[];
   databaseSuitability?: string;
@@ -685,6 +687,7 @@ function calphadUnavailableResult(
   tMax: number,
   tStep: number,
   pythonUnavailable: CalphadUnavailable,
+  literatureSolidification?: unknown,
 ): PythonCalphadSolveResult {
   return {
     alloyName: alloy.name,
@@ -702,7 +705,16 @@ function calphadUnavailableResult(
     isPythonEngine: false,
     databaseUsed: pythonUnavailable.databaseUsed,
     pythonUnavailable,
+    ...(literatureSolidification ? { literatureSolidification } : {}),
   };
+}
+
+/** Alloy id for the literature estimate: only IN718 / IN625 (by the studio's alloy name); anything else is undefined. */
+export function literatureAlloyIdFromName(name: string | undefined): "in718" | "in625" | undefined {
+  const n = String(name ?? "");
+  if (/\b(?:inconel|in)[\s-]*718\b|N07718/i.test(n)) return "in718";
+  if (/\b(?:inconel|in)[\s-]*625\b|N06625/i.test(n)) return "in625";
+  return undefined;
 }
 
 /** Unavailable envelope for a CALPHAD request the Python service did not answer (no equilibrium is shown). */
@@ -954,6 +966,7 @@ class PythonComputationService {
     options: { signal?: AbortSignal; supersedeKey?: string } = {}
   ): Promise<PythonCalphadSolveResult> {
     let pythonUnavailable: CalphadUnavailable | null = null;
+    let literatureSolidification: unknown;
     if (usePython) {
       let validation: PythonValidationError | null = null;
       try {
@@ -970,6 +983,7 @@ class PythonComputationService {
             tMax,
             tStep,
             databaseId,
+            literatureAlloyId: literatureAlloyIdFromName(alloy.name),
             customTdbText,
             adaptiveGrid,
             boundaryRefinement,
@@ -993,6 +1007,7 @@ class PythonComputationService {
           }
           // The Python engine has no fallback model: it says "unavailable" and why.
           pythonUnavailable = parseCalphadUnavailable(data) ?? engineUnreachable("the Python CALPHAD service gave no result");
+          literatureSolidification = data?.literatureSolidification;
         } else {
           validation = await validationErrorFromResponse(res, "CALPHAD");
           if (!validation) {
@@ -1008,7 +1023,7 @@ class PythonComputationService {
       if (validation) throw validation;
       // Unavailable (no database, no pycalphad, failed equilibrium, 5xx, network): an explicit,
       // number-free result. The client screening model is NOT run in its place.
-      return calphadUnavailableResult(alloy, tMin, tMax, tStep, pythonUnavailable);
+      return calphadUnavailableResult(alloy, tMin, tMax, tStep, pythonUnavailable, literatureSolidification);
     }
 
     // Client-side TypeScript Fallback
