@@ -103,7 +103,7 @@ def build_calphad_contract(seed) -> ModuleContract:
     )
     minimize = Operation(
         id="calphad-minimize", method="POST", route="/api/python/calphad-minimize",
-        authority=_python_authority(40000),
+        authority=_python_authority(240000),
         input=(
             _number("tMin", "Minimum temperature", "degC", "temperature", 500.0,
                     "Direct solver default is 500 degC. The mounted UI always sends a base-element-selected "

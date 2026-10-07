@@ -29,6 +29,8 @@ Status: failed (same 503 maintenance page for `/rmm/records/mds2-2525` and `/od/
 
 Originals are in `external-data/matcalc` and recorded in `external-data-manifest.json`: `mc_fe_v2062.tdb` 489,296 B, `mc_ni_v2036.tdb` 416,720 B, `mc_al_v2037.tdb` 308,711 B (sha256 values in the manifest; they match the 2026-10-05 compatibility review). Licence: ODbL 1.0 for the database, DbCL 1.0 for the contents. A repaired copy is an altered derivative database, so ODbL share-alike and attribution apply to it. Keep the original untouched, never commit the TDBs, and review with legal counsel before shipping any of them.
 
+**Update 2026-10-07 (maintainer decision):** the repaired mc_ni 2.036 and mc_fe 2.062 files are now committed under `python/databases/` (`mc_ni_v2036_repaired.tdb`, `mc_fe_v2062_repaired.tdb`, byte-identical to the repaired copies above) with their repair reports and `python/databases/MATCALC_OPEN_DATABASES_LICENSE.md` (ODbL 1.0 / DbCL 1.0 notice, attribution, source URLs, sha256 of originals and derivatives, change log). They are the catalogue entries `mc_ni` (Ni base) and `mc_fe` (Fe base) of `python/calphad_solver.py`. The originals stay uncommitted (fetched by `fetch_external_data.py`); mc_al is not added. The 2026-10-07 download page still lists mc_ni 2.036 and mc_fe 2.062 as the latest open releases; the hashes are unchanged.
+
 ### Syntactic repair (`python/tools/tdb_repair.py`)
 
 pycalphad 0.11.2 cannot read the originals. The tool writes a repaired copy under `external-data/repaired/` (never editing the original) and a JSON report listing every change. Counts from the last run:

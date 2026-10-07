@@ -51,7 +51,7 @@ physicsRouter.post("/api/python/ipc-warmup", async (_req: Request, res: Response
 
 // CALPHAD Gibbs Minimization & Databases
 physicsRouter.post(["/api/python/calphad-minimize", "/api/calphad/minimize"], (req: Request, res: Response) => {
-  return handlePythonDispatch("python/calphad_solver.py", req.body, res, 40000);
+  return handlePythonDispatch("python/calphad_solver.py", req.body, res, 240000);
 });
 
 physicsRouter.get(["/api/python/calphad-databases", "/api/calphad/databases"], (req: Request, res: Response) => {

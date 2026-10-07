@@ -26,7 +26,7 @@ Output fields (no status key, so the output carries no evidence status): `succes
 
 ### `calphad-minimize`: `POST /api/python/calphad-minimize`
 
-Authority: python-ipc `python/calphad_solver.py`; timeout 40000 ms; GPU none; warm true.
+Authority: python-ipc `python/calphad_solver.py`; timeout 240000 ms; GPU none; warm true.
 
 | Key | Label | Type | Unit | Min | Max | Step | Default | Note |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |

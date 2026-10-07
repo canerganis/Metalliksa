@@ -241,6 +241,90 @@ OPEN_TDB_CATALOG = [
         "usable": True,
         "statusReason": None,
     },
+    {
+        "id": "mc_ni",
+        "fileName": "mc_ni_v2036_repaired.tdb",
+        "name": "MatCalc mc_ni 2.036 open Ni-superalloy database (syntactically repaired for pycalphad)",
+        "description": "MatCalc open thermodynamic database for Ni-base superalloys, release 2.036 (2024-08-20), "
+                       "E. Povoden-Karadeniz, TU Wien; ODbL 1.0 / DbCL 1.0. The committed file is a syntactic "
+                       "repair of the original (python/tools/tdb_repair.py; no G/L/TC/BMAGN value changed; "
+                       "MatCalc-only directives and HMVA parameters commented out). Licence, source and change "
+                       "log: python/databases/MATCALC_OPEN_DATABASES_LICENSE.md.",
+        "elements": ["AL", "B", "C", "CO", "CR", "CU", "FE", "HF", "LA", "MN", "MO", "N", "NB", "NI", "O", "S",
+                     "SI", "TI", "V", "W", "Y", "ZR"],
+        "primaryPhases": ["LIQUID", "FCC_A1", "GAMMA_PRIME", "GAMMA_DP", "DELTA", "ETA", "LAVES", "SIGMA",
+                          "MU_PHASE", "P_PHASE", "M23C6", "M6C"],
+        "source": "MatCalc open databases, https://www.matcalc.at/index.php/databases/open-databases "
+                  "(mc_ni_v2036.tdb, sha256 84ba813156e1f7d8bde495d74420319afec03572b981f6b56103807f305313ab)",
+        "suitability": "Ni-base superalloys. The file header states it was tested inside Al<10, Co<20, Cr<20, "
+                       "Fe<20, Mo<5 (also listed as Mo<8), Nb<6, Ti<4, W<8 wt%; compositions outside these limits "
+                       "are flagged in the result. Not validated against experiment in this application.",
+        "assessedBaseElements": ["NI"],
+        "status": DB_STATUS_ASSESSMENT,
+        "usable": True,
+        "statusReason": None,
+        "testedLimitsWtPct": {"AL": 10.0, "B": 0.05, "C": 0.1, "CO": 20.0, "CR": 20.0, "CU": 0.5, "FE": 20.0,
+                              "HF": 2.0, "LA": 0.1, "MN": 0.5, "MO": 5.0, "N": 0.1, "NB": 6.0, "O": 0.1,
+                              "S": 0.1, "SI": 1.0, "TI": 4.0, "V": 0.5, "W": 8.0, "Y": 0.1, "ZR": 0.5},
+        "excludedPhases": {
+            "BCC_B2": "its ATTACH_CONTRIBUTION ... ORDER_DISORDER directive cannot be read by pycalphad and was "
+                      "commented out by the repair, so only the ordered part of the MatCalc split model is left",
+        },
+        # pycalphad sampling density (Workspace default 60) plus composition-seeded starting points
+        # (SEED_CLOUD_POINTS). Checked on a 50 K grid, 500-1550 degC (2026-10-07): unseeded runs stopped up
+        # to 770 J/mol above the lowest state found (spurious GAMMA_DP fields in IN718, all-liquid points
+        # below the IN718 liquidus with 0.04 C / 0.35 Co). Seeded pdens 10 gave the same phases and
+        # fractions as seeded pdens 30 for the IN718 studio preset at every grid point; for IN625 + 0.05 C it
+        # was up to 2.7 J/mol higher at 650-750 degC and missed one point (900 degC, reported as not
+        # converged). pdens 10 is used because the 9-component IN718 preset costs about 0.5 s per
+        # equilibrium with it and 1.3 s with pdens 30.
+        "calcOptions": {"pdens": 10},
+        "startingPointSeeding": True,
+        # One Scheil step costs about 0.1-0.3 s with this database (all phases sampled); IN718 needs about
+        # 115 steps of 2 K, so the default 20 s budget would stop the path early.
+        "scheilTimeBudgetS": 90.0,
+    },
+    {
+        "id": "mc_fe",
+        "fileName": "mc_fe_v2062_repaired.tdb",
+        "name": "MatCalc mc_fe 2.062 open steel database (syntactically repaired for pycalphad)",
+        "description": "MatCalc open thermodynamic steel database, release 2.062 (2024-11-08), "
+                       "E. Povoden-Karadeniz and A. Jacob, TU Wien; ODbL 1.0 / DbCL 1.0. The committed file is a "
+                       "syntactic repair of the original (python/tools/tdb_repair.py --allow-ambiguous; no "
+                       "G/L/TC/BMAGN value changed except the two listed PDMN_B2 stray tokens). Licence, source and "
+                       "change log: python/databases/MATCALC_OPEN_DATABASES_LICENSE.md.",
+        "elements": ["AL", "B", "C", "CO", "CR", "CU", "FE", "H", "HF", "LA", "MN", "MO", "N", "NB", "NI", "O",
+                     "P", "PD", "S", "SI", "TA", "TI", "V", "W", "Y"],
+        "primaryPhases": ["LIQUID", "FCC_A1", "BCC_A2", "SIGMA", "CHI_A12", "LAVES_PHASE", "M23C6", "G_PHASE"],
+        "source": "MatCalc open databases, https://www.matcalc.at/index.php/databases/open-databases "
+                  "(mc_fe_v2062.tdb, sha256 aa02077eac3f602dd7479cbeafb09b450e282716752b3ae2b1fc3a57d9c64865)",
+        "suitability": "Steels (the file header names 9-12 % Cr steels, hot-work tool steels, microalloyed, "
+                       "austenitic stainless and PH maraging steels), optimised for 673-2000 K inside Cr<25, Ni<26, "
+                       "Mn<25, Mo<5, Si<3.5 wt% (full list in the result). Not validated against experiment in "
+                       "this application.",
+        "assessedBaseElements": ["FE"],
+        "status": DB_STATUS_ASSESSMENT,
+        "usable": True,
+        "statusReason": None,
+        "testedLimitsWtPct": {"AL": 3.0, "B": 0.5, "C": 0.5, "CO": 3.0, "CR": 25.0, "CU": 1.0, "H": 0.1, "HF": 0.5,
+                              "LA": 0.5, "MN": 25.0, "MO": 5.0, "N": 1.0, "NB": 1.0, "NI": 26.0, "O": 0.5,
+                              "P": 0.05, "PD": 4.0, "S": 0.1, "SI": 3.5, "TA": 0.5, "TI": 0.5, "V": 0.5,
+                              "W": 3.0, "Y": 0.5},
+        "excludedPhases": {
+            "BCC_B2": "its ATTACH_CONTRIBUTION ... ORDER_DISORDER directive cannot be read by pycalphad and was "
+                      "commented out by the repair, so only the ordered part of the MatCalc split model is left",
+            "C15_LAVES": "the Mn-Ni-Si 'TO2' phase added for G-phase studies in duplex steels carries the reciprocal "
+                         "parameter G(C15_LAVES,FE,NI:MN,SI;0) = -9e6 J/mol; evaluated with every phase selected "
+                         "(pycalphad), it is stable at about 12 % in a fully liquid 316L at 1550 degC, which is "
+                         "not physical. MatCalc calculations select phases explicitly; this phase is left out",
+        },
+        # Same settings as mc_ni; checked for 316L (with 0.02 C): seeded pdens 30 matched unseeded pdens 60
+        # from 550 to 1550 degC; at 500 degC it stopped 49 J/mol above it (low-temperature precipitate
+        # equilibria are the least reliable part of the grid).
+        "calcOptions": {"pdens": 30},
+        "startingPointSeeding": True,
+        "scheilTimeBudgetS": 90.0,
+    },
 ]
 
 
@@ -262,6 +346,17 @@ COVERAGE_REFERENCE_SYSTEMS = (
 
 # Deviations observed with the covering database (stated, not corrected).
 COVERAGE_KNOWN_DEVIATIONS = {
+    "in718": ("MatCalc mc_ni gives liquidus/solidus about 37-40 K above the Thermo-Calc TCNI12 values held in the "
+              "repository (1350 / 1250 vs 1313 / 1210 degC), and its Scheil terminal phases (LAVES vs DELTA/ETA) "
+              "change with the minimiser settings; the Scheil LAVES amount does not follow the DuPont 1998 "
+              "literature trend. Indicative only."),
+    "in625": ("IN625 (Cr 20-23, Mo 8-10 wt%) lies outside the Cr < 20 / Mo < 5 wt% range in which mc_ni was tested; "
+              "its liquidus/solidus (1366 / 1309 degC without C) are 16-26 / 19-47 K above the JMatPro and TCNI12 "
+              "values held in the repository, and its Scheil path ends in DELTA + LAVES without MC carbide. "
+              "Indicative only."),
+    "ss316l": ("MatCalc mc_fe gives liquidus/solidus about 1422 / 1408 degC for 316L, 22 / 33 K above the screening "
+               "constants used elsewhere in the application; C15_LAVES is excluded (unphysical in the liquid), and "
+               "the Scheil path stops with 0.1 % liquid left. Indicative only."),
     "ti6al4v": ("COST 507 gives the HCP_A3 (alpha) phase up to about 925 degC for Ti-6Al-4V on a 25 degC grid "
                 "(phase-name heuristic), against a beta transus of about 995 +/- 10 degC reported for this "
                 "alloy (TIMET technical manual), i.e. about 70 K low; its liquidus/solidus (about 1686/1681 degC) "
@@ -281,6 +376,94 @@ RESULT_KNOWN_DEVIATIONS = {
                      "quoted for the alloy; not checked against a primary source here."),
     },
 }
+
+
+# Alloy-level deviations of a database result from literature values held in this repository, attached to a
+# result whose composition lies inside the window (wt%). Stated, not corrected; no parameter was tuned.
+# Numbers: 2026-10-07 runs with pycalphad 0.11.2 and the committed files (studio request: 500-1550 degC, 25 K
+# grid, refined boundaries, Scheil 2 K steps). Composition windows: SMC-045 / SM625 Table 1 limits as held in
+# lpbf_solidification_segregation.COMPOSITION_LIMITS; 316L approximately UNS S31603.
+ALLOY_KNOWN_DEVIATIONS: List[Dict[str, Any]] = [
+    {
+        "databaseId": "mc_ni",
+        "systemId": "in718",
+        "criticalTemperatures": {"text": ("For IN718 mc_ni gives about 1346-1350 / 1246-1256 degC, 35-46 K above the "
+                                              "Thermo-Calc TCNI12 values held in the repository (1313 / 1210 degC); not "
+                                              "validated against experiment.")},
+        "windowWtPct": {"Ni": (50.0, 55.0), "Cr": (17.0, 21.0), "Nb": (4.75, 5.5), "Mo": (2.8, 3.3)},
+        "notes": [
+            "Liquidus/solidus: mc_ni gives about 1346-1350 / 1246-1256 degC for IN718 (studio preset with "
+            "0.04 C and 0.35 Co: 1350.4 / 1249.9). The Thermo-Calc TCNI12 table in the repository (Zenodo "
+            "22901717, row 'Inconel 718', unit read as kelvin, see docs/XCHECK_SUPERALLOY_TABLE.md) gives "
+            "1313 / 1210 degC: about 37-40 K lower. Not reconciled.",
+            "Scheil terminal phases are not robust with this database in pycalphad: for the SMC-045 midpoint "
+            "the seeded run gives LAVES 0.86 mol% at 0.08 C and no LAVES at 0 C (DELTA 3.8, ETA 1.0 mol%), "
+            "while the earlier unseeded run (docs/LPBF_SCHEIL_LAVES_2026-10-07.md) gave no LAVES at 0.08 C and "
+            "1.9 mol% at 0 C. The DuPont-Robino-Marder 1998 literature model gives a gamma/Laves constituent of "
+            "2.8 % (0.08 C) and 6.5 % (0 C, upper bound), decreasing with C; the CALPHAD trend does not follow "
+            "it. Do not use the Scheil LAVES amount; nothing was tuned.",
+            "Order/disorder phases: GAMMA_PRIME, GAMMA_DP, DELTA and ETA are separate sublattice models whose "
+            "sublattices also admit the matrix elements; without composition-seeded starting points the "
+            "minimiser reported GAMMA_DP instead of the FCC_A1 matrix at 650-750 degC.",
+        ],
+    },
+    {
+        "databaseId": "mc_ni",
+        "systemId": "in625",
+        "criticalTemperatures": {"text": ("For C-free IN625 mc_ni gives 1366 / 1309 degC (with 0.05 C the solidus falls "
+                                              "to about 1283), against 1350 / 1290 (JMatPro) and 1340 / 1262 degC (TCNI12) "
+                                              "held in the repository; IN625 Cr and Mo lie outside the tested range of "
+                                              "mc_ni. Not validated against experiment.")},
+        "windowWtPct": {"Cr": (20.0, 23.0), "Mo": (8.0, 10.0), "Nb": (3.15, 4.15), "Fe": (0.0, 5.0)},
+        "notes": [
+            "Composition outside the tested range of the database (header: Cr < 20, Mo < 5 wt%; IN625 has Cr "
+            "20-23 and Mo 8-10).",
+            "Liquidus/solidus: mc_ni gives 1366.1 / 1309.1 degC (Ni-21.5Cr-9Mo-3.6Nb-4.9Fe, no C) and "
+            "1363.6 / 1283.1 degC with 0.05 C. In the repository: 1350 / 1290 degC (Sabau et al. 2020, "
+            "JMatPro-calculated, used by python/in625_thermal_material.py) and 1340 / 1262 degC (TCNI12 table, "
+            "kelvin reading): mc_ni is 16-26 K higher on the liquidus and 19-47 K higher on the solidus "
+            "without C. Not reconciled.",
+            "Scheil (no C): complete to 1150 degC with DELTA 2.2, LAVES 0.47 and BCC_A2 0.4 mol% and no MC "
+            "carbide. Cieslak et al. 1988 (low-Fe alloy 625 welds and DTA) report a measured minor constituent "
+            "of 0.3-1.3 vol%; the phases recorded for it in this repository (docs/LPBF_SCHEIL_LAVES_2026-10-07.md) "
+            "are Laves, NbC and, with Si, M6C, not delta.",
+        ],
+    },
+    {
+        "databaseId": "mc_fe",
+        "systemId": "ss316l",
+        "criticalTemperatures": {"text": ("For 316L mc_fe gives about 1422 / 1408 degC, 22 / 33 K above the 1400 / "
+                                               "1375 degC screening constants used elsewhere in the application; not "
+                                               "validated against experiment.")},
+        "windowWtPct": {"Cr": (16.0, 18.5), "Ni": (10.0, 14.0), "Mo": (2.0, 3.0)},
+        "notes": [
+            "Liquidus/solidus: mc_fe gives 1421.9 / 1408.1 degC for the studio 316L preset (Fe-17.5Cr-12Ni-"
+            "2.5Mo-1.8Mn-0.6Si-0.02C), against the 1400 / 1375 degC screening constants of "
+            "python/four_alloy_materials.py (no primary source recorded there): +22 / +33 K. Not reconciled.",
+            "C15_LAVES is excluded (catalogue excludedPhases): with it the database puts about 12 % of a "
+            "Mn-Ni-Si C15 phase into fully liquid 316L at 1550 degC.",
+            "Scheil: primary FCC_A1 with about 13 mol% BCC_A2 later; the path stops at about 1246 degC with "
+            "0.11 % liquid left (an equilibrium did not converge), reported as incomplete.",
+            "Below about 600 degC the equilibrium grid holds large sigma, Laves and G-phase fractions; these "
+            "low-temperature multi-phase points are the least reliable (up to about 50 J/mol above the lowest "
+            "state found with denser sampling at 500 degC).",
+        ],
+    },
+]
+
+
+def alloy_known_deviations(db_id: str, wt_pct: Dict[str, float]) -> List[Dict[str, Any]]:
+    """The ALLOY_KNOWN_DEVIATIONS entries for ``db_id`` whose composition window contains ``wt_pct``."""
+    out = []
+    for item in ALLOY_KNOWN_DEVIATIONS:
+        if item["databaseId"] != db_id:
+            continue
+        window = item["windowWtPct"]
+        if all(lo <= float(wt_pct.get(el, 0.0)) <= hi for el, (lo, hi) in window.items()):
+            out.append({"systemId": item["systemId"], "notes": list(item["notes"]),
+                        "criticalTemperatureNote": (item.get("criticalTemperatures") or {}).get("text"),
+                        "compositionWindowWtPct": {el: list(r) for el, r in window.items()}})
+    return out
 
 
 def system_coverage() -> List[Dict[str, Any]]:
@@ -306,6 +489,17 @@ def system_coverage() -> List[Dict[str, Any]]:
                         "reason": "no thermodynamic database for this system: " + res["reason"],
                         "missingElements": res["extra"].get("missingElements", [])})
         out.append(row)
+    return out
+
+
+def outside_tested_limits(wt_pct: Dict[str, float], limits: Dict[str, float]) -> List[Dict[str, Any]]:
+    """Elements whose wt% exceeds the upper limit a database file header states it was tested or optimised
+    inside (catalogue testedLimitsWtPct; the base element has no limit). Reported, never refused."""
+    out = []
+    for el, val in sorted(wt_pct.items()):
+        lim = limits.get(el.upper())
+        if lim is not None and float(val) > float(lim):
+            out.append({"element": el, "wtPct": round(float(val), 4), "testedUpToWtPct": float(lim)})
     return out
 
 
@@ -976,6 +1170,50 @@ def _friendly_phase_name(phase_str: str) -> str:
     return phase_str
 
 
+# Composition-seeded starting points (catalogue "startingPointSeeding"). pycalphad starts each minimisation
+# from the lower convex hull of sampled phase constitutions; in a 7-9 component system the quasi-random
+# sample is sparse near the alloy composition, and with the MatCalc databases the solver then stopped in a
+# state of higher Gibbs energy than the true minimum (IN718 with 0.04 C and 0.35 Co: all LIQUID at
+# 1275-1325 degC, 47-311 J/mol above the FCC_A1 + LIQUID state, and spurious GAMMA_DP fields). Adding,
+# for every phase, its site fractions at the overall composition of the current conditions plus a small
+# Dirichlet cloud around them (fixed seed, so repeatable) gives the solver candidates near that
+# composition. The pycalphad sample itself is kept; points are only added.
+SEED_CLOUD_POINTS = 200
+SEED_CLOUD_CONCENTRATION = 50.0
+SEED_CLOUD_MIN_ALPHA = 0.05
+SEED_RNG_SEED = 20261007
+
+
+def seed_site_fractions(constituents: List[List[str]], x_overall: Dict[str, float]) -> List[float]:
+    """Site fractions of a phase at the overall composition: in each sublattice proportional to the
+    overall mole fractions of its constituents, with weight 1 for a vacancy (interstitial sublattices
+    stay mostly vacant). ``constituents`` are the sorted species names per sublattice (pycalphad order)."""
+    out: List[float] = []
+    for names in constituents:
+        w = [(1.0 if n == "VA" else float(x_overall.get(n, 0.0))) + 1e-6 for n in names]
+        total = sum(w)
+        out.extend(val / total for val in w)
+    return out
+
+
+def seed_cloud(constituents: List[List[str]], x_overall: Dict[str, float],
+               n_points: int = SEED_CLOUD_POINTS, seed: int = SEED_RNG_SEED) -> Any:
+    """The seed point and ``n_points`` Dirichlet perturbations of it (deterministic for a given seed)."""
+    import numpy as np  # local: the module binds np only when pycalphad imports
+    rng = np.random.default_rng(seed)
+    centre = seed_site_fractions(constituents, x_overall)
+    blocks, i = [], 0
+    for names in constituents:
+        blocks.append(np.asarray(centre[i:i + len(names)]))
+        i += len(names)
+    cloud = [np.asarray(centre)]
+    for _ in range(n_points):
+        cloud.append(np.concatenate([
+            rng.dirichlet(b * SEED_CLOUD_CONCENTRATION + SEED_CLOUD_MIN_ALPHA) if len(b) > 1 else np.ones(1)
+            for b in blocks]))
+    return np.asarray(cloud, dtype=np.float64)
+
+
 class _EquilibriumRunner:
     """Runs pycalphad equilibria for one (database, components, phases, condition keys) system.
 
@@ -983,12 +1221,17 @@ class _EquilibriumRunner:
     (calphad_model_cache); without it (older pycalphad) each call is a plain equilibrium().
     Every call goes through ``run`` with the same condition keys, so a cached Workspace keeps
     its PhaseRecordFactory (pycalphad rebuilds it only when the condition keys change).
+    With ``seeded`` the starting-point sample of every phase gets composition-seeded points
+    (see SEED_CLOUD_POINTS); this needs the Workspace API.
     """
 
-    def __init__(self, dbf: Any, db_sha: str, comps: List[str], phases: List[str], conditions: Dict[Any, Any]):
+    def __init__(self, dbf: Any, db_sha: str, comps: List[str], phases: List[str], conditions: Dict[Any, Any],
+                 calc_opts: Optional[Dict[str, Any]] = None, seeded: bool = False):
         self.dbf = dbf
         self.comps = comps
         self.phases = phases
+        self.calc_opts = dict(calc_opts) if calc_opts else None
+        self.seeded = False
         self.workspace: Any = None
         self.lock: Any = None
         self.calls = 0
@@ -999,14 +1242,51 @@ class _EquilibriumRunner:
             self.cache_info = {"status": "unavailable-no-workspace-api", "buildMs": 0.0}
             return
         key = (PYCALPHAD_VERSION, db_sha, tuple(sorted(comps)), tuple(sorted(phases)),
-               tuple(str(k) for k in conditions))
+               tuple(str(k) for k in conditions), tuple(sorted((self.calc_opts or {}).items())), bool(seeded))
         self.workspace, self.lock, self.cache_info = process_cache().workspace(
-            key, lambda: Workspace(dbf, comps, phases, conditions))
+            key, lambda: (Workspace(dbf, comps, phases, conditions, calc_opts=self.calc_opts) if self.calc_opts
+                          else Workspace(dbf, comps, phases, conditions)))
+        self.seeded = bool(seeded)
+
+    def _seeded_points(self, conditions: Dict[Any, Any]) -> Dict[str, Any]:
+        """pycalphad's own sample of each phase plus the composition-seeded cloud for ``conditions``."""
+        from pycalphad.core.calculate import _sample_phase_constitution
+        from pycalphad.core.utils import point_sample
+        x: Dict[str, float] = {}
+        for key, value in conditions.items():
+            if isinstance(key, v.MoleFraction):
+                x[str(key.species.name)] = float(np.atleast_1d(value)[0])
+        dependent = [c for c in self.comps if c != "VA" and c not in x]
+        if len(dependent) == 1:
+            x[dependent[0]] = 1.0 - sum(x.values())
+        pdens = int((self.calc_opts or {}).get("pdens", 60))
+        points: Dict[str, Any] = {}
+        models = self.workspace.models
+        for phase in self.phases:
+            try:
+                model = models[phase]
+            except KeyError:
+                continue
+            if model is None:  # phase not formable from these components
+                continue
+            constituents = [sorted(str(sp.name) for sp in subl) for subl in model.constituents]
+            base = _sample_phase_constitution(model, point_sample, True, pdens, {})
+            cloud = seed_cloud(constituents, x)
+            if base.shape[1] != cloud.shape[1]:
+                continue
+            points[phase] = np.concatenate([base, cloud])
+        return points
 
     def run(self, conditions: Dict[Any, Any], as_dataset: bool = False) -> Any:
         self.calls += 1
         if self.workspace is None:
+            if self.calc_opts:
+                return equilibrium(self.dbf, self.comps, self.phases, conditions, calc_opts=self.calc_opts)
             return equilibrium(self.dbf, self.comps, self.phases, conditions)
+        if self.seeded:
+            opts = dict(self.calc_opts or {})
+            opts["points"] = self._seeded_points(conditions)
+            self.workspace.calc_opts = opts
         self.workspace.conditions = conditions
         result = self.workspace.eq
         return result.get_dataset() if as_dataset else result
@@ -1366,7 +1646,14 @@ def solve_pycalphad_equilibrium(
     if "VA" in dbf.elements:
         all_comps.append("VA")
 
-    phases = list(dbf.phases.keys())
+    # Phase set: every phase of the database, minus the phases its catalogue entry excludes (each with a
+    # stated reason, reported in the result as excludedPhases). Catalogue calcOptions (pycalphad point
+    # sampling density) apply to that database only.
+    catalog_entry = _entry_by_id(db_id) if db_id and not custom_tdb_text else None
+    excluded_phases = dict((catalog_entry or {}).get("excludedPhases") or {})
+    phases = [p for p in dbf.phases.keys() if p not in excluded_phases]
+    calc_opts = (catalog_entry or {}).get("calcOptions") or None
+    seeded = bool((catalog_entry or {}).get("startingPointSeeding"))
 
     # Build temperature grid
     t_start_k = max(GRID_T_MIN_K, t_min_c + ZERO_CELSIUS_K)
@@ -1387,7 +1674,7 @@ def solve_pycalphad_equilibrium(
             composition_adjustments[comp] = {"requestedMoleFraction": active_at_frac[comp], "usedMoleFraction": val}
         conditions[v.X(comp)] = val
 
-    runner = _EquilibriumRunner(dbf, db_cache.get("sha256", ""), all_comps, phases, conditions)
+    runner = _EquilibriumRunner(dbf, db_cache.get("sha256", ""), all_comps, phases, conditions, calc_opts, seeded)
     t_mark = _lap("workspaceBuild", t_mark)
     if runner.lock is not None:
         runner.lock.acquire()
@@ -1402,6 +1689,18 @@ def solve_pycalphad_equilibrium(
             runner.lock.release()
 
     result.update(grid_report)
+    if excluded_phases:
+        result["excludedPhases"] = [{"phase": name, "reason": why} for name, why in sorted(excluded_phases.items())]
+    if calc_opts:
+        result["pycalphadCalcOptions"] = dict(calc_opts)
+    if seeded:
+        result["startingPointSeeding"] = {
+            "enabled": runner.seeded,
+            "cloudPoints": SEED_CLOUD_POINTS,
+            "note": ("pycalphad starting points of every phase were supplemented with its site fractions at the "
+                     "overall composition of each calculation plus a fixed-seed cloud around them; without them "
+                     "the minimiser stopped in higher-energy states for multicomponent alloys with this database"),
+        }
     elapsed_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
     timings["total"] = elapsed_ms
     result["computeTimeMs"] = elapsed_ms
@@ -1672,7 +1971,8 @@ def _solve_with_runner(runner, conditions, dep_comp, indep_comps, alloy_name, wt
 
         start_c = float(liquidus_status["bracketC"][1])  # upper end of the bracket: fully liquid
         scheil_result = scheil_gulliver(run_point, start_c, x0, step_c=max(0.25, min(10.0, float(scheil_step_c))),
-                                        min_temperature_c=t_start_floor_c(conditions))
+                                        min_temperature_c=t_start_floor_c(conditions),
+                                        time_budget_s=scheil_time_budget_s(db_id))
     timings["scheil"] = round((time.perf_counter() - t_mark) * 1000.0, 2)
     t_mark = time.perf_counter()
 
@@ -1728,6 +2028,12 @@ def _solve_with_runner(runner, conditions, dep_comp, indep_comps, alloy_name, wt
                      "multi-section equilibrium calculations; there is no adaptive grid."),
         },
     }
+
+
+def scheil_time_budget_s(db_id: str) -> float:
+    """Scheil wall-time budget: SCHEIL_TIME_BUDGET_S, or the catalogue entry's scheilTimeBudgetS (large databases)."""
+    entry = _entry_by_id(db_id) if db_id else None
+    return float((entry or {}).get("scheilTimeBudgetS") or SCHEIL_TIME_BUDGET_S)
 
 
 def t_start_floor_c(conditions: Dict[Any, Any]) -> float:
@@ -1932,6 +2238,21 @@ def compute_multi_component_equilibrium(
                 entry["knownDeviation"] = text
         result["phaseNameNotes"] = phase_name_notes(
             ph["phaseId"] for point in result["equilibriumProfile"] for ph in point["phases"])
+        result["evidenceLabel"] = (f"CALPHAD calculation with {resolved['name']} (pycalphad); "
+                                   "not validated against experiment")
+        catalog_entry = _entry_by_id(resolved["id"]) if resolved["id"] != "custom" else None
+        limits = (catalog_entry or {}).get("testedLimitsWtPct")
+        if limits:
+            result["compositionOutsideTestedLimits"] = outside_tested_limits(wt_pct, limits)
+        alloy_notes = alloy_known_deviations(resolved["id"], wt_pct)
+        if alloy_notes:
+            result["knownDeviations"] = alloy_notes
+            for note in alloy_notes:
+                for field in ("liquidusC", "solidusC"):
+                    entry = result["criticalTemperatureStatus"].get(field)
+                    if (note["criticalTemperatureNote"] and entry is not None and "knownDeviation" not in entry
+                            and result["criticalTemperatures"].get(field) is not None):
+                        entry["knownDeviation"] = note["criticalTemperatureNote"]
         return result
     except CalphadUnavailable as exc:
         return unavailable_result(exc.kind, exc.reason, **base, **db_extra, **exc.extra)

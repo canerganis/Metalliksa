@@ -110,3 +110,7 @@
 
 # Validity-envelope sweep output: written LF by python/tools/lpbf_validity_envelope.py.
 /docs/LPBF_VALIDITY_ENVELOPE_2026-10-04.json text eol=lf
+
+# MatCalc open databases (ODbL derivatives): byte-pinned by python/test_calphad_matcalc_open.py.
+/python/databases/mc_ni_v2036_repaired.tdb -text
+/python/databases/mc_fe_v2062_repaired.tdb -text
