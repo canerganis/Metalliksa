@@ -141,3 +141,16 @@ test('the committed artefact (if present) drives the control: zero enabled cells
     }
   }
 });
+
+test('a PI 90 % wider than x2.5 is labelled not informative for each served quantity (R6/R11)', () => {
+  const wide: LPBFCalibratedMeltpoolResult = {
+    ...widthOnly,
+    calibrated: { ...widthOnly.calibrated, depth_um: 90, depth_pi90_um: [30, 260], depth_pi90_notInformative: true,
+      width_pi90_notInformative: false, depthReason: undefined },
+  };
+  const out = renderToStaticMarkup(<CalibratedResultView result={wide} />);
+  assert.ok(out.includes('data-testid="cal-depth-not-informative"') && out.includes('not informative: wider than ×2.5'));
+  assert.doesNotMatch(out, /data-testid="cal-width-not-informative"/);
+  const narrow = renderToStaticMarkup(<CalibratedResultView result={widthOnly} />);
+  assert.doesNotMatch(narrow, /not informative/);
+});

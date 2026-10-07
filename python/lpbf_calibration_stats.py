@@ -401,7 +401,7 @@ def fit_ladder(fk: FineKernel, idx: np.ndarray, cfg: Dict[str, Any], eta_prior: 
     step = cfg["gate"]["boundHitSteps"]
 
     def hit(j: int) -> bool:
-        return j >= 0 and (j <= step - 1 or j >= J - step)
+        return j >= 0 and (j <= step or j >= J - 1 - step)  # on the bound or within `step` fine-grid steps of it
 
     out: Dict[str, Any] = {
         "jW": jW, "jD": jD, "jJ": jJ,
@@ -480,7 +480,7 @@ def _bootstrap_fit(fk: FineKernel, idx: np.ndarray, stW: SetTable, stD: SetTable
         eta = fk.eta[j[okj]] if okj.any() else np.array([])
         res[name] = {
             "ci90": [float(np.percentile(eta, 5)), float(np.percentile(eta, 95))] if eta.size else None,
-            "boundHitFraction": float(np.mean((j[okj] <= step - 1) | (j[okj] >= J - step))) if eta.size else None,
+            "boundHitFraction": float(np.mean((j[okj] <= step) | (j[okj] >= J - 1 - step))) if eta.size else None,
             "n": int(okj.sum()),
         }
     # c_D bootstrap at the point-estimate eta_D (set values resampled with the same multiplicities)

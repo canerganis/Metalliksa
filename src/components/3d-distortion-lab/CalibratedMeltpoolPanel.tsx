@@ -51,12 +51,12 @@ export function CalibratedResultView({ result }: { result: LPBFCalibratedMeltpoo
           <div>
             <span className="block text-[10px] text-slate-400">Calibrated width (W)</span>
             <strong data-testid="cal-width" className="text-sm text-emerald-300">{c.width_um !== null ? `${fmt(c.width_um)} µm` : <Dash reason={c.widthReason ?? "not served"} />}</strong>
-            {c.width_pi90_um ? <span data-testid="cal-width-pi90" className="block text-[10px] text-slate-400">PI 90 %: [{fmt(c.width_pi90_um[0], 0)}, {fmt(c.width_pi90_um[1], 0)}] µm</span> : null}
+            {c.width_pi90_um ? <span data-testid="cal-width-pi90" className="block text-[10px] text-slate-400">PI 90 %: [{fmt(c.width_pi90_um[0], 0)}, {fmt(c.width_pi90_um[1], 0)}] µm{c.width_pi90_notInformative ? <strong data-testid="cal-width-not-informative" className="ml-1 text-amber-300">(not informative: wider than ×2.5)</strong> : null}</span> : null}
           </div>
           <div>
             <span className="block text-[10px] text-slate-400">Calibrated depth (D)</span>
             <strong data-testid="cal-depth" className="text-sm text-amber-300">{c.depth_um !== null ? `${fmt(c.depth_um)} µm` : <Dash reason={c.depthReason ?? "not served"} />}</strong>
-            {c.depth_pi90_um ? <span data-testid="cal-depth-pi90" className="block text-[10px] text-slate-400">PI 90 %: [{fmt(c.depth_pi90_um[0], 0)}, {fmt(c.depth_pi90_um[1], 0)}] µm</span> : null}
+            {c.depth_pi90_um ? <span data-testid="cal-depth-pi90" className="block text-[10px] text-slate-400">PI 90 %: [{fmt(c.depth_pi90_um[0], 0)}, {fmt(c.depth_pi90_um[1], 0)}] µm{c.depth_pi90_notInformative ? <strong data-testid="cal-depth-not-informative" className="ml-1 text-amber-300">(not informative: wider than ×2.5)</strong> : null}</span> : null}
           </div>
           <div data-testid="cal-ratio">
             <span className="block text-[10px] text-slate-400">Depth-to-width (D/W)</span>

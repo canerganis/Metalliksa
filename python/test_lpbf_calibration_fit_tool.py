@@ -137,6 +137,36 @@ class FitToolTests(unittest.TestCase):
         paths["json"].write_text(T.dump_json(full), encoding="utf-8", newline="\n")
         self.assertTrue(T.check_outputs(root, "2026-10-07"))
 
+    def test_summary_is_written_checked_and_matches_the_artefact(self):
+        root = Path(tempfile.mkdtemp())
+        paths = T.write_all(self.doc, root)
+        art = json.loads(paths["artefact"].read_text(encoding="utf-8"))
+        summ = json.loads(paths["summary"].read_text(encoding="utf-8"))
+        self.assertEqual((summ["calibrationId"], summ["contentSha256"]), (art["calibrationId"], art["contentSha256"]))
+        self.assertEqual(len(summ["cells"]), len(art["cells"]))
+        self.assertLess(paths["summary"].stat().st_size, paths["artefact"].stat().st_size)
+        summ["cells"][0]["status"] = "enabled"
+        paths["summary"].write_text(T.dump_json(summ), encoding="utf-8", newline="\n")
+        self.assertTrue(any("summary" in p for p in T.check_outputs(root, "2026-10-07")))
+
+    def test_date_defaults_to_today_and_check_follows_the_committed_record(self):
+        root = Path(tempfile.mkdtemp())
+        self.assertIsNone(T.committed_record_date(root))
+        T.write_all(self.doc, root)
+        self.assertEqual(T.committed_record_date(root), self.doc["generatedAt"])
+        self.assertIsNone(T.GENERATED_AT_DEFAULT, "a fresh run must default to today, never to a fixed past date")
+        pkg = json.loads((Path(__file__).resolve().parent.parent / "package.json").read_text(encoding="utf-8"))
+        for name in ("lpbf:calibration", "lpbf:calibration:check"):
+            self.assertNotIn("--date", pkg["scripts"][name])
+        self.assertEqual(T.main(["--check", "--repo-root", str(root)]), 0)
+
+    def test_diagnostics_table_covers_default_rung_cells(self):
+        md = T.render_markdown(self.doc)
+        self.assertIn("### Physics-compensation diagnostics", md)
+        rows = [c for c in self.doc["cells"] if c["params"]]
+        self.assertTrue(rows and all("diagnostics" in c and "gateRelevant" in c for c in rows))
+        self.assertTrue(any(c["rung"] == "default" and c["diagnostics"] for c in rows) or not any(c["rung"] == "default" for c in rows))
+
     def test_double_run_is_byte_identical(self):  # T-DET-1
         a = run_doc(self.cache)  # second run reads the table cache written by the first
         b = run_doc(None)        # third computes the table again

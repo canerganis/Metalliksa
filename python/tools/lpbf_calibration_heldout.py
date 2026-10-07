@@ -82,7 +82,8 @@ LOSS_DEFINITION = ("per row 0.5 * (|ln(W_pred/W_meas)| + |ln(D_pred/D_meas)|); r
                    "absorptivity grid (argmin, ties to the smaller value). A grid value is a candidate only when "
                    f"the kernel resolves an extent (extentStatus == 'computed') for at least {MIN_COVERAGE:.0%} "
                    "of the training rows.")
-SPLIT_RULE = ("parameter set = (material, power_W, speed_mm_s, beamDiameter_um); powder-layer thickness is "
+SPLIT_RULE = ("parameter set = (source, material, power_W, speed_mm_s, beamDiameter_um) (the shared key of lpbf_calibration_stats; "
+              "identical to the earlier 4-field key inside one source); powder-layer thickness is "
               "deliberately NOT part of the key, so replicates and layer variants of one laser setting are "
               "always on the same side of a split. Folds: the sorted set keys are shuffled with "
               "random.Random(seed) and dealt round-robin into k folds.")

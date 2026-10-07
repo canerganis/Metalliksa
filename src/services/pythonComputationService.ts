@@ -1668,8 +1668,11 @@ export interface LPBFCalibratedMeltpoolResult {
     depth_um: number | null;
     width_pi80_um?: [number, number];
     width_pi90_um?: [number, number];
+    /** PI 90 % wider than the configured ratio (x2.5): shown but labelled not informative. */
+    width_pi90_notInformative?: boolean;
     depth_pi80_um?: [number, number];
     depth_pi90_um?: [number, number];
+    depth_pi90_notInformative?: boolean;
     widthReason?: string;
     depthReason?: string;
     cells?: Record<string, { status: string; rung?: string }>;

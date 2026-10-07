@@ -285,48 +285,67 @@ def served_block(fk: st.FineKernel, test_idx: np.ndarray, fit: Optional[Dict[str
 # ---------------------------------------------------------------------------------------------
 def physics_flags(fit: Optional[Dict[str, Any]], rung: str, q: str, cfg: Dict[str, Any], class_sets: Dict[str, int],
                   material: str) -> Dict[str, Any]:
+    """Physics-compensation diagnostics (R5), computed for EVERY fitted cell, also when the served rung is `default`.
+
+    ``diagnosticFlags`` always reflect the fit (bound hit, eta_W/eta_D divergence, dominant class offset, eta vs measured
+    absorptance). ``flags`` keeps the gate semantics: a flag only counts for the gate when the served rung actually uses
+    the offending parameter (``gateRelevant`` is False for a `default` rung, where the diagnostics are shown but cannot
+    veto anything because nothing is served)."""
     g = cfg["gate"]
-    flags = {"boundHit": False, "etaSplit": False, "offsetDominant": False,
-             "etaInconsistentWithMeasuredAbsorptance": False}
+    names = ("boundHit", "etaSplit", "offsetDominant", "etaInconsistentWithMeasuredAbsorptance")
+    dflags = {n: False for n in names}
+    gflags = {n: False for n in names}
     notes: List[str] = []
     diag: Dict[str, Any] = {}
-    if fit is None or rung == "default":
-        return {"flags": flags, "notes": notes, "diagnostics": diag}
+    if fit is None:
+        return {"flags": gflags, "diagnosticFlags": dflags, "gateRelevant": False, "notes": notes, "diagnostics": diag}
+    uses = rung != "default"
     boot = fit.get("boot") or {}
     key = "J" if rung == "eta" else ("W" if q == "width" else "D")
-    if fit["boundHit"][key] or ((boot.get(key) or {}).get("boundHitFraction") or 0.0) > g["boundHitBootstrapFraction"]:
-        flags["boundHit"] = True
-        notes.append(f"boundHit: eta ({key}) {fit['etaJ' if key == 'J' else 'eta' + key]:.3f} within {g['boundHitSteps']} grid step "
-                     f"of a bound or in > {int(100 * g['boundHitBootstrapFraction'])} % of bootstrap replicates")
+    eta_key = "etaJ" if key == "J" else "eta" + key
+    bf = (boot.get(key) or {}).get("boundHitFraction") or 0.0
+    diag["boundHitBootstrapFraction"] = bf
+    if fit["boundHit"][key] or bf > g["boundHitBootstrapFraction"]:
+        dflags["boundHit"] = True
+        gflags["boundHit"] = uses
+        notes.append(f"boundHit: eta ({key}) {fit[eta_key]:.3f} within {g['boundHitSteps']} fine-grid step "
+                     f"of a bound or in > {int(100 * g['boundHitBootstrapFraction'])} % of bootstrap replicates"
+                     + ("" if uses else " (diagnostic only: default rung served)"))
     ew, ed = fit.get("etaW"), fit.get("etaD")
     if ew and ed:
         ratio = abs(math.log(ed / ew))
         diag["etaSplitLn"] = ratio
-        if ratio > math.log(g["etaSplitRatio"]) and rung in ("eta2", "eta2+dOffset"):
-            flags["etaSplit"] = True
+        if ratio > math.log(g["etaSplitRatio"]):
+            dflags["etaSplit"] = True
+            two_etas = rung in ("eta2", "eta2+dOffset")
+            gflags["etaSplit"] = two_etas
             notes.append(f"etaSplit: |ln(eta_D/eta_W)| = {ratio:.2f} > ln {g['etaSplitRatio']} "
-                         f"(eta_W {ew:.3f}, eta_D {ed:.3f}): one physical absorptivity cannot be both")
-        elif ratio > math.log(g["etaSplitRatio"]):
-            diag["etaSplitNote"] = "diagnostic only: the served rung does not use two separate etas"
+                         f"(eta_W {ew:.3f}, eta_D {ed:.3f}): one physical absorptivity cannot be both"
+                         + ("" if two_etas else " (diagnostic only: the served rung does not use two separate etas)"))
     cd = fit.get("cd") or {}
     if cd:
         worst = max(abs(v) for v in cd.values())
         diag["maxAbsCd"] = worst
-        if worst > math.log(g["offsetDominantRatio"]) and rung == "eta2+dOffset" and q == "depth":
-            flags["offsetDominant"] = True
-            notes.append(f"offsetDominant: |c_D| {worst:.2f} > ln {g['offsetDominantRatio']} for a served class")
+        if worst > math.log(g["offsetDominantRatio"]) and q == "depth":
+            dflags["offsetDominant"] = True
+            used = rung == "eta2+dOffset"
+            gflags["offsetDominant"] = used
+            notes.append(f"offsetDominant: |c_D| {worst:.2f} > ln {g['offsetDominantRatio']} for a class"
+                         + ("" if used else " (diagnostic only: the served rung has no class offset)"))
     eta_q = fit.get("etaJ") if rung == "eta" else (ew if q == "width" else ed)
     if eta_q is not None and material in cfg["absorptanceBands"]:
         mism = st.absorptance_disagreement(eta_q, class_sets, cfg["absorptanceBands"][material] | {
             "widenFactor": cfg["absorptanceBands"]["widenFactor"]}, cfg["minSetsPerClass"])
         if mism:
-            flags["etaInconsistentWithMeasuredAbsorptance"] = True
+            dflags["etaInconsistentWithMeasuredAbsorptance"] = True
+            gflags["etaInconsistentWithMeasuredAbsorptance"] = uses
             notes.append("etaInconsistentWithMeasuredAbsorptance: fitted effective eta disagrees with measured "
                          "absorptance (" + "; ".join(f"{m['class']} band {m['band'][0]:.2f}-{m['band'][1]:.2f}, "
                                                      f"eta {m['eta']:.3f}" for m in mism) +
-                         ") -> eta is absorbing model error (diagnostic, not a validation claim)")
+                         ") -> eta is absorbing model error (diagnostic, not a validation claim)"
+                         + ("" if uses else " (diagnostic only: default rung served)"))
         diag["absorptanceMismatch"] = mism
-    return {"flags": flags, "notes": notes, "diagnostics": diag}
+    return {"flags": gflags, "diagnosticFlags": dflags, "gateRelevant": uses, "notes": notes, "diagnostics": diag}
 
 
 def class_set_counts(fk: st.FineKernel, idx: np.ndarray) -> Dict[str, int]:

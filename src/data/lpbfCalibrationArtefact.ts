@@ -1,7 +1,8 @@
 /// <reference types="vite/client" />
 /**
- * Which calibrated-mode cells may be served, read from the committed, hashed calibration artefact
- * (data/calibration/lpbf-meltpool-calibration-v1.json, written only by python/tools/lpbf_calibration_fit.py).
+ * Which calibrated-mode cells may be served, read from the small summary written next to the committed, hashed calibration artefact
+ * (data/calibration/lpbf-meltpool-calibration-v1.summary.json; the summary carries the artefact's id and sha256 and
+ * python/tools/lpbf_calibration_fit.py --check fails when it drifts; the backend re-verifies the artefact hash).
  *
  * Only cells whose gate status is "enabled" are ever offered. When no cell is enabled for the chosen kernel and alloy
  * the calibrated-mode control is NOT rendered (no greyed-out toggle: a permanently disabled control would itself be a
@@ -17,7 +18,7 @@ export interface CalibrationCellRef {
 
 let modules: Record<string, unknown> = {};
 try {
-  modules = import.meta.glob("../../data/calibration/lpbf-meltpool-calibration-v1.json", { eager: true, import: "default" });
+  modules = import.meta.glob("../../data/calibration/lpbf-meltpool-calibration-v1.summary.json", { eager: true, import: "default" });
 } catch {
   modules = {};
 }
@@ -30,7 +31,7 @@ export interface CalibrationArtefactSummary {
 export function summarizeCalibrationArtefact(raw: unknown): CalibrationArtefactSummary | null {
   if (typeof raw !== "object" || raw === null) return null;
   const art = raw as { schema?: unknown; calibrationId?: unknown; cells?: unknown };
-  if (art.schema !== "lpbf-meltpool-calibration-1" || typeof art.calibrationId !== "string" || !Array.isArray(art.cells)) return null;
+  if ((art.schema !== "lpbf-meltpool-calibration-1" && art.schema !== "lpbf-meltpool-calibration-summary-1") || typeof art.calibrationId !== "string" || !Array.isArray(art.cells)) return null;
   const cells: CalibrationCellRef[] = [];
   for (const c of art.cells as Record<string, unknown>[]) {
     if (typeof c?.kernel === "string" && typeof c?.material === "string" && (c.quantity === "width" || c.quantity === "depth")

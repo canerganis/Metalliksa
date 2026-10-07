@@ -72,6 +72,14 @@ export interface ScorecardHeadlineRow {
   readonly servedRung: string | null;
   readonly flags: readonly string[];
   readonly flagNotes: readonly string[];
+  /** Diagnostics are computed for every fitted cell; false = shown only, the served rung is `default`. */
+  readonly gateRelevant?: boolean;
+  readonly diagnostics?: {
+    readonly boundHitBootstrapFraction?: number | null;
+    readonly etaSplitLn?: number | null;
+    readonly maxAbsCd?: number | null;
+    readonly absorptanceMismatch?: readonly { readonly class: string; readonly eta: number; readonly band: readonly number[] }[] | null;
+  };
   readonly headline: {
     readonly equalSourceWeight: { readonly mapeDefault: number | null; readonly mapeServed: number | null };
     readonly rowWeighted: { readonly mapeDefault: number | null; readonly mapeServed: number | null };

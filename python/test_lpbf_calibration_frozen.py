@@ -20,7 +20,15 @@ import lpbf_simulation  # noqa: E402
 
 FORBIDDEN_IMPORT_PREFIXES = ("lpbf_calibration", "lpbf_calibrated_meltpool", "calibration_synth_support")
 # Explicit base: the frozen files are compared against the merge-base with this ref, never against an implicit HEAD^.
-BASE_REF = os.environ.get("LPBF_FROZEN_BASE_REF", "integration/physics-b")
+# Candidates are tried in order; CI only has refs/remotes/origin/*. origin/main is deliberately not a fallback: until
+# the physics work is merged it is an unrelated older base and would flag that work's own frozen-file changes.
+BASE_REF_CANDIDATES = [r for r in (
+    os.environ.get("LPBF_FROZEN_BASE_REF"),
+    "integration/physics-b",
+    f"origin/{os.environ['GITHUB_BASE_REF']}" if os.environ.get("GITHUB_BASE_REF") else None,
+    "origin/integration/physics-b",
+) if r]
+BASE_REF = BASE_REF_CANDIDATES[0]
 # sha256 of the canonical thermal-solver JSON (computeTimeMs removed) for one fixed input per kernel, recorded on the
 # reference machine (Windows, CPU flat-plate path) at base c406b4a9 before any calibration code existed.
 HTTP_GOLDEN = {
@@ -64,15 +72,23 @@ class FrozenGuards(unittest.TestCase):
             self.assertFalse(Path(name).name.startswith(FORBIDDEN_IMPORT_PREFIXES), name)
 
     def test_diff_against_the_named_base_has_no_frozen_file(self):  # T-FRZ-3
-        base = _git("merge-base", "HEAD", BASE_REF)
-        if base.returncode != 0:
+        base = None
+        for ref in BASE_REF_CANDIDATES:
+            base = _git("merge-base", "HEAD", ref)
+            if base.returncode == 0:
+                break
+        if base is None or base.returncode != 0:
             if os.environ.get("CI"):
-                self.fail(f"base ref {BASE_REF!r} is not resolvable (CI needs full history): {base.stderr.strip()}")
-            self.skipTest(f"base ref {BASE_REF!r} not resolvable here")
+                # No named base exists in this checkout (e.g. only origin/main): the content pin is the guard, asserted
+                # explicitly here instead of skipping, so a missing base can never turn the guard into a no-op.
+                expected = (PYTHON_DIR / "lpbf_implementation_fingerprint.expected").read_text(encoding="utf-8").strip()
+                self.assertEqual(lpbf_simulation.implementation_fingerprint(), expected)
+                return
+            self.skipTest(f"no base ref of {BASE_REF_CANDIDATES} resolvable here")
         sha = base.stdout.strip()
         changed = set(_git("diff", "--name-only", sha, "HEAD").stdout.split())
         frozen = {f"python/{n}" for n in lpbf_simulation.IMPLEMENTATION_SOURCE_FILES}
-        self.assertEqual(sorted(changed & frozen), [], f"frozen files changed since merge-base {sha[:12]} with {BASE_REF}")
+        self.assertEqual(sorted(changed & frozen), [], f"frozen files changed since merge-base {sha[:12]} with {ref}")
         # the route that serves the default thermal-solver response is untouched as well
         old = _git("show", f"{sha}:routes/physics.ts").stdout
         new = (REPO_ROOT / "routes" / "physics.ts").read_text(encoding="utf-8")

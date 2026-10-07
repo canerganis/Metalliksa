@@ -248,7 +248,8 @@ function ParamsTable({ rows }: { rows: readonly ScorecardHeadlineRow[] }) {
         <caption className="mb-2 text-left text-slate-600">Effective absorptivity fitted on all trainable sources of the alloy, with bootstrap CI90. These are nuisance parameters that absorb model error, not measured absorptivities.</caption>
         <thead><tr className="border-b border-slate-200 text-slate-600">
           <th scope="col" className="p-2">Cell</th><th scope="col" className="p-2">η_W</th><th scope="col" className="p-2">η_D</th><th scope="col" className="p-2">η joint</th>
-          <th scope="col" className="p-2">c_D by class</th><th scope="col" className="p-2">Physics-compensation flags</th>
+          <th scope="col" className="p-2">c_D by class</th><th scope="col" className="p-2">Gate relevant</th>
+          <th scope="col" className="p-2">Physics-compensation diagnostics</th>
         </tr></thead>
         <tbody>
           {withParams.map((r) => (
@@ -258,7 +259,13 @@ function ParamsTable({ rows }: { rows: readonly ScorecardHeadlineRow[] }) {
               <td className="p-2">{fmt2(r.params?.etaD)}{ci(r.params?.etaD_ci90)}</td>
               <td className="p-2">{fmt2(r.params?.etaJoint)}{ci(r.params?.etaJoint_ci90)}</td>
               <td className="p-2">{r.params?.cD ? Object.entries(r.params.cD).map(([k, v]) => `${k} ${v >= 0 ? "+" : ""}${v.toFixed(2)}`).join(", ") : "n/a"}</td>
-              <td className="p-2">{r.flags.length ? r.flags.join(", ") : "none"}{r.flagNotes.length ? <div className="text-slate-600">{r.flagNotes.join(" ")}</div> : null}</td>
+              <td className="p-2">{r.gateRelevant ? "yes" : "no (default rung served)"}</td>
+              <td className="p-2">
+                <div data-testid="physics-diagnostics">
+                  bound-hit {fmt2(r.diagnostics?.boundHitBootstrapFraction)} · |ln(η_D/η_W)| {fmt2(r.diagnostics?.etaSplitLn)} · max |c_D| {fmt2(r.diagnostics?.maxAbsCd)}
+                  {r.diagnostics?.absorptanceMismatch?.length ? ` · absorptance mismatch: ${r.diagnostics.absorptanceMismatch.map((m) => m.class).join(", ")}` : ""}
+                </div>
+                {r.flags.length ? r.flags.join(", ") : "no flags"}{r.flagNotes.length ? <div className="text-slate-600">{r.flagNotes.join(" ")}</div> : null}</td>
             </tr>
           ))}
         </tbody>

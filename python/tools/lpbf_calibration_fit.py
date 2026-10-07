@@ -25,6 +25,7 @@ Usage (from the repo root; PYTHONDONTWRITEBYTECODE=1):
 from __future__ import annotations
 
 import argparse
+import datetime
 import contextlib
 import hashlib
 import io
@@ -54,7 +55,7 @@ from lpbf_calibration_config import (  # noqa: E402
 TABLE_SCHEMA = "lpbf-calibration-kernel-table-1"
 DEFAULT_HATCH_UM = 100.0
 NOMINAL_LAYER_FOR_BARE_UM = 30.0
-GENERATED_AT_DEFAULT = "2026-10-07"
+GENERATED_AT_DEFAULT = None  # None = today; a record is never silently rewritten under an older date
 EVIDENCE_KIND = "screening-only"
 EVIDENCE_LABEL = "Screening only: nuisance parameters fitted to published tracks; not validation"
 LABEL_PROMOTION = "none"
@@ -438,7 +439,9 @@ def build_cells(analysis: Dict[str, Any], rows_by_variant: Dict[float, List[Dict
                                  "nSourcesForSSource": cell["intervalParams"]["nSourcesForSSource"],
                                  "levels": CFG["interval"]["levels"], "factors": cell["interval"],
                                  "sourceMeanResiduals": cell["intervalParams"]["sourceMeanResiduals"]},
-                    "flags": cell["flags"]["flags"], "flagNotes": cell["flags"]["notes"], "diagnostics": cell["flags"]["diagnostics"],
+                    "flags": cell["flags"]["diagnosticFlags"], "gateFlags": cell["flags"]["flags"],
+                    "gateRelevant": cell["flags"]["gateRelevant"], "flagNotes": cell["flags"]["notes"],
+                    "diagnostics": cell["flags"]["diagnostics"],
                     "etaConsistent": cell["etaConsistent"], "foldEtas": cell["foldEtas"],
                     "selection": cell["selection"], "p2": prow, "p1": p1_rows(res, q),
                     "headline": heads, "beamStatuses": gate.get("beamStatuses"),
@@ -453,7 +456,8 @@ def build_cells(analysis: Dict[str, Any], rows_by_variant: Dict[float, List[Dict
             for q in QS:
                 cells.append({"kernel": k, "material": alloy, "quantity": q, "status": "no-data",
                               "reasons": ["no trainable measured source for this alloy"], "rung": None, "params": None,
-                              "interval": None, "flags": {}, "flagNotes": [], "diagnostics": {}, "etaConsistent": None,
+                              "interval": None, "flags": {}, "gateFlags": {}, "gateRelevant": False, "flagNotes": [],
+                              "diagnostics": {}, "etaConsistent": None,
                               "foldEtas": {}, "selection": None, "p2": [], "p1": [], "headline": None,
                               "beamStatuses": None, "beamSensitivity": None, "ballingSensitivity": None,
                               "trainSources": [], "nSetsBySource": {}, "nRowsBySource": {}, "p1Skipped": []})
@@ -462,7 +466,7 @@ def build_cells(analysis: Dict[str, Any], rows_by_variant: Dict[float, List[Dict
 
 def confusion_block(analysis: Dict[str, Any], rows_by_variant: Dict[float, List[Dict[str, Any]]]) -> Dict[str, Any]:
     """Regime confusion vs the KU Leuven published labels (316L, Ti64). Columns: the input-only screening class at the
-    default eta (the served label). Sensitivities: at the fitted eta_D, and the geometry-based keyhole call (D/W > 1)
+    default eta (the served label). Sensitivities: at the eta_D of the leave-KU-out fold fit (out-of-sample), and the geometry-based keyhole call (D/W > 1)
     from each rung's OWN width and depth (never measured D with calibrated W)."""
     out: Dict[str, Any] = {"labelSource": "KU Leuven published regime labels (verbatim, Coen 2021)", "byAlloy": {}}
     primary = sorted(rows_by_variant)[0]
@@ -483,7 +487,8 @@ def confusion_block(analysis: Dict[str, Any], rows_by_variant: Dict[float, List[
                     if res is None:
                         continue
                     ku_src = next(s for s in res["sources"] if s.startswith("ku-leuven"))
-                    fit = res["final"]["fit"]
+                    p2 = res["p2"].get(ku_src)
+                    fit = p2["fit"] if p2 else None  # trained WITHOUT the KU geometry the labels are scored on
                     ids = fk.subset_idx(source=ku_src)
                     kk: Dict[str, Any] = {}
                     if fit and fit["etaD"]:
@@ -491,7 +496,7 @@ def confusion_block(analysis: Dict[str, Any], rows_by_variant: Dict[float, List[
                         cls_d = [st.regime_class_from_enthalpy(fk.rows[int(i)]["normalizedEnthalpyDefault"] * scale) for i in ids]
                         kk["atEtaD"] = st.confusion([fk.rows[int(i)]["publishedLabel"] for i in ids], cls_d)
                         kk["etaD"] = fit["etaD"]
-                    p2 = res["p2"].get(ku_src)
+                        kk["etaDFit"] = "leave-KU-out fold fit (P2, trained without the KU Leuven rows)"
                     geo = {}
                     meas_kh = [fk.measD[i] / fk.measW[i] > 1.0 for i in ids]
                     for rung in ("default", "eta", "eta2", "eta2+dOffset"):
@@ -809,6 +814,18 @@ def build_artefact(doc: Dict[str, Any], scorecard_rel: str, scorecard_sha: str) 
     return art
 
 
+SUMMARY_REL_PATH = ARTEFACT_REL_PATH.replace(".json", ".summary.json")
+SUMMARY_SCHEMA = "lpbf-meltpool-calibration-summary-1"
+
+
+def build_summary(art: Dict[str, Any]) -> Dict[str, Any]:
+    """Small file the app imports instead of the whole artefact: id, hash and the per-cell gate status only."""
+    return {"schema": SUMMARY_SCHEMA, "calibrationId": art["calibrationId"], "contentSha256": art["contentSha256"],
+            "artefact": ARTEFACT_REL_PATH, "evidenceKind": art["evidenceKind"],
+            "cells": [{"kernel": c["kernel"], "material": c["material"], "quantity": c["quantity"], "status": c["status"]}
+                      for c in art["cells"]]}
+
+
 def verify_artefact_hash(art: Dict[str, Any]) -> bool:
     probe = dict(art)
     probe["contentSha256"] = ""
@@ -826,6 +843,7 @@ def make_view(doc: Dict[str, Any]) -> Dict[str, Any]:
         head.append({
             "kernel": c["kernel"], "material": c["material"], "quantity": c["quantity"], "status": c["status"],
             "reasons": c["reasons"], "servedRung": c["rung"], "flags": [k for k, v in (c["flags"] or {}).items() if v],
+            "gateRelevant": c.get("gateRelevant", False), "diagnostics": c.get("diagnostics") or {},
             "flagNotes": c["flagNotes"], "headline": c["headline"],
             "p2": [{k: r.get(k) for k in ("heldOut", "trainedOn", "rung", "nRows", "nSets", "mapeDefault", "mapeServed",
                                           "skill", "skillCi95", "verdictVsDefault", "unresolvedDefault", "unresolvedServed",
@@ -923,7 +941,22 @@ def render_markdown(doc: Dict[str, Any]) -> str:
                  f"{_f(p.get('etaJoint'), 3)}{_ci(p.get('etaJoint_ci90'), 3)} | {cd} | {flags} |")
     L += ["", "Parameters are listed for every cell for diagnosis; the `rung` column says what would be served, and nothing is "
           "served unless the status is `enabled`. A `default` rung means no ladder rung beat the unchanged screening "
-          "result on the training-only inner score.", "", "### Physics-compensation notes", ""]
+          "result on the training-only inner score.", "", "### Physics-compensation diagnostics", "",
+          "Computed for every fitted cell, including cells whose served rung is `default` (where they cannot veto anything "
+          "because nothing is served; `gate` = no). They show where a kernel is wrong and the fit compensates with an "
+          "unphysical absorptivity or offset.", "",
+          "| kernel | alloy | q | gate relevant | bound-hit fraction (bootstrap) | ln(eta_D/eta_W) | max abs c_D | "
+          "measured-absorptance mismatch | diagnostic flags |", "|---|---|---|---|---|---|---|---|---|"]
+    for c in doc["cells"]:
+        if not c["params"]:
+            continue
+        d = c.get("diagnostics") or {}
+        mm = "; ".join(f"{m['class']} (eta {m['eta']:.3f} vs {m['band'][0]:.2f}-{m['band'][1]:.2f})"
+                       for m in d.get("absorptanceMismatch") or []) or "none"
+        L.append(f"| {c['kernel']} | {c['material']} | {c['quantity']} | {'yes' if c.get('gateRelevant') else 'no'} | "
+                 f"{_f(d.get('boundHitBootstrapFraction'), 2)} | {_f(d.get('etaSplitLn'), 2)} | {_f(d.get('maxAbsCd'), 2)} | "
+                 f"{mm} | {', '.join(k for k, v in c['flags'].items() if v) or '-'} |")
+    L += ["", "### Physics-compensation notes", ""]
     for c in doc["cells"]:
         for n in c["flagNotes"]:
             L.append(f"- {c['kernel']} / {c['material']} / {c['quantity']}: {n}")
@@ -999,6 +1032,8 @@ def write_all(doc: Dict[str, Any], repo_root: Path) -> Dict[str, Path]:
     art = build_artefact(doc, f"docs/{stem}.json", sha)
     paths["artefact"].parent.mkdir(parents=True, exist_ok=True)
     paths["artefact"].write_text(dump_json(art), encoding="utf-8", newline="\n")
+    paths["summary"] = repo_root / SUMMARY_REL_PATH
+    paths["summary"].write_text(dump_json(build_summary(art)), encoding="utf-8", newline="\n")
     return paths
 
 
@@ -1032,27 +1067,41 @@ def check_outputs(repo_root: Path, date: str) -> List[str]:
         want_art = dump_json(build_artefact(doc, f"docs/{stem}.json", hashlib.sha256(raw.encode('utf-8')).hexdigest()))
         if ap.read_text(encoding="utf-8") != want_art:
             problems.append("artefact drifts from the one re-built from the scorecard JSON")
+        sp = repo_root / SUMMARY_REL_PATH
+        if not sp.is_file() or sp.read_text(encoding="utf-8") != dump_json(build_summary(art)):
+            problems.append(f"{SUMMARY_REL_PATH} is missing or drifts from the artefact (id/hash/cell statuses)")
     return problems
+
+
+def committed_record_date(repo_root: Path) -> Optional[str]:
+    """generatedAt of the committed artefact: the record --check verifies when no --date is given."""
+    ap = repo_root / ARTEFACT_REL_PATH
+    if not ap.is_file():
+        return None
+    return json.loads(ap.read_text(encoding="utf-8")).get("generatedAt")
 
 
 def main(argv: Optional[List[str]] = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--table-cache", default=None)
     ap.add_argument("--jobs", type=int, default=6)
-    ap.add_argument("--date", default=GENERATED_AT_DEFAULT)
+    ap.add_argument("--date", default=GENERATED_AT_DEFAULT,
+                    help="record date (default: today for a fresh run; --check defaults to the committed artefact's date)")
     ap.add_argument("--quick", action="store_true", help="first 40 rows per source (smoke run; not for records)")
     ap.add_argument("--check", action="store_true", help="re-render from the written JSON and fail on drift")
     ap.add_argument("--repo-root", default=str(REPO_ROOT))
     a = ap.parse_args(argv)
     root = Path(a.repo_root).resolve()
     if a.check:
-        problems = check_outputs(root, a.date)
+        date = a.date or committed_record_date(root)
+        problems = check_outputs(root, date) if date else [f"no committed artefact at {ARTEFACT_REL_PATH}"]
         for p in problems:
             print("DRIFT:", p, file=sys.stderr)
         print("check", "FAILED" if problems else "PASSED", file=sys.stderr)
         return 1 if problems else 0
     if a.quick and root == REPO_ROOT:
         raise SystemExit("--quick writes smoke output; pass --repo-root <scratch dir> so no record is overwritten")
+    a.date = a.date or datetime.date.today().isoformat()
     t0 = time.perf_counter()
     cache = Path(a.table_cache).resolve() if a.table_cache else None
     doc = build_document(a.quick, a.jobs, a.date, table_cache=cache, log=lambda m: print(m, file=sys.stderr))

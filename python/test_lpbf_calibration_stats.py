@@ -318,6 +318,45 @@ class PhysicsFlagTests(unittest.TestCase):
         self.assertFalse(fine["flags"]["etaInconsistentWithMeasuredAbsorptance"])
 
 
+class PhysicsDiagnosticsForDefaultRungTests(unittest.TestCase):
+    """The diagnostics exist for every fitted cell, also when the served rung is `default`; they never veto then."""
+    base_fit = PhysicsFlagTests.base_fit
+    flags = PhysicsFlagTests.flags
+
+    def test_default_rung_still_computes_diagnostics_but_is_not_gate_relevant(self):
+        fit = copy.deepcopy(self.base_fit)
+        fit.update(etaW=0.30, etaD=0.60)
+        fit["boundHit"]["D"] = True
+        fit["cd"]["keyhole"] = -0.5
+        out = self.flags(fit, "default", "depth")
+        self.assertFalse(out["gateRelevant"])
+        self.assertTrue(out["diagnosticFlags"]["boundHit"] and out["diagnosticFlags"]["etaSplit"]
+                        and out["diagnosticFlags"]["offsetDominant"])
+        self.assertFalse(any(out["flags"].values()), "nothing is served, so nothing can veto")
+        self.assertAlmostEqual(out["diagnostics"]["maxAbsCd"], 0.5)
+        self.assertIn("diagnostic only", " ".join(out["notes"]))
+        self.assertIn("absorptanceMismatch", self.flags(fit, "default", "width", material="316L Stainless Steel",
+                                                         class_sets={"conduction": 12, "transition": 0, "keyhole": 0})["diagnostics"])
+
+    def test_served_rung_keeps_gate_semantics(self):
+        fit = copy.deepcopy(self.base_fit)
+        fit["boundHit"]["W"] = True
+        out = self.flags(fit, "eta2", "width")
+        self.assertTrue(out["gateRelevant"] and out["flags"]["boundHit"] and out["diagnosticFlags"]["boundHit"])
+
+    def test_no_fit_gives_empty_flags(self):
+        out = self.flags(None, "default", "width")
+        self.assertFalse(any(out["flags"].values()) or any(out["diagnosticFlags"].values()))
+
+
+class BoundHitGridStepTests(unittest.TestCase):
+    def test_within_one_fine_step_of_the_bound_counts(self):  # R5: "within one grid step", not only exactly on the bound
+        src = (Path(__file__).resolve().parent / "lpbf_calibration_stats.py").read_text(encoding="utf-8")
+        self.assertIn("j <= step or j >= J - 1 - step", src)
+        self.assertIn("(j[okj] <= step) | (j[okj] >= J - 1 - step)", src)
+        self.assertEqual(CFG["gate"]["boundHitSteps"], 1)
+
+
 class ConfusionTests(unittest.TestCase):
     def test_counts_and_keyhole_precision_recall(self):  # T-CONF-1
         pub = ["keyhole", "keyhole", "keyhole", "conduction", "conduction", "transition"]
