@@ -1,0 +1,839 @@
+row_id,source,material,P,v,beam,preheat,layer,hatch,regime_class_input
+hofmann-0001,hofmann-316l-2026,316L Stainless Steel,500.0,900.0,110.0,20.0,0.0,,transition
+hofmann-0002,hofmann-316l-2026,316L Stainless Steel,200.0,1200.0,50.0,20.0,30.0,,keyhole
+hofmann-0003,hofmann-316l-2026,316L Stainless Steel,175.0,750.0,50.0,20.0,30.0,,keyhole
+hofmann-0004,hofmann-316l-2026,316L Stainless Steel,350.0,1500.0,140.0,20.0,30.0,,conduction
+hofmann-0005,hofmann-316l-2026,316L Stainless Steel,100.0,900.0,80.0,20.0,30.0,,conduction
+hofmann-0006,hofmann-316l-2026,316L Stainless Steel,200.0,300.0,140.0,20.0,60.0,,conduction
+hofmann-0007,hofmann-316l-2026,316L Stainless Steel,200.0,1500.0,140.0,20.0,0.0,,conduction
+hofmann-0008,hofmann-316l-2026,316L Stainless Steel,250.0,300.0,50.0,20.0,60.0,,keyhole
+hofmann-0009,hofmann-316l-2026,316L Stainless Steel,300.0,600.0,50.0,20.0,0.0,,keyhole
+hofmann-0010,hofmann-316l-2026,316L Stainless Steel,250.0,900.0,80.0,20.0,0.0,,transition
+hofmann-0011,hofmann-316l-2026,316L Stainless Steel,350.0,600.0,80.0,20.0,0.0,,keyhole
+hofmann-0012,hofmann-316l-2026,316L Stainless Steel,200.0,1200.0,80.0,20.0,0.0,,transition
+hofmann-0013,hofmann-316l-2026,316L Stainless Steel,400.0,900.0,140.0,20.0,60.0,,transition
+hofmann-0014,hofmann-316l-2026,316L Stainless Steel,400.0,900.0,80.0,20.0,0.0,,keyhole
+hofmann-0015,hofmann-316l-2026,316L Stainless Steel,200.0,750.0,80.0,20.0,60.0,,transition
+hofmann-0016,hofmann-316l-2026,316L Stainless Steel,400.0,300.0,80.0,20.0,0.0,,keyhole
+hofmann-0017,hofmann-316l-2026,316L Stainless Steel,150.0,1200.0,80.0,20.0,30.0,,conduction
+hofmann-0018,hofmann-316l-2026,316L Stainless Steel,450.0,1200.0,110.0,20.0,0.0,,transition
+hofmann-0019,hofmann-316l-2026,316L Stainless Steel,150.0,1050.0,50.0,20.0,60.0,,transition
+hofmann-0020,hofmann-316l-2026,316L Stainless Steel,475.0,450.0,110.0,20.0,30.0,,keyhole
+hofmann-0021,hofmann-316l-2026,316L Stainless Steel,250.0,600.0,140.0,20.0,60.0,,conduction
+hofmann-0022,hofmann-316l-2026,316L Stainless Steel,450.0,1500.0,50.0,20.0,30.0,,keyhole
+hofmann-0023,hofmann-316l-2026,316L Stainless Steel,450.0,450.0,80.0,20.0,60.0,,keyhole
+hofmann-0024,hofmann-316l-2026,316L Stainless Steel,250.0,300.0,140.0,20.0,0.0,,transition
+hofmann-0025,hofmann-316l-2026,316L Stainless Steel,300.0,450.0,80.0,20.0,60.0,,keyhole
+hofmann-0026,hofmann-316l-2026,316L Stainless Steel,75.0,450.0,50.0,20.0,30.0,,transition
+hofmann-0027,hofmann-316l-2026,316L Stainless Steel,350.0,1500.0,50.0,20.0,30.0,,keyhole
+hofmann-0028,hofmann-316l-2026,316L Stainless Steel,200.0,1500.0,80.0,20.0,30.0,,conduction
+hofmann-0029,hofmann-316l-2026,316L Stainless Steel,350.0,300.0,110.0,20.0,30.0,,keyhole
+hofmann-0030,hofmann-316l-2026,316L Stainless Steel,200.0,900.0,50.0,20.0,60.0,,keyhole
+hofmann-0031,hofmann-316l-2026,316L Stainless Steel,150.0,300.0,80.0,20.0,0.0,,transition
+hofmann-0032,hofmann-316l-2026,316L Stainless Steel,325.0,525.0,140.0,20.0,60.0,,transition
+hofmann-0033,hofmann-316l-2026,316L Stainless Steel,425.0,750.0,140.0,20.0,30.0,,transition
+hofmann-0034,hofmann-316l-2026,316L Stainless Steel,200.0,1050.0,50.0,20.0,60.0,,keyhole
+hofmann-0035,hofmann-316l-2026,316L Stainless Steel,225.0,1050.0,50.0,20.0,30.0,,keyhole
+hofmann-0036,hofmann-316l-2026,316L Stainless Steel,175.0,750.0,110.0,20.0,0.0,,conduction
+hofmann-0037,hofmann-316l-2026,316L Stainless Steel,450.0,600.0,140.0,20.0,60.0,,transition
+hofmann-0038,hofmann-316l-2026,316L Stainless Steel,300.0,600.0,140.0,20.0,60.0,,conduction
+hofmann-0039,hofmann-316l-2026,316L Stainless Steel,500.0,300.0,140.0,20.0,30.0,,keyhole
+hofmann-0040,hofmann-316l-2026,316L Stainless Steel,400.0,450.0,110.0,20.0,60.0,,keyhole
+hofmann-0041,hofmann-316l-2026,316L Stainless Steel,350.0,450.0,110.0,20.0,60.0,,transition
+hofmann-0042,hofmann-316l-2026,316L Stainless Steel,175.0,750.0,80.0,20.0,30.0,,transition
+hofmann-0043,hofmann-316l-2026,316L Stainless Steel,275.0,375.0,110.0,20.0,60.0,,transition
+hofmann-0044,hofmann-316l-2026,316L Stainless Steel,200.0,525.0,140.0,20.0,60.0,,conduction
+hofmann-0045,hofmann-316l-2026,316L Stainless Steel,500.0,600.0,140.0,20.0,0.0,,transition
+hofmann-0046,hofmann-316l-2026,316L Stainless Steel,500.0,900.0,140.0,20.0,0.0,,transition
+hofmann-0047,hofmann-316l-2026,316L Stainless Steel,75.0,1050.0,50.0,20.0,0.0,,conduction
+hofmann-0048,hofmann-316l-2026,316L Stainless Steel,500.0,450.0,110.0,20.0,60.0,,keyhole
+hofmann-0049,hofmann-316l-2026,316L Stainless Steel,425.0,225.0,140.0,20.0,60.0,,keyhole
+hofmann-0050,hofmann-316l-2026,316L Stainless Steel,300.0,900.0,140.0,20.0,30.0,,conduction
+hofmann-0051,hofmann-316l-2026,316L Stainless Steel,200.0,1200.0,140.0,20.0,0.0,,conduction
+hofmann-0052,hofmann-316l-2026,316L Stainless Steel,450.0,900.0,140.0,20.0,60.0,,transition
+hofmann-0053,hofmann-316l-2026,316L Stainless Steel,400.0,600.0,140.0,20.0,30.0,,transition
+hofmann-0054,hofmann-316l-2026,316L Stainless Steel,50.0,300.0,50.0,20.0,30.0,,transition
+hofmann-0055,hofmann-316l-2026,316L Stainless Steel,300.0,900.0,110.0,20.0,60.0,,transition
+hofmann-0056,hofmann-316l-2026,316L Stainless Steel,450.0,300.0,140.0,20.0,0.0,,transition
+hofmann-0057,hofmann-316l-2026,316L Stainless Steel,375.0,750.0,80.0,20.0,30.0,,keyhole
+hofmann-0058,hofmann-316l-2026,316L Stainless Steel,425.0,1050.0,80.0,20.0,30.0,,keyhole
+hofmann-0059,hofmann-316l-2026,316L Stainless Steel,225.0,450.0,110.0,20.0,30.0,,transition
+hofmann-0060,hofmann-316l-2026,316L Stainless Steel,425.0,225.0,140.0,20.0,60.0,,keyhole
+hofmann-0061,hofmann-316l-2026,316L Stainless Steel,125.0,225.0,140.0,20.0,60.0,,conduction
+hofmann-0062,hofmann-316l-2026,316L Stainless Steel,175.0,1050.0,110.0,20.0,0.0,,conduction
+hofmann-0063,hofmann-316l-2026,316L Stainless Steel,150.0,900.0,80.0,20.0,30.0,,conduction
+hofmann-0064,hofmann-316l-2026,316L Stainless Steel,250.0,600.0,50.0,20.0,0.0,,keyhole
+hofmann-0065,hofmann-316l-2026,316L Stainless Steel,150.0,600.0,80.0,20.0,30.0,,transition
+hofmann-0066,hofmann-316l-2026,316L Stainless Steel,250.0,1500.0,140.0,20.0,0.0,,conduction
+hofmann-0067,hofmann-316l-2026,316L Stainless Steel,250.0,450.0,140.0,20.0,60.0,,conduction
+hofmann-0068,hofmann-316l-2026,316L Stainless Steel,325.0,375.0,110.0,20.0,60.0,,transition
+hofmann-0069,hofmann-316l-2026,316L Stainless Steel,450.0,900.0,50.0,20.0,0.0,,keyhole
+hofmann-0070,hofmann-316l-2026,316L Stainless Steel,450.0,1500.0,110.0,20.0,30.0,,transition
+hofmann-0071,hofmann-316l-2026,316L Stainless Steel,450.0,900.0,140.0,20.0,0.0,,transition
+hofmann-0072,hofmann-316l-2026,316L Stainless Steel,500.0,300.0,110.0,20.0,0.0,,keyhole
+hofmann-0073,hofmann-316l-2026,316L Stainless Steel,375.0,450.0,80.0,20.0,30.0,,keyhole
+hofmann-0074,hofmann-316l-2026,316L Stainless Steel,325.0,750.0,80.0,20.0,30.0,,keyhole
+hofmann-0075,hofmann-316l-2026,316L Stainless Steel,175.0,1350.0,110.0,20.0,0.0,,conduction
+hofmann-0076,hofmann-316l-2026,316L Stainless Steel,150.0,600.0,50.0,20.0,30.0,,keyhole
+hofmann-0077,hofmann-316l-2026,316L Stainless Steel,500.0,1200.0,140.0,20.0,30.0,,transition
+hofmann-0078,hofmann-316l-2026,316L Stainless Steel,100.0,600.0,50.0,20.0,30.0,,transition
+hofmann-0079,hofmann-316l-2026,316L Stainless Steel,225.0,750.0,50.0,20.0,0.0,,keyhole
+hofmann-0080,hofmann-316l-2026,316L Stainless Steel,400.0,900.0,110.0,20.0,60.0,,transition
+hofmann-0081,hofmann-316l-2026,316L Stainless Steel,150.0,450.0,80.0,20.0,0.0,,transition
+hofmann-0082,hofmann-316l-2026,316L Stainless Steel,125.0,750.0,50.0,20.0,30.0,,transition
+hofmann-0083,hofmann-316l-2026,316L Stainless Steel,100.0,600.0,110.0,20.0,0.0,,conduction
+hofmann-0084,hofmann-316l-2026,316L Stainless Steel,375.0,750.0,110.0,20.0,30.0,,transition
+hofmann-0085,hofmann-316l-2026,316L Stainless Steel,125.0,750.0,110.0,20.0,30.0,,conduction
+hofmann-0086,hofmann-316l-2026,316L Stainless Steel,250.0,300.0,140.0,20.0,30.0,,transition
+hofmann-0087,hofmann-316l-2026,316L Stainless Steel,375.0,525.0,140.0,20.0,60.0,,transition
+hofmann-0088,hofmann-316l-2026,316L Stainless Steel,200.0,300.0,50.0,20.0,60.0,,keyhole
+hofmann-0089,hofmann-316l-2026,316L Stainless Steel,225.0,375.0,140.0,20.0,60.0,,conduction
+hofmann-0090,hofmann-316l-2026,316L Stainless Steel,150.0,900.0,140.0,20.0,0.0,,conduction
+hofmann-0091,hofmann-316l-2026,316L Stainless Steel,200.0,300.0,110.0,20.0,60.0,,transition
+hofmann-0092,hofmann-316l-2026,316L Stainless Steel,100.0,675.0,50.0,20.0,60.0,,transition
+hofmann-0093,hofmann-316l-2026,316L Stainless Steel,450.0,600.0,80.0,20.0,30.0,,keyhole
+hofmann-0094,hofmann-316l-2026,316L Stainless Steel,400.0,300.0,140.0,20.0,60.0,,transition
+hofmann-0095,hofmann-316l-2026,316L Stainless Steel,175.0,450.0,140.0,20.0,30.0,,conduction
+hofmann-0096,hofmann-316l-2026,316L Stainless Steel,425.0,450.0,110.0,20.0,0.0,,keyhole
+hofmann-0097,hofmann-316l-2026,316L Stainless Steel,350.0,300.0,140.0,20.0,60.0,,transition
+hofmann-0098,hofmann-316l-2026,316L Stainless Steel,200.0,450.0,50.0,20.0,60.0,,keyhole
+hofmann-0099,hofmann-316l-2026,316L Stainless Steel,450.0,600.0,110.0,20.0,30.0,,keyhole
+hofmann-0100,hofmann-316l-2026,316L Stainless Steel,125.0,525.0,50.0,20.0,60.0,,transition
+hofmann-0101,hofmann-316l-2026,316L Stainless Steel,200.0,600.0,110.0,20.0,60.0,,conduction
+hofmann-0102,hofmann-316l-2026,316L Stainless Steel,100.0,300.0,80.0,20.0,0.0,,transition
+hofmann-0103,hofmann-316l-2026,316L Stainless Steel,325.0,300.0,80.0,20.0,60.0,,keyhole
+hofmann-0104,hofmann-316l-2026,316L Stainless Steel,300.0,300.0,140.0,20.0,30.0,,transition
+hofmann-0105,hofmann-316l-2026,316L Stainless Steel,150.0,1200.0,50.0,20.0,60.0,,transition
+hofmann-0106,hofmann-316l-2026,316L Stainless Steel,125.0,750.0,50.0,20.0,0.0,,transition
+hofmann-0107,hofmann-316l-2026,316L Stainless Steel,475.0,450.0,140.0,20.0,30.0,,transition
+hofmann-0108,hofmann-316l-2026,316L Stainless Steel,400.0,900.0,80.0,20.0,30.0,,keyhole
+hofmann-0109,hofmann-316l-2026,316L Stainless Steel,475.0,675.0,140.0,20.0,60.0,,transition
+hofmann-0110,hofmann-316l-2026,316L Stainless Steel,400.0,1500.0,110.0,20.0,30.0,,transition
+hofmann-0111,hofmann-316l-2026,316L Stainless Steel,200.0,900.0,80.0,20.0,0.0,,transition
+hofmann-0112,hofmann-316l-2026,316L Stainless Steel,100.0,300.0,80.0,20.0,30.0,,transition
+hofmann-0113,hofmann-316l-2026,316L Stainless Steel,125.0,1350.0,50.0,20.0,0.0,,transition
+hofmann-0114,hofmann-316l-2026,316L Stainless Steel,375.0,375.0,140.0,20.0,60.0,,transition
+hofmann-0115,hofmann-316l-2026,316L Stainless Steel,250.0,450.0,80.0,20.0,0.0,,keyhole
+hofmann-0116,hofmann-316l-2026,316L Stainless Steel,450.0,1200.0,110.0,20.0,30.0,,transition
+hofmann-0117,hofmann-316l-2026,316L Stainless Steel,75.0,750.0,50.0,20.0,30.0,,conduction
+hofmann-0118,hofmann-316l-2026,316L Stainless Steel,200.0,900.0,140.0,20.0,30.0,,conduction
+hofmann-0119,hofmann-316l-2026,316L Stainless Steel,175.0,750.0,50.0,20.0,0.0,,keyhole
+hofmann-0120,hofmann-316l-2026,316L Stainless Steel,250.0,1500.0,110.0,20.0,30.0,,conduction
+hofmann-0121,hofmann-316l-2026,316L Stainless Steel,300.0,900.0,140.0,20.0,0.0,,conduction
+hofmann-0122,hofmann-316l-2026,316L Stainless Steel,300.0,900.0,50.0,20.0,60.0,,keyhole
+hofmann-0123,hofmann-316l-2026,316L Stainless Steel,350.0,700.0,110.0,20.0,60.0,,transition
+hofmann-0124,hofmann-316l-2026,316L Stainless Steel,250.0,600.0,80.0,20.0,60.0,,transition
+hofmann-0125,hofmann-316l-2026,316L Stainless Steel,450.0,1500.0,140.0,20.0,0.0,,conduction
+hofmann-0126,hofmann-316l-2026,316L Stainless Steel,450.0,1500.0,80.0,20.0,0.0,,keyhole
+hofmann-0127,hofmann-316l-2026,316L Stainless Steel,450.0,300.0,80.0,20.0,60.0,,keyhole
+hofmann-0128,hofmann-316l-2026,316L Stainless Steel,450.0,1500.0,110.0,20.0,0.0,,transition
+hofmann-0129,hofmann-316l-2026,316L Stainless Steel,300.0,1500.0,80.0,20.0,0.0,,transition
+hofmann-0130,hofmann-316l-2026,316L Stainless Steel,150.0,750.0,80.0,20.0,60.0,,conduction
+hofmann-0131,hofmann-316l-2026,316L Stainless Steel,250.0,1200.0,50.0,20.0,0.0,,keyhole
+hofmann-0132,hofmann-316l-2026,316L Stainless Steel,350.0,1500.0,80.0,20.0,30.0,,transition
+hofmann-0133,hofmann-316l-2026,316L Stainless Steel,500.0,300.0,140.0,20.0,0.0,,keyhole
+hofmann-0134,hofmann-316l-2026,316L Stainless Steel,250.0,900.0,140.0,20.0,30.0,,conduction
+hofmann-0135,hofmann-316l-2026,316L Stainless Steel,400.0,1200.0,80.0,20.0,30.0,,keyhole
+hofmann-0136,hofmann-316l-2026,316L Stainless Steel,500.0,525.0,140.0,20.0,30.0,,transition
+hofmann-0137,hofmann-316l-2026,316L Stainless Steel,325.0,450.0,110.0,20.0,0.0,,transition
+hofmann-0138,hofmann-316l-2026,316L Stainless Steel,475.0,525.0,110.0,20.0,60.0,,keyhole
+hofmann-0139,hofmann-316l-2026,316L Stainless Steel,300.0,600.0,80.0,20.0,60.0,,keyhole
+hofmann-0140,hofmann-316l-2026,316L Stainless Steel,400.0,450.0,80.0,20.0,60.0,,keyhole
+hofmann-0141,hofmann-316l-2026,316L Stainless Steel,50.0,300.0,110.0,20.0,30.0,,conduction
+hofmann-0142,hofmann-316l-2026,316L Stainless Steel,125.0,750.0,80.0,20.0,30.0,,conduction
+hofmann-0143,hofmann-316l-2026,316L Stainless Steel,300.0,600.0,80.0,20.0,0.0,,keyhole
+hofmann-0144,hofmann-316l-2026,316L Stainless Steel,450.0,1500.0,140.0,20.0,30.0,,conduction
+hofmann-0145,hofmann-316l-2026,316L Stainless Steel,425.0,525.0,110.0,20.0,60.0,,keyhole
+hofmann-0146,hofmann-316l-2026,316L Stainless Steel,450.0,1500.0,50.0,20.0,0.0,,keyhole
+hofmann-0147,hofmann-316l-2026,316L Stainless Steel,350.0,900.0,140.0,20.0,60.0,,conduction
+hofmann-0148,hofmann-316l-2026,316L Stainless Steel,175.0,1125.0,50.0,20.0,60.0,,transition
+hofmann-0149,hofmann-316l-2026,316L Stainless Steel,125.0,750.0,140.0,20.0,30.0,,conduction
+hofmann-0150,hofmann-316l-2026,316L Stainless Steel,100.0,300.0,110.0,20.0,60.0,,conduction
+hofmann-0151,hofmann-316l-2026,316L Stainless Steel,100.0,900.0,50.0,20.0,60.0,,transition
+hofmann-0152,hofmann-316l-2026,316L Stainless Steel,200.0,900.0,140.0,20.0,0.0,,conduction
+hofmann-0153,hofmann-316l-2026,316L Stainless Steel,450.0,750.0,80.0,20.0,60.0,,keyhole
+hofmann-0154,hofmann-316l-2026,316L Stainless Steel,250.0,600.0,140.0,20.0,30.0,,conduction
+hofmann-0155,hofmann-316l-2026,316L Stainless Steel,350.0,600.0,140.0,20.0,30.0,,transition
+hofmann-0156,hofmann-316l-2026,316L Stainless Steel,75.0,750.0,80.0,20.0,0.0,,conduction
+hofmann-0157,hofmann-316l-2026,316L Stainless Steel,400.0,600.0,140.0,20.0,60.0,,transition
+hofmann-0158,hofmann-316l-2026,316L Stainless Steel,400.0,900.0,140.0,20.0,0.0,,transition
+hofmann-0159,hofmann-316l-2026,316L Stainless Steel,375.0,375.0,110.0,20.0,60.0,,keyhole
+hofmann-0160,hofmann-316l-2026,316L Stainless Steel,400.0,900.0,50.0,20.0,60.0,,keyhole
+hofmann-0161,hofmann-316l-2026,316L Stainless Steel,200.0,1200.0,50.0,20.0,0.0,,keyhole
+hofmann-0162,hofmann-316l-2026,316L Stainless Steel,475.0,750.0,110.0,20.0,30.0,,transition
+hofmann-0163,hofmann-316l-2026,316L Stainless Steel,225.0,750.0,110.0,20.0,0.0,,conduction
+hofmann-0164,hofmann-316l-2026,316L Stainless Steel,50.0,600.0,80.0,20.0,0.0,,conduction
+hofmann-0165,hofmann-316l-2026,316L Stainless Steel,300.0,450.0,140.0,20.0,60.0,,transition
+hofmann-0166,hofmann-316l-2026,316L Stainless Steel,500.0,900.0,140.0,20.0,30.0,,transition
+hofmann-0167,hofmann-316l-2026,316L Stainless Steel,475.0,225.0,140.0,20.0,60.0,,keyhole
+hofmann-0168,hofmann-316l-2026,316L Stainless Steel,350.0,450.0,140.0,20.0,60.0,,transition
+hofmann-0169,hofmann-316l-2026,316L Stainless Steel,200.0,900.0,110.0,20.0,30.0,,conduction
+hofmann-0170,hofmann-316l-2026,316L Stainless Steel,300.0,900.0,80.0,20.0,30.0,,transition
+hofmann-0171,hofmann-316l-2026,316L Stainless Steel,375.0,225.0,140.0,20.0,60.0,,transition
+hofmann-0172,hofmann-316l-2026,316L Stainless Steel,250.0,900.0,80.0,20.0,60.0,,transition
+hofmann-0173,hofmann-316l-2026,316L Stainless Steel,300.0,600.0,140.0,20.0,0.0,,conduction
+hofmann-0174,hofmann-316l-2026,316L Stainless Steel,325.0,450.0,140.0,20.0,30.0,,transition
+hofmann-0175,hofmann-316l-2026,316L Stainless Steel,100.0,300.0,80.0,20.0,30.0,,transition
+hofmann-0176,hofmann-316l-2026,316L Stainless Steel,450.0,300.0,140.0,20.0,60.0,,transition
+hofmann-0177,hofmann-316l-2026,316L Stainless Steel,250.0,300.0,80.0,20.0,60.0,,keyhole
+hofmann-0178,hofmann-316l-2026,316L Stainless Steel,275.0,1050.0,50.0,20.0,30.0,,keyhole
+hofmann-0179,hofmann-316l-2026,316L Stainless Steel,150.0,1500.0,140.0,20.0,0.0,,conduction
+hofmann-0180,hofmann-316l-2026,316L Stainless Steel,350.0,450.0,80.0,20.0,60.0,,keyhole
+hofmann-0181,hofmann-316l-2026,316L Stainless Steel,300.0,450.0,80.0,20.0,0.0,,keyhole
+hofmann-0182,hofmann-316l-2026,316L Stainless Steel,225.0,825.0,50.0,20.0,60.0,,keyhole
+hofmann-0183,hofmann-316l-2026,316L Stainless Steel,325.0,900.0,80.0,20.0,30.0,,transition
+hofmann-0184,hofmann-316l-2026,316L Stainless Steel,500.0,900.0,110.0,20.0,30.0,,transition
+hofmann-0185,hofmann-316l-2026,316L Stainless Steel,325.0,375.0,140.0,20.0,60.0,,transition
+hofmann-0186,hofmann-316l-2026,316L Stainless Steel,375.0,750.0,140.0,20.0,30.0,,transition
+hofmann-0187,hofmann-316l-2026,316L Stainless Steel,200.0,600.0,80.0,20.0,0.0,,transition
+hofmann-0188,hofmann-316l-2026,316L Stainless Steel,200.0,1050.0,80.0,20.0,0.0,,transition
+hofmann-0189,hofmann-316l-2026,316L Stainless Steel,275.0,450.0,110.0,20.0,30.0,,transition
+hofmann-0190,hofmann-316l-2026,316L Stainless Steel,200.0,1200.0,110.0,20.0,0.0,,conduction
+hofmann-0191,hofmann-316l-2026,316L Stainless Steel,150.0,300.0,140.0,20.0,0.0,,conduction
+hofmann-0192,hofmann-316l-2026,316L Stainless Steel,400.0,600.0,80.0,20.0,60.0,,keyhole
+hofmann-0193,hofmann-316l-2026,316L Stainless Steel,175.0,450.0,140.0,20.0,30.0,,conduction
+hofmann-0194,hofmann-316l-2026,316L Stainless Steel,400.0,1200.0,140.0,20.0,0.0,,conduction
+hofmann-0195,hofmann-316l-2026,316L Stainless Steel,137.5,675.0,50.0,20.0,60.0,,transition
+hofmann-0196,hofmann-316l-2026,316L Stainless Steel,250.0,300.0,80.0,20.0,0.0,,keyhole
+hofmann-0197,hofmann-316l-2026,316L Stainless Steel,250.0,600.0,80.0,20.0,30.0,,transition
+hofmann-0198,hofmann-316l-2026,316L Stainless Steel,125.0,450.0,140.0,20.0,30.0,,conduction
+hofmann-0199,hofmann-316l-2026,316L Stainless Steel,300.0,450.0,110.0,20.0,60.0,,transition
+hofmann-0200,hofmann-316l-2026,316L Stainless Steel,150.0,300.0,110.0,20.0,60.0,,conduction
+hofmann-0201,hofmann-316l-2026,316L Stainless Steel,250.0,600.0,80.0,20.0,0.0,,transition
+hofmann-0202,hofmann-316l-2026,316L Stainless Steel,325.0,1050.0,80.0,20.0,30.0,,transition
+hofmann-0203,hofmann-316l-2026,316L Stainless Steel,150.0,1500.0,50.0,20.0,0.0,,transition
+hofmann-0204,hofmann-316l-2026,316L Stainless Steel,225.0,1050.0,50.0,20.0,0.0,,keyhole
+hofmann-0205,hofmann-316l-2026,316L Stainless Steel,300.0,900.0,80.0,20.0,0.0,,transition
+hofmann-0206,hofmann-316l-2026,316L Stainless Steel,350.0,600.0,110.0,20.0,30.0,,transition
+hofmann-0207,hofmann-316l-2026,316L Stainless Steel,350.0,975.0,80.0,20.0,60.0,,transition
+hofmann-0208,hofmann-316l-2026,316L Stainless Steel,250.0,300.0,110.0,20.0,0.0,,transition
+hofmann-0209,hofmann-316l-2026,316L Stainless Steel,350.0,600.0,80.0,20.0,60.0,,keyhole
+hofmann-0210,hofmann-316l-2026,316L Stainless Steel,200.0,300.0,140.0,20.0,30.0,,conduction
+hofmann-0211,hofmann-316l-2026,316L Stainless Steel,400.0,1200.0,140.0,20.0,30.0,,conduction
+hofmann-0212,hofmann-316l-2026,316L Stainless Steel,200.0,600.0,140.0,20.0,0.0,,conduction
+hofmann-0213,hofmann-316l-2026,316L Stainless Steel,100.0,300.0,110.0,20.0,30.0,,conduction
+hofmann-0214,hofmann-316l-2026,316L Stainless Steel,200.0,600.0,80.0,20.0,30.0,,transition
+hofmann-0215,hofmann-316l-2026,316L Stainless Steel,250.0,1050.0,80.0,20.0,0.0,,transition
+hofmann-0216,hofmann-316l-2026,316L Stainless Steel,275.0,525.0,110.0,20.0,60.0,,transition
+hofmann-0217,hofmann-316l-2026,316L Stainless Steel,150.0,300.0,110.0,20.0,60.0,,conduction
+hofmann-0218,hofmann-316l-2026,316L Stainless Steel,100.0,750.0,50.0,20.0,60.0,,transition
+hofmann-0219,hofmann-316l-2026,316L Stainless Steel,325.0,1050.0,50.0,20.0,30.0,,keyhole
+hofmann-0220,hofmann-316l-2026,316L Stainless Steel,450.0,900.0,110.0,20.0,60.0,,transition
+hofmann-0221,hofmann-316l-2026,316L Stainless Steel,475.0,225.0,140.0,20.0,60.0,,keyhole
+hofmann-0222,hofmann-316l-2026,316L Stainless Steel,250.0,1050.0,50.0,20.0,60.0,,keyhole
+hofmann-0223,hofmann-316l-2026,316L Stainless Steel,300.0,1200.0,140.0,20.0,0.0,,conduction
+hofmann-0224,hofmann-316l-2026,316L Stainless Steel,150.0,300.0,140.0,20.0,60.0,,conduction
+hofmann-0225,hofmann-316l-2026,316L Stainless Steel,300.0,300.0,140.0,20.0,30.0,,transition
+hofmann-0226,hofmann-316l-2026,316L Stainless Steel,125.0,1350.0,80.0,20.0,0.0,,conduction
+hofmann-0227,hofmann-316l-2026,316L Stainless Steel,200.0,300.0,110.0,20.0,0.0,,transition
+hofmann-0228,hofmann-316l-2026,316L Stainless Steel,425.0,750.0,110.0,20.0,0.0,,transition
+hofmann-0229,hofmann-316l-2026,316L Stainless Steel,175.0,450.0,50.0,20.0,30.0,,keyhole
+hofmann-0230,hofmann-316l-2026,316L Stainless Steel,150.0,600.0,80.0,20.0,60.0,,transition
+hofmann-0231,hofmann-316l-2026,316L Stainless Steel,425.0,375.0,140.0,20.0,60.0,,transition
+hofmann-0232,hofmann-316l-2026,316L Stainless Steel,150.0,1200.0,140.0,20.0,0.0,,conduction
+hofmann-0233,hofmann-316l-2026,316L Stainless Steel,200.0,1200.0,110.0,20.0,30.0,,conduction
+hofmann-0234,hofmann-316l-2026,316L Stainless Steel,500.0,1200.0,110.0,20.0,0.0,,transition
+hofmann-0235,hofmann-316l-2026,316L Stainless Steel,500.0,300.0,140.0,20.0,60.0,,keyhole
+hofmann-0236,hofmann-316l-2026,316L Stainless Steel,300.0,1500.0,50.0,20.0,0.0,,keyhole
+hofmann-0237,hofmann-316l-2026,316L Stainless Steel,150.0,600.0,110.0,20.0,0.0,,conduction
+hofmann-0238,hofmann-316l-2026,316L Stainless Steel,250.0,300.0,80.0,20.0,30.0,,keyhole
+hofmann-0239,hofmann-316l-2026,316L Stainless Steel,100.0,300.0,140.0,20.0,30.0,,conduction
+hofmann-0240,hofmann-316l-2026,316L Stainless Steel,125.0,600.0,50.0,20.0,30.0,,transition
+hofmann-0241,hofmann-316l-2026,316L Stainless Steel,50.0,900.0,50.0,20.0,0.0,,conduction
+hofmann-0242,hofmann-316l-2026,316L Stainless Steel,225.0,1125.0,50.0,20.0,60.0,,keyhole
+hofmann-0243,hofmann-316l-2026,316L Stainless Steel,225.0,975.0,50.0,20.0,60.0,,keyhole
+hofmann-0244,hofmann-316l-2026,316L Stainless Steel,250.0,600.0,50.0,20.0,30.0,,keyhole
+hofmann-0245,hofmann-316l-2026,316L Stainless Steel,100.0,900.0,50.0,20.0,0.0,,transition
+hofmann-0246,hofmann-316l-2026,316L Stainless Steel,200.0,1200.0,50.0,20.0,60.0,,keyhole
+hofmann-0247,hofmann-316l-2026,316L Stainless Steel,150.0,600.0,80.0,20.0,0.0,,transition
+hofmann-0248,hofmann-316l-2026,316L Stainless Steel,100.0,600.0,80.0,20.0,30.0,,conduction
+hofmann-0249,hofmann-316l-2026,316L Stainless Steel,400.0,1200.0,110.0,20.0,60.0,,transition
+hofmann-0250,hofmann-316l-2026,316L Stainless Steel,300.0,750.0,50.0,20.0,60.0,,keyhole
+hofmann-0251,hofmann-316l-2026,316L Stainless Steel,475.0,450.0,140.0,20.0,30.0,,transition
+hofmann-0252,hofmann-316l-2026,316L Stainless Steel,350.0,1200.0,110.0,20.0,60.0,,transition
+hofmann-0253,hofmann-316l-2026,316L Stainless Steel,325.0,750.0,50.0,20.0,0.0,,keyhole
+hofmann-0254,hofmann-316l-2026,316L Stainless Steel,300.0,600.0,110.0,20.0,0.0,,transition
+hofmann-0255,hofmann-316l-2026,316L Stainless Steel,250.0,1500.0,50.0,20.0,0.0,,keyhole
+hofmann-0256,hofmann-316l-2026,316L Stainless Steel,200.0,1200.0,80.0,20.0,30.0,,transition
+hofmann-0257,hofmann-316l-2026,316L Stainless Steel,400.0,1500.0,110.0,20.0,0.0,,transition
+hofmann-0258,hofmann-316l-2026,316L Stainless Steel,300.0,600.0,140.0,20.0,30.0,,conduction
+hofmann-0259,hofmann-316l-2026,316L Stainless Steel,350.0,900.0,140.0,20.0,0.0,,conduction
+hofmann-0260,hofmann-316l-2026,316L Stainless Steel,50.0,300.0,50.0,20.0,60.0,,transition
+hofmann-0261,hofmann-316l-2026,316L Stainless Steel,475.0,450.0,110.0,20.0,30.0,,keyhole
+hofmann-0262,hofmann-316l-2026,316L Stainless Steel,400.0,1500.0,50.0,20.0,60.0,,keyhole
+hofmann-0263,hofmann-316l-2026,316L Stainless Steel,400.0,1200.0,80.0,20.0,0.0,,keyhole
+hofmann-0264,hofmann-316l-2026,316L Stainless Steel,225.0,750.0,110.0,20.0,30.0,,conduction
+hofmann-0265,hofmann-316l-2026,316L Stainless Steel,300.0,1500.0,110.0,20.0,0.0,,conduction
+hofmann-0266,hofmann-316l-2026,316L Stainless Steel,150.0,600.0,50.0,20.0,60.0,,keyhole
+hofmann-0267,hofmann-316l-2026,316L Stainless Steel,150.0,450.0,110.0,20.0,60.0,,conduction
+hofmann-0268,hofmann-316l-2026,316L Stainless Steel,250.0,1200.0,110.0,20.0,30.0,,conduction
+hofmann-0269,hofmann-316l-2026,316L Stainless Steel,100.0,300.0,80.0,20.0,0.0,,transition
+hofmann-0270,hofmann-316l-2026,316L Stainless Steel,425.0,750.0,80.0,20.0,0.0,,keyhole
+hofmann-0271,hofmann-316l-2026,316L Stainless Steel,175.0,450.0,80.0,20.0,30.0,,transition
+hofmann-0272,hofmann-316l-2026,316L Stainless Steel,250.0,750.0,50.0,20.0,60.0,,keyhole
+hofmann-0273,hofmann-316l-2026,316L Stainless Steel,500.0,1200.0,80.0,20.0,60.0,,keyhole
+hofmann-0274,hofmann-316l-2026,316L Stainless Steel,350.0,600.0,140.0,20.0,60.0,,transition
+hofmann-0275,hofmann-316l-2026,316L Stainless Steel,150.0,600.0,50.0,20.0,0.0,,keyhole
+hofmann-0276,hofmann-316l-2026,316L Stainless Steel,350.0,1500.0,80.0,20.0,60.0,,transition
+hofmann-0277,hofmann-316l-2026,316L Stainless Steel,250.0,1200.0,50.0,20.0,60.0,,keyhole
+hofmann-0278,hofmann-316l-2026,316L Stainless Steel,300.0,1200.0,110.0,20.0,0.0,,conduction
+hofmann-0279,hofmann-316l-2026,316L Stainless Steel,375.0,450.0,140.0,20.0,30.0,,transition
+hofmann-0280,hofmann-316l-2026,316L Stainless Steel,200.0,750.0,50.0,20.0,60.0,,keyhole
+hofmann-0281,hofmann-316l-2026,316L Stainless Steel,350.0,1200.0,80.0,20.0,30.0,,transition
+hofmann-0282,hofmann-316l-2026,316L Stainless Steel,100.0,600.0,80.0,20.0,30.0,,conduction
+hofmann-0283,hofmann-316l-2026,316L Stainless Steel,225.0,525.0,50.0,20.0,60.0,,keyhole
+hofmann-0284,hofmann-316l-2026,316L Stainless Steel,300.0,300.0,110.0,20.0,60.0,,transition
+hofmann-0285,hofmann-316l-2026,316L Stainless Steel,275.0,750.0,110.0,20.0,0.0,,transition
+hofmann-0286,hofmann-316l-2026,316L Stainless Steel,350.0,1500.0,110.0,20.0,0.0,,conduction
+hofmann-0287,hofmann-316l-2026,316L Stainless Steel,250.0,1500.0,140.0,20.0,0.0,,conduction
+hofmann-0288,hofmann-316l-2026,316L Stainless Steel,275.0,1050.0,110.0,20.0,0.0,,conduction
+hofmann-0289,hofmann-316l-2026,316L Stainless Steel,200.0,1000.0,50.0,20.0,30.0,,keyhole
+hofmann-0290,hofmann-316l-2026,316L Stainless Steel,425.0,1050.0,50.0,20.0,0.0,,keyhole
+hofmann-0291,hofmann-316l-2026,316L Stainless Steel,500.0,900.0,80.0,20.0,60.0,,keyhole
+hofmann-0292,hofmann-316l-2026,316L Stainless Steel,75.0,450.0,80.0,20.0,30.0,,conduction
+hofmann-0293,hofmann-316l-2026,316L Stainless Steel,400.0,1500.0,80.0,20.0,0.0,,transition
+hofmann-0294,hofmann-316l-2026,316L Stainless Steel,500.0,600.0,80.0,20.0,60.0,,keyhole
+hofmann-0295,hofmann-316l-2026,316L Stainless Steel,275.0,750.0,50.0,20.0,30.0,,keyhole
+hofmann-0296,hofmann-316l-2026,316L Stainless Steel,200.0,1500.0,50.0,20.0,60.0,,transition
+hofmann-0297,hofmann-316l-2026,316L Stainless Steel,450.0,450.0,140.0,20.0,60.0,,transition
+hofmann-0298,hofmann-316l-2026,316L Stainless Steel,400.0,1200.0,80.0,20.0,60.0,,keyhole
+hofmann-0299,hofmann-316l-2026,316L Stainless Steel,325.0,1050.0,110.0,20.0,0.0,,transition
+hofmann-0300,hofmann-316l-2026,316L Stainless Steel,125.0,450.0,110.0,20.0,30.0,,conduction
+hofmann-0301,hofmann-316l-2026,316L Stainless Steel,100.0,1200.0,80.0,20.0,0.0,,conduction
+hofmann-0302,hofmann-316l-2026,316L Stainless Steel,350.0,900.0,50.0,20.0,0.0,,keyhole
+hofmann-0303,hofmann-316l-2026,316L Stainless Steel,300.0,750.0,80.0,20.0,60.0,,transition
+hofmann-0304,hofmann-316l-2026,316L Stainless Steel,250.0,600.0,110.0,20.0,0.0,,transition
+hofmann-0305,hofmann-316l-2026,316L Stainless Steel,150.0,600.0,140.0,20.0,30.0,,conduction
+hofmann-0306,hofmann-316l-2026,316L Stainless Steel,150.0,1050.0,80.0,20.0,0.0,,conduction
+hofmann-0307,hofmann-316l-2026,316L Stainless Steel,200.0,300.0,80.0,20.0,60.0,,keyhole
+hofmann-0308,hofmann-316l-2026,316L Stainless Steel,500.0,1200.0,80.0,20.0,30.0,,keyhole
+hofmann-0309,hofmann-316l-2026,316L Stainless Steel,275.0,225.0,140.0,20.0,60.0,,transition
+hofmann-0310,hofmann-316l-2026,316L Stainless Steel,200.0,300.0,140.0,20.0,0.0,,conduction
+hofmann-0311,hofmann-316l-2026,316L Stainless Steel,175.0,900.0,50.0,20.0,30.0,,keyhole
+hofmann-0312,hofmann-316l-2026,316L Stainless Steel,300.0,1200.0,50.0,20.0,0.0,,keyhole
+hofmann-0313,hofmann-316l-2026,316L Stainless Steel,400.0,300.0,140.0,20.0,30.0,,transition
+hofmann-0314,hofmann-316l-2026,316L Stainless Steel,275.0,525.0,110.0,20.0,60.0,,transition
+hofmann-0315,hofmann-316l-2026,316L Stainless Steel,200.0,1500.0,50.0,20.0,0.0,,transition
+hofmann-0316,hofmann-316l-2026,316L Stainless Steel,250.0,300.0,140.0,20.0,60.0,,transition
+hofmann-0317,hofmann-316l-2026,316L Stainless Steel,400.0,600.0,80.0,20.0,30.0,,keyhole
+hofmann-0318,hofmann-316l-2026,316L Stainless Steel,425.0,525.0,140.0,20.0,60.0,,transition
+hofmann-0319,hofmann-316l-2026,316L Stainless Steel,500.0,600.0,140.0,20.0,60.0,,transition
+hofmann-0320,hofmann-316l-2026,316L Stainless Steel,250.0,1500.0,80.0,20.0,0.0,,transition
+hofmann-0321,hofmann-316l-2026,316L Stainless Steel,250.0,1200.0,80.0,20.0,0.0,,transition
+hofmann-0322,hofmann-316l-2026,316L Stainless Steel,375.0,1050.0,110.0,20.0,0.0,,transition
+hofmann-0323,hofmann-316l-2026,316L Stainless Steel,200.0,1200.0,50.0,20.0,30.0,,keyhole
+hofmann-0324,hofmann-316l-2026,316L Stainless Steel,375.0,525.0,110.0,20.0,60.0,,transition
+hofmann-0325,hofmann-316l-2026,316L Stainless Steel,125.0,450.0,50.0,20.0,30.0,,keyhole
+hofmann-0326,hofmann-316l-2026,316L Stainless Steel,50.0,300.0,50.0,20.0,0.0,,transition
+hofmann-0327,hofmann-316l-2026,316L Stainless Steel,175.0,825.0,50.0,20.0,60.0,,keyhole
+hofmann-0328,hofmann-316l-2026,316L Stainless Steel,425.0,450.0,80.0,20.0,30.0,,keyhole
+hofmann-0329,hofmann-316l-2026,316L Stainless Steel,425.0,525.0,110.0,20.0,60.0,,keyhole
+hofmann-0330,hofmann-316l-2026,316L Stainless Steel,175.0,1350.0,50.0,20.0,0.0,,transition
+hofmann-0331,hofmann-316l-2026,316L Stainless Steel,125.0,1050.0,80.0,20.0,30.0,,conduction
+hofmann-0332,hofmann-316l-2026,316L Stainless Steel,200.0,900.0,50.0,20.0,0.0,,keyhole
+hofmann-0333,hofmann-316l-2026,316L Stainless Steel,125.0,975.0,50.0,20.0,60.0,,transition
+hofmann-0334,hofmann-316l-2026,316L Stainless Steel,300.0,300.0,140.0,20.0,60.0,,transition
+hofmann-0335,hofmann-316l-2026,316L Stainless Steel,100.0,600.0,140.0,20.0,30.0,,conduction
+hofmann-0336,hofmann-316l-2026,316L Stainless Steel,350.0,300.0,110.0,20.0,0.0,,keyhole
+hofmann-0337,hofmann-316l-2026,316L Stainless Steel,300.0,1500.0,50.0,20.0,60.0,,keyhole
+hofmann-0338,hofmann-316l-2026,316L Stainless Steel,450.0,900.0,140.0,20.0,30.0,,transition
+hofmann-0339,hofmann-316l-2026,316L Stainless Steel,225.0,450.0,50.0,20.0,30.0,,keyhole
+hofmann-0340,hofmann-316l-2026,316L Stainless Steel,425.0,750.0,110.0,20.0,30.0,,transition
+hofmann-0341,hofmann-316l-2026,316L Stainless Steel,100.0,1200.0,50.0,20.0,0.0,,transition
+hofmann-0342,hofmann-316l-2026,316L Stainless Steel,225.0,750.0,80.0,20.0,30.0,,transition
+hofmann-0343,hofmann-316l-2026,316L Stainless Steel,200.0,300.0,80.0,20.0,0.0,,keyhole
+hofmann-0344,hofmann-316l-2026,316L Stainless Steel,375.0,1050.0,50.0,20.0,30.0,,keyhole
+hofmann-0345,hofmann-316l-2026,316L Stainless Steel,375.0,1050.0,50.0,20.0,0.0,,keyhole
+hofmann-0346,hofmann-316l-2026,316L Stainless Steel,100.0,1500.0,50.0,20.0,0.0,,conduction
+hofmann-0347,hofmann-316l-2026,316L Stainless Steel,425.0,750.0,80.0,20.0,30.0,,keyhole
+hofmann-0348,hofmann-316l-2026,316L Stainless Steel,150.0,600.0,110.0,20.0,30.0,,conduction
+hofmann-0349,hofmann-316l-2026,316L Stainless Steel,300.0,900.0,80.0,20.0,60.0,,transition
+hofmann-0350,hofmann-316l-2026,316L Stainless Steel,150.0,600.0,80.0,20.0,60.0,,transition
+hofmann-0351,hofmann-316l-2026,316L Stainless Steel,200.0,300.0,110.0,20.0,30.0,,transition
+hofmann-0352,hofmann-316l-2026,316L Stainless Steel,300.0,1050.0,80.0,20.0,0.0,,transition
+hofmann-0353,hofmann-316l-2026,316L Stainless Steel,250.0,300.0,110.0,20.0,30.0,,transition
+hofmann-0354,hofmann-316l-2026,316L Stainless Steel,400.0,1500.0,140.0,20.0,30.0,,conduction
+hofmann-0355,hofmann-316l-2026,316L Stainless Steel,300.0,1200.0,110.0,20.0,30.0,,conduction
+hofmann-0356,hofmann-316l-2026,316L Stainless Steel,450.0,900.0,50.0,20.0,60.0,,keyhole
+hofmann-0357,hofmann-316l-2026,316L Stainless Steel,150.0,1200.0,110.0,20.0,0.0,,conduction
+hofmann-0358,hofmann-316l-2026,316L Stainless Steel,175.0,750.0,80.0,20.0,0.0,,transition
+hofmann-0359,hofmann-316l-2026,316L Stainless Steel,275.0,750.0,80.0,20.0,0.0,,transition
+hofmann-0360,hofmann-316l-2026,316L Stainless Steel,300.0,600.0,110.0,20.0,30.0,,transition
+hofmann-0361,hofmann-316l-2026,316L Stainless Steel,200.0,900.0,80.0,20.0,60.0,,transition
+hofmann-0362,hofmann-316l-2026,316L Stainless Steel,150.0,900.0,110.0,20.0,30.0,,conduction
+hofmann-0363,hofmann-316l-2026,316L Stainless Steel,375.0,450.0,110.0,20.0,30.0,,transition
+hofmann-0364,hofmann-316l-2026,316L Stainless Steel,150.0,1200.0,50.0,20.0,0.0,,transition
+hofmann-0365,hofmann-316l-2026,316L Stainless Steel,250.0,900.0,50.0,20.0,0.0,,keyhole
+hofmann-0366,hofmann-316l-2026,316L Stainless Steel,275.0,750.0,140.0,20.0,30.0,,conduction
+hofmann-0367,hofmann-316l-2026,316L Stainless Steel,500.0,300.0,80.0,20.0,60.0,,keyhole
+hofmann-0368,hofmann-316l-2026,316L Stainless Steel,475.0,675.0,140.0,20.0,30.0,,transition
+hofmann-0369,hofmann-316l-2026,316L Stainless Steel,300.0,450.0,50.0,20.0,60.0,,keyhole
+hofmann-0370,hofmann-316l-2026,316L Stainless Steel,400.0,450.0,140.0,20.0,60.0,,transition
+hofmann-0371,hofmann-316l-2026,316L Stainless Steel,350.0,750.0,80.0,20.0,60.0,,keyhole
+hofmann-0372,hofmann-316l-2026,316L Stainless Steel,450.0,900.0,110.0,20.0,30.0,,transition
+hofmann-0373,hofmann-316l-2026,316L Stainless Steel,225.0,750.0,140.0,20.0,30.0,,conduction
+hofmann-0374,hofmann-316l-2026,316L Stainless Steel,450.0,1500.0,80.0,20.0,60.0,,keyhole
+hofmann-0375,hofmann-316l-2026,316L Stainless Steel,225.0,1050.0,80.0,20.0,30.0,,transition
+hofmann-0376,hofmann-316l-2026,316L Stainless Steel,225.0,375.0,110.0,20.0,60.0,,transition
+hofmann-0377,hofmann-316l-2026,316L Stainless Steel,225.0,1350.0,80.0,20.0,0.0,,transition
+hofmann-0378,hofmann-316l-2026,316L Stainless Steel,150.0,900.0,50.0,20.0,60.0,,transition
+hofmann-0379,hofmann-316l-2026,316L Stainless Steel,400.0,1200.0,110.0,20.0,30.0,,transition
+hofmann-0380,hofmann-316l-2026,316L Stainless Steel,300.0,300.0,110.0,20.0,0.0,,transition
+hofmann-0381,hofmann-316l-2026,316L Stainless Steel,150.0,900.0,50.0,20.0,0.0,,transition
+hofmann-0382,hofmann-316l-2026,316L Stainless Steel,250.0,600.0,140.0,20.0,0.0,,conduction
+hofmann-0383,hofmann-316l-2026,316L Stainless Steel,200.0,600.0,110.0,20.0,0.0,,conduction
+hofmann-0384,hofmann-316l-2026,316L Stainless Steel,325.0,225.0,140.0,20.0,60.0,,transition
+hofmann-0385,hofmann-316l-2026,316L Stainless Steel,350.0,600.0,80.0,20.0,30.0,,keyhole
+hofmann-0386,hofmann-316l-2026,316L Stainless Steel,225.0,450.0,140.0,20.0,30.0,,conduction
+hofmann-0387,hofmann-316l-2026,316L Stainless Steel,350.0,900.0,110.0,20.0,0.0,,transition
+hofmann-0388,hofmann-316l-2026,316L Stainless Steel,500.0,450.0,140.0,20.0,60.0,,transition
+hofmann-0389,hofmann-316l-2026,316L Stainless Steel,325.0,450.0,80.0,20.0,30.0,,keyhole
+hofmann-0390,hofmann-316l-2026,316L Stainless Steel,325.0,450.0,140.0,20.0,30.0,,transition
+hofmann-0391,hofmann-316l-2026,316L Stainless Steel,150.0,900.0,50.0,20.0,30.0,,transition
+hofmann-0392,hofmann-316l-2026,316L Stainless Steel,375.0,850.0,80.0,20.0,60.0,,keyhole
+hofmann-0393,hofmann-316l-2026,316L Stainless Steel,225.0,525.0,110.0,20.0,60.0,,transition
+hofmann-0394,hofmann-316l-2026,316L Stainless Steel,100.0,825.0,50.0,20.0,60.0,,transition
+hofmann-0395,hofmann-316l-2026,316L Stainless Steel,200.0,1050.0,80.0,20.0,60.0,,transition
+hofmann-0396,hofmann-316l-2026,316L Stainless Steel,125.0,750.0,110.0,20.0,0.0,,conduction
+hofmann-0397,hofmann-316l-2026,316L Stainless Steel,400.0,300.0,110.0,20.0,30.0,,keyhole
+hofmann-0398,hofmann-316l-2026,316L Stainless Steel,350.0,600.0,110.0,20.0,0.0,,transition
+hofmann-0399,hofmann-316l-2026,316L Stainless Steel,475.0,750.0,140.0,20.0,30.0,,transition
+hofmann-0400,hofmann-316l-2026,316L Stainless Steel,275.0,1350.0,80.0,20.0,0.0,,transition
+hofmann-0401,hofmann-316l-2026,316L Stainless Steel,250.0,600.0,140.0,20.0,30.0,,conduction
+hofmann-0402,hofmann-316l-2026,316L Stainless Steel,250.0,525.0,140.0,20.0,60.0,,conduction
+hofmann-0403,hofmann-316l-2026,316L Stainless Steel,325.0,735.0,140.0,20.0,60.0,,conduction
+hofmann-0404,hofmann-316l-2026,316L Stainless Steel,225.0,675.0,50.0,20.0,60.0,,keyhole
+hofmann-0405,hofmann-316l-2026,316L Stainless Steel,350.0,1200.0,50.0,20.0,60.0,,keyhole
+hofmann-0406,hofmann-316l-2026,316L Stainless Steel,350.0,900.0,110.0,20.0,30.0,,transition
+hofmann-0407,hofmann-316l-2026,316L Stainless Steel,150.0,300.0,80.0,20.0,60.0,,transition
+hofmann-0408,hofmann-316l-2026,316L Stainless Steel,350.0,300.0,140.0,20.0,30.0,,transition
+hofmann-0409,hofmann-316l-2026,316L Stainless Steel,100.0,900.0,80.0,20.0,0.0,,conduction
+hofmann-0410,hofmann-316l-2026,316L Stainless Steel,450.0,900.0,80.0,20.0,60.0,,keyhole
+hofmann-0411,hofmann-316l-2026,316L Stainless Steel,475.0,375.0,140.0,20.0,60.0,,transition
+hofmann-0412,hofmann-316l-2026,316L Stainless Steel,50.0,300.0,140.0,20.0,0.0,,conduction
+hofmann-0413,hofmann-316l-2026,316L Stainless Steel,350.0,1200.0,80.0,20.0,60.0,,transition
+hofmann-0414,hofmann-316l-2026,316L Stainless Steel,200.0,900.0,50.0,20.0,30.0,,keyhole
+hofmann-0415,hofmann-316l-2026,316L Stainless Steel,350.0,600.0,140.0,20.0,0.0,,transition
+hofmann-0416,hofmann-316l-2026,316L Stainless Steel,450.0,525.0,140.0,20.0,30.0,,transition
+hofmann-0417,hofmann-316l-2026,316L Stainless Steel,150.0,300.0,140.0,20.0,60.0,,conduction
+hofmann-0418,hofmann-316l-2026,316L Stainless Steel,500.0,600.0,140.0,20.0,0.0,,transition
+hofmann-0419,hofmann-316l-2026,316L Stainless Steel,250.0,600.0,80.0,20.0,60.0,,transition
+hofmann-0420,hofmann-316l-2026,316L Stainless Steel,225.0,750.0,50.0,20.0,30.0,,keyhole
+hofmann-0421,hofmann-316l-2026,316L Stainless Steel,300.0,600.0,50.0,20.0,30.0,,keyhole
+hofmann-0422,hofmann-316l-2026,316L Stainless Steel,75.0,900.0,50.0,20.0,30.0,,conduction
+hofmann-0423,hofmann-316l-2026,316L Stainless Steel,175.0,750.0,140.0,20.0,30.0,,conduction
+hofmann-0424,hofmann-316l-2026,316L Stainless Steel,275.0,750.0,110.0,20.0,30.0,,transition
+hofmann-0425,hofmann-316l-2026,316L Stainless Steel,450.0,1500.0,50.0,20.0,60.0,,keyhole
+hofmann-0426,hofmann-316l-2026,316L Stainless Steel,200.0,450.0,50.0,20.0,0.0,,keyhole
+hofmann-0427,hofmann-316l-2026,316L Stainless Steel,175.0,525.0,50.0,20.0,60.0,,keyhole
+hofmann-0428,hofmann-316l-2026,316L Stainless Steel,100.0,300.0,80.0,20.0,60.0,,transition
+hofmann-0429,hofmann-316l-2026,316L Stainless Steel,150.0,300.0,80.0,20.0,60.0,,transition
+hofmann-0430,hofmann-316l-2026,316L Stainless Steel,200.0,1500.0,80.0,20.0,0.0,,conduction
+hofmann-0431,hofmann-316l-2026,316L Stainless Steel,425.0,450.0,140.0,20.0,30.0,,transition
+hofmann-0432,hofmann-316l-2026,316L Stainless Steel,100.0,900.0,110.0,20.0,0.0,,conduction
+hofmann-0433,hofmann-316l-2026,316L Stainless Steel,350.0,1200.0,140.0,20.0,30.0,,conduction
+hofmann-0434,hofmann-316l-2026,316L Stainless Steel,400.0,600.0,110.0,20.0,60.0,,transition
+hofmann-0435,hofmann-316l-2026,316L Stainless Steel,175.0,1050.0,80.0,20.0,30.0,,conduction
+hofmann-0436,hofmann-316l-2026,316L Stainless Steel,150.0,900.0,80.0,20.0,0.0,,conduction
+hofmann-0437,hofmann-316l-2026,316L Stainless Steel,100.0,600.0,50.0,20.0,60.0,,transition
+hofmann-0438,hofmann-316l-2026,316L Stainless Steel,175.0,975.0,50.0,20.0,60.0,,keyhole
+hofmann-0439,hofmann-316l-2026,316L Stainless Steel,400.0,600.0,140.0,20.0,30.0,,transition
+hofmann-0440,hofmann-316l-2026,316L Stainless Steel,400.0,900.0,80.0,20.0,60.0,,keyhole
+hofmann-0441,hofmann-316l-2026,316L Stainless Steel,500.0,1200.0,140.0,20.0,0.0,,transition
+hofmann-0442,hofmann-316l-2026,316L Stainless Steel,400.0,1200.0,50.0,20.0,60.0,,keyhole
+hofmann-0443,hofmann-316l-2026,316L Stainless Steel,200.0,300.0,140.0,20.0,30.0,,conduction
+hofmann-0444,hofmann-316l-2026,316L Stainless Steel,100.0,300.0,80.0,20.0,60.0,,transition
+hofmann-0445,hofmann-316l-2026,316L Stainless Steel,200.0,600.0,50.0,20.0,60.0,,keyhole
+hofmann-0446,hofmann-316l-2026,316L Stainless Steel,75.0,750.0,50.0,20.0,0.0,,conduction
+hofmann-0447,hofmann-316l-2026,316L Stainless Steel,275.0,450.0,140.0,20.0,30.0,,conduction
+hofmann-0448,hofmann-316l-2026,316L Stainless Steel,350.0,900.0,80.0,20.0,30.0,,keyhole
+hofmann-0449,hofmann-316l-2026,316L Stainless Steel,400.0,600.0,80.0,20.0,60.0,,keyhole
+hofmann-0450,hofmann-316l-2026,316L Stainless Steel,375.0,450.0,110.0,20.0,0.0,,transition
+hofmann-0451,hofmann-316l-2026,316L Stainless Steel,200.0,1500.0,110.0,20.0,0.0,,conduction
+hofmann-0452,hofmann-316l-2026,316L Stainless Steel,325.0,750.0,110.0,20.0,0.0,,transition
+hofmann-0453,hofmann-316l-2026,316L Stainless Steel,150.0,600.0,50.0,20.0,60.0,,keyhole
+hofmann-0454,hofmann-316l-2026,316L Stainless Steel,450.0,450.0,110.0,20.0,60.0,,keyhole
+hofmann-0455,hofmann-316l-2026,316L Stainless Steel,300.0,1050.0,80.0,20.0,60.0,,transition
+hofmann-0456,hofmann-316l-2026,316L Stainless Steel,350.0,900.0,80.0,20.0,60.0,,keyhole
+hofmann-0457,hofmann-316l-2026,316L Stainless Steel,125.0,1050.0,50.0,20.0,0.0,,transition
+hofmann-0458,hofmann-316l-2026,316L Stainless Steel,275.0,1050.0,80.0,20.0,30.0,,transition
+hofmann-0459,hofmann-316l-2026,316L Stainless Steel,250.0,1200.0,80.0,20.0,30.0,,transition
+hofmann-0460,hofmann-316l-2026,316L Stainless Steel,350.0,1500.0,50.0,20.0,60.0,,keyhole
+hofmann-0461,hofmann-316l-2026,316L Stainless Steel,100.0,450.0,50.0,20.0,60.0,,transition
+hofmann-0462,hofmann-316l-2026,316L Stainless Steel,250.0,1050.0,80.0,20.0,60.0,,transition
+hofmann-0463,hofmann-316l-2026,316L Stainless Steel,325.0,375.0,110.0,20.0,60.0,,transition
+hofmann-0464,hofmann-316l-2026,316L Stainless Steel,400.0,900.0,140.0,20.0,30.0,,transition
+hofmann-0465,hofmann-316l-2026,316L Stainless Steel,175.0,975.0,50.0,20.0,60.0,,keyhole
+hofmann-0466,hofmann-316l-2026,316L Stainless Steel,350.0,900.0,140.0,20.0,30.0,,conduction
+hofmann-0467,hofmann-316l-2026,316L Stainless Steel,50.0,600.0,80.0,20.0,0.0,,conduction
+hofmann-0468,hofmann-316l-2026,316L Stainless Steel,200.0,450.0,140.0,20.0,60.0,,conduction
+hofmann-0469,hofmann-316l-2026,316L Stainless Steel,350.0,1200.0,140.0,20.0,0.0,,conduction
+hofmann-0470,hofmann-316l-2026,316L Stainless Steel,300.0,300.0,80.0,20.0,30.0,,keyhole
+hofmann-0471,hofmann-316l-2026,316L Stainless Steel,200.0,1200.0,140.0,20.0,0.0,,conduction
+hofmann-0472,hofmann-316l-2026,316L Stainless Steel,350.0,450.0,80.0,20.0,0.0,,keyhole
+hofmann-0473,hofmann-316l-2026,316L Stainless Steel,200.0,600.0,140.0,20.0,30.0,,conduction
+hofmann-0474,hofmann-316l-2026,316L Stainless Steel,350.0,900.0,80.0,20.0,0.0,,keyhole
+hofmann-0475,hofmann-316l-2026,316L Stainless Steel,300.0,1200.0,50.0,20.0,60.0,,keyhole
+hofmann-0476,hofmann-316l-2026,316L Stainless Steel,150.0,1200.0,50.0,20.0,30.0,,transition
+hofmann-0477,hofmann-316l-2026,316L Stainless Steel,500.0,750.0,80.0,20.0,60.0,,keyhole
+hofmann-0478,hofmann-316l-2026,316L Stainless Steel,250.0,300.0,110.0,20.0,60.0,,transition
+hofmann-0479,hofmann-316l-2026,316L Stainless Steel,450.0,600.0,140.0,20.0,30.0,,transition
+hofmann-0480,hofmann-316l-2026,316L Stainless Steel,75.0,450.0,110.0,20.0,30.0,,conduction
+hofmann-0481,hofmann-316l-2026,316L Stainless Steel,250.0,600.0,110.0,20.0,60.0,,transition
+hofmann-0482,hofmann-316l-2026,316L Stainless Steel,325.0,525.0,110.0,20.0,60.0,,transition
+hofmann-0483,hofmann-316l-2026,316L Stainless Steel,450.0,300.0,110.0,20.0,30.0,,keyhole
+hofmann-0484,hofmann-316l-2026,316L Stainless Steel,200.0,900.0,50.0,20.0,0.0,,keyhole
+hofmann-0485,hofmann-316l-2026,316L Stainless Steel,400.0,375.0,110.0,20.0,60.0,,keyhole
+hofmann-0486,hofmann-316l-2026,316L Stainless Steel,375.0,750.0,50.0,20.0,0.0,,keyhole
+hofmann-0487,hofmann-316l-2026,316L Stainless Steel,400.0,1500.0,50.0,20.0,0.0,,keyhole
+hofmann-0488,hofmann-316l-2026,316L Stainless Steel,75.0,525.0,50.0,20.0,60.0,,transition
+hofmann-0489,hofmann-316l-2026,316L Stainless Steel,200.0,600.0,50.0,20.0,30.0,,keyhole
+hofmann-0490,hofmann-316l-2026,316L Stainless Steel,350.0,1200.0,110.0,20.0,0.0,,transition
+hofmann-0491,hofmann-316l-2026,316L Stainless Steel,350.0,300.0,80.0,20.0,0.0,,keyhole
+hofmann-0492,hofmann-316l-2026,316L Stainless Steel,200.0,600.0,140.0,20.0,30.0,,conduction
+hofmann-0493,hofmann-316l-2026,316L Stainless Steel,400.0,900.0,50.0,20.0,30.0,,keyhole
+hofmann-0494,hofmann-316l-2026,316L Stainless Steel,50.0,600.0,50.0,20.0,30.0,,conduction
+hofmann-0495,hofmann-316l-2026,316L Stainless Steel,450.0,600.0,80.0,20.0,0.0,,keyhole
+hofmann-0496,hofmann-316l-2026,316L Stainless Steel,175.0,1050.0,50.0,20.0,0.0,,transition
+hofmann-0497,hofmann-316l-2026,316L Stainless Steel,400.0,1500.0,50.0,20.0,30.0,,keyhole
+hofmann-0498,hofmann-316l-2026,316L Stainless Steel,500.0,900.0,140.0,20.0,60.0,,transition
+hofmann-0499,hofmann-316l-2026,316L Stainless Steel,450.0,600.0,80.0,20.0,60.0,,keyhole
+hofmann-0500,hofmann-316l-2026,316L Stainless Steel,200.0,900.0,50.0,20.0,60.0,,keyhole
+hofmann-0501,hofmann-316l-2026,316L Stainless Steel,250.0,1200.0,80.0,20.0,60.0,,transition
+hofmann-0502,hofmann-316l-2026,316L Stainless Steel,450.0,1200.0,80.0,20.0,0.0,,keyhole
+hofmann-0503,hofmann-316l-2026,316L Stainless Steel,150.0,450.0,50.0,20.0,60.0,,keyhole
+hofmann-0504,hofmann-316l-2026,316L Stainless Steel,175.0,725.0,50.0,20.0,60.0,,keyhole
+hofmann-0505,hofmann-316l-2026,316L Stainless Steel,300.0,300.0,80.0,20.0,0.0,,keyhole
+hofmann-0506,hofmann-316l-2026,316L Stainless Steel,300.0,1200.0,140.0,20.0,30.0,,conduction
+hofmann-0507,hofmann-316l-2026,316L Stainless Steel,350.0,600.0,110.0,20.0,60.0,,transition
+hofmann-0508,hofmann-316l-2026,316L Stainless Steel,100.0,600.0,50.0,20.0,0.0,,transition
+hofmann-0509,hofmann-316l-2026,316L Stainless Steel,350.0,1050.0,80.0,20.0,0.0,,transition
+hofmann-0510,hofmann-316l-2026,316L Stainless Steel,225.0,750.0,80.0,20.0,0.0,,transition
+hofmann-0511,hofmann-316l-2026,316L Stainless Steel,100.0,300.0,110.0,20.0,60.0,,conduction
+hofmann-0512,hofmann-316l-2026,316L Stainless Steel,300.0,1200.0,80.0,20.0,0.0,,transition
+hofmann-0513,hofmann-316l-2026,316L Stainless Steel,200.0,900.0,140.0,20.0,0.0,,conduction
+hofmann-0514,hofmann-316l-2026,316L Stainless Steel,400.0,600.0,110.0,20.0,30.0,,transition
+hofmann-0515,hofmann-316l-2026,316L Stainless Steel,375.0,750.0,80.0,20.0,0.0,,keyhole
+hofmann-0516,hofmann-316l-2026,316L Stainless Steel,400.0,900.0,110.0,20.0,30.0,,transition
+hofmann-0517,hofmann-316l-2026,316L Stainless Steel,125.0,750.0,80.0,20.0,0.0,,conduction
+hofmann-0518,hofmann-316l-2026,316L Stainless Steel,450.0,1200.0,50.0,20.0,60.0,,keyhole
+hofmann-0519,hofmann-316l-2026,316L Stainless Steel,425.0,375.0,110.0,20.0,60.0,,keyhole
+hofmann-0520,hofmann-316l-2026,316L Stainless Steel,75.0,600.0,50.0,20.0,30.0,,transition
+hofmann-0521,hofmann-316l-2026,316L Stainless Steel,300.0,600.0,110.0,20.0,30.0,,transition
+hofmann-0522,hofmann-316l-2026,316L Stainless Steel,150.0,450.0,80.0,20.0,60.0,,transition
+hofmann-0523,hofmann-316l-2026,316L Stainless Steel,250.0,900.0,80.0,20.0,30.0,,transition
+hofmann-0524,hofmann-316l-2026,316L Stainless Steel,450.0,1200.0,140.0,20.0,30.0,,conduction
+hofmann-0525,hofmann-316l-2026,316L Stainless Steel,350.0,1500.0,140.0,20.0,0.0,,conduction
+hofmann-0526,hofmann-316l-2026,316L Stainless Steel,350.0,1200.0,50.0,20.0,0.0,,keyhole
+hofmann-0527,hofmann-316l-2026,316L Stainless Steel,175.0,1350.0,80.0,20.0,0.0,,conduction
+hofmann-0528,hofmann-316l-2026,316L Stainless Steel,350.0,300.0,110.0,20.0,60.0,,keyhole
+hofmann-0529,hofmann-316l-2026,316L Stainless Steel,100.0,1050.0,80.0,20.0,0.0,,conduction
+hofmann-0530,hofmann-316l-2026,316L Stainless Steel,275.0,375.0,140.0,20.0,60.0,,transition
+hofmann-0531,hofmann-316l-2026,316L Stainless Steel,175.0,750.0,110.0,20.0,30.0,,conduction
+hofmann-0532,hofmann-316l-2026,316L Stainless Steel,400.0,1200.0,110.0,20.0,0.0,,transition
+hofmann-0533,hofmann-316l-2026,316L Stainless Steel,250.0,600.0,110.0,20.0,30.0,,transition
+hofmann-0534,hofmann-316l-2026,316L Stainless Steel,500.0,900.0,110.0,20.0,60.0,,transition
+hofmann-0535,hofmann-316l-2026,316L Stainless Steel,400.0,1500.0,110.0,20.0,60.0,,transition
+hofmann-0536,hofmann-316l-2026,316L Stainless Steel,275.0,750.0,50.0,20.0,0.0,,keyhole
+hofmann-0537,hofmann-316l-2026,316L Stainless Steel,150.0,600.0,80.0,20.0,30.0,,transition
+hofmann-0538,hofmann-316l-2026,316L Stainless Steel,200.0,300.0,50.0,20.0,30.0,,keyhole
+hofmann-0539,hofmann-316l-2026,316L Stainless Steel,500.0,450.0,80.0,20.0,60.0,,keyhole
+hofmann-0540,hofmann-316l-2026,316L Stainless Steel,250.0,300.0,110.0,20.0,60.0,,transition
+hofmann-0541,hofmann-316l-2026,316L Stainless Steel,50.0,300.0,110.0,20.0,0.0,,conduction
+hofmann-0542,hofmann-316l-2026,316L Stainless Steel,300.0,900.0,50.0,20.0,0.0,,keyhole
+hofmann-0543,hofmann-316l-2026,316L Stainless Steel,200.0,900.0,110.0,20.0,0.0,,conduction
+hofmann-0544,hofmann-316l-2026,316L Stainless Steel,50.0,450.0,50.0,20.0,0.0,,conduction
+hofmann-0545,hofmann-316l-2026,316L Stainless Steel,425.0,1050.0,110.0,20.0,0.0,,transition
+hofmann-0546,hofmann-316l-2026,316L Stainless Steel,450.0,1500.0,110.0,20.0,60.0,,transition
+hofmann-0547,hofmann-316l-2026,316L Stainless Steel,250.0,1500.0,80.0,20.0,30.0,,transition
+hofmann-0548,hofmann-316l-2026,316L Stainless Steel,225.0,225.0,140.0,20.0,60.0,,transition
+hofmann-0549,hofmann-316l-2026,316L Stainless Steel,475.0,750.0,80.0,20.0,30.0,,keyhole
+hofmann-0550,hofmann-316l-2026,316L Stainless Steel,100.0,1200.0,50.0,20.0,30.0,,transition
+hofmann-0551,hofmann-316l-2026,316L Stainless Steel,150.0,450.0,50.0,20.0,0.0,,keyhole
+hofmann-0552,hofmann-316l-2026,316L Stainless Steel,400.0,600.0,80.0,20.0,0.0,,keyhole
+hofmann-0553,hofmann-316l-2026,316L Stainless Steel,300.0,300.0,80.0,20.0,60.0,,keyhole
+hofmann-0554,hofmann-316l-2026,316L Stainless Steel,300.0,300.0,110.0,20.0,60.0,,transition
+hofmann-0555,hofmann-316l-2026,316L Stainless Steel,175.0,675.0,50.0,20.0,60.0,,keyhole
+hofmann-0556,hofmann-316l-2026,316L Stainless Steel,250.0,900.0,50.0,20.0,60.0,,keyhole
+hofmann-0557,hofmann-316l-2026,316L Stainless Steel,450.0,300.0,110.0,20.0,0.0,,keyhole
+hofmann-0558,hofmann-316l-2026,316L Stainless Steel,325.0,750.0,80.0,20.0,0.0,,keyhole
+hofmann-0559,hofmann-316l-2026,316L Stainless Steel,450.0,1500.0,80.0,20.0,30.0,,keyhole
+hofmann-0560,hofmann-316l-2026,316L Stainless Steel,125.0,450.0,80.0,20.0,30.0,,transition
+hofmann-0561,hofmann-316l-2026,316L Stainless Steel,150.0,300.0,80.0,20.0,30.0,,transition
+hofmann-0562,hofmann-316l-2026,316L Stainless Steel,150.0,1200.0,80.0,20.0,0.0,,conduction
+hofmann-0563,hofmann-316l-2026,316L Stainless Steel,100.0,600.0,140.0,20.0,0.0,,conduction
+hofmann-0564,hofmann-316l-2026,316L Stainless Steel,300.0,1200.0,80.0,20.0,30.0,,transition
+hofmann-0565,hofmann-316l-2026,316L Stainless Steel,400.0,900.0,80.0,20.0,30.0,,keyhole
+hofmann-0566,hofmann-316l-2026,316L Stainless Steel,500.0,300.0,110.0,20.0,60.0,,keyhole
+hofmann-0567,hofmann-316l-2026,316L Stainless Steel,250.0,1500.0,110.0,20.0,0.0,,conduction
+hofmann-0568,hofmann-316l-2026,316L Stainless Steel,475.0,1050.0,50.0,20.0,0.0,,keyhole
+hofmann-0569,hofmann-316l-2026,316L Stainless Steel,450.0,1200.0,80.0,20.0,30.0,,keyhole
+hofmann-0570,hofmann-316l-2026,316L Stainless Steel,250.0,1200.0,50.0,20.0,30.0,,keyhole
+hofmann-0571,hofmann-316l-2026,316L Stainless Steel,150.0,1050.0,50.0,20.0,60.0,,transition
+hofmann-0572,hofmann-316l-2026,316L Stainless Steel,150.0,900.0,50.0,20.0,60.0,,transition
+hofmann-0573,hofmann-316l-2026,316L Stainless Steel,150.0,300.0,50.0,20.0,60.0,,keyhole
+hofmann-0574,hofmann-316l-2026,316L Stainless Steel,300.0,600.0,80.0,20.0,30.0,,keyhole
+hofmann-0575,hofmann-316l-2026,316L Stainless Steel,100.0,900.0,50.0,20.0,30.0,,transition
+hofmann-0576,hofmann-316l-2026,316L Stainless Steel,200.0,600.0,80.0,20.0,60.0,,transition
+hofmann-0577,hofmann-316l-2026,316L Stainless Steel,275.0,450.0,80.0,20.0,30.0,,keyhole
+hofmann-0578,hofmann-316l-2026,316L Stainless Steel,250.0,900.0,110.0,20.0,30.0,,conduction
+hofmann-0579,hofmann-316l-2026,316L Stainless Steel,400.0,900.0,110.0,20.0,0.0,,transition
+hofmann-0580,hofmann-316l-2026,316L Stainless Steel,350.0,900.0,50.0,20.0,30.0,,keyhole
+hofmann-0581,hofmann-316l-2026,316L Stainless Steel,250.0,1500.0,50.0,20.0,60.0,,keyhole
+hofmann-0582,hofmann-316l-2026,316L Stainless Steel,250.0,450.0,110.0,20.0,60.0,,transition
+hofmann-0583,hofmann-316l-2026,316L Stainless Steel,200.0,300.0,80.0,20.0,30.0,,keyhole
+hofmann-0584,hofmann-316l-2026,316L Stainless Steel,200.0,600.0,80.0,20.0,60.0,,transition
+hofmann-0585,hofmann-316l-2026,316L Stainless Steel,150.0,300.0,140.0,20.0,30.0,,conduction
+hofmann-0586,hofmann-316l-2026,316L Stainless Steel,400.0,300.0,80.0,20.0,60.0,,keyhole
+hofmann-0587,hofmann-316l-2026,316L Stainless Steel,150.0,300.0,110.0,20.0,0.0,,conduction
+hofmann-0588,hofmann-316l-2026,316L Stainless Steel,200.0,300.0,140.0,20.0,60.0,,conduction
+hofmann-0589,hofmann-316l-2026,316L Stainless Steel,300.0,900.0,50.0,20.0,30.0,,keyhole
+hofmann-0590,hofmann-316l-2026,316L Stainless Steel,300.0,900.0,110.0,20.0,0.0,,transition
+hofmann-0591,hofmann-316l-2026,316L Stainless Steel,300.0,1500.0,80.0,20.0,30.0,,transition
+hofmann-0592,hofmann-316l-2026,316L Stainless Steel,300.0,600.0,110.0,20.0,60.0,,transition
+hofmann-0593,hofmann-316l-2026,316L Stainless Steel,100.0,600.0,50.0,20.0,60.0,,transition
+hofmann-0594,hofmann-316l-2026,316L Stainless Steel,350.0,900.0,50.0,20.0,60.0,,keyhole
+hofmann-0595,hofmann-316l-2026,316L Stainless Steel,275.0,900.0,80.0,20.0,30.0,,transition
+hofmann-0596,hofmann-316l-2026,316L Stainless Steel,475.0,525.0,140.0,20.0,60.0,,transition
+hofmann-0597,hofmann-316l-2026,316L Stainless Steel,300.0,1200.0,80.0,20.0,60.0,,transition
+hofmann-0598,hofmann-316l-2026,316L Stainless Steel,150.0,1500.0,80.0,20.0,0.0,,conduction
+hofmann-0599,hofmann-316l-2026,316L Stainless Steel,450.0,600.0,110.0,20.0,60.0,,keyhole
+hofmann-0600,hofmann-316l-2026,316L Stainless Steel,475.0,375.0,110.0,20.0,60.0,,keyhole
+hofmann-0601,hofmann-316l-2026,316L Stainless Steel,250.0,1200.0,110.0,20.0,0.0,,conduction
+hofmann-0602,hofmann-316l-2026,316L Stainless Steel,225.0,900.0,50.0,20.0,30.0,,keyhole
+hofmann-0603,hofmann-316l-2026,316L Stainless Steel,250.0,900.0,140.0,20.0,0.0,,conduction
+hofmann-0604,hofmann-316l-2026,316L Stainless Steel,100.0,300.0,140.0,20.0,30.0,,conduction
+hofmann-0605,hofmann-316l-2026,316L Stainless Steel,275.0,700.0,110.0,20.0,60.0,,transition
+hofmann-0606,hofmann-316l-2026,316L Stainless Steel,100.0,450.0,50.0,20.0,0.0,,transition
+hofmann-0607,hofmann-316l-2026,316L Stainless Steel,325.0,750.0,140.0,20.0,30.0,,conduction
+hofmann-0608,hofmann-316l-2026,316L Stainless Steel,50.0,1050.0,80.0,20.0,0.0,,conduction
+hofmann-0609,hofmann-316l-2026,316L Stainless Steel,225.0,1350.0,50.0,20.0,0.0,,keyhole
+hofmann-0610,hofmann-316l-2026,316L Stainless Steel,350.0,1200.0,50.0,20.0,30.0,,keyhole
+hofmann-0611,hofmann-316l-2026,316L Stainless Steel,325.0,450.0,110.0,20.0,30.0,,transition
+hofmann-0612,hofmann-316l-2026,316L Stainless Steel,400.0,600.0,140.0,20.0,0.0,,transition
+hofmann-0613,hofmann-316l-2026,316L Stainless Steel,50.0,900.0,50.0,20.0,0.0,,conduction
+hofmann-0614,hofmann-316l-2026,316L Stainless Steel,225.0,1050.0,110.0,20.0,0.0,,conduction
+hofmann-0615,hofmann-316l-2026,316L Stainless Steel,350.0,600.0,140.0,20.0,30.0,,transition
+hofmann-0616,hofmann-316l-2026,316L Stainless Steel,200.0,1500.0,50.0,20.0,30.0,,transition
+hofmann-0617,hofmann-316l-2026,316L Stainless Steel,100.0,450.0,80.0,20.0,60.0,,conduction
+hofmann-0618,hofmann-316l-2026,316L Stainless Steel,100.0,600.0,80.0,20.0,0.0,,conduction
+hofmann-0619,hofmann-316l-2026,316L Stainless Steel,175.0,225.0,140.0,20.0,60.0,,conduction
+hofmann-0620,hofmann-316l-2026,316L Stainless Steel,250.0,450.0,80.0,20.0,60.0,,keyhole
+hofmann-0621,hofmann-316l-2026,316L Stainless Steel,300.0,1500.0,50.0,20.0,30.0,,keyhole
+hofmann-0622,hofmann-316l-2026,316L Stainless Steel,300.0,1200.0,50.0,20.0,30.0,,keyhole
+hofmann-0623,hofmann-316l-2026,316L Stainless Steel,400.0,900.0,50.0,20.0,0.0,,keyhole
+hofmann-0624,hofmann-316l-2026,316L Stainless Steel,375.0,750.0,110.0,20.0,0.0,,transition
+hofmann-0625,hofmann-316l-2026,316L Stainless Steel,450.0,1200.0,140.0,20.0,0.0,,conduction
+hofmann-0626,hofmann-316l-2026,316L Stainless Steel,275.0,675.0,140.0,20.0,60.0,,conduction
+hofmann-0627,hofmann-316l-2026,316L Stainless Steel,400.0,1500.0,80.0,20.0,30.0,,transition
+hofmann-0628,hofmann-316l-2026,316L Stainless Steel,500.0,600.0,110.0,20.0,30.0,,keyhole
+hofmann-0629,hofmann-316l-2026,316L Stainless Steel,250.0,1200.0,140.0,20.0,0.0,,conduction
+hofmann-0630,hofmann-316l-2026,316L Stainless Steel,200.0,1050.0,50.0,20.0,60.0,,keyhole
+hofmann-0631,hofmann-316l-2026,316L Stainless Steel,350.0,1500.0,50.0,20.0,0.0,,keyhole
+hofmann-0632,hofmann-316l-2026,316L Stainless Steel,250.0,1500.0,50.0,20.0,30.0,,keyhole
+hofmann-0633,hofmann-316l-2026,316L Stainless Steel,137.5,825.0,50.0,20.0,60.0,,transition
+hofmann-0634,hofmann-316l-2026,316L Stainless Steel,200.0,450.0,80.0,20.0,60.0,,transition
+hofmann-0635,hofmann-316l-2026,316L Stainless Steel,100.0,600.0,110.0,20.0,30.0,,conduction
+hofmann-0636,hofmann-316l-2026,316L Stainless Steel,175.0,450.0,110.0,20.0,30.0,,conduction
+hofmann-0637,hofmann-316l-2026,316L Stainless Steel,300.0,300.0,110.0,20.0,30.0,,transition
+hofmann-0638,hofmann-316l-2026,316L Stainless Steel,150.0,1500.0,50.0,20.0,30.0,,transition
+hofmann-0639,hofmann-316l-2026,316L Stainless Steel,450.0,450.0,110.0,20.0,60.0,,keyhole
+hofmann-0640,hofmann-316l-2026,316L Stainless Steel,300.0,1500.0,80.0,20.0,60.0,,transition
+hofmann-0641,hofmann-316l-2026,316L Stainless Steel,475.0,750.0,110.0,20.0,0.0,,transition
+hofmann-0642,hofmann-316l-2026,316L Stainless Steel,400.0,450.0,80.0,20.0,0.0,,keyhole
+hofmann-0643,hofmann-316l-2026,316L Stainless Steel,100.0,300.0,50.0,20.0,30.0,,keyhole
+hofmann-0644,hofmann-316l-2026,316L Stainless Steel,250.0,900.0,50.0,20.0,30.0,,keyhole
+hofmann-0645,hofmann-316l-2026,316L Stainless Steel,275.0,450.0,110.0,20.0,0.0,,transition
+hofmann-0646,hofmann-316l-2026,316L Stainless Steel,500.0,1200.0,110.0,20.0,30.0,,transition
+hofmann-0647,hofmann-316l-2026,316L Stainless Steel,250.0,450.0,50.0,20.0,60.0,,keyhole
+hofmann-0648,hofmann-316l-2026,316L Stainless Steel,275.0,675.0,50.0,20.0,60.0,,keyhole
+hofmann-0649,hofmann-316l-2026,316L Stainless Steel,350.0,1200.0,110.0,20.0,30.0,,transition
+hofmann-0650,hofmann-316l-2026,316L Stainless Steel,125.0,900.0,50.0,20.0,30.0,,transition
+hofmann-0651,hofmann-316l-2026,316L Stainless Steel,450.0,600.0,80.0,20.0,60.0,,keyhole
+hofmann-0652,hofmann-316l-2026,316L Stainless Steel,200.0,600.0,50.0,20.0,0.0,,keyhole
+hofmann-0653,hofmann-316l-2026,316L Stainless Steel,200.0,600.0,110.0,20.0,30.0,,conduction
+hofmann-0654,hofmann-316l-2026,316L Stainless Steel,200.0,300.0,110.0,20.0,60.0,,transition
+hofmann-0655,hofmann-316l-2026,316L Stainless Steel,150.0,300.0,50.0,20.0,30.0,,keyhole
+hofmann-0656,hofmann-316l-2026,316L Stainless Steel,150.0,750.0,50.0,20.0,60.0,,transition
+hofmann-0657,hofmann-316l-2026,316L Stainless Steel,500.0,1500.0,80.0,20.0,30.0,,keyhole
+hofmann-0658,hofmann-316l-2026,316L Stainless Steel,375.0,525.0,110.0,20.0,60.0,,transition
+hofmann-0659,hofmann-316l-2026,316L Stainless Steel,400.0,1500.0,80.0,20.0,60.0,,transition
+hofmann-0660,hofmann-316l-2026,316L Stainless Steel,300.0,600.0,50.0,20.0,60.0,,keyhole
+hofmann-0661,hofmann-316l-2026,316L Stainless Steel,275.0,750.0,80.0,20.0,30.0,,transition
+hofmann-0662,hofmann-316l-2026,316L Stainless Steel,300.0,1500.0,140.0,20.0,0.0,,conduction
+hofmann-0663,hofmann-316l-2026,316L Stainless Steel,350.0,1200.0,80.0,20.0,0.0,,transition
+hofmann-0664,hofmann-316l-2026,316L Stainless Steel,225.0,450.0,80.0,20.0,30.0,,transition
+hofmann-0665,hofmann-316l-2026,316L Stainless Steel,300.0,1500.0,110.0,20.0,30.0,,conduction
+hofmann-0666,hofmann-316l-2026,316L Stainless Steel,250.0,300.0,140.0,20.0,30.0,,transition
+hofmann-0667,hofmann-316l-2026,316L Stainless Steel,125.0,1050.0,50.0,20.0,30.0,,transition
+hofmann-0668,hofmann-316l-2026,316L Stainless Steel,175.0,1050.0,50.0,20.0,30.0,,transition
+hofmann-0669,hofmann-316l-2026,316L Stainless Steel,425.0,1050.0,50.0,20.0,30.0,,keyhole
+hofmann-0670,hofmann-316l-2026,316L Stainless Steel,375.0,675.0,140.0,20.0,60.0,,transition
+hofmann-0671,hofmann-316l-2026,316L Stainless Steel,350.0,1500.0,80.0,20.0,0.0,,transition
+hofmann-0672,hofmann-316l-2026,316L Stainless Steel,350.0,1500.0,110.0,20.0,30.0,,conduction
+hofmann-0673,hofmann-316l-2026,316L Stainless Steel,325.0,750.0,110.0,20.0,30.0,,transition
+hofmann-0674,hofmann-316l-2026,316L Stainless Steel,250.0,900.0,110.0,20.0,0.0,,conduction
+hofmann-0675,hofmann-316l-2026,316L Stainless Steel,350.0,300.0,80.0,20.0,60.0,,keyhole
+hofmann-0676,hofmann-316l-2026,316L Stainless Steel,150.0,600.0,140.0,20.0,0.0,,conduction
+hofmann-0677,hofmann-316l-2026,316L Stainless Steel,350.0,600.0,50.0,20.0,30.0,,keyhole
+ku-leuven-316l-2021-01,ku-leuven-316l-2021,316L Stainless Steel,100.0,400.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-02,ku-leuven-316l-2021,316L Stainless Steel,100.0,500.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-03,ku-leuven-316l-2021,316L Stainless Steel,100.0,600.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-04,ku-leuven-316l-2021,316L Stainless Steel,100.0,700.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-05,ku-leuven-316l-2021,316L Stainless Steel,100.0,800.0,37.5,20.0,,,transition
+ku-leuven-316l-2021-06,ku-leuven-316l-2021,316L Stainless Steel,100.0,900.0,37.5,20.0,,,transition
+ku-leuven-316l-2021-07,ku-leuven-316l-2021,316L Stainless Steel,100.0,1000.0,37.5,20.0,,,transition
+ku-leuven-316l-2021-08,ku-leuven-316l-2021,316L Stainless Steel,100.0,1100.0,37.5,20.0,,,transition
+ku-leuven-316l-2021-09,ku-leuven-316l-2021,316L Stainless Steel,200.0,400.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-10,ku-leuven-316l-2021,316L Stainless Steel,200.0,500.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-11,ku-leuven-316l-2021,316L Stainless Steel,200.0,600.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-12,ku-leuven-316l-2021,316L Stainless Steel,200.0,700.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-13,ku-leuven-316l-2021,316L Stainless Steel,200.0,800.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-14,ku-leuven-316l-2021,316L Stainless Steel,200.0,900.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-15,ku-leuven-316l-2021,316L Stainless Steel,200.0,1000.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-16,ku-leuven-316l-2021,316L Stainless Steel,200.0,1100.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-17,ku-leuven-316l-2021,316L Stainless Steel,300.0,400.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-18,ku-leuven-316l-2021,316L Stainless Steel,300.0,500.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-19,ku-leuven-316l-2021,316L Stainless Steel,300.0,600.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-20,ku-leuven-316l-2021,316L Stainless Steel,300.0,700.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-21,ku-leuven-316l-2021,316L Stainless Steel,300.0,800.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-22,ku-leuven-316l-2021,316L Stainless Steel,300.0,900.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-23,ku-leuven-316l-2021,316L Stainless Steel,300.0,1000.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-24,ku-leuven-316l-2021,316L Stainless Steel,300.0,1100.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-25,ku-leuven-316l-2021,316L Stainless Steel,400.0,400.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-26,ku-leuven-316l-2021,316L Stainless Steel,400.0,500.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-27,ku-leuven-316l-2021,316L Stainless Steel,400.0,600.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-28,ku-leuven-316l-2021,316L Stainless Steel,400.0,700.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-29,ku-leuven-316l-2021,316L Stainless Steel,400.0,800.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-30,ku-leuven-316l-2021,316L Stainless Steel,400.0,900.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-31,ku-leuven-316l-2021,316L Stainless Steel,400.0,1000.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-32,ku-leuven-316l-2021,316L Stainless Steel,400.0,1100.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-33,ku-leuven-316l-2021,316L Stainless Steel,500.0,400.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-34,ku-leuven-316l-2021,316L Stainless Steel,500.0,500.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-35,ku-leuven-316l-2021,316L Stainless Steel,500.0,600.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-36,ku-leuven-316l-2021,316L Stainless Steel,500.0,700.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-37,ku-leuven-316l-2021,316L Stainless Steel,500.0,800.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-38,ku-leuven-316l-2021,316L Stainless Steel,500.0,900.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-39,ku-leuven-316l-2021,316L Stainless Steel,500.0,1000.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-40,ku-leuven-316l-2021,316L Stainless Steel,500.0,1100.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-43,ku-leuven-316l-2021,316L Stainless Steel,600.0,600.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-44,ku-leuven-316l-2021,316L Stainless Steel,600.0,700.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-45,ku-leuven-316l-2021,316L Stainless Steel,600.0,800.0,37.5,20.0,,,keyhole
+ku-leuven-316l-2021-46,ku-leuven-316l-2021,316L Stainless Steel,600.0,900.0,37.5,20.0,,,keyhole
+totis-050W-0250mms,totis-ti64-2021,Ti-6Al-4V,50.0,250.0,50.0,20.0,25.0,,transition
+totis-050W-0500mms,totis-ti64-2021,Ti-6Al-4V,50.0,500.0,50.0,20.0,25.0,,transition
+totis-050W-0750mms,totis-ti64-2021,Ti-6Al-4V,50.0,750.0,50.0,20.0,25.0,,conduction
+totis-050W-1000mms,totis-ti64-2021,Ti-6Al-4V,50.0,1000.0,50.0,20.0,25.0,,conduction
+totis-050W-1250mms,totis-ti64-2021,Ti-6Al-4V,50.0,1250.0,50.0,20.0,25.0,,conduction
+totis-050W-1500mms,totis-ti64-2021,Ti-6Al-4V,50.0,1500.0,50.0,20.0,25.0,,conduction
+totis-050W-1750mms,totis-ti64-2021,Ti-6Al-4V,50.0,1750.0,50.0,20.0,25.0,,conduction
+totis-050W-2000mms,totis-ti64-2021,Ti-6Al-4V,50.0,2000.0,50.0,20.0,25.0,,conduction
+totis-050W-2250mms,totis-ti64-2021,Ti-6Al-4V,50.0,2250.0,50.0,20.0,25.0,,conduction
+totis-050W-2500mms,totis-ti64-2021,Ti-6Al-4V,50.0,2500.0,50.0,20.0,25.0,,conduction
+totis-100W-0250mms,totis-ti64-2021,Ti-6Al-4V,100.0,250.0,50.0,20.0,25.0,,keyhole
+totis-100W-0500mms,totis-ti64-2021,Ti-6Al-4V,100.0,500.0,50.0,20.0,25.0,,keyhole
+totis-100W-0750mms,totis-ti64-2021,Ti-6Al-4V,100.0,750.0,50.0,20.0,25.0,,transition
+totis-100W-1000mms,totis-ti64-2021,Ti-6Al-4V,100.0,1000.0,50.0,20.0,25.0,,transition
+totis-100W-1250mms,totis-ti64-2021,Ti-6Al-4V,100.0,1250.0,50.0,20.0,25.0,,transition
+totis-100W-1500mms,totis-ti64-2021,Ti-6Al-4V,100.0,1500.0,50.0,20.0,25.0,,transition
+totis-100W-1750mms,totis-ti64-2021,Ti-6Al-4V,100.0,1750.0,50.0,20.0,25.0,,transition
+totis-100W-2000mms,totis-ti64-2021,Ti-6Al-4V,100.0,2000.0,50.0,20.0,25.0,,transition
+totis-100W-2250mms,totis-ti64-2021,Ti-6Al-4V,100.0,2250.0,50.0,20.0,25.0,,transition
+totis-100W-2500mms,totis-ti64-2021,Ti-6Al-4V,100.0,2500.0,50.0,20.0,25.0,,transition
+totis-150W-0250mms,totis-ti64-2021,Ti-6Al-4V,150.0,250.0,50.0,20.0,25.0,,keyhole
+totis-150W-0500mms,totis-ti64-2021,Ti-6Al-4V,150.0,500.0,50.0,20.0,25.0,,keyhole
+totis-150W-0750mms,totis-ti64-2021,Ti-6Al-4V,150.0,750.0,50.0,20.0,25.0,,keyhole
+totis-150W-1000mms,totis-ti64-2021,Ti-6Al-4V,150.0,1000.0,50.0,20.0,25.0,,keyhole
+totis-150W-1250mms,totis-ti64-2021,Ti-6Al-4V,150.0,1250.0,50.0,20.0,25.0,,keyhole
+totis-150W-1500mms,totis-ti64-2021,Ti-6Al-4V,150.0,1500.0,50.0,20.0,25.0,,transition
+totis-150W-1750mms,totis-ti64-2021,Ti-6Al-4V,150.0,1750.0,50.0,20.0,25.0,,transition
+totis-150W-2000mms,totis-ti64-2021,Ti-6Al-4V,150.0,2000.0,50.0,20.0,25.0,,transition
+totis-150W-2250mms,totis-ti64-2021,Ti-6Al-4V,150.0,2250.0,50.0,20.0,25.0,,transition
+totis-150W-2500mms,totis-ti64-2021,Ti-6Al-4V,150.0,2500.0,50.0,20.0,25.0,,transition
+totis-200W-0250mms,totis-ti64-2021,Ti-6Al-4V,200.0,250.0,50.0,20.0,25.0,,keyhole
+totis-200W-0500mms,totis-ti64-2021,Ti-6Al-4V,200.0,500.0,50.0,20.0,25.0,,keyhole
+totis-200W-0750mms,totis-ti64-2021,Ti-6Al-4V,200.0,750.0,50.0,20.0,25.0,,keyhole
+totis-200W-1000mms,totis-ti64-2021,Ti-6Al-4V,200.0,1000.0,50.0,20.0,25.0,,keyhole
+totis-200W-1250mms,totis-ti64-2021,Ti-6Al-4V,200.0,1250.0,50.0,20.0,25.0,,keyhole
+totis-200W-1500mms,totis-ti64-2021,Ti-6Al-4V,200.0,1500.0,50.0,20.0,25.0,,keyhole
+totis-200W-1750mms,totis-ti64-2021,Ti-6Al-4V,200.0,1750.0,50.0,20.0,25.0,,keyhole
+totis-200W-2000mms,totis-ti64-2021,Ti-6Al-4V,200.0,2000.0,50.0,20.0,25.0,,keyhole
+totis-200W-2250mms,totis-ti64-2021,Ti-6Al-4V,200.0,2250.0,50.0,20.0,25.0,,keyhole
+totis-200W-2500mms,totis-ti64-2021,Ti-6Al-4V,200.0,2500.0,50.0,20.0,25.0,,keyhole
+totis-250W-0250mms,totis-ti64-2021,Ti-6Al-4V,250.0,250.0,50.0,20.0,25.0,,keyhole
+totis-250W-0500mms,totis-ti64-2021,Ti-6Al-4V,250.0,500.0,50.0,20.0,25.0,,keyhole
+totis-250W-0750mms,totis-ti64-2021,Ti-6Al-4V,250.0,750.0,50.0,20.0,25.0,,keyhole
+totis-250W-1000mms,totis-ti64-2021,Ti-6Al-4V,250.0,1000.0,50.0,20.0,25.0,,keyhole
+totis-250W-1250mms,totis-ti64-2021,Ti-6Al-4V,250.0,1250.0,50.0,20.0,25.0,,keyhole
+totis-250W-1500mms,totis-ti64-2021,Ti-6Al-4V,250.0,1500.0,50.0,20.0,25.0,,keyhole
+totis-250W-1750mms,totis-ti64-2021,Ti-6Al-4V,250.0,1750.0,50.0,20.0,25.0,,keyhole
+totis-250W-2000mms,totis-ti64-2021,Ti-6Al-4V,250.0,2000.0,50.0,20.0,25.0,,keyhole
+totis-250W-2250mms,totis-ti64-2021,Ti-6Al-4V,250.0,2250.0,50.0,20.0,25.0,,keyhole
+totis-250W-2500mms,totis-ti64-2021,Ti-6Al-4V,250.0,2500.0,50.0,20.0,25.0,,keyhole
+totis-300W-0250mms,totis-ti64-2021,Ti-6Al-4V,300.0,250.0,50.0,20.0,25.0,,keyhole
+totis-300W-0500mms,totis-ti64-2021,Ti-6Al-4V,300.0,500.0,50.0,20.0,25.0,,keyhole
+totis-300W-0750mms,totis-ti64-2021,Ti-6Al-4V,300.0,750.0,50.0,20.0,25.0,,keyhole
+totis-300W-1000mms,totis-ti64-2021,Ti-6Al-4V,300.0,1000.0,50.0,20.0,25.0,,keyhole
+totis-300W-1250mms,totis-ti64-2021,Ti-6Al-4V,300.0,1250.0,50.0,20.0,25.0,,keyhole
+totis-300W-1500mms,totis-ti64-2021,Ti-6Al-4V,300.0,1500.0,50.0,20.0,25.0,,keyhole
+totis-300W-1750mms,totis-ti64-2021,Ti-6Al-4V,300.0,1750.0,50.0,20.0,25.0,,keyhole
+totis-300W-2000mms,totis-ti64-2021,Ti-6Al-4V,300.0,2000.0,50.0,20.0,25.0,,keyhole
+totis-300W-2250mms,totis-ti64-2021,Ti-6Al-4V,300.0,2250.0,50.0,20.0,25.0,,keyhole
+totis-300W-2500mms,totis-ti64-2021,Ti-6Al-4V,300.0,2500.0,50.0,20.0,25.0,,keyhole
+totis-350W-0250mms,totis-ti64-2021,Ti-6Al-4V,350.0,250.0,50.0,20.0,25.0,,keyhole
+totis-350W-0500mms,totis-ti64-2021,Ti-6Al-4V,350.0,500.0,50.0,20.0,25.0,,keyhole
+totis-350W-0750mms,totis-ti64-2021,Ti-6Al-4V,350.0,750.0,50.0,20.0,25.0,,keyhole
+totis-350W-1000mms,totis-ti64-2021,Ti-6Al-4V,350.0,1000.0,50.0,20.0,25.0,,keyhole
+totis-350W-1250mms,totis-ti64-2021,Ti-6Al-4V,350.0,1250.0,50.0,20.0,25.0,,keyhole
+totis-350W-1500mms,totis-ti64-2021,Ti-6Al-4V,350.0,1500.0,50.0,20.0,25.0,,keyhole
+totis-350W-1750mms,totis-ti64-2021,Ti-6Al-4V,350.0,1750.0,50.0,20.0,25.0,,keyhole
+totis-350W-2000mms,totis-ti64-2021,Ti-6Al-4V,350.0,2000.0,50.0,20.0,25.0,,keyhole
+totis-350W-2250mms,totis-ti64-2021,Ti-6Al-4V,350.0,2250.0,50.0,20.0,25.0,,keyhole
+totis-350W-2500mms,totis-ti64-2021,Ti-6Al-4V,350.0,2500.0,50.0,20.0,25.0,,keyhole
+totis-400W-0250mms,totis-ti64-2021,Ti-6Al-4V,400.0,250.0,50.0,20.0,25.0,,keyhole
+totis-400W-0500mms,totis-ti64-2021,Ti-6Al-4V,400.0,500.0,50.0,20.0,25.0,,keyhole
+totis-400W-0750mms,totis-ti64-2021,Ti-6Al-4V,400.0,750.0,50.0,20.0,25.0,,keyhole
+totis-400W-1000mms,totis-ti64-2021,Ti-6Al-4V,400.0,1000.0,50.0,20.0,25.0,,keyhole
+totis-400W-1250mms,totis-ti64-2021,Ti-6Al-4V,400.0,1250.0,50.0,20.0,25.0,,keyhole
+totis-400W-1500mms,totis-ti64-2021,Ti-6Al-4V,400.0,1500.0,50.0,20.0,25.0,,keyhole
+totis-400W-1750mms,totis-ti64-2021,Ti-6Al-4V,400.0,1750.0,50.0,20.0,25.0,,keyhole
+totis-400W-2000mms,totis-ti64-2021,Ti-6Al-4V,400.0,2000.0,50.0,20.0,25.0,,keyhole
+totis-400W-2250mms,totis-ti64-2021,Ti-6Al-4V,400.0,2250.0,50.0,20.0,25.0,,keyhole
+totis-400W-2500mms,totis-ti64-2021,Ti-6Al-4V,400.0,2500.0,50.0,20.0,25.0,,keyhole
+ku-leuven-ti64-2021-01,ku-leuven-ti64-2021,Ti-6Al-4V,100.0,800.0,37.5,20.0,,,keyhole
+ku-leuven-ti64-2021-02,ku-leuven-ti64-2021,Ti-6Al-4V,100.0,1000.0,37.5,20.0,,,keyhole
+ku-leuven-ti64-2021-03,ku-leuven-ti64-2021,Ti-6Al-4V,100.0,1200.0,37.5,20.0,,,keyhole
+ku-leuven-ti64-2021-04,ku-leuven-ti64-2021,Ti-6Al-4V,100.0,1400.0,37.5,20.0,,,keyhole
+ku-leuven-ti64-2021-05,ku-leuven-ti64-2021,Ti-6Al-4V,100.0,1600.0,37.5,20.0,,,transition
+ku-leuven-ti64-2021-06,ku-leuven-ti64-2021,Ti-6Al-4V,100.0,1800.0,37.5,20.0,,,transition
+ku-leuven-ti64-2021-07,ku-leuven-ti64-2021,Ti-6Al-4V,100.0,2000.0,37.5,20.0,,,transition
+ku-leuven-ti64-2021-08,ku-leuven-ti64-2021,Ti-6Al-4V,200.0,800.0,37.5,20.0,,,keyhole
+ku-leuven-ti64-2021-09,ku-leuven-ti64-2021,Ti-6Al-4V,200.0,1000.0,37.5,20.0,,,keyhole
+ku-leuven-ti64-2021-10,ku-leuven-ti64-2021,Ti-6Al-4V,200.0,1200.0,37.5,20.0,,,keyhole
+ku-leuven-ti64-2021-11,ku-leuven-ti64-2021,Ti-6Al-4V,200.0,1400.0,37.5,20.0,,,keyhole
+ku-leuven-ti64-2021-12,ku-leuven-ti64-2021,Ti-6Al-4V,200.0,1600.0,37.5,20.0,,,keyhole
+ku-leuven-ti64-2021-13,ku-leuven-ti64-2021,Ti-6Al-4V,200.0,1800.0,37.5,20.0,,,keyhole
+ku-leuven-ti64-2021-14,ku-leuven-ti64-2021,Ti-6Al-4V,200.0,2000.0,37.5,20.0,,,keyhole
+lane-in625-cbm40-t03-A,lane-in625-2020,Inconel 625,150.0,400.0,100.0,20.0,0.0,,transition
+lane-in625-cbm40-t06-A,lane-in625-2020,Inconel 625,150.0,400.0,100.0,20.0,0.0,,transition
+lane-in625-cbm40-t09-A,lane-in625-2020,Inconel 625,150.0,400.0,100.0,20.0,0.0,,transition
+lane-in625-cbm40-t02-B,lane-in625-2020,Inconel 625,195.0,800.0,100.0,20.0,0.0,,transition
+lane-in625-cbm40-t05-B,lane-in625-2020,Inconel 625,195.0,800.0,100.0,20.0,0.0,,transition
+lane-in625-cbm40-t08-B,lane-in625-2020,Inconel 625,195.0,800.0,100.0,20.0,0.0,,transition
+lane-in625-cbm40-t01-C,lane-in625-2020,Inconel 625,195.0,1200.0,100.0,20.0,0.0,,conduction
+lane-in625-cbm40-t04-C,lane-in625-2020,Inconel 625,195.0,1200.0,100.0,20.0,0.0,,conduction
+lane-in625-cbm40-t07-C,lane-in625-2020,Inconel 625,195.0,1200.0,100.0,20.0,0.0,,conduction
+lane-in625-cbm40-t10-C,lane-in625-2020,Inconel 625,195.0,1200.0,100.0,20.0,0.0,,conduction
+lane-in625-ammt100-t05-A,lane-in625-2020,Inconel 625,137.9,400.0,170.0,20.0,0.0,,conduction
+lane-in625-ammt100-t06-A,lane-in625-2020,Inconel 625,137.9,400.0,170.0,20.0,0.0,,conduction
+lane-in625-ammt100-t07-A,lane-in625-2020,Inconel 625,137.9,400.0,170.0,20.0,0.0,,conduction
+lane-in625-ammt100-t08-B,lane-in625-2020,Inconel 625,179.2,800.0,170.0,20.0,0.0,,conduction
+lane-in625-ammt100-t09-B,lane-in625-2020,Inconel 625,179.2,800.0,170.0,20.0,0.0,,conduction
+lane-in625-ammt100-t10-B,lane-in625-2020,Inconel 625,179.2,800.0,170.0,20.0,0.0,,conduction
+lane-in625-ammt100-t01-C,lane-in625-2020,Inconel 625,179.2,1200.0,170.0,20.0,0.0,,conduction
+lane-in625-ammt100-t02-C,lane-in625-2020,Inconel 625,179.2,1200.0,170.0,20.0,0.0,,conduction
+lane-in625-ammt100-t03-C,lane-in625-2020,Inconel 625,179.2,1200.0,170.0,20.0,0.0,,conduction
+lane-in625-ammt100-t04-C,lane-in625-2020,Inconel 625,179.2,1200.0,170.0,20.0,0.0,,conduction
+lane-in625-ammt20-t02-A,lane-in625-2020,Inconel 625,137.9,400.0,170.0,20.0,0.0,,conduction
+lane-in625-ammt20-t03-B,lane-in625-2020,Inconel 625,179.2,800.0,170.0,20.0,0.0,,conduction
+lane-in625-ammt20-t01-C,lane-in625-2020,Inconel 625,179.2,1200.0,170.0,20.0,0.0,,conduction

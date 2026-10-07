@@ -1,0 +1,84 @@
+{
+ "columns": [
+  "row_id",
+  "source",
+  "material",
+  "P",
+  "v",
+  "beam",
+  "preheat",
+  "layer",
+  "hatch",
+  "regime_class_input"
+ ],
+ "configSha256": "6926386ddf9ad2a0d9fc787b4dbca7324b20b466e7a806be38b949fbafa1271b",
+ "evidence": {
+  "experimentalValidation": false,
+  "kind": "screening-only",
+  "statement": "Screening benchmark: predictions scored on published single tracks; not validation"
+ },
+ "inputsFile": "inputs-v1.csv",
+ "inputsSha256": "84529f05d7da0b93a979bdf2a4da290f49c19170ea878eacfe27a8bb32afecc8",
+ "protocol": {
+  "clusters": "parameter set via lpbf_calibration_stats.set_key = (source, material, power_W, speed_mm_s, beamDiameter_um)",
+  "coverage": {
+   "columns": "width_lo90,width_hi90,depth_lo90,depth_hi90 (absolute um)",
+   "interval": "Wilson 95 %",
+   "nominal": 0.9
+  },
+  "heldOut": "per (material, source) block of the trainable sources; sources a submission declares in trainedOnSources are excluded and marked as such",
+  "metrics": [
+   "mapePct on resolved rows",
+   "meanAbsLn = mean |ln(pred / meas)| on resolved rows",
+   "mapeUnresolvedAsFailPct (an unresolved row counts as a 100 % error)"
+  ],
+  "noCrossMaterialRank": true,
+  "skill": {
+   "baseline": "frozen Rosenthal kernel at its default absorptivity",
+   "baselineKernel": "rosenthal",
+   "bootstrap": {
+    "B": 1000,
+    "seed": 0,
+    "unit": "test parameter set (cluster), predictions fixed"
+   },
+   "statistic": "1 - MAPE_A / MAPE_B on the common resolved rows"
+  },
+  "unresolved": "a missing, blank row counts as unresolved; mapeUnresolvedAsFail scores it as a 100 % error"
+ },
+ "rowsPerSource": {
+  "hofmann-316l-2026": 677,
+  "ku-leuven-316l-2021": 44,
+  "ku-leuven-ti64-2021": 14,
+  "lane-in625-2020": 23,
+  "totis-ti64-2021": 80
+ },
+ "schema": "lpbf-benchmark-manifest-1",
+ "sentinelNote": "catalog sentinels (used during physics development, not blind): reported separately, never trained on, never in the gate",
+ "sentinelRowsPerSource": {
+  "guo-316l-2024": 4,
+  "nist-amb2022-03-in718": 7
+ },
+ "sentinelSources": [
+  "guo-316l-2024",
+  "nist-amb2022-03-in718"
+ ],
+ "sentinelsFile": "inputs-sentinels-v1.csv",
+ "sentinelsSha256": "fa289859df5d1e693171c0876737db16047096b8b110eade43002490f3bdaa9b",
+ "tableSha256": {
+  "hofmann-316l-2026": "d4bbc7a60b536118586f44b64beb0fa20f94133f6d1a8d0fdcf726003720c3d8",
+  "ku-leuven-316l-2021": "e031aead71bf64c70a35ae05d64c0c576d33c2ae757a1e5bda68b5da532ac831",
+  "ku-leuven-ti64-2021": "e031aead71bf64c70a35ae05d64c0c576d33c2ae757a1e5bda68b5da532ac831",
+  "lane-in625-2020": "32fe10fb8606a49cdc59e1e3753b40e6be9ea9751dae9ec8ac95c217e6d16179",
+  "totis-ti64-2021": "3b5794f3a25a5f67fa0d8d1ab006834205ef820b046c24deb15836025825d623"
+ },
+ "trainableSources": [
+  "hofmann-316l-2026",
+  "ku-leuven-316l-2021",
+  "totis-ti64-2021",
+  "ku-leuven-ti64-2021",
+  "lane-in625-2020"
+ ],
+ "truthColumnsInInputs": [],
+ "truthSource": "read at scoring time from the pinned loaders (lpbf_calibration_fit.load_rows); never published here",
+ "version": "v1"
+}
