@@ -77,7 +77,7 @@ CALIBRATION_CONFIG: Dict[str, Any] = {
                   "skillUnit": "test parameter set (cluster), theta fixed, no refit"},
     "p1": {"k": 5, "seeds": [0, 1, 2], "minSetsPerSource": 20},
     "interval": {"levels": [0.8, 0.9], "z": {"0.8": 1.2816, "0.9": 1.6449}, "minSourcesForSSource": 3,
-                 "sSourceInflation": "chi-square upper bound, one-sided 90 % on the SD of per-source mean residuals",
+                 "chi2Level": 0.10, "sSourceInflation": "chi-square upper bound, one-sided 90 % on the SD of per-source mean residuals",
                  "sSourceResiduals": "at a theta fitted WITHOUT the source itself and WITHOUT the held-out source "
                                      "(default eta when no training source is left)",
                  "notInformativeRatio": 2.5, "wilsonConfidence": 0.95},
