@@ -1,0 +1,89 @@
+{
+ "depth": {
+  "cunningham140": 79.447,
+  "cunningham95": 44.785,
+  "zhaoBoundaryBare": 63.768,
+  "zhaoBoundaryPowder": 30.524
+ },
+ "evidenceKind": "Literature comparison (screening only; digitized published measurements)",
+ "evidenceNote": "docs/LPBF_KEYHOLE_THRESHOLD_EVIDENCE_2026-10-07.md",
+ "generatedAt": "2026-10-07",
+ "honesty": "Comparison of the app's existing screening with published Ti-6Al-4V x-ray measurements; digitized figure values (read uncertainty recorded per row); app thermophysical properties and flat absorptivity are the app's estimates, not the papers' values; not experimental validation; nothing in the app was changed.",
+ "implementationHash": "d92d1a3ae85cd4c1adab6dc734eaae589ef4c275c33f09015aff639998f10ddd",
+ "keyholeThreshold": {
+  "app": 30.0,
+  "appIndexAtPublishedKeyholeLine": {
+   "max": 20.005,
+   "median": 17.662,
+   "min": 17.293,
+   "n": 9
+  }
+ },
+ "label": "Keyhole regime screening vs published Ti-6Al-4V x-ray data",
+ "physicsBumpProposed": true,
+ "porosity": {
+  "appIndexAlongPublishedPorosityBoundary": {
+   "max": 62.424,
+   "median": 24.942,
+   "min": 15.0,
+   "n": 20
+  },
+  "zhaoPoreCasesFlaggedHigh": "19/35"
+ },
+ "readOnly": true,
+ "regimeConfusion": {
+  "accuracy": 0.652,
+  "matrix": {
+   "conduction": {
+    "conduction": 1,
+    "keyhole": 0,
+    "transition": 0
+   },
+   "keyhole": {
+    "conduction": 0,
+    "keyhole": 26,
+    "transition": 15
+   },
+   "transition": {
+    "conduction": 1,
+    "keyhole": 0,
+    "transition": 3
+   }
+  },
+  "n": 46,
+  "rule": "app dH/hs 15/30 vs Cunningham 2019 Fig. 3A (95 um, Ti-6Al-4V)"
+ },
+ "schema": "lpbf-keyhole-benchmark-view-1",
+ "sources": [
+  {
+   "doi": "10.1126/science.aav4687",
+   "id": "cunningham-ti64-2019",
+   "rows": 69
+  },
+  {
+   "doi": "10.1038/s41467-021-22704-0",
+   "id": "gan-keyhole-2021",
+   "rows": 5
+  },
+  {
+   "doi": "10.1088/0022-3727/44/44/445401",
+   "id": "hann-ss304-2011",
+   "rows": 14
+  },
+  {
+   "doi": "10.1038/s41467-022-28694-x",
+   "id": "huang-al7a77-2022",
+   "rows": 6
+  },
+  {
+   "doi": "10.1126/science.abd1587",
+   "id": "zhao-ti64-2020-boundary",
+   "rows": 20
+  },
+  {
+   "doi": "10.1126/science.abd1587",
+   "id": "zhao-ti64-2020-pores",
+   "rows": 35
+  }
+ ]
+}

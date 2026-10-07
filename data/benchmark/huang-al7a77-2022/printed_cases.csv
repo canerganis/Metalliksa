@@ -1,0 +1,7 @@
+case,material,substrate,power_W,speed_mm_s,spot_um,regime_reported,pores_reported,aed_printed_MJ_m2,locator,digitized
+huang22-powder-v1600,Al7A77,Al7A77 powder on Al plate,500,1600,50,I quasi-stable keyhole,,,Fig. 1a-i label (1.6 m/s quasi-stable); P and spot from the Fig. 1 caption and Table 1,false
+huang22-powder-v1200,Al7A77,Al7A77 powder on Al plate,500,1200,50,II transition keyhole,"true (rear-wall bubble, Fig. 1a-ii; Fig. 4b)",8,"Fig. 1a-ii label; Fig. 4b and p. 7 (AED = 8 MJ m-2, regime II)",false
+huang22-powder-v800,Al7A77,Al7A77 powder on Al plate,500,800,50,III unstable keyhole,true (Fig. 4a),12.5,"Fig. 4a; p. 7 (0.8 m/s, AED = 12.5 MJ m-2, regime III)",false
+huang22-powder-v600,Al7A77,Al7A77 powder on Al plate,500,600,50,III unstable keyhole,"true (bottom pores, Fig. 1a-iii)",,Fig. 1a-iii label (0.6 m/s unstable),false
+huang22-bare-v1200,Al (99.99%),bare aluminium plate,500,1200,50,II transition keyhole,"true (rear-wall collapse bubble, Fig. 1c)",8,"Fig. 1c labels and caption (bare aluminium plate, II); p. 4 AED = 8",false
+huang22-bare-v1000,Al (99.99%),bare aluminium plate,500,1000,50,III unstable keyhole,"true (bottom collapse bubble, Fig. 1e)",10,"Fig. 1e labels and caption (bare aluminium plate, III); p. 5 AED = 10",false

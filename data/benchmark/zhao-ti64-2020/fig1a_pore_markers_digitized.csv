@@ -1,0 +1,36 @@
+case,spot_um,power_W,speed_mm_s,bare_plate_pores,powder_bed_pores,power_read_uncertainty_W,speed_read_uncertainty_mm_s,locator,digitized
+zhao20-pore-v155-p82,100,82,155,true,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed); marker partly cut by the V axis at 150 mm/s",true
+zhao20-pore-v172-p82,100,82,172,true,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v248-p98,100,98,248,not-shown,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v272-p98,100,98,272,not-shown,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v248-p113,100,113,248,not-shown,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v273-p113,100,113,273,true,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v298-p113,100,113,298,true,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v322-p113,100,113,322,true,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v300-p143,100,143,300,not-shown,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v325-p143,100,143,325,true,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v350-p143,100,143,350,true,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v375-p143,100,143,375,true,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v397-p143,100,143,397,true,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v398-p202,100,202,398,true,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v422-p202,100,202,422,true,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v445-p202,100,202,445,true,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v472-p262,100,262,472,not-shown,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v497-p262,100,262,497,not-shown,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v350-p321,100,321,350,true,not-shown,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v400-p321,100,321,400,true,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v447-p321,100,321,447,true,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v473-p321,100,321,473,true,not-shown,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v497-p321,100,321,497,not-shown,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v472-p381,100,381,472,true,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v497-p381,100,381,497,true,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v522-p381,100,381,522,not-shown,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v450-p441,100,441,450,not-shown,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v500-p441,100,441,500,not-shown,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v550-p441,100,441,550,not-shown,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v575-p500,100,500,575,not-shown,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v600-p500,100,500,600,not-shown,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v500-p560,100,560,500,true,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v525-p560,100,560,525,true,not-shown,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v550-p560,100,560,550,true,true,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
+zhao20-pore-v575-p560,100,560,575,true,not-shown,4,4,"Fig. 1A maximum-pore-size marker (blue left half = bare plate, red half = powder bed)",true
