@@ -1,0 +1,245 @@
+{
+ "source": "mc_fe_v2062.tdb",
+ "sourceSha256": "aa02077eac3f602dd7479cbeafb09b450e282716752b3ae2b1fc3a57d9c64865",
+ "output": "mc_fe_v2062_repaired.tdb",
+ "origin": "MatCalc open databases, https://www.matcalc.at/index.php/databases/open-databases",
+ "parametersRetained": 4093,
+ "ruleCounts": {
+  "drop-directive": 14,
+  "drop-matcalc-parameter": 21,
+  "semicolon-to-comma": 1,
+  "insert-missing-terminator": 1,
+  "fix-temperature-limit": 2,
+  "ambiguous-stray-number": 2,
+  "ambiguous-duplicate-range-tail": 2,
+  "constituent-trailing-junk": 1,
+  "ref-tag-blank": 4,
+  "comment-out-bibliography": 1
+ },
+ "droppedMatcalcParameterTypes": [
+  "HMVA"
+ ],
+ "repairs": [
+  {
+   "rule": "drop-directive",
+   "detail": "REFERENCE_ELEMENT FE"
+  },
+  {
+   "rule": "drop-directive",
+   "detail": "ADD_COMPOSITION_SET FCC_A1 :NB,TA,TI,V:C,N:"
+  },
+  {
+   "rule": "drop-directive",
+   "detail": "ADD_COMPOSITION_SET FCC_A1 :CU:VA:"
+  },
+  {
+   "rule": "drop-directive",
+   "detail": "ADD_COMPOSITION_SET HCP_A3 :CR,TA:N:"
+  },
+  {
+   "rule": "drop-directive",
+   "detail": "ADD_COMPOSITION_SET HCP_A3 :MO:C:"
+  },
+  {
+   "rule": "drop-directive",
+   "detail": "ADD_COMPOSITION_SET HCP_A3 :CR,V:C:"
+  },
+  {
+   "rule": "drop-directive",
+   "detail": "ADD_COMPOSITION_SET M6C :CR:NI:SI:C,N:"
+  },
+  {
+   "rule": "drop-directive",
+   "detail": "ATTACH_CONTRIBUTION BCC_B2 BCC_A2 ORDER_DISORDER"
+  },
+  {
+   "rule": "drop-directive",
+   "detail": "ADD_COMPOSITION_SET BCC_B2 :FE:CO:"
+  },
+  {
+   "rule": "drop-directive",
+   "detail": "ADD_COMPOSITION_SET BCC_B2 :FE,MN:SI:"
+  },
+  {
+   "rule": "drop-directive",
+   "detail": "ADD_COMPOSITION_SET BCC_B2 :MN:NI:"
+  },
+  {
+   "rule": "drop-directive",
+   "detail": "ADD_COMPOSITION_SET BCC_B2 :NI:TI:"
+  },
+  {
+   "rule": "drop-directive",
+   "detail": "ADD_COMPOSITION_SET LAVES_PHASE :CO:MO:"
+  },
+  {
+   "rule": "drop-directive",
+   "detail": "ADD_COMPOSITION_SET LAVES_PHASE :FE:W:"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(FCC_A1,*;0) 273.00 +175000; 6000.00 N REF:pov12"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(FCC_A1,AL:*;0) 273.00 +64200; 6000.00 N REF:pov10"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(FCC_A1,CO:*;0) 273.00 +165000; 6000.00 N REF:pov15"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(FCC_A1,CU:*;0) 273.00 +125000; 6000.00 N REF:pov10"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(FCC_A1,FE:*;0) 273.00 +175000; 6000.00 N REF:pov12"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(FCC_A1,HF:*;0) 273.00 +200000; 6000.00 N REF:pov15"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(FCC_A1,LA:*;0) 273.00 +140000; 6000.00 N REF:pov15"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(FCC_A1,MN:*;0) 273.00 +230000; 6000.00 N REF:pov15"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(FCC_A1,NI:*;0) 273.00 +134000; 6000.00 N REF:pov15"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(FCC_A1,PD:*;0) 273.00 +178000; 6000.00 N REF:pov14"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(FCC_A1,TI:*;0) 273.00 +188000; 6000.00 N REF:pov15"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(FCC_A1,W:*;0) 273.00 +160000; 6000.00 N REF:pov15"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(FCC_A1,ZR:*;0) 273.00 +195000; 6000.00 N REF:pov15"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(BCC_A2,*;0) 273.00 +163000; 6000.00 N REF:pov10"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(BCC_A2,CR:*;0) 273.00 +203000; 6000.00 N REF:pov10"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(BCC_A2,FE:*;0) 273.00 +163000; 6000.00 N REF:pov10"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(BCC_A2,MN:*;0) 273.00 +101000; 6000.00 N REF:pov10"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(BCC_A2,MO:*;0) 273.00 +286000; 6000.00 N REF:pov10"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(BCC_A2,NB:*;0) 273.00 +290000; 6000.00 N REF:pov10"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(BCC_A2,V:*;0) 273.00 +204000; 6000.00 N REF:pov10"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(BCC_A2,W:*;0) 273.00 +378000; 6000.00 N REF:pov10"
+  },
+  {
+   "rule": "semicolon-to-comma",
+   "detail": "G(G_PHASE;FE:CU:SI;0) -> (G_PHASE,FE:CU:SI;0)"
+  },
+  {
+   "rule": "insert-missing-terminator",
+   "detail": "inserted '!' before line starting: PARAMETER L(LAVES_PHASE,TI:MN,NI;0) 273.00 +70000; 6000.00  "
+  },
+  {
+   "rule": "fix-temperature-limit",
+   "detail": "6000.00.00 -> 6000.00"
+  },
+  {
+   "rule": "fix-temperature-limit",
+   "detail": "6000.00.00 -> 6000.00"
+  },
+  {
+   "rule": "ambiguous-stray-number",
+   "assumption": true,
+   "detail": "G: dropped stray 273 after lower limit 273.00"
+  },
+  {
+   "rule": "ambiguous-duplicate-range-tail",
+   "assumption": true,
+   "detail": "G: dropped repeated '; 6000.00 N'"
+  },
+  {
+   "rule": "ambiguous-stray-number",
+   "assumption": true,
+   "detail": "G: dropped stray 273 after lower limit 273.00"
+  },
+  {
+   "rule": "ambiguous-duplicate-range-tail",
+   "assumption": true,
+   "detail": "G: dropped repeated '; 6000.00 N'"
+  },
+  {
+   "rule": "constituent-trailing-junk",
+   "detail": "removed '> >> 1' after the last sublattice of: CONSTITUENT MNB4 : MN : B : > >> 1"
+  },
+  {
+   "rule": "ref-tag-blank",
+   "detail": "REF tag with blank joined by '_': test koze10"
+  },
+  {
+   "rule": "ref-tag-blank",
+   "detail": "REF tag with blank joined by '_': test koze10"
+  },
+  {
+   "rule": "ref-tag-blank",
+   "detail": "REF tag with blank joined by '_': test koze10"
+  },
+  {
+   "rule": "ref-tag-blank",
+   "detail": "REF tag with blank joined by '_': test koze10"
+  },
+  {
+   "rule": "comment-out-bibliography",
+   "detail": "580 lines of free text (references)"
+  }
+ ]
+}

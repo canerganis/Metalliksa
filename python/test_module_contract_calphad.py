@@ -65,7 +65,7 @@ class CalphadContractTests(unittest.TestCase):
                          ("GET", "/api/python/calphad-databases", "python/calphad_solver.py", 15000, True))
         minimize = self.operations["calphad-minimize"]
         self.assertEqual((minimize.method, minimize.route, minimize.authority.timeout_ms),
-                         ("POST", "/api/python/calphad-minimize", 40000))
+                         ("POST", "/api/python/calphad-minimize", 240000))
         self.assertEqual(self.operations["ai-consult"].authority.timeout_ms, 60000)
         self.assertEqual(self.contract.lifecycle.background_work, "none")
         self.assertEqual(set(self.contract.lifecycle.resources), {"fetch", "interval"})

@@ -35,7 +35,7 @@ sys.path.insert(0, str(HERE))
 import calphad_solver as cs  # noqa: E402
 
 FIXTURE_IDS = {"alcocrni", "mc_fecocrnbti", "cr_fe_ni"}
-ASSESSMENT_IDS = {"cost507", "alni_dupin_2001", "crtiv_ghosh"}
+ASSESSMENT_IDS = {"cost507", "alni_dupin_2001", "crtiv_ghosh", "mc_ni", "mc_fe"}
 TI64 = {"Ti": 90.0, "Al": 6.0, "V": 4.0}
 IN718 = {"Ni": 53.0, "Cr": 19.0, "Fe": 18.0, "Nb": 5.0, "Mo": 3.0, "Ti": 1.0, "Al": 1.0}
 REAL_ELEMENTS = {  # ELEMENT commands of the files as pycalphad 0.11.2 reads them
@@ -47,6 +47,10 @@ REAL_ELEMENTS = {  # ELEMENT commands of the files as pycalphad 0.11.2 reads the
                           "O", "P", "PD", "S", "SI", "TI", "V", "W", "Y"},
     "Cr-Fe-Ni_shallow_bcc.tdb": {"CR", "FE", "NI"},
     "crtiv_ghosh.tdb": {"CR", "TI", "V"},
+    "mc_ni_v2036_repaired.tdb": {"AL", "B", "C", "CO", "CR", "CU", "FE", "HF", "LA", "MN", "MO", "N", "NB", "NI", "O",
+                                 "S", "SI", "TI", "V", "W", "Y", "ZR"},
+    "mc_fe_v2062_repaired.tdb": {"AL", "B", "C", "CO", "CR", "CU", "FE", "H", "HF", "LA", "MN", "MO", "N", "NB", "NI",
+                                 "O", "P", "PD", "S", "SI", "TA", "TI", "V", "W", "Y"},
 }
 
 
@@ -419,16 +423,27 @@ class TestDatabaseScope(unittest.TestCase):
                 self.assertTrue(entry["assessedBaseElements"], entry["id"])
 
     def test_in718_is_never_routed_to_cost_507(self):
-        for pyc in (False, True):
-            with self.subTest(pycalphad=pyc), pycalphad_forced(pyc):
-                out = compute(IN718)
-                self.assertIs(out["success"], False)
-                self.assertEqual(out["baseElement"], "Ni")
-                self.assertNotEqual(out["databaseId"], "cost507")
-                self.assertEqual(out["unavailableKind"], "no-database-covers-elements")
-                assert_no_numbers(self, out)
-                considered = {c["databaseId"]: c for c in out["databasesConsidered"]}
-                self.assertEqual(considered["cost507"]["notAssessedForBase"], "Ni")
+        # Since the MatCalc mc_ni database was added (2026-10-07) IN718 resolves to it; COST 507 is still
+        # recorded as considered and refused for the Ni base.
+        res = resolve(IN718)
+        self.assertTrue(res["ok"], res)
+        self.assertEqual(res["id"], "mc_ni")
+        self.assertNotEqual(res["id"], "cost507")
+        old_catalog = cs.OPEN_TDB_CATALOG
+        try:
+            cs.OPEN_TDB_CATALOG = [e for e in old_catalog if e["id"] != "mc_ni"]
+            for pyc in (False, True):
+                with self.subTest(pycalphad=pyc), pycalphad_forced(pyc):
+                    out = compute(IN718)
+                    self.assertIs(out["success"], False)
+                    self.assertEqual(out["baseElement"], "Ni")
+                    self.assertNotEqual(out["databaseId"], "cost507")
+                    self.assertEqual(out["unavailableKind"], "no-database-covers-elements")
+                    assert_no_numbers(self, out)
+                    considered = {c["databaseId"]: c for c in out["databasesConsidered"]}
+                    self.assertEqual(considered["cost507"]["notAssessedForBase"], "Ni")
+        finally:
+            cs.OPEN_TDB_CATALOG = old_catalog
 
     def test_explicit_cost_507_for_a_ni_base_alloy_is_refused_with_the_reason(self):
         out = compute(IN718, database_id="cost507")
@@ -438,14 +453,14 @@ class TestDatabaseScope(unittest.TestCase):
         self.assertIn("Ni-, Fe- and Co-base alloys", out["databaseSuitability"])
         assert_no_numbers(self, out)
 
-    def test_fe_and_co_base_alloys_have_no_database(self):
-        for elements in ({"Fe": 65.5, "Cr": 17.0, "Ni": 12.0, "Mo": 2.5, "Mn": 2.0},
-                         {"Co": 60.0, "Cr": 28.0, "Mo": 6.0, "W": 6.0}):
-            with self.subTest(elements=elements):
-                out = compute(elements)
-                self.assertEqual(out["unavailableKind"], "database-not-assessed-for-base")
-                self.assertIn("databases are never substituted", out["reason"])
-                self.assertNotIn("databaseId", out)
+    def test_co_base_alloys_have_no_database_and_fe_base_resolves_to_mc_fe(self):
+        out = compute({"Co": 60.0, "Cr": 28.0, "Mo": 6.0, "W": 6.0})
+        self.assertEqual(out["unavailableKind"], "database-not-assessed-for-base")
+        self.assertIn("databases are never substituted", out["reason"])
+        self.assertNotIn("databaseId", out)
+        res = resolve({"Fe": 65.5, "Cr": 17.0, "Ni": 12.0, "Mo": 2.5, "Mn": 2.0})
+        self.assertTrue(res["ok"], res)
+        self.assertEqual(res["id"], "mc_fe")
 
     def test_light_alloys_still_resolve_to_cost_507(self):
         for elements in (TI64, {"Al": 88.5, "Si": 10.0, "Mg": 0.5, "Fe": 1.0}, {"Mg": 92.0, "Al": 3.0, "Zn": 1.0}):

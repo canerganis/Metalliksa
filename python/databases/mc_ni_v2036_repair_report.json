@@ -1,0 +1,139 @@
+{
+ "source": "mc_ni_v2036.tdb",
+ "sourceSha256": "84ba813156e1f7d8bde495d74420319afec03572b981f6b56103807f305313ab",
+ "output": "mc_ni_v2036_repaired.tdb",
+ "origin": "MatCalc open databases, https://www.matcalc.at/index.php/databases/open-databases",
+ "parametersRetained": 3586,
+ "ruleCounts": {
+  "drop-directive": 11,
+  "drop-matcalc-parameter": 13,
+  "fix-temperature-limit": 2,
+  "comment-out-bibliography": 1
+ },
+ "droppedMatcalcParameterTypes": [
+  "HMVA"
+ ],
+ "repairs": [
+  {
+   "rule": "drop-directive",
+   "detail": "REFERENCE_ELEMENT NI"
+  },
+  {
+   "rule": "drop-directive",
+   "detail": "ATTACH_CONTRIBUTION BCC_B2 BCC_A2 ORDER_DISORDER"
+  },
+  {
+   "rule": "drop-directive",
+   "detail": "ADD_COMPOSITION_SET BCC_B2 :NI:AL:"
+  },
+  {
+   "rule": "drop-directive",
+   "detail": "ADD_COMPOSITION_SET BCC_B2 :NI:FE:"
+  },
+  {
+   "rule": "drop-directive",
+   "detail": "ADD_COMPOSITION_SET NIAL :TI:NI:"
+  },
+  {
+   "rule": "drop-directive",
+   "detail": "ADD_COMPOSITION_SET FCC_A1 :TI,NB,V:C,N:"
+  },
+  {
+   "rule": "drop-directive",
+   "detail": "ADD_COMPOSITION_SET FCC_A1 :CU:VA:"
+  },
+  {
+   "rule": "drop-directive",
+   "detail": "ADD_COMPOSITION_SET HCP_A3 :CR:N:"
+  },
+  {
+   "rule": "drop-directive",
+   "detail": "ADD_COMPOSITION_SET HCP_A3 :MO:C:"
+  },
+  {
+   "rule": "drop-directive",
+   "detail": "ADD_COMPOSITION_SET HCP_A3 :CR,V:C:"
+  },
+  {
+   "rule": "drop-directive",
+   "detail": "ADD_COMPOSITION_SET MU_PHASE :CO,NI:W:CR,MO:"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(FCC_A1,*;0) 273.00 +170000; 6000.00 N REF:151"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(FCC_A1,AL:*;0) 273.00 +64200; 6000.00 N REF:pov10"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(FCC_A1,CU:*;0) 273.00 +125000; 6000.00 N REF:pov10"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(FCC_A1,FE:*;0) 273.00 +175000; 6000.00 N REF:pov12"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(FCC_A1,NI:*;0) 273.00 +170000; 6000.00 N REF:pov10"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(BCC_A2,*;0) 273.00 +163000; 6000.00 N REF:pov10"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(BCC_A2,CR:*;0) 273.00 +203000; 6000.00 N REF:pov10"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(BCC_A2,FE:*;0) 273.00 +163000; 6000.00 N REF:pov10"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(BCC_A2,MN:*;0) 273.00 +101000; 6000.00 N REF:pov10"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(BCC_A2,MO:*;0) 273.00 +286000; 6000.00 N REF:pov10"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(BCC_A2,NB:*;0) 273.00 +290000; 6000.00 N REF:pov10"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(BCC_A2,V:*;0) 273.00 +204000; 6000.00 N REF:pov10"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(BCC_A2,W:*;0) 273.00 +378000; 6000.00 N REF:pov10"
+  },
+  {
+   "rule": "fix-temperature-limit",
+   "detail": "6000.00.00 -> 6000.00"
+  },
+  {
+   "rule": "fix-temperature-limit",
+   "detail": "6000.00.00 -> 6000.00"
+  },
+  {
+   "rule": "comment-out-bibliography",
+   "detail": "500 lines of free text (references)"
+  }
+ ]
+}

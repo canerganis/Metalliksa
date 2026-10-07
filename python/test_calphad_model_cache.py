@@ -244,12 +244,22 @@ class TestScheilAlgorithm(unittest.TestCase):
 
 class TestSystemCoverage(unittest.TestCase):
     def test_reference_alloys_without_a_database_say_so(self):
+        # IN718, IN625 and 316L are covered by the MatCalc databases since 2026-10-07; without them they
+        # are reported as unavailable with the reason.
         cov = {row["id"]: row for row in cs.system_coverage()}
+        self.assertEqual({cov[s]["databaseId"] for s in ("in718", "in625")}, {"mc_ni"})
+        self.assertEqual(cov["ss316l"]["databaseId"], "mc_fe")
+        old_catalog = cs.OPEN_TDB_CATALOG
+        try:
+            cs.OPEN_TDB_CATALOG = [e for e in old_catalog if e["id"] not in ("mc_ni", "mc_fe")]
+            without = {row["id"]: row for row in cs.system_coverage()}
+        finally:
+            cs.OPEN_TDB_CATALOG = old_catalog
         for sys_id in ("in718", "in625", "ss316l"):
-            self.assertEqual(cov[sys_id]["status"], "unavailable", sys_id)
-            self.assertTrue(cov[sys_id]["reason"].startswith("no thermodynamic database for this system"))
-        self.assertEqual(cov["in718"]["unavailableKind"], "no-database-covers-elements")
-        self.assertEqual(cov["ss316l"]["unavailableKind"], "database-not-assessed-for-base")
+            self.assertEqual(without[sys_id]["status"], "unavailable", sys_id)
+            self.assertTrue(without[sys_id]["reason"].startswith("no thermodynamic database for this system"))
+        self.assertEqual(without["in718"]["unavailableKind"], "no-database-covers-elements")
+        self.assertEqual(without["ss316l"]["unavailableKind"], "database-not-assessed-for-base")
         self.assertEqual(cov["ti6al4v"]["databaseId"], "cost507")
         self.assertIn("995", cov["ti6al4v"]["knownDeviation"])
         self.assertEqual(cov["alsi10mg"]["databaseId"], "cost507")

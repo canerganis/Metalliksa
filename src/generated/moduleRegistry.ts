@@ -3448,7 +3448,7 @@ export const MODULE_REGISTRY = {
             "kind": "python-ipc",
             "script": "python/calphad_solver.py",
             "workerMethod": null,
-            "timeoutMs": 40000,
+            "timeoutMs": 240000,
             "gpu": "none",
             "warm": true,
             "exceptionReason": null
