@@ -55,3 +55,8 @@ docs/**/queue.sqlite
 docs/**/worker.lock
 # Orchestra lane run roots (local logs and scratch artifacts)
 /.orchestra-run/
+
+# Local AI-assistant tooling (kept on disk, not part of the product)
+.agents/
+.cursor/
+.gemini/
