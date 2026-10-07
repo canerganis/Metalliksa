@@ -434,11 +434,11 @@ def _adopt_parent_uname(uname) -> None:
 
     Libraries imported during warm-up (numpy, scipy) call platform.uname(). On Windows it first asks WMI
     and, when that fails (it does under heavy machine load), falls back to ``cmd /c ver`` through
-    subprocess. Inside a spawn worker that fallback closes a stale standard handle whose number the
-    worker has meanwhile reused for one of its inherited queue semaphores; the next queue read then
-    raises WinError 6 and the worker dies ("Worker process died during execution"). Seeding the cache
-    removes the subprocess from worker start-up (and a WMI round trip per worker). The attribute is
-    CPython-private; when it is absent this is a no-op and behaviour is as before.
+    subprocess. That WMI-failure -> subprocess path is what the WinError 6 / "Worker process died during
+    execution" flake correlated with (an audit hook showed a standard handle being flipped right after
+    the ``ver`` Popen, and a queue handle number then failing); the exact handle-closing site is not
+    confirmed. A seeded cache skips both WMI and ``ver``, so the whole path is removed from worker
+    start-up. The attribute is CPython-private; when it is absent this is a no-op.
     """
     import platform
     if uname is not None and hasattr(platform, "_uname_cache"):
