@@ -402,6 +402,89 @@ def check_build_job_microstructure_degenerate_floor():
         assert degenerate["reason"] == DEGENERATE_FLOOR_REASON
 
 
+SEGREGATION_FIXTURE = os.path.join(HERE, "..", "tests", "fixtures", "build-job-segregation-blocks.json")
+# Result keys of revision v13 (before the segregation block). v14 adds exactly "segregation".
+V13_RESULT_KEYS = frozenset((
+    "success", "engine", "modelId", "solverRevision", "buildJobIdentity", "assumptions", "alloyId",
+    "materialPropertySchemaVersion", "materialPropertyRevision", "materialPropertySha256",
+    "materialPropertySnapshot", "materialAuthority", "materialAuthorityRevisionSha256",
+    "amBenchMaterialPropertySha256", "amBenchMaterialPropertySnapshot", "processSeed", "scanStrategy",
+    "computeTimeMs", "thermal", "slicer", "kinematics", "microstructure", "kinetics", "porosity", "verdict",
+    "uq", "ambench", "murakami", "qualification", "cache",
+))
+_SEGREGATION_COMMON = {"beamDiameter_um": 80, "layerThickness_um": 40, "hatchSpacing_um": 110, "bypassCache": True}
+
+
+def segregation_fixture_blocks():
+    """Real segregation blocks for the UI render test (tests/build-job-segregation.test.tsx)."""
+    from lpbf_solidification_microstructure import project_build_job_microstructure
+    from lpbf_solidification_segregation import build_job_segregation
+
+    available = run_job({"alloyId": "in718", "laserPower_W": 285, "scanSpeed_mm_s": 960, **_SEGREGATION_COMMON})
+    floor_src = run_job({"alloyId": "in718", "laserPower_W": 100, "scanSpeed_mm_s": 960, **_SEGREGATION_COMMON})
+    steel = run_job({"alloyId": "ss316l", "laserPower_W": 200, "scanSpeed_mm_s": 800, **_SEGREGATION_COMMON})
+    return {
+        "available_in718_285_960": available["segregation"],
+        # SYNTHETIC microstructure state (clamp floors), real composition-only result.
+        "in718_degenerate_floor_synthetic": build_job_segregation(
+            "in718", project_build_job_microstructure(_floored_thermal(floor_src["thermal"]))),
+        "in625_unavailable": build_job_segregation("in625", available["microstructure"]),
+        "ss316l_not_applicable": steel["segregation"],
+    }
+
+
+def check_segregation_fixture():
+    with open(SEGREGATION_FIXTURE, encoding="utf-8") as fh:
+        committed = json.load(fh)
+    current = json.loads(json.dumps(segregation_fixture_blocks()))
+    assert committed == current, "tests/fixtures/build-job-segregation-blocks.json is stale: rerun with --write-segregation-fixture"
+
+
+def _without_volatile(job):
+    out = json.loads(json.dumps(job))
+    for key in ("computeTimeMs", "cache", "segregation"):
+        out.pop(key, None)
+    out["thermal"].pop("computeTimeMs", None)
+    if isinstance(out.get("slicer"), dict):
+        out["slicer"].pop("pythonDurationMs", None)
+    return out
+
+
+def check_build_job_segregation():
+    """v14 adds the segregation block and changes nothing else in the result."""
+    from unittest.mock import patch
+
+    import lpbf_build_job_solver as build_job_solver
+    from lpbf_solidification_segregation import EVIDENCE_LABEL, NOT_APPLICABLE_REASON
+
+    payload = {"alloyId": "in718", "laserPower_W": 285, "scanSpeed_mm_s": 960, **_SEGREGATION_COMMON}
+    job = run_job(payload)
+    assert set(job) == V13_RESULT_KEYS | {"segregation"}, sorted(set(job) ^ (V13_RESULT_KEYS | {"segregation"}))
+    seg = job["segregation"]
+    assert seg["status"] in ("available", "unavailable"), seg["status"]
+    assert seg["status"] == "available"
+    assert seg["alloyId"] == "in718"
+    assert seg["evidenceLabel"] == EVIDENCE_LABEL
+    pc = seg["processCoupling"]
+    assert pc["status"] == job["microstructure"]["status"] == "available"
+    for key in ("G_K_m", "R_m_s", "coolingRate_K_s", "morphology", "PDAS_um"):
+        assert pc[key] == job["microstructure"][key], key
+    assert seg["validity"]["outsideSourceRegime"] is True
+    # Every other key equals a run whose segregation hook is replaced: the block is purely additive.
+    with patch.object(build_job_solver, "build_job_segregation", lambda alloy_id, micro: None):
+        stub = run_job(payload)
+    assert stub["segregation"] is None
+    assert _without_volatile(job) == _without_volatile(stub)
+
+    steel = run_job({"alloyId": "ss316l", "laserPower_W": 200, "scanSpeed_mm_s": 800, **_SEGREGATION_COMMON})
+    assert steel["segregation"]["status"] == "not-applicable"
+    assert steel["segregation"]["reason"] == NOT_APPLICABLE_REASON
+    for alloy_id, power, speed in (("ti6al4v", 200, 900), ("alsi10mg", 330, 1100)):
+        other = run_job({"alloyId": alloy_id, "laserPower_W": power, "scanSpeed_mm_s": speed, **_SEGREGATION_COMMON})
+        assert other["segregation"]["status"] == "not-applicable", alloy_id
+    check_segregation_fixture()
+
+
 def check_extent_status_consumers():
     """Heuristic / floored / box-limited melt-pool extent must not become a hard verdict."""
     import copy
@@ -560,8 +643,9 @@ def main():
         "lpbf-build-job-kinetics-li1998-extent-v8",
         "lpbf-build-job-flat-absorptivity-peak-extent-v10",
         "lpbf-build-job-waveb-front-field-marangoni-v11",
+        "lpbf-build-job-eagar-tsai-balling-screen-v13",
     ), BUILD_JOB_SOLVER_REVISION
-    assert BUILD_JOB_SOLVER_REVISION == "lpbf-build-job-eagar-tsai-balling-screen-v13"
+    assert BUILD_JOB_SOLVER_REVISION == "lpbf-build-job-eagar-tsai-balling-screen-v14"
     assert ti["processSeed"] == 42
     assert ti["scanStrategy"]["id"] == "stripe"
     assert ti["uq"] is None  # lazy default
@@ -675,6 +759,7 @@ def main():
     check_build_job_microstructure_fallback()
     check_build_job_microstructure_degenerate_floor()
     check_microstructure_fixture()
+    check_build_job_segregation()
 
     # The effective thermal input is frozen once per request and changes cache identity.
     from four_alloy_materials import _THERMAL
@@ -1097,6 +1182,11 @@ if __name__ == "__main__":
     if "--write-kinetics-fixture" in sys.argv:
         with open(KINETICS_FIXTURE, "w", encoding="utf-8", newline="\n") as fh:
             json.dump(kinetics_fixture_blocks(), fh, indent=1, ensure_ascii=False)
+            fh.write("\n")
+        sys.exit(0)
+    if "--write-segregation-fixture" in sys.argv:
+        with open(SEGREGATION_FIXTURE, "w", encoding="utf-8", newline="\n") as fh:
+            json.dump(segregation_fixture_blocks(), fh, indent=1, ensure_ascii=False)
             fh.write("\n")
         sys.exit(0)
     if "--write-microstructure-fixture" in sys.argv:

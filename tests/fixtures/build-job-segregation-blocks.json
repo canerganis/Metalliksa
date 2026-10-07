@@ -1,0 +1,704 @@
+{
+ "available_in718_285_960": {
+  "schema": "lpbf-solidification-segregation-1",
+  "modelId": "dupont1997-pseudo-ternary-gamma-nb-c-v1",
+  "status": "available",
+  "alloyId": "in718",
+  "evidenceLabel": "Literature estimate (screening): Scheil-type pseudo-ternary gamma-Nb-C model, constants from DuPont, Robino & Marder 1997 (GTA welds of experimental alloys); not CALPHAD; LPBF is outside the source regime",
+  "source": {
+   "citation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3",
+   "url": "https://www.osti.gov/biblio/515586",
+   "read": true,
+   "note": "full text (scanned report, OSTI servlets/purl/515586) read for this module"
+  },
+  "constantSet": "ni-base",
+  "constants": {
+   "k_gamma_Nb": {
+    "value": 0.46,
+    "unit": "-",
+    "source": "D97",
+    "locator": "Table 2 (Ni-Base) and Table 3 (k_gamma,Nb, Ni Base Alloys)",
+    "verified": true,
+    "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+   },
+   "k_gamma_C": {
+    "value": 0.27,
+    "unit": "-",
+    "source": "D97",
+    "locator": "Table 2 (Ni-Base) and Table 3 (k_gamma,C, Ni Base Alloys)",
+    "verified": true,
+    "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+   },
+   "a_wtC": {
+    "value": 0.98,
+    "unit": "wt% C",
+    "source": "D97",
+    "locator": "Table 3 (a, Ni Base Alloys); Eq. 4",
+    "verified": true,
+    "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+   },
+   "b_wtC_per_wtNb": {
+    "value": -0.04,
+    "unit": "wt% C / wt% Nb",
+    "source": "D97",
+    "locator": "Table 3 (b, Ni Base Alloys); Eq. 4",
+    "verified": true,
+    "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+   },
+   "C_Nb_laves": {
+    "value": 23.1,
+    "unit": "wt% Nb",
+    "source": "D97",
+    "locator": "Table 3 (C_Nb,L->(gamma+Laves), Ni Base Alloys)",
+    "verified": true,
+    "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+   },
+   "C_C_laves": {
+    "value": 0.03,
+    "unit": "wt% C",
+    "source": "D97",
+    "locator": "Table 3 (C_C,L->(gamma+Laves), Ni Base Alloys)",
+    "verified": true,
+    "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+   },
+   "C_NbC_Nb": {
+    "value": 90.5,
+    "unit": "wt% Nb",
+    "source": "D97",
+    "locator": "text after Eq. 7 (NbC stoichiometric, 90.5 wt% Nb)",
+    "verified": true,
+    "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+   },
+   "C_NbC_C": {
+    "value": 9.5,
+    "unit": "wt% C",
+    "source": "D97",
+    "locator": "text after Eq. 7 (NbC stoichiometric, 9.5 wt% C)",
+    "verified": true,
+    "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+   }
+  },
+  "k_Nb": {
+   "value": 0.46,
+   "citation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3",
+   "locator": "Table 2 (Ni-Base) and Table 3 (k_gamma,Nb, Ni Base Alloys)"
+  },
+  "composition": {
+   "source": "Special Metals Corporation, INCONEL alloy 718 technical bulletin, Publication Number SMC-045 (2007), Table 1 - Limiting Chemical Composition (conforms to AMS specifications)",
+   "locator": "Table 1 - Limiting Chemical Composition, %",
+   "Nb_wt": {
+    "min": 4.75,
+    "max": 5.5,
+    "nominal": 5.125,
+    "nominalIs": "midpoint of the specification range (not a measured composition)",
+    "note": "Niobium (plus Tantalum)"
+   },
+   "C_wt": {
+    "min": null,
+    "max": 0.08,
+    "note": "maximum only; C = 0 is the binary upper-bound end"
+   },
+   "balanceElement": "Fe",
+   "balanceByDifference_wt": {
+    "min": 11.13,
+    "max": 24.6
+   }
+  },
+  "band": [
+   {
+    "label": "min",
+    "Nb_wt": 4.75,
+    "binaryUpperBound": {
+     "C_wt": 0.0,
+     "fLaves": 0.0534,
+     "riskClass": "eutectic Laves expected (Scheil)"
+    },
+    "pseudoTernaryAtCmax": {
+     "C_wt": 0.08,
+     "fNbC": 0.0631,
+     "fLaves": 0.0181,
+     "fEutecticTotal": 0.0812,
+     "fLiquidPrimaryEnd": 0.0812,
+     "terminatedBy": "laves-point",
+     "riskClass": "eutectic Laves expected (Scheil)"
+    }
+   },
+   {
+    "label": "nominal",
+    "Nb_wt": 5.125,
+    "binaryUpperBound": {
+     "C_wt": 0.0,
+     "fLaves": 0.0615,
+     "riskClass": "eutectic Laves expected (Scheil)"
+    },
+    "pseudoTernaryAtCmax": {
+     "C_wt": 0.08,
+     "fNbC": 0.0658,
+     "fLaves": 0.0264,
+     "fEutecticTotal": 0.0922,
+     "fLiquidPrimaryEnd": 0.0922,
+     "terminatedBy": "laves-point",
+     "riskClass": "eutectic Laves expected (Scheil)"
+    }
+   },
+   {
+    "label": "max",
+    "Nb_wt": 5.5,
+    "binaryUpperBound": {
+     "C_wt": 0.0,
+     "fLaves": 0.0701,
+     "riskClass": "eutectic Laves expected (Scheil)"
+    },
+    "pseudoTernaryAtCmax": {
+     "C_wt": 0.08,
+     "fNbC": 0.0684,
+     "fLaves": 0.0352,
+     "fEutecticTotal": 0.1036,
+     "fLiquidPrimaryEnd": 0.1036,
+     "terminatedBy": "laves-point",
+     "riskClass": "eutectic Laves expected (Scheil)"
+    }
+   }
+  ],
+  "bandNote": "fLaves at C = 0 (binary upper bound) and at the specification maximum C with the pseudo-ternary model; fractions are of the liquid, which D97 compares with measured volume %",
+  "feBaseSensitivity": {
+   "constantSet": "fe-base",
+   "constants": {
+    "k_gamma_Nb": {
+     "value": 0.25,
+     "unit": "-",
+     "source": "D97",
+     "locator": "Table 2 (Fe-Base) and Table 3 (k_gamma,Nb, Fe Base Alloys)",
+     "verified": true,
+     "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+    },
+    "k_gamma_C": {
+     "value": 0.27,
+     "unit": "-",
+     "source": "D97",
+     "locator": "Table 2 (Fe-Base, footnote: estimated from the Ni base alloy data); Table 3",
+     "verified": true,
+     "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+    },
+    "a_wtC": {
+     "value": 1.24,
+     "unit": "wt% C",
+     "source": "D97",
+     "locator": "Table 3 (a, Fe Base Alloys); Eq. 4",
+     "verified": true,
+     "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+    },
+    "b_wtC_per_wtNb": {
+     "value": -0.06,
+     "unit": "wt% C / wt% Nb",
+     "source": "D97",
+     "locator": "Table 3 (b, Fe Base Alloys); Eq. 4",
+     "verified": true,
+     "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+    },
+    "C_Nb_laves": {
+     "value": 20.4,
+     "unit": "wt% Nb",
+     "source": "D97",
+     "locator": "Table 3 (C_Nb,L->(gamma+Laves), Fe Base Alloys)",
+     "verified": true,
+     "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+    },
+    "C_C_laves": {
+     "value": 0.03,
+     "unit": "wt% C",
+     "source": "D97",
+     "locator": "Table 3 (C_C,L->(gamma+Laves), Fe Base Alloys)",
+     "verified": true,
+     "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+    },
+    "C_NbC_Nb": {
+     "value": 90.5,
+     "unit": "wt% Nb",
+     "source": "D97",
+     "locator": "text after Eq. 7 (NbC stoichiometric, 90.5 wt% Nb)",
+     "verified": true,
+     "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+    },
+    "C_NbC_C": {
+     "value": 9.5,
+     "unit": "wt% C",
+     "source": "D97",
+     "locator": "text after Eq. 7 (NbC stoichiometric, 9.5 wt% C)",
+     "verified": true,
+     "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+    }
+   },
+   "point": {
+    "label": "nominal",
+    "Nb_wt": 5.125,
+    "binaryUpperBound": {
+     "C_wt": 0.0,
+     "fLaves": 0.1585,
+     "riskClass": "eutectic Laves expected (Scheil)"
+    },
+    "pseudoTernaryAtCmax": {
+     "C_wt": 0.08,
+     "fNbC": 0.0761,
+     "fLaves": 0.1193,
+     "fEutecticTotal": 0.1954,
+     "fLiquidPrimaryEnd": 0.1954,
+     "terminatedBy": "laves-point",
+     "riskClass": "eutectic Laves expected (Scheil)"
+    }
+   },
+   "note": "bracketing sensitivity with the D97 Fe-base constants; not an interpolation"
+  },
+  "segregation": {
+   "Nb_wt": 5.125,
+   "basis": "binary gamma-Nb Scheil (D97 Eq. 1), C = 0",
+   "coreNb_wt": 2.357,
+   "coreRatioToNominal": 0.46,
+   "interdendritic": [
+    {
+     "fs": 0.9,
+     "liquidNb_wt": 17.77,
+     "ratioToNominal": 3.467,
+     "atEutecticComposition": false
+    },
+    {
+     "fs": 0.95,
+     "liquidNb_wt": 23.1,
+     "ratioToNominal": 4.507,
+     "atEutecticComposition": true
+    }
+   ],
+   "note": "When the remaining liquid at fs is below the eutectic fraction the liquid has reached the gamma/Laves composition and the ratio is capped there (atEutecticComposition = true)."
+  },
+  "riskClass": "eutectic Laves expected (Scheil)",
+  "riskClassRule": "f_Laves > 0 at any band point under the Scheil-type model; no fitted threshold",
+  "processCoupling": {
+   "status": "available",
+   "reason": null,
+   "G_K_m": 12135115.0,
+   "R_m_s": 0.0684,
+   "coolingRate_K_s": 830457.0,
+   "morphology": "Columnar dendritic (Hunt G/R screening)",
+   "PDAS_um": 0.67,
+   "source": "build job microstructure block (copied, not recomputed)",
+   "usedInCalculation": false,
+   "note": "G and R are copied for context only: the Scheil-type result depends on composition alone. Solute trapping and back-diffusion at this solidification rate are not modelled."
+  },
+  "upperBoundNote": "Upper bound with respect to effects that are not modelled and that all reduce segregation: solid-state back-diffusion of Nb, solute trapping at high solidification rate and dendrite-tip undercooling. It is not a bound with respect to the choice of k_Nb (see validity).",
+  "binaryBoundNote": "Binary gamma-Nb Scheil (C = 0): carbon ties Nb up as NbC, so within this model the binary value is an upper bound on the gamma/Laves fraction for any carbon content.",
+  "notModelled": [
+   "solid-state back-diffusion of Nb",
+   "solute trapping (no kinetic constant is introduced)",
+   "dendrite-tip undercooling",
+   "Mo, Ti, Al and Si effects on the Laves reaction",
+   "mechanical consequences of Laves"
+  ],
+  "classIINote": "D97 Table 3 class II point (C_Nb, C_C) is not exactly on the regressed gamma/NbC line (a + b * C_Nb gives about 0.056 wt% C at 23.1 wt% Nb); the eutectic-type integration stops when C_l,Nb reaches C_Nb,L->(gamma+Laves).",
+  "validity": {
+   "sourceCompositionRange_wt": {
+    "Fe": [
+     10.39,
+     11.12
+    ],
+    "Ni": [
+     63.93,
+     68.53
+    ],
+    "Cr": [
+     18.54,
+     19.3
+    ],
+    "Nb": [
+     1.82,
+     5.17
+    ],
+    "Si": [
+     0.03,
+     0.52
+    ],
+    "C": [
+     0.01,
+     0.17
+    ]
+   },
+   "sourceCompositionLocator": "D97 Table 1, alloys 1-8 (Ni base)",
+   "sourceAbsentElements": [
+    "Mo",
+    "Ti",
+    "Al",
+    "Co"
+   ],
+   "outsideSourceComposition": true,
+   "outsideSourceCompositionReasons": [
+    "Fe (balance, 11.13-24.6 wt% by difference) is outside the source 10.39-11.12 wt%",
+    "Nb specification 4.75-5.5 wt% extends outside the source 1.82-5.17 wt%",
+    "Mo (2.8-3.3 wt% in the specification) is absent from the source alloys",
+    "Ti (0.65-1.15 wt% in the specification) is absent from the source alloys",
+    "Al (0.2-0.8 wt% in the specification) is absent from the source alloys"
+   ],
+   "sourceRegime": "gas tungsten arc (GTA) autogenous welds and DTA samples of investment-cast experimental alloys (D97 Experimental Procedure)",
+   "outsideSourceRegime": true,
+   "outsideSourceRegimeReason": "LPBF is not among the source processes (GTA welds, DTA samples); the k values and the Scheil assumption were not established at LPBF solidification rates",
+   "kTransferNote": "D97 reports k_Nb = 0.46 for its Ni base alloys (Fe about 11 wt%) and 0.25 for its Fe base alloys (Fe about 45 wt%) and attributes the drop to Fe. The source gives no k_Nb(Fe) relation here, so no interpolation is made; the Fe-base result is shown as a bracketing sensitivity."
+  }
+ },
+ "in718_degenerate_floor_synthetic": {
+  "schema": "lpbf-solidification-segregation-1",
+  "modelId": "dupont1997-pseudo-ternary-gamma-nb-c-v1",
+  "status": "available",
+  "alloyId": "in718",
+  "evidenceLabel": "Literature estimate (screening): Scheil-type pseudo-ternary gamma-Nb-C model, constants from DuPont, Robino & Marder 1997 (GTA welds of experimental alloys); not CALPHAD; LPBF is outside the source regime",
+  "source": {
+   "citation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3",
+   "url": "https://www.osti.gov/biblio/515586",
+   "read": true,
+   "note": "full text (scanned report, OSTI servlets/purl/515586) read for this module"
+  },
+  "constantSet": "ni-base",
+  "constants": {
+   "k_gamma_Nb": {
+    "value": 0.46,
+    "unit": "-",
+    "source": "D97",
+    "locator": "Table 2 (Ni-Base) and Table 3 (k_gamma,Nb, Ni Base Alloys)",
+    "verified": true,
+    "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+   },
+   "k_gamma_C": {
+    "value": 0.27,
+    "unit": "-",
+    "source": "D97",
+    "locator": "Table 2 (Ni-Base) and Table 3 (k_gamma,C, Ni Base Alloys)",
+    "verified": true,
+    "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+   },
+   "a_wtC": {
+    "value": 0.98,
+    "unit": "wt% C",
+    "source": "D97",
+    "locator": "Table 3 (a, Ni Base Alloys); Eq. 4",
+    "verified": true,
+    "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+   },
+   "b_wtC_per_wtNb": {
+    "value": -0.04,
+    "unit": "wt% C / wt% Nb",
+    "source": "D97",
+    "locator": "Table 3 (b, Ni Base Alloys); Eq. 4",
+    "verified": true,
+    "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+   },
+   "C_Nb_laves": {
+    "value": 23.1,
+    "unit": "wt% Nb",
+    "source": "D97",
+    "locator": "Table 3 (C_Nb,L->(gamma+Laves), Ni Base Alloys)",
+    "verified": true,
+    "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+   },
+   "C_C_laves": {
+    "value": 0.03,
+    "unit": "wt% C",
+    "source": "D97",
+    "locator": "Table 3 (C_C,L->(gamma+Laves), Ni Base Alloys)",
+    "verified": true,
+    "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+   },
+   "C_NbC_Nb": {
+    "value": 90.5,
+    "unit": "wt% Nb",
+    "source": "D97",
+    "locator": "text after Eq. 7 (NbC stoichiometric, 90.5 wt% Nb)",
+    "verified": true,
+    "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+   },
+   "C_NbC_C": {
+    "value": 9.5,
+    "unit": "wt% C",
+    "source": "D97",
+    "locator": "text after Eq. 7 (NbC stoichiometric, 9.5 wt% C)",
+    "verified": true,
+    "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+   }
+  },
+  "k_Nb": {
+   "value": 0.46,
+   "citation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3",
+   "locator": "Table 2 (Ni-Base) and Table 3 (k_gamma,Nb, Ni Base Alloys)"
+  },
+  "composition": {
+   "source": "Special Metals Corporation, INCONEL alloy 718 technical bulletin, Publication Number SMC-045 (2007), Table 1 - Limiting Chemical Composition (conforms to AMS specifications)",
+   "locator": "Table 1 - Limiting Chemical Composition, %",
+   "Nb_wt": {
+    "min": 4.75,
+    "max": 5.5,
+    "nominal": 5.125,
+    "nominalIs": "midpoint of the specification range (not a measured composition)",
+    "note": "Niobium (plus Tantalum)"
+   },
+   "C_wt": {
+    "min": null,
+    "max": 0.08,
+    "note": "maximum only; C = 0 is the binary upper-bound end"
+   },
+   "balanceElement": "Fe",
+   "balanceByDifference_wt": {
+    "min": 11.13,
+    "max": 24.6
+   }
+  },
+  "band": [
+   {
+    "label": "min",
+    "Nb_wt": 4.75,
+    "binaryUpperBound": {
+     "C_wt": 0.0,
+     "fLaves": 0.0534,
+     "riskClass": "eutectic Laves expected (Scheil)"
+    },
+    "pseudoTernaryAtCmax": {
+     "C_wt": 0.08,
+     "fNbC": 0.0631,
+     "fLaves": 0.0181,
+     "fEutecticTotal": 0.0812,
+     "fLiquidPrimaryEnd": 0.0812,
+     "terminatedBy": "laves-point",
+     "riskClass": "eutectic Laves expected (Scheil)"
+    }
+   },
+   {
+    "label": "nominal",
+    "Nb_wt": 5.125,
+    "binaryUpperBound": {
+     "C_wt": 0.0,
+     "fLaves": 0.0615,
+     "riskClass": "eutectic Laves expected (Scheil)"
+    },
+    "pseudoTernaryAtCmax": {
+     "C_wt": 0.08,
+     "fNbC": 0.0658,
+     "fLaves": 0.0264,
+     "fEutecticTotal": 0.0922,
+     "fLiquidPrimaryEnd": 0.0922,
+     "terminatedBy": "laves-point",
+     "riskClass": "eutectic Laves expected (Scheil)"
+    }
+   },
+   {
+    "label": "max",
+    "Nb_wt": 5.5,
+    "binaryUpperBound": {
+     "C_wt": 0.0,
+     "fLaves": 0.0701,
+     "riskClass": "eutectic Laves expected (Scheil)"
+    },
+    "pseudoTernaryAtCmax": {
+     "C_wt": 0.08,
+     "fNbC": 0.0684,
+     "fLaves": 0.0352,
+     "fEutecticTotal": 0.1036,
+     "fLiquidPrimaryEnd": 0.1036,
+     "terminatedBy": "laves-point",
+     "riskClass": "eutectic Laves expected (Scheil)"
+    }
+   }
+  ],
+  "bandNote": "fLaves at C = 0 (binary upper bound) and at the specification maximum C with the pseudo-ternary model; fractions are of the liquid, which D97 compares with measured volume %",
+  "feBaseSensitivity": {
+   "constantSet": "fe-base",
+   "constants": {
+    "k_gamma_Nb": {
+     "value": 0.25,
+     "unit": "-",
+     "source": "D97",
+     "locator": "Table 2 (Fe-Base) and Table 3 (k_gamma,Nb, Fe Base Alloys)",
+     "verified": true,
+     "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+    },
+    "k_gamma_C": {
+     "value": 0.27,
+     "unit": "-",
+     "source": "D97",
+     "locator": "Table 2 (Fe-Base, footnote: estimated from the Ni base alloy data); Table 3",
+     "verified": true,
+     "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+    },
+    "a_wtC": {
+     "value": 1.24,
+     "unit": "wt% C",
+     "source": "D97",
+     "locator": "Table 3 (a, Fe Base Alloys); Eq. 4",
+     "verified": true,
+     "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+    },
+    "b_wtC_per_wtNb": {
+     "value": -0.06,
+     "unit": "wt% C / wt% Nb",
+     "source": "D97",
+     "locator": "Table 3 (b, Fe Base Alloys); Eq. 4",
+     "verified": true,
+     "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+    },
+    "C_Nb_laves": {
+     "value": 20.4,
+     "unit": "wt% Nb",
+     "source": "D97",
+     "locator": "Table 3 (C_Nb,L->(gamma+Laves), Fe Base Alloys)",
+     "verified": true,
+     "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+    },
+    "C_C_laves": {
+     "value": 0.03,
+     "unit": "wt% C",
+     "source": "D97",
+     "locator": "Table 3 (C_C,L->(gamma+Laves), Fe Base Alloys)",
+     "verified": true,
+     "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+    },
+    "C_NbC_Nb": {
+     "value": 90.5,
+     "unit": "wt% Nb",
+     "source": "D97",
+     "locator": "text after Eq. 7 (NbC stoichiometric, 90.5 wt% Nb)",
+     "verified": true,
+     "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+    },
+    "C_NbC_C": {
+     "value": 9.5,
+     "unit": "wt% C",
+     "source": "D97",
+     "locator": "text after Eq. 7 (NbC stoichiometric, 9.5 wt% C)",
+     "verified": true,
+     "sourceCitation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Solidification modeling of Nb bearing superalloys', Superalloys 718, 625, 706 and Derivatives, TMS, Pittsburgh PA, June 15-18 1997; Sandia report SAND97-1669C / CONF-970605-3"
+    }
+   },
+   "point": {
+    "label": "nominal",
+    "Nb_wt": 5.125,
+    "binaryUpperBound": {
+     "C_wt": 0.0,
+     "fLaves": 0.1585,
+     "riskClass": "eutectic Laves expected (Scheil)"
+    },
+    "pseudoTernaryAtCmax": {
+     "C_wt": 0.08,
+     "fNbC": 0.0761,
+     "fLaves": 0.1193,
+     "fEutecticTotal": 0.1954,
+     "fLiquidPrimaryEnd": 0.1954,
+     "terminatedBy": "laves-point",
+     "riskClass": "eutectic Laves expected (Scheil)"
+    }
+   },
+   "note": "bracketing sensitivity with the D97 Fe-base constants; not an interpolation"
+  },
+  "segregation": {
+   "Nb_wt": 5.125,
+   "basis": "binary gamma-Nb Scheil (D97 Eq. 1), C = 0",
+   "coreNb_wt": 2.357,
+   "coreRatioToNominal": 0.46,
+   "interdendritic": [
+    {
+     "fs": 0.9,
+     "liquidNb_wt": 17.77,
+     "ratioToNominal": 3.467,
+     "atEutecticComposition": false
+    },
+    {
+     "fs": 0.95,
+     "liquidNb_wt": 23.1,
+     "ratioToNominal": 4.507,
+     "atEutecticComposition": true
+    }
+   ],
+   "note": "When the remaining liquid at fs is below the eutectic fraction the liquid has reached the gamma/Laves composition and the ratio is capped there (atEutecticComposition = true)."
+  },
+  "riskClass": "eutectic Laves expected (Scheil)",
+  "riskClassRule": "f_Laves > 0 at any band point under the Scheil-type model; no fitted threshold",
+  "processCoupling": {
+   "status": "unavailable",
+   "reason": "microstructure degenerate-floor: solidification front degenerate: floor-clamped R/cooling (R <= 1e-4 m/s or cooling <= 1 K/s), not a computed value",
+   "G_K_m": null,
+   "R_m_s": null,
+   "coolingRate_K_s": null,
+   "morphology": null,
+   "PDAS_um": null,
+   "source": "build job microstructure block (copied, not recomputed)",
+   "usedInCalculation": false,
+   "note": "G and R are copied for context only: the Scheil-type result depends on composition alone. Solute trapping and back-diffusion at this solidification rate are not modelled."
+  },
+  "upperBoundNote": "Upper bound with respect to effects that are not modelled and that all reduce segregation: solid-state back-diffusion of Nb, solute trapping at high solidification rate and dendrite-tip undercooling. It is not a bound with respect to the choice of k_Nb (see validity).",
+  "binaryBoundNote": "Binary gamma-Nb Scheil (C = 0): carbon ties Nb up as NbC, so within this model the binary value is an upper bound on the gamma/Laves fraction for any carbon content.",
+  "notModelled": [
+   "solid-state back-diffusion of Nb",
+   "solute trapping (no kinetic constant is introduced)",
+   "dendrite-tip undercooling",
+   "Mo, Ti, Al and Si effects on the Laves reaction",
+   "mechanical consequences of Laves"
+  ],
+  "classIINote": "D97 Table 3 class II point (C_Nb, C_C) is not exactly on the regressed gamma/NbC line (a + b * C_Nb gives about 0.056 wt% C at 23.1 wt% Nb); the eutectic-type integration stops when C_l,Nb reaches C_Nb,L->(gamma+Laves).",
+  "validity": {
+   "sourceCompositionRange_wt": {
+    "Fe": [
+     10.39,
+     11.12
+    ],
+    "Ni": [
+     63.93,
+     68.53
+    ],
+    "Cr": [
+     18.54,
+     19.3
+    ],
+    "Nb": [
+     1.82,
+     5.17
+    ],
+    "Si": [
+     0.03,
+     0.52
+    ],
+    "C": [
+     0.01,
+     0.17
+    ]
+   },
+   "sourceCompositionLocator": "D97 Table 1, alloys 1-8 (Ni base)",
+   "sourceAbsentElements": [
+    "Mo",
+    "Ti",
+    "Al",
+    "Co"
+   ],
+   "outsideSourceComposition": true,
+   "outsideSourceCompositionReasons": [
+    "Fe (balance, 11.13-24.6 wt% by difference) is outside the source 10.39-11.12 wt%",
+    "Nb specification 4.75-5.5 wt% extends outside the source 1.82-5.17 wt%",
+    "Mo (2.8-3.3 wt% in the specification) is absent from the source alloys",
+    "Ti (0.65-1.15 wt% in the specification) is absent from the source alloys",
+    "Al (0.2-0.8 wt% in the specification) is absent from the source alloys"
+   ],
+   "sourceRegime": "gas tungsten arc (GTA) autogenous welds and DTA samples of investment-cast experimental alloys (D97 Experimental Procedure)",
+   "outsideSourceRegime": true,
+   "outsideSourceRegimeReason": "LPBF is not among the source processes (GTA welds, DTA samples); the k values and the Scheil assumption were not established at LPBF solidification rates",
+   "kTransferNote": "D97 reports k_Nb = 0.46 for its Ni base alloys (Fe about 11 wt%) and 0.25 for its Fe base alloys (Fe about 45 wt%) and attributes the drop to Fe. The source gives no k_Nb(Fe) relation here, so no interpolation is made; the Fe-base result is shown as a bracketing sensitivity."
+  }
+ },
+ "in625_unavailable": {
+  "schema": "lpbf-solidification-segregation-1",
+  "modelId": "dupont1997-pseudo-ternary-gamma-nb-c-v1",
+  "status": "unavailable",
+  "alloyId": "in625",
+  "reason": "constant not verified against primary source: alloy 625 constants (k_gamma_Nb, C_Nb_laves) are in J.N. DuPont, 'Solidification of an alloy 625 weld overlay', Metall. Mater. Trans. A 27 (1996) 3612-3620, which was not read; the D97 alloys contain no Mo, a major alloying element of alloy 625 (calphad_solver.COVERAGE_REFERENCE_SYSTEMS), so the D97 constants are not transferred",
+  "evidenceLabel": "Literature estimate (screening): Scheil-type pseudo-ternary gamma-Nb-C model, constants from DuPont, Robino & Marder 1997 (GTA welds of experimental alloys); not CALPHAD; LPBF is outside the source regime"
+ },
+ "ss316l_not_applicable": {
+  "schema": "lpbf-solidification-segregation-1",
+  "modelId": "dupont1997-pseudo-ternary-gamma-nb-c-v1",
+  "status": "not-applicable",
+  "alloyId": "ss316l",
+  "reason": "no Nb-bearing gamma/Laves model for this alloy",
+  "evidenceLabel": null
+ }
+}

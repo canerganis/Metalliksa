@@ -650,7 +650,7 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
 
       {(job?.microstructure || job?.kinetics) && (
         <div className="rounded-2xl border border-teal-500/30 bg-[#090e18] p-3.5 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <BuildJobMicrostructurePanel micro={job?.microstructure} />
+          <BuildJobMicrostructurePanel micro={job?.microstructure} segregation={job && "segregation" in job ? job.segregation : undefined} />
           <BuildJobKineticsPanel kinetics={job?.kinetics} />
         </div>
       )}
