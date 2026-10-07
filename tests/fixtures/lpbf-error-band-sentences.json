@@ -1,0 +1,475 @@
+{
+ "cases": [
+  {
+   "cell": {
+    "alloys": [
+     "316L Stainless Steel"
+    ],
+    "digitizedSources": [
+     "trapp-316l-2017"
+    ],
+    "eligible": true,
+    "envelope": {
+     "beamDiameter_um": [
+      60,
+      120
+     ],
+     "laserPower_W": [
+      100,
+      400
+     ],
+     "scanSpeed_mm_s": [
+      400,
+      1200
+     ]
+    },
+    "family": "316L",
+    "kernel": "eagar-tsai",
+    "loso": {
+     "coverageBySource": {
+      "hofmann-316l-2026": 0.8,
+      "ku-leuven-316l-2021": 0.7,
+      "trapp-316l-2017": 0.75
+     },
+     "coverageEqualWeight": 0.7499,
+     "coveragePooled": 0.7
+    },
+    "median": 0.0462,
+    "n": 269,
+    "nBalling": 0,
+    "nSets": 169,
+    "nSources": 3,
+    "p10": -0.1049,
+    "p90": 0.3651,
+    "pooledMedian": 0.04,
+    "pooledP10": -0.1,
+    "pooledP90": 0.3,
+    "quantity": "width",
+    "regime": "keyhole",
+    "rowsPerSource": {
+     "hofmann-316l-2026": 100,
+     "ku-leuven-316l-2021": 60,
+     "trapp-316l-2017": 109
+    },
+    "sentinelOnly": false,
+    "sourceMedian": {
+     "hofmann-316l-2026": -0.0149,
+     "ku-leuven-316l-2021": 0.1251,
+     "trapp-316l-2017": 0.0449
+    },
+    "sourceMedianSd": 0.07,
+    "sources": [
+     "hofmann-316l-2026",
+     "ku-leuven-316l-2021",
+     "trapp-316l-2017"
+    ],
+    "state": "band",
+    "widened": {
+     "coverageEqualWeight": 0.9,
+     "informative": true,
+     "p10": -0.2,
+     "p90": 0.5,
+     "sdLeak": false
+    }
+   },
+   "inputs": {
+    "beamDiameter_um": 80,
+    "laserPower_W": 200,
+    "scanSpeed_mm_s": 900
+   },
+   "material": "316L Stainless Steel",
+   "name": "band state, width, inside envelope",
+   "quantity": "width",
+   "sentence": "width ≈ 183 µm · typical error on published tracks, 10–90 % range −10 / +37 % (median +5 %; 269 rows, 3 sources; per-source median error Hofmann −1 %, KU Leuven +13 %, Trapp (digitized) +4 %; a held-out source fell inside the band 75 % of the time, nominal 80 %) · Screening only · typical published-data error shown; transfer to another lab not established",
+   "short": "W err. −10/+37 % (cov 75 %)",
+   "value_um": 183.4
+  },
+  {
+   "cell": {
+    "alloys": [
+     "316L Stainless Steel"
+    ],
+    "digitizedSources": [
+     "trapp-316l-2017"
+    ],
+    "eligible": true,
+    "envelope": {
+     "beamDiameter_um": [
+      60,
+      120
+     ],
+     "laserPower_W": [
+      100,
+      400
+     ],
+     "scanSpeed_mm_s": [
+      400,
+      1200
+     ]
+    },
+    "family": "316L",
+    "kernel": "eagar-tsai",
+    "loso": {
+     "coverageBySource": {
+      "hofmann-316l-2026": 0.8,
+      "ku-leuven-316l-2021": 0.7,
+      "trapp-316l-2017": 0.75
+     },
+     "coverageEqualWeight": 0.7499,
+     "coveragePooled": 0.7
+    },
+    "median": 0.0462,
+    "n": 269,
+    "nBalling": 0,
+    "nSets": 169,
+    "nSources": 3,
+    "p10": -0.1049,
+    "p90": 0.3651,
+    "pooledMedian": 0.04,
+    "pooledP10": -0.1,
+    "pooledP90": 0.3,
+    "quantity": "width",
+    "regime": "keyhole",
+    "rowsPerSource": {
+     "hofmann-316l-2026": 100,
+     "ku-leuven-316l-2021": 60,
+     "trapp-316l-2017": 109
+    },
+    "sentinelOnly": false,
+    "sourceMedian": {
+     "hofmann-316l-2026": -0.0149,
+     "ku-leuven-316l-2021": 0.1251,
+     "trapp-316l-2017": 0.0449
+    },
+    "sourceMedianSd": 0.07,
+    "sources": [
+     "hofmann-316l-2026",
+     "ku-leuven-316l-2021",
+     "trapp-316l-2017"
+    ],
+    "state": "band",
+    "widened": {
+     "coverageEqualWeight": 0.9,
+     "informative": true,
+     "p10": -0.2,
+     "p90": 0.5,
+     "sdLeak": false
+    }
+   },
+   "inputs": {
+    "beamDiameter_um": 80,
+    "laserPower_W": 500,
+    "scanSpeed_mm_s": 900
+   },
+   "material": "316L Stainless Steel",
+   "name": "band state, outside envelope (power)",
+   "quantity": "width",
+   "sentence": "width ≈ 184 µm · typical error on published tracks, 10–90 % range −10 / +37 % (median +5 %; 269 rows, 3 sources; per-source median error Hofmann −1 %, KU Leuven +13 %, Trapp (digitized) +4 %; a held-out source fell inside the band 75 % of the time, nominal 80 %) · input outside the published range of this cell · Screening only · typical published-data error shown; transfer to another lab not established",
+   "short": "W err. −10/+37 % (cov 75 %)",
+   "value_um": 183.5
+  },
+  {
+   "cell": {
+    "alloys": [
+     "316L Stainless Steel"
+    ],
+    "digitizedSources": [
+     "trapp-316l-2017"
+    ],
+    "eligible": true,
+    "envelope": {
+     "beamDiameter_um": [
+      60,
+      120
+     ],
+     "laserPower_W": [
+      100,
+      400
+     ],
+     "scanSpeed_mm_s": [
+      400,
+      1200
+     ]
+    },
+    "family": "316L",
+    "kernel": "eagar-tsai",
+    "loso": {
+     "coverageBySource": {},
+     "coverageEqualWeight": 0.6751,
+     "coveragePooled": 0.7
+    },
+    "median": -0.2,
+    "n": 731,
+    "nBalling": 0,
+    "nSets": 432,
+    "nSources": 3,
+    "p10": -0.4301,
+    "p90": 0.4099,
+    "pooledMedian": 0.04,
+    "pooledP10": -0.1,
+    "pooledP90": 0.3,
+    "quantity": "depth",
+    "regime": "all",
+    "rowsPerSource": {
+     "hofmann-316l-2026": 100,
+     "ku-leuven-316l-2021": 60,
+     "trapp-316l-2017": 109
+    },
+    "sentinelOnly": false,
+    "sourceMedian": {
+     "hofmann-316l-2026": 0.0701,
+     "ku-leuven-316l-2021": -0.2801,
+     "trapp-316l-2017": -0.3701
+    },
+    "sourceMedianSd": 0.07,
+    "sources": [
+     "hofmann-316l-2026",
+     "ku-leuven-316l-2021",
+     "trapp-316l-2017"
+    ],
+    "state": "band-under-covers",
+    "widened": {
+     "coverageEqualWeight": 0.92,
+     "informative": false,
+     "p10": -0.72,
+     "p90": 0.7,
+     "sdLeak": false
+    }
+   },
+   "inputs": {
+    "beamDiameter_um": 80,
+    "laserPower_W": 200,
+    "scanSpeed_mm_s": 900
+   },
+   "material": "316L Stainless Steel",
+   "name": "under-covers, not informative",
+   "quantity": "depth",
+   "sentence": "depth ≈ 120 µm · published-track error 10–90 % range −43 / +41 % (median −20 %; 731 rows, 3 sources) — this band does NOT transfer between sources: a held-out source fell inside only 68 % of the time (nominal 80 %); per-source median error Hofmann +7 %, KU Leuven −28 %, Trapp (digitized) −37 %. No informative bound from published data. Only measurements on your own machine can bound this. · Screening only · typical published-data error shown; transfer to another lab not established",
+   "short": "D err. −43/+41 % (cov 68 %)",
+   "value_um": 119.6
+  },
+  {
+   "cell": {
+    "alloys": [
+     "316L Stainless Steel"
+    ],
+    "digitizedSources": [
+     "trapp-316l-2017"
+    ],
+    "eligible": true,
+    "envelope": {
+     "beamDiameter_um": [
+      60,
+      120
+     ],
+     "laserPower_W": [
+      100,
+      400
+     ],
+     "scanSpeed_mm_s": [
+      400,
+      1200
+     ]
+    },
+    "family": "316L",
+    "kernel": "eagar-tsai",
+    "loso": {
+     "coverageBySource": {},
+     "coverageEqualWeight": 0.5,
+     "coveragePooled": 0.5
+    },
+    "median": 0.01,
+    "n": 269,
+    "nBalling": 0,
+    "nSets": 169,
+    "nSources": 3,
+    "p10": -0.1,
+    "p90": 0.2,
+    "pooledMedian": 0.04,
+    "pooledP10": -0.1,
+    "pooledP90": 0.3,
+    "quantity": "depth",
+    "regime": "transition",
+    "rowsPerSource": {
+     "hofmann-316l-2026": 100,
+     "ku-leuven-316l-2021": 60,
+     "trapp-316l-2017": 109
+    },
+    "sentinelOnly": false,
+    "sourceMedian": {
+     "hofmann-316l-2026": -0.0149,
+     "ku-leuven-316l-2021": 0.1251,
+     "trapp-316l-2017": 0.0449
+    },
+    "sourceMedianSd": 0.07,
+    "sources": [
+     "hofmann-316l-2026",
+     "ku-leuven-316l-2021",
+     "trapp-316l-2017"
+    ],
+    "state": "band-under-covers",
+    "widened": {
+     "coverageEqualWeight": 0.8,
+     "informative": true,
+     "p10": -0.2,
+     "p90": 0.35,
+     "sdLeak": false
+    }
+   },
+   "inputs": null,
+   "material": "316L Stainless Steel",
+   "name": "under-covers, informative widened band",
+   "quantity": "depth",
+   "sentence": "depth ≈ 100 µm · published-track error 10–90 % range −10 / +20 % (median +1 %; 269 rows, 3 sources) — this band does NOT transfer between sources: a held-out source fell inside only 50 % of the time (nominal 80 %); per-source median error Hofmann −1 %, KU Leuven +13 %, Trapp (digitized) +4 %. Widened by the between-source spread: −20 / +35 %. Only measurements on your own machine can bound this. · Screening only · typical published-data error shown; transfer to another lab not established",
+   "short": "D err. −10/+20 % (cov 50 %)",
+   "value_um": 99.5
+  },
+  {
+   "cell": {
+    "alloys": [
+     "Ti-6Al-4V"
+    ],
+    "digitizedSources": [],
+    "eligible": false,
+    "envelope": {
+     "beamDiameter_um": [
+      60,
+      120
+     ],
+     "laserPower_W": [
+      100,
+      400
+     ],
+     "scanSpeed_mm_s": [
+      400,
+      1200
+     ]
+    },
+    "family": "Ti64",
+    "kernel": "eagar-tsai",
+    "loso": null,
+    "median": 0.56,
+    "n": 8,
+    "nBalling": 0,
+    "nSets": 8,
+    "nSources": 1,
+    "p10": 0.56,
+    "p90": 0.56,
+    "pooledMedian": 0.04,
+    "pooledP10": -0.1,
+    "pooledP90": 0.3,
+    "quantity": "depth",
+    "regime": "conduction",
+    "rowsPerSource": {
+     "totis-ti64-2021": 8
+    },
+    "sentinelOnly": false,
+    "sourceMedian": {
+     "totis-ti64-2021": 0.56
+    },
+    "sourceMedianSd": null,
+    "sources": [
+     "totis-ti64-2021"
+    ],
+    "state": "insufficient-data",
+    "widened": null
+   },
+   "inputs": null,
+   "material": "Ti-6Al-4V",
+   "name": "insufficient data, one source",
+   "quantity": "depth",
+   "sentence": "depth ≈ 120 µm · published-track error: insufficient data (1 source, 8 rows: Totis +56 % median) · Screening only · typical published-data error shown; transfer to another lab not established",
+   "short": "D err. n/a (1 src, 8 rows)",
+   "value_um": 120.04
+  },
+  {
+   "cell": {
+    "alloys": [
+     "Inconel 625",
+     "Inconel 718"
+    ],
+    "digitizedSources": [
+     "ghosh-in625-2018"
+    ],
+    "eligible": true,
+    "envelope": {
+     "beamDiameter_um": [
+      60,
+      120
+     ],
+     "laserPower_W": [
+      100,
+      400
+     ],
+     "scanSpeed_mm_s": [
+      400,
+      1200
+     ]
+    },
+    "family": "Ni",
+    "kernel": "rosenthal",
+    "loso": {
+     "coverageBySource": {},
+     "coverageEqualWeight": 0.6801,
+     "coveragePooled": 0.6
+    },
+    "median": 0.27,
+    "n": 20,
+    "nBalling": 0,
+    "nSets": 15,
+    "nSources": 3,
+    "p10": -0.32,
+    "p90": 0.45,
+    "pooledMedian": 0.04,
+    "pooledP10": -0.1,
+    "pooledP90": 0.3,
+    "quantity": "depth",
+    "regime": "transition",
+    "rowsPerSource": {
+     "ghosh-in625-2018": 7,
+     "lane-in625-2020": 6,
+     "nist-amb2022-03": 7
+    },
+    "sentinelOnly": false,
+    "sourceMedian": {
+     "ghosh-in625-2018": 0.36,
+     "lane-in625-2020": -0.23,
+     "nist-amb2022-03": 0.3
+    },
+    "sourceMedianSd": 0.07,
+    "sources": [
+     "ghosh-in625-2018",
+     "lane-in625-2020",
+     "nist-amb2022-03"
+    ],
+    "state": "band-under-covers",
+    "widened": {
+     "coverageEqualWeight": 0.8,
+     "informative": false,
+     "p10": -0.74,
+     "p90": 0.86,
+     "sdLeak": false
+    }
+   },
+   "inputs": null,
+   "material": "Inconel 718",
+   "name": "under-covers, pooled alloys, IN718 asked",
+   "quantity": "depth",
+   "sentence": "depth ≈ 210 µm · published-track error 10–90 % range −32 / +45 % (median +27 %; 20 rows, 3 sources) — this band does NOT transfer between sources: a held-out source fell inside only 68 % of the time (nominal 80 %); per-source median error Ghosh (digitized) +36 %, Lane −23 %, NIST AMB2022-03 (catalog sentinel) +30 %. No informative bound from published data. Only measurements on your own machine can bound this. Pooled alloys in this cell: Inconel 625, Inconel 718. · Screening only · typical published-data error shown; transfer to another lab not established",
+   "short": "D err. −32/+45 % (cov 68 %)",
+   "value_um": 210
+  },
+  {
+   "cell": null,
+   "inputs": null,
+   "material": "AlSi10Mg",
+   "name": "no cell for this alloy",
+   "quantity": "depth",
+   "sentence": "depth ≈ 75 µm · published-track error: insufficient data (0 sources, 0 rows) · Screening only · typical published-data error shown; transfer to another lab not established",
+   "short": "D err. n/a (0 src, 0 rows)",
+   "value_um": 75.2
+  }
+ ],
+ "labelLine": "Screening only · typical published-data error shown; transfer to another lab not established",
+ "note": "Golden strings of band_sentence / band_short on synthetic cells (python/lpbf_error_bands.py); read by python/test_lpbf_error_bands.py and tests/lpbf-error-bands.test.tsx. Hand-checked wording; a change here is a wording decision."
+}

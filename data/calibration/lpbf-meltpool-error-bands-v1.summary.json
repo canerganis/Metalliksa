@@ -1,0 +1,6095 @@
+{
+ "bandsId": "lpbf-meltpool-error-bands-2026-10-07-8cc89f494031",
+ "cells": [
+  {
+   "alloys": [
+    "316L Stainless Steel"
+   ],
+   "digitizedSources": [
+    "trapp-316l-2017"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     140.0
+    ],
+    "laserPower_W": [
+     32.0,
+     600.0
+    ],
+    "scanSpeed_mm_s": [
+     225.0,
+     1500.0
+    ]
+   },
+   "family": "316L",
+   "kernel": "eagar-tsai",
+   "loso": {
+    "coverageBySource": {
+     "hofmann-316l-2026": 0.707533,
+     "ku-leuven-316l-2021": 0.931818,
+     "trapp-316l-2017": 0.4
+    },
+    "coverageEqualWeight": 0.679784,
+    "coveragePooled": 0.716826
+   },
+   "median": -0.20081,
+   "n": 731,
+   "nBalling": 216,
+   "nSets": 432,
+   "nSources": 3,
+   "p10": -0.426389,
+   "p90": 0.406933,
+   "pooledMedian": 0.0539153,
+   "pooledP10": -0.320019,
+   "pooledP90": 0.779397,
+   "quantity": "depth",
+   "regime": "all",
+   "rowsPerSource": {
+    "hofmann-316l-2026": 677,
+    "ku-leuven-316l-2021": 44,
+    "trapp-316l-2017": 10
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "hofmann-316l-2026": 0.0684932,
+    "ku-leuven-316l-2021": -0.27972,
+    "trapp-316l-2017": -0.370695
+   },
+   "sourceMedianSd": 0.23181,
+   "sources": [
+    "hofmann-316l-2026",
+    "ku-leuven-316l-2021",
+    "trapp-316l-2017"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.923191,
+    "informative": false,
+    "p10": -0.723477,
+    "p90": 0.70402,
+    "sdLeak": false
+   }
+  },
+  {
+   "alloys": [
+    "316L Stainless Steel"
+   ],
+   "digitizedSources": [
+    "trapp-316l-2017"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     50.0,
+     140.0
+    ],
+    "laserPower_W": [
+     32.0,
+     450.0
+    ],
+    "scanSpeed_mm_s": [
+     225.0,
+     1500.0
+    ]
+   },
+   "family": "316L",
+   "kernel": "eagar-tsai",
+   "loso": {
+    "coverageBySource": {
+     "hofmann-316l-2026": 0.097561,
+     "trapp-316l-2017": 1.0
+    },
+    "coverageEqualWeight": 0.54878,
+    "coveragePooled": 0.113772
+   },
+   "median": 0.257143,
+   "n": 167,
+   "nBalling": 31,
+   "nSets": 105,
+   "nSources": 2,
+   "p10": 0.0440605,
+   "p90": 0.688263,
+   "pooledMedian": 0.246987,
+   "pooledP10": -0.00729927,
+   "pooledP90": 1.02438,
+   "quantity": "depth",
+   "regime": "conduction",
+   "rowsPerSource": {
+    "hofmann-316l-2026": 164,
+    "trapp-316l-2017": 3
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "hofmann-316l-2026": 0.239012,
+    "trapp-316l-2017": 0.257143
+   },
+   "sourceMedianSd": 0.0128206,
+   "sources": [
+    "hofmann-316l-2026",
+    "trapp-316l-2017"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.567073,
+    "informative": true,
+    "p10": 0.0276296,
+    "p90": 0.704694,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "316L Stainless Steel"
+   ],
+   "digitizedSources": [
+    "trapp-316l-2017"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     140.0
+    ],
+    "laserPower_W": [
+     100.0,
+     600.0
+    ],
+    "scanSpeed_mm_s": [
+     225.0,
+     1500.0
+    ]
+   },
+   "family": "316L",
+   "kernel": "eagar-tsai",
+   "loso": {
+    "coverageBySource": {
+     "hofmann-316l-2026": 0.391111,
+     "ku-leuven-316l-2021": 0.875,
+     "trapp-316l-2017": 0.25
+    },
+    "coverageEqualWeight": 0.50537,
+    "coveragePooled": 0.460967
+   },
+   "median": -0.305451,
+   "n": 269,
+   "nBalling": 88,
+   "nSets": 169,
+   "nSources": 3,
+   "p10": -0.388326,
+   "p90": 0.403909,
+   "pooledMedian": 0.00550459,
+   "pooledP10": -0.323741,
+   "pooledP90": 1.01887,
+   "quantity": "depth",
+   "regime": "keyhole",
+   "rowsPerSource": {
+    "hofmann-316l-2026": 225,
+    "ku-leuven-316l-2021": 40,
+    "trapp-316l-2017": 4
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "hofmann-316l-2026": 0.11089,
+    "ku-leuven-316l-2021": -0.298361,
+    "trapp-316l-2017": -0.370695
+   },
+   "sourceMedianSd": 0.259693,
+   "sources": [
+    "hofmann-316l-2026",
+    "ku-leuven-316l-2021",
+    "trapp-316l-2017"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.823704,
+    "informative": false,
+    "p10": -0.721148,
+    "p90": 0.736731,
+    "sdLeak": false
+   }
+  },
+  {
+   "alloys": [
+    "316L Stainless Steel"
+   ],
+   "digitizedSources": [
+    "trapp-316l-2017"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     140.0
+    ],
+    "laserPower_W": [
+     50.0,
+     500.0
+    ],
+    "scanSpeed_mm_s": [
+     225.0,
+     1500.0
+    ]
+   },
+   "family": "316L",
+   "kernel": "eagar-tsai",
+   "loso": {
+    "coverageBySource": {
+     "hofmann-316l-2026": 0.909722,
+     "ku-leuven-316l-2021": 0.25,
+     "trapp-316l-2017": 0.0
+    },
+    "coverageEqualWeight": 0.386574,
+    "coveragePooled": 0.891525
+   },
+   "median": -0.0551207,
+   "n": 295,
+   "nBalling": 97,
+   "nSets": 158,
+   "nSources": 3,
+   "p10": -0.570968,
+   "p90": 0.563965,
+   "pooledMedian": -0.0546959,
+   "pooledP10": -0.384428,
+   "pooledP90": 0.450755,
+   "quantity": "depth",
+   "regime": "transition",
+   "rowsPerSource": {
+    "hofmann-316l-2026": 288,
+    "ku-leuven-316l-2021": 4,
+    "trapp-316l-2017": 3
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "hofmann-316l-2026": -0.0551207,
+    "ku-leuven-316l-2021": 0.306522,
+    "trapp-316l-2017": -0.560952
+   },
+   "sourceMedianSd": 0.43573,
+   "sources": [
+    "hofmann-316l-2026",
+    "ku-leuven-316l-2021",
+    "trapp-316l-2017"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.99537,
+    "informative": false,
+    "p10": -1.1294,
+    "p90": 1.1224,
+    "sdLeak": false
+   }
+  },
+  {
+   "alloys": [
+    "Inconel 625"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     100.0,
+     170.0
+    ],
+    "laserPower_W": [
+     49.0,
+     195.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     1200.0
+    ]
+   },
+   "family": "Inconel 625",
+   "kernel": "eagar-tsai",
+   "loso": {
+    "coverageBySource": {
+     "ghosh-in625-2018": 0.166667,
+     "lane-in625-2020": 0.117647
+    },
+    "coverageEqualWeight": 0.142157,
+    "coveragePooled": 0.130435
+   },
+   "median": 0.207895,
+   "n": 23,
+   "nBalling": 0,
+   "nSets": 10,
+   "nSources": 2,
+   "p10": -0.339037,
+   "p90": 0.391667,
+   "pooledMedian": 0.137536,
+   "pooledP10": -0.343662,
+   "pooledP90": 0.327273,
+   "quantity": "depth",
+   "regime": "conduction",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 6,
+    "lane-in625-2020": 17
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": 0.28,
+    "lane-in625-2020": 0.0103448
+   },
+   "sourceMedianSd": 0.190675,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.79902,
+    "informative": false,
+    "p10": -0.583406,
+    "p90": 0.636036,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "Inconel 625"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     100.0,
+     140.0
+    ],
+    "laserPower_W": [
+     150.0,
+     195.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     800.0
+    ]
+   },
+   "family": "Inconel 625",
+   "kernel": "eagar-tsai",
+   "loso": null,
+   "median": -0.440223,
+   "n": 7,
+   "nBalling": 0,
+   "nSets": 3,
+   "nSources": 2,
+   "p10": -0.595207,
+   "p90": -0.0770642,
+   "pooledMedian": -0.462042,
+   "pooledP10": -0.633237,
+   "pooledP90": -0.0770642,
+   "quantity": "depth",
+   "regime": "transition",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 1,
+    "lane-in625-2020": 6
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": -0.0770642,
+    "lane-in625-2020": -0.518379
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Inconel 718"
+   ],
+   "digitizedSources": [],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     49.0,
+     67.0
+    ],
+    "laserPower_W": [
+     245.0,
+     325.0
+    ],
+    "scanSpeed_mm_s": [
+     800.0,
+     1200.0
+    ]
+   },
+   "family": "Inconel 718",
+   "kernel": "eagar-tsai",
+   "loso": null,
+   "median": -0.149308,
+   "n": 6,
+   "nBalling": 0,
+   "nSets": 6,
+   "nSources": 1,
+   "p10": -0.283451,
+   "p90": -0.0756609,
+   "pooledMedian": -0.149308,
+   "pooledP10": -0.283451,
+   "pooledP90": -0.0756609,
+   "quantity": "depth",
+   "regime": "keyhole",
+   "rowsPerSource": {
+    "nist-amb2022-03": 6
+   },
+   "sentinelOnly": true,
+   "sourceMedian": {
+    "nist-amb2022-03": -0.149308
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "nist-amb2022-03"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Inconel 718"
+   ],
+   "digitizedSources": [],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     82.0,
+     82.0
+    ],
+    "laserPower_W": [
+     285.0,
+     285.0
+    ],
+    "scanSpeed_mm_s": [
+     960.0,
+     960.0
+    ]
+   },
+   "family": "Inconel 718",
+   "kernel": "eagar-tsai",
+   "loso": null,
+   "median": -0.0986328,
+   "n": 1,
+   "nBalling": 0,
+   "nSets": 1,
+   "nSources": 1,
+   "p10": -0.0986328,
+   "p90": -0.0986328,
+   "pooledMedian": -0.0986328,
+   "pooledP10": -0.0986328,
+   "pooledP90": -0.0986328,
+   "quantity": "depth",
+   "regime": "transition",
+   "rowsPerSource": {
+    "nist-amb2022-03": 1
+   },
+   "sentinelOnly": true,
+   "sourceMedian": {
+    "nist-amb2022-03": -0.0986328
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "nist-amb2022-03"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Inconel 625",
+    "Inconel 718"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     49.0,
+     170.0
+    ],
+    "laserPower_W": [
+     49.0,
+     325.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     1200.0
+    ]
+   },
+   "family": "Ni",
+   "kernel": "eagar-tsai",
+   "loso": {
+    "coverageBySource": {
+     "ghosh-in625-2018": 0.142857,
+     "lane-in625-2020": 0.565217,
+     "nist-amb2022-03": 1.0
+    },
+    "coverageEqualWeight": 0.569358,
+    "coveragePooled": 0.567568
+   },
+   "median": -0.0756609,
+   "n": 37,
+   "nBalling": 0,
+   "nSets": 20,
+   "nSources": 3,
+   "p10": -0.35144,
+   "p90": 0.327273,
+   "pooledMedian": -0.0298013,
+   "pooledP10": -0.462042,
+   "pooledP90": 0.28,
+   "quantity": "depth",
+   "regime": "all",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 7,
+    "lane-in625-2020": 23,
+    "nist-amb2022-03": 7
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": 0.28,
+    "lane-in625-2020": -0.0233333,
+    "nist-amb2022-03": -0.113099
+   },
+   "sourceMedianSd": 0.205992,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020",
+    "nist-amb2022-03"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.732919,
+    "informative": false,
+    "p10": -0.61544,
+    "p90": 0.591272,
+    "sdLeak": false
+   }
+  },
+  {
+   "alloys": [
+    "Inconel 625"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     100.0,
+     170.0
+    ],
+    "laserPower_W": [
+     49.0,
+     195.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     1200.0
+    ]
+   },
+   "family": "Ni",
+   "kernel": "eagar-tsai",
+   "loso": {
+    "coverageBySource": {
+     "ghosh-in625-2018": 0.166667,
+     "lane-in625-2020": 0.117647
+    },
+    "coverageEqualWeight": 0.142157,
+    "coveragePooled": 0.130435
+   },
+   "median": 0.207895,
+   "n": 23,
+   "nBalling": 0,
+   "nSets": 10,
+   "nSources": 2,
+   "p10": -0.339037,
+   "p90": 0.391667,
+   "pooledMedian": 0.137536,
+   "pooledP10": -0.343662,
+   "pooledP90": 0.327273,
+   "quantity": "depth",
+   "regime": "conduction",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 6,
+    "lane-in625-2020": 17
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": 0.28,
+    "lane-in625-2020": 0.0103448
+   },
+   "sourceMedianSd": 0.190675,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.79902,
+    "informative": false,
+    "p10": -0.583406,
+    "p90": 0.636036,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "Inconel 718"
+   ],
+   "digitizedSources": [],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     49.0,
+     67.0
+    ],
+    "laserPower_W": [
+     245.0,
+     325.0
+    ],
+    "scanSpeed_mm_s": [
+     800.0,
+     1200.0
+    ]
+   },
+   "family": "Ni",
+   "kernel": "eagar-tsai",
+   "loso": null,
+   "median": -0.149308,
+   "n": 6,
+   "nBalling": 0,
+   "nSets": 6,
+   "nSources": 1,
+   "p10": -0.283451,
+   "p90": -0.0756609,
+   "pooledMedian": -0.149308,
+   "pooledP10": -0.283451,
+   "pooledP90": -0.0756609,
+   "quantity": "depth",
+   "regime": "keyhole",
+   "rowsPerSource": {
+    "nist-amb2022-03": 6
+   },
+   "sentinelOnly": true,
+   "sourceMedian": {
+    "nist-amb2022-03": -0.149308
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "nist-amb2022-03"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Inconel 625",
+    "Inconel 718"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     82.0,
+     140.0
+    ],
+    "laserPower_W": [
+     150.0,
+     285.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     960.0
+    ]
+   },
+   "family": "Ni",
+   "kernel": "eagar-tsai",
+   "loso": null,
+   "median": -0.0986328,
+   "n": 8,
+   "nBalling": 0,
+   "nSets": 4,
+   "nSources": 3,
+   "p10": -0.595207,
+   "p90": -0.0770642,
+   "pooledMedian": -0.462042,
+   "pooledP10": -0.633237,
+   "pooledP90": -0.0770642,
+   "quantity": "depth",
+   "regime": "transition",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 1,
+    "lane-in625-2020": 6,
+    "nist-amb2022-03": 1
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": -0.0770642,
+    "lane-in625-2020": -0.518379,
+    "nist-amb2022-03": -0.0986328
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020",
+    "nist-amb2022-03"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Ti-6Al-4V"
+   ],
+   "digitizedSources": [],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     50.0
+    ],
+    "laserPower_W": [
+     50.0,
+     400.0
+    ],
+    "scanSpeed_mm_s": [
+     250.0,
+     2500.0
+    ]
+   },
+   "family": "Ti64",
+   "kernel": "eagar-tsai",
+   "loso": {
+    "coverageBySource": {
+     "ku-leuven-ti64-2021": 0.571429,
+     "totis-ti64-2021": 0.3
+    },
+    "coverageEqualWeight": 0.435714,
+    "coveragePooled": 0.340426
+   },
+   "median": -0.0467532,
+   "n": 94,
+   "nBalling": 0,
+   "nSets": 94,
+   "nSources": 2,
+   "p10": -0.369351,
+   "p90": 0.609461,
+   "pooledMedian": -0.191039,
+   "pooledP10": -0.405558,
+   "pooledP90": 0.55569,
+   "quantity": "depth",
+   "regime": "all",
+   "rowsPerSource": {
+    "ku-leuven-ti64-2021": 14,
+    "totis-ti64-2021": 80
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ku-leuven-ti64-2021": 0.0301205,
+    "totis-ti64-2021": -0.242028
+   },
+   "sourceMedianSd": 0.192438,
+   "sources": [
+    "ku-leuven-ti64-2021",
+    "totis-ti64-2021"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.834821,
+    "informative": false,
+    "p10": -0.615979,
+    "p90": 0.856089,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "Ti-6Al-4V"
+   ],
+   "digitizedSources": [],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     50.0,
+     50.0
+    ],
+    "laserPower_W": [
+     50.0,
+     50.0
+    ],
+    "scanSpeed_mm_s": [
+     750.0,
+     2500.0
+    ]
+   },
+   "family": "Ti64",
+   "kernel": "eagar-tsai",
+   "loso": null,
+   "median": 0.55569,
+   "n": 8,
+   "nBalling": 0,
+   "nSets": 8,
+   "nSources": 1,
+   "p10": -0.747623,
+   "p90": 2.7376,
+   "pooledMedian": 0.55569,
+   "pooledP10": -0.747623,
+   "pooledP90": 2.7376,
+   "quantity": "depth",
+   "regime": "conduction",
+   "rowsPerSource": {
+    "totis-ti64-2021": 8
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "totis-ti64-2021": 0.55569
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "totis-ti64-2021"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Ti-6Al-4V"
+   ],
+   "digitizedSources": [],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     50.0
+    ],
+    "laserPower_W": [
+     100.0,
+     400.0
+    ],
+    "scanSpeed_mm_s": [
+     250.0,
+     2500.0
+    ]
+   },
+   "family": "Ti64",
+   "kernel": "eagar-tsai",
+   "loso": {
+    "coverageBySource": {
+     "ku-leuven-ti64-2021": 0.636364,
+     "totis-ti64-2021": 0.385965
+    },
+    "coverageEqualWeight": 0.511164,
+    "coveragePooled": 0.426471
+   },
+   "median": -0.0525143,
+   "n": 68,
+   "nBalling": 0,
+   "nSets": 68,
+   "nSources": 2,
+   "p10": -0.346752,
+   "p90": 0.497911,
+   "pooledMedian": -0.156087,
+   "pooledP10": -0.369351,
+   "pooledP90": 0.471127,
+   "quantity": "depth",
+   "regime": "keyhole",
+   "rowsPerSource": {
+    "ku-leuven-ti64-2021": 11,
+    "totis-ti64-2021": 57
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ku-leuven-ti64-2021": -0.0200742,
+    "totis-ti64-2021": -0.206876
+   },
+   "sourceMedianSd": 0.132089,
+   "sources": [
+    "ku-leuven-ti64-2021",
+    "totis-ti64-2021"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.669059,
+    "informative": false,
+    "p10": -0.516037,
+    "p90": 0.667196,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "Ti-6Al-4V"
+   ],
+   "digitizedSources": [],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     50.0
+    ],
+    "laserPower_W": [
+     50.0,
+     150.0
+    ],
+    "scanSpeed_mm_s": [
+     250.0,
+     2500.0
+    ]
+   },
+   "family": "Ti64",
+   "kernel": "eagar-tsai",
+   "loso": {
+    "coverageBySource": {
+     "ku-leuven-ti64-2021": 0.0,
+     "totis-ti64-2021": 0.0
+    },
+    "coverageEqualWeight": 0.0,
+    "coveragePooled": 0.0
+   },
+   "median": -0.215008,
+   "n": 18,
+   "nBalling": 0,
+   "nSets": 18,
+   "nSources": 2,
+   "p10": -0.469876,
+   "p90": 0.722265,
+   "pooledMedian": -0.269818,
+   "pooledP10": -0.507692,
+   "pooledP90": 0.609461,
+   "quantity": "depth",
+   "regime": "transition",
+   "rowsPerSource": {
+    "ku-leuven-ti64-2021": 3,
+    "totis-ti64-2021": 15
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ku-leuven-ti64-2021": 0.609461,
+    "totis-ti64-2021": -0.361524
+   },
+   "sourceMedianSd": 0.68659,
+   "sources": [
+    "ku-leuven-ti64-2021",
+    "totis-ti64-2021"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.833333,
+    "informative": false,
+    "p10": -1.34981,
+    "p90": 1.6022,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "316L Stainless Steel"
+   ],
+   "digitizedSources": [
+    "trapp-316l-2017"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     140.0
+    ],
+    "laserPower_W": [
+     32.0,
+     600.0
+    ],
+    "scanSpeed_mm_s": [
+     225.0,
+     1500.0
+    ]
+   },
+   "family": "316L",
+   "kernel": "goldak",
+   "loso": {
+    "coverageBySource": {
+     "hofmann-316l-2026": 0.695394,
+     "ku-leuven-316l-2021": 0.954545,
+     "trapp-316l-2017": 0.4
+    },
+    "coverageEqualWeight": 0.683313,
+    "coveragePooled": 0.707015
+   },
+   "median": -0.18584,
+   "n": 727,
+   "nBalling": 216,
+   "nSets": 428,
+   "nSources": 3,
+   "p10": -0.396192,
+   "p90": 0.448726,
+   "pooledMedian": 0.13281,
+   "pooledP10": -0.306638,
+   "pooledP90": 0.925868,
+   "quantity": "depth",
+   "regime": "all",
+   "rowsPerSource": {
+    "hofmann-316l-2026": 673,
+    "ku-leuven-316l-2021": 44,
+    "trapp-316l-2017": 10
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "hofmann-316l-2026": 0.154262,
+    "ku-leuven-316l-2021": -0.27972,
+    "trapp-316l-2017": -0.370695
+   },
+   "sourceMedianSd": 0.280534,
+   "sources": [
+    "hofmann-316l-2026",
+    "ku-leuven-316l-2021",
+    "trapp-316l-2017"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.91679,
+    "informative": false,
+    "p10": -0.755724,
+    "p90": 0.808259,
+    "sdLeak": false
+   }
+  },
+  {
+   "alloys": [
+    "316L Stainless Steel"
+   ],
+   "digitizedSources": [
+    "trapp-316l-2017"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     50.0,
+     140.0
+    ],
+    "laserPower_W": [
+     32.0,
+     450.0
+    ],
+    "scanSpeed_mm_s": [
+     225.0,
+     1500.0
+    ]
+   },
+   "family": "316L",
+   "kernel": "goldak",
+   "loso": {
+    "coverageBySource": {
+     "hofmann-316l-2026": 0.08125,
+     "trapp-316l-2017": 1.0
+    },
+    "coverageEqualWeight": 0.540625,
+    "coveragePooled": 0.0981595
+   },
+   "median": 0.371429,
+   "n": 163,
+   "nBalling": 31,
+   "nSets": 101,
+   "nSources": 2,
+   "p10": 0.215743,
+   "p90": 0.902954,
+   "pooledMedian": 0.442495,
+   "pooledP10": 0.125547,
+   "pooledP90": 1.36511,
+   "quantity": "depth",
+   "regime": "conduction",
+   "rowsPerSource": {
+    "hofmann-316l-2026": 160,
+    "trapp-316l-2017": 3
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "hofmann-316l-2026": 0.442495,
+    "trapp-316l-2017": 0.371429
+   },
+   "sourceMedianSd": 0.0502516,
+   "sources": [
+    "hofmann-316l-2026",
+    "trapp-316l-2017"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.609375,
+    "informative": true,
+    "p10": 0.151341,
+    "p90": 0.967356,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "316L Stainless Steel"
+   ],
+   "digitizedSources": [
+    "trapp-316l-2017"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     140.0
+    ],
+    "laserPower_W": [
+     100.0,
+     600.0
+    ],
+    "scanSpeed_mm_s": [
+     225.0,
+     1500.0
+    ]
+   },
+   "family": "316L",
+   "kernel": "goldak",
+   "loso": {
+    "coverageBySource": {
+     "hofmann-316l-2026": 0.391111,
+     "ku-leuven-316l-2021": 0.875,
+     "trapp-316l-2017": 0.25
+    },
+    "coverageEqualWeight": 0.50537,
+    "coveragePooled": 0.460967
+   },
+   "median": -0.305451,
+   "n": 269,
+   "nBalling": 88,
+   "nSets": 169,
+   "nSources": 3,
+   "p10": -0.388326,
+   "p90": 0.403909,
+   "pooledMedian": 0.00550459,
+   "pooledP10": -0.323741,
+   "pooledP90": 1.01887,
+   "quantity": "depth",
+   "regime": "keyhole",
+   "rowsPerSource": {
+    "hofmann-316l-2026": 225,
+    "ku-leuven-316l-2021": 40,
+    "trapp-316l-2017": 4
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "hofmann-316l-2026": 0.11089,
+    "ku-leuven-316l-2021": -0.298361,
+    "trapp-316l-2017": -0.370695
+   },
+   "sourceMedianSd": 0.259693,
+   "sources": [
+    "hofmann-316l-2026",
+    "ku-leuven-316l-2021",
+    "trapp-316l-2017"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.823704,
+    "informative": false,
+    "p10": -0.721148,
+    "p90": 0.736731,
+    "sdLeak": false
+   }
+  },
+  {
+   "alloys": [
+    "316L Stainless Steel"
+   ],
+   "digitizedSources": [
+    "trapp-316l-2017"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     140.0
+    ],
+    "laserPower_W": [
+     50.0,
+     500.0
+    ],
+    "scanSpeed_mm_s": [
+     225.0,
+     1500.0
+    ]
+   },
+   "family": "316L",
+   "kernel": "goldak",
+   "loso": {
+    "coverageBySource": {
+     "hofmann-316l-2026": 0.888889,
+     "ku-leuven-316l-2021": 0.25,
+     "trapp-316l-2017": 0.0
+    },
+    "coverageEqualWeight": 0.37963,
+    "coveragePooled": 0.871186
+   },
+   "median": 0.0220386,
+   "n": 295,
+   "nBalling": 97,
+   "nSets": 158,
+   "nSources": 3,
+   "p10": -0.570968,
+   "p90": 0.563965,
+   "pooledMedian": 0.0223036,
+   "pooledP10": -0.365614,
+   "pooledP90": 0.584846,
+   "quantity": "depth",
+   "regime": "transition",
+   "rowsPerSource": {
+    "hofmann-316l-2026": 288,
+    "ku-leuven-316l-2021": 4,
+    "trapp-316l-2017": 3
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "hofmann-316l-2026": 0.0220386,
+    "ku-leuven-316l-2021": 0.306522,
+    "trapp-316l-2017": -0.533333
+   },
+   "sourceMedianSd": 0.427147,
+   "sources": [
+    "hofmann-316l-2026",
+    "ku-leuven-316l-2021",
+    "trapp-316l-2017"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.773148,
+    "informative": false,
+    "p10": -1.1184,
+    "p90": 1.1114,
+    "sdLeak": false
+   }
+  },
+  {
+   "alloys": [
+    "Inconel 625"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     100.0,
+     170.0
+    ],
+    "laserPower_W": [
+     122.0,
+     195.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     1200.0
+    ]
+   },
+   "family": "Inconel 625",
+   "kernel": "goldak",
+   "loso": {
+    "coverageBySource": {
+     "ghosh-in625-2018": 0.4,
+     "lane-in625-2020": 0.166667
+    },
+    "coverageEqualWeight": 0.283333,
+    "coveragePooled": 0.235294
+   },
+   "median": 0.436735,
+   "n": 17,
+   "nBalling": 0,
+   "nSets": 8,
+   "nSources": 2,
+   "p10": -0.228719,
+   "p90": 0.593939,
+   "pooledMedian": 0.432558,
+   "pooledP10": -0.232554,
+   "pooledP90": 0.593939,
+   "quantity": "depth",
+   "regime": "conduction",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 5,
+    "lane-in625-2020": 12
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": 0.584,
+    "lane-in625-2020": 0.386111
+   },
+   "sourceMedianSd": 0.139929,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.733333,
+    "informative": false,
+    "p10": -0.408051,
+    "p90": 0.773272,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "Inconel 625"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     100.0,
+     140.0
+    ],
+    "laserPower_W": [
+     150.0,
+     195.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     800.0
+    ]
+   },
+   "family": "Inconel 625",
+   "kernel": "goldak",
+   "loso": null,
+   "median": -0.368715,
+   "n": 7,
+   "nBalling": 0,
+   "nSets": 3,
+   "nSources": 2,
+   "p10": -0.558938,
+   "p90": -0.012844,
+   "pooledMedian": -0.393321,
+   "pooledP10": -0.600376,
+   "pooledP90": -0.012844,
+   "quantity": "depth",
+   "regime": "transition",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 1,
+    "lane-in625-2020": 6
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": -0.012844,
+    "lane-in625-2020": -0.475225
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Inconel 718"
+   ],
+   "digitizedSources": [],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     49.0,
+     67.0
+    ],
+    "laserPower_W": [
+     245.0,
+     325.0
+    ],
+    "scanSpeed_mm_s": [
+     800.0,
+     1200.0
+    ]
+   },
+   "family": "Inconel 718",
+   "kernel": "goldak",
+   "loso": null,
+   "median": -0.149308,
+   "n": 6,
+   "nBalling": 0,
+   "nSets": 6,
+   "nSources": 1,
+   "p10": -0.283451,
+   "p90": -0.0756609,
+   "pooledMedian": -0.149308,
+   "pooledP10": -0.283451,
+   "pooledP90": -0.0756609,
+   "quantity": "depth",
+   "regime": "keyhole",
+   "rowsPerSource": {
+    "nist-amb2022-03": 6
+   },
+   "sentinelOnly": true,
+   "sourceMedian": {
+    "nist-amb2022-03": -0.149308
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "nist-amb2022-03"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Inconel 718"
+   ],
+   "digitizedSources": [],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     82.0,
+     82.0
+    ],
+    "laserPower_W": [
+     285.0,
+     285.0
+    ],
+    "scanSpeed_mm_s": [
+     960.0,
+     960.0
+    ]
+   },
+   "family": "Inconel 718",
+   "kernel": "goldak",
+   "loso": null,
+   "median": -0.0986328,
+   "n": 1,
+   "nBalling": 0,
+   "nSets": 1,
+   "nSources": 1,
+   "p10": -0.0986328,
+   "p90": -0.0986328,
+   "pooledMedian": -0.0986328,
+   "pooledP10": -0.0986328,
+   "pooledP90": -0.0986328,
+   "quantity": "depth",
+   "regime": "transition",
+   "rowsPerSource": {
+    "nist-amb2022-03": 1
+   },
+   "sentinelOnly": true,
+   "sourceMedian": {
+    "nist-amb2022-03": -0.0986328
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "nist-amb2022-03"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Inconel 625",
+    "Inconel 718"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     49.0,
+     170.0
+    ],
+    "laserPower_W": [
+     122.0,
+     325.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     1200.0
+    ]
+   },
+   "family": "Ni",
+   "kernel": "goldak",
+   "loso": {
+    "coverageBySource": {
+     "ghosh-in625-2018": 0.166667,
+     "lane-in625-2020": 0.444444,
+     "nist-amb2022-03": 1.0
+    },
+    "coverageEqualWeight": 0.537037,
+    "coveragePooled": 0.516129
+   },
+   "median": -0.0756609,
+   "n": 31,
+   "nBalling": 0,
+   "nSets": 18,
+   "nSources": 3,
+   "p10": -0.368715,
+   "p90": 0.593939,
+   "pooledMedian": -0.0889649,
+   "pooledP10": -0.393321,
+   "pooledP90": 0.502439,
+   "quantity": "depth",
+   "regime": "all",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 6,
+    "lane-in625-2020": 18,
+    "nist-amb2022-03": 7
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": 0.457895,
+    "lane-in625-2020": -0.228719,
+    "nist-amb2022-03": -0.113099
+   },
+   "sourceMedianSd": 0.367614,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020",
+    "nist-amb2022-03"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.833333,
+    "informative": false,
+    "p10": -0.839849,
+    "p90": 1.06507,
+    "sdLeak": false
+   }
+  },
+  {
+   "alloys": [
+    "Inconel 625"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     100.0,
+     170.0
+    ],
+    "laserPower_W": [
+     122.0,
+     195.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     1200.0
+    ]
+   },
+   "family": "Ni",
+   "kernel": "goldak",
+   "loso": {
+    "coverageBySource": {
+     "ghosh-in625-2018": 0.4,
+     "lane-in625-2020": 0.166667
+    },
+    "coverageEqualWeight": 0.283333,
+    "coveragePooled": 0.235294
+   },
+   "median": 0.436735,
+   "n": 17,
+   "nBalling": 0,
+   "nSets": 8,
+   "nSources": 2,
+   "p10": -0.228719,
+   "p90": 0.593939,
+   "pooledMedian": 0.432558,
+   "pooledP10": -0.232554,
+   "pooledP90": 0.593939,
+   "quantity": "depth",
+   "regime": "conduction",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 5,
+    "lane-in625-2020": 12
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": 0.584,
+    "lane-in625-2020": 0.386111
+   },
+   "sourceMedianSd": 0.139929,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.733333,
+    "informative": false,
+    "p10": -0.408051,
+    "p90": 0.773272,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "Inconel 718"
+   ],
+   "digitizedSources": [],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     49.0,
+     67.0
+    ],
+    "laserPower_W": [
+     245.0,
+     325.0
+    ],
+    "scanSpeed_mm_s": [
+     800.0,
+     1200.0
+    ]
+   },
+   "family": "Ni",
+   "kernel": "goldak",
+   "loso": null,
+   "median": -0.149308,
+   "n": 6,
+   "nBalling": 0,
+   "nSets": 6,
+   "nSources": 1,
+   "p10": -0.283451,
+   "p90": -0.0756609,
+   "pooledMedian": -0.149308,
+   "pooledP10": -0.283451,
+   "pooledP90": -0.0756609,
+   "quantity": "depth",
+   "regime": "keyhole",
+   "rowsPerSource": {
+    "nist-amb2022-03": 6
+   },
+   "sentinelOnly": true,
+   "sourceMedian": {
+    "nist-amb2022-03": -0.149308
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "nist-amb2022-03"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Inconel 625",
+    "Inconel 718"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     82.0,
+     140.0
+    ],
+    "laserPower_W": [
+     150.0,
+     285.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     960.0
+    ]
+   },
+   "family": "Ni",
+   "kernel": "goldak",
+   "loso": null,
+   "median": -0.0986328,
+   "n": 8,
+   "nBalling": 0,
+   "nSets": 4,
+   "nSources": 3,
+   "p10": -0.558938,
+   "p90": -0.012844,
+   "pooledMedian": -0.393321,
+   "pooledP10": -0.600376,
+   "pooledP90": -0.012844,
+   "quantity": "depth",
+   "regime": "transition",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 1,
+    "lane-in625-2020": 6,
+    "nist-amb2022-03": 1
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": -0.012844,
+    "lane-in625-2020": -0.475225,
+    "nist-amb2022-03": -0.0986328
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020",
+    "nist-amb2022-03"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Ti-6Al-4V"
+   ],
+   "digitizedSources": [],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     50.0
+    ],
+    "laserPower_W": [
+     50.0,
+     400.0
+    ],
+    "scanSpeed_mm_s": [
+     250.0,
+     2500.0
+    ]
+   },
+   "family": "Ti64",
+   "kernel": "goldak",
+   "loso": {
+    "coverageBySource": {
+     "ku-leuven-ti64-2021": 0.571429,
+     "totis-ti64-2021": 0.3
+    },
+    "coverageEqualWeight": 0.435714,
+    "coveragePooled": 0.340426
+   },
+   "median": -0.0467532,
+   "n": 94,
+   "nBalling": 0,
+   "nSets": 94,
+   "nSources": 2,
+   "p10": -0.357824,
+   "p90": 0.609461,
+   "pooledMedian": -0.176727,
+   "pooledP10": -0.375501,
+   "pooledP90": 0.609461,
+   "quantity": "depth",
+   "regime": "all",
+   "rowsPerSource": {
+    "ku-leuven-ti64-2021": 14,
+    "totis-ti64-2021": 80
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ku-leuven-ti64-2021": 0.0301205,
+    "totis-ti64-2021": -0.229003
+   },
+   "sourceMedianSd": 0.183228,
+   "sources": [
+    "ku-leuven-ti64-2021",
+    "totis-ti64-2021"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.847321,
+    "informative": false,
+    "p10": -0.592648,
+    "p90": 0.844285,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "Ti-6Al-4V"
+   ],
+   "digitizedSources": [],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     50.0,
+     50.0
+    ],
+    "laserPower_W": [
+     50.0,
+     50.0
+    ],
+    "scanSpeed_mm_s": [
+     750.0,
+     2500.0
+    ]
+   },
+   "family": "Ti64",
+   "kernel": "goldak",
+   "loso": null,
+   "median": 0.752613,
+   "n": 8,
+   "nBalling": 0,
+   "nSets": 8,
+   "nSources": 1,
+   "p10": -0.708981,
+   "p90": 3.5312,
+   "pooledMedian": 0.752613,
+   "pooledP10": -0.708981,
+   "pooledP90": 3.5312,
+   "quantity": "depth",
+   "regime": "conduction",
+   "rowsPerSource": {
+    "totis-ti64-2021": 8
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "totis-ti64-2021": 0.752613
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "totis-ti64-2021"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Ti-6Al-4V"
+   ],
+   "digitizedSources": [],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     50.0
+    ],
+    "laserPower_W": [
+     100.0,
+     400.0
+    ],
+    "scanSpeed_mm_s": [
+     250.0,
+     2500.0
+    ]
+   },
+   "family": "Ti64",
+   "kernel": "goldak",
+   "loso": {
+    "coverageBySource": {
+     "ku-leuven-ti64-2021": 0.636364,
+     "totis-ti64-2021": 0.385965
+    },
+    "coverageEqualWeight": 0.511164,
+    "coveragePooled": 0.426471
+   },
+   "median": -0.0525143,
+   "n": 68,
+   "nBalling": 0,
+   "nSets": 68,
+   "nSources": 2,
+   "p10": -0.346752,
+   "p90": 0.497911,
+   "pooledMedian": -0.156087,
+   "pooledP10": -0.369351,
+   "pooledP90": 0.471127,
+   "quantity": "depth",
+   "regime": "keyhole",
+   "rowsPerSource": {
+    "ku-leuven-ti64-2021": 11,
+    "totis-ti64-2021": 57
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ku-leuven-ti64-2021": -0.0200742,
+    "totis-ti64-2021": -0.206876
+   },
+   "sourceMedianSd": 0.132089,
+   "sources": [
+    "ku-leuven-ti64-2021",
+    "totis-ti64-2021"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.669059,
+    "informative": false,
+    "p10": -0.516037,
+    "p90": 0.667196,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "Ti-6Al-4V"
+   ],
+   "digitizedSources": [],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     50.0
+    ],
+    "laserPower_W": [
+     50.0,
+     150.0
+    ],
+    "scanSpeed_mm_s": [
+     250.0,
+     2500.0
+    ]
+   },
+   "family": "Ti64",
+   "kernel": "goldak",
+   "loso": {
+    "coverageBySource": {
+     "ku-leuven-ti64-2021": 0.0,
+     "totis-ti64-2021": 0.0
+    },
+    "coverageEqualWeight": 0.0,
+    "coveragePooled": 0.0
+   },
+   "median": -0.153231,
+   "n": 18,
+   "nBalling": 0,
+   "nSets": 18,
+   "nSources": 2,
+   "p10": -0.420035,
+   "p90": 0.722265,
+   "pooledMedian": -0.258747,
+   "pooledP10": -0.465278,
+   "pooledP90": 0.609461,
+   "quantity": "depth",
+   "regime": "transition",
+   "rowsPerSource": {
+    "ku-leuven-ti64-2021": 3,
+    "totis-ti64-2021": 15
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ku-leuven-ti64-2021": 0.609461,
+    "totis-ti64-2021": -0.305461
+   },
+   "sourceMedianSd": 0.646947,
+   "sources": [
+    "ku-leuven-ti64-2021",
+    "totis-ti64-2021"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.833333,
+    "informative": false,
+    "p10": -1.24916,
+    "p90": 1.55139,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "316L Stainless Steel"
+   ],
+   "digitizedSources": [
+    "trapp-316l-2017"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     140.0
+    ],
+    "laserPower_W": [
+     32.0,
+     600.0
+    ],
+    "scanSpeed_mm_s": [
+     225.0,
+     1500.0
+    ]
+   },
+   "family": "316L",
+   "kernel": "rosenthal",
+   "loso": {
+    "coverageBySource": {
+     "hofmann-316l-2026": 0.51194,
+     "ku-leuven-316l-2021": 0.5,
+     "trapp-316l-2017": 1.0
+    },
+    "coverageEqualWeight": 0.670647,
+    "coveragePooled": 0.517956
+   },
+   "median": -0.050924,
+   "n": 724,
+   "nBalling": 216,
+   "nSets": 426,
+   "nSources": 3,
+   "p10": -0.406067,
+   "p90": 0.819225,
+   "pooledMedian": 0.342629,
+   "pooledP10": -0.13923,
+   "pooledP90": 1.23603,
+   "quantity": "depth",
+   "regime": "all",
+   "rowsPerSource": {
+    "hofmann-316l-2026": 670,
+    "ku-leuven-316l-2021": 44,
+    "trapp-316l-2017": 10
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "hofmann-316l-2026": 0.369404,
+    "ku-leuven-316l-2021": -0.321857,
+    "trapp-316l-2017": -0.25287
+   },
+   "sourceMedianSd": 0.380751,
+   "sources": [
+    "hofmann-316l-2026",
+    "ku-leuven-316l-2021",
+    "trapp-316l-2017"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.853234,
+    "informative": false,
+    "p10": -0.894036,
+    "p90": 1.3072,
+    "sdLeak": false
+   }
+  },
+  {
+   "alloys": [
+    "316L Stainless Steel"
+   ],
+   "digitizedSources": [
+    "trapp-316l-2017"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     50.0,
+     140.0
+    ],
+    "laserPower_W": [
+     32.0,
+     450.0
+    ],
+    "scanSpeed_mm_s": [
+     225.0,
+     1500.0
+    ]
+   },
+   "family": "316L",
+   "kernel": "rosenthal",
+   "loso": {
+    "coverageBySource": {
+     "hofmann-316l-2026": 0.101911,
+     "trapp-316l-2017": 1.0
+    },
+    "coverageEqualWeight": 0.550955,
+    "coveragePooled": 0.11875
+   },
+   "median": 0.2,
+   "n": 160,
+   "nBalling": 31,
+   "nSets": 99,
+   "nSources": 2,
+   "p10": 0.0526316,
+   "p90": 0.676652,
+   "pooledMedian": 0.256983,
+   "pooledP10": -0.0123242,
+   "pooledP90": 1.08946,
+   "quantity": "depth",
+   "regime": "conduction",
+   "rowsPerSource": {
+    "hofmann-316l-2026": 157,
+    "trapp-316l-2017": 3
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "hofmann-316l-2026": 0.270955,
+    "trapp-316l-2017": 0.2
+   },
+   "sourceMedianSd": 0.0501729,
+   "sources": [
+    "hofmann-316l-2026",
+    "trapp-316l-2017"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.636943,
+    "informative": true,
+    "p10": -0.01167,
+    "p90": 0.740954,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "316L Stainless Steel"
+   ],
+   "digitizedSources": [
+    "trapp-316l-2017"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     140.0
+    ],
+    "laserPower_W": [
+     100.0,
+     600.0
+    ],
+    "scanSpeed_mm_s": [
+     225.0,
+     1500.0
+    ]
+   },
+   "family": "316L",
+   "kernel": "rosenthal",
+   "loso": {
+    "coverageBySource": {
+     "hofmann-316l-2026": 0.164444,
+     "ku-leuven-316l-2021": 0.45,
+     "trapp-316l-2017": 1.0
+    },
+    "coverageEqualWeight": 0.538148,
+    "coveragePooled": 0.219331
+   },
+   "median": -0.16939,
+   "n": 269,
+   "nBalling": 88,
+   "nSets": 169,
+   "nSources": 3,
+   "p10": -0.430188,
+   "p90": 0.793244,
+   "pooledMedian": 0.230769,
+   "pooledP10": -0.299016,
+   "pooledP90": 1.56733,
+   "quantity": "depth",
+   "regime": "keyhole",
+   "rowsPerSource": {
+    "hofmann-316l-2026": 225,
+    "ku-leuven-316l-2021": 40,
+    "trapp-316l-2017": 4
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "hofmann-316l-2026": 0.36925,
+    "ku-leuven-316l-2021": -0.367529,
+    "trapp-316l-2017": -0.25287
+   },
+   "sourceMedianSd": 0.396448,
+   "sources": [
+    "hofmann-316l-2026",
+    "ku-leuven-316l-2021",
+    "trapp-316l-2017"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.748148,
+    "informative": false,
+    "p10": -0.938275,
+    "p90": 1.30133,
+    "sdLeak": false
+   }
+  },
+  {
+   "alloys": [
+    "316L Stainless Steel"
+   ],
+   "digitizedSources": [
+    "trapp-316l-2017"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     140.0
+    ],
+    "laserPower_W": [
+     50.0,
+     500.0
+    ],
+    "scanSpeed_mm_s": [
+     225.0,
+     1500.0
+    ]
+   },
+   "family": "316L",
+   "kernel": "rosenthal",
+   "loso": {
+    "coverageBySource": {
+     "hofmann-316l-2026": 0.920139,
+     "ku-leuven-316l-2021": 0.75,
+     "trapp-316l-2017": 0.0
+    },
+    "coverageEqualWeight": 0.556713,
+    "coveragePooled": 0.908475
+   },
+   "median": 0.468927,
+   "n": 295,
+   "nBalling": 97,
+   "nSets": 158,
+   "nSources": 3,
+   "p10": -0.356944,
+   "p90": 1.31832,
+   "pooledMedian": 0.470588,
+   "pooledP10": -0.00704501,
+   "pooledP90": 1.19756,
+   "quantity": "depth",
+   "regime": "transition",
+   "rowsPerSource": {
+    "hofmann-316l-2026": 288,
+    "ku-leuven-316l-2021": 4,
+    "trapp-316l-2017": 3
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "hofmann-316l-2026": 0.468927,
+    "ku-leuven-316l-2021": 0.756522,
+    "trapp-316l-2017": -0.353333
+   },
+   "sourceMedianSd": 0.575992,
+   "sources": [
+    "hofmann-316l-2026",
+    "ku-leuven-316l-2021",
+    "trapp-316l-2017"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.659722,
+    "informative": false,
+    "p10": -1.09514,
+    "p90": 2.05651,
+    "sdLeak": false
+   }
+  },
+  {
+   "alloys": [
+    "Inconel 625"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     100.0,
+     170.0
+    ],
+    "laserPower_W": [
+     122.0,
+     195.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     1200.0
+    ]
+   },
+   "family": "Inconel 625",
+   "kernel": "rosenthal",
+   "loso": {
+    "coverageBySource": {
+     "ghosh-in625-2018": 0.5,
+     "lane-in625-2020": 0.416667
+    },
+    "coverageEqualWeight": 0.458333,
+    "coveragePooled": 0.4375
+   },
+   "median": 0.254157,
+   "n": 16,
+   "nBalling": 0,
+   "nSets": 7,
+   "nSources": 2,
+   "p10": -0.328669,
+   "p90": 0.447917,
+   "pooledMedian": 0.236735,
+   "pooledP10": -0.332007,
+   "pooledP90": 0.363636,
+   "quantity": "depth",
+   "regime": "conduction",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 4,
+    "lane-in625-2020": 12
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": 0.265789,
+    "lane-in625-2020": 0.189189
+   },
+   "sourceMedianSd": 0.0541646,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.583333,
+    "informative": false,
+    "p10": -0.398086,
+    "p90": 0.517334,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "Inconel 625"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     100.0,
+     140.0
+    ],
+    "laserPower_W": [
+     150.0,
+     195.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     800.0
+    ]
+   },
+   "family": "Inconel 625",
+   "kernel": "rosenthal",
+   "loso": null,
+   "median": -0.215642,
+   "n": 7,
+   "nBalling": 0,
+   "nSets": 3,
+   "nSources": 2,
+   "p10": -0.378238,
+   "p90": 0.598165,
+   "pooledMedian": -0.246215,
+   "pooledP10": -0.436653,
+   "pooledP90": 0.598165,
+   "quantity": "depth",
+   "regime": "transition",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 1,
+    "lane-in625-2020": 6
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": 0.598165,
+    "lane-in625-2020": -0.26023
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Inconel 718"
+   ],
+   "digitizedSources": [],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     49.0,
+     67.0
+    ],
+    "laserPower_W": [
+     245.0,
+     325.0
+    ],
+    "scanSpeed_mm_s": [
+     800.0,
+     1200.0
+    ]
+   },
+   "family": "Inconel 718",
+   "kernel": "rosenthal",
+   "loso": null,
+   "median": 0.216135,
+   "n": 6,
+   "nBalling": 0,
+   "nSets": 6,
+   "nSources": 1,
+   "p10": -0.110475,
+   "p90": 0.413856,
+   "pooledMedian": 0.216135,
+   "pooledP10": -0.110475,
+   "pooledP90": 0.413856,
+   "quantity": "depth",
+   "regime": "keyhole",
+   "rowsPerSource": {
+    "nist-amb2022-03": 6
+   },
+   "sentinelOnly": true,
+   "sourceMedian": {
+    "nist-amb2022-03": 0.216135
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "nist-amb2022-03"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Inconel 718"
+   ],
+   "digitizedSources": [],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     82.0,
+     82.0
+    ],
+    "laserPower_W": [
+     285.0,
+     285.0
+    ],
+    "scanSpeed_mm_s": [
+     960.0,
+     960.0
+    ]
+   },
+   "family": "Inconel 718",
+   "kernel": "rosenthal",
+   "loso": null,
+   "median": 0.37793,
+   "n": 1,
+   "nBalling": 0,
+   "nSets": 1,
+   "nSources": 1,
+   "p10": 0.37793,
+   "p90": 0.37793,
+   "pooledMedian": 0.37793,
+   "pooledP10": 0.37793,
+   "pooledP90": 0.37793,
+   "quantity": "depth",
+   "regime": "transition",
+   "rowsPerSource": {
+    "nist-amb2022-03": 1
+   },
+   "sentinelOnly": true,
+   "sourceMedian": {
+    "nist-amb2022-03": 0.37793
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "nist-amb2022-03"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Inconel 625",
+    "Inconel 718"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     49.0,
+     170.0
+    ],
+    "laserPower_W": [
+     122.0,
+     325.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     1200.0
+    ]
+   },
+   "family": "Ni",
+   "kernel": "rosenthal",
+   "loso": {
+    "coverageBySource": {
+     "ghosh-in625-2018": 0.6,
+     "lane-in625-2020": 0.444444,
+     "nist-amb2022-03": 1.0
+    },
+    "coverageEqualWeight": 0.681481,
+    "coveragePooled": 0.6
+   },
+   "median": 0.265789,
+   "n": 30,
+   "nBalling": 0,
+   "nSets": 17,
+   "nSources": 3,
+   "p10": -0.323939,
+   "p90": 0.447917,
+   "pooledMedian": 0.216135,
+   "pooledP10": -0.336626,
+   "pooledP90": 0.37793,
+   "quantity": "depth",
+   "regime": "all",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 5,
+    "lane-in625-2020": 18,
+    "nist-amb2022-03": 7
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": 0.363636,
+    "lane-in625-2020": -0.229672,
+    "nist-amb2022-03": 0.297781
+   },
+   "sourceMedianSd": 0.325207,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020",
+    "nist-amb2022-03"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.814815,
+    "informative": false,
+    "p10": -0.740724,
+    "p90": 0.864702,
+    "sdLeak": false
+   }
+  },
+  {
+   "alloys": [
+    "Inconel 625"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     100.0,
+     170.0
+    ],
+    "laserPower_W": [
+     122.0,
+     195.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     1200.0
+    ]
+   },
+   "family": "Ni",
+   "kernel": "rosenthal",
+   "loso": {
+    "coverageBySource": {
+     "ghosh-in625-2018": 0.5,
+     "lane-in625-2020": 0.416667
+    },
+    "coverageEqualWeight": 0.458333,
+    "coveragePooled": 0.4375
+   },
+   "median": 0.254157,
+   "n": 16,
+   "nBalling": 0,
+   "nSets": 7,
+   "nSources": 2,
+   "p10": -0.328669,
+   "p90": 0.447917,
+   "pooledMedian": 0.236735,
+   "pooledP10": -0.332007,
+   "pooledP90": 0.363636,
+   "quantity": "depth",
+   "regime": "conduction",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 4,
+    "lane-in625-2020": 12
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": 0.265789,
+    "lane-in625-2020": 0.189189
+   },
+   "sourceMedianSd": 0.0541646,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.583333,
+    "informative": false,
+    "p10": -0.398086,
+    "p90": 0.517334,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "Inconel 718"
+   ],
+   "digitizedSources": [],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     49.0,
+     67.0
+    ],
+    "laserPower_W": [
+     245.0,
+     325.0
+    ],
+    "scanSpeed_mm_s": [
+     800.0,
+     1200.0
+    ]
+   },
+   "family": "Ni",
+   "kernel": "rosenthal",
+   "loso": null,
+   "median": 0.216135,
+   "n": 6,
+   "nBalling": 0,
+   "nSets": 6,
+   "nSources": 1,
+   "p10": -0.110475,
+   "p90": 0.413856,
+   "pooledMedian": 0.216135,
+   "pooledP10": -0.110475,
+   "pooledP90": 0.413856,
+   "quantity": "depth",
+   "regime": "keyhole",
+   "rowsPerSource": {
+    "nist-amb2022-03": 6
+   },
+   "sentinelOnly": true,
+   "sourceMedian": {
+    "nist-amb2022-03": 0.216135
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "nist-amb2022-03"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Inconel 625",
+    "Inconel 718"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     82.0,
+     140.0
+    ],
+    "laserPower_W": [
+     150.0,
+     285.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     960.0
+    ]
+   },
+   "family": "Ni",
+   "kernel": "rosenthal",
+   "loso": null,
+   "median": 0.37793,
+   "n": 8,
+   "nBalling": 0,
+   "nSets": 4,
+   "nSources": 3,
+   "p10": -0.378238,
+   "p90": 0.598165,
+   "pooledMedian": -0.246215,
+   "pooledP10": -0.436653,
+   "pooledP90": 0.598165,
+   "quantity": "depth",
+   "regime": "transition",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 1,
+    "lane-in625-2020": 6,
+    "nist-amb2022-03": 1
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": 0.598165,
+    "lane-in625-2020": -0.26023,
+    "nist-amb2022-03": 0.37793
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020",
+    "nist-amb2022-03"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Ti-6Al-4V"
+   ],
+   "digitizedSources": [],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     50.0
+    ],
+    "laserPower_W": [
+     50.0,
+     400.0
+    ],
+    "scanSpeed_mm_s": [
+     250.0,
+     2500.0
+    ]
+   },
+   "family": "Ti64",
+   "kernel": "rosenthal",
+   "loso": {
+    "coverageBySource": {
+     "ku-leuven-ti64-2021": 0.714286,
+     "totis-ti64-2021": 0.5375
+    },
+    "coverageEqualWeight": 0.625893,
+    "coveragePooled": 0.56383
+   },
+   "median": 0.28394,
+   "n": 94,
+   "nBalling": 0,
+   "nSets": 94,
+   "nSources": 2,
+   "p10": -0.28184,
+   "p90": 1.1921,
+   "pooledMedian": 0.172803,
+   "pooledP10": -0.353442,
+   "pooledP90": 1.14167,
+   "quantity": "depth",
+   "regime": "all",
+   "rowsPerSource": {
+    "ku-leuven-ti64-2021": 14,
+    "totis-ti64-2021": 80
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ku-leuven-ti64-2021": 0.401606,
+    "totis-ti64-2021": 0.0976289
+   },
+   "sourceMedianSd": 0.214945,
+   "sources": [
+    "ku-leuven-ti64-2021",
+    "totis-ti64-2021"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.858036,
+    "informative": false,
+    "p10": -0.557313,
+    "p90": 1.46757,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "Ti-6Al-4V"
+   ],
+   "digitizedSources": [],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     50.0,
+     50.0
+    ],
+    "laserPower_W": [
+     50.0,
+     50.0
+    ],
+    "scanSpeed_mm_s": [
+     750.0,
+     2500.0
+    ]
+   },
+   "family": "Ti64",
+   "kernel": "rosenthal",
+   "loso": null,
+   "median": 0.549126,
+   "n": 8,
+   "nBalling": 0,
+   "nSets": 8,
+   "nSources": 1,
+   "p10": -0.744,
+   "p90": 3.0704,
+   "pooledMedian": 0.549126,
+   "pooledP10": -0.744,
+   "pooledP90": 3.0704,
+   "quantity": "depth",
+   "regime": "conduction",
+   "rowsPerSource": {
+    "totis-ti64-2021": 8
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "totis-ti64-2021": 0.549126
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "totis-ti64-2021"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Ti-6Al-4V"
+   ],
+   "digitizedSources": [],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     50.0
+    ],
+    "laserPower_W": [
+     100.0,
+     400.0
+    ],
+    "scanSpeed_mm_s": [
+     250.0,
+     2500.0
+    ]
+   },
+   "family": "Ti64",
+   "kernel": "rosenthal",
+   "loso": {
+    "coverageBySource": {
+     "ku-leuven-ti64-2021": 0.727273,
+     "totis-ti64-2021": 0.508772
+    },
+    "coverageEqualWeight": 0.618022,
+    "coveragePooled": 0.544118
+   },
+   "median": 0.265019,
+   "n": 68,
+   "nBalling": 0,
+   "nSets": 68,
+   "nSources": 2,
+   "p10": -0.29097,
+   "p90": 1.11025,
+   "pooledMedian": 0.146104,
+   "pooledP10": -0.353442,
+   "pooledP90": 1.1056,
+   "quantity": "depth",
+   "regime": "keyhole",
+   "rowsPerSource": {
+    "ku-leuven-ti64-2021": 11,
+    "totis-ti64-2021": 57
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ku-leuven-ti64-2021": 0.305299,
+    "totis-ti64-2021": 0.0883176
+   },
+   "sourceMedianSd": 0.153429,
+   "sources": [
+    "ku-leuven-ti64-2021",
+    "totis-ti64-2021"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.833333,
+    "informative": false,
+    "p10": -0.487605,
+    "p90": 1.30689,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "Ti-6Al-4V"
+   ],
+   "digitizedSources": [],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     50.0
+    ],
+    "laserPower_W": [
+     50.0,
+     150.0
+    ],
+    "scanSpeed_mm_s": [
+     250.0,
+     2500.0
+    ]
+   },
+   "family": "Ti64",
+   "kernel": "rosenthal",
+   "loso": {
+    "coverageBySource": {
+     "ku-leuven-ti64-2021": 0.0,
+     "totis-ti64-2021": 0.0
+    },
+    "coverageEqualWeight": 0.0,
+    "coveragePooled": 0.0
+   },
+   "median": 0.400357,
+   "n": 18,
+   "nBalling": 0,
+   "nSets": 18,
+   "nSources": 2,
+   "p10": -0.0541588,
+   "p90": 1.63382,
+   "pooledMedian": 0.0976289,
+   "pooledP10": -0.28184,
+   "pooledP90": 1.1921,
+   "quantity": "depth",
+   "regime": "transition",
+   "rowsPerSource": {
+    "ku-leuven-ti64-2021": 3,
+    "totis-ti64-2021": 15
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ku-leuven-ti64-2021": 1.1921,
+    "totis-ti64-2021": 0.0774255
+   },
+   "sourceMedianSd": 0.788192,
+   "sources": [
+    "ku-leuven-ti64-2021",
+    "totis-ti64-2021"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.7,
+    "informative": false,
+    "p10": -1.06431,
+    "p90": 2.64397,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "316L Stainless Steel"
+   ],
+   "digitizedSources": [
+    "trapp-316l-2017"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     140.0
+    ],
+    "laserPower_W": [
+     32.0,
+     600.0
+    ],
+    "scanSpeed_mm_s": [
+     225.0,
+     1500.0
+    ]
+   },
+   "family": "316L",
+   "kernel": "eagar-tsai",
+   "loso": {
+    "coverageBySource": {
+     "hofmann-316l-2026": 0.741507,
+     "ku-leuven-316l-2021": 0.681818,
+     "trapp-316l-2017": 0.818182
+    },
+    "coverageEqualWeight": 0.747169,
+    "coveragePooled": 0.739071
+   },
+   "median": 0.0331545,
+   "n": 732,
+   "nBalling": 216,
+   "nSets": 433,
+   "nSources": 3,
+   "p10": -0.169194,
+   "p90": 0.302344,
+   "pooledMedian": -0.049641,
+   "pooledP10": -0.195084,
+   "pooledP90": 0.14374,
+   "quantity": "width",
+   "regime": "all",
+   "rowsPerSource": {
+    "hofmann-316l-2026": 677,
+    "ku-leuven-316l-2021": 44,
+    "trapp-316l-2017": 11
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "hofmann-316l-2026": -0.0545833,
+    "ku-leuven-316l-2021": 0.122535,
+    "trapp-316l-2017": 0.0355556
+   },
+   "sourceMedianSd": 0.088564,
+   "sources": [
+    "hofmann-316l-2026",
+    "ku-leuven-316l-2021",
+    "trapp-316l-2017"
+   ],
+   "state": "band",
+   "widened": {
+    "coverageEqualWeight": 0.894398,
+    "informative": true,
+    "p10": -0.282698,
+    "p90": 0.415848,
+    "sdLeak": false
+   }
+  },
+  {
+   "alloys": [
+    "316L Stainless Steel"
+   ],
+   "digitizedSources": [
+    "trapp-316l-2017"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     50.0,
+     140.0
+    ],
+    "laserPower_W": [
+     32.0,
+     450.0
+    ],
+    "scanSpeed_mm_s": [
+     225.0,
+     1500.0
+    ]
+   },
+   "family": "316L",
+   "kernel": "eagar-tsai",
+   "loso": {
+    "coverageBySource": {
+     "hofmann-316l-2026": 0.0609756,
+     "trapp-316l-2017": 0.0
+    },
+    "coverageEqualWeight": 0.0304878,
+    "coveragePooled": 0.0598802
+   },
+   "median": 0.105882,
+   "n": 167,
+   "nBalling": 31,
+   "nSets": 105,
+   "nSources": 2,
+   "p10": -0.163649,
+   "p90": 0.209615,
+   "pooledMedian": -0.0782967,
+   "pooledP10": -0.205526,
+   "pooledP90": 0.0963899,
+   "quantity": "width",
+   "regime": "conduction",
+   "rowsPerSource": {
+    "hofmann-316l-2026": 164,
+    "trapp-316l-2017": 3
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "hofmann-316l-2026": -0.0806596,
+    "trapp-316l-2017": 0.137333
+   },
+   "sourceMedianSd": 0.154144,
+   "sources": [
+    "hofmann-316l-2026",
+    "trapp-316l-2017"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.780488,
+    "informative": true,
+    "p10": -0.3612,
+    "p90": 0.407167,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "316L Stainless Steel"
+   ],
+   "digitizedSources": [
+    "trapp-316l-2017"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     140.0
+    ],
+    "laserPower_W": [
+     100.0,
+     600.0
+    ],
+    "scanSpeed_mm_s": [
+     225.0,
+     1500.0
+    ]
+   },
+   "family": "316L",
+   "kernel": "eagar-tsai",
+   "loso": {
+    "coverageBySource": {
+     "hofmann-316l-2026": 0.666667,
+     "ku-leuven-316l-2021": 0.825,
+     "trapp-316l-2017": 0.75
+    },
+    "coverageEqualWeight": 0.747222,
+    "coveragePooled": 0.69145
+   },
+   "median": 0.0539084,
+   "n": 269,
+   "nBalling": 88,
+   "nSets": 169,
+   "nSources": 3,
+   "p10": -0.0972671,
+   "p90": 0.367586,
+   "pooledMedian": 0.0163659,
+   "pooledP10": -0.148445,
+   "pooledP90": 0.248622,
+   "quantity": "width",
+   "regime": "keyhole",
+   "rowsPerSource": {
+    "hofmann-316l-2026": 225,
+    "ku-leuven-316l-2021": 40,
+    "trapp-316l-2017": 4
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "hofmann-316l-2026": -0.00964489,
+    "ku-leuven-316l-2021": 0.125542,
+    "trapp-316l-2017": 0.0355556
+   },
+   "sourceMedianSd": 0.0688189,
+   "sources": [
+    "hofmann-316l-2026",
+    "ku-leuven-316l-2021",
+    "trapp-316l-2017"
+   ],
+   "state": "band",
+   "widened": {
+    "coverageEqualWeight": 0.918333,
+    "informative": true,
+    "p10": -0.185465,
+    "p90": 0.455785,
+    "sdLeak": false
+   }
+  },
+  {
+   "alloys": [
+    "316L Stainless Steel"
+   ],
+   "digitizedSources": [
+    "trapp-316l-2017"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     140.0
+    ],
+    "laserPower_W": [
+     50.0,
+     500.0
+    ],
+    "scanSpeed_mm_s": [
+     225.0,
+     1500.0
+    ]
+   },
+   "family": "316L",
+   "kernel": "eagar-tsai",
+   "loso": {
+    "coverageBySource": {
+     "hofmann-316l-2026": 0.84375,
+     "ku-leuven-316l-2021": 0.0,
+     "trapp-316l-2017": 0.75
+    },
+    "coverageEqualWeight": 0.53125,
+    "coveragePooled": 0.831081
+   },
+   "median": -0.0612403,
+   "n": 296,
+   "nBalling": 97,
+   "nSets": 159,
+   "nSources": 3,
+   "p10": -0.181102,
+   "p90": 0.0949635,
+   "pooledMedian": -0.0667678,
+   "pooledP10": -0.206032,
+   "pooledP90": 0.0578778,
+   "quantity": "width",
+   "regime": "transition",
+   "rowsPerSource": {
+    "hofmann-316l-2026": 288,
+    "ku-leuven-316l-2021": 4,
+    "trapp-316l-2017": 4
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "hofmann-316l-2026": -0.0669328,
+    "ku-leuven-316l-2021": 0.0331545,
+    "trapp-316l-2017": -0.116406
+   },
+   "sourceMedianSd": 0.0761944,
+   "sources": [
+    "hofmann-316l-2026",
+    "ku-leuven-316l-2021",
+    "trapp-316l-2017"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.914352,
+    "informative": true,
+    "p10": -0.278753,
+    "p90": 0.192614,
+    "sdLeak": false
+   }
+  },
+  {
+   "alloys": [
+    "Inconel 625"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     100.0,
+     170.0
+    ],
+    "laserPower_W": [
+     49.0,
+     195.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     1200.0
+    ]
+   },
+   "family": "Inconel 625",
+   "kernel": "eagar-tsai",
+   "loso": {
+    "coverageBySource": {
+     "ghosh-in625-2018": 0.0,
+     "lane-in625-2020": 0.0
+    },
+    "coverageEqualWeight": 0.0,
+    "coveragePooled": 0.0
+   },
+   "median": 0.12406,
+   "n": 23,
+   "nBalling": 0,
+   "nSets": 10,
+   "nSources": 2,
+   "p10": 0.0283951,
+   "p90": 0.363977,
+   "pooledMedian": 0.155698,
+   "pooledP10": 0.0716418,
+   "pooledP90": 0.369416,
+   "quantity": "width",
+   "regime": "conduction",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 6,
+    "lane-in625-2020": 17
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": 0.0716418,
+    "lane-in625-2020": 0.207576
+   },
+   "sourceMedianSd": 0.0961198,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.710784,
+    "informative": true,
+    "p10": -0.0947921,
+    "p90": 0.487165,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "Inconel 625"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     100.0,
+     140.0
+    ],
+    "laserPower_W": [
+     150.0,
+     195.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     800.0
+    ]
+   },
+   "family": "Inconel 625",
+   "kernel": "eagar-tsai",
+   "loso": null,
+   "median": -0.113514,
+   "n": 7,
+   "nBalling": 0,
+   "nSets": 3,
+   "nSources": 2,
+   "p10": -0.137101,
+   "p90": -0.0360169,
+   "pooledMedian": -0.113514,
+   "pooledP10": -0.154873,
+   "pooledP90": -0.0344096,
+   "quantity": "width",
+   "regime": "transition",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 1,
+    "lane-in625-2020": 6
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": -0.113514,
+    "lane-in625-2020": -0.130461
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Inconel 718"
+   ],
+   "digitizedSources": [],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     49.0,
+     67.0
+    ],
+    "laserPower_W": [
+     245.0,
+     325.0
+    ],
+    "scanSpeed_mm_s": [
+     800.0,
+     1200.0
+    ]
+   },
+   "family": "Inconel 718",
+   "kernel": "eagar-tsai",
+   "loso": null,
+   "median": -0.0234776,
+   "n": 6,
+   "nBalling": 0,
+   "nSets": 6,
+   "nSources": 1,
+   "p10": -0.0723895,
+   "p90": 0.234463,
+   "pooledMedian": -0.0234776,
+   "pooledP10": -0.0723895,
+   "pooledP90": 0.234463,
+   "quantity": "width",
+   "regime": "keyhole",
+   "rowsPerSource": {
+    "nist-amb2022-03": 6
+   },
+   "sentinelOnly": true,
+   "sourceMedian": {
+    "nist-amb2022-03": -0.0234776
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "nist-amb2022-03"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Inconel 718"
+   ],
+   "digitizedSources": [],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     82.0,
+     82.0
+    ],
+    "laserPower_W": [
+     285.0,
+     285.0
+    ],
+    "scanSpeed_mm_s": [
+     960.0,
+     960.0
+    ]
+   },
+   "family": "Inconel 718",
+   "kernel": "eagar-tsai",
+   "loso": null,
+   "median": -0.0465773,
+   "n": 1,
+   "nBalling": 0,
+   "nSets": 1,
+   "nSources": 1,
+   "p10": -0.0465773,
+   "p90": -0.0465773,
+   "pooledMedian": -0.0465773,
+   "pooledP10": -0.0465773,
+   "pooledP90": -0.0465773,
+   "quantity": "width",
+   "regime": "transition",
+   "rowsPerSource": {
+    "nist-amb2022-03": 1
+   },
+   "sentinelOnly": true,
+   "sourceMedian": {
+    "nist-amb2022-03": -0.0465773
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "nist-amb2022-03"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Inconel 625",
+    "Inconel 718"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     49.0,
+     170.0
+    ],
+    "laserPower_W": [
+     49.0,
+     325.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     1200.0
+    ]
+   },
+   "family": "Ni",
+   "kernel": "eagar-tsai",
+   "loso": {
+    "coverageBySource": {
+     "ghosh-in625-2018": 0.857143,
+     "lane-in625-2020": 0.130435,
+     "nist-amb2022-03": 1.0
+    },
+    "coverageEqualWeight": 0.662526,
+    "coveragePooled": 0.432432
+   },
+   "median": 0.064659,
+   "n": 37,
+   "nBalling": 0,
+   "nSets": 20,
+   "nSources": 3,
+   "p10": -0.0723895,
+   "p90": 0.276221,
+   "pooledMedian": 0.12406,
+   "pooledP10": -0.113514,
+   "pooledP90": 0.363977,
+   "quantity": "width",
+   "regime": "all",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 7,
+    "lane-in625-2020": 23,
+    "nist-amb2022-03": 7
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": 0.0716418,
+    "lane-in625-2020": 0.155698,
+    "nist-amb2022-03": -0.0234776
+   },
+   "sourceMedianSd": 0.0896448,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020",
+    "nist-amb2022-03"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.884058,
+    "informative": true,
+    "p10": -0.187278,
+    "p90": 0.39111,
+    "sdLeak": false
+   }
+  },
+  {
+   "alloys": [
+    "Inconel 625"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     100.0,
+     170.0
+    ],
+    "laserPower_W": [
+     49.0,
+     195.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     1200.0
+    ]
+   },
+   "family": "Ni",
+   "kernel": "eagar-tsai",
+   "loso": {
+    "coverageBySource": {
+     "ghosh-in625-2018": 0.0,
+     "lane-in625-2020": 0.0
+    },
+    "coverageEqualWeight": 0.0,
+    "coveragePooled": 0.0
+   },
+   "median": 0.12406,
+   "n": 23,
+   "nBalling": 0,
+   "nSets": 10,
+   "nSources": 2,
+   "p10": 0.0283951,
+   "p90": 0.363977,
+   "pooledMedian": 0.155698,
+   "pooledP10": 0.0716418,
+   "pooledP90": 0.369416,
+   "quantity": "width",
+   "regime": "conduction",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 6,
+    "lane-in625-2020": 17
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": 0.0716418,
+    "lane-in625-2020": 0.207576
+   },
+   "sourceMedianSd": 0.0961198,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.710784,
+    "informative": true,
+    "p10": -0.0947921,
+    "p90": 0.487165,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "Inconel 718"
+   ],
+   "digitizedSources": [],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     49.0,
+     67.0
+    ],
+    "laserPower_W": [
+     245.0,
+     325.0
+    ],
+    "scanSpeed_mm_s": [
+     800.0,
+     1200.0
+    ]
+   },
+   "family": "Ni",
+   "kernel": "eagar-tsai",
+   "loso": null,
+   "median": -0.0234776,
+   "n": 6,
+   "nBalling": 0,
+   "nSets": 6,
+   "nSources": 1,
+   "p10": -0.0723895,
+   "p90": 0.234463,
+   "pooledMedian": -0.0234776,
+   "pooledP10": -0.0723895,
+   "pooledP90": 0.234463,
+   "quantity": "width",
+   "regime": "keyhole",
+   "rowsPerSource": {
+    "nist-amb2022-03": 6
+   },
+   "sentinelOnly": true,
+   "sourceMedian": {
+    "nist-amb2022-03": -0.0234776
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "nist-amb2022-03"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Inconel 625",
+    "Inconel 718"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     82.0,
+     140.0
+    ],
+    "laserPower_W": [
+     150.0,
+     285.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     960.0
+    ]
+   },
+   "family": "Ni",
+   "kernel": "eagar-tsai",
+   "loso": null,
+   "median": -0.113514,
+   "n": 8,
+   "nBalling": 0,
+   "nSets": 4,
+   "nSources": 3,
+   "p10": -0.137101,
+   "p90": -0.0360169,
+   "pooledMedian": -0.113514,
+   "pooledP10": -0.154873,
+   "pooledP90": -0.0344096,
+   "quantity": "width",
+   "regime": "transition",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 1,
+    "lane-in625-2020": 6,
+    "nist-amb2022-03": 1
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": -0.113514,
+    "lane-in625-2020": -0.130461,
+    "nist-amb2022-03": -0.0465773
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020",
+    "nist-amb2022-03"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Ti-6Al-4V"
+   ],
+   "digitizedSources": [],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     50.0
+    ],
+    "laserPower_W": [
+     50.0,
+     400.0
+    ],
+    "scanSpeed_mm_s": [
+     250.0,
+     2500.0
+    ]
+   },
+   "family": "Ti64",
+   "kernel": "eagar-tsai",
+   "loso": {
+    "coverageBySource": {
+     "ku-leuven-ti64-2021": 1.0,
+     "totis-ti64-2021": 0.125
+    },
+    "coverageEqualWeight": 0.5625,
+    "coveragePooled": 0.255319
+   },
+   "median": -0.0732903,
+   "n": 94,
+   "nBalling": 0,
+   "nSets": 94,
+   "nSources": 2,
+   "p10": -0.251979,
+   "p90": 0.205089,
+   "pooledMedian": -0.0536673,
+   "pooledP10": -0.301753,
+   "pooledP90": 0.235621,
+   "quantity": "width",
+   "regime": "all",
+   "rowsPerSource": {
+    "ku-leuven-ti64-2021": 14,
+    "totis-ti64-2021": 80
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ku-leuven-ti64-2021": -0.0759025,
+    "totis-ti64-2021": -0.00723617
+   },
+   "sourceMedianSd": 0.0485544,
+   "sources": [
+    "ku-leuven-ti64-2021",
+    "totis-ti64-2021"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.66875,
+    "informative": true,
+    "p10": -0.314206,
+    "p90": 0.267316,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "Ti-6Al-4V"
+   ],
+   "digitizedSources": [],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     50.0,
+     50.0
+    ],
+    "laserPower_W": [
+     50.0,
+     50.0
+    ],
+    "scanSpeed_mm_s": [
+     750.0,
+     2500.0
+    ]
+   },
+   "family": "Ti64",
+   "kernel": "eagar-tsai",
+   "loso": null,
+   "median": -0.251979,
+   "n": 8,
+   "nBalling": 0,
+   "nSets": 8,
+   "nSources": 1,
+   "p10": -0.301753,
+   "p90": 0.320562,
+   "pooledMedian": -0.251979,
+   "pooledP10": -0.301753,
+   "pooledP90": 0.320562,
+   "quantity": "width",
+   "regime": "conduction",
+   "rowsPerSource": {
+    "totis-ti64-2021": 8
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "totis-ti64-2021": -0.251979
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "totis-ti64-2021"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Ti-6Al-4V"
+   ],
+   "digitizedSources": [],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     50.0
+    ],
+    "laserPower_W": [
+     100.0,
+     400.0
+    ],
+    "scanSpeed_mm_s": [
+     250.0,
+     2500.0
+    ]
+   },
+   "family": "Ti64",
+   "kernel": "eagar-tsai",
+   "loso": {
+    "coverageBySource": {
+     "ku-leuven-ti64-2021": 1.0,
+     "totis-ti64-2021": 0.157895
+    },
+    "coverageEqualWeight": 0.578947,
+    "coveragePooled": 0.294118
+   },
+   "median": -0.0536673,
+   "n": 68,
+   "nBalling": 0,
+   "nSets": 68,
+   "nSources": 2,
+   "p10": -0.17208,
+   "p90": 0.223407,
+   "pooledMedian": 0.0297847,
+   "pooledP10": -0.178657,
+   "pooledP90": 0.295665,
+   "quantity": "width",
+   "regime": "keyhole",
+   "rowsPerSource": {
+    "ku-leuven-ti64-2021": 11,
+    "totis-ti64-2021": 57
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ku-leuven-ti64-2021": -0.0833201,
+    "totis-ti64-2021": 0.0770687
+   },
+   "sourceMedianSd": 0.113412,
+   "sources": [
+    "ku-leuven-ti64-2021",
+    "totis-ti64-2021"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.789474,
+    "informative": true,
+    "p10": -0.317429,
+    "p90": 0.368756,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "Ti-6Al-4V"
+   ],
+   "digitizedSources": [],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     50.0
+    ],
+    "laserPower_W": [
+     50.0,
+     150.0
+    ],
+    "scanSpeed_mm_s": [
+     250.0,
+     2500.0
+    ]
+   },
+   "family": "Ti64",
+   "kernel": "eagar-tsai",
+   "loso": {
+    "coverageBySource": {
+     "ku-leuven-ti64-2021": 0.0,
+     "totis-ti64-2021": 0.0
+    },
+    "coverageEqualWeight": 0.0,
+    "coveragePooled": 0.0
+   },
+   "median": -0.14965,
+   "n": 18,
+   "nBalling": 0,
+   "nSets": 18,
+   "nSources": 2,
+   "p10": -0.361333,
+   "p90": -0.0557143,
+   "pooledMedian": -0.294495,
+   "pooledP10": -0.383845,
+   "pooledP90": -0.0626402,
+   "quantity": "width",
+   "regime": "transition",
+   "rowsPerSource": {
+    "ku-leuven-ti64-2021": 3,
+    "totis-ti64-2021": 15
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ku-leuven-ti64-2021": -0.0626402,
+    "totis-ti64-2021": -0.30662
+   },
+   "sourceMedianSd": 0.17252,
+   "sources": [
+    "ku-leuven-ti64-2021",
+    "totis-ti64-2021"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.733333,
+    "informative": false,
+    "p10": -0.582435,
+    "p90": 0.165387,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "316L Stainless Steel"
+   ],
+   "digitizedSources": [
+    "trapp-316l-2017"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     140.0
+    ],
+    "laserPower_W": [
+     32.0,
+     600.0
+    ],
+    "scanSpeed_mm_s": [
+     225.0,
+     1500.0
+    ]
+   },
+   "family": "316L",
+   "kernel": "goldak",
+   "loso": {
+    "coverageBySource": {
+     "hofmann-316l-2026": 0.625557,
+     "ku-leuven-316l-2021": 0.477273,
+     "trapp-316l-2017": 0.909091
+    },
+    "coverageEqualWeight": 0.67064,
+    "coveragePooled": 0.620879
+   },
+   "median": -0.0252245,
+   "n": 728,
+   "nBalling": 216,
+   "nSets": 429,
+   "nSources": 3,
+   "p10": -0.224409,
+   "p90": 0.296446,
+   "pooledMedian": -0.109922,
+   "pooledP10": -0.306036,
+   "pooledP90": 0.113949,
+   "quantity": "width",
+   "regime": "all",
+   "rowsPerSource": {
+    "hofmann-316l-2026": 673,
+    "ku-leuven-316l-2021": 44,
+    "trapp-316l-2017": 11
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "hofmann-316l-2026": -0.117682,
+    "ku-leuven-316l-2021": 0.114789,
+    "trapp-316l-2017": -0.0735294
+   },
+   "sourceMedianSd": 0.123461,
+   "sources": [
+    "hofmann-316l-2026",
+    "ku-leuven-316l-2021",
+    "trapp-316l-2017"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.84298,
+    "informative": true,
+    "p10": -0.382637,
+    "p90": 0.454673,
+    "sdLeak": false
+   }
+  },
+  {
+   "alloys": [
+    "316L Stainless Steel"
+   ],
+   "digitizedSources": [
+    "trapp-316l-2017"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     50.0,
+     140.0
+    ],
+    "laserPower_W": [
+     32.0,
+     450.0
+    ],
+    "scanSpeed_mm_s": [
+     225.0,
+     1500.0
+    ]
+   },
+   "family": "316L",
+   "kernel": "goldak",
+   "loso": {
+    "coverageBySource": {
+     "hofmann-316l-2026": 0.09375,
+     "trapp-316l-2017": 0.333333
+    },
+    "coverageEqualWeight": 0.213542,
+    "coveragePooled": 0.0981595
+   },
+   "median": -0.101923,
+   "n": 163,
+   "nBalling": 31,
+   "nSets": 101,
+   "nSources": 2,
+   "p10": -0.356748,
+   "p90": 0.0226667,
+   "pooledMedian": -0.229099,
+   "pooledP10": -0.392857,
+   "pooledP90": -0.0775401,
+   "quantity": "width",
+   "regime": "conduction",
+   "rowsPerSource": {
+    "hofmann-316l-2026": 160,
+    "trapp-316l-2017": 3
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "hofmann-316l-2026": -0.2339,
+    "trapp-316l-2017": -0.0735294
+   },
+   "sourceMedianSd": 0.113399,
+   "sources": [
+    "hofmann-316l-2026",
+    "trapp-316l-2017"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.76875,
+    "informative": true,
+    "p10": -0.502081,
+    "p90": 0.167999,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "316L Stainless Steel"
+   ],
+   "digitizedSources": [
+    "trapp-316l-2017"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     140.0
+    ],
+    "laserPower_W": [
+     100.0,
+     600.0
+    ],
+    "scanSpeed_mm_s": [
+     225.0,
+     1500.0
+    ]
+   },
+   "family": "316L",
+   "kernel": "goldak",
+   "loso": {
+    "coverageBySource": {
+     "hofmann-316l-2026": 0.635556,
+     "ku-leuven-316l-2021": 0.825,
+     "trapp-316l-2017": 0.75
+    },
+    "coverageEqualWeight": 0.736852,
+    "coveragePooled": 0.665428
+   },
+   "median": 0.0423342,
+   "n": 269,
+   "nBalling": 88,
+   "nSets": 169,
+   "nSources": 3,
+   "p10": -0.12316,
+   "p90": 0.350345,
+   "pooledMedian": -0.00990644,
+   "pooledP10": -0.171065,
+   "pooledP90": 0.237247,
+   "quantity": "width",
+   "regime": "keyhole",
+   "rowsPerSource": {
+    "hofmann-316l-2026": 225,
+    "ku-leuven-316l-2021": 40,
+    "trapp-316l-2017": 4
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "hofmann-316l-2026": -0.0364742,
+    "ku-leuven-316l-2021": 0.116532,
+    "trapp-316l-2017": 0.00814815
+   },
+   "sourceMedianSd": 0.0786864,
+   "sources": [
+    "hofmann-316l-2026",
+    "ku-leuven-316l-2021",
+    "trapp-316l-2017"
+   ],
+   "state": "band",
+   "widened": {
+    "coverageEqualWeight": 0.914444,
+    "informative": true,
+    "p10": -0.224004,
+    "p90": 0.451189,
+    "sdLeak": false
+   }
+  },
+  {
+   "alloys": [
+    "316L Stainless Steel"
+   ],
+   "digitizedSources": [
+    "trapp-316l-2017"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     140.0
+    ],
+    "laserPower_W": [
+     50.0,
+     500.0
+    ],
+    "scanSpeed_mm_s": [
+     225.0,
+     1500.0
+    ]
+   },
+   "family": "316L",
+   "kernel": "goldak",
+   "loso": {
+    "coverageBySource": {
+     "hofmann-316l-2026": 0.826389,
+     "ku-leuven-316l-2021": 0.0,
+     "trapp-316l-2017": 0.75
+    },
+    "coverageEqualWeight": 0.525463,
+    "coveragePooled": 0.814189
+   },
+   "median": -0.096124,
+   "n": 296,
+   "nBalling": 97,
+   "nSets": 159,
+   "nSources": 3,
+   "p10": -0.224409,
+   "p90": 0.0375,
+   "pooledMedian": -0.119208,
+   "pooledP10": -0.260987,
+   "pooledP90": -0.00612557,
+   "quantity": "width",
+   "regime": "transition",
+   "rowsPerSource": {
+    "hofmann-316l-2026": 288,
+    "ku-leuven-316l-2021": 4,
+    "trapp-316l-2017": 4
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "hofmann-316l-2026": -0.11952,
+    "ku-leuven-316l-2021": 0.00196025,
+    "trapp-316l-2017": -0.154687
+   },
+   "sourceMedianSd": 0.0821916,
+   "sources": [
+    "hofmann-316l-2026",
+    "ku-leuven-316l-2021",
+    "trapp-316l-2017"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.664352,
+    "informative": true,
+    "p10": -0.329746,
+    "p90": 0.142837,
+    "sdLeak": false
+   }
+  },
+  {
+   "alloys": [
+    "Inconel 625"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     100.0,
+     170.0
+    ],
+    "laserPower_W": [
+     122.0,
+     195.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     1200.0
+    ]
+   },
+   "family": "Inconel 625",
+   "kernel": "goldak",
+   "loso": {
+    "coverageBySource": {
+     "ghosh-in625-2018": 0.8,
+     "lane-in625-2020": 0.666667
+    },
+    "coverageEqualWeight": 0.733333,
+    "coveragePooled": 0.705882
+   },
+   "median": -0.162406,
+   "n": 17,
+   "nBalling": 0,
+   "nSets": 8,
+   "nSources": 2,
+   "p10": -0.321368,
+   "p90": -0.0846818,
+   "pooledMedian": -0.162406,
+   "pooledP10": -0.243182,
+   "pooledP90": -0.0750401,
+   "quantity": "width",
+   "regime": "conduction",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 5,
+    "lane-in625-2020": 12
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": -0.162406,
+    "lane-in625-2020": -0.16835
+   },
+   "sourceMedianSd": 0.00420315,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020"
+   ],
+   "state": "band",
+   "widened": {
+    "coverageEqualWeight": 0.733333,
+    "informative": true,
+    "p10": -0.326754,
+    "p90": -0.0792951,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "Inconel 625"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     100.0,
+     140.0
+    ],
+    "laserPower_W": [
+     150.0,
+     195.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     800.0
+    ]
+   },
+   "family": "Inconel 625",
+   "kernel": "goldak",
+   "loso": null,
+   "median": -0.166023,
+   "n": 7,
+   "nBalling": 0,
+   "nSets": 3,
+   "nSources": 2,
+   "p10": -0.199953,
+   "p90": -0.153299,
+   "pooledMedian": -0.170865,
+   "pooledP10": -0.216431,
+   "pooledP90": -0.151887,
+   "quantity": "width",
+   "regime": "transition",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 1,
+    "lane-in625-2020": 6
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": -0.166023,
+    "lane-in625-2020": -0.193797
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Inconel 718"
+   ],
+   "digitizedSources": [],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     49.0,
+     67.0
+    ],
+    "laserPower_W": [
+     245.0,
+     325.0
+    ],
+    "scanSpeed_mm_s": [
+     800.0,
+     1200.0
+    ]
+   },
+   "family": "Inconel 718",
+   "kernel": "goldak",
+   "loso": null,
+   "median": -0.0572267,
+   "n": 6,
+   "nBalling": 0,
+   "nSets": 6,
+   "nSources": 1,
+   "p10": -0.0992953,
+   "p90": 0.211864,
+   "pooledMedian": -0.0572267,
+   "pooledP10": -0.0992953,
+   "pooledP90": 0.211864,
+   "quantity": "width",
+   "regime": "keyhole",
+   "rowsPerSource": {
+    "nist-amb2022-03": 6
+   },
+   "sentinelOnly": true,
+   "sourceMedian": {
+    "nist-amb2022-03": -0.0572267
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "nist-amb2022-03"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Inconel 718"
+   ],
+   "digitizedSources": [],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     82.0,
+     82.0
+    ],
+    "laserPower_W": [
+     285.0,
+     285.0
+    ],
+    "scanSpeed_mm_s": [
+     960.0,
+     960.0
+    ]
+   },
+   "family": "Inconel 718",
+   "kernel": "goldak",
+   "loso": null,
+   "median": -0.094566,
+   "n": 1,
+   "nBalling": 0,
+   "nSets": 1,
+   "nSources": 1,
+   "p10": -0.094566,
+   "p90": -0.094566,
+   "pooledMedian": -0.094566,
+   "pooledP10": -0.094566,
+   "pooledP90": -0.094566,
+   "quantity": "width",
+   "regime": "transition",
+   "rowsPerSource": {
+    "nist-amb2022-03": 1
+   },
+   "sentinelOnly": true,
+   "sourceMedian": {
+    "nist-amb2022-03": -0.094566
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "nist-amb2022-03"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Inconel 625",
+    "Inconel 718"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     49.0,
+     170.0
+    ],
+    "laserPower_W": [
+     122.0,
+     325.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     1200.0
+    ]
+   },
+   "family": "Ni",
+   "kernel": "goldak",
+   "loso": {
+    "coverageBySource": {
+     "ghosh-in625-2018": 0.666667,
+     "lane-in625-2020": 0.833333,
+     "nist-amb2022-03": 0.142857
+    },
+    "coverageEqualWeight": 0.547619,
+    "coveragePooled": 0.645161
+   },
+   "median": -0.140123,
+   "n": 31,
+   "nBalling": 0,
+   "nSets": 18,
+   "nSources": 3,
+   "p10": -0.216431,
+   "p90": 0.0194863,
+   "pooledMedian": -0.151887,
+   "pooledP10": -0.216431,
+   "pooledP90": -0.0572267,
+   "quantity": "width",
+   "regime": "all",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 6,
+    "lane-in625-2020": 18,
+    "nist-amb2022-03": 7
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": -0.166023,
+    "lane-in625-2020": -0.170865,
+    "nist-amb2022-03": -0.0572267
+   },
+   "sourceMedianSd": 0.0642571,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020",
+    "nist-amb2022-03"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.706349,
+    "informative": true,
+    "p10": -0.298783,
+    "p90": 0.101838,
+    "sdLeak": false
+   }
+  },
+  {
+   "alloys": [
+    "Inconel 625"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     100.0,
+     170.0
+    ],
+    "laserPower_W": [
+     122.0,
+     195.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     1200.0
+    ]
+   },
+   "family": "Ni",
+   "kernel": "goldak",
+   "loso": {
+    "coverageBySource": {
+     "ghosh-in625-2018": 0.8,
+     "lane-in625-2020": 0.666667
+    },
+    "coverageEqualWeight": 0.733333,
+    "coveragePooled": 0.705882
+   },
+   "median": -0.162406,
+   "n": 17,
+   "nBalling": 0,
+   "nSets": 8,
+   "nSources": 2,
+   "p10": -0.321368,
+   "p90": -0.0846818,
+   "pooledMedian": -0.162406,
+   "pooledP10": -0.243182,
+   "pooledP90": -0.0750401,
+   "quantity": "width",
+   "regime": "conduction",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 5,
+    "lane-in625-2020": 12
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": -0.162406,
+    "lane-in625-2020": -0.16835
+   },
+   "sourceMedianSd": 0.00420315,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020"
+   ],
+   "state": "band",
+   "widened": {
+    "coverageEqualWeight": 0.733333,
+    "informative": true,
+    "p10": -0.326754,
+    "p90": -0.0792951,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "Inconel 718"
+   ],
+   "digitizedSources": [],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     49.0,
+     67.0
+    ],
+    "laserPower_W": [
+     245.0,
+     325.0
+    ],
+    "scanSpeed_mm_s": [
+     800.0,
+     1200.0
+    ]
+   },
+   "family": "Ni",
+   "kernel": "goldak",
+   "loso": null,
+   "median": -0.0572267,
+   "n": 6,
+   "nBalling": 0,
+   "nSets": 6,
+   "nSources": 1,
+   "p10": -0.0992953,
+   "p90": 0.211864,
+   "pooledMedian": -0.0572267,
+   "pooledP10": -0.0992953,
+   "pooledP90": 0.211864,
+   "quantity": "width",
+   "regime": "keyhole",
+   "rowsPerSource": {
+    "nist-amb2022-03": 6
+   },
+   "sentinelOnly": true,
+   "sourceMedian": {
+    "nist-amb2022-03": -0.0572267
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "nist-amb2022-03"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Inconel 625",
+    "Inconel 718"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     82.0,
+     140.0
+    ],
+    "laserPower_W": [
+     150.0,
+     285.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     960.0
+    ]
+   },
+   "family": "Ni",
+   "kernel": "goldak",
+   "loso": null,
+   "median": -0.166023,
+   "n": 8,
+   "nBalling": 0,
+   "nSets": 4,
+   "nSources": 3,
+   "p10": -0.199953,
+   "p90": -0.094566,
+   "pooledMedian": -0.170865,
+   "pooledP10": -0.216431,
+   "pooledP90": -0.094566,
+   "quantity": "width",
+   "regime": "transition",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 1,
+    "lane-in625-2020": 6,
+    "nist-amb2022-03": 1
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": -0.166023,
+    "lane-in625-2020": -0.193797,
+    "nist-amb2022-03": -0.094566
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020",
+    "nist-amb2022-03"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Ti-6Al-4V"
+   ],
+   "digitizedSources": [],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     50.0
+    ],
+    "laserPower_W": [
+     50.0,
+     400.0
+    ],
+    "scanSpeed_mm_s": [
+     250.0,
+     2500.0
+    ]
+   },
+   "family": "Ti64",
+   "kernel": "goldak",
+   "loso": {
+    "coverageBySource": {
+     "ku-leuven-ti64-2021": 1.0,
+     "totis-ti64-2021": 0.125
+    },
+    "coverageEqualWeight": 0.5625,
+    "coveragePooled": 0.255319
+   },
+   "median": -0.0989084,
+   "n": 94,
+   "nBalling": 0,
+   "nSets": 94,
+   "nSources": 2,
+   "p10": -0.34329,
+   "p90": 0.142192,
+   "pooledMedian": -0.07913,
+   "pooledP10": -0.378303,
+   "pooledP90": 0.217912,
+   "quantity": "width",
+   "regime": "all",
+   "rowsPerSource": {
+    "ku-leuven-ti64-2021": 14,
+    "totis-ti64-2021": 80
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ku-leuven-ti64-2021": -0.108985,
+    "totis-ti64-2021": -0.0441864
+   },
+   "sourceMedianSd": 0.0458195,
+   "sources": [
+    "ku-leuven-ti64-2021",
+    "totis-ti64-2021"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.64375,
+    "informative": true,
+    "p10": -0.402012,
+    "p90": 0.200914,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "Ti-6Al-4V"
+   ],
+   "digitizedSources": [],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     50.0,
+     50.0
+    ],
+    "laserPower_W": [
+     50.0,
+     50.0
+    ],
+    "scanSpeed_mm_s": [
+     750.0,
+     2500.0
+    ]
+   },
+   "family": "Ti64",
+   "kernel": "goldak",
+   "loso": null,
+   "median": -0.380357,
+   "n": 8,
+   "nBalling": 0,
+   "nSets": 8,
+   "nSources": 1,
+   "p10": -0.481173,
+   "p90": -0.0293742,
+   "pooledMedian": -0.380357,
+   "pooledP10": -0.481173,
+   "pooledP90": -0.0293742,
+   "quantity": "width",
+   "regime": "conduction",
+   "rowsPerSource": {
+    "totis-ti64-2021": 8
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "totis-ti64-2021": -0.380357
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "totis-ti64-2021"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Ti-6Al-4V"
+   ],
+   "digitizedSources": [],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     50.0
+    ],
+    "laserPower_W": [
+     100.0,
+     400.0
+    ],
+    "scanSpeed_mm_s": [
+     250.0,
+     2500.0
+    ]
+   },
+   "family": "Ti64",
+   "kernel": "goldak",
+   "loso": {
+    "coverageBySource": {
+     "ku-leuven-ti64-2021": 1.0,
+     "totis-ti64-2021": 0.175439
+    },
+    "coverageEqualWeight": 0.587719,
+    "coveragePooled": 0.308824
+   },
+   "median": -0.0697674,
+   "n": 68,
+   "nBalling": 0,
+   "nSets": 68,
+   "nSources": 2,
+   "p10": -0.201806,
+   "p90": 0.211232,
+   "pooledMedian": 0.00324796,
+   "pooledP10": -0.20282,
+   "pooledP90": 0.264842,
+   "quantity": "width",
+   "regime": "keyhole",
+   "rowsPerSource": {
+    "ku-leuven-ti64-2021": 11,
+    "totis-ti64-2021": 57
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ku-leuven-ti64-2021": -0.0989084,
+    "totis-ti64-2021": 0.0501022
+   },
+   "sourceMedianSd": 0.105366,
+   "sources": [
+    "ku-leuven-ti64-2021",
+    "totis-ti64-2021"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.789474,
+    "informative": true,
+    "p10": -0.336843,
+    "p90": 0.34627,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "Ti-6Al-4V"
+   ],
+   "digitizedSources": [],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     50.0
+    ],
+    "laserPower_W": [
+     50.0,
+     150.0
+    ],
+    "scanSpeed_mm_s": [
+     250.0,
+     2500.0
+    ]
+   },
+   "family": "Ti64",
+   "kernel": "goldak",
+   "loso": {
+    "coverageBySource": {
+     "ku-leuven-ti64-2021": 0.0,
+     "totis-ti64-2021": 0.0
+    },
+    "coverageEqualWeight": 0.0,
+    "coveragePooled": 0.0
+   },
+   "median": -0.211474,
+   "n": 18,
+   "nBalling": 0,
+   "nSets": 18,
+   "nSources": 2,
+   "p10": -0.407713,
+   "p90": -0.0985714,
+   "pooledMedian": -0.34329,
+   "pooledP10": -0.458325,
+   "pooledP90": -0.108985,
+   "quantity": "width",
+   "regime": "transition",
+   "rowsPerSource": {
+    "ku-leuven-ti64-2021": 3,
+    "totis-ti64-2021": 15
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ku-leuven-ti64-2021": -0.108985,
+    "totis-ti64-2021": -0.365469
+   },
+   "sourceMedianSd": 0.181362,
+   "sources": [
+    "ku-leuven-ti64-2021",
+    "totis-ti64-2021"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.733333,
+    "informative": false,
+    "p10": -0.640147,
+    "p90": 0.133862,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "316L Stainless Steel"
+   ],
+   "digitizedSources": [
+    "trapp-316l-2017"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     140.0
+    ],
+    "laserPower_W": [
+     32.0,
+     600.0
+    ],
+    "scanSpeed_mm_s": [
+     225.0,
+     1500.0
+    ]
+   },
+   "family": "316L",
+   "kernel": "rosenthal",
+   "loso": {
+    "coverageBySource": {
+     "hofmann-316l-2026": 0.735821,
+     "ku-leuven-316l-2021": 0.522727,
+     "trapp-316l-2017": 0.818182
+    },
+    "coverageEqualWeight": 0.692243,
+    "coveragePooled": 0.724138
+   },
+   "median": 0.296293,
+   "n": 725,
+   "nBalling": 216,
+   "nSets": 427,
+   "nSources": 3,
+   "p10": -0.209966,
+   "p90": 0.847664,
+   "pooledMedian": 0.129167,
+   "pooledP10": -0.312236,
+   "pooledP90": 0.559732,
+   "quantity": "width",
+   "regime": "all",
+   "rowsPerSource": {
+    "hofmann-316l-2026": 670,
+    "ku-leuven-316l-2021": 44,
+    "trapp-316l-2017": 11
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "hofmann-316l-2026": 0.083151,
+    "ku-leuven-316l-2021": 0.554464,
+    "trapp-316l-2017": 0.0523437
+   },
+   "sourceMedianSd": 0.281428,
+   "sources": [
+    "hofmann-316l-2026",
+    "ku-leuven-316l-2021",
+    "trapp-316l-2017"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.862641,
+    "informative": false,
+    "p10": -0.570644,
+    "p90": 1.20834,
+    "sdLeak": false
+   }
+  },
+  {
+   "alloys": [
+    "316L Stainless Steel"
+   ],
+   "digitizedSources": [
+    "trapp-316l-2017"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     50.0,
+     140.0
+    ],
+    "laserPower_W": [
+     32.0,
+     450.0
+    ],
+    "scanSpeed_mm_s": [
+     225.0,
+     1500.0
+    ]
+   },
+   "family": "316L",
+   "kernel": "rosenthal",
+   "loso": {
+    "coverageBySource": {
+     "hofmann-316l-2026": 0.216561,
+     "trapp-316l-2017": 0.666667
+    },
+    "coverageEqualWeight": 0.441614,
+    "coveragePooled": 0.225
+   },
+   "median": -0.223077,
+   "n": 160,
+   "nBalling": 31,
+   "nSets": 99,
+   "nSources": 2,
+   "p10": -0.407026,
+   "p90": -0.08,
+   "pooledMedian": -0.289603,
+   "pooledP10": -0.441008,
+   "pooledP90": -0.169194,
+   "quantity": "width",
+   "regime": "conduction",
+   "rowsPerSource": {
+    "hofmann-316l-2026": 157,
+    "trapp-316l-2017": 3
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "hofmann-316l-2026": -0.294667,
+    "trapp-316l-2017": -0.175
+   },
+   "sourceMedianSd": 0.0846176,
+   "sources": [
+    "hofmann-316l-2026",
+    "trapp-316l-2017"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.792994,
+    "informative": true,
+    "p10": -0.515472,
+    "p90": 0.0284459,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "316L Stainless Steel"
+   ],
+   "digitizedSources": [
+    "trapp-316l-2017"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     140.0
+    ],
+    "laserPower_W": [
+     100.0,
+     600.0
+    ],
+    "scanSpeed_mm_s": [
+     225.0,
+     1500.0
+    ]
+   },
+   "family": "316L",
+   "kernel": "rosenthal",
+   "loso": {
+    "coverageBySource": {
+     "hofmann-316l-2026": 0.502222,
+     "ku-leuven-316l-2021": 0.825,
+     "trapp-316l-2017": 0.75
+    },
+    "coverageEqualWeight": 0.692407,
+    "coveragePooled": 0.553903
+   },
+   "median": 0.482268,
+   "n": 269,
+   "nBalling": 88,
+   "nSets": 169,
+   "nSources": 3,
+   "p10": 0.223332,
+   "p90": 0.932414,
+   "pooledMedian": 0.390612,
+   "pooledP10": 0.173287,
+   "pooledP90": 0.775782,
+   "quantity": "width",
+   "regime": "keyhole",
+   "rowsPerSource": {
+    "hofmann-316l-2026": 225,
+    "ku-leuven-316l-2021": 40,
+    "trapp-316l-2017": 4
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "hofmann-316l-2026": 0.369467,
+    "ku-leuven-316l-2021": 0.601843,
+    "trapp-316l-2017": 0.411111
+   },
+   "sourceMedianSd": 0.123903,
+   "sources": [
+    "hofmann-316l-2026",
+    "ku-leuven-316l-2021",
+    "trapp-316l-2017"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.90463,
+    "informative": true,
+    "p10": 0.0645386,
+    "p90": 1.09121,
+    "sdLeak": false
+   }
+  },
+  {
+   "alloys": [
+    "316L Stainless Steel"
+   ],
+   "digitizedSources": [
+    "trapp-316l-2017"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     140.0
+    ],
+    "laserPower_W": [
+     50.0,
+     500.0
+    ],
+    "scanSpeed_mm_s": [
+     225.0,
+     1500.0
+    ]
+   },
+   "family": "316L",
+   "kernel": "rosenthal",
+   "loso": {
+    "coverageBySource": {
+     "hofmann-316l-2026": 0.920139,
+     "ku-leuven-316l-2021": 0.0,
+     "trapp-316l-2017": 0.5
+    },
+    "coverageEqualWeight": 0.47338,
+    "coveragePooled": 0.902027
+   },
+   "median": 0.183719,
+   "n": 296,
+   "nBalling": 97,
+   "nSets": 159,
+   "nSources": 3,
+   "p10": -0.195098,
+   "p90": 0.378787,
+   "pooledMedian": 0.0631409,
+   "pooledP10": -0.172602,
+   "pooledP90": 0.27566,
+   "quantity": "width",
+   "regime": "transition",
+   "rowsPerSource": {
+    "hofmann-316l-2026": 288,
+    "ku-leuven-316l-2021": 4,
+    "trapp-316l-2017": 4
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "hofmann-316l-2026": 0.0624371,
+    "ku-leuven-316l-2021": 0.360377,
+    "trapp-316l-2017": -0.131496
+   },
+   "sourceMedianSd": 0.247762,
+   "sources": [
+    "hofmann-316l-2026",
+    "ku-leuven-316l-2021",
+    "trapp-316l-2017"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.916667,
+    "informative": false,
+    "p10": -0.51263,
+    "p90": 0.69632,
+    "sdLeak": false
+   }
+  },
+  {
+   "alloys": [
+    "Inconel 625"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     100.0,
+     170.0
+    ],
+    "laserPower_W": [
+     122.0,
+     195.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     1200.0
+    ]
+   },
+   "family": "Inconel 625",
+   "kernel": "rosenthal",
+   "loso": {
+    "coverageBySource": {
+     "ghosh-in625-2018": 0.75,
+     "lane-in625-2020": 0.583333
+    },
+    "coverageEqualWeight": 0.666667,
+    "coveragePooled": 0.625
+   },
+   "median": -0.24812,
+   "n": 16,
+   "nBalling": 0,
+   "nSets": 7,
+   "nSources": 2,
+   "p10": -0.298507,
+   "p90": -0.173037,
+   "pooledMedian": -0.24812,
+   "pooledP10": -0.290152,
+   "pooledP90": -0.164326,
+   "quantity": "width",
+   "regime": "conduction",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 4,
+    "lane-in625-2020": 12
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": -0.24812,
+    "lane-in625-2020": -0.2498
+   },
+   "sourceMedianSd": 0.00118761,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.666667,
+    "informative": true,
+    "p10": -0.30003,
+    "p90": -0.171515,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "Inconel 625"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     100.0,
+     140.0
+    ],
+    "laserPower_W": [
+     150.0,
+     195.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     800.0
+    ]
+   },
+   "family": "Inconel 625",
+   "kernel": "rosenthal",
+   "loso": null,
+   "median": -0.086658,
+   "n": 7,
+   "nBalling": 0,
+   "nSets": 3,
+   "nSources": 2,
+   "p10": -0.1123,
+   "p90": 0.0196911,
+   "pooledMedian": -0.104138,
+   "pooledP10": -0.124185,
+   "pooledP90": 0.0196911,
+   "quantity": "width",
+   "regime": "transition",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 1,
+    "lane-in625-2020": 6
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": 0.0196911,
+    "lane-in625-2020": -0.10563
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Inconel 718"
+   ],
+   "digitizedSources": [],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     49.0,
+     67.0
+    ],
+    "laserPower_W": [
+     245.0,
+     325.0
+    ],
+    "scanSpeed_mm_s": [
+     800.0,
+     1200.0
+    ]
+   },
+   "family": "Inconel 718",
+   "kernel": "rosenthal",
+   "loso": null,
+   "median": 0.371974,
+   "n": 6,
+   "nBalling": 0,
+   "nSets": 6,
+   "nSources": 1,
+   "p10": 0.309892,
+   "p90": 0.789077,
+   "pooledMedian": 0.371974,
+   "pooledP10": 0.309892,
+   "pooledP90": 0.789077,
+   "quantity": "width",
+   "regime": "keyhole",
+   "rowsPerSource": {
+    "nist-amb2022-03": 6
+   },
+   "sentinelOnly": true,
+   "sourceMedian": {
+    "nist-amb2022-03": 0.371974
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "nist-amb2022-03"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Inconel 718"
+   ],
+   "digitizedSources": [],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     82.0,
+     82.0
+    ],
+    "laserPower_W": [
+     285.0,
+     285.0
+    ],
+    "scanSpeed_mm_s": [
+     960.0,
+     960.0
+    ]
+   },
+   "family": "Inconel 718",
+   "kernel": "rosenthal",
+   "loso": null,
+   "median": 0.249118,
+   "n": 1,
+   "nBalling": 0,
+   "nSets": 1,
+   "nSources": 1,
+   "p10": 0.249118,
+   "p90": 0.249118,
+   "pooledMedian": 0.249118,
+   "pooledP10": 0.249118,
+   "pooledP90": 0.249118,
+   "quantity": "width",
+   "regime": "transition",
+   "rowsPerSource": {
+    "nist-amb2022-03": 1
+   },
+   "sentinelOnly": true,
+   "sourceMedian": {
+    "nist-amb2022-03": 0.249118
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "nist-amb2022-03"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Inconel 625",
+    "Inconel 718"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     49.0,
+     170.0
+    ],
+    "laserPower_W": [
+     122.0,
+     325.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     1200.0
+    ]
+   },
+   "family": "Ni",
+   "kernel": "rosenthal",
+   "loso": {
+    "coverageBySource": {
+     "ghosh-in625-2018": 0.8,
+     "lane-in625-2020": 1.0,
+     "nist-amb2022-03": 0.0
+    },
+    "coverageEqualWeight": 0.6,
+    "coveragePooled": 0.733333
+   },
+   "median": -0.124185,
+   "n": 30,
+   "nBalling": 0,
+   "nSets": 17,
+   "nSources": 3,
+   "p10": -0.275,
+   "p90": 0.460585,
+   "pooledMedian": -0.164326,
+   "pooledP10": -0.275,
+   "pooledP90": 0.371974,
+   "quantity": "width",
+   "regime": "all",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 5,
+    "lane-in625-2020": 18,
+    "nist-amb2022-03": 7
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": -0.232258,
+    "lane-in625-2020": -0.183653,
+    "nist-amb2022-03": 0.371974
+   },
+   "sourceMedianSd": 0.335703,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020",
+    "nist-amb2022-03"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.666667,
+    "informative": false,
+    "p10": -0.705237,
+    "p90": 0.890822,
+    "sdLeak": false
+   }
+  },
+  {
+   "alloys": [
+    "Inconel 625"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     100.0,
+     170.0
+    ],
+    "laserPower_W": [
+     122.0,
+     195.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     1200.0
+    ]
+   },
+   "family": "Ni",
+   "kernel": "rosenthal",
+   "loso": {
+    "coverageBySource": {
+     "ghosh-in625-2018": 0.75,
+     "lane-in625-2020": 0.583333
+    },
+    "coverageEqualWeight": 0.666667,
+    "coveragePooled": 0.625
+   },
+   "median": -0.24812,
+   "n": 16,
+   "nBalling": 0,
+   "nSets": 7,
+   "nSources": 2,
+   "p10": -0.298507,
+   "p90": -0.173037,
+   "pooledMedian": -0.24812,
+   "pooledP10": -0.290152,
+   "pooledP90": -0.164326,
+   "quantity": "width",
+   "regime": "conduction",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 4,
+    "lane-in625-2020": 12
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": -0.24812,
+    "lane-in625-2020": -0.2498
+   },
+   "sourceMedianSd": 0.00118761,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.666667,
+    "informative": true,
+    "p10": -0.30003,
+    "p90": -0.171515,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "Inconel 718"
+   ],
+   "digitizedSources": [],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     49.0,
+     67.0
+    ],
+    "laserPower_W": [
+     245.0,
+     325.0
+    ],
+    "scanSpeed_mm_s": [
+     800.0,
+     1200.0
+    ]
+   },
+   "family": "Ni",
+   "kernel": "rosenthal",
+   "loso": null,
+   "median": 0.371974,
+   "n": 6,
+   "nBalling": 0,
+   "nSets": 6,
+   "nSources": 1,
+   "p10": 0.309892,
+   "p90": 0.789077,
+   "pooledMedian": 0.371974,
+   "pooledP10": 0.309892,
+   "pooledP90": 0.789077,
+   "quantity": "width",
+   "regime": "keyhole",
+   "rowsPerSource": {
+    "nist-amb2022-03": 6
+   },
+   "sentinelOnly": true,
+   "sourceMedian": {
+    "nist-amb2022-03": 0.371974
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "nist-amb2022-03"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Inconel 625",
+    "Inconel 718"
+   ],
+   "digitizedSources": [
+    "ghosh-in625-2018"
+   ],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     82.0,
+     140.0
+    ],
+    "laserPower_W": [
+     150.0,
+     285.0
+    ],
+    "scanSpeed_mm_s": [
+     200.0,
+     960.0
+    ]
+   },
+   "family": "Ni",
+   "kernel": "rosenthal",
+   "loso": null,
+   "median": 0.0196911,
+   "n": 8,
+   "nBalling": 0,
+   "nSets": 4,
+   "nSources": 3,
+   "p10": -0.1123,
+   "p90": 0.249118,
+   "pooledMedian": -0.104138,
+   "pooledP10": -0.124185,
+   "pooledP90": 0.249118,
+   "quantity": "width",
+   "regime": "transition",
+   "rowsPerSource": {
+    "ghosh-in625-2018": 1,
+    "lane-in625-2020": 6,
+    "nist-amb2022-03": 1
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ghosh-in625-2018": 0.0196911,
+    "lane-in625-2020": -0.10563,
+    "nist-amb2022-03": 0.249118
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "ghosh-in625-2018",
+    "lane-in625-2020",
+    "nist-amb2022-03"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Ti-6Al-4V"
+   ],
+   "digitizedSources": [],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     50.0
+    ],
+    "laserPower_W": [
+     50.0,
+     400.0
+    ],
+    "scanSpeed_mm_s": [
+     250.0,
+     2500.0
+    ]
+   },
+   "family": "Ti64",
+   "kernel": "rosenthal",
+   "loso": {
+    "coverageBySource": {
+     "ku-leuven-ti64-2021": 1.0,
+     "totis-ti64-2021": 0.15
+    },
+    "coverageEqualWeight": 0.575,
+    "coveragePooled": 0.276596
+   },
+   "median": 0.367916,
+   "n": 94,
+   "nBalling": 0,
+   "nSets": 94,
+   "nSources": 2,
+   "p10": -0.127957,
+   "p90": 0.821408,
+   "pooledMedian": 0.419145,
+   "pooledP10": -0.377339,
+   "pooledP90": 0.915328,
+   "quantity": "width",
+   "regime": "all",
+   "rowsPerSource": {
+    "ku-leuven-ti64-2021": 14,
+    "totis-ti64-2021": 80
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ku-leuven-ti64-2021": 0.322857,
+    "totis-ti64-2021": 0.480411
+   },
+   "sourceMedianSd": 0.111407,
+   "sources": [
+    "ku-leuven-ti64-2021",
+    "totis-ti64-2021"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.66875,
+    "informative": false,
+    "p10": -0.270737,
+    "p90": 0.964187,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "Ti-6Al-4V"
+   ],
+   "digitizedSources": [],
+   "eligible": false,
+   "envelope": {
+    "beamDiameter_um": [
+     50.0,
+     50.0
+    ],
+    "laserPower_W": [
+     50.0,
+     50.0
+    ],
+    "scanSpeed_mm_s": [
+     750.0,
+     2500.0
+    ]
+   },
+   "family": "Ti64",
+   "kernel": "rosenthal",
+   "loso": null,
+   "median": -0.419152,
+   "n": 8,
+   "nBalling": 0,
+   "nSets": 8,
+   "nSources": 1,
+   "p10": -0.517505,
+   "p90": -0.100894,
+   "pooledMedian": -0.419152,
+   "pooledP10": -0.517505,
+   "pooledP90": -0.100894,
+   "quantity": "width",
+   "regime": "conduction",
+   "rowsPerSource": {
+    "totis-ti64-2021": 8
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "totis-ti64-2021": -0.419152
+   },
+   "sourceMedianSd": null,
+   "sources": [
+    "totis-ti64-2021"
+   ],
+   "state": "insufficient-data",
+   "widened": null
+  },
+  {
+   "alloys": [
+    "Ti-6Al-4V"
+   ],
+   "digitizedSources": [],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     50.0
+    ],
+    "laserPower_W": [
+     100.0,
+     400.0
+    ],
+    "scanSpeed_mm_s": [
+     250.0,
+     2500.0
+    ]
+   },
+   "family": "Ti64",
+   "kernel": "rosenthal",
+   "loso": {
+    "coverageBySource": {
+     "ku-leuven-ti64-2021": 1.0,
+     "totis-ti64-2021": 0.175439
+    },
+    "coverageEqualWeight": 0.587719,
+    "coveragePooled": 0.308824
+   },
+   "median": 0.458855,
+   "n": 68,
+   "nBalling": 0,
+   "nSets": 68,
+   "nSources": 2,
+   "p10": 0.25882,
+   "p90": 0.905352,
+   "pooledMedian": 0.603547,
+   "pooledP10": 0.214356,
+   "pooledP90": 0.97377,
+   "quantity": "width",
+   "regime": "keyhole",
+   "rowsPerSource": {
+    "ku-leuven-ti64-2021": 11,
+    "totis-ti64-2021": 57
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ku-leuven-ti64-2021": 0.410114,
+    "totis-ti64-2021": 0.638433
+   },
+   "sourceMedianSd": 0.161446,
+   "sources": [
+    "ku-leuven-ti64-2021",
+    "totis-ti64-2021"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.780702,
+    "informative": true,
+    "p10": 0.05191,
+    "p90": 1.11226,
+    "sdLeak": true
+   }
+  },
+  {
+   "alloys": [
+    "Ti-6Al-4V"
+   ],
+   "digitizedSources": [],
+   "eligible": true,
+   "envelope": {
+    "beamDiameter_um": [
+     37.5,
+     50.0
+    ],
+    "laserPower_W": [
+     50.0,
+     150.0
+    ],
+    "scanSpeed_mm_s": [
+     250.0,
+     2500.0
+    ]
+   },
+   "family": "Ti64",
+   "kernel": "rosenthal",
+   "loso": {
+    "coverageBySource": {
+     "ku-leuven-ti64-2021": 0.0,
+     "totis-ti64-2021": 0.0
+    },
+    "coverageEqualWeight": 0.0,
+    "coveragePooled": 0.0
+   },
+   "median": 0.0545588,
+   "n": 18,
+   "nBalling": 0,
+   "nSets": 18,
+   "nSources": 2,
+   "p10": -0.384112,
+   "p90": 0.322857,
+   "pooledMedian": -0.127957,
+   "pooledP10": -0.40319,
+   "pooledP90": 0.284198,
+   "quantity": "width",
+   "regime": "transition",
+   "rowsPerSource": {
+    "ku-leuven-ti64-2021": 3,
+    "totis-ti64-2021": 15
+   },
+   "sentinelOnly": false,
+   "sourceMedian": {
+    "ku-leuven-ti64-2021": 0.284198,
+    "totis-ti64-2021": -0.136017
+   },
+   "sourceMedianSd": 0.297137,
+   "sources": [
+    "ku-leuven-ti64-2021",
+    "totis-ti64-2021"
+   ],
+   "state": "band-under-covers",
+   "widened": {
+    "coverageEqualWeight": 0.766667,
+    "informative": false,
+    "p10": -0.764922,
+    "p90": 0.703667,
+    "sdLeak": true
+   }
+  }
+ ],
+ "config": {
+  "coverageFloor": 0.7,
+  "digitizedSources": [
+   "trapp-316l-2017",
+   "ghosh-in625-2018"
+  ],
+  "families": {
+   "316L Stainless Steel": "316L",
+   "Inconel 625": "Ni",
+   "Inconel 718": "Ni",
+   "Ti-6Al-4V": "Ti64"
+  },
+  "nominalCoverage": 0.8,
+  "notInformativeRatio": 2.5,
+  "sentinelSources": [
+   "nist-amb2022-03"
+  ],
+  "sourceNames": {
+   "ghosh-in625-2018": "Ghosh",
+   "hofmann-316l-2026": "Hofmann",
+   "ku-leuven-316l-2021": "KU Leuven",
+   "ku-leuven-ti64-2021": "KU Leuven",
+   "lane-in625-2020": "Lane",
+   "nist-amb2022-03": "NIST AMB2022-03",
+   "totis-ti64-2021": "Totis",
+   "trapp-316l-2017": "Trapp"
+  },
+  "thresholds": [
+   15.0,
+   30.0
+  ]
+ },
+ "contentSha256": "8cc89f494031d08806af0da8ad06c3a7de5add6572f9136b653dd6ad522fc1df",
+ "evidenceKind": "screening-only",
+ "evidenceLabel": "Screening only",
+ "experimentalValidation": false,
+ "generatedAt": "2026-10-07",
+ "honesty": "typical error of the frozen screening kernels on published single tracks, per kernel, alloy family and screening regime class; reporting text only: it is not a tolerance, not a prediction interval for any other machine and not experimental validation; the leave-one-source-out coverage is reported next to every band and shows that a band built from some published sources does not transfer to another; no per-row measurement uncertainty exists in any source; digitized figures (Trapp, Ghosh) and a development sentinel (NIST AMB2022-03 IN718) are flagged; experimentalValidation=false",
+ "implementationHash": "d92d1a3ae85cd4c1adab6dc734eaae589ef4c275c33f09015aff639998f10ddd",
+ "labelLine": "Screening only · typical published-data error shown; transfer to another lab not established",
+ "labelPromotionProposed": "none",
+ "schema": "lpbf-meltpool-error-bands-summary-1",
+ "sources": [
+  {
+   "digitized": true,
+   "doi": "10.1007/s11837-018-2771-x",
+   "materials": [
+    "Inconel 625"
+   ],
+   "name": "Ghosh",
+   "role": "test-only",
+   "rows": 7,
+   "sentinel": false,
+   "sets": 7,
+   "source": "ghosh-in625-2018",
+   "tableSha256": "79ee2d58b26c56dc88eadd5b1b0f73fb8f33e1b50a8f5eb73ac37d20e8487ce2"
+  },
+  {
+   "digitized": false,
+   "doi": "10.5281/zenodo.16979848",
+   "materials": [
+    "316L Stainless Steel"
+   ],
+   "name": "Hofmann",
+   "role": "trainable",
+   "rows": 677,
+   "sentinel": false,
+   "sets": 378,
+   "source": "hofmann-316l-2026",
+   "tableSha256": "d4bbc7a60b536118586f44b64beb0fa20f94133f6d1a8d0fdcf726003720c3d8"
+  },
+  {
+   "digitized": false,
+   "doi": "10.6084/m9.figshare.15035733.v1 + 10.6084/m9.figshare.15035703.v1",
+   "materials": [
+    "316L Stainless Steel"
+   ],
+   "name": "KU Leuven",
+   "role": "trainable",
+   "rows": 44,
+   "sentinel": false,
+   "sets": 44,
+   "source": "ku-leuven-316l-2021",
+   "tableSha256": "e031aead71bf64c70a35ae05d64c0c576d33c2ae757a1e5bda68b5da532ac831"
+  },
+  {
+   "digitized": false,
+   "doi": "10.6084/m9.figshare.15035709.v1 + 10.6084/m9.figshare.15035712.v2",
+   "materials": [
+    "Ti-6Al-4V"
+   ],
+   "name": "KU Leuven",
+   "role": "trainable",
+   "rows": 14,
+   "sentinel": false,
+   "sets": 14,
+   "source": "ku-leuven-ti64-2021",
+   "tableSha256": "e031aead71bf64c70a35ae05d64c0c576d33c2ae757a1e5bda68b5da532ac831"
+  },
+  {
+   "digitized": false,
+   "doi": "10.1007/s40192-020-00169-1",
+   "materials": [
+    "Inconel 625"
+   ],
+   "name": "Lane",
+   "role": "trainable",
+   "rows": 23,
+   "sentinel": false,
+   "sets": 6,
+   "source": "lane-in625-2020",
+   "tableSha256": "32fe10fb8606a49cdc59e1e3753b40e6be9ea9751dae9ec8ac95c217e6d16179"
+  },
+  {
+   "digitized": false,
+   "doi": "10.18434/mds2-2718",
+   "materials": [
+    "Inconel 718"
+   ],
+   "name": "NIST AMB2022-03",
+   "role": "catalog-sentinel",
+   "rows": 7,
+   "sentinel": true,
+   "sets": 7,
+   "source": "nist-amb2022-03",
+   "tableSha256": "d1b36dfa2e01a3537093c481e249ce52df6b8879c1c67480ddb9aa10799133da"
+  },
+  {
+   "digitized": false,
+   "doi": "10.17632/s9438vb5xd.1",
+   "materials": [
+    "Ti-6Al-4V"
+   ],
+   "name": "Totis",
+   "role": "trainable",
+   "rows": 80,
+   "sentinel": false,
+   "sets": 80,
+   "source": "totis-ti64-2021",
+   "tableSha256": "3b5794f3a25a5f67fa0d8d1ab006834205ef820b046c24deb15836025825d623"
+  },
+  {
+   "digitized": true,
+   "doi": "10.1016/j.apmt.2017.08.006",
+   "materials": [
+    "316L Stainless Steel"
+   ],
+   "name": "Trapp",
+   "role": "test-only",
+   "rows": 11,
+   "sentinel": false,
+   "sets": 11,
+   "source": "trapp-316l-2017",
+   "tableSha256": "3a7bc34d75bb09bf41771331d116ce5d7e5ca0b7251aeb4d1e45c1e066a4ce7f"
+  }
+ ]
+}
