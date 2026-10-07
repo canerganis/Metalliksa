@@ -48,6 +48,7 @@ from stl_slicer_build_time_solver import solve_slicer
 from lpbf_part_porosity_aggregator import aggregate_part_porosity
 from lpbf_scanner_kinematics import calculate_scanner_kinematics
 from lpbf_solidification_microstructure import project_build_job_microstructure
+from lpbf_solidification_segregation import build_job_segregation
 import alloy_registry
 from kinetics_ttt_cct_solver import STEEL_ONLY_REASON, resolve_kinetics_alloy, solve_phase_transformation_kinetics
 
@@ -929,6 +930,7 @@ def solve_lpbf_build_job(data):
         "Murakami/qualification blocks are SCREENING ONLY; defect √area not invented when absent."
     )
 
+    microstructure = project_build_job_microstructure(thermal)
     result = {
         "success": True,
         "engine": "lpbf_build_job",
@@ -956,7 +958,9 @@ def solve_lpbf_build_job(data):
         "thermal": thermal,
         "slicer": slicer,
         "kinematics": calculate_scanner_kinematics(speed, max(50.0, float(stripe_width_mm * 1000.0))),
-        "microstructure": project_build_job_microstructure(thermal),
+        "microstructure": microstructure,
+        # Nb segregation / terminal gamma-Laves screening (composition-only; G/R copied from microstructure).
+        "segregation": build_job_segregation(alloy_id, microstructure),
         "kinetics": build_job_kinetics(alloy_id, thermal),
         "porosity": aggregate_part_porosity(
             uq_block.pop("defectSamples", []) if uq_block else [thermal.get("geometricDefectScreen", {})]

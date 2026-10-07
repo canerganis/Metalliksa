@@ -1,5 +1,6 @@
 import React from "react";
 import { Layers } from "lucide-react";
+import { BuildJobSegregationPanel } from "./BuildJobSegregationPanel";
 
 // Build-job solidification microstructure (python/lpbf_solidification_microstructure.py
 // project_build_job_microstructure). Python projects thermal.solidificationKinetics and decides the status:
@@ -7,6 +8,8 @@ import { Layers } from "lucide-react";
 // "degenerate-floor" (field map used but R/cooling are solver clamp floors; carries a reason, copied numbers
 // are not a result) or "unavailable" (carries a reason, no numbers). This panel only displays those decisions;
 // degenerate-floor is rendered like unavailable (reason only, no PDAS/SDAS/morphology).
+// The optional `segregation` block (python/lpbf_solidification_segregation.py) is rendered at the bottom by
+// BuildJobSegregationPanel; it carries its own status and is independent of the microstructure status.
 
 export interface BuildJobMicrostructureLike {
   status?: string;
@@ -37,8 +40,18 @@ const MicroMetric: React.FC<{ label: string; value: string; hint?: string }> = (
 
 const KNOWN_STATUS = ["available", "screening-fallback", "degenerate-floor", "unavailable"];
 
-export const BuildJobMicrostructurePanel: React.FC<{ micro: BuildJobMicrostructureLike | null | undefined }> = ({ micro }) => {
-  if (!micro) return null;
+export const BuildJobMicrostructurePanel: React.FC<{
+  micro: BuildJobMicrostructureLike | null | undefined;
+  segregation?: unknown;
+}> = ({ micro, segregation }) => {
+  // The segregation result is composition-only, so it is still shown when the microstructure block is missing.
+  if (!micro) {
+    return segregation !== undefined && segregation !== null ? (
+      <div>
+        <BuildJobSegregationPanel segregation={segregation} />
+      </div>
+    ) : null;
+  }
   // A block without a known status (an old worker's Rosenthal block) is never shown as available.
   const known = typeof micro.status === "string" && KNOWN_STATUS.includes(micro.status);
   const m: BuildJobMicrostructureLike = known ? micro : { status: "unavailable", reason: "legacy block without status" };
@@ -77,6 +90,7 @@ export const BuildJobMicrostructurePanel: React.FC<{ micro: BuildJobMicrostructu
           <p className="text-[9px] text-slate-500 mt-1">{m.disclaimer}</p>
         </>
       )}
+      {segregation !== undefined && <BuildJobSegregationPanel segregation={segregation} />}
     </div>
   );
 };
