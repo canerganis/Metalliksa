@@ -424,8 +424,31 @@ def _exit_when_parent_dies() -> None:
     threading.Thread(target=watch, daemon=True, name="metallix-worker-parent-watch").start()
 
 
-def _worker_init(script_dir: str, module_names: list):
+def _parent_uname():
+    """The parent's platform.uname(), handed to each worker so its imports never have to query it."""
+    import platform
+    return platform.uname()
+
+
+def _adopt_parent_uname(uname) -> None:
+    """Seeds platform's per-process uname cache in a spawned worker.
+
+    Libraries imported during warm-up (numpy, scipy) call platform.uname(). On Windows it first asks WMI
+    and, when that fails (it does under heavy machine load), falls back to ``cmd /c ver`` through
+    subprocess. That WMI-failure -> subprocess path is what the WinError 6 / "Worker process died during
+    execution" flake correlated with (an audit hook showed a standard handle being flipped right after
+    the ``ver`` Popen, and a queue handle number then failing); the exact handle-closing site is not
+    confirmed. A seeded cache skips both WMI and ``ver``, so the whole path is removed from worker
+    start-up. The attribute is CPython-private; when it is absent this is a no-op.
+    """
+    import platform
+    if uname is not None and hasattr(platform, "_uname_cache"):
+        platform._uname_cache = uname
+
+
+def _worker_init(script_dir: str, module_names: list, uname=None):
     """Initializes each process pool worker by adding paths and pre-warming modules."""
+    _adopt_parent_uname(uname)  # before any import that may call platform.uname()
     _exit_when_parent_dies()
     if script_dir not in sys.path:
         sys.path.insert(0, script_dir)
@@ -742,7 +765,7 @@ class ConcurrentModuleRegistry:
                 max_workers=self.num_workers,
                 mp_context=_pool_mp_context(),
                 initializer=_worker_init,
-                initargs=(self.script_dir, WARM_MODULE_NAMES),
+                initargs=(self.script_dir, WARM_MODULE_NAMES, _parent_uname()),
             )
             sys.stderr.write(
                 f"[PersistentIPC] ProcessPoolExecutor initialized with {self.num_workers} warm worker processes.\n"
@@ -760,7 +783,7 @@ class ConcurrentModuleRegistry:
             max_workers=1,
             mp_context=_pool_mp_context(),
             initializer=_worker_init,
-            initargs=(self.script_dir, [name]),
+            initargs=(self.script_dir, [name], _parent_uname()),
         )
 
     def _affinity_lane(self, name: str) -> _AffinityLane:

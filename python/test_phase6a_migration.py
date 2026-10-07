@@ -319,6 +319,11 @@ class EnvelopeTest(unittest.TestCase):
         self.assertEqual(out["errorKind"], "internal")
 
 
+# A budget, not an expectation: a cold spawn worker imports numpy/scipy and 13 solvers, which took
+# 45 s+ on a machine saturated by parallel suites (the old 60 s ceiling then reported exit 124).
+POOL_JOB_TIMEOUT_MS = 300000
+
+
 class PersistentIpcRelayTest(unittest.TestCase):
     """The envelope and exit code 2 pass through persistent_ipc_service unchanged.
 
@@ -338,14 +343,55 @@ class PersistentIpcRelayTest(unittest.TestCase):
         own = ipc.ConcurrentModuleRegistry(ipc.SCRIPT_DIR, num_workers=1)
         try:
             res = own.execute_script("python/tafel_corrosion_rate_solver.py",
-                                     {"alloyId": "unobtainium-x"}, [], 60000)
+                                     {"alloyId": "unobtainium-x"}, [], POOL_JOB_TIMEOUT_MS)
             self.assertEqual(res["concurrency"], "process_pool")
             self._assert_envelope(res, "UNKNOWN_ALLOY")
-            res = own.execute_script("python/pourbaix_solver.py", {"element": "Xx"}, [], 60000)
+            res = own.execute_script("python/pourbaix_solver.py", {"element": "Xx"}, [], POOL_JOB_TIMEOUT_MS)
             self.assertEqual(res["concurrency"], "process_pool")
             self._assert_envelope(res, "UNKNOWN_ELEMENT")
         finally:
             own.shutdown()
+
+    def test_worker_start_never_shells_out_for_platform_info(self):
+        """Regression for the Windows 'Worker process died' flake (WinError 6 under heavy load).
+
+        platform.uname() falls back to ``cmd /c ver`` via subprocess when WMI fails; inside a spawn
+        worker that path correlated with a handle number the worker reuses for a queue semaphore.
+        _worker_init must seed the uname cache from the parent and both pools must hand it over, so
+        imports during warm-up cannot reach that fallback.
+        """
+        import platform
+        import subprocess
+        from unittest import mock
+        import persistent_ipc_service as ipc
+        # The seeding is a no-op without this CPython-private attribute: fail loudly, not silently.
+        self.assertTrue(hasattr(platform, "_uname_cache"), "platform._uname_cache gone; revisit the fix")
+        parent = ipc._parent_uname()
+        self.assertIsInstance(parent, platform.uname_result)
+
+        saved_cache = platform._uname_cache
+        saved_path = list(sys.path)
+        saved_mods = (ipc._worker_modules, ipc._worker_compiled_cache)
+        try:
+            platform._uname_cache = None
+            with mock.patch.object(subprocess, "Popen", side_effect=AssertionError("subprocess used")),                     mock.patch.object(platform, "_wmi_query", side_effect=OSError("WMI unavailable"), create=True),                     mock.patch.object(ipc, "_exit_when_parent_dies"):
+                ipc._worker_init(ipc.SCRIPT_DIR, [], parent)
+                self.assertEqual(platform.uname(), parent)
+        finally:
+            platform._uname_cache = saved_cache
+            sys.path[:] = saved_path
+            ipc._worker_modules, ipc._worker_compiled_cache = saved_mods
+
+        # Both pool constructors must pass the parent's uname as the third initarg.
+        with mock.patch.object(ipc, "ProcessPoolExecutor") as pool_cls:
+            reg = ipc.ConcurrentModuleRegistry(ipc.SCRIPT_DIR, num_workers=1)
+            reg._new_affinity_pool("pourbaix_solver")
+            kwargs_list = [c.kwargs for c in pool_cls.call_args_list]
+        self.assertGreaterEqual(len(kwargs_list), 2)
+        for kw in kwargs_list:
+            self.assertIs(kw["initializer"], ipc._worker_init)
+            self.assertEqual(len(kw["initargs"]), 3)
+            self.assertIsInstance(kw["initargs"][2], platform.uname_result)
 
     def _assert_envelope(self, res, code):
         self.assertEqual(res["exitCode"], 2, res.get("stderr"))
