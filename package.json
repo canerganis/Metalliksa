@@ -23,6 +23,8 @@
     "lpbf:calibration:check": "python -B python/tools/lpbf_calibration_fit.py --check",
     "lpbf:calibration:v2": "python -B python/tools/lpbf_calibration_fit_v2.py --table-cache .runtime/cache/lpbf_calib_table.json --jobs 12",
     "lpbf:calibration:v2:check": "python -B python/tools/lpbf_calibration_fit_v2.py --check",
+    "lpbf:bands": "python -B python/tools/lpbf_error_bands.py",
+    "lpbf:bands:check": "python -B python/tools/lpbf_error_bands.py --check",
     "test:meltpool": "python python/test_eagar_tsai.py && python python/test_goldak_fabbro.py && python python/test_lpbf_meltpool_accuracy.py"
   },
   "dependencies": {

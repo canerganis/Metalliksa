@@ -36,6 +36,7 @@ import { BuildJobKineticsPanel } from "./BuildJobKineticsPanel";
 import { BuildJobMicrostructurePanel } from "./BuildJobMicrostructurePanel";
 import { stressProxyYieldCheck } from "../../utils/residualStressYieldCheck";
 import { peakTemperatureBasisLabel } from "../../utils/peakTemperatureDisplay";
+import { PublishedTrackBands } from "../PublishedTrackBands";
 
 interface Props {
   onOpenSlicer?: () => void;
@@ -623,6 +624,7 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
         </div>
       )}
       {thermal && <MeltPoolExtentNotice geometry={thermal.meltPoolGeometry} />}
+      {thermal && <PublishedTrackBands thermal={thermal} />}
 
       {job?.porosity && (
         <div className="rounded-2xl border border-violet-500/30 bg-[#090e18] p-3.5 grid grid-cols-2 md:grid-cols-4 gap-4">

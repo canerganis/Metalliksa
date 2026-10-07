@@ -18,7 +18,7 @@ sys.path.insert(0, str(PYTHON_DIR))
 
 import lpbf_simulation  # noqa: E402
 
-FORBIDDEN_IMPORT_PREFIXES = ("lpbf_calibration", "lpbf_calibrated_meltpool", "calibration_synth_support")
+FORBIDDEN_IMPORT_PREFIXES = ("lpbf_calibration", "lpbf_calibrated_meltpool", "calibration_synth_support", "lpbf_error_bands")
 # Explicit base: the frozen files are compared against the merge-base with this ref, never against an implicit HEAD^.
 # Candidates are tried in order; CI only has refs/remotes/origin/*. origin/main is deliberately not a fallback: until
 # the physics work is merged it is an unrelated older base and would flag that work's own frozen-file changes.
