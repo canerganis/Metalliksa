@@ -33,8 +33,8 @@ test("available (IN718): label chip as text, k with citation, Nb band, risk clas
   assert.match(markup, /data-seg-label/);
   assert.ok(t.includes(block.evidenceLabel), t);
   assert.ok(block.evidenceLabel.startsWith(LABEL_PREFIX));
-  assert.ok(t.includes("k Nb = 0.46"), t);
-  assert.ok(t.includes("DuPont, C.V. Robino, A.R. Marder") && t.includes("Table 3"), t);
+  assert.ok(t.includes("k Nb = 0.45"), t);
+  assert.ok(t.includes("DuPont, C.V. Robino, A.R. Marder") && t.includes("Table 2"), t);
   // Nb band rows min / nominal / max with Python's fractions (%, one decimal).
   for (const p of block.band) {
     assert.match(markup, new RegExp(`data-seg-band-row="${p.label}"`));
@@ -43,7 +43,7 @@ test("available (IN718): label chip as text, k with citation, Nb band, risk clas
   }
   assert.ok(t.includes("upper bound"), t);
   assert.ok(t.includes(`Laves risk class: ${block.riskClass}`), t);
-  assert.ok(t.includes("core k·C 0 = 0.46"), t);
+  assert.ok(t.includes("core k·C 0 = 0.45"), t);
   assert.ok(t.includes("capped at the γ/Laves composition"), t);
   // Process coupling: G, R and morphology copied from the build job's microstructure block.
   assert.match(markup, /data-seg-coupling="available"/);
@@ -56,7 +56,7 @@ test("available (IN718): label chip as text, k with citation, Nb band, risk clas
   for (const r of block.validity.outsideSourceCompositionReasons) assert.ok(t.includes(r), r);
   assert.match(markup, /data-seg-upper-bound/);
   assert.ok(t.includes(block.upperBoundNote), t);
-  // The source's own measurements disagree with the model in both directions (D97 Fig. 9b): shown next to it.
+  // The source's own measurements disagree with the model in both directions (D97 Fig. 9b, conference paper): shown next to it.
   assert.match(markup, /data-seg-source-agreement/);
   assert.ok(t.includes(block.sourceAgreementNote) && block.sourceAgreementNote.includes("Fig. 9b"), t);
   assert.ok(t.includes("binary; model upper bound over C only"), t);

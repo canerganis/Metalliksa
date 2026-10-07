@@ -645,8 +645,9 @@ def main():
         "lpbf-build-job-flat-absorptivity-peak-extent-v10",
         "lpbf-build-job-waveb-front-field-marangoni-v11",
         "lpbf-build-job-eagar-tsai-balling-screen-v13",
+        "lpbf-build-job-eagar-tsai-balling-screen-v14",
     ), BUILD_JOB_SOLVER_REVISION
-    assert BUILD_JOB_SOLVER_REVISION == "lpbf-build-job-eagar-tsai-balling-screen-v14"
+    assert BUILD_JOB_SOLVER_REVISION == "lpbf-build-job-eagar-tsai-balling-screen-v15"
     assert ti["processSeed"] == 42
     assert ti["scanStrategy"]["id"] == "stripe"
     assert ti["uq"] is None  # lazy default

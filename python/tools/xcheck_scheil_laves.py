@@ -3,7 +3,7 @@
 
 Analysis script only. Not used by the app, not a test dependency, not run in CI. It changes no
 solver, catalogue, golden or evidence label. Both columns are calculations:
-  * "literature" = python/lpbf_solidification_segregation.py (DuPont, Robino & Marder 1997
+  * "literature" = python/lpbf_solidification_segregation.py (DuPont, Robino & Marder 1998
     pseudo-ternary gamma-Nb-C model, Literature estimate (screening));
   * "pycalphad"  = calphad_solver.scheil_gulliver on a TDB the user supplies with --tdb (there is
     NO default path; the repaired MatCalc mc_ni database is held outside git, see
@@ -109,7 +109,7 @@ def literature(c_wt: float) -> Dict[str, Any]:
         f = seg.scheil_eutectic_fraction(nb, ni["C_Nb_laves"]["value"], ni["k_gamma_Nb"]["value"])
         return {"model": "binary gamma-Nb Scheil (upper bound)", "Nb_wt": nb, "C_wt": 0.0, "fGammaLavesConstituent": round(f, 4)}
     r = seg.pseudo_ternary_path(nb, c_wt, ni)
-    return {"model": "D97 pseudo-ternary", "Nb_wt": nb, "C_wt": c_wt, "fGammaLavesConstituent": round(r["fGammaLavesConstituent"], 4),
+    return {"model": "D98 pseudo-ternary", "Nb_wt": nb, "C_wt": c_wt, "fGammaLavesConstituent": round(r["fGammaLavesConstituent"], 4),
             "fGammaNbCConstituent": round(r["fGammaNbCConstituent"], 4)}
 
 
@@ -123,7 +123,7 @@ STEP0 = """## Step 0: database decision (recorded before modelling)
 - `docs/XCHECK_SUPERALLOY_TABLE.md`: its Scheil path completes for IN718 but is incomplete for IN625 (equilibrium not
   converged, 4.2 % liquid left at 1170 degC).
 - Decision: the shipped path is the published closed-form model (`python/lpbf_solidification_segregation.py`,
-  DuPont, Robino & Marder 1997, SAND97-1669C, Literature estimate (screening)). pycalphad Scheil on `mc_ni` is this
+  DuPont, Robino & Marder 1998, Acta Mater 46 (1998) 4781 Table 2, Literature estimate (screening)). pycalphad Scheil on `mc_ni` is this
   optional local cross-check only: never a default path, never in CI, never in the app. `mc_ni` was not added to the
   catalogue and `calphad_solver.py` was not edited.
 """
@@ -145,7 +145,7 @@ def render_md(result: Dict[str, Any]) -> str:
         "## Run",
         "",
         f"- TDB: `{result['tdbName']}` (sha256 `{result['tdbSha256'][:12]}...`), pycalphad {result['pycalphad']}",
-        "- Literature side: `lpbf_solidification_segregation` (DuPont, Robino & Marder 1997, Literature estimate "
+        "- Literature side: `lpbf_solidification_segregation` (DuPont, Robino & Marder 1998, Literature estimate "
         "(screening)); fractions of the liquid, mass basis; C = 0 is the binary upper bound, C = 0.08 the pseudo-ternary "
         "model at the specification maximum.",
         "- pycalphad side: `calphad_solver.scheil_gulliver`; phase amounts in moles of atoms. Indicative comparison only.",

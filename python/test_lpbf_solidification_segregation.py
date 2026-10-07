@@ -16,7 +16,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import lpbf_solidification_segregation as seg  # noqa: E402
 
-NI = seg.CONSTANTS["ni-base"]
+NI = seg.CONSTANTS["ni-base-d97"]  # the 1997 conference constants: the D97 reproduction tests use them explicitly
+NI_D98 = seg.CONSTANTS["ni-base"]  # the shipped IN718 set (D98 Table 2)
 
 
 def _micro(status, **extra):
@@ -68,6 +69,46 @@ class ScheilIdentities(unittest.TestCase):
                 seg.scheil_eutectic_fraction(bad, 23.1, 0.46)
         with self.assertRaises(seg.SegregationModelError):
             seg.scheil_liquid_composition(5.0, 0.46, 1.0)
+
+
+class D98Constants(unittest.TestCase):
+    """The shipped IN718 constant sets are DuPont, Robino & Marder, Acta Mater 46 (1998) 4781, Table 2."""
+
+    def test_table_2_values_and_provenance(self):
+        ni, fe = seg.CONSTANTS["ni-base"], seg.CONSTANTS["fe-base"]
+        expected_ni = {"k_gamma_Nb": 0.45, "k_gamma_C": 0.21, "a_wtC": 1.13, "b_wtC_per_wtNb": -0.047,
+                       "C_Nb_laves": 23.1, "C_C_laves": 0.04, "C_NbC_Nb": 90.5, "C_NbC_C": 9.5}
+        expected_fe = {"k_gamma_Nb": 0.25, "k_gamma_C": 0.21, "a_wtC": 1.37, "b_wtC_per_wtNb": -0.065,
+                       "C_Nb_laves": 20.4, "C_C_laves": 0.04, "C_NbC_Nb": 90.5, "C_NbC_C": 9.5}
+        for cset, expected in ((ni, expected_ni), (fe, expected_fe)):
+            self.assertEqual({k: v["value"] for k, v in cset.items()}, expected)
+            for entry in cset.values():
+                self.assertEqual(entry["source"], "D98")
+                self.assertIn("D98 Table 2", entry["locator"])
+        self.assertIn("10.1016/S1359-6454(98)00123-2", seg.SOURCES["D98"]["citation"])
+        # the D97 sets stay available, cited to D97, with the 1997 values
+        self.assertEqual(seg.CONSTANTS["ni-base-d97"]["k_gamma_Nb"]["value"], 0.46)
+        self.assertEqual(seg.CONSTANTS["fe-base-d97"]["a_wtC"]["value"], 1.24)
+        self.assertTrue(all(e["source"] == "D97" for e in seg.CONSTANTS["ni-base-d97"].values()))
+
+    def test_shipped_in718_numbers_are_the_d98_values(self):
+        b = seg.segregation_estimate("in718", _micro("available"))
+        self.assertEqual(b["source"], seg.SOURCES["D98"])
+        self.assertEqual(b["k_Nb"]["value"], 0.45)
+        binary = [p["binaryUpperBound"]["fGammaLavesConstituent"] for p in b["band"]]
+        for got, want in zip(binary, (0.0564, 0.0647, 0.0736)):
+            self.assertAlmostEqual(got, want, delta=5e-4)
+        tern = [p["pseudoTernaryAtCmax"]["fGammaLavesConstituent"] for p in b["band"]]
+        self.assertEqual(b["band"][0]["pseudoTernaryAtCmax"]["C_wt"], 0.08)
+        for got, want in zip(tern, (0.0198, 0.0282, 0.0372)):
+            self.assertAlmostEqual(got, want, delta=5e-4)
+
+    def test_d98_class_ii_point_lies_near_the_regressed_line(self):
+        # a + b * 23.1 = 0.0443 wt% C against the tabulated 0.04 (D97 constants: 0.056 against 0.03)
+        c = seg.CONSTANTS["ni-base"]
+        line = c["a_wtC"]["value"] + c["b_wtC_per_wtNb"]["value"] * c["C_Nb_laves"]["value"]
+        self.assertAlmostEqual(line, 0.0443, delta=1e-4)
+        self.assertLess(abs(line - c["C_C_laves"]["value"]), 0.005)
 
 
 class PseudoTernaryD97(unittest.TestCase):
@@ -172,7 +213,7 @@ class AlloyStatus(unittest.TestCase):
         self.assertEqual(lav, sorted(lav))
         for p in b["band"]:
             self.assertLessEqual(p["pseudoTernaryAtCmax"]["fGammaLavesConstituent"], p["binaryUpperBound"]["fGammaLavesConstituent"])
-        self.assertEqual(b["k_Nb"]["value"], 0.46)
+        self.assertEqual(b["k_Nb"]["value"], 0.45)
         self.assertIn("Table", b["k_Nb"]["locator"])
         self.assertEqual(b["riskClass"], "eutectic Laves expected (Scheil)")
         v = b["validity"]
@@ -182,7 +223,7 @@ class AlloyStatus(unittest.TestCase):
         self.assertIn("upper bound", b["upperBoundNote"].lower())
         self.assertIn("back-diffusion", b["upperBoundNote"])
         seg_ratio = b["segregation"]
-        self.assertEqual(seg_ratio["coreRatioToNominal"], 0.46)
+        self.assertEqual(seg_ratio["coreRatioToNominal"], 0.45)
         self.assertTrue(all(r["ratioToNominal"] > 1.0 for r in seg_ratio["interdendritic"]))
         json.dumps(b, allow_nan=False)
 
@@ -217,10 +258,20 @@ class AlloyStatus(unittest.TestCase):
         self.assertFalse(any(r.startswith("Fe") for r in inside["outsideSourceCompositionReasons"]))
 
     def test_in718_output_unchanged_by_the_in625_branch(self):
-        # sha256 of the in718 block as produced on main d8d6e6f5 (before the D96 alloy 625 branch was added).
+        # sha256 of the in718 block with the D98 Table 2 constants (re-pinned deliberately when the source switched
+        # from the D97 conference values; the previous pin 489d0b83... was the D97-constant output).
         b = seg.segregation_estimate("in718", _micro("available"))
         digest = hashlib.sha256(json.dumps(b, sort_keys=True, allow_nan=False).encode()).hexdigest()
-        self.assertEqual(digest, "489d0b837ce12ae5432339390a61acd18118e6dec39277558ac2b3667f676ce5")
+        self.assertEqual(digest, "e0b46e9f72c55a4166c620acd77c9b06a58c14039114a373d54e4cd539510f8c")
+
+    def test_in625_output_unchanged_by_the_d98_switch(self):
+        # sha256 of the in625 block as produced on main 9f5c4e72 (D97 constants for IN718); in625 uses its own
+        # constant sets (C88 / D96), so the D98 switch must not move it.
+        for micro, pin in ((_micro("available"), "11209258f4d5909c87912420b147f288db44ed146aae48dd3604db82af70a798"),
+                           (None, "5a1cf4c183db7a4f7c5fb98ebd6e60cb60078693cf01176eb7370698ad34f4dc")):
+            b = seg.segregation_estimate("in625", micro)
+            digest = hashlib.sha256(json.dumps(b, sort_keys=True, allow_nan=False).encode()).hexdigest()
+            self.assertEqual(digest, pin)
 
     def test_in625_unverified_constant_gives_unavailable(self):
         patched = copy.deepcopy(seg.CONSTANTS)

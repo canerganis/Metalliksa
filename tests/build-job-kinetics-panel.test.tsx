@@ -39,7 +39,8 @@ test("TS and Python build-job solver revisions are the same string", () => {
   assert.notEqual(BUILD_JOB_SOLVER_REVISION, "lpbf-build-job-waveb-front-field-marangoni-v11");
   assert.notEqual(BUILD_JOB_SOLVER_REVISION, "lpbf-build-job-eagar-tsai-balling-screen-v12");
   assert.notEqual(BUILD_JOB_SOLVER_REVISION, "lpbf-build-job-eagar-tsai-balling-screen-v13");
-  assert.equal(BUILD_JOB_SOLVER_REVISION, "lpbf-build-job-eagar-tsai-balling-screen-v14");
+  assert.notEqual(BUILD_JOB_SOLVER_REVISION, "lpbf-build-job-eagar-tsai-balling-screen-v14");
+  assert.equal(BUILD_JOB_SOLVER_REVISION, "lpbf-build-job-eagar-tsai-balling-screen-v15");
 });
 
 test("316L and AlSi10Mg: one Unavailable tile with the reason, no numbers, no substituted alloy", () => {

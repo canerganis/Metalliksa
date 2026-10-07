@@ -9,8 +9,15 @@ read for this module:
         superalloys", Superalloys 718, 625, 706 and Derivatives (TMS, Pittsburgh PA,
         June 15-18 1997); Sandia report SAND97-1669C / CONF-970605-3, OSTI 515586.
 
-The journal versions of the same model (Acta Mater 46 (1998) 4781-4790; Weld J 77 (1998)
-417s-431s) were NOT read here; no constant is taken from them.
+  [D98] J.N. DuPont, C.V. Robino, A.R. Marder, "Modeling solute redistribution and microstructural
+        development in fusion welds of Nb-bearing superalloys", Acta Materialia 46 (1998) 4781-4790,
+        doi:10.1016/S1359-6454(98)00123-2 (refereed journal version of the same model).
+
+The solidification constants (k_Nb, k_C, a, b, class II point) are those of [D98] Table 2, read in full
+(maintainer decision: refereed journal constants, not the 1997 conference values; they differ, see
+docs/LPBF_SCHEIL_LAVES_2026-10-07.md). The equations below are the same in both papers: [D97] Eqs. 1-8 are
+[D98] Section 3.2 (negligible Nb diffusion, infinitely fast C diffusion: Eqs. 13c, 14, 2, 4, 21, and 12 for the
+forward step). The Weld J 77 (1998) 417s-431s version was NOT read.
 
 Alloy 625 uses a separate, smaller model (binary gamma-Nb Scheil only, D96 Eq. 5
 f_e = (C_e / C_0) ** (1 / (k - 1))) from two sources, both read in full:
@@ -28,7 +35,7 @@ f_e = (C_e / C_0) ** (1 / (k - 1))) from two sources, both read in full:
   phase identity of the terminal constituent (Laves or NbC) is not established. The IN625 Nb band uses
   the Special Metals INCONEL alloy 625 bulletin, Table 1.
 
-Model ([D97] Eqs. 1-8):
+Model ([D97] Eqs. 1-8 = [D98] Eqs. 13c, 14, 2, 4, 21, 12):
   * Primary L -> gamma. Nb: Scheil, no diffusion in the solid (Eq. 1)
         f_l = (C_l,Nb / C_0,Nb) ** (1 / (k_Nb - 1)).
     C: equilibrium lever rule, fast diffusion in the solid (Eq. 2). Solidification path Eq. 3.
@@ -38,8 +45,9 @@ Model ([D97] Eqs. 1-8):
     Eq. 8 in C_l,Nb. NbC is stoichiometric at 90.5 wt% Nb / 9.5 wt% C, k_NbC,Nb = 90.5 / C_l,Nb.
   * When C_l,Nb reaches the class II point C_Nb,L->(gamma+Laves) the remaining liquid is reported
     as gamma/Laves eutectic-type constituent ([D97] text after Eq. 8). The tabulated class II
-    point (23.1 wt% Nb, 0.03 wt% C for the Ni-base set) does not lie exactly on the regressed
-    line (a + b * 23.1 = 0.056 wt% C); this module stops on the Nb coordinate and says so.
+    point (23.1 wt% Nb, 0.04 wt% C for the D98 Ni-base set) does not lie exactly on the regressed
+    line (a + b * 23.1 = 0.044 wt% C; 0.056 with the D97 constants); this module stops on the Nb coordinate
+    and says so.
   * C = 0 limit: the gamma-Nb binary Scheil result f_e = (C_e / C_0) ** (1 / (k - 1)) with
     C_e = C_Nb,L->(gamma+Laves). Carbon ties Nb up as NbC, so the binary value is an upper bound
     on the Laves fraction within this model (stated in the output).
@@ -65,7 +73,7 @@ MODEL_ID = "dupont1997-pseudo-ternary-gamma-nb-c-v1"
 
 EVIDENCE_LABEL = (
     "Literature estimate (screening): Scheil-type pseudo-ternary gamma-Nb-C model, constants from "
-    "DuPont, Robino & Marder 1997 (GTA welds of experimental alloys); not CALPHAD; LPBF is outside "
+    "DuPont, Robino & Marder 1998 (GTA welds of experimental alloys); not CALPHAD; LPBF is outside "
     "the source regime"
 )
 
@@ -77,6 +85,16 @@ SOURCES: Dict[str, Dict[str, Any]] = {
         "url": "https://www.osti.gov/biblio/515586",
         "read": True,
         "note": "full text (scanned report, OSTI servlets/purl/515586) read for this module",
+    },
+    "D98": {
+        "citation": ("J.N. DuPont, C.V. Robino, A.R. Marder, 'Modeling solute redistribution and microstructural "
+                     "development in fusion welds of Nb-bearing superalloys', Acta Materialia 46 (1998) 4781-4790, "
+                     "doi:10.1016/S1359-6454(98)00123-2"),
+        "url": "https://doi.org/10.1016/S1359-6454(98)00123-2",
+        "read": True,
+        "note": ("full text (journal article) read for this module; Table 2 gives the solidification constants used "
+                 "here. Its Section 3.2 (negligible Nb diffusion / infinitely fast C diffusion, Eqs. 13-21) is the "
+                 "same model as the equations implemented here (D97 Eqs. 1-8)"),
     },
     "SMC045": {
         "citation": ("Special Metals Corporation, INCONEL alloy 718 technical bulletin, Publication Number SMC-045 "
@@ -117,10 +135,33 @@ def _c(value, unit, source, locator, verified=True):
     return {"value": value, "unit": unit, "source": source, "locator": locator, "verified": verified}
 
 
-# Constant sets of [D97]. "ni-base" (Fe about 10-11 wt%) is the primary set; "fe-base" (Fe about
-# 44-47 wt%) is reported for IN718 only as a bracketing sensitivity, never interpolated.
+# Constant sets of [D98] Table 2 (refereed journal version of the [D97] conference paper; the maintainer
+# decision is to use the journal constants). "ni-base" (Fe about 10-11 wt%) is the primary set; "fe-base" (Fe about
+# 44-47 wt%) is reported for IN718 only as a bracketing sensitivity, never interpolated. NbC stoichiometry is also
+# printed in D98 (Table 2 and text after Eq. 11, 90.5 wt% Nb / 9.5 wt% C, identical to D97) and is cited to D98.
 CONSTANTS: Dict[str, Dict[str, Dict[str, Any]]] = {
     "ni-base": {
+        "k_gamma_Nb": _c(0.45, "-", "D98", "D98 Table 2 (k_gamma,Nb, Ni base alloys)"),
+        "k_gamma_C": _c(0.21, "-", "D98", "D98 Table 2 (k_gamma,C, Ni base alloys)"),
+        "a_wtC": _c(1.13, "wt% C", "D98", "D98 Table 2 (a, Ni base alloys); Eq. 2"),
+        "b_wtC_per_wtNb": _c(-0.047, "wt% C / wt% Nb", "D98", "D98 Table 2 (b, Ni base alloys); Eq. 2"),
+        "C_Nb_laves": _c(23.1, "wt% Nb", "D98", "D98 Table 2 (C_Nb,L->(gamma+Laves), Ni base alloys)"),
+        "C_C_laves": _c(0.04, "wt% C", "D98", "D98 Table 2 (C_C,L->(gamma+Laves), Ni base alloys)"),
+        "C_NbC_Nb": _c(90.5, "wt% Nb", "D98", "D98 Table 2 (C_NbC,Nb); text after Eq. 11"),
+        "C_NbC_C": _c(9.5, "wt% C", "D98", "D98 Table 2 (C_NbC,C); text after Eq. 11"),
+    },
+    "fe-base": {
+        "k_gamma_Nb": _c(0.25, "-", "D98", "D98 Table 2 (k_gamma,Nb, Fe base alloys)"),
+        "k_gamma_C": _c(0.21, "-", "D98", "D98 Table 2 (k_gamma,C, Fe base alloys)"),
+        "a_wtC": _c(1.37, "wt% C", "D98", "D98 Table 2 (a, Fe base alloys); Eq. 2"),
+        "b_wtC_per_wtNb": _c(-0.065, "wt% C / wt% Nb", "D98", "D98 Table 2 (b, Fe base alloys); Eq. 2"),
+        "C_Nb_laves": _c(20.4, "wt% Nb", "D98", "D98 Table 2 (C_Nb,L->(gamma+Laves), Fe base alloys)"),
+        "C_C_laves": _c(0.04, "wt% C", "D98", "D98 Table 2 (C_C,L->(gamma+Laves), Fe base alloys)"),
+        "C_NbC_Nb": _c(90.5, "wt% Nb", "D98", "D98 Table 2 (C_NbC,Nb); text after Eq. 11"),
+        "C_NbC_C": _c(9.5, "wt% C", "D98", "D98 Table 2 (C_NbC,C); text after Eq. 11"),
+    },
+    # [D97] constant sets (1997 conference values), kept only so the 1997 worked example can be reproduced.
+    "ni-base-d97": {
         "k_gamma_Nb": _c(0.46, "-", "D97", "Table 2 (Ni-Base) and Table 3 (k_gamma,Nb, Ni Base Alloys)"),
         "k_gamma_C": _c(0.27, "-", "D97", "Table 2 (Ni-Base) and Table 3 (k_gamma,C, Ni Base Alloys)"),
         "a_wtC": _c(0.98, "wt% C", "D97", "Table 3 (a, Ni Base Alloys); Eq. 4"),
@@ -130,7 +171,7 @@ CONSTANTS: Dict[str, Dict[str, Dict[str, Any]]] = {
         "C_NbC_Nb": _c(90.5, "wt% Nb", "D97", "text after Eq. 7 (NbC stoichiometric, 90.5 wt% Nb)"),
         "C_NbC_C": _c(9.5, "wt% C", "D97", "text after Eq. 7 (NbC stoichiometric, 9.5 wt% C)"),
     },
-    "fe-base": {
+    "fe-base-d97": {
         "k_gamma_Nb": _c(0.25, "-", "D97", "Table 2 (Fe-Base) and Table 3 (k_gamma,Nb, Fe Base Alloys)"),
         "k_gamma_C": _c(0.27, "-", "D97", "Table 2 (Fe-Base, footnote: estimated from the Ni base alloy data); "
                                           "Table 3"),
@@ -187,7 +228,8 @@ COMPOSITION_LIMITS: Dict[str, Dict[str, Any]] = {
     },
 }
 
-# Composition range of the source experiments ([D97] Table 1, wt%), per constant set.
+# Composition range of the source experiments ([D97] Table 1, wt%), per constant set (the same alloys as [D98]
+# Table 1; the ranges were transcribed from D97 and are kept with that locator).
 SOURCE_COMPOSITION_RANGE: Dict[str, Dict[str, Any]] = {
     "ni-base": {
         "locator": "D97 Table 1, alloys 1-8 (Ni base)",
@@ -476,7 +518,7 @@ def _validity(alloy_id: str, spec_info: Dict[str, Any], set_id: str) -> Dict[str
         "outsideSourceRegime": True,
         "outsideSourceRegimeReason": ("LPBF is not among the source processes (GTA welds, DTA samples); the k values "
                                       "and the Scheil assumption were not established at LPBF solidification rates"),
-        "kTransferNote": ("D97 reports k_Nb = 0.46 for its Ni base alloys (Fe about 11 wt%) and 0.25 for its Fe base "
+        "kTransferNote": ("D98 reports k_Nb = 0.45 for its Ni base alloys (Fe about 11 wt%) and 0.25 for its Fe base "
                           "alloys (Fe about 45 wt%) and attributes the drop to Fe. The source gives no k_Nb(Fe) relation "
                           "here, so no interpolation is made; the Fe-base result is shown as a bracketing sensitivity."),
     }
@@ -511,7 +553,7 @@ def _constants_view(set_id: str) -> Dict[str, Any]:
 
 
 def segregation_estimate(alloy_id: str, microstructure: Optional[Mapping[str, Any]] = None) -> Dict[str, Any]:
-    """Segregation block for one alloy id. in718: D97 pseudo-ternary; in625: D96 binary Scheil; others n/a."""
+    """Segregation block for one alloy id. in718: D98 pseudo-ternary; in625: D96 binary Scheil; others n/a."""
     aid = str(alloy_id or "").strip().lower()
     if aid not in NB_ALLOYS:
         return _unavailable(aid, NOT_APPLICABLE_REASON, status="not-applicable")
@@ -533,20 +575,20 @@ def segregation_estimate(alloy_id: str, microstructure: Optional[Mapping[str, An
         "status": "available",
         "alloyId": aid,
         "evidenceLabel": EVIDENCE_LABEL,
-        "source": SOURCES["D97"],
+        "source": SOURCES["D98"],
         "constantSet": set_id,
         "constants": _constants_view(set_id),
         "k_Nb": {"value": CONSTANTS[set_id]["k_gamma_Nb"]["value"],
-                 "citation": SOURCES["D97"]["citation"], "locator": CONSTANTS[set_id]["k_gamma_Nb"]["locator"]},
+                 "citation": SOURCES["D98"]["citation"], "locator": CONSTANTS[set_id]["k_gamma_Nb"]["locator"]},
         "composition": spec_info,
         "band": points,
         "bandNote": ("gamma/Laves constituent fraction at C = 0 (binary; model upper bound over C only) and at the "
-                     "specification maximum C with the pseudo-ternary model; fractions are of the liquid, which D97 "
+                     "specification maximum C with the pseudo-ternary model; fractions are of the liquid, which D98 "
                      "compares with measured volume %"),
         "quantity": QUANTITY_NOTE,
         "feBaseSensitivity": {"constantSet": "fe-base", "constants": _constants_view("fe-base"),
                               "point": sensitivity,
-                              "note": "bracketing sensitivity with the D97 Fe-base constants; not an interpolation"},
+                              "note": "bracketing sensitivity with the D98 Fe-base constants; not an interpolation"},
         "segregation": ratios,
         "riskClass": laves_risk_class(1.0 if any_laves else 0.0),
         "riskClassRule": ("gamma/Laves constituent > 0 at any band point under the Scheil-type model; no fitted "
@@ -561,8 +603,8 @@ def segregation_estimate(alloy_id: str, microstructure: Optional[Mapping[str, An
         "notModelled": ["solid-state back-diffusion of Nb", "solute trapping (no kinetic constant is introduced)",
                         "dendrite-tip undercooling", "Mo, Ti, Al and Si effects on the Laves reaction",
                         "mechanical consequences of Laves"],
-        "classIINote": ("D97 Table 3 class II point (C_Nb, C_C) is not exactly on the regressed gamma/NbC line "
-                        "(a + b * C_Nb gives about 0.056 wt% C at 23.1 wt% Nb); the eutectic-type integration stops "
+        "classIINote": ("D98 Table 2 class II point (C_Nb, C_C) is not exactly on the regressed gamma/NbC line "
+                        "(a + b * C_Nb gives about 0.044 wt% C at 23.1 wt% Nb, against 0.04 tabulated); the eutectic-type integration stops "
                         "when C_l,Nb reaches C_Nb,L->(gamma+Laves)."),
         "validity": _validity(aid, spec_info, set_id),
     }

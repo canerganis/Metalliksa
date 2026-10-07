@@ -2,7 +2,7 @@ import React from "react";
 import { FlaskConical } from "lucide-react";
 
 // Build-job Nb segregation / terminal gamma-Laves screening (python/lpbf_solidification_segregation.py
-// build_job_segregation). Python decides everything: status "available" (IN718: DuPont, Robino & Marder 1997
+// build_job_segregation). Python decides everything: status "available" (IN718: DuPont, Robino & Marder 1998 (Acta Mater 46, Table 2)
 // pseudo-ternary model; IN625: binary Scheil, k_Nb Cieslak 1988, C_e DuPont 1996, no risk class; both
 // Literature estimate (screening)), "unavailable" (reason only, e.g. constants not verified
 // against a primary source) or "not-applicable" (no Nb-bearing gamma/Laves model for the alloy). This panel only
