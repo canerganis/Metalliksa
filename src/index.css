@@ -435,6 +435,30 @@ html { scroll-padding-top: calc(var(--mk-header-h) + 0.5rem); }
   background-size: 250% 100%;
   background-position: 160% 0;
 }
+/* Core flow (numbered by its own markup, not by the mk-ws counter) and the collapsible Labs group. */
+.mk-nav-core-head, .mk-nav-labs-toggle {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+  padding: 0.25rem 0.25rem;
+  font-family: var(--mk-font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mk-text-dim);
+}
+.mk-nav-core-head { color: var(--mk-ice); }
+.mk-nav-labs-toggle { margin-bottom: 0.75rem; border-radius: 8px; text-align: left; }
+.mk-nav-labs-toggle:hover { color: var(--mk-text); }
+.mk-nav-labs-caret { width: 1em; text-align: center; }
+.mk-nav-core-item { padding-left: 2.4rem; }
+.mk-nav-num { position: absolute; left: 0.75rem; top: 0.55rem; font-family: var(--mk-font-mono); font-size: 11px; line-height: 1.4; color: var(--mk-text-faint); }
+.mk-nav-core-item.is-active .mk-nav-num { color: var(--mk-laser); }
+.mk-nav-core-item.is-active::before { display: none; }
+.mk-nav-labs-toggle:focus-visible, .mk-nav-item:focus-visible, .mk-nav-ws:focus-visible { outline: 2px solid var(--mk-ice); outline-offset: 2px; }
 .mk-nav-home { font-family: var(--mk-font-mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; }
 .is-home .mk-nav .mk-nav-item.is-active, .is-home nav .mk-nav-item.is-active { background: transparent; box-shadow: none; font-weight: 400; }
 .is-home nav .mk-nav-item.is-active::before { display: none; }

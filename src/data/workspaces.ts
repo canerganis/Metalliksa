@@ -26,6 +26,18 @@ export const MODULES: readonly NavigationModule[] = LISTED_CONTRACTS.map(contrac
   id: contract.id, workspace: contract.workspace, label: contract.label,
   scope: contract.maturity, description: contract.description, next: contract.next,
 }));
+
+/** The flagship LPBF screening flow, in flow order. Labels always come from the registry (MODULES). */
+export const CORE_MODULE_IDS: readonly ModuleId[] = ['3d-distortion-lab', 'lpbf-optimizer', 'lpbf-dataset-comparison', 'lpbf-calibration-scorecard'];
+export const CORE_FLOW: readonly { readonly id: ModuleId; readonly verb: string }[] = [
+  { id: '3d-distortion-lab', verb: 'Set up and run' },
+  { id: 'lpbf-optimizer', verb: 'Screen the process window' },
+  { id: 'lpbf-dataset-comparison', verb: 'Compare with published data' },
+  { id: 'lpbf-calibration-scorecard', verb: 'Check the scorecard' },
+];
+export function isCoreModule(id: string): boolean { return CORE_MODULE_IDS.some(core => core === id); }
+/** Every listed module that is not part of the core flow (shown under "Labs"). Registry order. */
+export const LAB_MODULES: readonly NavigationModule[] = MODULES.filter(module => !isCoreModule(module.id));
 export function isModuleId(value: unknown): value is ModuleId {
   return typeof value === 'string' && MODULES.some(module => module.id === value);
 }
