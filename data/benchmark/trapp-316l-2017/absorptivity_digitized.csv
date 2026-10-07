@@ -1,0 +1,108 @@
+series,material,surface,speed_mm_s,power_W,absorptivity,read_uncertainty_power_W,read_uncertainty_absorptivity,flag,locator,digitized
+316L-disc-v100,316L Stainless Steel,bare disc,100,32,0.264,0.5,0.005,,Fig. 6(a) black squares (316L Disc 100 mm/s),true
+316L-disc-v100,316L Stainless Steel,bare disc,100,37,0.257,0.5,0.005,,Fig. 6(a) black squares (316L Disc 100 mm/s),true
+316L-disc-v100,316L Stainless Steel,bare disc,100,41,0.258,0.5,0.005,,Fig. 6(a) black squares (316L Disc 100 mm/s),true
+316L-disc-v100,316L Stainless Steel,bare disc,100,45,0.253,0.5,0.005,,Fig. 6(a) black squares (316L Disc 100 mm/s),true
+316L-disc-v100,316L Stainless Steel,bare disc,100,48,0.257,0.5,0.005,,Fig. 6(a) black squares (316L Disc 100 mm/s),true
+316L-disc-v100,316L Stainless Steel,bare disc,100,53,0.277,0.5,0.005,,Fig. 6(a) black squares (316L Disc 100 mm/s),true
+316L-disc-v100,316L Stainless Steel,bare disc,100,57,0.288,0.5,0.005,,Fig. 6(a) black squares (316L Disc 100 mm/s),true
+316L-disc-v100,316L Stainless Steel,bare disc,100,61,0.315,0.5,0.005,,Fig. 6(a) black squares (316L Disc 100 mm/s),true
+316L-disc-v100,316L Stainless Steel,bare disc,100,66,0.354,0.5,0.005,,Fig. 6(a) black squares (316L Disc 100 mm/s),true
+316L-disc-v100,316L Stainless Steel,bare disc,100,83,0.665,0.5,0.005,,Fig. 6(a) black squares (316L Disc 100 mm/s),true
+316L-disc-v100,316L Stainless Steel,bare disc,100,100,0.739,0.5,0.005,,Fig. 6(a) black squares (316L Disc 100 mm/s),true
+316L-disc-v100,316L Stainless Steel,bare disc,100,108,0.765,0.5,0.005,,Fig. 6(a) black squares (316L Disc 100 mm/s),true
+316L-disc-v100,316L Stainless Steel,bare disc,100,134,0.768,0.5,0.005,,Fig. 6(a) black squares (316L Disc 100 mm/s),true
+316L-disc-v100,316L Stainless Steel,bare disc,100,178,0.776,0.5,0.005,,Fig. 6(a) black squares (316L Disc 100 mm/s),true
+316L-disc-v500,316L Stainless Steel,bare disc,500,32,0.287,1.5,0.005,,Fig. 4 blue squares (500 mm/s); same series as Fig. 3(a),true
+316L-disc-v500,316L Stainless Steel,bare disc,500,48,0.295,1.5,0.005,,Fig. 4 blue squares (500 mm/s); same series as Fig. 3(a),true
+316L-disc-v500,316L Stainless Steel,bare disc,500,56,0.298,1.5,0.005,,Fig. 4 blue squares (500 mm/s); same series as Fig. 3(a),true
+316L-disc-v500,316L Stainless Steel,bare disc,500,65,0.307,1.5,0.005,,Fig. 4 blue squares (500 mm/s); same series as Fig. 3(a),true
+316L-disc-v500,316L Stainless Steel,bare disc,500,74,0.371,1.5,0.005,,Fig. 4 blue squares (500 mm/s); same series as Fig. 3(a),true
+316L-disc-v500,316L Stainless Steel,bare disc,500,83,0.420,1.5,0.005,,Fig. 4 blue squares (500 mm/s); same series as Fig. 3(a),true
+316L-disc-v500,316L Stainless Steel,bare disc,500,83,0.534,1.5,0.005,,Fig. 4 blue squares (500 mm/s); same series as Fig. 3(a),true
+316L-disc-v500,316L Stainless Steel,bare disc,500,91,0.558,1.5,0.005,,Fig. 4 blue squares (500 mm/s); same series as Fig. 3(a),true
+316L-disc-v500,316L Stainless Steel,bare disc,500,99,0.656,1.5,0.005,,Fig. 4 blue squares (500 mm/s); same series as Fig. 3(a),true
+316L-disc-v500,316L Stainless Steel,bare disc,500,116,0.699,1.5,0.005,,Fig. 4 blue squares (500 mm/s); same series as Fig. 3(a),true
+316L-disc-v500,316L Stainless Steel,bare disc,500,133,0.726,1.5,0.005,,Fig. 4 blue squares (500 mm/s); same series as Fig. 3(a),true
+316L-disc-v500,316L Stainless Steel,bare disc,500,178,0.764,1.5,0.005,,Fig. 4 blue squares (500 mm/s); same series as Fig. 3(a),true
+316L-disc-v500,316L Stainless Steel,bare disc,500,222,0.792,1.5,0.005,,Fig. 4 blue squares (500 mm/s); same series as Fig. 3(a),true
+316L-disc-v500,316L Stainless Steel,bare disc,500,266,0.785,1.5,0.005,,Fig. 4 blue squares (500 mm/s); same series as Fig. 3(a),true
+316L-disc-v500,316L Stainless Steel,bare disc,500,356,0.784,1.5,0.005,,Fig. 4 blue squares (500 mm/s); same series as Fig. 3(a),true
+316L-disc-v1500,316L Stainless Steel,bare disc,1500,48,0.315,1.5,0.005,,Fig. 6(b) black squares (316L Disc 1500 mm/s); same series as Fig. 4 triangles and Fig. 7 circles,true
+316L-disc-v1500,316L Stainless Steel,bare disc,1500,66,0.325,1.5,0.005,,Fig. 6(b) black squares (316L Disc 1500 mm/s); same series as Fig. 4 triangles and Fig. 7 circles,true
+316L-disc-v1500,316L Stainless Steel,bare disc,1500,91,0.336,1.5,0.005,,Fig. 6(b) black squares (316L Disc 1500 mm/s); same series as Fig. 4 triangles and Fig. 7 circles,true
+316L-disc-v1500,316L Stainless Steel,bare disc,1500,108,0.341,1.5,0.005,,Fig. 6(b) black squares (316L Disc 1500 mm/s); same series as Fig. 4 triangles and Fig. 7 circles,true
+316L-disc-v1500,316L Stainless Steel,bare disc,1500,117,0.386,1.5,0.005,,Fig. 6(b) black squares (316L Disc 1500 mm/s); same series as Fig. 4 triangles and Fig. 7 circles,true
+316L-disc-v1500,316L Stainless Steel,bare disc,1500,125,0.408,1.5,0.005,,Fig. 6(b) black squares (316L Disc 1500 mm/s); same series as Fig. 4 triangles and Fig. 7 circles,true
+316L-disc-v1500,316L Stainless Steel,bare disc,1500,134,0.450,1.5,0.005,,Fig. 6(b) black squares (316L Disc 1500 mm/s); same series as Fig. 4 triangles and Fig. 7 circles,true
+316L-disc-v1500,316L Stainless Steel,bare disc,1500,178,0.531,1.5,0.005,,Fig. 6(b) black squares (316L Disc 1500 mm/s); same series as Fig. 4 triangles and Fig. 7 circles,true
+316L-disc-v1500,316L Stainless Steel,bare disc,1500,223,0.598,1.5,0.005,,Fig. 6(b) black squares (316L Disc 1500 mm/s); same series as Fig. 4 triangles and Fig. 7 circles,true
+316L-disc-v1500,316L Stainless Steel,bare disc,1500,267,0.618,1.5,0.005,,Fig. 6(b) black squares (316L Disc 1500 mm/s); same series as Fig. 4 triangles and Fig. 7 circles,true
+316L-disc-v1500,316L Stainless Steel,bare disc,1500,311,0.621,1.5,0.005,initially penetrated disc (Fig. 4 red bar under the symbol),Fig. 6(b) black squares (316L Disc 1500 mm/s); same series as Fig. 4 triangles and Fig. 7 circles,true
+316L-disc-v1500,316L Stainless Steel,bare disc,1500,356,0.611,1.5,0.005,initially penetrated disc (Fig. 4 red bar under the symbol),Fig. 6(b) black squares (316L Disc 1500 mm/s); same series as Fig. 4 triangles and Fig. 7 circles,true
+316L-disc-v1500,316L Stainless Steel,bare disc,1500,445,0.659,1.5,0.005,initially penetrated disc (Fig. 4 red bar under the symbol),Fig. 6(b) black squares (316L Disc 1500 mm/s); same series as Fig. 4 triangles and Fig. 7 circles,true
+316L-disc-v1500,316L Stainless Steel,bare disc,1500,534,0.690,1.5,0.005,initially penetrated disc (Fig. 4 red bar under the symbol),Fig. 6(b) black squares (316L Disc 1500 mm/s); same series as Fig. 4 triangles and Fig. 7 circles,true
+316L-powder-v100,316L Stainless Steel,100 um powder layer in a cup,100,32,0.485,0.5,0.005,,Fig. 6(a) red circles (316L Powder 100 mm/s),true
+316L-powder-v100,316L Stainless Steel,100 um powder layer in a cup,100,37,0.425,0.5,0.005,,Fig. 6(a) red circles (316L Powder 100 mm/s),true
+316L-powder-v100,316L Stainless Steel,100 um powder layer in a cup,100,45,0.436,0.5,0.005,,Fig. 6(a) red circles (316L Powder 100 mm/s),true
+316L-powder-v100,316L Stainless Steel,100 um powder layer in a cup,100,48,0.465,0.5,0.005,,Fig. 6(a) red circles (316L Powder 100 mm/s),true
+316L-powder-v100,316L Stainless Steel,100 um powder layer in a cup,100,53,0.450,0.5,0.005,,Fig. 6(a) red circles (316L Powder 100 mm/s),true
+316L-powder-v100,316L Stainless Steel,100 um powder layer in a cup,100,57,0.448,0.5,0.005,,Fig. 6(a) red circles (316L Powder 100 mm/s),true
+316L-powder-v100,316L Stainless Steel,100 um powder layer in a cup,100,61,0.364,0.5,0.005,,Fig. 6(a) red circles (316L Powder 100 mm/s),true
+316L-powder-v100,316L Stainless Steel,100 um powder layer in a cup,100,66,0.522,0.5,0.005,,Fig. 6(a) red circles (316L Powder 100 mm/s),true
+316L-powder-v100,316L Stainless Steel,100 um powder layer in a cup,100,74,0.521,0.5,0.005,,Fig. 6(a) red circles (316L Powder 100 mm/s),true
+316L-powder-v100,316L Stainless Steel,100 um powder layer in a cup,100,92,0.575,0.5,0.005,,Fig. 6(a) red circles (316L Powder 100 mm/s),true
+316L-powder-v100,316L Stainless Steel,100 um powder layer in a cup,100,108,0.621,0.5,0.005,,Fig. 6(a) red circles (316L Powder 100 mm/s),true
+316L-powder-v100,316L Stainless Steel,100 um powder layer in a cup,100,134,0.665,0.5,0.005,,Fig. 6(a) red circles (316L Powder 100 mm/s),true
+316L-powder-v1500,316L Stainless Steel,100 um powder layer in a cup,1500,32,0.533,1.5,0.005,,Fig. 6(b) red dots (316L Powder 1500 mm/s),true
+316L-powder-v1500,316L Stainless Steel,100 um powder layer in a cup,1500,40,0.550,1.5,0.005,,Fig. 6(b) red dots (316L Powder 1500 mm/s),true
+316L-powder-v1500,316L Stainless Steel,100 um powder layer in a cup,1500,48,0.483,1.5,0.005,,Fig. 6(b) red dots (316L Powder 1500 mm/s),true
+316L-powder-v1500,316L Stainless Steel,100 um powder layer in a cup,1500,57,0.578,1.5,0.005,,Fig. 6(b) red dots (316L Powder 1500 mm/s),true
+316L-powder-v1500,316L Stainless Steel,100 um powder layer in a cup,1500,64,0.431,1.5,0.005,,Fig. 6(b) red dots (316L Powder 1500 mm/s),true
+316L-powder-v1500,316L Stainless Steel,100 um powder layer in a cup,1500,83,0.339,1.5,0.008,symbol lies on the fitted line; centre taken from the dot core,Fig. 6(b) red dots (316L Powder 1500 mm/s),true
+316L-powder-v1500,316L Stainless Steel,100 um powder layer in a cup,1500,86,0.437,1.5,0.005,,Fig. 6(b) red dots (316L Powder 1500 mm/s),true
+316L-powder-v1500,316L Stainless Steel,100 um powder layer in a cup,1500,89,0.383,1.5,0.008,symbol lies on the fitted line; centre taken from the dot core,Fig. 6(b) red dots (316L Powder 1500 mm/s),true
+316L-powder-v1500,316L Stainless Steel,100 um powder layer in a cup,1500,99,0.492,1.5,0.005,,Fig. 6(b) red dots (316L Powder 1500 mm/s),true
+316L-powder-v1500,316L Stainless Steel,100 um powder layer in a cup,1500,107,0.470,1.5,0.005,,Fig. 6(b) red dots (316L Powder 1500 mm/s),true
+316L-powder-v1500,316L Stainless Steel,100 um powder layer in a cup,1500,125,0.527,1.5,0.005,,Fig. 6(b) red dots (316L Powder 1500 mm/s),true
+316L-powder-v1500,316L Stainless Steel,100 um powder layer in a cup,1500,133,0.583,1.5,0.005,,Fig. 6(b) red dots (316L Powder 1500 mm/s),true
+316L-powder-v1500,316L Stainless Steel,100 um powder layer in a cup,1500,178,0.601,1.5,0.005,,Fig. 6(b) red dots (316L Powder 1500 mm/s),true
+316L-powder-v1500,316L Stainless Steel,100 um powder layer in a cup,1500,222,0.634,1.5,0.005,,Fig. 6(b) red dots (316L Powder 1500 mm/s),true
+316L-powder-v1500,316L Stainless Steel,100 um powder layer in a cup,1500,223,0.650,1.5,0.005,,Fig. 6(b) red dots (316L Powder 1500 mm/s),true
+316L-powder-v1500,316L Stainless Steel,100 um powder layer in a cup,1500,267,0.669,1.5,0.005,,Fig. 6(b) red dots (316L Powder 1500 mm/s),true
+316L-powder-v1500,316L Stainless Steel,100 um powder layer in a cup,1500,311,0.657,1.5,0.005,,Fig. 6(b) red dots (316L Powder 1500 mm/s),true
+316L-powder-v1500,316L Stainless Steel,100 um powder layer in a cup,1500,400,0.712,1.5,0.005,,Fig. 6(b) red dots (316L Powder 1500 mm/s),true
+W-disc-v1500,Tungsten (99.95 %),bare disc,1500,33,0.288,1.5,0.005,,Fig. 7 red triangles (W 1500 mm/s),true
+W-disc-v1500,Tungsten (99.95 %),bare disc,1500,66,0.310,1.5,0.005,,Fig. 7 red triangles (W 1500 mm/s),true
+W-disc-v1500,Tungsten (99.95 %),bare disc,1500,100,0.291,1.5,0.005,,Fig. 7 red triangles (W 1500 mm/s),true
+W-disc-v1500,Tungsten (99.95 %),bare disc,1500,117,0.284,1.5,0.005,,Fig. 7 red triangles (W 1500 mm/s),true
+W-disc-v1500,Tungsten (99.95 %),bare disc,1500,134,0.265,1.5,0.005,,Fig. 7 red triangles (W 1500 mm/s),true
+W-disc-v1500,Tungsten (99.95 %),bare disc,1500,134,0.278,1.5,0.005,,Fig. 7 red triangles (W 1500 mm/s),true
+W-disc-v1500,Tungsten (99.95 %),bare disc,1500,178,0.252,1.5,0.008,two overlapping symbols; centroid from the visible triangle edges,Fig. 7 red triangles (W 1500 mm/s),true
+W-disc-v1500,Tungsten (99.95 %),bare disc,1500,178,0.258,1.5,0.008,two overlapping symbols; centroid from the visible triangle edges,Fig. 7 red triangles (W 1500 mm/s),true
+W-disc-v1500,Tungsten (99.95 %),bare disc,1500,187,0.255,1.5,0.005,,Fig. 7 red triangles (W 1500 mm/s),true
+W-disc-v1500,Tungsten (99.95 %),bare disc,1500,201,0.273,1.5,0.005,,Fig. 7 red triangles (W 1500 mm/s),true
+W-disc-v1500,Tungsten (99.95 %),bare disc,1500,205,0.247,1.5,0.005,,Fig. 7 red triangles (W 1500 mm/s),true
+W-disc-v1500,Tungsten (99.95 %),bare disc,1500,223,0.265,1.5,0.005,,Fig. 7 red triangles (W 1500 mm/s),true
+W-disc-v1500,Tungsten (99.95 %),bare disc,1500,267,0.265,1.5,0.005,,Fig. 7 red triangles (W 1500 mm/s),true
+W-disc-v1500,Tungsten (99.95 %),bare disc,1500,312,0.306,1.5,0.005,,Fig. 7 red triangles (W 1500 mm/s),true
+W-disc-v1500,Tungsten (99.95 %),bare disc,1500,357,0.355,1.5,0.005,,Fig. 7 red triangles (W 1500 mm/s),true
+W-disc-v1500,Tungsten (99.95 %),bare disc,1500,401,0.402,1.5,0.005,,Fig. 7 red triangles (W 1500 mm/s),true
+W-disc-v1500,Tungsten (99.95 %),bare disc,1500,446,0.453,1.5,0.005,,Fig. 7 red triangles (W 1500 mm/s),true
+W-disc-v1500,Tungsten (99.95 %),bare disc,1500,534,0.541,1.5,0.005,,Fig. 7 red triangles (W 1500 mm/s),true
+Al1100-disc-v1500,Aluminium alloy 1100,bare disc,1500,66,0.145,1.5,0.005,,Fig. 7 grey squares (Al 1500 mm/s),true
+Al1100-disc-v1500,Aluminium alloy 1100,bare disc,1500,92,0.144,1.5,0.005,,Fig. 7 grey squares (Al 1500 mm/s),true
+Al1100-disc-v1500,Aluminium alloy 1100,bare disc,1500,151,0.138,1.5,0.005,,Fig. 7 grey squares (Al 1500 mm/s),true
+Al1100-disc-v1500,Aluminium alloy 1100,bare disc,1500,169,0.138,1.5,0.005,,Fig. 7 grey squares (Al 1500 mm/s),true
+Al1100-disc-v1500,Aluminium alloy 1100,bare disc,1500,178,0.136,1.5,0.005,,Fig. 7 grey squares (Al 1500 mm/s),true
+Al1100-disc-v1500,Aluminium alloy 1100,bare disc,1500,187,0.129,1.5,0.005,,Fig. 7 grey squares (Al 1500 mm/s),true
+Al1100-disc-v1500,Aluminium alloy 1100,bare disc,1500,205,0.137,1.5,0.005,,Fig. 7 grey squares (Al 1500 mm/s),true
+Al1100-disc-v1500,Aluminium alloy 1100,bare disc,1500,214,0.143,1.5,0.005,,Fig. 7 grey squares (Al 1500 mm/s),true
+Al1100-disc-v1500,Aluminium alloy 1100,bare disc,1500,223,0.137,1.5,0.005,,Fig. 7 grey squares (Al 1500 mm/s),true
+Al1100-disc-v1500,Aluminium alloy 1100,bare disc,1500,250,0.206,1.5,0.005,,Fig. 7 grey squares (Al 1500 mm/s),true
+Al1100-disc-v1500,Aluminium alloy 1100,bare disc,1500,267,0.212,1.5,0.005,,Fig. 7 grey squares (Al 1500 mm/s),true
+Al1100-disc-v1500,Aluminium alloy 1100,bare disc,1500,350,0.311,1.5,0.005,,Fig. 7 grey squares (Al 1500 mm/s),true
+Al1100-disc-v1500,Aluminium alloy 1100,bare disc,1500,357,0.409,1.5,0.005,,Fig. 7 grey squares (Al 1500 mm/s),true
+Al1100-disc-v1500,Aluminium alloy 1100,bare disc,1500,401,0.428,1.5,0.005,,Fig. 7 grey squares (Al 1500 mm/s),true
+Al1100-disc-v1500,Aluminium alloy 1100,bare disc,1500,445,0.478,1.5,0.005,,Fig. 7 grey squares (Al 1500 mm/s),true
+Al1100-disc-v1500,Aluminium alloy 1100,bare disc,1500,534,0.522,1.5,0.005,,Fig. 7 grey squares (Al 1500 mm/s),true

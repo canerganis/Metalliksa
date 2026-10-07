@@ -1,0 +1,8 @@
+case,power_W,speed_mm_s,length_um,length_sd_um,read_uncertainty_um,locator,digitized
+1,49,200,172,22,5,"Fig. 2, case 1 experimental column (value = error-bar midpoint; SD = half error-bar span)",true
+2,122,200,523,53,5,"Fig. 2, case 2 experimental column (value = error-bar midpoint; SD = half error-bar span)",true
+3,122,500,362,48,5,"Fig. 2, case 3 experimental column (value = error-bar midpoint; SD = half error-bar span)",true
+4,122,800,317,48,5,"Fig. 2, case 4 experimental column (value = error-bar midpoint; SD = half error-bar span)",true
+5,195,200,842,106,5,"Fig. 2, case 5 experimental column (value = error-bar midpoint; SD = half error-bar span)",true
+6,195,500,920,93,5,"Fig. 2, case 6 experimental column (value = error-bar midpoint; SD = half error-bar span)",true
+7,195,800,820,129,5,"Fig. 2, case 7 experimental column (value = error-bar midpoint; SD = half error-bar span)",true

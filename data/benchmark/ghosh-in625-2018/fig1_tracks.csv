@@ -1,0 +1,8 @@
+case,power_W,speed_mm_s,width_um,depth_um,measurement_sd_um,locator,digitized,value_origin
+1,49,200,111,24,1,"Fig. 1, case 1 label (w, h); P from the Fig. 2 power groups, V from the Fig. 1 scan-speed axis",false,number printed in the figure (not read off an axis)
+2,122,200,186,48,1,"Fig. 1, case 2 label (w, h); P from the Fig. 2 power groups, V from the Fig. 1 scan-speed axis",false,number printed in the figure (not read off an axis)
+3,122,500,134,33,1,"Fig. 1, case 3 label (w, h); P from the Fig. 2 power groups, V from the Fig. 1 scan-speed axis",false,number printed in the figure (not read off an axis)
+4,122,800,117,25,1,"Fig. 1, case 4 label (w, h); P from the Fig. 2 power groups, V from the Fig. 1 scan-speed axis",false,number printed in the figure (not read off an axis)
+5,195,200,259,109,1,"Fig. 1, case 5 label (w, h); P from the Fig. 2 power groups, V from the Fig. 1 scan-speed axis",false,number printed in the figure (not read off an axis)
+6,195,500,162,49,1,"Fig. 1, case 6 label (w, h); P from the Fig. 2 power groups, V from the Fig. 1 scan-speed axis",false,number printed in the figure (not read off an axis)
+7,195,800,133,38,1,"Fig. 1, case 7 label (w, h); P from the Fig. 2 power groups, V from the Fig. 1 scan-speed axis",false,number printed in the figure (not read off an axis)
