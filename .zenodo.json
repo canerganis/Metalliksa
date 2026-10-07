@@ -1,7 +1,7 @@
 {
   "title": "Metalliksa: open research workstation for LPBF melt-pool and process-window screening",
   "upload_type": "software",
-  "description": "Open research workstation for laser powder bed fusion (LPBF) melt-pool and process-window screening. Every result carries its source, evidence level and limits; no experimental validation is claimed. Includes P-v process-window maps, CALPHAD with the MatCalc open databases, Nb segregation/Laves literature estimates, and benchmarks against published single-track and keyhole measurements with negative results documented. Under active development (pre-1.0).",
+  "description": "Open research workstation for laser powder bed fusion (LPBF) melt-pool and process-window screening. Designed so that each result shows its source, evidence level and limits; no experimental validation is claimed. Includes P-v process-window maps, CALPHAD with the MatCalc open databases, Nb segregation/Laves literature estimates, and benchmarks against published single-track and keyhole measurements with negative results documented. Under active development (pre-1.0).",
   "creators": [
     {
       "name": "Erganis, Muhammet Can"
@@ -18,12 +18,5 @@
     "materials science",
     "open science"
   ],
-  "related_identifiers": [
-    {
-      "identifier": "https://github.com/canerganis/metalliksa",
-      "relation": "isSupplementTo",
-      "scheme": "url"
-    }
-  ],
-  "notes": "Dual-licensed: AGPL-3.0-only, or a commercial licence from the copyright holder for proprietary use (see LICENSING.md)."
+  "notes": "Dual-licensed: the Metalliksa code is AGPL-3.0-only, or available under a commercial licence from the copyright holder for proprietary use (see LICENSING.md). Third-party materials keep their own licences."
 }

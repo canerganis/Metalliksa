@@ -6,14 +6,14 @@
 
 **An open research workstation for LPBF melt-pool and process-window screening, built so every result carries its evidence and limits.**
 
-*Why it is different: every number shows its source, its evidence level and its limits.*
+*Why it is different: it is designed so that each result shows its source, its evidence level and its limits.*
 
 [![CI](https://github.com/canerganis/metalliksa/actions/workflows/ci.yml/badge.svg)](https://github.com/canerganis/metalliksa/actions/workflows/ci.yml)
 [![Status: active development](https://img.shields.io/badge/status-active%20development-b45309)](STATUS.md)
 [![React](https://img.shields.io/badge/React-18-1f2937?logo=react&logoColor=white)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-typed-1f2937?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Python solvers](https://img.shields.io/badge/Python-LPBF%20solvers-1f2937?logo=python&logoColor=white)](https://www.python.org)
-[![License: AGPL-3.0 or commercial](https://img.shields.io/badge/license-AGPL--3.0%20%7C%20commercial-1f2937)](LICENSING.md)
+[![License: AGPL-3.0-only or commercial](https://img.shields.io/badge/license-AGPL--3.0--only%20%7C%20commercial-1f2937)](LICENSING.md)
 [![Evidence first](https://img.shields.io/badge/evidence-first-1f2937)](#evidence-and-limits)
 
 </div>
@@ -57,7 +57,7 @@ Needs Node >= 22.13 and Python 3.11 or 3.12. Details are in [Quick start](#quick
 
 - **Keyhole benchmark:** screening compared with published X-ray measurements shows substantial regime and depth mismatches. It is a comparison, not a validation. [Benchmark and methods](docs/LPBF_KEYHOLE_BENCHMARK_2026-10-07.md).
 - **Calibration v2 scorecard:** pre-registered; no cell is enabled. [Scorecard](docs/LPBF_CALIBRATION_SCORECARD_v2_2026-10-07.md) and [pre-registration](docs/LPBF_CALIBRATION_V2_PREREGISTRATION_2026-10-07.md).
-- **Depth does not transfer between labs:** held-out depth errors are large and differ by source, so the app shows typical published-data error instead of a calibrated band. See the [held-out evaluation](docs/LPBF_CALIBRATION_HELDOUT_2026-10-06.md) and [PROOF.md](PROOF.md).
+- **Depth transfer between labs could not be shown on the datasets examined:** held-out depth errors are large and differ by source and alloy, so the app shows typical published-data error instead of a calibrated band. See the [held-out evaluation](docs/LPBF_CALIBRATION_HELDOUT_2026-10-06.md) and [PROOF.md](PROOF.md).
 - `experimentalValidation=false`. More in [Evidence and limits](#evidence-and-limits).
 
 ---
@@ -176,4 +176,4 @@ When adding a comparison, retain the source file identity and hash, the measurem
 
 ## License
 
-Metalliksa is dual-licensed. The open-source licence is the [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-only): you may use, study, modify and share it, and if you distribute it or offer it to others over a network, you must release your complete corresponding source under the same licence. For use in a closed-source or proprietary product, a separate commercial licence is available from the copyright holder; see [LICENSING.md](LICENSING.md). Releases up to commit `bb449579` were published under the MIT License and remain available under it. Third-party datasets, the MatCalc open databases (ODbL) and transcribed source material keep their own attribution and licence terms. Solver outputs are research screening results, not qualified engineering data.
+Metalliksa is dual-licensed. The open-source licence is the [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-only): you may use, study, modify and share it, if you distribute it, or let users interact with a modified version over a network, you must offer them the complete corresponding source of that version under the same licence (see sections 6 and 13 of the licence). For use in a closed-source or proprietary product, a separate commercial licence for the Metalliksa code is available from the copyright holder; see [LICENSING.md](LICENSING.md). Commits up to and including `bb449579` were published under the MIT License and remain available under it. Third-party datasets, the MatCalc open databases (ODbL) and transcribed source material keep their own attribution and licence terms. Solver outputs are research screening results, not qualified engineering data.

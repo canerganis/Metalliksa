@@ -9,7 +9,7 @@ Metalliksa is **dual-licensed**:
    network (for example as a web service), you must make the complete corresponding source code of your version
    available under the AGPL-3.0.
 
-2. **Commercial licence** — for organisations that want to embed Metalliksa, or a modified version, in a closed-source
+2. **Commercial licence** — covers the Metalliksa code owned by the copyright holder, for organisations that want to embed it, or a modified version, in a closed-source
    or proprietary product or service without the AGPL-3.0 obligations. Contact the copyright holder through
    [github.com/canerganis](https://github.com/canerganis) (open an issue titled "Commercial licence enquiry" or use the
    contact details on the profile). Terms are agreed case by case.
@@ -17,11 +17,11 @@ Metalliksa is **dual-licensed**:
 ## Earlier versions
 
 Commits up to and including `bb449579` (2026-10-08) were published under the MIT License. Copies obtained under that
-licence remain available under it. Everything after that commit is AGPL-3.0-only or commercial.
+licence remain available under it. The Metalliksa code in later commits is AGPL-3.0-only or commercial.
 
 ## Third-party material
 
-Third-party components keep their own licences, including:
+Third-party components keep their own licences; neither licence above replaces or removes their terms. They include:
 
 - the MatCalc open thermodynamic databases in `python/databases/` (ODbL 1.0 / DbCL 1.0, see
   `python/databases/MATCALC_OPEN_DATABASES_LICENSE.md`);
