@@ -46,7 +46,7 @@
   }
  },
  "honesty": "Comparison of the app's existing screening with published Ti-6Al-4V x-ray measurements; digitized figure values (read uncertainty recorded per row); app thermophysical properties and flat absorptivity are the app's estimates, not the papers' values; not experimental validation; this report changes no solver number.",
- "implementationHash": "cb5f6eccfbc3db1e941f5115e9246cd4ad8860920415aafe9a3dc3f77e1edc89",
+ "implementationHash": "cda80143d28baf8dd39512065a8ce3683f4c97f46b20d53052b63b4cd34a41d2",
  "keyholeThreshold": {
   "app": 20.0,
   "appIndexAtPublishedKeyholeLine": {

@@ -22,7 +22,7 @@ absorptivity 0.35, 20 C preheat, spot = 1/e^2 diameter (assumed). This is a comp
   standard deviation (I ~ exp(-r^2/2 sigma^2), i.e. sigma = r/2) and hs = rho c Tm. Correction (keyhole-regime bump
   spec): the sigma term alone is 2^1.5 = 2.8x, but the property terms cancel about half of it; for 316L with the app
   properties the full ratio is H_King / H_app = **1.351** (A 0.4 vs 0.42, hs_K = 1.2e6 J/kg vs rho cp (T_liq - T0),
-  D_K = 5.38e-6 m2/s vs the app's solid alpha), so King's 30 +/- 4 is **22.2 (19.3-25.2)** in the app convention. (The
+  D_K = 5.38e-6 m2/s vs the app's solid alpha), so King's 30 +/- 4 is **22.2 (19.3-25.2)** in the app convention, conditional on the app absorptivity, 20 C preheat and the app property set. (The
   code comment in `lpbf_thermal_solver.py` said the thresholds were "applied to this convention as a screening proxy";
   that was true before the bump.)
 
@@ -92,11 +92,10 @@ Against the measured vapor-depression depth:
 ## Resolution (keyhole-regime bump, 2026-10-07)
 
 Implemented as the planned physics bump `keyhole-regime` (bump record under `docs/LPBF_IMPLEMENTATION_BUMP_2026-10-07_keyhole-regime.*`): the
-regime keyhole-mode threshold moved 30 -> 20 in the app convention (overlap of King 316L 19.3-25.2 and Cunningham red
-line 17.3-20.0; the held-out Hofmann/Totis checks and the benchmark v2 record are in
+regime keyhole-mode threshold moved 30 -> 20 in the app convention as a **provisional screening choice, not a derived exact threshold** (inside the overlap of King 316L 19.3-25.2 and the Cunningham red-line values along speed 17.3-20.0, a range, not a confidence interval; Cunningham and Gan data are the derivation inputs, not independent validation; the held-out Hofmann/Totis checks and the benchmark v2 record are in
 `LPBF_KEYHOLE_BENCHMARK_2026-10-07_keyhole-regime.*`); `keyholePorosityRisk` is decoupled from the regime index (same
 numeric gate, labels Negligible / Possible / High, 15-30 advisory in the build job); the Fabbro depth formula is
-unchanged (no tested variant passes the cross-material bounds, text only); calibration v2 keeps 15/30 (preregistered).
+unchanged (no tested variant passes the cross-material bounds, text only; the cause of the Fabbro under-prediction is not resolved, candidate mechanisms are listed in `FABBRO_BASIS`: beam-diameter convention into Fabbro's uniform model, model validity range / deep cylindrical keyhole, flat keyhole absorptivity, no vaporisation sink); calibration v2 keeps 15/30 (preregistered).
 Labels are unchanged: `experimentalValidation=false`, `validationStatus=unvalidated`, `productionReady=false`.
 
 ## Open points that limit the evidence (settled by the keyhole-regime bump, with sources)
@@ -109,7 +108,7 @@ Labels are unchanged: `experimentalValidation=false`, `validationStatus=unvalida
 | Fig. 3A red line meaning | SM Figs. S2/S3: blue = vapor-depression transition, red = melt-pool transition "around d/w = 0.5" (stationary beam). Same criterion as King 2014 (depth > half-width). | SM pp. 3-4 |
 | Digitization quality | Gan Data 1 Ti-6Al-4V depths vs our digitized Fig. 3B/3C: 69/69 rows matched, digitized minus Gan median +0.8 um, mean abs 2.5 um, max 20.4 um. | benchmark v2 `ganData1Check` |
 | Gan Ke offset (needed factor 0.26-0.45) | Property set, not r0: with Gan Supplementary Table 1 properties and per-case eta, Gan Eq. 2 reproduces Cunningham depths in-sample (95 um: median ratio 0.95; 140 um: 0.96); held-out Zhao bare boundary 0.71, powder 1.45. | designer check |
-| King Table 3 | A = 0.4, rho = 7980 kg/m3, hs = 1.2e6 J/kg (Rai 2007), D = 5.38e-6 m2/s, sigma from I = I0 exp(-r^2/2 sigma^2) (D4sigma = 4 sigma); threshold 30 +/- 4 (transition ~26-34). | King 2014 accepted MS Table 3, Section 3.2.1 fn. 3-4, Section 5 |
+| King Table 3 | A = 0.4, rho = 7.98 printed with the unit kg/m3 (rendered page image of the accepted manuscript, verified) = physically 7.98 g/cm3, so **7980 kg/m3 is a unit correction, not as printed**; hs = 1.2e6 J/kg (Rai 2007), D = 5.38e-6 m2/s, sigma from I = I0 exp(-r^2/2 sigma^2) (D4sigma = 4 sigma); threshold 30 +/- 4 (transition ~26-34). | King 2014 accepted MS Table 3, Section 3.2.1 fn. 3-4, Section 5 |
 
 Still open: Zhao's SI (E definition, beam profile) and Huang Supplementary Table 3 were not available.
 

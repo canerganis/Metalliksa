@@ -54,6 +54,7 @@ CURRENT_TRANSITION = solver.ENTHALPY_TRANSITION
 CURRENT_KEYHOLE = solver.ENTHALPY_KEYHOLE
 RULES = {"legacy_15_30": (LEGACY_TRANSITION, LEGACY_KEYHOLE), "current": (CURRENT_TRANSITION, CURRENT_KEYHOLE)}
 SENSITIVITY_THRESHOLDS = (15.0, 17.5, 18.0, 20.0, 22.0, 25.0, 30.0)
+REPORT_THRESHOLDS = (15.0, 20.0, 30.0)  # per-source sensitivity (keyhole-mode recall) and specificity are reported here
 HELD_OUT_DW = 0.5  # melt-pool depth / width above which a track is keyhole mode (King 2014, Cunningham 2019)
 KERNELS = ("rosenthal", "eagar-tsai")
 LAYER_UM, HATCH_UM = 30.0, 100.0  # irrelevant to the single-track keyhole quantities; recorded
@@ -184,6 +185,14 @@ def _binary_block(rows: Sequence[tuple]) -> Dict[str, Any]:
         tn = sum(h < keyhole for h in nk)
         out[name] = {"threshold": keyhole, "correct": tp + tn, "accuracy": r3((tp + tn) / n) if n else None,
                      "keyholeModeRecall": f"{tp}/{len(kh)}", "notKeyholeRecall": f"{tn}/{len(nk)}"}
+    per: Dict[str, Any] = {}
+    for t in REPORT_THRESHOLDS:
+        tp, fn = sum(h >= t for h in kh), sum(h < t for h in kh)
+        tn, fp = sum(h < t for h in nk), sum(h >= t for h in nk)
+        per[f"{t:g}"] = {"truePositive": tp, "falseNegative": fn, "trueNegative": tn, "falsePositive": fp,
+                         "sensitivity": r3(tp / len(kh)) if kh else None,
+                         "specificity": r3(tn / len(nk)) if nk else None}
+    out["perThreshold"] = per
     out["sensitivityAccuracy"] = {str(t): r3((sum(h >= t for h in kh) + sum(h < t for h in nk)) / n) if n else None
                                   for t in SENSITIVITY_THRESHOLDS}
     out["indexOfKeyholeModeRows"] = summary(kh)
@@ -227,7 +236,12 @@ def held_out_check() -> Dict[str, Any]:
                   "Lane IN625 uses the app's legacy-estimated IN625 properties: keyhole-mode tracks sit below the "
                   "index cut for any threshold, i.e. the index under-reads IN625.",
                   "Zhao boundary at low speed (v <= 425 mm/s) sits at index 15.0-18.9 (keyhole porosity begins at "
-                  "the keyhole-mode onset there): consistent, not used."],
+                  "the keyhole-mode onset there): consistent, not used.",
+                  "Moving 30 -> 20 trades specificity for sensitivity: it adds true keyhole-mode calls and false "
+                  "positives (Hofmann 316L +109 true, +59 false), still catches 0/10 Lane IN625 keyhole-mode tracks, "
+                  "and costs KU Leuven Ti-6Al-4V (37.5 um reading) 3 rows, 14 -> 11: an unresolved counter-finding.",
+                  "Cunningham and Gan data are the same measurements and the derivation inputs; they are not "
+                  "independent validation. The threshold 20 is a provisional screening choice."],
     }
     return out
 
@@ -249,13 +263,18 @@ def king_conversion(red_line_index: Optional[Dict[str, Any]] = None) -> Dict[str
     lo, mid, hi = ((c["center"] + sgn * c["halfwidth"]) / factor for sgn in (-1, 0, 1))
     out: Dict[str, Any] = {
         "source": king["locator"], "kingConstants": c,
+        "densityUnitNote": ("King's Table 3 prints density as '7.98 kg/m3' (verified on the rendered page image of the "
+                            "accepted manuscript, OSTI 1502044); the physical value is 7.98 g/cm3 = 7980 kg/m3, so the "
+                            "unit was corrected here, not taken as printed"),
         "app316lProperties": {"density_kg_m3": rho, "specific_heat_J_kgK": cp, "liquidus_C": props["liquidus_C"],
                               "thermal_conductivity_W_mK": k, "absorptivity_IR": props["absorptivity_IR"], "T0_C": t0},
         "factorHKingOverHApp": r3(factor),
         "kingThresholdInAppUnits": {"low": r3(lo), "mid": r3(mid), "high": r3(hi)},
-        "note": ("Convention conversion at equal P, v and beam (r = 2 sigma); the app absorptivity enters the index "
-                 "linearly, so the converted threshold is consistent with the app's estimated absorptivity, not with "
-                 "the true one.")}
+        "note": ("Convention conversion at equal P, v and beam (r = 2 sigma), conditional on the app absorptivity, 20 C "
+                 "preheat and the app 316L property set; the app absorptivity enters the index linearly, so the "
+                 "converted threshold is consistent with the app's estimated absorptivity, not with the true one. "
+                 "The Cunningham red-line range is the app index along speed (400-1200 mm/s), not a confidence "
+                 "interval; the chosen 20 is a provisional screening choice, not a derived exact threshold.")}
     if red_line_index:
         rlo, rhi = red_line_index["min"], red_line_index["max"]
         olo, ohi = max(lo, rlo), min(hi, rhi)
@@ -592,9 +611,10 @@ def to_markdown(doc: Dict[str, Any]) -> str:
           f"v and beam (r = 2 sigma). King 30 +/- 4 corresponds to app index {k['kingThresholdInAppUnits']['mid']} "
           f"({k['kingThresholdInAppUnits']['low']} to {k['kingThresholdInAppUnits']['high']}). Cunningham 2019 Fig. 3A "
           f"red line (Ti-6Al-4V 95 um): app index {k['cunninghamRedLineIndexRange']['low']} to "
-          f"{k['cunninghamRedLineIndexRange']['high']}. Overlap {k['intervalOverlap']['low']} to "
+          f"{k['cunninghamRedLineIndexRange']['high']} along speed (a range, not a confidence interval). Overlap {k['intervalOverlap']['low']} to "
           f"{k['intervalOverlap']['high']}; chosen threshold {k['chosenKeyholeThreshold']:g} "
-          f"(inside both: {k['chosenInsideBothIntervals']}). {k['note']}", "",
+          f"(inside both: {k['chosenInsideBothIntervals']}); a provisional screening choice. {k['densityUnitNote']}. "
+          f"{k['note']}", "",
           "## Held-out check (not used to choose the threshold): measured melt-pool D/W > 0.5 = keyhole mode", ""]
     ho = doc["heldOut"]
     L += ["| dataset | n | legacy 15/30 correct | current correct | current accuracy | keyhole-mode recall legacy -> current | "
@@ -610,6 +630,14 @@ def to_markdown(doc: Dict[str, Any]) -> str:
             L.append(ho_row(name, x))
     for spot, x in ho["hofmann316lBySpot_um"].items():
         L.append(ho_row(f"hofmann316l, spot {spot} um", x))
+    L += ["", "Sensitivity (keyhole-mode recall) and specificity (not-keyhole recall) per source at 15 / 20 / 30 "
+          "(TP / FN / TN / FP):", "", "| dataset | threshold | TP | FN | TN | FP | sensitivity | specificity |",
+          "|---|---|---|---|---|---|---|---|"]
+    for name, x in ho.items():
+        if isinstance(x, dict) and "perThreshold" in x:
+            for t, v in x["perThreshold"].items():
+                L.append(f"| {name} | {t} | {v['truePositive']} | {v['falseNegative']} | {v['trueNegative']} | "
+                         f"{v['falsePositive']} | {v['sensitivity']} | {v['specificity']} |")
     L += ["", "Accuracy vs threshold (reported, not tuned):", "",
           "| dataset | " + " | ".join(f"{t:g}" for t in SENSITIVITY_THRESHOLDS) + " |",
           "|---|" + "---|" * len(SENSITIVITY_THRESHOLDS)]

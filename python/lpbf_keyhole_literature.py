@@ -228,7 +228,7 @@ HANN_PROVENANCE = {
 # ---- published relations -----------------------------------------------------------------------------------------
 REL_DIR = BENCHMARK_DIR / "keyhole-reference-relations-2026"
 REL_TABLE = REL_DIR / "published_relations.csv"
-REL_SHA256 = "d80185cc2885a3e09c35ccffb5264eb665f1bf318f9a8369caf6764209c8083c"
+REL_SHA256 = "85564cf60e576946ebcb6dd05c29d5fac8a66fc3bf353f6abb7de4c8c02e4452"
 REL_COLUMNS = ["relation", "source_dataset", "relation_text", "constants", "uncertainty", "locator", "digitized"]
 
 # Constants of the relations implemented below; the test checks them against published_relations.csv.
