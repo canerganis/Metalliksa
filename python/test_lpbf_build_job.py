@@ -428,7 +428,8 @@ def segregation_fixture_blocks():
         # SYNTHETIC microstructure state (clamp floors), real composition-only result.
         "in718_degenerate_floor_synthetic": build_job_segregation(
             "in718", project_build_job_microstructure(_floored_thermal(floor_src["thermal"]))),
-        "in625_unavailable": build_job_segregation("in625", available["microstructure"]),
+        # in625 is not a build-job alloy (resolve_alloy_id refuses it); the block is called directly for the UI test.
+        "in625_available": build_job_segregation("in625", available["microstructure"]),
         "ss316l_not_applicable": steel["segregation"],
     }
 

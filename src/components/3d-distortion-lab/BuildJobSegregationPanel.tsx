@@ -3,7 +3,8 @@ import { FlaskConical } from "lucide-react";
 
 // Build-job Nb segregation / terminal gamma-Laves screening (python/lpbf_solidification_segregation.py
 // build_job_segregation). Python decides everything: status "available" (IN718: DuPont, Robino & Marder 1997
-// pseudo-ternary model, Literature estimate (screening)), "unavailable" (reason only, e.g. constants not verified
+// pseudo-ternary model; IN625: binary Scheil, k_Nb Cieslak 1988, C_e DuPont 1996, no risk class; both
+// Literature estimate (screening)), "unavailable" (reason only, e.g. constants not verified
 // against a primary source) or "not-applicable" (no Nb-bearing gamma/Laves model for the alloy). This panel only
 // displays those decisions; it never computes a fraction and shows no number unless the status is "available".
 
@@ -33,6 +34,14 @@ export interface BuildJobSegregationLike {
   band?: SegBandPoint[] | null;
   bandNote?: string | null;
   feBaseSensitivity?: { point?: SegBandPoint | null; note?: string | null; constants?: Record<string, { value?: number | null }> } | null;
+  kSensitivity?: {
+    note?: string | null;
+    [key: string]: { k?: number | null; band?: { label?: string; fGammaLavesConstituent?: number | null }[] | null } | string | null | undefined;
+  } | null;
+  sourceComparison?: {
+    c88?: { alloy?: string; fComputed?: number | null; fMeasured?: number | null; phasesObserved?: string | null }[] | null;
+    c88Locator?: string | null;
+  } | null;
   segregation?: {
     Nb_wt?: number | null;
     basis?: string | null;
@@ -61,6 +70,8 @@ export interface BuildJobSegregationLike {
     outsideSourceComposition?: boolean;
     outsideSourceCompositionReasons?: string[] | null;
     kTransferNote?: string | null;
+    ceTransferNote?: string | null;
+    phaseIdentityNote?: string | null;
   } | null;
 }
 
@@ -147,10 +158,14 @@ const AvailableBody: React.FC<{ s: BuildJobSegregationLike }> = ({ s }) => {
       </table>
       {s.bandNote && <p className="text-[9px] text-slate-500">{s.bandNote}</p>}
       {s.quantity && <p className="text-[9px] text-slate-500" data-seg-quantity>{s.quantity}</p>}
-      <p className="text-[11px] text-slate-300" data-seg-risk>
-        Laves risk class: <strong className="text-white">{s.riskClass}</strong>
-        {s.riskClassRule ? <span className="text-slate-500"> ({s.riskClassRule})</span> : null}
-      </p>
+      {s.riskClass ? (
+        <p className="text-[11px] text-slate-300" data-seg-risk>
+          Laves risk class: <strong className="text-white">{s.riskClass}</strong>
+          {s.riskClassRule ? <span className="text-slate-500"> ({s.riskClassRule})</span> : null}
+        </p>
+      ) : s.riskClassRule ? (
+        <p className="text-[11px] text-slate-300" data-seg-risk="none">{s.riskClassRule}</p>
+      ) : null}
       {s.segregation && (
         <p className="text-[11px] text-slate-300" data-seg-ratio>
           Segregation ratio C<sub>L</sub>/C<sub>0</sub> (Nb {num(s.segregation.Nb_wt, 3)} wt%): core k·C<sub>0</sub> ={" "}
@@ -168,6 +183,30 @@ const AvailableBody: React.FC<{ s: BuildJobSegregationLike }> = ({ s }) => {
         <p className="text-[10px] text-slate-400" data-seg-sensitivity>
           Fe-base constant set (k<sub>Nb</sub> = {num(s.feBaseSensitivity?.constants?.k_gamma_Nb?.value, 2)}), nominal Nb: γ/Laves{" "}
           {pct(fe.binaryUpperBound?.fGammaLavesConstituent)} at C = 0, {pct(fe.pseudoTernaryAtCmax?.fGammaLavesConstituent)} at C max — {s.feBaseSensitivity?.note}
+        </p>
+      )}
+      {s.kSensitivity && (
+        <p className="text-[10px] text-slate-400" data-seg-k-sensitivity>
+          {Object.entries(s.kSensitivity)
+            .filter(([key, v]) => key !== "note" && v && typeof v === "object")
+            .map(([key, v]) => {
+              const e = v as { k?: number | null; band?: { label?: string; fGammaLavesConstituent?: number | null }[] | null };
+              return (
+                <span key={key}>
+                  k<sub>Nb</sub> = {num(e.k, 2)}: {(e.band ?? []).map((p) => `${p.label} ${pct(p.fGammaLavesConstituent)}`).join(", ")}.{" "}
+                </span>
+              );
+            })}
+          {s.kSensitivity.note ? <span className="text-slate-500">({s.kSensitivity.note})</span> : null}
+        </p>
+      )}
+      {(s.sourceComparison?.c88 ?? []).length > 0 && (
+        <p className="text-[10px] text-slate-400" data-seg-source-comparison>
+          Source comparison (computed vs measured):{" "}
+          {(s.sourceComparison?.c88 ?? [])
+            .map((r) => `alloy ${r.alloy}: ${pct(r.fComputed)} vs ${pct(r.fMeasured)} (${r.phasesObserved ?? "—"})`)
+            .join("; ")}
+          {s.sourceComparison?.c88Locator ? <span className="text-slate-500"> — {s.sourceComparison.c88Locator}</span> : null}
         </p>
       )}
       <div className="text-[10px] text-slate-400" data-seg-coupling={pc?.status ?? "unavailable"}>
@@ -191,7 +230,9 @@ const AvailableBody: React.FC<{ s: BuildJobSegregationLike }> = ({ s }) => {
               ))}
             </ul>
           )}
+          {v.phaseIdentityNote && <p data-seg-phase-identity>{v.phaseIdentityNote}</p>}
           {v.kTransferNote && <p>{v.kTransferNote}</p>}
+          {v.ceTransferNote && <p>{v.ceTransferNote}</p>}
         </div>
       )}
       {s.upperBoundNote && <p className="text-[10px] text-slate-400" data-seg-upper-bound>{s.upperBoundNote}</p>}

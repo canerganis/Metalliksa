@@ -77,16 +77,42 @@ test("degenerate-floor microstructure: composition result still shown, process c
   assert.ok(!t.includes("K/m"), t);
 });
 
-test("unavailable (IN625): reason only, no numbers, no band", () => {
-  const block = BLOCKS.in625_unavailable;
-  assert.equal(block.status, "unavailable");
-  const markup = html("in625_unavailable");
+test("available (IN625, Cieslak 1988 k + DuPont 1996 C_e): binary band, no risk class, no carbon columns, phase identity and validity shown", () => {
+  const block = BLOCKS.in625_available;
+  assert.equal(block.status, "available");
+  const markup = html("in625_available");
   const t = text(markup);
-  assert.match(markup, /data-seg-status="unavailable"/);
-  assert.ok(t.includes(`Unavailable — ${block.reason}`), t);
-  assert.doesNotMatch(markup, /data-seg-band|data-seg-k|data-seg-coupling|data-seg-risk/);
-  assert.ok(!/\d+\.\d+ %/.test(t), t);
-  assert.ok(!t.includes("k Nb"), t);
+  assert.match(markup, /data-seg-status="available"/);
+  assert.ok(block.evidenceLabel.startsWith(LABEL_PREFIX));
+  assert.ok(t.includes(block.evidenceLabel), t);
+  assert.ok(t.includes("k Nb = 0.51"), t);
+  assert.ok(t.includes("M.J. Cieslak") && t.includes("Table VIII"), t);
+  // k sensitivity (C88 Table VII and the D96 overlay value) and the C88 computed-vs-measured comparison are shown.
+  assert.match(markup, /data-seg-k-sensitivity/);
+  assert.ok(t.includes("k Nb = 0.54") && t.includes("k Nb = 0.46"), t);
+  assert.match(markup, /data-seg-source-comparison/);
+  for (const r of block.sourceComparison.c88) {
+    assert.ok(t.includes(`alloy ${r.alloy}: ${(r.fComputed * 100).toFixed(1)} % vs ${(r.fMeasured * 100).toFixed(1)} %`), t);
+  }
+  for (const p of block.band) {
+    assert.match(markup, new RegExp(`data-seg-band-row="${p.label}"`));
+    assert.ok(t.includes(`${(p.binaryUpperBound.fGammaLavesConstituent * 100).toFixed(1)} %`), `${p.label} ${t}`);
+    assert.equal(p.pseudoTernaryAtCmax.status, "not-modelled");
+    assert.ok(t.includes(`— ${p.pseudoTernaryAtCmax.reason}`), t);
+  }
+  // No Laves risk class: the rule explaining why is shown instead, never an empty class.
+  assert.equal(block.riskClass, null);
+  assert.match(markup, /data-seg-risk="none"/);
+  assert.ok(!t.includes("Laves risk class:"), t);
+  assert.ok(t.includes(block.riskClassRule), t);
+  assert.doesNotMatch(markup, /data-seg-sensitivity/);
+  assert.match(markup, /data-seg-phase-identity/);
+  assert.ok(t.includes(block.validity.phaseIdentityNote), t);
+  assert.ok(t.includes(block.validity.ceTransferNote), t);
+  assert.ok(t.includes(`Outside the source regime — ${block.validity.outsideSourceRegimeReason}`), t);
+  for (const r of block.validity.outsideSourceCompositionReasons) assert.ok(t.includes(r), r);
+  assert.ok(t.includes(block.sourceAgreementNote) && block.sourceAgreementNote.includes("0.3-1.3 vol%"), t);
+  for (const word of ["Validated", "Calibrated"]) assert.ok(!t.includes(word), word);
 });
 
 test("not-applicable (316L): reason only, no numbers", () => {
