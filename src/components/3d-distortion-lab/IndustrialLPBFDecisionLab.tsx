@@ -62,6 +62,7 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
   const slicer = job?.slicer ?? null;
   const decision = job?.verdict ?? null;
   const litWindow = job?.verdict?.literatureWindow;
+  const keyholeGateStatus = decision?.gates?.find((g) => g.id === "keyhole")?.status;
   const geometryResolved = thermal ? isComputedMeltPoolExtent(thermal.meltPoolGeometry) : true;
   const extentLabel = thermal ? meltPoolExtentInfo(thermal.meltPoolGeometry).status : "";
   const htCohorts = useMemo(() => heatTreatmentCohorts(materials.alloyId), [materials.alloyId]);
@@ -459,8 +460,8 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
               <Metric
                 label="ΔH/hₛ"
                 value={String(thermal.processParameters.normalizedEnthalpy)}
-                ok={thermal.processParameters.normalizedEnthalpy < 30}
-                hint="King onset ~30"
+                ok={keyholeGateOk(keyholeGateStatus)}
+                hint="porosity unresolved: legacy screen ≥ 30 · regime keyhole ≥ 20 (provisional)"
               />
               <Metric
                 label="P–v literature"
@@ -776,6 +777,12 @@ export const VerdictBanner: React.FC<{
     </ul>
   </div>
 );
+
+/** Missing verdict -> null (rendered as unavailable), never the Metric default ok=true. */
+export function keyholeGateOk(status: string | undefined): boolean | null {
+  if (status === undefined) return null;
+  return status === "pass" || status === "advisory";
+}
 
 /** ok = null: no pass/fail is possible (dashed, neutral), distinct from a passed check. */
 const Metric: React.FC<{ label: string; value: string; ok?: boolean | null; hint?: string }> = ({ label, value, ok = true, hint }) => (

@@ -122,13 +122,14 @@ TOTIS_PROVENANCE = {
 }
 
 ENTHALPY_TRANSITION = 15.0
-ENTHALPY_KEYHOLE = 30.0
+ENTHALPY_KEYHOLE = 20.0
 REGIME_RULE = (
     "Screening classifier, not the papers' regime definition. Inputs: normalised enthalpy "
     "dH/h_s = eta*P / (rho*cp_s*max(50, T_liq-T0)*sqrt(pi*alpha_s*v*r^3)) (same form as "
     "lpbf_thermal_solver.py, flat-plate absorptivity_IR of the material authority, solid k/cp, r = d/2) "
     "and the dataset's own balling flag. balling == 1 -> 'balling-flagged' (Hofmann only); otherwise "
-    "dH/h_s < 15 -> 'conduction', 15 <= dH/h_s < 30 -> 'transition', >= 30 -> 'keyhole'. "
+    "dH/h_s < 15 -> 'conduction', 15 <= dH/h_s < 20 -> 'transition', >= 20 -> 'keyhole' "
+    "(derivation: lpbf_thermal_solver.REGIME_THRESHOLD_BASIS). "
     "Measured D/W is recorded next to the label but not used for it."
 )
 REGIME_PARAMETERS = {"transitionEnthalpy": ENTHALPY_TRANSITION, "keyholeEnthalpy": ENTHALPY_KEYHOLE,

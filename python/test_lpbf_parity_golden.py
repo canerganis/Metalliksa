@@ -33,11 +33,12 @@ _SPEC.loader.exec_module(parity)
 PRE_BUMP_FINGERPRINT = "7482697c458b6c1aa2a77829f2fbce0c4ce4ac9466e9a3583e97b9a799b5e483"
 # Main before the 5c bump (design 5c stage B); that bump record's "from" side.
 PRE_BUMP_REVISION = "520903802a5cb89e368af60f68e53f232c99046d"
-# The goldens are recorded at this implementation (re-recorded after the 2026-10-07 balling-screen
-# bump f3ba9896 -> d92d1a3a, on top of Wave B), and GOLDEN_REVISION is a commit carrying it (the
-# re-pin commit of feat/lpbf-balling-criterion): the "from" side of the next bump.
-GOLDEN_FINGERPRINT = "d92d1a3ae85cd4c1adab6dc734eaae589ef4c275c33f09015aff639998f10ddd"
-GOLDEN_REVISION = "2a0eb47ab6cec454d3af534e0746930285998281"
+# The goldens are recorded at this implementation (re-recorded after the 2026-10-07 keyhole-regime
+# bump d92d1a3a -> cda80143, on top of the balling-screen bump), and GOLDEN_REVISION is a commit carrying it
+# (the re-pin commit of feat/lpbf-keyhole-threshold-bump): the "from" side of the next bump. Only G11 and G18
+# (label/basis text of the thermal dicts) changed; the V1 stripped digest below is unchanged.
+GOLDEN_FINGERPRINT = "cda80143d28baf8dd39512065a8ce3683f4c97f46b20d53052b63b4cd34a41d2"
+GOLDEN_REVISION = "baceb2070c1881a4ac6d52e1ba559f44a7cb2afd"
 SLOW = os.environ.get("LPBF_PARITY_SLOW") == "1"
 # Off the reference machine every case test is skipped (the goldens are bit-exact for one
 # environment). METALLIKSA_REQUIRE_PARITY=1 turns such a "NOT VERIFIED" skip into a failure,

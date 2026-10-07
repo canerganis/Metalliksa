@@ -343,6 +343,7 @@ def compose_verdict(thermal, alloy_id, extras=None):
     lof_fail = def_["lackOfFusionStatus"] == "Fail"
     lof_warn = def_["lackOfFusionStatus"] == "Warning"
     keyhole_high = str(def_["keyholePorosityRisk"]).startswith("High")
+    keyhole_possible = str(def_["keyholePorosityRisk"]).startswith("Possible")
     balling_band, balling = _balling_screen_of(def_)
     balling_high = balling_band == "high"
     balling_moderate = balling_band == "moderate"
@@ -400,7 +401,7 @@ def compose_verdict(thermal, alloy_id, extras=None):
             f"Tang overlap marginal: (h/W)²+(t/D)² = {tang:.3f} (pass ≤0.80)."
         )
     if keyhole_high:
-        reasons.append(f"Keyhole porosity: ΔH/hₛ = {dh} (King onset ~30).")
+        reasons.append(f"Keyhole porosity screen High: ΔH/hₛ = {dh} (legacy screening level ≥ 30; porosity unresolved, not a porosity boundary).")
     if balling_high:
         reasons.append(
             f"Balling screen High: Eagar–Tsai L/W = {balling_lw_text} (> {balling.get('highThreshold', 5.5)}; "
@@ -414,6 +415,11 @@ def compose_verdict(thermal, alloy_id, extras=None):
             "not include a balling screen."
         )
     advisories = []
+    if keyhole_possible:
+        advisories.append(
+            f"Advisory: keyhole porosity possible (legacy screening level, ΔH/hₛ {dh} in 15–30); Zhao 2020 "
+            "Ti-6Al-4V pores at 16–28 for v ≤ 445 mm/s; porosity unresolved, this index does not resolve it."
+        )
     if balling_absorption_note and geometry_resolved:
         advisories.append("Advisory: " + balling_absorption_note)
     if balling_moderate:
@@ -478,7 +484,8 @@ def compose_verdict(thermal, alloy_id, extras=None):
     dt = round(depth_over_layer, 3)
     tang_r = round(tang, 3)
     tang_status = "fail" if lof_fail else ("warn" if lof_warn else "pass")
-    kh_status = "fail" if (keyhole_high and dh > 35) else ("warn" if keyhole_high else "pass")
+    kh_status = ("fail" if (keyhole_high and dh > 35) else "warn" if keyhole_high
+                 else "advisory" if keyhole_possible else "pass")
     ball_status = ("warn" if balling_high else "advisory" if balling_moderate
                    else "unavailable" if balling_unavailable else "pass")
     lit_status = "pass" if win["inside"] else "warn"
@@ -518,7 +525,8 @@ def compose_verdict(thermal, alloy_id, extras=None):
             dh,
             30.0,
             "1",
-            "King normalized enthalpy ΔH/hₛ — onset ~30; do-not-print when High and >35.",
+            "Keyhole-porosity legacy screening level on ΔH/hₛ (porosity unresolved, not a porosity boundary): High ≥ 30 → warn, "
+            "High and > 35 → fail, 15–30 → advisory. The regime keyhole-mode onset (ΔH/hₛ = 20) is separate.",
         ),
         _gate(
             "balling",

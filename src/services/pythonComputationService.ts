@@ -580,7 +580,7 @@ export interface PythonBayesianOptimizationResult {
     advisoryGateCounts?: Record<string, number>;
     inconclusiveExtentStatusCounts: Record<string, number>;
   };
-  /** States that the keyhole gate is frozen solver physics, pending a planned bump. */
+  /** States that the keyhole gate is frozen solver physics (regime threshold 20 since the keyhole-regime bump; porosity screen stays a proxy). */
   keyholeGateNote?: string;
 }
 
@@ -1815,6 +1815,10 @@ export interface PythonLPBFResult {
     depthToWidthRatio_D_over_W: number;
     keyholeVaporCavityDepth_um: number;
     regime: string;
+    /** Derivation of the regime thresholds (python REGIME_THRESHOLD_BASIS). */
+    regimeBasis?: string;
+    /** Per-alloy note shown with the regime (threshold derived / misses keyhole in the dataset / not validated). */
+    regimeMaterialNote?: string;
     /** Only "computed" is a closed, unfloored liquidus isotherm (python/lpbf_thermal_solver.py). */
     extentStatus: MeltPoolExtentStatus;
     extentNote: string | null;
@@ -1854,6 +1858,10 @@ export interface PythonLPBFResult {
     hOverW?: number;
     tOverD?: number;
     keyholePorosityRisk: string;
+    /** Basis text of the porosity proxy (independent of the regime threshold). */
+    keyholePorosityBasis?: string;
+    /** Always false: no published index cut resolves keyhole porosity (Zhao 2020). */
+    keyholePorosityResolved?: boolean;
     /** Band text of the balling screen ("High…", "Moderate…", "Stable…", "Unavailable…"); see ballingScreen. */
     ballingInstabilityRisk: string;
     /** Eagar–Tsai L/W balling screen (python lpbf_defect_diagnostics.balling_screen). */

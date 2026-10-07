@@ -58,6 +58,17 @@ export function temperatureColor(T: number, Tliq: number, Tsol: number, Thaz: nu
   return color;
 }
 
+/** Legacy contour band edge (ΔH/hs). The solver keeps the contour shape change at 30 even though the regime label
+ *  now reads "Keyhole" from 20, so the 3D loft uses the same edge to match the solver contours. */
+export const LOFT_KEYHOLE_DH_HS_EDGE = 30;
+
+export function isLoftKeyhole(result: PythonLPBFResult): boolean {
+  const dh = result.processParameters?.normalizedEnthalpy;
+  if (typeof dh === "number" && Number.isFinite(dh)) return dh >= LOFT_KEYHOLE_DH_HS_EDGE;
+  // Safe fallback when ΔH/hs is missing: use the regime label.
+  return (result.meltPoolGeometry?.regime ?? "").startsWith("Keyhole");
+}
+
 export function buildLoftedMeltPoolGeometry(
   result: PythonLPBFResult,
   radialSegs = 36
@@ -71,7 +82,7 @@ export function buildLoftedMeltPoolGeometry(
   // Colour-scale top, capped (D10); the uncapped peak is displayed as text elsewhere.
   const Tpeak = colourScalePeak_C(result, Tliq);
   const xz = result.thermalSlices?.xz;
-  const isKeyhole = result.meltPoolGeometry.regime.startsWith("Keyhole");
+  const isKeyhole = isLoftKeyhole(result);
 
   const stations =
     longC.length >= 8

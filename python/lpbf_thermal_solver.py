@@ -5,7 +5,7 @@ Author: MetalliX Additive Manufacturing HPC Subsystem
 
 Simulates:
 1. 3D Goldak double-ellipsoid moving laser heat source & Eagar-Tsai / Rosenthal thermal fields
-2. Multi-regime melt pool geometry (Conduction, Transition, Keyhole Vapor Cavity)
+2. Multi-regime melt pool geometry (Conduction, Transition, Keyhole Mode)
 3. 3-View geometric contours (Top-Down X-Y, Longitudinal X-Z, Transverse Y-Z with Hatch Overlap)
 4. Hydrodynamic Marangoni convection, Knudsen recoil vapor pressure, & multiple-reflection absorptivity
 5. Comprehensive defect analytics: Lack of Fusion (LoF), Keyhole Porosity, Plateau-Rayleigh Balling, Spatter Denudation
@@ -164,15 +164,71 @@ SECONDARY_THERMOPHYSICAL_DB = {
 
 THERMOPHYSICAL_DB = {**four_alloy_thermophysical_db(), **SECONDARY_THERMOPHYSICAL_DB}
 
-# King et al. (2014) / Rubenchik: keyhole onset typically ΔH/hs ≈ 25–30.
+# Regime (normalised-enthalpy screening index, repo convention r = 1/e^2 radius, flat A, solid k/cp,
+# hs = rho cp_s (T_liq - T0)). 15 = vapor-depression onset (Cunningham 2019 Fig. 3A blue line, app units
+# 13.0-16.9 along speed). 20 = PROVISIONAL screening choice for the keyhole-mode onset (melt-pool D/W ~ 0.5): it
+# lies in the overlap of the King et al. 2014 30 +/- 4 (316L, Table 3 constants with the density unit corrected
+# to 7980 kg/m3, sigma = D4sigma/4) converted to this convention = 22.2 (19.3-25.2, conditional on the app
+# absorptivity, 20 C preheat and property set) and the Cunningham 2019 Fig. 3A red-line values along speed
+# (Ti-6Al-4V, 95 um 1/e^2) = 17.3-20.0 (a range along speed, not a confidence interval). Not an exact threshold.
 ENTHALPY_TRANSITION = 15.0
-ENTHALPY_KEYHOLE = 30.0
+ENTHALPY_KEYHOLE = 20.0
+REGIME_THRESHOLD_BASIS = ("dH/hs < 15 conduction, 15-20 transition, >= 20 keyhole mode (melt-pool D/W > 0.5 "
+                          "screening onset). 20 is a provisional screening choice, not a derived exact threshold: it "
+                          "lies in the overlap of King et al. 2014 30+/-4 (316L) converted to the repo convention "
+                          "(19.3-25.2; conditional on the app absorptivity, 20 C preheat and property set; King's "
+                          "printed density unit kg/m3 corrected to 7980 kg/m3) and the Cunningham et al. 2019 Fig. 3A "
+                          "melt-pool transition line (Ti-6Al-4V; app index 17.3-20.0 along speed, a range, not a "
+                          "confidence interval). Both sources and the held-out checks are for Ti-6Al-4V and 316L; "
+                          "transferred, not derived, for IN718/IN625/AlSi10Mg. "
+                          "Cunningham and Gan data are not independent validation. Keyhole mode is not keyhole "
+                          "porosity; a low index is not an assurance.")
+REGIME_MATERIAL_NOTE_DERIVED = ("threshold derived for this alloy from Ti-6Al-4V / 316L data (provisional screening "
+                                "choice)")
+REGIME_MATERIAL_NOTE_IN625 = ("threshold misses keyhole in the available dataset (measured keyhole indices "
+                              "13.9-18.6)")
+REGIME_MATERIAL_NOTE_UNVALIDATED = "threshold not validated for this alloy"
+
+
+def regime_material_note(material_name: str) -> str:
+    """Per-alloy statement shown next to the regime so that a low index never reads as an assurance."""
+    name = str(material_name).lower()
+    if "625" in name:
+        return REGIME_MATERIAL_NOTE_IN625
+    if "ti-6al-4v" in name or "ti6al4v" in name or "316l" in name:
+        return REGIME_MATERIAL_NOTE_DERIVED
+    return REGIME_MATERIAL_NOTE_UNVALIDATED
+
+
+# Legacy band edges of the uncited Rosenthal depth increment and of the process-map depth proxy. They are the
+# heuristic's own constants (numerically unchanged by the keyhole-regime bump), not the regime threshold.
+KEYHOLE_INCREMENT_FULL_AT = 30.0
+# Keyhole-porosity screen (proxy, not a porosity boundary; Zhao 2020 shows no single index cut exists).
+POROSITY_SCREEN_NEGLIGIBLE_BELOW = 15.0
+POROSITY_SCREEN_HIGH_AT = 30.0
+KEYHOLE_POROSITY_BASIS = ("Porosity unresolved; legacy screening level on the normalised enthalpy, independent of the "
+                          "regime threshold. < 15: Zhao 2020 (doi 10.1126/science.abd1587) found no pore condition "
+                          "below 15 (0/35) and its boundary minimum is 15.0; 0/35 observations is not evidence of "
+                          "safety. >= 30 is the legacy screen kept for verdict continuity, not a porosity boundary "
+                          "(Zhao 2020 stable keyholes up to dH/hs 62 at high speed). Keyhole mode (>= 20) does not "
+                          "imply porosity.")
 KEYHOLE_INCREMENT_MODEL_ID = "heuristic-keyhole-increment-v1"
 KEYHOLE_INCREMENT_BASIS = ("uncited screening heuristic: extra depth = d_iso*(0.15+0.55*t) for 15<=dH/hs<30, "
-                           "d_iso*(0.85+0.55*log10(1+(dH/hs-30)/10)) above; only the 15/30 thresholds are from "
-                           "King et al. 2014 (doi 10.1016/j.jmatprotec.2014.06.005)")
+                           "d_iso*(0.85+0.55*log10(1+(dH/hs-30)/10)) above; the 15/30 band edges are the "
+                           "heuristic's own legacy constants (formerly King et al. 2014 316L numbers applied in a "
+                           "different convention, doi 10.1016/j.jmatprotec.2014.06.005), not the regime "
+                           "threshold (20)")
+KEYHOLE_DEPTH_BENCHMARK_NOTE = ("vs x-ray vapor-depression depths (keyhole benchmark 2026-10-07): under-predicts "
+                                "Ti-6Al-4V (median ratio 0.62 at 95 um, 0.12 at 140 um) and exceeds the measured "
+                                "316L melt depth in 176/677 Hofmann tracks; no single A(R) or ramp change fixes "
+                                "both. Cause not resolved; candidate mechanisms: beam-diameter convention into "
+                                "Fabbro's uniform model (Fabbro 2020 Sec. 3.4 discusses ~56 um effective diameter for a "
+                                "95 um Gaussian; the app passes the 1/e^2 diameter), model validity range 2<=Pe<=10 / "
+                                "deep cylindrical keyhole, flat keyhole absorptivity (no A(R) multiple-reflection "
+                                "term), no vaporisation heat sink; tracked as a later bump")
 FABBRO_BASIS = ("Fabbro 2020 eq. 2 with the flat-surface absorptivity as a calibrated effective value (not the "
-                "keyhole A(R)); m=2.4, n=3 fitted for 2<=Pe<=10; uncited linear dH/hs onset ramp 15->30")
+                "keyhole A(R)); m=2.4, n=3 fitted for 2<=Pe<=10; uncited linear dH/hs onset ramp 15->30; "
+                + KEYHOLE_DEPTH_BENCHMARK_NOTE)
 
 # Absorption model of the screening kernels. "flat-plate" (default, every machine): the material
 # authority's flat absorptivity feeds ΔH/hs, the multiple-reflection η_eff, the conduction power and
@@ -190,7 +246,7 @@ DISTORTION_INDEX_BASIS = ("alloy/layer/preheat-only: E, alpha, nu, T_solidus - T
 
 def classify_enthalpy_regime(normalized_enthalpy: float) -> str:
     if normalized_enthalpy >= ENTHALPY_KEYHOLE:
-        return "Keyhole Mode (Deep Vapor Cavity)"
+        return "Keyhole Mode (melt-pool D/W > 0.5 screening onset)"
     if normalized_enthalpy >= ENTHALPY_TRANSITION:
         return "Transition Mode"
     return "Conduction Mode (Stable)"
@@ -545,7 +601,7 @@ def calculate_meltpool_physics(
     # King et al. 2014 (doi 10.1016/j.jmatprotec.2014.06.005) Eq. (2.6), Hann calibration, pi INSIDE
     # the root: dH/hs = A P / (hs sqrt(pi D u sigma^3)), A = flat absorptivity. Repo convention differs
     # from King's calibration: r = 1/e^2 radius (King sigma = r/2), hs = rho cp_s (T_liq - T0), D = solid
-    # diffusivity; the 15/30 thresholds are applied to this convention as a screening proxy.
+    # diffusivity; the 15/20 thresholds are derived in this convention (see REGIME_THRESHOLD_BASIS).
     # dH always uses the flat absorptivity, also when the powder ray tracer is requested.
     enthalpy_denom = rho * cp_s * max(50.0, T_liq - T_preheat) * math.sqrt(math.pi * alpha_solid * v_scan * (r_beam ** 3))
     normalized_enthalpy = (eta_base_flat * P_laser) / max(1e-9, enthalpy_denom)
@@ -645,21 +701,24 @@ def calculate_meltpool_physics(
     elif normalized_enthalpy < ENTHALPY_TRANSITION:
         extra = 0.0
         keyhole_depth_um = 0.0
-    elif normalized_enthalpy < ENTHALPY_KEYHOLE:
-        trans = (normalized_enthalpy - ENTHALPY_TRANSITION) / (ENTHALPY_KEYHOLE - ENTHALPY_TRANSITION)
+    elif normalized_enthalpy < KEYHOLE_INCREMENT_FULL_AT:
+        trans = (normalized_enthalpy - ENTHALPY_TRANSITION) / (KEYHOLE_INCREMENT_FULL_AT - ENTHALPY_TRANSITION)
         extra = d_iso * (0.15 + 0.55 * trans)
         keyhole_depth_um = extra * 1e6
     else:
-        over = (normalized_enthalpy - ENTHALPY_KEYHOLE) / 10.0
+        over = (normalized_enthalpy - KEYHOLE_INCREMENT_FULL_AT) / 10.0
         extra = d_iso * (0.85 + 0.55 * math.log10(1.0 + max(0.0, over)))
         keyhole_depth_um = extra * 1e6
 
-    if normalized_enthalpy < ENTHALPY_TRANSITION:
-        keyhole_porosity_risk = "Negligible (<0.01%)"
-    elif normalized_enthalpy < ENTHALPY_KEYHOLE:
-        keyhole_porosity_risk = "Low-Moderate (Occasional Fluctuations)"
+    if normalized_enthalpy < POROSITY_SCREEN_NEGLIGIBLE_BELOW:
+        keyhole_porosity_risk = ("Negligible (legacy screening level, dH/hs < 15; porosity unresolved: Zhao 2020 "
+                                 "0/35 pore conditions below 15 is not evidence of safety)")
+    elif normalized_enthalpy < POROSITY_SCREEN_HIGH_AT:
+        keyhole_porosity_risk = ("Possible (legacy screening level, 15 <= dH/hs < 30; porosity unresolved by this "
+                                 "index: Zhao 2020 Ti-6Al-4V pores observed at dH/hs 16-28 for v <= 445 mm/s)")
     else:
-        keyhole_porosity_risk = "High (Vapor Bubble Entrapment / Pore Defect Risk)"
+        keyhole_porosity_risk = ("High (legacy screening level, dH/hs >= 30; porosity unresolved, not a porosity "
+                                 "boundary: Zhao 2020 Ti-6Al-4V stable keyholes up to dH/hs 62 at high speed)")
 
     d_melt_m = d_iso + extra
     regime = classify_enthalpy_regime(normalized_enthalpy)
@@ -825,7 +884,8 @@ def calculate_meltpool_physics(
         # Cross-section plane at the axial peak x_peak (x = 0 when the field peaks at the beam centre),
         # consistent with the anchored extent search; a pool behind the beam is otherwise missed.
         z_iso = _binary_extent(lambda z: T_field(x_peak, y_m, z) >= T_liq, 0.0, search_depth)
-        if regime.startswith("Keyhole"):
+        # Contour shape keeps the legacy 30 band edge (numerically unchanged by the keyhole-regime bump).
+        if normalized_enthalpy >= KEYHOLE_INCREMENT_FULL_AT:
             z_pt = z_iso * depth_scale * (max(0.05, math.sin(phi)) ** 0.75)
         else:
             z_pt = z_iso * depth_scale
@@ -908,16 +968,20 @@ def calculate_meltpool_physics(
             w_m = math.sqrt(max(1e-12, (8.0 / (math.pi * math.e)) * (eff_p / (rho * cp * max(50.0, T_liq - T_preheat) * v_m))) + d_beam ** 2)
             w_um = w_m * 1e6
             
+            # Depth proxy keeps the legacy 15/30 band edges (numerically unchanged by the keyhole-regime bump).
             if enth < ENTHALPY_TRANSITION:
                 d_um = w_um * 0.45
-                pt_regime = "Optimal Conduction"
-                color_code = "#10b981"  # Emerald
-            elif enth > ENTHALPY_KEYHOLE:
+            elif enth > KEYHOLE_INCREMENT_FULL_AT:
                 d_um = w_um * 1.15
-                pt_regime = "Keyhole Defect Zone"
-                color_code = "#ef4444"  # Red
             else:
                 d_um = w_um * 0.70
+            if enth < ENTHALPY_TRANSITION:
+                pt_regime = "Optimal Conduction"
+                color_code = "#10b981"  # Emerald
+            elif enth >= ENTHALPY_KEYHOLE:
+                pt_regime = "Keyhole Mode"
+                color_code = "#ef4444"  # Red
+            else:
                 pt_regime = "Transition"
                 color_code = "#38bdf8"  # Sky
 
@@ -985,6 +1049,8 @@ def calculate_meltpool_physics(
             "depthToWidthRatio_D_over_W": round(d_melt_um / max(1.0, w_melt_um), 2),
             "keyholeVaporCavityDepth_um": round(keyhole_depth_um, 1),
             "regime": regime,
+            "regimeBasis": REGIME_THRESHOLD_BASIS,
+            "regimeMaterialNote": regime_material_note(material_name),
             "extentStatus": extent_status,
             "extentNote": extent_note,
             "peakOffset_um": round(x_peak * 1e6, 1),
@@ -1008,6 +1074,7 @@ def calculate_meltpool_physics(
             "absorptivity": round(A_fabbro, 3),
             "absorptivityBasis": "flat-surface effective (not Fabbro keyhole A(R))",
             "doi": fabbro["doi"],
+            "depthBenchmarkNote": KEYHOLE_DEPTH_BENCHMARK_NOTE,
         },
         "marangoniModel": {
             "modelId": MARANGONI_MODEL_ID,
@@ -1044,6 +1111,8 @@ def calculate_meltpool_physics(
             "hOverW": round(h_over_w, 3),
             "tOverD": round(t_over_d, 3),
             "keyholePorosityRisk": keyhole_porosity_risk,
+            "keyholePorosityBasis": KEYHOLE_POROSITY_BASIS,
+            "keyholePorosityResolved": False,
             "ballingInstabilityRisk": balling_risk,
             "ballingScreen": balling,
             "recoaterCrashRisk": recoater_risk,
@@ -1088,6 +1157,7 @@ def calculate_meltpool_physics(
                 "regime": regime,
                 "lofStatus": lof_status
             },
+            "regimeBasis": REGIME_THRESHOLD_BASIS,
             "grid": process_map_grid,
             "ballingNote": ("Balling is screened at the operating point only (defectDiagnostics.ballingScreen, "
                             "Eagar-Tsai L/W); the quick grid has no melt-pool length and marks no balling zone."),

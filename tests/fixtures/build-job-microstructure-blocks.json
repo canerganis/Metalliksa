@@ -5,7 +5,7 @@
   "modelId": "solidification-front-v1",
   "gradientSource": "solidification-front-v1",
   "usedFieldMap": true,
-  "regime": "Keyhole Mode (Deep Vapor Cavity)",
+  "regime": "Keyhole Mode (melt-pool D/W > 0.5 screening onset)",
   "normalizedEnthalpy": 30.8,
   "regimeNote": "Keyhole Mode: outside the conduction regime of the G/R field",
   "G_K_m": 12135115.0,

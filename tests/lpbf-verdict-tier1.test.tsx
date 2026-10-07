@@ -59,7 +59,7 @@ test("all-zero run shows the dominant blocking gates and the frozen keyhole note
   assert.match(t, /Inconclusive \(melt-pool extent not resolved\): heuristic-width-fallback ×9/);
   assert.match(t, /balling ×11/);
   assert.match(t, /frozen thermal solver/);
-  assert.match(t, /pending a planned implementation bump/);
+  assert.match(t, /the regime threshold moved to 20 in the keyhole-regime bump/);
   // A backend without the summary is reported, not hidden.
   const bare = text(renderToStaticMarkup(<BlockingGateSummary result={{ ...result, gateSummary: undefined, keyholeGateNote: undefined }} />));
   assert.match(bare, /Gate summary not returned/);

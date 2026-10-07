@@ -113,7 +113,7 @@ class TestBayesianOptimizerHonesty(unittest.TestCase):
             if it["verdict"] == "do-not-print":
                 self.assertTrue(d["blockingGates"])
         self.assertIn("frozen", res["keyholeGateNote"])
-        self.assertIn("planned implementation bump", res["keyholeGateNote"])
+        self.assertIn("keyhole-regime bump", res["keyholeGateNote"])
         self.assertEqual(set(res["gateSummary"]),
                          {"blockingGateCounts", "riskGateCounts", "advisoryGateCounts",
                           "inconclusiveExtentStatusCounts"})

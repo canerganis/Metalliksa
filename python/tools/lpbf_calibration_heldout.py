@@ -65,6 +65,7 @@ GENERATED_AT_DEFAULT = "2026-10-06"
 RAYTRACER_MODULE = "powder_bed_raytracer"
 FALLBACK_WARNING_TEXT = "GPU Powder Bed Ray Tracing failed"
 ENTHALPY_TRANSITION = 15.0
+# legacy 15/30 kept for the preregistered v2 protocol; the solver regime uses 15/20 since the keyhole-regime bump
 ENTHALPY_KEYHOLE = 30.0
 CLASSES = ("conduction", "transition", "keyhole")
 MODELS = ("default", "const", "regime", "powerlaw")

@@ -181,6 +181,33 @@ class ComposeVerdictTier1(unittest.TestCase):
         self.assertEqual(out["blockingGates"], ["keyhole"])
         self.assertEqual(out["dominantGate"], "keyhole")
 
+    def test_keyhole_possible_band_is_an_advisory_without_verdict_effect(self):
+        # Keyhole-regime bump: the porosity screen "Possible" band (15 <= dH/hs < 30) is advisory only; the
+        # numeric gate (High at 30, do-not-print above 35) is unchanged and the regime threshold (20) is separate.
+        possible = ("Possible (15 <= dH/hs < 30; not resolved by this index: Zhao 2020 Ti-6Al-4V pores "
+                    "observed at dH/hs 16-28 for v <= 445 mm/s)")
+        out = compose_verdict(_clean(keyholePorosityRisk=possible, normalizedEnthalpy=25.0), "in718")
+        self.assertEqual(out["verdict"], "printable")
+        gates = {g["id"]: g["status"] for g in out["gates"]}
+        self.assertEqual(gates["keyhole"], "advisory")
+        self.assertIn("keyhole", out["advisoryGates"])
+        self.assertEqual(out["riskGates"], [])
+        self.assertEqual(out["blockingGates"], [])
+        self.assertEqual(out["dominantGate"], "none")
+        adv = next(a for a in out["advisories"] if "keyhole porosity possible" in a)
+        self.assertTrue(adv.startswith("Advisory:"), adv)
+        self.assertIn("ΔH/hₛ 25.0 in 15–30", adv)
+        self.assertIn("porosity unresolved", adv)
+        gate = next(g for g in out["gates"] if g["id"] == "keyhole")
+        self.assertEqual((gate["measured"], gate["required"]), (25.0, 30.0))
+        self.assertIn("regime keyhole-mode onset (ΔH/hₛ = 20) is separate", gate["note"])
+        high = "High (screening proxy dH/hs >= 30; not a porosity boundary)"
+        self.assertEqual(compose_verdict(_clean(keyholePorosityRisk=high, normalizedEnthalpy=30.0), "in718")["verdict"], "risky")
+        self.assertEqual(compose_verdict(_clean(keyholePorosityRisk=high, normalizedEnthalpy=35.01), "in718")["verdict"], "do-not-print")
+        reason = next(r for r in compose_verdict(_clean(keyholePorosityRisk=high, normalizedEnthalpy=30.0), "in718")["reasons"]
+                      if r.startswith("Keyhole porosity screen High"))
+        self.assertIn("legacy screening level ≥ 30; porosity unresolved, not a porosity boundary", reason)
+
     def test_lof_fail_still_do_not_print(self):
         out = compose_verdict(_clean(lackOfFusionStatus="Fail"), "in718")
         self.assertEqual(out["verdict"], "do-not-print")

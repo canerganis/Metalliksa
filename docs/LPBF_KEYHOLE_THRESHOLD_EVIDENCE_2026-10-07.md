@@ -19,9 +19,12 @@ absorptivity 0.35, 20 C preheat, spot = 1/e^2 diameter (assumed). This is a comp
 - keyholePorosityRisk: the same bands (Negligible / Low-Moderate / High).
 - Keyhole depth: Fabbro 2020 eq. 2 with the flat absorptivity, scaled by a 15 -> 30 ramp (0 below 15).
 - The 15/30 values are King et al. 2014 (316L) numbers, applied to a different convention: King's sigma is the Gaussian
-  standard deviation (I ~ exp(-r^2/2 sigma^2), i.e. sigma = r/2) and hs = rho c Tm, so for the same case King's index
-  is about 2^1.5 = 2.8x the app's (the code comment in `lpbf_thermal_solver.py` already says the thresholds are
-  "applied to this convention as a screening proxy").
+  standard deviation (I ~ exp(-r^2/2 sigma^2), i.e. sigma = r/2) and hs = rho c Tm. Correction (keyhole-regime bump
+  spec): the sigma term alone is 2^1.5 = 2.8x, but the property terms cancel about half of it; for 316L with the app
+  properties the full ratio is H_King / H_app = **1.351** (A 0.4 vs 0.42, hs_K = 1.2e6 J/kg vs rho cp (T_liq - T0),
+  D_K = 5.38e-6 m2/s vs the app's solid alpha), so King's 30 +/- 4 is **22.2 (19.3-25.2)** in the app convention, conditional on the app absorptivity, 20 C preheat and the app property set. (The
+  code comment in `lpbf_thermal_solver.py` said the thresholds were "applied to this convention as a screening proxy";
+  that was true before the bump.)
 
 ## Finding 1: the keyhole threshold 30 is too high for Ti-6Al-4V (95 um spot)
 
@@ -86,10 +89,34 @@ Against the measured vapor-depression depth:
    regeneration, UI copy (`< 30`, "15 / 30"), and this benchmark re-run as the acceptance check (target: the app index
    at the Cunningham red line within the chosen threshold +/- read uncertainty; Zhao pore cases reported, not tuned).
 
-## Open points that limit the evidence
+## Resolution (keyhole-regime bump, 2026-10-07)
+
+Implemented as the planned physics bump `keyhole-regime` (bump record under `docs/LPBF_IMPLEMENTATION_BUMP_2026-10-07_keyhole-regime.*`): the
+regime keyhole-mode threshold moved 30 -> 20 in the app convention as a **provisional screening choice, not a derived exact threshold** (inside the overlap of King 316L 19.3-25.2 and the Cunningham red-line values along speed 17.3-20.0, a range, not a confidence interval; Cunningham and Gan data are the derivation inputs, not independent validation; the held-out Hofmann/Totis checks and the benchmark v2 record are in
+`LPBF_KEYHOLE_BENCHMARK_2026-10-07_keyhole-regime.*`); `keyholePorosityRisk` is decoupled from the regime index (same
+numeric gate, labels Negligible / Possible / High, 15-30 advisory in the build job); the Fabbro depth formula is
+unchanged (no tested variant passes the cross-material bounds, text only; the cause of the Fabbro under-prediction is not resolved, candidate mechanisms are listed in `FABBRO_BASIS`: beam-diameter convention into Fabbro's uniform model, model validity range / deep cylindrical keyhole, flat keyhole absorptivity, no vaporisation sink); calibration v2 keeps 15/30 (preregistered).
+Labels are unchanged: `experimentalValidation=false`, `validationStatus=unvalidated`, `productionReady=false`.
+
+## Open points that limit the evidence (settled by the keyhole-regime bump, with sources)
+
+| question | answer | source |
+|---|---|---|
+| Cunningham spot convention | 1/e^2 diameter. SM p. 2: single-mode fibre laser "providing Gaussian beam profiles", focal spot ~56 um (1/e^2), larger spots by defocusing; Eq. S1 uses the 1/e^2 diameter. | `aav4687_cunningham_sm.pdf` pp. 2-3 |
+| Same, independent | Gan 2021 Supplementary Data 1 lists the Cunningham Ti-6Al-4V cases with d = 95 um, r0 = 48 um and d = 140 um, r0 = 70 um; SI Eqs. 23/37 define r0 by exp(-2 r^2/r0^2), so r0 = d/2 (the app's r). Data 2 lists r0 = 75 um for 140 um: Gan-internal inconsistency, recorded. | `gan2021_data1/2.xlsx`, `gan2021_SI.pdf` |
+| Benchmark spot assumption right? | Yes; no benchmark row is re-derived for the spot. The "assumption" wording stays only for Zhao (SI unavailable). | |
+| Fig. 3A red line meaning | SM Figs. S2/S3: blue = vapor-depression transition, red = melt-pool transition "around d/w = 0.5" (stationary beam). Same criterion as King 2014 (depth > half-width). | SM pp. 3-4 |
+| Digitization quality | Gan Data 1 Ti-6Al-4V depths vs our digitized Fig. 3B/3C: 69/69 rows matched, digitized minus Gan median +0.8 um, mean abs 2.5 um, max 20.4 um. | benchmark v2 `ganData1Check` |
+| Gan Ke offset (needed factor 0.26-0.45) | Property set, not r0: with Gan Supplementary Table 1 properties and per-case eta, Gan Eq. 2 reproduces Cunningham depths in-sample (95 um: median ratio 0.95; 140 um: 0.96); held-out Zhao bare boundary 0.71, powder 1.45. | designer check |
+| King Table 3 | A = 0.4, rho = 7.98 printed with the unit kg/m3 (rendered page image of the accepted manuscript, verified) = physically 7.98 g/cm3, so **7980 kg/m3 is a unit correction, not as printed**; hs = 1.2e6 J/kg (Rai 2007), D = 5.38e-6 m2/s, sigma from I = I0 exp(-r^2/2 sigma^2) (D4sigma = 4 sigma); threshold 30 +/- 4 (transition ~26-34). | King 2014 accepted MS Table 3, Section 3.2.1 fn. 3-4, Section 5 |
+
+Still open: Zhao's SI (E definition, beam profile) and Huang Supplementary Table 3 were not available.
+
+Original open points (before the SM and Gan Data read):
 
 - Supplementary materials (beam definition, plate thickness, Zhao's E definition, Gan Supplementary Data 1 and
-  property set, Huang Supplementary Table 3) were not available. Spot = 1/e^2 diameter is an assumption; if the
+  property set, Huang Supplementary Table 3) were not available. Spot = 1/e^2 diameter was an assumption (now
+  confirmed for Cunningham, see above); if the
   published spot were D4sigma of a non-Gaussian profile, the index shifts by (d_true/d)^-1.5.
 - Gan's Eq. 2 with app properties over-predicts the depths by 2.4-4.9x; the Ke factor that would fit is 0.26-0.45
   (property set and/or r0 convention). Gan's relations are therefore not usable quantitatively until the SI is read.

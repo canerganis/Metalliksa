@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import lpbf_keyhole_literature as kl  # noqa: E402
 import lpbf_public_datasets as pds  # noqa: E402
 
-LOCATOR_RE = r"^(Fig\. |Table |Eq\.|Eqs\.|Section |Methods |p\. )"
+LOCATOR_RE = r"^(Fig\. |Table |Eq\.|Eqs\.|Section |Methods |p\. |Supplementary Data )"
 
 
 def _rows(path):
@@ -29,7 +29,7 @@ def _rows(path):
 
 class PinsRowsLocators(unittest.TestCase):
     def test_every_table_matches_its_pin_and_row_count(self):
-        self.assertEqual(len(kl.PINNED_TABLES), 8)
+        self.assertEqual(len(kl.PINNED_TABLES), 9)
         for path, digest in kl.PINNED_TABLES.items():
             self.assertEqual(pds.sha256_file(path), digest, path.name)
             self.assertEqual(len(_rows(path)), kl.EXPECTED_ROWS[path], path.name)
@@ -148,6 +148,25 @@ class Relations(unittest.TestCase):
         self.assertEqual(c["hann2011-vaporization-ratio"]["constants"]["ti64"], kl.HANN_HV_HS_TI64)
         self.assertEqual(c["gan2021-porosity"]["constants"], {"a": 0.10, "b": 1.51, "c": 0.01, "d": 2.32, "e": 0.055})
         self.assertEqual(c["huang2022-front-wall-angle"]["constants"], {"a": 0.29, "b": -0.2})
+
+    def test_king_table3_relation_and_conversion_constants(self):
+        k = self.rel["king2014-keyhole-threshold-316l"]
+        self.assertEqual(k["constants"], {"A": 0.4, "rho_kg_m3": 7980.0, "hs_J_kg": 1.2e6, "D_m2_s": 5.38e-6,
+                                          "center": 30.0, "halfwidth": 4.0})
+        self.assertRegex(k["locator"], r"^Table 3")
+
+    def test_gan_data1_ti64_rows_as_published(self):
+        d = kl.load_gan_data1_ti64()
+        rows = d["rows"]
+        self.assertEqual(len(rows), 71)
+        self.assertEqual(sum(r["beamDiameter_um"] == 95.0 for r in rows), 48)
+        self.assertEqual(sum(r["beamDiameter_um"] == 140.0 for r in rows), 23)
+        self.assertTrue(all(r["r0_um"] * 2 == r["beamDiameter_um"] for r in rows))
+        r = rows[0]
+        self.assertEqual((r["power_W"], r["speed_mm_s"], r["keyholeDepth_um"]), (103.198, 400.0, 33.008))
+        self.assertEqual(r["ganTable1"]["rho_kg_m3"], 3920.0)
+        self.assertEqual(d["provenance"]["source"]["sha256"], kl.GAN_DATA1_XLSX_SHA256)
+        self.assertEqual(d["provenance"]["rows"], 71)
 
     def test_gan_keyhole_number_by_hand(self):
         # Ti-6Al-4V-like inputs: rho 4430, cp 526, k 6.7, Tl 1660, T0 20, eta_m 0.26, 300 W, 700 mm/s, 95 um

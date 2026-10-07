@@ -4,9 +4,9 @@
  "group": "NPZ",
  "description": "np.savez_compressed bytes are time-independent (fixture arrays, 2.1 s apart)",
  "slow": false,
- "recordedImplementationHash": "d92d1a3ae85cd4c1adab6dc734eaae589ef4c275c33f09015aff639998f10ddd",
+ "recordedImplementationHash": "cda80143d28baf8dd39512065a8ce3683f4c97f46b20d53052b63b4cd34a41d2",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "2a0eb47ab6cec454d3af534e0746930285998281",
+ "recordedGitHead": "dd77476713b324e87bdc941eb400a6774117cd5d",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",

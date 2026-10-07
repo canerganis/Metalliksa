@@ -1,9 +1,11 @@
-"""Keyhole benchmark report (docs/LPBF_KEYHOLE_BENCHMARK_2026-10-07.*): the committed report is reproducible from the
-committed data and pins the headline numbers.
+"""Keyhole benchmark report v2 (docs/LPBF_KEYHOLE_BENCHMARK_2026-10-07_keyhole-regime.*): the committed report is
+reproducible from the committed data and pins the headline numbers of both rule sets (legacy 15/30 and current 15/20).
 
 Self-contained and fast: the index-only evaluation (no solver) is recomputed in full and compared with the committed
 JSON; the .md and .view.json are regenerated from the committed JSON and compared byte-for-byte; three cases are
 re-run through the frozen kernels when the implementation fingerprint matches the report (else skipped, with reason).
+The depth tables must equal the schema-1 record (docs/LPBF_KEYHOLE_BENCHMARK_2026-10-07.json, kept): the bump changes
+no depth.
 """
 
 import json
@@ -18,9 +20,11 @@ sys.path.insert(0, str(HERE / "tools"))
 import lpbf_keyhole_benchmark as kb  # noqa: E402
 import lpbf_keyhole_literature as kl  # noqa: E402
 
-REPORT = HERE.parent / "docs" / "LPBF_KEYHOLE_BENCHMARK_2026-10-07.json"
-INDEX_KEYS = ("appIndex_dHhs", "appRegime", "appPorosityRiskByIndex", "ganKe", "ganEta", "ganRegime",
-              "ganKeyholeDepth_um", "huangProduct_betaYe", "huangProduct_betaAppFlat", "hannRegime")
+REPORT = HERE.parent / "docs" / "LPBF_KEYHOLE_BENCHMARK_2026-10-07_keyhole-regime.json"
+OLD_REPORT = HERE.parent / "docs" / "LPBF_KEYHOLE_BENCHMARK_2026-10-07.json"
+INDEX_KEYS = ("appIndex_dHhs", "appRegime", "appRegimeLegacy_15_30", "appPorosityRiskByIndex", "appPorosityRiskLegacy",
+              "ganKe", "ganEta", "ganRegime", "ganKeyholeDepth_um", "huangProduct_betaYe", "huangProduct_betaAppFlat",
+              "hannRegime")
 
 
 class CommittedReport(unittest.TestCase):
@@ -30,13 +34,18 @@ class CommittedReport(unittest.TestCase):
         cls.idx = kb.evaluate(run_kernels=False)
 
     def test_schema_and_data_pins(self):
+        self.assertEqual(self.doc["schema"], "lpbf-keyhole-benchmark-2")
         self.assertEqual(self.doc["schema"], kb.SCHEMA)
         self.assertEqual(self.doc["generatedAt"], "2026-10-07")
         for name, prov in self.doc["datasets"].items():
             self.assertEqual(prov["fileSha256"], kl.LOADERS[name]()["provenance"]["fileSha256"], name)
+        self.assertEqual(self.doc["crossCheckDatasets"]["gan-keyhole-2021-supplementary-data1"]["fileSha256"],
+                         kl.GAN_DATA1_SHA256)
         self.assertEqual(len(self.doc["cases"]["cunningham"]), 69)
         self.assertEqual(len(self.doc["cases"]["zhaoBoundary"]), 20)
         self.assertEqual(len(self.doc["cases"]["zhaoPores"]), 35)
+        self.assertEqual((kb.LEGACY_TRANSITION, kb.LEGACY_KEYHOLE), (15.0, 30.0))
+        self.assertEqual((kb.CURRENT_TRANSITION, kb.CURRENT_KEYHOLE), (15.0, 20.0))
 
     def test_index_evaluation_is_reproduced_exactly(self):
         for group in ("cunningham", "zhaoBoundary", "zhaoPores"):
@@ -44,33 +53,99 @@ class CommittedReport(unittest.TestCase):
                 self.assertEqual(a["rowId"], b["rowId"])
                 for k in INDEX_KEYS:
                     self.assertEqual(a[k], b[k], (group, a["rowId"], k))
-        for key in ("cunninghamLines", "zhaoPores", "zhaoBoundary", "hannRelationCheck"):
+        for key in ("cunninghamLines", "zhaoPores", "zhaoBoundary", "hannRelationCheck", "heldOut", "kingConversion",
+                    "ganData1Check"):
             self.assertEqual(self.doc[key], self.idx[key], key)
-        for k in ("appIndex_15_30", "ganKe_1.4_6", "appIndex_keyholeOnly", "hann_HvHs_12.34",
-                  "appIndex_15_30_excludingNearBoundary"):
+        for k in ("legacy_15_30", "current", "ganKe_1.4_6", "hann_HvHs_12.34"):
             self.assertEqual(self.doc["confusion"][k], self.idx["confusion"][k], k)
         for name, block in self.idx["depth"].items():
             self.assertEqual(self.doc["depth"][name]["ganEq2"], block["ganEq2"], name)
             self.assertEqual(self.doc["depth"][name]["ganKeScaleToFitEq2"], block["ganKeScaleToFitEq2"], name)
 
-    def test_headline_numbers(self):
-        c = self.doc["confusion"]["appIndex_15_30"]
-        self.assertEqual(c["rowsAreReported_columnsArePredicted"],
+    def test_cunningham_confusion_legacy_and_current(self):
+        m = lambda rule: self.doc["confusion"][rule]["appIndex3Class"]  # noqa: E731
+        self.assertEqual(m("legacy_15_30")["rowsAreReported_columnsArePredicted"],
                          {"conduction": {"conduction": 1, "transition": 0, "keyhole": 0},
                           "transition": {"conduction": 1, "transition": 3, "keyhole": 0},
                           "keyhole": {"conduction": 0, "transition": 15, "keyhole": 26}})
-        self.assertEqual((c["n"], c["correct"], c["accuracy"]), (46, 30, 0.652))
+        self.assertEqual((m("legacy_15_30")["n"], m("legacy_15_30")["correct"], m("legacy_15_30")["accuracy"]),
+                         (46, 30, 0.652))
+        self.assertEqual(m("current")["rowsAreReported_columnsArePredicted"],
+                         {"conduction": {"conduction": 1, "transition": 0, "keyhole": 0},
+                          "transition": {"conduction": 1, "transition": 3, "keyhole": 0},
+                          "keyhole": {"conduction": 0, "transition": 4, "keyhole": 37}})
+        self.assertEqual((m("current")["n"], m("current")["correct"]), (46, 41))
+        near = lambda rule: self.doc["confusion"][rule]["appIndex3ClassExcludingNearBoundary"]  # noqa: E731
+        self.assertEqual((near("legacy_15_30")["correct"], near("legacy_15_30")["n"]), (30, 44))
+        self.assertEqual((near("current")["correct"], near("current")["n"]), (41, 44))
+        b = lambda rule: self.doc["confusion"][rule]["appIndexKeyholeOnly"]  # noqa: E731
+        self.assertEqual((b("legacy_15_30")["correct"], b("current")["correct"]), (31, 42))
+        self.assertEqual((b("legacy_15_30")["rowsAreReported_columnsArePredicted"]["keyhole"]["keyhole"],
+                          b("current")["rowsAreReported_columnsArePredicted"]["keyhole"]["keyhole"]), (26, 37))
+
+    def test_held_out_check(self):
+        ho = self.doc["heldOut"]
+        pairs = {"hofmann316l": (677, 511, 561), "totisTi64": (80, 69, 74), "laneIn625LegacyProps": (23, 13, 13),
+                 "kuLeuven316l_spot37.5um_unverified": (44, 41, 43), "kuLeuven316l_spot75um_sensitivity": (44, 26, 34),
+                 "kuLeuvenTi64_spot37.5um_unverified": (14, 14, 11), "kuLeuvenTi64_spot75um_sensitivity": (14, 3, 8)}
+        for name, (n, leg, cur) in pairs.items():
+            self.assertEqual((ho[name]["n"], ho[name]["legacy_15_30"]["correct"], ho[name]["current"]["correct"]),
+                             (n, leg, cur), name)
+        spots = {"50": (175, 132, 144), "80": (187, 137, 148), "110": (161, 122, 129), "140": (154, 120, 140)}
+        for spot, (n, leg, cur) in spots.items():
+            x = ho["hofmann316lBySpot_um"][spot]
+            self.assertEqual((x["n"], x["legacy_15_30"]["correct"], x["current"]["correct"]), (n, leg, cur), spot)
+        self.assertEqual(ho["hofmann316l"]["sensitivityAccuracy"],
+                         {"15.0": 0.731, "17.5": 0.808, "18.0": 0.815, "20.0": 0.829, "22.0": 0.833, "25.0": 0.815,
+                          "30.0": 0.755})
+        self.assertEqual(ho["totisTi64"]["sensitivityAccuracy"],
+                         {"15.0": 0.9, "17.5": 0.925, "18.0": 0.925, "20.0": 0.925, "22.0": 0.912, "25.0": 0.912,
+                          "30.0": 0.863})
+        self.assertEqual(ho["hofmann316l"]["current"]["keyholeModeRecall"], "306/335")
+
+    def test_threshold_derivation_block(self):
+        k = self.doc["kingConversion"]
+        self.assertAlmostEqual(k["factorHKingOverHApp"], 1.351, delta=0.001)
+        self.assertAlmostEqual(k["kingThresholdInAppUnits"]["mid"], 22.2, delta=0.05)
+        self.assertAlmostEqual(k["kingThresholdInAppUnits"]["low"], 19.3, delta=0.06)
+        self.assertAlmostEqual(k["kingThresholdInAppUnits"]["high"], 25.2, delta=0.06)
+        self.assertFalse(k["intervalOverlap"]["empty"])
+        self.assertTrue(k["chosenInsideBothIntervals"])
+        self.assertEqual(k["chosenKeyholeThreshold"], 20.0)
+        g = self.doc["ganData1Check"]
+        self.assertEqual((g["matched"], g["unmatched"], g["ganRows"]), (69, 0, 71))
+        self.assertEqual(g["digitizedMinusGan_um"], {"median": 0.797, "meanAbs": 2.486, "maxAbs": 20.42})
+
+    def test_headline_numbers(self):
         f = self.doc["findings"]
         self.assertEqual(f["appIndexAtCunninghamRedLine"], {"n": 9, "min": 17.293, "median": 17.662, "max": 20.005})
         self.assertEqual(f["appIndexAtCunninghamBlueLine"], {"n": 9, "min": 12.962, "median": 13.922, "max": 16.928})
         self.assertEqual(f["appIndexAtZhaoBoundary"], {"n": 20, "min": 15.0, "median": 24.942, "max": 62.424})
         self.assertEqual(f["zhaoPoreCasesAppHigh"], "19/35")
-        self.assertTrue(f["keyholeThresholdTooHighForTi64"])
+        self.assertEqual(f["zhaoPoreCasesAppPossible"], "16/35")
+        self.assertTrue(f["keyholeThresholdTooHighForTi64Legacy"])
+        self.assertFalse(f["keyholeThresholdTooHighForTi64"])
         self.assertFalse(f["singleIndexThresholdFitsZhaoBoundary"])
+        self.assertTrue(f["publicDatasetsConstantsEqualSolver"])
         self.assertTrue(f["solverIndexEqualsProcessMapIndex"])
         self.assertTrue(f["solverPorosityRiskEqualsIndexBands"])
+        self.assertTrue(f["solverRegimeFamilyEqualsIndexRegime"])
+        pores = self.doc["zhaoPores"]["all"]
+        self.assertEqual((pores["appHigh_dHhs_ge_30"], pores["appPossible_15_30"], pores["appNegligible_lt_15"]),
+                         (19, 16, 0))
         self.assertEqual(self.doc["depth"]["cunningham95"]["appFabbro"]["mape_pct"], 44.785)
         self.assertEqual(self.doc["hannRelationCheck"]["withinClaimed10pct"], 3)
+
+    def test_depth_tables_equal_the_schema_1_record(self):
+        old = json.loads(OLD_REPORT.read_text(encoding="utf-8"))
+        self.assertEqual(old["schema"], "lpbf-keyhole-benchmark-1")
+        for name, block in old["depth"].items():
+            for key, stats in block.items():
+                self.assertEqual(self.doc["depth"][name][key], stats, (name, key))
+        self.assertEqual(old["zhaoBoundary"], self.doc["zhaoBoundary"])
+        for key in ("n", "bias_um", "mae_um", "mape_pct", "medianRatioPredOverMeas"):
+            self.assertEqual(self.doc["depth"]["cunningham95"]["appFabbro"][key],
+                             old["depth"]["cunningham95"]["appFabbro"][key])
 
     def test_markdown_and_view_are_regenerated_byte_for_byte(self):
         md = REPORT.with_suffix(".md").read_text(encoding="utf-8")

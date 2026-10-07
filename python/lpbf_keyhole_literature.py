@@ -70,9 +70,11 @@ CUN_PROVENANCE = {
     "evidenceKind": "published measurement (operando x-ray vapor-depression depth), digitized from figures",
     "source": {"file": "cunningham2019.pdf", "bytes": 658815,
                "sha256": "995151c40f0ca70a525b0fde2fc0fd067ae6cb52aa4943c5d89e67cd683f3fe4", "note": SOURCE_NOTE},
-    "supplementaryNeeded": ("Materials and methods, fig. S2 (aspect-ratio transitions) and the beam-diameter "
-                            "definition are in the Supplementary Materials, which were not available; spot sizes "
-                            "95/140 um are taken as 1/e^2 diameters (assumption)."),
+    "supplementaryNeeded": ("Supplementary Materials read 2026-10-07 (aav4687_cunningham_sm.pdf, pp. 2-4): single-mode "
+                            "fibre laser with a Gaussian profile, focal spot ~56 um (1/e^2) and larger spots by "
+                            "defocusing, so the 95/140 um spot sizes are 1/e^2 diameters (Eq. S1 uses the 1/e^2 "
+                            "diameter); confirmed independently by Gan 2021 Supplementary Data 1 (r0 = d/2). Fig. 3A "
+                            "red line = melt-pool transition (d/w ~ 0.5, stationary beam, SM Figs. S2/S3)."),
     "caveats": [
         "Depth is the VAPOR-DEPRESSION (keyhole) depth from operando x-ray radiographs, mean of > 30 frames, error bar "
         "= SD (Fig. 3 caption, p. 2). It is not the post-mortem melt-pool depth.",
@@ -137,6 +139,12 @@ ZHAO_PROVENANCE = {
 GAN_DIR = BENCHMARK_DIR / "gan-keyhole-2021"
 GAN_TABLE = GAN_DIR / "printed_cases.csv"
 GAN_SHA256 = "0da9f9b9f604e439040923d1d0f1d498024c4b78f04edaeef9838b5991fd04ff"
+GAN_DATA1_TABLE = GAN_DIR / "supplementary_data1_ti64.csv"
+GAN_DATA1_SHA256 = "1fad0e2f1d3fed3a95c4126e68ebbacc130185bed8fd56f0a56a8b2dce387ca1"
+GAN_DATA1_XLSX_SHA256 = "b52d9173eb3a63983dd87c56b2720abd419a200e9594b863218de13da6a7597a"
+GAN_DATA1_COLUMNS = ["case", "spot_label", "P_W", "eta", "V_m_s", "d_m", "r0_m", "k_W_mK", "rho_kg_m3", "cp_J_kgK",
+                     "alpha_m2_s", "Tv_minus_T0_K", "Lv_J_m3", "Tl_minus_T0_K", "Lm_J_m3", "e_m", "length_um",
+                     "tan_theta", "locator", "digitized"]
 GAN_COLUMNS = ["case", "material", "substrate", "power_W", "speed_mm_s", "spot_um", "keyhole_number_printed",
                "regime_reported", "stability_reported", "locator", "digitized"]
 GAN_PROVENANCE = {
@@ -149,8 +157,10 @@ GAN_PROVENANCE = {
     "evidenceKind": "published measurement (printed case labels) and published scaling relations",
     "source": {"file": "gan2021.pdf", "bytes": 1642516,
                "sha256": "85dc767c0a91020f97119cc53139b9718e2f3523a5e30ddb4ce6ccb36ad0b074", "note": SOURCE_NOTE},
-    "supplementaryNeeded": ("Supplementary Data 1 (all measured keyhole depths behind Fig. 1a) and the material "
-                            "properties used for Ke are SI-only and were not available; Fig. 1a was not digitized."),
+    "supplementaryNeeded": ("Supplementary Data 1 (Ti-6Al-4V keyhole depths behind Fig. 1a, Gan Table 1 properties) was "
+                            "read 2026-10-07 and its 71 Ti-6Al-4V rows are ingested as a cross-check "
+                            "(supplementary_data1_ti64.csv, load_gan_data1_ti64); Fig. 1a was not digitized and the "
+                            "Al6061 block is not ingested."),
     "caveats": [
         "Ke uses the keyhole absorptivity eta (Eq. 6, a function of Ke_m*Ld* with the flat minimum absorptivity eta_m "
         "of Ye et al. 2019), not a flat absorptivity.",
@@ -218,7 +228,7 @@ HANN_PROVENANCE = {
 # ---- published relations -----------------------------------------------------------------------------------------
 REL_DIR = BENCHMARK_DIR / "keyhole-reference-relations-2026"
 REL_TABLE = REL_DIR / "published_relations.csv"
-REL_SHA256 = "fc2d9b664eb8367fa7cce7245f5de2517bc16caeb0765373591d97593bd7d63f"
+REL_SHA256 = "85564cf60e576946ebcb6dd05c29d5fac8a66fc3bf353f6abb7de4c8c02e4452"
 REL_COLUMNS = ["relation", "source_dataset", "relation_text", "constants", "uncertainty", "locator", "digitized"]
 
 # Constants of the relations implemented below; the test checks them against published_relations.csv.
@@ -327,6 +337,31 @@ def load_gan_cases(verify: bool = True) -> Dict[str, Any]:
     return {"rows": rows, "provenance": _prov(GAN_PROVENANCE, GAN_TABLE, len(rows))}
 
 
+def load_gan_data1_ti64(verify: bool = True) -> Dict[str, Any]:
+    """Gan 2021 Supplementary Data 1, Ti-6Al-4V rows as published (the Cunningham 2019 cases, Gan ref. 2).
+
+    Used only as a cross-check of the digitized Cunningham depths and of Gan Eq. (2) with Gan's own Table 1 property
+    set; these are the same measurements as ``load_cunningham_depths`` and are never counted as a second dataset.
+    SI units as published (m, m/s, W); the loader adds um / mm/s convenience fields."""
+    recs = _load_pinned_csv(GAN_DATA1_TABLE, GAN_DATA1_SHA256 if verify else sha256_file(GAN_DATA1_TABLE),
+                            GAN_DATA1_COLUMNS, "Gan Supplementary Data 1 Ti-6Al-4V")
+    rows = [{"dataset": "gan-keyhole-2021-supplementary-data1", "rowId": r["case"], "material": APP_MATERIAL_TI64,
+             "power_W": float(r["P_W"]), "eta": float(r["eta"]), "speed_mm_s": float(r["V_m_s"]) * 1e3,
+             "beamDiameter_um": round(float(r["d_m"]) * 1e6, 6), "r0_um": round(float(r["r0_m"]) * 1e6, 6),
+             "keyholeDepth_um": round(float(r["e_m"]) * 1e6, 6), "lengthPublished_um": _f(r["length_um"]),
+             "ganTable1": {"k_W_mK": float(r["k_W_mK"]), "rho_kg_m3": float(r["rho_kg_m3"]),
+                           "cp_J_kgK": float(r["cp_J_kgK"]), "alpha_m2_s": float(r["alpha_m2_s"]),
+                           "TlMinusT0_K": float(r["Tl_minus_T0_K"]), "TvMinusT0_K": float(r["Tv_minus_T0_K"])},
+             "locator": r["locator"], "digitized": r["digitized"] == "true"} for r in recs]
+    prov = {"id": "gan-keyhole-2021-supplementary-data1", "doi": "10.1038/s41467-021-22704-0",
+            "license": "CC BY 4.0 (Nat. Commun. supplementary data); Ti-6Al-4V rows copied as published",
+            "source": {"file": "gan2021_data1.xlsx", "sha256": GAN_DATA1_XLSX_SHA256, "note": SOURCE_NOTE},
+            "overlap": "Cunningham 2019 Ti-6Al-4V cases (Gan ref. 2); cross-check only, never a second dataset.",
+            "file": GAN_DATA1_TABLE.name, "fileSha256": sha256_file(GAN_DATA1_TABLE), "rows": len(rows),
+            "transcribed": TRANSCRIBED}
+    return {"rows": rows, "provenance": prov}
+
+
 def load_huang_cases(verify: bool = True) -> Dict[str, Any]:
     recs = _load_pinned_csv(HUANG_TABLE, HUANG_SHA256 if verify else sha256_file(HUANG_TABLE), HUANG_COLUMNS,
                             "Huang printed cases")
@@ -425,11 +460,12 @@ LOADERS: Dict[str, Callable[..., Dict[str, Any]]] = {
 PINNED_TABLES = {
     CUN_DEPTH_TABLE: CUN_DEPTH_SHA256, CUN_LINES_TABLE: CUN_LINES_SHA256,
     ZHAO_BOUNDARY_TABLE: ZHAO_BOUNDARY_SHA256, ZHAO_PORE_TABLE: ZHAO_PORE_SHA256,
-    GAN_TABLE: GAN_SHA256, HUANG_TABLE: HUANG_SHA256, HANN_TABLE: HANN_SHA256, REL_TABLE: REL_SHA256,
+    GAN_TABLE: GAN_SHA256, GAN_DATA1_TABLE: GAN_DATA1_SHA256, HUANG_TABLE: HUANG_SHA256, HANN_TABLE: HANN_SHA256,
+    REL_TABLE: REL_SHA256,
 }
 EXPECTED_ROWS = {
     CUN_DEPTH_TABLE: 69, CUN_LINES_TABLE: 2, ZHAO_BOUNDARY_TABLE: 20, ZHAO_PORE_TABLE: 35, GAN_TABLE: 5,
-    HUANG_TABLE: 6, HANN_TABLE: 14, REL_TABLE: 18,
+    GAN_DATA1_TABLE: 71, HUANG_TABLE: 6, HANN_TABLE: 14, REL_TABLE: 19,
 }
 DATASET_DIRS = (CUN_DIR, ZHAO_DIR, GAN_DIR, HUANG_DIR, HANN_DIR, REL_DIR)
 
