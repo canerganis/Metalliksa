@@ -21,7 +21,7 @@ import { useLpbfBuildMeshStore } from "./useLpbfBuildMeshStore";
 
 // Keep aligned with python/lpbf_job_cache.py; changing this invalidates held
 // same-input results when the client and build-job solver are upgraded.
-export const BUILD_JOB_SOLVER_REVISION = "lpbf-build-job-eagar-tsai-balling-screen-v15";
+export const BUILD_JOB_SOLVER_REVISION = "lpbf-build-job-eagar-tsai-balling-screen-v16";
 
 export interface LpbfMurakamiSessionInput {
   defectSqrtAreasPaste: string;

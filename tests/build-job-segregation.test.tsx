@@ -115,6 +115,76 @@ test("available (IN625, Cieslak 1988 k + DuPont 1996 C_e): binary band, no risk 
   for (const word of ["Validated", "Calibrated"]) assert.ok(!t.includes(word), word);
 });
 
+test("rapid solidification k(V) (IN718): shown beside the unchanged upper bound with V_D range, label and notes", () => {
+  const block = BLOCKS.available_in718_285_960;
+  const rs = block.rapidSolidification;
+  assert.equal(rs.status, "available");
+  assert.equal(rs.replacesUpperBound, false);
+  const markup = html("available_in718_285_960");
+  const t = text(markup);
+  assert.match(markup, /data-seg-rapid="available"/);
+  assert.ok(rs.evidenceLabel.startsWith(LABEL_PREFIX));
+  assert.ok(t.includes(rs.evidenceLabel), t);
+  assert.ok(t.includes("V D = 0.23–0.31 m/s"), t);
+  assert.ok(t.includes(`R = ${rs.R_m_s.toFixed(4)} m/s`), t);
+  assert.ok(t.includes(`k(R) = ${rs.kEff.min.toFixed(3)} to ${rs.kEff.max.toFixed(3)}`), t);
+  for (const row of rs.byVD) {
+    for (const p of row.band) {
+      const cell = `${(p.binary.fGammaLavesConstituent * 100).toFixed(1)} % / ${(p.pseudoTernaryAtCmax.fGammaLavesConstituent * 100).toFixed(1)} %`;
+      assert.ok(t.includes(cell), `${row.V_D_m_s} ${p.label} ${cell}`);
+    }
+    assert.ok(t.includes(`${row.segregation.coreRatioToNominal.toFixed(3)} (V_D ${row.V_D_m_s.toFixed(2)} m/s)`), t);
+  }
+  // the equilibrium-k upper bound rows are still rendered with their own numbers
+  for (const p of block.band) assert.ok(t.includes(`${(p.binaryUpperBound.fGammaLavesConstituent * 100).toFixed(1)} %`), t);
+  assert.match(markup, /data-seg-rapid-notes/);
+  assert.ok(t.includes(rs.V_D_m_s.nature) && rs.V_D_m_s.nature.includes("no experimental V_D"), t);
+  assert.ok(t.includes(rs.extrapolationNote) && rs.extrapolationNote.startsWith("Extrapolation"), t);
+  assert.ok(t.includes(rs.kTransferNote), t);
+  // IN718: no LPBF measurement among the sources read; said so, no comparison numbers.
+  assert.match(markup, /data-seg-lpbf="unavailable"/);
+  assert.ok(t.includes(`LPBF observations: none — ${block.lpbfObservations.reason}`), t);
+  assert.doesNotMatch(markup, /data-seg-lpbf-comparison/);
+});
+
+test("rapid solidification without a usable R: reason only, no k(V) numbers", () => {
+  const block = BLOCKS.in718_degenerate_floor_synthetic;
+  assert.equal(block.rapidSolidification.status, "unavailable");
+  const markup = html("in718_degenerate_floor_synthetic");
+  const t = text(markup);
+  assert.match(markup, /data-seg-rapid="unavailable"/);
+  assert.ok(t.includes(`Unavailable — ${block.rapidSolidification.reason}`), t);
+  assert.doesNotMatch(markup, /data-seg-rapid-band|data-seg-rapid-core/);
+});
+
+test("IN625: k(V) estimate and as-built LPBF observations with the non-discriminating comparison", () => {
+  const block = BLOCKS.in625_available;
+  const rs = block.rapidSolidification;
+  const obs = block.lpbfObservations;
+  assert.equal(rs.status, "available");
+  assert.equal(obs.status, "available");
+  const markup = html("in625_available");
+  const t = text(markup);
+  for (const row of rs.byVD) {
+    for (const p of row.band) {
+      assert.equal(p.pseudoTernaryAtCmax, undefined);
+      assert.ok(t.includes(`${(p.binary.fGammaLavesConstituent * 100).toFixed(1)} %`), t);
+    }
+  }
+  assert.match(markup, /data-seg-lpbf="available"/);
+  for (const ob of obs.observations) {
+    assert.ok(t.includes(ob.locator), ob.locator);
+  }
+  assert.ok(t.includes("Nb 2.81 to 5.84 wt%"), t);
+  const c = obs.comparison;
+  assert.match(markup, /data-seg-lpbf-comparison/);
+  assert.ok(t.includes(`equilibrium k ${c.equilibriumK.coreRatioToNominal.toFixed(3)}`), t);
+  assert.ok(t.includes(`EDS lowest ${c.measured.lowestRatioToNominal.toFixed(3)}`), t);
+  assert.ok(t.includes("measured fraction: none reported"), t);
+  assert.ok(t.includes(c.note) && c.note.startsWith("Non-discriminating"), t);
+  for (const word of ["Validated", "Calibrated"]) assert.ok(!t.includes(word), word);
+});
+
 test("not-applicable (316L): reason only, no numbers", () => {
   const block = BLOCKS.ss316l_not_applicable;
   assert.equal(block.status, "not-applicable");

@@ -7,6 +7,8 @@ import { FlaskConical } from "lucide-react";
 // Literature estimate (screening)), "unavailable" (reason only, e.g. constants not verified
 // against a primary source) or "not-applicable" (no Nb-bearing gamma/Laves model for the alloy). This panel only
 // displays those decisions; it never computes a fraction and shows no number unless the status is "available".
+// The optional rapidSolidification sub-block (Aziz k(V), V_D range from Ghosh et al. 2017, screening) is shown beside
+// the equilibrium-k upper bound, never instead of it; lpbfObservations lists as-built LPBF IN625 literature data.
 
 interface SegBandEntry {
   C_wt?: number | null;
@@ -23,6 +25,55 @@ interface SegBandPoint {
   Nb_wt?: number | null;
   binaryUpperBound?: SegBandEntry | null;
   pseudoTernaryAtCmax?: SegBandEntry | null;
+}
+
+interface RapidBandPoint {
+  label?: string;
+  Nb_wt?: number | null;
+  binary?: { fGammaLavesConstituent?: number | null } | null;
+  pseudoTernaryAtCmax?: { fGammaLavesConstituent?: number | null; fGammaNbCConstituent?: number | null; status?: string | null } | null;
+}
+
+interface RapidSolidificationLike {
+  status?: string | null;
+  reason?: string | null;
+  evidenceLabel?: string | null;
+  model?: { equation?: string | null; locator?: string | null } | null;
+  V_D_m_s?: { min?: number | null; max?: number | null; nature?: string | null } | null;
+  R_m_s?: number | null;
+  k_e?: number | null;
+  kEff?: { min?: number | null; max?: number | null } | null;
+  byVD?: {
+    V_D_m_s?: number | null;
+    kEff?: number | null;
+    band?: RapidBandPoint[] | null;
+    segregation?: { coreRatioToNominal?: number | null } | null;
+  }[] | null;
+  extrapolationNote?: string | null;
+  kTransferNote?: string | null;
+}
+
+interface LpbfObservationsLike {
+  status?: string | null;
+  reason?: string | null;
+  evidenceKind?: string | null;
+  observations?: {
+    source?: string;
+    quantity?: string | null;
+    result?: string | null;
+    Nb_wt?: { min?: number; max?: number } | null;
+    locator?: string | null;
+  }[] | null;
+  comparison?: {
+    Nb_wt?: number | null;
+    equilibriumK?: { coreRatioToNominal?: number | null; fGammaLavesConstituent?: number | null } | null;
+    kOfV?: {
+      coreRatioToNominal?: { min?: number | null; max?: number | null } | null;
+      fGammaLavesConstituent?: { min?: number | null; max?: number | null } | null;
+    } | null;
+    measured?: { lowestRatioToNominal?: number | null; highestRatioToNominal?: number | null } | null;
+    note?: string | null;
+  } | null;
 }
 
 export interface BuildJobSegregationLike {
@@ -73,6 +124,8 @@ export interface BuildJobSegregationLike {
     ceTransferNote?: string | null;
     phaseIdentityNote?: string | null;
   } | null;
+  rapidSolidification?: RapidSolidificationLike | null;
+  lpbfObservations?: LpbfObservationsLike | null;
 }
 
 const KNOWN_STATUS = ["available", "unavailable", "not-applicable"];
@@ -242,6 +295,118 @@ const AvailableBody: React.FC<{ s: BuildJobSegregationLike }> = ({ s }) => {
         </p>
       )}
       {s.binaryBoundNote && <p className="text-[9px] text-slate-500">{s.binaryBoundNote}</p>}
+      {s.rapidSolidification && <RapidSolidificationBody r={s.rapidSolidification} />}
+      {s.lpbfObservations && <LpbfObservationsBody o={s.lpbfObservations} />}
     </>
+  );
+};
+
+const span = (lo: unknown, hi: unknown, f: (v: unknown) => string) =>
+  fin(lo) && fin(hi) && lo !== hi ? `${f(lo)} to ${f(hi)}` : f(lo);
+
+const RapidSolidificationBody: React.FC<{ r: RapidSolidificationLike }> = ({ r }) => {
+  const ok = r.status === "available" || r.status === "screening-fallback";
+  const rows = Array.isArray(r.byVD) ? r.byVD : [];
+  const labels = (rows[0]?.band ?? []).map((p) => p.label);
+  const withCmax = Boolean(rows[0]?.band?.[0]?.pseudoTernaryAtCmax);
+  return (
+    <div className="space-y-1 border-t border-[#162032] pt-2" data-seg-rapid={ok ? r.status : "unavailable"}>
+      <p className="text-[11px] font-semibold text-slate-200">
+        Rapid solidification: solute trapping k(V), shown beside the equilibrium-k upper bound (screening)
+      </p>
+      {!ok ? (
+        <p className="text-[10px] text-slate-400">Unavailable — {r.reason}</p>
+      ) : (
+        <>
+          {r.evidenceLabel && (
+            <p className="inline-block rounded border border-amber-400/60 px-2 py-0.5 text-[10px] text-amber-200" data-seg-rapid-label>
+              {r.evidenceLabel}
+            </p>
+          )}
+          <p className="text-[10px] text-slate-300" data-seg-rapid-k>
+            {r.model?.equation} ({r.model?.locator}); V<sub>D</sub> = {num(r.V_D_m_s?.min, 2)}–{num(r.V_D_m_s?.max, 2)} m/s; R ={" "}
+            {num(r.R_m_s, 4)} m/s; k<sub>e</sub> = {num(r.k_e, 2)} → k(R) = {span(r.kEff?.min, r.kEff?.max, (v) => num(v, 3))}.
+            {r.status === "screening-fallback" && r.reason ? ` Screening only — ${r.reason}` : ""}
+          </p>
+          <table className="w-full text-[10px] text-slate-300 border-collapse" data-seg-rapid-band>
+            <caption className="text-left text-[10px] text-slate-500 pb-1">
+              γ/Laves fraction with k(R), % of the liquid{withCmax ? " (C = 0 / C max)" : " (C = 0)"}
+            </caption>
+            <thead>
+              <tr className="text-slate-500">
+                <th scope="col" className="text-left font-normal">Nb band point</th>
+                {rows.map((row) => (
+                  <th key={String(row.V_D_m_s)} scope="col" className="text-left font-normal">
+                    V<sub>D</sub> {num(row.V_D_m_s, 2)} m/s (k = {num(row.kEff, 3)})
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {labels.map((label, i) => (
+                <tr key={label ?? i} data-seg-rapid-row={label}>
+                  <th scope="row" className="text-left font-normal">{label}</th>
+                  {rows.map((row) => {
+                    const p = row.band?.[i];
+                    const t = p?.pseudoTernaryAtCmax;
+                    return (
+                      <td key={String(row.V_D_m_s)}>
+                        {pct(p?.binary?.fGammaLavesConstituent)}
+                        {t ? ` / ${t.status ? "—" : pct(t.fGammaLavesConstituent)}` : ""}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="text-[10px] text-slate-400" data-seg-rapid-core>
+            Core ratio C<sub>s</sub>/C<sub>0</sub> = k(R):{" "}
+            {rows.map((row) => `${num(row.segregation?.coreRatioToNominal, 3)} (V_D ${num(row.V_D_m_s, 2)} m/s)`).join(", ")}
+          </p>
+        </>
+      )}
+      <div className="rounded border border-amber-500/40 p-2 text-[10px] text-amber-200 space-y-1" role="note" data-seg-rapid-notes>
+        {r.V_D_m_s?.nature && <p>{r.V_D_m_s.nature}</p>}
+        {r.extrapolationNote && <p>{r.extrapolationNote}</p>}
+        {r.kTransferNote && <p>{r.kTransferNote}</p>}
+      </div>
+    </div>
+  );
+};
+
+const LpbfObservationsBody: React.FC<{ o: LpbfObservationsLike }> = ({ o }) => {
+  if (o.status !== "available") {
+    return (
+      <p className="text-[10px] text-slate-400" data-seg-lpbf="unavailable">
+        LPBF observations: none — {o.reason}
+      </p>
+    );
+  }
+  const c = o.comparison ?? null;
+  return (
+    <div className="space-y-1 border-t border-[#162032] pt-2 text-[10px] text-slate-300" data-seg-lpbf="available">
+      <p className="text-[11px] font-semibold text-slate-200">As-built LPBF observations ({o.evidenceKind})</p>
+      <ul className="list-disc pl-4 space-y-0.5">
+        {(o.observations ?? []).map((ob, i) => (
+          <li key={`${ob.source}-${i}`}>
+            {ob.source}: {ob.quantity}
+            {ob.Nb_wt ? ` — Nb ${num(ob.Nb_wt.min, 2)} to ${num(ob.Nb_wt.max, 2)} wt%` : ""}
+            {ob.result ? ` — ${ob.result}` : ""}
+            {ob.locator ? <span className="text-slate-500"> ({ob.locator})</span> : null}
+          </li>
+        ))}
+      </ul>
+      {c && (
+        <p data-seg-lpbf-comparison>
+          Comparison at Nb {num(c.Nb_wt, 2)} wt%: core ratio — equilibrium k {num(c.equilibriumK?.coreRatioToNominal, 3)}, k(V){" "}
+          {span(c.kOfV?.coreRatioToNominal?.min, c.kOfV?.coreRatioToNominal?.max, (v) => num(v, 3))}, EDS lowest{" "}
+          {num(c.measured?.lowestRatioToNominal, 3)} and highest {num(c.measured?.highestRatioToNominal, 3)}; γ/Laves — equilibrium k{" "}
+          {pct(c.equilibriumK?.fGammaLavesConstituent)}, k(V){" "}
+          {span(c.kOfV?.fGammaLavesConstituent?.min, c.kOfV?.fGammaLavesConstituent?.max, pct)}, measured fraction: none reported.{" "}
+          <span className="text-amber-200">{c.note}</span>
+        </p>
+      )}
+    </div>
   );
 };

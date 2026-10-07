@@ -27,6 +27,15 @@ def _micro(status, **extra):
     return block
 
 
+def _pinned_digest(block):
+    b = copy.deepcopy(block)
+    for key in ("rapidSolidification", "lpbfObservations", "notModelled"):
+        b.pop(key, None)
+    if isinstance(b.get("processCoupling"), dict):
+        b["processCoupling"].pop("note", None)
+    return hashlib.sha256(json.dumps(b, sort_keys=True, allow_nan=False).encode()).hexdigest()
+
+
 class ScheilIdentities(unittest.TestCase):
     def test_liquid_composition_at_fs0_equals_c0(self):
         for c0 in (0.5, 4.75, 5.125, 12.0):
@@ -258,20 +267,31 @@ class AlloyStatus(unittest.TestCase):
         self.assertFalse(any(r.startswith("Fe") for r in inside["outsideSourceCompositionReasons"]))
 
     def test_in718_output_unchanged_by_the_in625_branch(self):
-        # sha256 of the in718 block with the D98 Table 2 constants (re-pinned deliberately when the source switched
-        # from the D97 conference values; the previous pin 489d0b83... was the D97-constant output).
-        b = seg.segregation_estimate("in718", _micro("available"))
-        digest = hashlib.sha256(json.dumps(b, sort_keys=True, allow_nan=False).encode()).hexdigest()
-        self.assertEqual(digest, "e0b46e9f72c55a4166c620acd77c9b06a58c14039114a373d54e4cd539510f8c")
+        # The equilibrium-k numbers are pinned through _pinned_digest: the block without the additive k(V) and
+        # LPBF-observation sub-blocks and without the two reworded texts (notModelled, processCoupling.note). The pins
+        # were computed with the same stripping from main 8895cc5c (before the k(V) block), so every equilibrium
+        # number and every other text is byte-identical to that revision.
+        for micro, pin in ((_micro("available"), "ba4c46fa01b686b8b9bf535e5f932610efb6082bc24e92669bfe7a1640851552"),
+                           (None, "ef6aff0f8a074bf6e9abab9636efc7e8fbcab47da451160bce8edcbbcf0d1811")):
+            self.assertEqual(_pinned_digest(seg.segregation_estimate("in718", micro)), pin)
 
     def test_in625_output_unchanged_by_the_d98_switch(self):
-        # sha256 of the in625 block as produced on main 9f5c4e72 (D97 constants for IN718); in625 uses its own
-        # constant sets (C88 / D96), so the D98 switch must not move it.
-        for micro, pin in ((_micro("available"), "11209258f4d5909c87912420b147f288db44ed146aae48dd3604db82af70a798"),
-                           (None, "5a1cf4c183db7a4f7c5fb98ebd6e60cb60078693cf01176eb7370698ad34f4dc")):
-            b = seg.segregation_estimate("in625", micro)
-            digest = hashlib.sha256(json.dumps(b, sort_keys=True, allow_nan=False).encode()).hexdigest()
-            self.assertEqual(digest, pin)
+        # Same stripped pin for in625 (C88 / D96 constant sets), computed from main 8895cc5c.
+        for micro, pin in ((_micro("available"), "84e7913a01a5b309e315d4a91d2c94afab3544d1d0cafc1679ca806fecf274c5"),
+                           (None, "50c8db8fd6913f58a432e17e039d693e753e67e2548c0ab767c9ebb7522cd1ef")):
+            self.assertEqual(_pinned_digest(seg.segregation_estimate("in625", micro)), pin)
+
+    def test_equilibrium_band_numbers_pinned(self):
+        b718 = seg.segregation_estimate("in718", None)
+        self.assertEqual([p["binaryUpperBound"]["fGammaLavesConstituent"] for p in b718["band"]], [0.0564, 0.0647, 0.0736])
+        self.assertEqual([p["pseudoTernaryAtCmax"]["fGammaLavesConstituent"] for p in b718["band"]],
+                         [0.0198, 0.0282, 0.0372])
+        b625 = seg.segregation_estimate("in625", None)
+        self.assertEqual([p["binaryUpperBound"]["fGammaLavesConstituent"] for p in b625["band"]], [0.0258, 0.0349, 0.0453])
+        # the equilibrium result does not depend on R
+        a = seg.segregation_estimate("in718", _micro("available", R_m_s=0.0684))
+        self.assertEqual(a["band"], b718["band"])
+        self.assertEqual(a["segregation"], b718["segregation"])
 
     def test_in625_unverified_constant_gives_unavailable(self):
         patched = copy.deepcopy(seg.CONSTANTS)
@@ -407,7 +427,8 @@ class In625(unittest.TestCase):
         self.assertEqual(b["processCoupling"]["status"], "available")
         self.assertIs(b["processCoupling"]["usedInCalculation"], False)
         self.assertEqual(seg.segregation_estimate("in625", None)["processCoupling"]["status"], "unavailable")
-        text = json.dumps(b).lower()
+        eq = {k: v for k, v in b.items() if k not in ("rapidSolidification", "lpbfObservations", "processCoupling")}
+        text = json.dumps(eq).lower()
         for banned in ("v_d", "aziz", "diffusive speed"):
             self.assertNotIn(banned, text)
 
@@ -426,7 +447,8 @@ class ProcessCoupling(unittest.TestCase):
     def test_composition_result_independent_of_microstructure(self):
         a = seg.segregation_estimate("in718", _micro("available"))
         b = seg.segregation_estimate("in718", _micro("available", G_K_m=1.0e5, R_m_s=1.0))
-        a.pop("processCoupling"), b.pop("processCoupling")
+        for blk in (a, b):
+            blk.pop("processCoupling"), blk.pop("rapidSolidification")
         self.assertEqual(a, b)
 
     def test_degenerate_floor_and_unavailable_give_unavailable_coupling(self):
@@ -447,10 +469,145 @@ class ProcessCoupling(unittest.TestCase):
         self.assertEqual(pc["status"], "screening-fallback")
         self.assertEqual(pc["reason"], "tail-length heuristic")
 
-    def test_no_invented_kinetic_constant(self):
-        text = json.dumps(seg.segregation_estimate("in718", _micro("available"))).lower()
+    def test_kinetic_constant_only_in_the_rapid_block(self):
+        b = seg.segregation_estimate("in718", _micro("available"))
+        eq = {k: v for k, v in b.items() if k not in ("rapidSolidification", "lpbfObservations", "processCoupling")}
+        text = json.dumps(eq).lower()
         for banned in ("v_d", "aziz", "diffusive speed"):
             self.assertNotIn(banned, text)
+        self.assertIs(b["processCoupling"]["usedInCalculation"], False)  # the equilibrium result does not use R
+
+
+class RapidSolidification(unittest.TestCase):
+    """Aziz k(V) (G17 Eq. 12) with the G17 V_D range: a separate screening sub-block, never the upper bound."""
+
+    def test_v_d_values_are_the_g17_fits(self):
+        vals = sorted(float(v["value"]) for v in seg.V_D_VALUES)
+        self.assertEqual(vals, [0.23, 0.31])
+        for v in seg.V_D_VALUES:
+            self.assertEqual(v["source"], "G17")
+            self.assertTrue(v["verified"])
+            self.assertIn("Section 3.2.4", v["locator"])
+            self.assertEqual(v["unit"], "m/s")
+        self.assertTrue(seg.SOURCES["G17"]["read"])
+        self.assertFalse(seg.SOURCES["A82"]["read"])  # Aziz 1982 itself not read; cited through G17 Eq. 12
+        self.assertIn("no experimental V_D", seg.V_D_NATURE_NOTE)
+        self.assertIn("not a measurement", seg.V_D_NATURE_NOTE)
+
+    def test_aziz_identities(self):
+        k = seg.aziz_partition_coefficient
+        self.assertEqual(k(0.45, 0.0, 0.23), 0.45)
+        self.assertAlmostEqual(k(0.45, 0.23, 0.23), (0.45 + 1.0) / 2.0, places=14)
+        self.assertAlmostEqual(k(0.48, 0.1, 0.31), (0.48 + 0.1 / 0.31) / (1.0 + 0.1 / 0.31), places=14)
+        prev = 0.0
+        for v in (0.0, 0.001, 0.01, 0.1, 1.0, 10.0, 1000.0):
+            cur = k(0.51, v, 0.23)
+            self.assertGreater(cur, prev)
+            self.assertLess(cur, 1.0)
+            prev = cur
+        self.assertGreater(k(0.51, 1.0e4, 0.23), 0.9999)
+        self.assertGreater(k(0.45, 0.1, 0.23), k(0.45, 0.1, 0.31))  # smaller V_D, more trapping
+        for bad in ((0.45, -0.1, 0.23), (0.45, float("nan"), 0.23), (0.45, 0.1, 0.0), (1.2, 0.1, 0.23)):
+            with self.assertRaises(seg.SegregationModelError, msg=bad):
+                k(*bad)
+
+    def test_unavailable_without_usable_r(self):
+        for micro in (None, _micro("unavailable"), _micro("degenerate-floor"), _micro("available", R_m_s=None),
+                      _micro("available", R_m_s=0.0), _micro("available", R_m_s=float("nan"))):
+            for alloy in ("in718", "in625"):
+                rs = seg.segregation_estimate(alloy, micro)["rapidSolidification"]
+                self.assertEqual(rs["status"], "unavailable", (alloy, micro))
+                self.assertTrue(rs["reason"])
+                self.assertNotIn("byVD", rs)
+                self.assertEqual(rs["V_D_m_s"]["min"], 0.23)  # the model statement is still shown
+        self.assertNotIn("rapidSolidification", seg.segregation_estimate("ss316l", _micro("available")))
+
+    def test_in718_at_typical_lpbf_r(self):
+        # R = 0.0684 m/s is the build-job fixture value (in718, 285 W, 960 mm/s).
+        b = seg.segregation_estimate("in718", _micro("available", R_m_s=0.0684))
+        rs = b["rapidSolidification"]
+        self.assertEqual(rs["status"], "available")
+        self.assertFalse(rs["replacesUpperBound"])
+        self.assertIn("screening", rs["evidenceLabel"])
+        self.assertIn("Extrapolation", rs["extrapolationNote"])
+        self.assertIn("GTA welds", rs["extrapolationNote"])
+        self.assertEqual(rs["k_e"], 0.45)
+        self.assertEqual(rs["kEff"], {"min": 0.5494, "max": 0.5761})
+        self.assertEqual(rs["nominalBinaryFGammaLaves"], {"min": 0.0287, "max": 0.0354})
+        by = {row["V_D_m_s"]: row for row in rs["byVD"]}
+        self.assertAlmostEqual(by[0.23]["kEff"], seg.aziz_partition_coefficient(0.45, 0.0684, 0.23), places=4)
+        # k(V) lowers every fraction against the equilibrium-k upper bound, which is unchanged beside it
+        for row in rs["byVD"]:
+            for p_rs, p_eq in zip(row["band"], b["band"]):
+                self.assertLess(p_rs["binary"]["fGammaLavesConstituent"], p_eq["binaryUpperBound"]["fGammaLavesConstituent"])
+                self.assertLessEqual(p_rs["pseudoTernaryAtCmax"]["fGammaLavesConstituent"],
+                                     p_eq["pseudoTernaryAtCmax"]["fGammaLavesConstituent"])
+            self.assertGreater(row["segregation"]["coreRatioToNominal"], b["segregation"]["coreRatioToNominal"])
+        self.assertEqual(b["band"][1]["binaryUpperBound"]["fGammaLavesConstituent"], 0.0647)
+
+    def test_in625_at_typical_lpbf_r(self):
+        b = seg.segregation_estimate("in625", _micro("available", R_m_s=0.0684))
+        rs = b["rapidSolidification"]
+        self.assertEqual(rs["k_e"], 0.51)
+        self.assertEqual(rs["kEff"], {"min": 0.5986, "max": 0.6223})
+        self.assertEqual(rs["nominalBinaryFGammaLaves"], {"min": 0.0129, "max": 0.0166})
+        for row in rs["byVD"]:
+            self.assertNotIn("pseudoTernaryAtCmax", row["band"][0])  # no carbon model for alloy 625
+        self.assertEqual(b["band"][1]["binaryUpperBound"]["fGammaLavesConstituent"], 0.0349)
+
+    def test_screening_fallback_carried(self):
+        rs = seg.segregation_estimate("in718", _micro("screening-fallback", R_m_s=0.05, reason="tail-length"))[
+            "rapidSolidification"]
+        self.assertEqual(rs["status"], "screening-fallback")
+        self.assertEqual(rs["reason"], "tail-length")
+        self.assertEqual(rs["R_m_s"], 0.05)
+
+
+class LpbfObservations(unittest.TestCase):
+    """As-built LPBF IN625 (Z18, L17, K17) against the equilibrium upper bound and the k(V) estimate (not tuned)."""
+
+    def test_in718_has_no_lpbf_measurement(self):
+        obs = seg.segregation_estimate("in718", None)["lpbfObservations"]
+        self.assertEqual(obs["status"], "unavailable")
+        self.assertEqual(obs["observations"], [])
+
+    def test_in625_observations_are_located(self):
+        obs = seg.segregation_estimate("in625", None)["lpbfObservations"]
+        self.assertEqual(obs["status"], "available")
+        self.assertEqual(obs["powderNb_wt"]["value"], 3.75)
+        self.assertIn("Z18 Table 1", obs["powderNb_wt"]["locator"])
+        self.assertEqual({o["source"] for o in obs["observations"]}, {"Z18", "L17", "K17"})
+        for o in obs["observations"] + obs["literatureSimulations"]:
+            self.assertTrue(o["locator"])
+            self.assertTrue(seg.SOURCES[o["source"]]["read"])
+        eds = next(o for o in obs["observations"] if "EDS" in o["quantity"])
+        self.assertEqual(eds["Nb_wt"], {"min": 2.81, "max": 5.84})
+        self.assertIn("2 um", eds["probe"])
+        for o in obs["literatureSimulations"]:
+            self.assertIn("simulation", o["kind"])  # never mixed with measurements
+        self.assertEqual({(v["source"], v["min"], v["max"]) for v in obs["solidificationVelocity"]},
+                         {("K17", 0.01, 0.17), ("Z18", 0.001, 0.03)})
+
+    def test_comparison_with_measurement(self):
+        c = seg.segregation_estimate("in625", None)["lpbfObservations"]["comparison"]
+        self.assertEqual(c["Nb_wt"], 3.75)
+        # equilibrium-k upper bound at the observed powder Nb
+        self.assertEqual(c["equilibriumK"]["coreRatioToNominal"], 0.51)
+        self.assertEqual(c["equilibriumK"]["fGammaLavesConstituent"], 0.0369)
+        # k(V) over 0.001-0.17 m/s and V_D 0.23-0.31 m/s
+        self.assertEqual(c["kOfV"]["kEff"], {"min": 0.5116, "max": 0.7182})
+        self.assertEqual(c["kOfV"]["fGammaLavesConstituent"], {"min": 0.0032, "max": 0.0365})
+        # Z18 EDS (2 um probe): lowest Nb 2.81 / 3.75, highest 5.84 / 3.75
+        self.assertEqual(c["measured"]["lowestRatioToNominal"], 0.749)
+        self.assertEqual(c["measured"]["highestRatioToNominal"], 1.557)
+        # both model core ratios lie below the probe-averaged minimum, as they must; the data cannot separate them
+        self.assertEqual(c["coreBelowLowestMeasured"], {"equilibriumK": True, "kOfVMax": True})
+        self.assertLess(c["kOfV"]["coreRatioToNominal"]["max"], c["measured"]["lowestRatioToNominal"])
+        self.assertIs(c["discriminating"], False)
+        self.assertIn("Non-discriminating", c["note"])
+        # the terminal fraction is not tested: no as-built Laves/NbC fraction is reported (XRD FCC only)
+        self.assertLessEqual(c["kOfV"]["fGammaLavesConstituent"]["max"], c["equilibriumK"]["fGammaLavesConstituent"])
+        self.assertIn("detection limit", c["note"])
 
 
 if __name__ == "__main__":
