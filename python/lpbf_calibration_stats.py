@@ -23,6 +23,7 @@ import numpy as np
 RAYTRACER_MODULE = "powder_bed_raytracer"
 CLASSES = ("conduction", "transition", "keyhole")
 ENTHALPY_TRANSITION = 15.0
+# legacy 15/30 kept for the preregistered v2 protocol; the solver regime uses 15/20 since the keyhole-regime bump
 ENTHALPY_KEYHOLE = 30.0
 
 

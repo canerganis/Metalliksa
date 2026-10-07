@@ -30,11 +30,12 @@ BASE_REF_CANDIDATES = [r for r in (
 ) if r]
 BASE_REF = BASE_REF_CANDIDATES[0]
 # sha256 of the canonical thermal-solver JSON (computeTimeMs removed) for one fixed input per kernel, recorded on the
-# reference machine (Windows, CPU flat-plate path) at base c406b4a9 before any calibration code existed.
+# reference machine (Windows, CPU flat-plate path) at base c406b4a9 before any calibration code existed; re-pinned at the
+# keyhole-regime bump (only label/basis text keys changed: keyholePorosityRisk text, regimeBasis, depthBenchmarkNote).
 HTTP_GOLDEN = {
-    "eagar-tsai": "2d9bf8500f8c895ec39cc158b0e2f4d44e65a2bcc1afb083390d060cebb49f30",
-    "goldak": "4cecf8108a897efb2c18019bc7d05b45a2b8343234fcbffb28eb1c0a682813a9",
-    "rosenthal": "f723d5bd019b78a786eb7ec3df10a6ebd9c7c934a29a7fc35d51ac1fbf623ce7",
+    "eagar-tsai": "f99a37eb6d3274a6c01a49b83453358bd7a1c7380b43af6600fd0b6353bbef57",
+    "goldak": "a02796dbb239ce5b2e5a158a34705ee057d8985cd5299f64daeea120797bd798",
+    "rosenthal": "27c246f67bcf741c8c642d028196d2d1ec2c0309380e8ee4b8c154fd91756800",
 }
 HTTP_INPUT = {"material": "316L Stainless Steel", "laserPower_W": 200, "scanSpeed_mm_s": 900, "beamDiameter_um": 80,
               "preheatTemp_C": 20, "layerThickness_um": 30, "hatchSpacing_um": 100}

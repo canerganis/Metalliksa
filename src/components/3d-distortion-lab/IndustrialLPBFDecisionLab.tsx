@@ -62,6 +62,7 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
   const slicer = job?.slicer ?? null;
   const decision = job?.verdict ?? null;
   const litWindow = job?.verdict?.literatureWindow;
+  const keyholeGateStatus = decision?.gates?.find((g) => g.id === "keyhole")?.status;
   const geometryResolved = thermal ? isComputedMeltPoolExtent(thermal.meltPoolGeometry) : true;
   const extentLabel = thermal ? meltPoolExtentInfo(thermal.meltPoolGeometry).status : "";
   const htCohorts = useMemo(() => heatTreatmentCohorts(materials.alloyId), [materials.alloyId]);
@@ -459,8 +460,8 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
               <Metric
                 label="ΔH/hₛ"
                 value={String(thermal.processParameters.normalizedEnthalpy)}
-                ok={thermal.processParameters.normalizedEnthalpy < 30}
-                hint="King onset ~30"
+                ok={keyholeGateStatus === undefined ? undefined : keyholeGateStatus === "pass" || keyholeGateStatus === "advisory"}
+                hint="porosity proxy ≥ 30 · regime keyhole ≥ 20"
               />
               <Metric
                 label="P–v literature"

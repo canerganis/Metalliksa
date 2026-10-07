@@ -213,7 +213,7 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
     return () => {clearTimeout(timer);solveGeneration.current++;};
   }, [solvePhysics]);
 
-  // Regime from the solver only (King ΔH/hs ≈ 15 / 30). Do not recompute a second threshold.
+  // Regime from the solver only (ΔH/hs 15 / 20, repo convention). Do not recompute a second threshold.
   const regimeInfo = useMemo(() => {
     const enthalpy = pyResult?.processParameters?.normalizedEnthalpy ?? 0;
     const d_over_w = pyResult?.meltPoolGeometry?.depthToWidthRatio_D_over_W ?? 0;
@@ -222,20 +222,20 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
     const isTransition = family === "Transition";
     const isConduction = family === "Conduction";
 
-    const modeName = isKeyhole ? "High keyhole screening indicator" : isTransition ? "Transition screening indicator" : "Conduction assumption (screening)";
+    const modeName = isKeyhole ? "Keyhole-mode screening indicator" : isTransition ? "Transition screening indicator" : "Conduction assumption (screening)";
     let badgeColor = "bg-emerald-500/20 text-emerald-300 border-emerald-500/40";
     const sourceLabel =
       heatSource === "goldak" ? "Goldak double-ellipsoid" : heatSource === "eagar-tsai" ? "Eagar–Tsai Gaussian" : "regularized Rosenthal";
-    let desc = `Analytical conduction estimate. Width and depth from the T = T_liquidus isotherm of a ${sourceLabel} field (King ΔH/hs < 15).`;
+    let desc = `Analytical conduction estimate. Width and depth from the T = T_liquidus isotherm of a ${sourceLabel} field (ΔH/hs < 15).`;
     let keyRisk = "Low screening indicator — unvalidated";
 
     if (isKeyhole) {
       badgeColor = "bg-rose-500/20 text-rose-300 border-rose-500/50 shadow-[0_0_12px_rgba(244,63,94,0.3)]";
-      desc = `King keyhole onset (ΔH/hs ≥ 30). The ${sourceLabel} conduction estimate and Fabbro depth proxy do not resolve a cavity or pore entrapment.`;
-      keyRisk = "High keyhole screening indicator";
+      desc = `Keyhole-mode onset (ΔH/hs ≥ 20; melt-pool D/W > 0.5 screening, King 2014 / Cunningham 2019 converted to this index). The ${sourceLabel} conduction estimate and Fabbro depth proxy do not resolve a cavity or pore entrapment. Keyhole mode is not keyhole porosity.`;
+      keyRisk = "Keyhole-mode screening indicator";
     } else if (isTransition) {
       badgeColor = "bg-amber-500/20 text-amber-300 border-amber-500/40";
-      desc = `Transition band (15 ≤ ΔH/hs < 30). ${sourceLabel} conduction estimate; free-surface shape unresolved.`;
+      desc = `Transition band (15 ≤ ΔH/hs < 20). ${sourceLabel} conduction estimate; free-surface shape unresolved.`;
       keyRisk = "Moderate / Near Threshold";
     }
 
@@ -1256,8 +1256,8 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-1.5 bg-[#050810] rounded-lg border border-slate-800">
-                  <span className="text-slate-300">Keyhole screening risk:</span>
-                  <span className={`font-bold ${regimeInfo.isKeyhole ? "text-rose-400" : "text-emerald-400"}`}>
+                  <span className="text-slate-300">Keyhole porosity screen (proxy):</span>
+                  <span className={`font-bold ${pyResult.defectDiagnostics.keyholePorosityRisk.startsWith("High") ? "text-rose-400" : pyResult.defectDiagnostics.keyholePorosityRisk.startsWith("Possible") ? "text-amber-400" : "text-emerald-400"}`}>
                     {pyResult.defectDiagnostics.keyholePorosityRisk}
                   </span>
                 </div>

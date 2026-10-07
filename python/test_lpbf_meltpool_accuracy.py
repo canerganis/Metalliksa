@@ -16,9 +16,10 @@ def assert_true(cond, msg):
 
 def main():
     assert_true(classify_enthalpy_regime(10) == "Conduction Mode (Stable)", "King conduction cut")
-    assert_true(classify_enthalpy_regime(20) == "Transition Mode", "King transition cut")
-    assert_true(classify_enthalpy_regime(35) == "Keyhole Mode (Deep Vapor Cavity)", "King keyhole cut")
-    assert_true(ENTHALPY_TRANSITION == 15.0 and ENTHALPY_KEYHOLE == 30.0, "King thresholds")
+    assert_true(classify_enthalpy_regime(19.99) == "Transition Mode", "transition cut (15 <= dH/hs < 20)")
+    assert_true(classify_enthalpy_regime(20) == "Keyhole Mode (melt-pool D/W > 0.5 screening onset)", "keyhole-mode cut")
+    assert_true(classify_enthalpy_regime(35).startswith("Keyhole Mode"), "keyhole mode above the cut")
+    assert_true(ENTHALPY_TRANSITION == 15.0 and ENTHALPY_KEYHOLE == 20.0, "regime thresholds 15 / 20")
 
     in718 = calculate_meltpool_physics("Inconel 718", 285, 960, 80, 80, 40, 110)
     g = in718["meltPoolGeometry"]

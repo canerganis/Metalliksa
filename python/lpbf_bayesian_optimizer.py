@@ -119,9 +119,9 @@ OBJECTIVE_DESCRIPTION = (
 
 
 KEYHOLE_GATE_NOTE = (
-    'The keyhole gate (King normalised enthalpy dH/h_s: High at >= 30, do-not-print when High and > 35) '
+    'The keyhole gate (normalised enthalpy dH/h_s: porosity screen High at >= 30, do-not-print when High and > 35) '
     'comes from the frozen thermal solver (python/lpbf_thermal_solver.py) and is not relaxed or re-derived '
-    'here; a correction is pending a planned implementation bump.'
+    'here; the regime threshold moved to 20 in the keyhole-regime bump; the porosity screen stays a proxy (High >= 30).'
 )
 
 
