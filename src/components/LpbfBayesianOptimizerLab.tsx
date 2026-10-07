@@ -19,6 +19,7 @@ import {
   Legend
 } from "recharts";
 import { LpbfProcessWindowMap } from "./LpbfProcessWindowMap";
+import { LpbfExperimentPlanPanel } from "./LpbfExperimentPlanPanel";
 import { pythonComputationService, PythonBayesianOptimizationResult, PythonBayesianIterationDiagnostics } from "../services/pythonComputationService";
 import { useMaterialSpecimenStore } from "../store/useMaterialSpecimenStore";
 import {
@@ -378,13 +379,14 @@ export const LpbfOptimizerSearchPanel: React.FC = () => {
 };
 
 
-type LabTab = "window" | "search";
+type LabTab = "window" | "search" | "plan";
 const LAB_TABS: readonly { id: LabTab; label: string }[] = [
   { id: "window", label: "Process-window map" },
   { id: "search", label: "Parameter search (Bayesian)" },
+  { id: "plan", label: "Plan experiments" },
 ];
 
-/** Process Parameter Search lab: the process-window map first, the unchanged optimizer in the second tab. */
+/** Process Parameter Search lab: the process-window map first, the unchanged optimizer in the second tab, the experiment-plan viewer in the third. */
 export const LpbfBayesianOptimizerLab: React.FC = () => {
   const [tab, setTab] = useState<LabTab>("window");
   const [visited, setVisited] = useState<ReadonlySet<LabTab>>(() => new Set<LabTab>(["window"]));
@@ -421,6 +423,9 @@ export const LpbfBayesianOptimizerLab: React.FC = () => {
       </div>
       <div role="tabpanel" id="pps-panel-search" aria-labelledby="pps-tab-search" hidden={tab !== "search"}>
         {visited.has("search") && <LpbfOptimizerSearchPanel />}
+      </div>
+      <div role="tabpanel" id="pps-panel-plan" aria-labelledby="pps-tab-plan" hidden={tab !== "plan"}>
+        {visited.has("plan") && <LpbfExperimentPlanPanel />}
       </div>
     </div>
   );

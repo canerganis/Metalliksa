@@ -106,3 +106,35 @@ def canonical_json(obj: Any) -> str:
 
 def config_sha256(config: Dict[str, Any] = CALIBRATION_CONFIG) -> str:
     return hashlib.sha256(canonical_json(config).encode("utf-8")).hexdigest()
+
+
+# ---------------------------------------------------------------------------------------------
+# user-supplied measurement sources (additive hook; CALIBRATION_CONFIG itself is untouched, so the committed
+# artefact's config sha256 and the runtime loader are unaffected)
+# ---------------------------------------------------------------------------------------------
+USER_SOURCE_ID_PATTERN = r"^user-[a-z0-9-]{3,40}$"
+
+
+def config_with_user_sources(base: Dict[str, Any], source_ids: Any) -> Dict[str, Any]:
+    """A deep COPY of ``base`` in which the given user sources are one extra trainable source each.
+
+    ``dataRoles.userSources`` lists them (so the copy has its own sha256, recorded next to the scorecard) and
+    ``dataRoles.trainable`` gains them at the end. Every threshold, grid, rung, bootstrap size and gate value is
+    carried over unchanged; a user source is never added to ``catalogSentinels``.
+    """
+    import copy
+    import re
+    ids = list(source_ids)
+    seen = set(base["dataRoles"]["trainable"]) | set(base["dataRoles"]["catalogSentinels"])
+    for sid in ids:
+        if not isinstance(sid, str) or not re.match(USER_SOURCE_ID_PATTERN, sid):
+            raise ValueError(f"user source id {sid!r} does not match {USER_SOURCE_ID_PATTERN}")
+        if sid in seen:
+            raise ValueError(f"user source id {sid!r} collides with an existing or repeated source")
+        seen.add(sid)
+    cfg = copy.deepcopy(base)
+    cfg["dataRoles"]["userSources"] = list(ids)
+    cfg["dataRoles"]["trainable"] = list(cfg["dataRoles"]["trainable"]) + list(ids)
+    cfg["dataRoles"]["userSourceNote"] = ("user-supplied measurements joined as extra trainable sources for a private "
+                                         "scorecard run; never a catalog sentinel; evidence stays screening-only")
+    return cfg

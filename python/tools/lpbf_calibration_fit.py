@@ -299,8 +299,10 @@ def alloys_present(rows: Sequence[Dict[str, Any]]) -> List[str]:
 
 
 def run_analysis(rows_by_variant: Dict[float, List[Dict[str, Any]]], table: Dict[str, Any],
-                 kernels: Sequence[str] = KERNELS, log: Optional[Callable[[str], None]] = None) -> Dict[str, Any]:
+                 kernels: Sequence[str] = KERNELS, log: Optional[Callable[[str], None]] = None,
+                 cfg: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """{variant: {kernel: {alloy: analysis}}} (alloys without KU rows are analysed once, under the first variant)."""
+    cfg = CFG if cfg is None else cfg
     out: Dict[float, Dict[str, Any]] = {}
     fks: Dict[float, Dict[str, st.FineKernel]] = {}
     for vi, (beam, rows) in enumerate(sorted(rows_by_variant.items())):
@@ -315,7 +317,7 @@ def run_analysis(rows_by_variant: Dict[float, List[Dict[str, Any]]], table: Dict
                 if vi > 0 and not uses_ku:
                     continue
                 t0 = time.perf_counter()
-                out[beam][k][alloy] = cl.analyze_kernel_alloy(fk, alloy, CFG)
+                out[beam][k][alloy] = cl.analyze_kernel_alloy(fk, alloy, cfg)
                 if log:
                     log(f"analysed beam={beam:g} {k} {alloy} in {time.perf_counter() - t0:.1f}s")
     return {"results": out, "fks": fks}
@@ -675,14 +677,41 @@ def what_this_does_not_show() -> List[str]:
 def build_document(quick: bool, jobs: int, generated_at: str, table_cache: Optional[Path] = None,
                    solver: Optional[Callable] = None, rows_override: Optional[Dict[float, Dict[str, Any]]] = None,
                    fp_override: Optional[str] = None, revision: Optional[Dict[str, Any]] = None,
-                   log: Optional[Callable[[str], None]] = None) -> Dict[str, Any]:
+                   log: Optional[Callable[[str], None]] = None,
+                   user_sources: Optional[Sequence[Dict[str, Any]]] = None) -> Dict[str, Any]:
+    """``user_sources`` (additive hook, default None = unchanged output): documents from
+    ``lpbf_user_measurements.load_user_rows``. Each joins as ONE extra trainable source in a COPY of the config
+    (``dataRoles.userSources``; the copy's sha256 is the recorded configSha256); LOSO, gate, rungs and intervals are
+    the production ones, and a user source is never a catalog sentinel."""
     st.pin_flat_plate()
+    cfg = CFG
+    user_docs = list(user_sources or [])
+    if user_docs:
+        from lpbf_calibration_config import config_with_user_sources
+        cfg = config_with_user_sources(CFG, [d["sourceId"] for d in user_docs])
     if fp_override is None:
         from lpbf_simulation import implementation_fingerprint
         fp = implementation_fingerprint()
     else:
         fp = fp_override
     loads = rows_override or {b: load_rows(quick, b) for b in BEAM_VARIANTS}
+    if user_docs:
+        loads = {b: dict(v) for b, v in loads.items()}
+        for b in loads:
+            extra = []
+            for d in user_docs:
+                for r in d["rows"]:
+                    row = dict(r)
+                    if "normalizedEnthalpyDefault" not in row:
+                        _classify(row)
+                    extra.append(row)
+            loads[b]["trainable"] = list(loads[b]["trainable"]) + extra
+        have = {r["material"] for r in loads[sorted(loads)[0]]["trainable"] if r["source"] not in
+                {d["sourceId"] for d in user_docs}}
+        for d in user_docs:
+            if d["material"] not in have:
+                raise SystemExit(f"user source {d['sourceId']}: no trainable source of {d['material']} exists, so "
+                                 "the scorecard would have nothing to hold it out against")
     primary = sorted(loads)[0]
     rows_by_variant = {b: loads[b]["trainable"] for b in loads}
     catalog = loads[primary]["catalog"]
@@ -700,16 +729,16 @@ def build_document(quick: bool, jobs: int, generated_at: str, table_cache: Optio
     for m, v in CFG["materialDefaults"].items():
         if m in mat_defaults and abs(mat_defaults[m] - v) > 1e-9:
             raise SystemExit(f"CALIBRATION_CONFIG materialDefaults[{m}]={v} != live default {mat_defaults[m]}")
-    analysis = run_analysis(rows_by_variant, table, log=log)
+    analysis = run_analysis(rows_by_variant, table, log=log, cfg=cfg)
     cells = build_cells(analysis, rows_by_variant)
     primary_rows = rows_by_variant[primary]
     sources_info = []
-    for s in list(TRAINABLE_SOURCES) + list(CATALOG_SOURCES):
+    for s in list(cfg["dataRoles"]["trainable"]) + list(CATALOG_SOURCES):
         rr = [r for r in primary_rows + catalog if r["source"] == s]
         if not rr:
             continue
         info = dict(provenance.get(s, {}))
-        info.update({"source": s, "role": "trainable" if s in TRAINABLE_SOURCES else "catalog-sentinel (test-only)",
+        info.update({"source": s, "role": "trainable" if s in cfg["dataRoles"]["trainable"] else "catalog-sentinel (test-only)",
                      "material": rr[0]["material"], "rowsUsed": len(rr),
                      "parameterSets": len({st.set_key(r) for r in rr})})
         sources_info.append(info)
@@ -718,7 +747,7 @@ def build_document(quick: bool, jobs: int, generated_at: str, table_cache: Optio
         "schema": SCORECARD_SCHEMA, "generatedAt": generated_at, "quick": bool(quick),
         "implementationHash": fp, "codeRevision": revision or code_revision(),
         "tool": {"path": "python/tools/lpbf_calibration_fit.py", "sha256": tool_sha256()},
-        "config": CFG, "configSha256": config_sha256(CFG),
+        "config": cfg, "configSha256": config_sha256(cfg),
         "evidence": {"kind": EVIDENCE_KIND, "label": EVIDENCE_LABEL, "labelPromotionProposed": LABEL_PROMOTION,
                      "experimentalValidation": False, "opticalOperatorMatched": False, "statement": HONESTY},
         "kernel": {"entryPoint": "lpbf_thermal_solver.calculate_meltpool_physics(heat_source=<kernel>)",
@@ -739,6 +768,14 @@ def build_document(quick: bool, jobs: int, generated_at: str, table_cache: Optio
         "betweenSource": between_source_summary(analysis),
         "whatThisDoesNotShow": what_this_does_not_show(),
     }
+    if user_docs:
+        doc["userSources"] = [{"source": d["sourceId"], "label": d["label"], "material": d["material"],
+                               "nRows": d["nRows"], "nExcluded": d["nExcluded"], "provenance": d["provenance"],
+                               "role": "extra trainable source (user-supplied), private run",
+                               "statement": "the user's own measurements; never a catalog sentinel; the evidence "
+                                            "label stays screening-only"} for d in user_docs]
+        doc["privateRun"] = ("scorecard computed with user-supplied measurements as an extra trainable source; it is "
+                             "not a committed record and its artefact is refused by the runtime loader (config sha)")
     return st.round_sig(doc, CFG["rounding"]["significantDigits"])
 
 
@@ -794,7 +831,7 @@ def build_artefact(doc: Dict[str, Any], scorecard_rel: str, scorecard_sha: str) 
         "schema": CALIBRATION_SCHEMA,
         "calibrationId": "", "generatedAt": doc["generatedAt"], "implementationHash": doc["implementationHash"],
         "codeRevision": doc["codeRevision"], "tool": doc["tool"],
-        "configSha256": doc["configSha256"], "config": CFG,
+        "configSha256": doc["configSha256"], "config": doc["config"] if doc.get("userSources") else CFG,
         "trainingData": [{k: s.get(k) for k in ("source", "doi", "tableSha256", "rowsUsed", "parameterSets", "material")}
                          for s in doc["sources"] if s["role"] == "trainable"],
         "catalogSentinelSources": [s["source"] for s in doc["sources"] if s["role"] != "trainable"],
@@ -873,6 +910,19 @@ def _ci(ci: Any, d: int = 2) -> str:
     return "" if not ci else f" [{ci[0]:.{d}f}, {ci[1]:.{d}f}]"
 
 
+def _user_source_lines(doc: Dict[str, Any]) -> List[str]:
+    """Empty unless the record came from a private --user-source run (the committed record is unchanged)."""
+    us = doc.get("userSources")
+    if not us:
+        return []
+    out = ["## User-supplied sources (private run)", "",
+           f"{doc.get('privateRun')}", ""]
+    for u in us:
+        out.append(f"- `{u['source']}`: {u['label']}, {u['material']}, {u['nRows']} rows used, {u['nExcluded']} "
+                   "excluded; an extra trainable source, never a catalog sentinel.")
+    return out + [""]
+
+
 def render_markdown(doc: Dict[str, Any]) -> str:
     ev = doc["evidence"]
     cr = doc["codeRevision"]
@@ -883,6 +933,7 @@ def render_markdown(doc: Dict[str, Any]) -> str:
          f"`{doc['configSha256']}`; code revision `{cr.get('gitHead')}` ({cr.get('gitBranch')}; dirty tracked paths: "
          f"{cr.get('dirtyTrackedPaths')}); tool sha256 `{doc['tool']['sha256']}`; quick mode: {doc['quick']}.", "",
          f"Honesty: {ev['statement']}.", "",
+         *_user_source_lines(doc),
          "## Gate outcome", "",
          "Calibrated mode may serve a cell only when its status is `enabled`: held-out skill CI95 lower bound >= "
          f"{CFG['gate']['skillLbFloor']} on every held-out source (and > 0 on at least one), 90 % interval coverage "
@@ -1073,6 +1124,16 @@ def check_outputs(repo_root: Path, date: str) -> List[str]:
     return problems
 
 
+def refuse_record_dir(out_dir: Path, root: Path) -> None:
+    """A user-source run must never write into a committed record location (docs/, data/calibration/) or the repo
+    root itself (whose docs/ and data/calibration/ it would overwrite)."""
+    o, r = out_dir.resolve(), root.resolve()
+    for forbidden in (r, r / "docs", r / "data" / "calibration"):
+        if o == forbidden or (forbidden != r and forbidden in o.parents):
+            raise SystemExit(f"--out-dir {out_dir} is a committed record location; pick a scratch directory "
+                             "(for example under .runtime/)")
+
+
 def committed_record_date(repo_root: Path) -> Optional[str]:
     """generatedAt of the committed artefact: the record --check verifies when no --date is given."""
     ap = repo_root / ARTEFACT_REL_PATH
@@ -1090,8 +1151,21 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("--quick", action="store_true", help="first 40 rows per source (smoke run; not for records)")
     ap.add_argument("--check", action="store_true", help="re-render from the written JSON and fail on drift")
     ap.add_argument("--repo-root", default=str(REPO_ROOT))
+    ap.add_argument("--user-source", action="append", default=[], metavar="ROWS_JSON",
+                    help="rows.json written by lpbf_next_experiment.py import; repeatable; joins as one extra "
+                         "trainable source in a private run (requires --out-dir)")
+    ap.add_argument("--out-dir", default=None,
+                    help="where a --user-source run writes its outputs; refuses docs/ and data/calibration/")
     a = ap.parse_args(argv)
     root = Path(a.repo_root).resolve()
+    if a.out_dir and not a.user_source:
+        ap.error("--out-dir is only for a --user-source run")
+    if a.user_source:
+        if not a.out_dir:
+            ap.error("--user-source requires --out-dir (a private run never writes the committed records)")
+        if a.check:
+            ap.error("--check verifies the committed records and cannot be combined with --user-source")
+        refuse_record_dir(Path(a.out_dir), root)
     if a.check:
         date = a.date or committed_record_date(root)
         problems = check_outputs(root, date) if date else [f"no committed artefact at {ARTEFACT_REL_PATH}"]
@@ -1104,6 +1178,20 @@ def main(argv: Optional[List[str]] = None) -> int:
     a.date = a.date or datetime.date.today().isoformat()
     t0 = time.perf_counter()
     cache = Path(a.table_cache).resolve() if a.table_cache else None
+    if a.user_source:
+        import lpbf_user_measurements as um
+        try:
+            user_docs = [um.load_user_rows(p) for p in a.user_source]
+        except um.UserMeasurementError as exc:
+            raise SystemExit(f"error: {exc}")
+        doc = build_document(a.quick, a.jobs, a.date, table_cache=cache, log=lambda m: print(m, file=sys.stderr),
+                             user_sources=user_docs)
+        paths = write_all(doc, Path(a.out_dir).resolve())
+        print(f"private run with user sources {', '.join(d['sourceId'] for d in user_docs)}: config sha256 "
+              f"{doc['configSha256']} (production {config_sha256(CFG)})", file=sys.stderr)
+        print(f"wrote {', '.join(p.name for p in paths.values())} to {a.out_dir} in {time.perf_counter() - t0:.0f} s",
+              file=sys.stderr)
+        return 0
     doc = build_document(a.quick, a.jobs, a.date, table_cache=cache, log=lambda m: print(m, file=sys.stderr))
     paths = write_all(doc, root)
     print(f"wrote {', '.join(p.name for p in paths.values())} in {time.perf_counter() - t0:.0f} s", file=sys.stderr)
