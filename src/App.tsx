@@ -204,7 +204,7 @@ export default function App() {
     <header className="mk-header sticky top-0 z-40 border-b px-4 lg:px-6 py-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3"><button aria-label="Toggle workspace navigation" aria-expanded={navigationOpen} onClick={() => setNavigationOpen(v => !v)} className="lg:hidden mk-status px-3 py-2 text-xs">Modules</button><div className="contents"><div className="mk-brand-mark" role="img" aria-label="Metalliksa logo"><span className="mk-brand-laser" aria-hidden="true" /></div></div><div><h1 className="mk-brand-title">METALLIKSA</h1><p className="mk-brand-tag hidden lg:block">Research engineering workstation</p></div></div>
-        <div className="flex items-center gap-2 sm:gap-3"><button type="button" aria-haspopup="dialog" aria-keyshortcuts={SHORTCUT_KEYS} onClick={openPalette} className="mk-status inline-flex items-center gap-2 px-3 py-2 text-xs"><Search className="h-3.5 w-3.5" aria-hidden="true"/><span className="sr-only sm:not-sr-only">Search modules</span><kbd aria-hidden="true" className="hidden sm:inline font-mono text-[10px]">{SHORTCUT_LABEL}</kbd></button><span className="mk-hud-chip hidden xl:inline">Local control plane</span><button onClick={() => { setPaletteOpen(false); setShowStatus(true); }} className="mk-status px-3 py-2 text-xs"><span className={`mr-2 inline-block h-1.5 w-1.5 rounded-full ${checking ? 'bg-amber-500 animate-pulse' : status?.online ? 'bg-emerald-500' : 'bg-amber-500'}`}/>{checking ? 'Checking…' : status?.online ? 'Python daemon ready' : 'Python daemon unavailable'}</button></div>
+        <div className="flex items-center gap-2 sm:gap-3"><button type="button" aria-haspopup="dialog" aria-keyshortcuts={SHORTCUT_KEYS} onClick={openPalette} className="mk-status inline-flex items-center gap-2 px-3 py-2 text-xs"><Search className="h-3.5 w-3.5" aria-hidden="true"/><span className="sr-only sm:not-sr-only">Search modules</span><kbd aria-hidden="true" className="hidden sm:inline font-mono text-[10px]">{SHORTCUT_LABEL}</kbd></button><button type="button" onClick={() => void useGuidedDemoStore.getState().start()} className="mk-status px-3 py-2 text-xs">Guided tour</button><span className="mk-hud-chip hidden xl:inline">Local control plane</span><button onClick={() => { setPaletteOpen(false); setShowStatus(true); }} className="mk-status px-3 py-2 text-xs"><span className={`mr-2 inline-block h-1.5 w-1.5 rounded-full ${checking ? 'bg-amber-500 animate-pulse' : status?.online ? 'bg-emerald-500' : 'bg-amber-500'}`}/>{checking ? 'Checking…' : status?.online ? 'Python daemon ready' : 'Python daemon unavailable'}</button></div>
       </div>
     </header>
     <div className="flex flex-col lg:flex-row">
@@ -214,6 +214,7 @@ export default function App() {
         <ModuleNav home={home} modules={filtered} activeTab={activeTab} activeWorkspace={activeWorkspace.id} onNavigate={navigate} />
       </aside>
       <main id="main-content" tabIndex={-1} className="flex-1 min-w-0 p-4 sm:p-6 xl:p-8">
+        <SilentBoundary><Suspense fallback={null}><GuidedDemo home={home} engine={status} engineChecking={checking || (status === null && statusError === null)} /></Suspense></SilentBoundary>
         {home ? <ModuleBoundary label="Overview"><Suspense fallback={<div role="status" className="mk-loading">Loading overview…</div>}><Atrium continueId={activeTab} engine={status} engineChecking={checking || (status === null && statusError === null)} shortcutLabel={SHORTCUT_LABEL} onNavigate={navigate} onSearch={openPalette} /></Suspense></ModuleBoundary> : <>
         {/* Laser wipe on entering a module (ornament, transform only, once per navigation). */}
         <div key={'wipe-' + activeTab} className="mk-wipe" aria-hidden="true" />
@@ -243,3 +244,7 @@ export default function App() {
 }
 
 
+
+// Own chunk (below the module-contract refs in renderModule so their line numbers stay put): first-run card and tour panel.
+const GuidedDemo = lazy(() => import('./components/GuidedDemo').then(m => ({ default: m.GuidedDemo })));
+import { useGuidedDemoStore } from './store/useGuidedDemoStore';
