@@ -10,6 +10,7 @@ import {
 } from "../data/lpbfCalibrationScorecard";
 import { summarizeScorecard, SUMMARY_LEGEND, SUMMARY_METRIC_DEFINITION } from "../data/lpbfCalibrationScorecardSummary";
 import { COMMITTED_CALIBRATION_SCORECARD } from "../data/lpbfCalibrationScorecardRecord";
+import { LpbfLeaderboardPanel } from "./LpbfLeaderboardPanel";
 
 // Read-only view of the Python-generated record docs/LPBF_CALIBRATION_SCORECARD_<date>.view.json.
 // Every number below is read from that JSON: no physics and no statistics are computed here.
@@ -318,6 +319,7 @@ export function LpbfCalibrationScorecardLab({ document: doc = COMMITTED_CALIBRAT
         <header className="p-4"><h1 className="text-lg font-semibold text-slate-100">Calibration Scorecard (LPBF melt pool)</h1></header>
         <NoScorecardRecord />
         <N01Card n01={[]} note="Guo N01 is a documented keyhole-depth failure of the frozen kernels; calibration does not and must not fix it." />
+        <LpbfLeaderboardPanel />
       </div>
     );
   }
@@ -439,6 +441,8 @@ export function LpbfCalibrationScorecardLab({ document: doc = COMMITTED_CALIBRAT
         <CardHeader><CardTitle>What this does not show</CardTitle></CardHeader>
         <CardContent><ul className="list-disc space-y-1 pl-5 text-xs text-slate-700">{doc.notes.map((n) => <li key={n}>{n}</li>)}</ul></CardContent>
       </Card>
+
+      <LpbfLeaderboardPanel />
     </div>
   );
 }
