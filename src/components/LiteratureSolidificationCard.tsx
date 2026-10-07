@@ -1,6 +1,7 @@
 import React from "react";
 
-// Read-only literature solidification estimate shown under an unavailable CALPHAD result for IN718 / IN625.
+// Read-only literature solidification estimate for IN718 / IN625, shown under an unavailable CALPHAD result or
+// beside a successful one (then with the comparison note).
 // Python (python/calphad_solver.py literature_solidification_block, fed by lpbf_solidification_segregation.py)
 // decides everything; this card displays those fields and computes nothing. It is not a CALPHAD result.
 
@@ -61,7 +62,12 @@ const fin = (v: unknown): v is number => typeof v === "number" && Number.isFinit
 const pct = (v: unknown) => (fin(v) ? `${(v * 100).toFixed(1)} %` : "—");
 const num = (v: unknown, digits = 2) => (fin(v) ? v.toFixed(digits) : "—");
 
-export const LiteratureSolidificationCard: React.FC<{ literature: unknown }> = ({ literature }) => {
+export const LITERATURE_VS_CALPHAD_NOTE =
+  "Not comparable directly: the CALPHAD Scheil phase amounts are mole percent of atoms with composition sets merged " +
+  "(the IN718 Laves amount is minimiser-sensitive and marked do-not-use in the known deviations), while the literature " +
+  "γ/Laves figure is the constituent fraction of the liquid and includes the eutectic γ.";
+
+export const LiteratureSolidificationCard: React.FC<{ literature: unknown; alongsideCalphad?: boolean }> = ({ literature, alongsideCalphad = false }) => {
   const headingId = React.useId();
   if (!literature || typeof literature !== "object" || Array.isArray(literature)) return null;
   const s = literature as LiteratureSolidificationLike;
@@ -75,10 +81,16 @@ export const LiteratureSolidificationCard: React.FC<{ literature: unknown }> = (
       data-testid="calphad-literature-solidification"
       data-lit-status={s.status ?? "unavailable"}
       data-lit-alloy={s.alloyId ?? ""}
+      data-lit-alongside-calphad={alongsideCalphad ? "true" : "false"}
     >
       <h3 id={headingId} className="text-sm font-bold text-white">
         Literature solidification estimate (not CALPHAD)
       </h3>
+      {alongsideCalphad && (
+        <p className="text-[10px] text-sky-200 rounded border border-sky-400/40 p-2" role="note" data-lit-comparison-note>
+          {LITERATURE_VS_CALPHAD_NOTE}
+        </p>
+      )}
       {!available ? (
         <p className="text-[11px] text-slate-400" data-lit-note="unavailable">Unavailable — {s.reason ?? "no literature block"}</p>
       ) : (

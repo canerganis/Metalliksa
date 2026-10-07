@@ -58,3 +58,12 @@ The ambiguous case is two mc_fe PDMN_B2 parameters written `273.00 273 +46000-23
 - pycalphad warns that the type-definition character `%` appears in many phases of the repaired mc_ni without a matching TYPE_DEFINITION line; its effect was not analysed.
 
 A successful load or an equilibrium is not validation. The small runs in the handoff only show that the repaired files calculate and return plausible phases.
+
+## Running the app with CALPHAD enabled (interpreter)
+
+The CALPHAD studio posts to `/api/python/calphad-minimize`, which runs `python/calphad_solver.py` in the interpreter chosen by `server/pythonRuntime.ts`: `METALLIX_PYTHON` (one executable path, probed, no fallback), else `./.venv`, else `VIRTUAL_ENV`, else `py -3.12`, `py -3.11`, `py -3`, `python`, `python3`. The `.runtime/*` environments are never picked automatically.
+
+- `pycalphad` (0.11.2, in `python/requirements.txt`) must be importable in that interpreter. `.runtime/scientific-win-py312-cu128` has it; the locked LPBF/CI environment `.runtime/lpbf-win-py312` does not (that is intended).
+- To enable CALPHAD with a given environment: `$env:METALLIX_PYTHON = 'C:\path\to\.runtime\scientific-win-py312-cu128\Scripts\python.exe'` and then `npm run dev` (restart the server after changing it; for browser checks also set `DISABLE_HMR=true`).
+- Without pycalphad the studio shows the existing honest "Unavailable: pycalphad is not installed in the server interpreter" message and no CALPHAD numbers. For IN718 and IN625 the labelled "Literature solidification estimate (not CALPHAD)" card still appears; with CALPHAD it appears beside the result with a note that the quantities differ.
+- CALPHAD runs are slow on a cold model cache (IN625 about 30 s, IN718 about 2-3 min).

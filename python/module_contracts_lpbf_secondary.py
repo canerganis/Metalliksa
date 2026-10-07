@@ -145,12 +145,12 @@ def build_lpbf_optimizer_contract(seed: Mapping[str, str]) -> ModuleContract:
         ),
         sources=(
             "src/components/LpbfBayesianOptimizerLab.tsx::LpbfBayesianOptimizerLab",
-            "src/services/pythonComputationService.ts:720-732#lpbf-bayesian-optimize",
+            "src/services/pythonComputationService.ts:733-745#lpbf-bayesian-optimize",
             "routes/physics.ts:78-79#120000",
             "python/lpbf_bayesian_optimizer.py::run_bayesian_optimization",
             "python/lpbf_bayesian_optimizer.py:307-334#nIterations",
             "src/components/LpbfProcessWindowMap.tsx::LpbfProcessWindowMap",
-            "src/services/pythonComputationService.ts:1442-1446#lpbf-process-window",
+            "src/services/pythonComputationService.ts:1460-1464#lpbf-process-window",
             "routes/physics.ts:123-125#60000",
             "python/lpbf_process_window.py::run_process_window",
             "python/lpbf_process_window.py:35-35#MAX_CELLS = 225",
@@ -214,7 +214,7 @@ def build_solidification_microstructure_contract(seed: Mapping[str, str]) -> Mod
         sources=(
             "src/components/SolidificationMicrostructureLab.tsx::SolidificationMicrostructureLab",
             "src/components/SolidificationMicrostructureLab.tsx::solidificationRequest",
-            "src/services/pythonComputationService.ts:737-749#lpbf-solidification-microstructure",
+            "src/services/pythonComputationService.ts:750-762#lpbf-solidification-microstructure",
             "routes/lpbfSimulation.ts:22-38#solidification-microstructure",
             "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
             "python/lpbf_worker_rpc.py::_rpc_solidification_microstructure",

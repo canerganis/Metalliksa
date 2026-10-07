@@ -506,3 +506,57 @@ test("an unavailable answer names no client engine and no compute time (review N
   assert.doesNotMatch(text, /MetalliX-Client/);
   assert.match(text, /Unavailable: no thermodynamic database for this system/);
 });
+
+test("Scheil tab: an incomplete path says where it stopped and never claims an end of solidification", () => {
+  const result = pycalphadResult({
+    criticalTemperatures: { liquidusC: 1450, solidusC: 1250, freezingRangeC: 200 },
+    multiElementScheil: [
+      { fractionSolid: 0, temperatureC: 1450, liquidCompositions: { Fe: 65, Cr: 17 }, solidCompositions: null, solidPhases: [] },
+      { fractionSolid: 0.9, temperatureC: 1246, liquidCompositions: { Fe: 60, Cr: 20 }, solidCompositions: { Fe: 66, Cr: 16 }, solidPhases: ["FCC_A1"] },
+    ],
+    scheilSolidification: {
+      status: "incomplete",
+      reason: "the path stopped early: an equilibrium on the path did not converge",
+      terminationReason: "equilibrium-not-converged",
+      startTemperatureC: 1450,
+      terminalTemperatureC: 1246,
+      terminalBracketC: null,
+      remainingLiquidFraction: 0.12,
+      phaseAmounts: { FCC_A1: 0.88 },
+      fractionBasis: "mole fraction of atoms",
+      evidence: "unvalidated",
+    },
+  });
+  const text = textOf(renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={result} initialSubTab="multi_scheil" />));
+  assert.match(text, /Scheil path incomplete: stopped at 1246 °C with 12\.0 % liquid \(equilibrium-not-converged\)/);
+  assert.doesNotMatch(text, /End of solidification/);
+  assert.match(text, /Solid formed so far \(mole fraction of atoms\): FCC_A1 88\.0 %/);
+});
+
+test("Scheil tab: the IN718 Laves do-not-use deviation is visible next to the Scheil phase amounts", () => {
+  const result = pycalphadResult({
+    scheilSolidification: {
+      status: "pycalphad-scheil-gulliver", terminationReason: "liquid-exhausted-within-step", startTemperatureC: 1350,
+      terminalTemperatureC: 1200, terminalBracketC: [1200, 1201], remainingLiquidFraction: 0,
+      phaseAmounts: { FCC_A1: 0.95, LAVES: 0.0086 }, fractionBasis: "mole fraction of atoms", evidence: "unvalidated",
+    },
+    knownDeviations: [{ systemId: "in718", notes: ["Scheil terminal phases are not robust. Do not use the Scheil LAVES amount; nothing was tuned."] }],
+  });
+  const markup = renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={result} initialSubTab="multi_scheil" />);
+  const text = textOf(markup);
+  assert.match(markup, /data-testid="scheil-known-deviations"/);
+  assert.ok(text.indexOf("LAVES 0.9 %") >= 0 && text.indexOf("Do not use the Scheil LAVES amount") > text.indexOf("LAVES 0.9 %"), text);
+});
+
+test("Studio: IN718 CALPHAD result shows the labelled literature card with the not-comparable note; 316L and Python-off show none", () => {
+  const lit = { status: "available", alloyId: "in718", evidenceLabel: "Literature estimate (screening)", source: "weld studies", band: [], kValues: [] };
+  const withLit = renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={pycalphadResult({ literatureSolidification: lit })} />);
+  const t = textOf(withLit);
+  assert.match(withLit, /data-testid="calphad-literature-solidification"/);
+  assert.match(withLit, /data-lit-alongside-calphad="true"/);
+  assert.ok(t.includes("Literature solidification estimate (not CALPHAD)") && t.includes("Not comparable directly"), t);
+  assert.doesNotMatch(renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={pycalphadResult()} />), /calphad-literature-solidification/);
+  assert.doesNotMatch(
+    renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={pycalphadResult({ literatureSolidification: lit })} initialUsePython={false} />),
+    /calphad-literature-solidification/);
+});

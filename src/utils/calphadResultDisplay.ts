@@ -142,18 +142,24 @@ export function scheilSummaryLines(b: CalphadScheilBlock | undefined | null): st
   if (!b) return [];
   if (b.status === "unavailable") return [`Scheil-Gulliver path unavailable: ${b.reason ?? "no reason reported"}.`];
   const lines: string[] = [];
-  if (b.status !== SCHEIL_COMPUTED && b.reason) lines.push(`Incomplete path: ${b.reason}.`);
+  if (b.status !== SCHEIL_COMPUTED && b.reason) lines.push(`Reason: ${b.reason}.`);
   if (typeof b.startTemperatureC === "number") lines.push(`Start (liquidus bracket, all liquid): ${b.startTemperatureC} °C`);
-  if (b.terminalBracketC) {
+  const incomplete = b.status !== SCHEIL_COMPUTED;
+  if (incomplete) {
+    // An incomplete path never claims an end of solidification: it says where it stopped and how much liquid is left.
+    const at = typeof b.terminalTemperatureC === "number" ? ` at ${b.terminalTemperatureC} °C` : "";
+    const liquid = typeof b.remainingLiquidFraction === "number" ? ` with ${(b.remainingLiquidFraction * 100).toFixed(1)} % liquid` : "";
+    lines.push(`Scheil path incomplete: stopped${at}${liquid}${b.terminationReason ? ` (${b.terminationReason})` : ""}. The phase amounts below are partial.`);
+  } else if (b.terminalBracketC) {
     lines.push(`End of solidification between ${b.terminalBracketC[0]} and ${b.terminalBracketC[1]} °C (${b.terminationReason}).`);
-  } else if (typeof b.terminalTemperatureC === "number") {
+  } else if (!incomplete && typeof b.terminalTemperatureC === "number") {
     lines.push(`Last step: ${b.terminalTemperatureC} °C (${b.terminationReason}); remaining liquid ${((b.remainingLiquidFraction ?? 0) * 100).toFixed(2)} %.`);
   }
   if (b.phaseAmounts && Object.keys(b.phaseAmounts).length) {
     const phases = Object.entries(b.phaseAmounts)
       .map(([name, f]) => `${withOrderingNote(name, b.phaseNameNotes)} ${(f * 100).toFixed(1)} %`)
       .join(", ");
-    lines.push(`Solid formed (${b.fractionBasis ?? "mole fraction"}): ${phases}`);
+    lines.push(`${incomplete ? "Solid formed so far" : "Solid formed"} (${b.fractionBasis ?? "mole fraction"}): ${phases}`);
   }
   if (b.primarySolidPhase) lines.push(`Primary solid (first to form): ${withOrderingNote(b.primarySolidPhase, b.phaseNameNotes)}`);
   const notes = Object.entries(b.phaseNameNotes ?? {});

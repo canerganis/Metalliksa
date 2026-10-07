@@ -2292,8 +2292,16 @@ LITERATURE_RAPID_NOTE = (
     "(LPBF Distortion Lab); it is not computed here.")
 
 
+def attach_literature_solidification(result: Dict[str, Any], alloy_id: Any) -> Dict[str, Any]:
+    """Add ``literatureSolidification`` to ``result`` for an IN718 / IN625 id; no other field is touched."""
+    literature = literature_solidification_block(alloy_id)
+    if literature is not None:
+        result["literatureSolidification"] = literature
+    return result
+
+
 def literature_solidification_block(alloy_id: Any) -> Optional[Dict[str, Any]]:
-    """Read-only literature segregation view for an unavailable IN718 / IN625 request, else None.
+    """Read-only literature segregation view for an IN718 / IN625 request, else None.
 
     Only the ids in LITERATURE_ALLOY_IDS are accepted (anything else is refused with None). The numbers are the
     existing segregation_estimate block's own; none is computed here and none is a CALPHAD result.
@@ -2397,11 +2405,9 @@ def main():
             scheil=scheil,
             scheil_step_c=scheil_step,
         )
-        # Unavailable IN718 / IN625 requests also carry the read-only literature estimate (CALPHAD fields unchanged).
-        if result.get("status") == "unavailable":
-            literature = literature_solidification_block(payload.get("literatureAlloyId"))
-            if literature is not None:
-                result["literatureSolidification"] = literature
+        # IN718 / IN625 requests also carry the read-only literature estimate, next to a CALPHAD result as well as
+        # an unavailable one (CALPHAD fields unchanged; the two are different quantities, see the studio note).
+        attach_literature_solidification(result, payload.get("literatureAlloyId"))
         # Phase 6a provenance (constants version, the R actually used, domain data)
         result["provenance"] = {
             "constantsVersion": physical_constants.CONSTANTS_VERSION,
