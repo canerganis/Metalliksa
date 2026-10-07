@@ -122,7 +122,7 @@ export function Atrium({ continueId, engine, engineChecking, shortcutLabel, onNa
       </div>
 
       <div className="mk-at-section">
-        <p className="mk-at-section-label"><span>{two(WORKSPACES.length)}</span>Labs</p>
+        <p className="mk-at-section-label"><span>{two(LAB_MODULES.length)}</span>Labs</p>
       </div>
       <div className="mk-at-grid">
         {WORKSPACES.map((workspace, index) => {

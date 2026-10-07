@@ -4,8 +4,8 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { registerHooks } from "node:module";
 import type { AtriumProps } from "../src/components/Atrium";
-import { ModuleNav } from "../src/components/ModuleNav";
-import { CORE_FLOW, CORE_MODULE_IDS, LAB_MODULES, MODULES, isCoreModule } from "../src/data/workspaces";
+import { ModuleNav, labHeadingTarget, navTabStop } from "../src/components/ModuleNav";
+import { CORE_FLOW, CORE_MODULE_IDS, LAB_MODULES, MODULES, WORKSPACES, isCoreModule } from "../src/data/workspaces";
 
 // Atrium imports stylesheets, which plain Node cannot load: stub .css modules before importing it.
 registerHooks({
@@ -92,4 +92,42 @@ test("Atrium: four flow steps in order with registry labels, the screening note 
   assert.ok(html.includes("Screening only. No result in this flow is experimental validation."));
   const counts = [...html.matchAll(/class="mk-at-count">(?:<!-- -->)?(\d+)(?:<!-- -->)? labs/g)].map(m => Number(m[1]));
   assert.equal(counts.reduce((a, b) => a + b, 0), LAB_MODULES.length);
+  assert.match(html, new RegExp(`class="mk-at-section-label"><span>(?:<!-- -->)?0?${LAB_MODULES.length}(?:<!-- -->)?</span>Labs`));
+});
+
+test("stored preference expands Labs for a core module; still one tabindex=0", () => {
+  const g = globalThis as unknown as { window?: unknown };
+  const previous = g.window;
+  g.window = { localStorage: { getItem: () => "1", setItem() { /* unused */ } } };
+  try {
+    const html = nav(CORE_MODULE_IDS[0]);
+    assert.match(buttons(html).find(b => /aria-controls="module-nav-labs"/.test(b))!, /aria-expanded="true"/);
+    assert.deepEqual(moduleButtons(html, LAB_MODULES.map(m => m.id)), LAB_MODULES.map(m => m.id));
+    assert.equal(buttons(html).filter(b => /tabindex="0"/.test(b)).length, 1);
+  } finally {
+    if (previous === undefined) delete g.window; else g.window = previous;
+  }
+});
+
+test("no Labs heading targets a core module", () => {
+  for (const workspace of WORKSPACES) {
+    const entries = LAB_MODULES.filter(m => m.workspace === workspace.id);
+    if (!entries.length) continue;
+    const target = labHeadingTarget(workspace.id, workspace.defaultModule, entries);
+    assert.ok(!isCoreModule(target), `${workspace.id} heading target ${target} is a lab`);
+    assert.ok(entries.some(m => m.id === target));
+  }
+});
+
+test("focus key 'labs' with a core-only filtered list leaves exactly one Tab stop", () => {
+  const core = MODULES.filter(m => m.id === CORE_MODULE_IDS[0]);
+  assert.equal(navTabStop(core, { key: "labs", tab: CORE_MODULE_IDS[0] }, CORE_MODULE_IDS[0], false), CORE_MODULE_IDS[0]);
+  assert.equal(navTabStop(core, { key: "labs", tab: CORE_MODULE_IDS[0] }, CORE_MODULE_IDS[0], true), "labs");
+});
+
+test("forced-open Labs toggle is aria-disabled with a reason", () => {
+  const html = nav(LAB_MODULES[0].id);
+  const toggle = buttons(html).find(b => /aria-controls="module-nav-labs"/.test(b))!;
+  assert.match(toggle, /aria-disabled="true"/);
+  assert.ok(html.includes("Labs stay open while a lab is active or a search is applied."));
 });

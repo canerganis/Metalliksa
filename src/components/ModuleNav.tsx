@@ -6,14 +6,19 @@ import { rovingIndex } from '../utils/rovingFocus';
  * The single Tab stop: the entry focused last while `activeTab` was active, else the active module,
  * else the first visible module. Workspace headings use the key "ws:<workspace id>", the Labs toggle "labs".
  */
-export function navTabStop(modules: { id: string; workspace: string }[], focus: { key: string; tab: string }, activeTab: string): string | undefined {
-  const shown = (key: string) => key === 'labs' || modules.some(m => m.id === key || 'ws:' + m.workspace === key);
+export function navTabStop(modules: { id: string; workspace: string }[], focus: { key: string; tab: string }, activeTab: string, labsToggleShown = true): string | undefined {
+  const shown = (key: string) => (key === 'labs' ? labsToggleShown : false) || modules.some(m => m.id === key || 'ws:' + m.workspace === key);
   return [focus.tab === activeTab ? focus.key : '', activeTab].find(shown) ?? modules[0]?.id;
 }
 
 /** Clears the remembered entry once the active module differs from the one it was focused under. */
 export function syncNavFocus(focus: { key: string; tab: string }, activeTab: string): { key: string; tab: string } {
   return focus.tab === activeTab ? focus : { key: '', tab: activeTab };
+}
+
+/** Labs headings must stay inside Labs: a core default module would collapse Labs and drop focus. */
+export function labHeadingTarget(_workspace: string, defaultModule: string, entries: { id: string }[]): string {
+  return !isCoreModule(defaultModule) && entries.some(m => m.id === defaultModule) ? defaultModule : entries[0].id;
 }
 
 export const LABS_OPEN_KEY = 'metalliksa.nav.labsOpen';
@@ -45,7 +50,7 @@ export function ModuleNav({ home = false, modules, activeTab, activeWorkspace, o
   const forcedOpen = !isCoreModule(activeTab) || modules.length !== MODULES.length;
   const labsOpen = forcedOpen || userLabsOpen;
   const visible = labsOpen ? modules : modules.filter(m => isCoreModule(m.id));
-  const stop = navTabStop(visible, synced, activeTab);
+  const stop = navTabStop(visible, synced, activeTab, labEntries.length > 0);
   function toggleLabs() {
     if (forcedOpen) return;
     setUserLabsOpen(!userLabsOpen);
@@ -73,14 +78,15 @@ export function ModuleNav({ home = false, modules, activeTab, activeWorkspace, o
       <p className="mk-nav-core-head">Core - LPBF screening flow</p>
       <div className="space-y-0.5">{coreEntries.map(({ index, module }) => entryButton(module!, index + 1))}</div>
     </div>}
-    {labEntries.length > 0 && <button type="button" {...item('labs')} aria-expanded={labsOpen} aria-controls="module-nav-labs" onClick={toggleLabs} className="mk-nav-labs-toggle">
+    {labEntries.length > 0 && <button type="button" {...item('labs')} aria-describedby={'module-nav-hint' + (forcedOpen ? ' module-nav-labs-why' : '')} aria-disabled={forcedOpen || undefined} aria-expanded={labsOpen} aria-controls="module-nav-labs" onClick={toggleLabs} className="mk-nav-labs-toggle">
       <span className="mk-nav-labs-caret" aria-hidden="true">{labsOpen ? '▾' : '▸'}</span>Labs ({labEntries.length})
     </button>}
+    {forcedOpen && labEntries.length > 0 && <p id="module-nav-labs-why" className="mk-sr-only">Labs stay open while a lab is active or a search is applied.</p>}
     <div id="module-nav-labs" hidden={!labsOpen || !labEntries.length} className="mk-nav-labs">
       {labsOpen && WORKSPACES.map(workspace => {
         const entries = labEntries.filter(m => m.workspace === workspace.id);
         if (!entries.length) return null;
-        return <div key={workspace.id} className="mb-6"><button {...item('ws:' + workspace.id)} onClick={() => onNavigate(workspace.defaultModule)} className={`mk-nav-ws${workspace.id === activeWorkspace ? ' is-current' : ''}`}>{workspace.label}</button><div className="space-y-0.5">{entries.map(module => entryButton(module))}</div></div>;
+        return <div key={workspace.id} className="mb-6"><button {...item('ws:' + workspace.id)} onClick={() => onNavigate(labHeadingTarget(workspace.id, workspace.defaultModule, entries))} className={`mk-nav-ws${workspace.id === activeWorkspace ? ' is-current' : ''}`}>{workspace.label}</button><div className="space-y-0.5">{entries.map(module => entryButton(module))}</div></div>;
       })}
     </div>
     <div hidden>{modules.map(module => <span key={module.id} id={'nav-desc-' + module.id}>{module.description}</span>)}</div>
