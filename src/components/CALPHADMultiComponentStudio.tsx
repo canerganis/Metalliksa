@@ -1,5 +1,6 @@
 import { ResponsiveContainer } from './VisibleResponsiveContainer';
 import React, { useState, useMemo, useEffect, useRef } from "react";
+import { LiteratureSolidificationCard } from "./LiteratureSolidificationCard";
 import {
   Atom,
   Flame,
@@ -909,6 +910,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
 
         {/* Right Column: Interactive Graphs & Solute Partitioning Matrix */}
         {!showNumbers ? (
+          <>
           <div className="lg:col-span-8 p-6 rounded-2xl bg-[#090e18] border border-amber-500/30 text-xs text-amber-200 space-y-2" data-testid="calphad-no-result">
             <div className="font-bold text-sm">No equilibrium result</div>
             <div>
@@ -921,6 +923,10 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
                 : "No pycalphad result for this input yet."}
             </div>
           </div>
+          {pythonUnavailable && solveResult.literatureSolidification != null && (
+            <LiteratureSolidificationCard literature={solveResult.literatureSolidification} />
+          )}
+          </>
         ) : (
         <div className="lg:col-span-8 space-y-4">
           {/* Sub-tab Switcher */}

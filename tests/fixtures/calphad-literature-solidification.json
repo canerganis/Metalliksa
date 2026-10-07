@@ -1,0 +1,333 @@
+{
+ "in625": {
+  "alloyId": "in625",
+  "band": [
+   {
+    "Nb_wt": 3.15,
+    "binaryUpperBound": {
+     "C_wt": 0.0,
+     "fGammaLavesConstituent": 0.0258
+    },
+    "label": "min",
+    "pseudoTernaryAtCmax": {
+     "C_wt": 0.1,
+     "reason": "not modelled: no carbon constants for alloy 625 in C88 or D96 (binary gamma-Nb Scheil only)",
+     "status": "not-modelled"
+    }
+   },
+   {
+    "Nb_wt": 3.65,
+    "binaryUpperBound": {
+     "C_wt": 0.0,
+     "fGammaLavesConstituent": 0.0349
+    },
+    "label": "nominal",
+    "pseudoTernaryAtCmax": {
+     "C_wt": 0.1,
+     "reason": "not modelled: no carbon constants for alloy 625 in C88 or D96 (binary gamma-Nb Scheil only)",
+     "status": "not-modelled"
+    }
+   },
+   {
+    "Nb_wt": 4.15,
+    "binaryUpperBound": {
+     "C_wt": 0.0,
+     "fGammaLavesConstituent": 0.0453
+    },
+    "label": "max",
+    "pseudoTernaryAtCmax": {
+     "C_wt": 0.1,
+     "reason": "not modelled: no carbon constants for alloy 625 in C88 or D96 (binary gamma-Nb Scheil only)",
+     "status": "not-modelled"
+    }
+   }
+  ],
+  "bandNote": "terminal eutectic-type constituent fraction from D96 Eq. 5 (binary gamma-Nb Scheil, C = 0) over the specification Nb band with k_Nb from C88; fraction of the liquid, which both sources compare with measured volume %. Carbon is not modelled for alloy 625.",
+  "evidenceLabel": "Literature estimate (screening): binary gamma-Nb Scheil, k_Nb from Cieslak et al. 1988 (low-Fe alloy 625, GTA welds and DTA), C_e from DuPont 1996 (taken from Alloy 718 data); not CALPHAD; LPBF is outside the source regime",
+  "isCalphad": false,
+  "kSensitivity": {
+   "c88TableVII": {
+    "band": [
+     {
+      "Nb_wt": 3.15,
+      "fGammaLavesConstituent": 0.0203,
+      "label": "min"
+     },
+     {
+      "Nb_wt": 3.65,
+      "fGammaLavesConstituent": 0.028,
+      "label": "nominal"
+     },
+     {
+      "Nb_wt": 4.15,
+      "fGammaLavesConstituent": 0.037,
+      "label": "max"
+     }
+    ],
+    "k": 0.54
+   },
+   "d96Overlay": {
+    "band": [
+     {
+      "Nb_wt": 3.15,
+      "fGammaLavesConstituent": 0.0362,
+      "label": "min"
+     },
+     {
+      "Nb_wt": 3.65,
+      "fGammaLavesConstituent": 0.0476,
+      "label": "nominal"
+     },
+     {
+      "Nb_wt": 4.15,
+      "fGammaLavesConstituent": 0.0604,
+      "label": "max"
+     }
+    ],
+    "k": 0.46
+   },
+   "note": "same C_e, other read k_Nb values: C88 Table VII (liquidus/solidus slopes) and the D96 Fe-diluted overlay (Table IV); a lower k gives a larger fraction"
+  },
+  "kValues": [
+   {
+    "citation": "M.J. Cieslak, T.J. Headley, T. Kollie, A.D. Romig Jr., 'A melting and solidification study of alloy 625', Metall. Trans. A 19A (1988) 2319-2331",
+    "id": "k_gamma_Nb",
+    "locator": "Table VIII (k = C_core / C_nom by EPMA; 0.53, 0.51, 0.52, 0.51 for alloys 5-8; the lowest value is used)",
+    "unit": "-",
+    "value": 0.51,
+    "verified": true
+   },
+   {
+    "citation": "M.J. Cieslak, T.J. Headley, T. Kollie, A.D. Romig Jr., 'A melting and solidification study of alloy 625', Metall. Trans. A 19A (1988) 2319-2331",
+    "id": "k_gamma_Nb_slopes",
+    "locator": "Table VII (k = m_L / m_S, Alloy 625, Nb); Conclusion 2",
+    "unit": "-",
+    "value": 0.54,
+    "verified": true
+   }
+  ],
+  "primarySource": {
+   "citation": "M.J. Cieslak, T.J. Headley, T. Kollie, A.D. Romig Jr., 'A melting and solidification study of alloy 625', Metall. Trans. A 19A (1988) 2319-2331",
+   "note": "full text read for this module; factorial Nb/C/Si heats of alloy 625 with Fe about 2.2-2.6 wt% (Table I), GTA welds and DTA",
+   "read": true,
+   "url": "https://doi.org/10.1007/BF02645056"
+  },
+  "quantity": "fGammaLavesConstituent is the fraction of the liquid that remains when the binary Scheil liquid reaches C_e = 18.9 wt% Nb (D96 Eq. 5); D96 treats it as the gamma/Laves eutectic-type constituent (eutectic gamma included) and compares it with volume %. It is not a phase fraction of Laves, and its phase identity is not established (see validity.phaseIdentityNote).",
+  "rapidSolidificationNote": "The k values below are equilibrium (weld/DTA) partition coefficients, so the fractions are upper bounds. A rapid-solidification estimate with solute trapping k(V) exists in the segregation block of a build job (LPBF Distortion Lab); it is not computed here.",
+  "secondarySource": {
+   "citation": "J.N. DuPont, 'Solidification of an Alloy 625 Weld Overlay', Metall. Mater. Trans. A 27A (1996) 3612-3620",
+   "note": "full text (journal article, 9 pages) read for this module; one GMAW overlay of alloy 625 filler on 2.25Cr-1Mo steel at about 25-28 % dilution (Table II), plus a DTA sample of the same deposit",
+   "read": true,
+   "url": "https://www.osti.gov/biblio/413291"
+  },
+  "source": "Literature (weld and DTA studies: gas tungsten arc / GMAW welds and DTA samples), not LPBF; the numbers come from python/lpbf_solidification_segregation.py and are not a CALPHAD result",
+  "status": "available",
+  "upperBoundNote": "Upper bound with respect to effects that are not modelled and that all reduce the terminal constituent: solid-state back-diffusion of Nb, solute trapping at high solidification rate, dendrite-tip undercooling, and Nb tied up as NbC by carbon (no carbon model for alloy 625). It is not a bound with respect to k_Nb or C_e. Against the C88 low-Fe measurements the estimate is high (see sourceAgreementNote), but that is one set of four heats at DTA cooling, not a guarantee.",
+  "validity": {
+   "ceTransferNote": "C_e = 18.9 wt% Nb is not measured on alloy 625: D96 (Section IV-C) builds it from Alloy 718 data (gamma 9.3 wt% Nb in the gamma/Laves eutectic, Table V) and the Fe-diluted overlay Laves (22.1 wt% Nb, Table III). C88 gives no eutectic composition; its Laves in low-Fe alloy 625 holds less Nb (16.8-19.2 wt%, Table V), so C_e for low-Fe IN625 may be lower, which would raise the computed fraction.",
+   "d96SourceComposition_wt": {
+    "C": 0.05,
+    "Cr": 16.67,
+    "Fe": 28.14,
+    "Mo": 6.78,
+    "Nb": 2.07,
+    "Ni": 44.91,
+    "Si": 0.24,
+    "Ti": 0.17
+   },
+   "d96SourceNote": "D96 is a single Fe-diluted (28.14 wt% Fe) GMAW overlay (Table II); wrought and LPBF IN625 (Fe <= 5 wt%) are outside it, so its k_Nb is used only as a cross-check.",
+   "kTransferNote": "k_Nb = 0.51 is the lowest of the four EPMA dendrite-core values in C88 Table VIII (0.51-0.53, alloys 5-8, Nb 3.53-3.61 wt%, Fe about 2.3 wt%); C88 Table VII gives 0.54 from liquidus/solidus slopes. The source Nb is 3.53-3.61 wt%, so the band ends (3.15 and 4.15 wt%) assume a constant k.",
+   "outsideSourceComposition": true,
+   "outsideSourceCompositionReasons": [
+    "Fe: IN625 specification <= 5.0 wt% extends outside the source 2.26-2.31 wt%",
+    "Cr: IN625 specification 20.0-23.0 wt% extends outside the source 21.65-21.83 wt%",
+    "Mo: IN625 specification 8.0-10.0 wt% extends outside the source 9.67-9.81 wt%",
+    "Nb: IN625 specification 3.15-4.15 wt% extends outside the source 3.53-3.61 wt%",
+    "Si: IN625 specification <= 0.5 wt% extends outside the source 0.03-0.46 wt%",
+    "C: IN625 specification <= 0.1 wt% extends outside the source 0.008-0.038 wt%",
+    "Ti: IN625 specification <= 0.4 wt% extends outside the source 0.06 wt%",
+    "Mn: IN625 specification <= 0.5 wt% extends outside the source 0.03 wt%"
+   ],
+   "outsideSourceRegime": true,
+   "outsideSourceRegimeReason": "LPBF is not among the source processes (C88: GTA welds and DTA samples; D96: one GMAW overlay); k_Nb and the Scheil assumption were not established at LPBF solidification rates",
+   "phaseIdentityNote": "Phase identity not established. In low-Fe alloy 625 (Fe about 2.3 wt%) C88 found the terminal constituent to depend on C and Si: with 0.038 wt% C and no added Si only gamma/NbC formed (alloy 6, no Laves); with low C and no added Si a small amount of mostly Laves formed (alloy 5); Si (0.38-0.46 wt%) promoted Laves and, at low C, M6C (Sections III-B and IV-B, Tables IV and IX). D96 adds that Fe favours Laves over NbC (Section IV-B). The IN625 specification allows C up to 0.10 and Si up to 0.50 wt%, so the computed number is a gamma/Laves-type estimate with C_e = 18.9 wt% Nb, not a Laves prediction; the constituent may be gamma/NbC, gamma/Laves or both.",
+   "sourceAbsentElements": [],
+   "sourceCompositionLocator": "C88 Table I, alloys 5-8 (Nb-bearing)",
+   "sourceCompositionRange_wt": {
+    "C": [
+     0.008,
+     0.038
+    ],
+    "Cr": [
+     21.65,
+     21.83
+    ],
+    "Fe": [
+     2.26,
+     2.31
+    ],
+    "Mn": [
+     0.03,
+     0.03
+    ],
+    "Mo": [
+     9.67,
+     9.81
+    ],
+    "Nb": [
+     3.53,
+     3.61
+    ],
+    "Si": [
+     0.03,
+     0.46
+    ],
+    "Ti": [
+     0.06,
+     0.06
+    ]
+   },
+   "sourceRegime": "gas tungsten arc (GTA) welds and DTA samples (20 degC/min) of vacuum-melted experimental alloy 625 heats with Fe about 2.3 wt% (C88 Section II)"
+  }
+ },
+ "in718": {
+  "alloyId": "in718",
+  "band": [
+   {
+    "Nb_wt": 4.75,
+    "binaryUpperBound": {
+     "C_wt": 0.0,
+     "fGammaLavesConstituent": 0.0564,
+     "riskClass": "eutectic Laves expected (Scheil)"
+    },
+    "label": "min",
+    "pseudoTernaryAtCmax": {
+     "C_wt": 0.08,
+     "fEutecticTotal": 0.089,
+     "fGammaLavesConstituent": 0.0198,
+     "fGammaNbCConstituent": 0.0692,
+     "fLiquidPrimaryEnd": 0.089,
+     "riskClass": "eutectic Laves expected (Scheil)",
+     "terminatedBy": "laves-point"
+    }
+   },
+   {
+    "Nb_wt": 5.125,
+    "binaryUpperBound": {
+     "C_wt": 0.0,
+     "fGammaLavesConstituent": 0.0647,
+     "riskClass": "eutectic Laves expected (Scheil)"
+    },
+    "label": "nominal",
+    "pseudoTernaryAtCmax": {
+     "C_wt": 0.08,
+     "fEutecticTotal": 0.1003,
+     "fGammaLavesConstituent": 0.0282,
+     "fGammaNbCConstituent": 0.072,
+     "fLiquidPrimaryEnd": 0.1003,
+     "riskClass": "eutectic Laves expected (Scheil)",
+     "terminatedBy": "laves-point"
+    }
+   },
+   {
+    "Nb_wt": 5.5,
+    "binaryUpperBound": {
+     "C_wt": 0.0,
+     "fGammaLavesConstituent": 0.0736,
+     "riskClass": "eutectic Laves expected (Scheil)"
+    },
+    "label": "max",
+    "pseudoTernaryAtCmax": {
+     "C_wt": 0.08,
+     "fEutecticTotal": 0.112,
+     "fGammaLavesConstituent": 0.0372,
+     "fGammaNbCConstituent": 0.0747,
+     "fLiquidPrimaryEnd": 0.112,
+     "riskClass": "eutectic Laves expected (Scheil)",
+     "terminatedBy": "laves-point"
+    }
+   }
+  ],
+  "bandNote": "gamma/Laves constituent fraction at C = 0 (binary; model upper bound over C only) and at the specification maximum C with the pseudo-ternary model; fractions are of the liquid, which D98 compares with measured volume %",
+  "evidenceLabel": "Literature estimate (screening): Scheil-type pseudo-ternary gamma-Nb-C model, constants from DuPont, Robino & Marder 1998 (GTA welds of experimental alloys); not CALPHAD; LPBF is outside the source regime",
+  "isCalphad": false,
+  "kSensitivity": null,
+  "kValues": [
+   {
+    "citation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Modeling solute redistribution and microstructural development in fusion welds of Nb-bearing superalloys', Acta Materialia 46 (1998) 4781-4790, doi:10.1016/S1359-6454(98)00123-2",
+    "id": "k_gamma_Nb",
+    "locator": "D98 Table 2 (k_gamma,Nb, Ni base alloys)",
+    "unit": "-",
+    "value": 0.45,
+    "verified": true
+   },
+   {
+    "citation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Modeling solute redistribution and microstructural development in fusion welds of Nb-bearing superalloys', Acta Materialia 46 (1998) 4781-4790, doi:10.1016/S1359-6454(98)00123-2",
+    "id": "k_gamma_C",
+    "locator": "D98 Table 2 (k_gamma,C, Ni base alloys)",
+    "unit": "-",
+    "value": 0.21,
+    "verified": true
+   }
+  ],
+  "primarySource": {
+   "citation": "J.N. DuPont, C.V. Robino, A.R. Marder, 'Modeling solute redistribution and microstructural development in fusion welds of Nb-bearing superalloys', Acta Materialia 46 (1998) 4781-4790, doi:10.1016/S1359-6454(98)00123-2",
+   "note": "full text (journal article) read for this module; Table 2 gives the solidification constants used here. Its Section 3.2 (negligible Nb diffusion / infinitely fast C diffusion, Eqs. 13-21) is the same model as the equations implemented here (D97 Eqs. 1-8)",
+   "read": true,
+   "url": "https://doi.org/10.1016/S1359-6454(98)00123-2"
+  },
+  "quantity": "fGammaLavesConstituent and fGammaNbCConstituent are fractions of the gamma/Laves and gamma/NbC eutectic-type constituents (remaining liquid that transforms, eutectic gamma included; D97 terminology), not phase fractions of Laves or NbC.",
+  "rapidSolidificationNote": "The k values below are equilibrium (weld/DTA) partition coefficients, so the fractions are upper bounds. A rapid-solidification estimate with solute trapping k(V) exists in the segregation block of a build job (LPBF Distortion Lab); it is not computed here.",
+  "secondarySource": null,
+  "source": "Literature (weld and DTA studies: gas tungsten arc / GMAW welds and DTA samples), not LPBF; the numbers come from python/lpbf_solidification_segregation.py and are not a CALPHAD result",
+  "status": "available",
+  "upperBoundNote": "Upper bound with respect to effects that are not modelled and that all reduce segregation: solid-state back-diffusion of Nb, solute trapping at high solidification rate and dendrite-tip undercooling. It is not a bound with respect to the choice of k_Nb (see validity), and it is not an upper bound on measured Laves content (see sourceAgreementNote).",
+  "validity": {
+   "kTransferNote": "D98 reports k_Nb = 0.45 for its Ni base alloys (Fe about 11 wt%) and 0.25 for its Fe base alloys (Fe about 45 wt%) and attributes the drop to Fe. The source gives no k_Nb(Fe) relation here, so no interpolation is made; the Fe-base result is shown as a bracketing sensitivity.",
+   "outsideSourceComposition": true,
+   "outsideSourceCompositionReasons": [
+    "Fe (balance, 11.13-24.6 wt% by difference) extends outside the source 10.39-11.12 wt%",
+    "Nb specification 4.75-5.5 wt% extends outside the source 1.82-5.17 wt%",
+    "Mo (2.8-3.3 wt% in the specification) is absent from the source alloys",
+    "Ti (0.65-1.15 wt% in the specification) is absent from the source alloys",
+    "Al (0.2-0.8 wt% in the specification) is absent from the source alloys"
+   ],
+   "outsideSourceRegime": true,
+   "outsideSourceRegimeReason": "LPBF is not among the source processes (GTA welds, DTA samples); the k values and the Scheil assumption were not established at LPBF solidification rates",
+   "sourceAbsentElements": [
+    "Mo",
+    "Ti",
+    "Al",
+    "Co"
+   ],
+   "sourceCompositionLocator": "D97 Table 1, alloys 1-8 (Ni base)",
+   "sourceCompositionRange_wt": {
+    "C": [
+     0.01,
+     0.17
+    ],
+    "Cr": [
+     18.54,
+     19.3
+    ],
+    "Fe": [
+     10.39,
+     11.12
+    ],
+    "Nb": [
+     1.82,
+     5.17
+    ],
+    "Ni": [
+     63.93,
+     68.53
+    ],
+    "Si": [
+     0.03,
+     0.52
+    ]
+   },
+   "sourceRegime": "gas tungsten arc (GTA) autogenous welds and DTA samples of investment-cast experimental alloys (D97 Experimental Procedure)"
+  }
+ }
+}
