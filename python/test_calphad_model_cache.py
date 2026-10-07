@@ -30,12 +30,11 @@ from unittest import mock
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import calphad_model_cache as cmc  # noqa: E402
-import calphad_solver as cs  # noqa: E402
+import calphad_solver as cs  # noqa: E402
+import calphad_test_lane  # noqa: E402
 
 NEEDS_PYCALPHAD = unittest.skipUnless(
-    cs.PYCALPHAD_AVAILABLE,
-    "pycalphad is not installed in this interpreter (the locked CI environment); the real path runs with "
-    "the server interpreter (METALLIX_PYTHON) or .runtime/scientific-win-py312-cu128")
+    calphad_test_lane.RUN_REAL_SOLVES, calphad_test_lane.SKIP_REASON)
 
 VOLATILE_KEYS = {"computeTimeMs", "timingsMs", "modelCache", "provenance"}
 

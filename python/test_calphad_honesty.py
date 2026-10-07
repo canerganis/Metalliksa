@@ -32,7 +32,8 @@ import numpy as np
 HERE = Path(__file__).parent
 sys.path.insert(0, str(HERE))
 
-import calphad_solver as cs  # noqa: E402
+import calphad_solver as cs  # noqa: E402
+import calphad_test_lane  # noqa: E402
 
 FIXTURE_IDS = {"alcocrni", "mc_fecocrnbti", "cr_fe_ni"}
 ASSESSMENT_IDS = {"cost507", "alni_dupin_2001", "crtiv_ghosh", "mc_ni", "mc_fe"}
@@ -592,9 +593,7 @@ class TestPhacompScope(unittest.TestCase):
         self.assertIn("Ag", p["reason"])
 
 
-@unittest.skipUnless(cs.PYCALPHAD_AVAILABLE,
-                     "pycalphad is not installed in this interpreter (the locked CI environment): the real "
-                     "equilibrium path is exercised with .runtime/scientific-win-py312-cu128 only")
+@unittest.skipUnless(calphad_test_lane.RUN_REAL_SOLVES, calphad_test_lane.SKIP_REASON)
 class TestRealPath(unittest.TestCase):
     def test_ni_al_dupin_runs_the_real_path_and_flags_the_audit_defects(self):
         out = compute({"Ni": 90.0, "Al": 10.0}, unit="at_pct", t_min_c=600.0, t_max_c=1700.0, t_step_c=20.0)
@@ -909,7 +908,7 @@ class TestActivityNullReasons(unittest.TestCase):
         self.assertAlmostEqual(a, math.exp(-500.0 / 8314.0), places=12)
 
 
-@unittest.skipUnless(cs.PYCALPHAD_AVAILABLE, "needs pycalphad (alni_dupin_2001 equilibria)")
+@unittest.skipUnless(calphad_test_lane.RUN_REAL_SOLVES, calphad_test_lane.SKIP_REASON)
 class TestActivityReferenceState(unittest.TestCase):
     """Physics audit TK-1: activities were exp(MU/RT) on the database SER scale, e.g. a_Ni = 0.00459 for
     Ni-5 at% Al at 700 C. Against pure FCC Ni at the same T, a_Ni = exp((MU_Ni - G_FCC_Ni(T))/RT) = 0.938."""

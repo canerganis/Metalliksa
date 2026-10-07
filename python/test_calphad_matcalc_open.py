@@ -21,7 +21,8 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
-import calphad_solver as cs  # noqa: E402
+import calphad_solver as cs  # noqa: E402
+import calphad_test_lane  # noqa: E402
 
 SLOW = "--slow" in sys.argv or os.environ.get("METALLIX_SLOW_TESTS") == "1"
 if "--slow" in sys.argv:
@@ -200,7 +201,7 @@ class TestHelpers(unittest.TestCase):
         self.assertTrue((a >= 0).all())
 
 
-@unittest.skipUnless(cs.PYCALPHAD_AVAILABLE, "needs pycalphad")
+@unittest.skipUnless(calphad_test_lane.RUN_REAL_SOLVES, calphad_test_lane.SKIP_REASON)
 class TestEquilibriumSmoke(unittest.TestCase):
     """One short grid (5 points, no refinement, no Scheil) for IN625 with mc_ni."""
 
