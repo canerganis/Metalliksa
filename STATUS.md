@@ -1,3 +1,11 @@
+## Güncel devam noktası — 2026-10-07 / Fizik 49/49 + W2 skor tablosu + W3 ürün yerel main'de (`2af96e73`)
+
+- **Fizik:** 49 doğrulanmış fizik-motoru bulgusu main'de (Dalga A 24 donmamış; Tier 2 + Dalga B donmuş, parmak izi `d92d1a3a…`, VERSION enthalpy-fv-6). Sonuçlar CUDA'dan bağımsız; balling Eagar–Tsai L/W ekranı (risky, sert kapı değil). V1 kabulü `d92d1a3a`'ya gerçek sunucu tekrarıyla bağlandı.
+- **W2:** dürüst kalibrasyon skor tablosu (kaynak dışı test, rejim karışıklığı, aralık kapsaması, Guo N01 kırmızı kart). Bugünkü veriyle 0 hücre kapıyı geçiyor → kalibre mod gizli, etiket yükseltme önerisi yok.
+- **W3:** proses penceresi (P–v karar haritası, engelleyen kapı, ölçüm katmanı), rehberli demo (NIST IN718 285/960), tek tıkla HTML çalışma raporu, sade dil skor özeti, Core/Labs gezinme (modül silinmedi).
+- **Doğrulama (bu revizyon):** tsc temiz; TS 1544 / 0 FAIL / 0 todo; Python CI listesi (kilitli) 1587 OK; registry --check, ceiling review 0, bundle bütçesi PASS. Paketler kapıda gerçek tarayıcıda kontrol edildi.
+- **Açık:** push yapılmadı (GitHub CI hiç koşmadı); LA-6 sonraki bump; lpbf-optimizer sözleşme dokümanı (contracted listesi testi); IN718/AlSi10Mg için eğitilebilir ölçüm yok.
+
 ## Güncel devam noktası — 2026-10-07 / LPBF kalibrasyon karnesi ve gizli kalibre mod altyapısı (`feat/lpbf-scorecard-calibration-infra`, taban `c406b4a9`, birleştirilmedi)
 
 - **Sonuç:** dondurulmuş fizik değişmedi (parmak izi `d92d1a3a…`, `IMPLEMENTATION_SOURCE_FILES` farkta yok, varsayılan `lpbf_thermal_solver` yanıtı üç çekirdek için bayt-aynı). Ana teslimat dürüst karne: `npm run lpbf:calibration` → `docs/LPBF_CALIBRATION_SCORECARD_2026-10-07.{json,view.json,md}` + `data/calibration/lpbf-meltpool-calibration-v1.json` (sha256 `41484169…`); Melt Pool laboratuvarında yeni `lpbf-calibration-scorecard` modülü (Research, yalnız okuma; Guo N01 kırmızı kart her zaman görünür).
