@@ -1,0 +1,12 @@
+power_W,power_label_W,speed_mm_s,spot_1e2_diameter_um,width_um,depth_um,read_uncertainty_power_W,read_uncertainty_um,locator,digitized
+32,32,500,60,52,17,1.5,3,"Fig. 3(a) right axis: open circles = track width, filled circles = track depth",true
+48,48,500,60,68,22,1.5,3,"Fig. 3(a) right axis: open circles = track width, filled circles = track depth",true
+65,65,500,60,75,28,1.5,3,"Fig. 3(a) right axis: open circles = track width, filled circles = track depth",true
+83,83,500,60,102,72,1.5,3,"Fig. 3(a) right axis: open circles = track width, filled circles = track depth",true
+99,99,500,60,127,105,1.5,3,"Fig. 3(a) right axis: open circles = track width, filled circles = track depth",true
+117,117,500,60,128,,1.5,3,"Fig. 3(a) right axis: open circles = track width, filled circles = track depth; no depth symbol is plotted at this power",true
+134,134,500,60,129,155,1.5,3,"Fig. 3(a) right axis: open circles = track width, filled circles = track depth",true
+178,178,500,60,135,204,1.5,3,"Fig. 3(a) right axis: open circles = track width, filled circles = track depth",true
+222,223,500,60,155,270,1.5,3,"Fig. 3(a) right axis: open circles = track width, filled circles = track depth",true
+267,,500,60,152,331,1.5,3,"Fig. 3(a) right axis: open circles = track width, filled circles = track depth",true
+356,,500,60,145,454,1.5,3,"Fig. 3(a) right axis: open circles = track width, filled circles = track depth",true

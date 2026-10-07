@@ -1,0 +1,4 @@
+material,substrate,minimal_absorptivity_Am,locator,digitized
+Ti-6Al-4V,"bare 0.5 mm foil disc (1 cm), as-machined",0.26,"Table 1, column Ti64, row ""Minimal absorptivity (Am) in this work""",false
+Inconel 625,"bare 0.5 mm foil disc (1 cm), as-machined",0.28,"Table 1, column In625, row ""Minimal absorptivity (Am) in this work""",false
+316L Stainless Steel,"bare 0.5 mm foil disc (1 cm), as-machined",0.28,"Table 1, column SS316L, row ""Minimal absorptivity (Am) in this work""",false

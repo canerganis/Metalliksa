@@ -1,0 +1,11 @@
+feature,feature_size_mm,layers,odd_n,odd_mean_C_s,odd_median_C_s,odd_sd_C_s,even_n,even_mean_C_s,even_median_C_s,even_sd_C_s,locator,digitized
+Bridge,,476 and 477,30329,4.79E+5,4.70E+5,1.81E+5,36305,1.62E+5,1.62E+5,8.66E+4,"Table 2, row 1",false
+L7 (large),5x5,3 and 4,12919,5.78E+5,5.71E+5,1.76E+5,14699,2.21E+5,2.22E+5,1.01E+5,"Table 2, row 2",false
+L7 (large),5x5,125 and 126,13044,4.83E+5,4.72E+5,1.72E+5,15002,1.67E+5,1.67E+5,8.90E+4,"Table 2, row 3",false
+L7 (large),5x5,345 and 346,12270,4.88E+5,4.78E+5,1.74E+5,14950,1.62E+5,1.62E+5,8.98E+4,"Table 2, row 4",false
+L9 (medium),2.5x5,3 and 4,6407,5.80E+5,5.71E+5,1.91E+5,7491,2.69E+5,2.57E+5,1.31E+5,"Table 2, row 5",false
+L9 (medium),2.5x5,125 and 126,6404,4.98E+5,4.88E+5,1.90E+5,7598,1.80E+5,1.72E+5,1.16E+5,"Table 2, row 6",false
+L9 (medium),2.5x5,345 and 346,11358,4.69E+5,4.62E+5,1.93E+5,14213,1.25E+5,1.27E+5,9.07E+4,"Table 2, row 7",false
+L8 (small),0.5x5,3 and 4,1031,7.10E+5,6.99E+5,1.82E+5,1305,3.85E+5,3.61E+5,1.40E+5,"Table 2, row 8",false
+L8 (small),0.5x5,125 and 126,1100,6.40E+5,6.37E+5,1.90E+5,1378,2.23E+5,1.84E+5,1.57E+5,"Table 2, row 9",false
+L8 (small),0.5x5,345 and 346,5802,4.58E+5,4.39E+5,1.88E+5,7529,1.16E+5,1.15E+5,8.09E+4,"Table 2, row 10",false
