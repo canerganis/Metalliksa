@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
-import { LiteratureSolidificationCard } from "../src/components/LiteratureSolidificationCard";
+import { LiteratureSolidificationCard, LITERATURE_VS_CALPHAD_NOTE } from "../src/components/LiteratureSolidificationCard";
 import { literatureAlloyIdFromName } from "../src/services/pythonComputationService";
 
 // Real Python output of calphad_solver.literature_solidification_block; python/test_calphad_literature_solidification.py
@@ -70,4 +70,17 @@ test("alloy id mapping: only IN718 and IN625; 316L and others undefined", () => 
   assert.equal(literatureAlloyIdFromName("316L stainless steel"), undefined);
   assert.equal(literatureAlloyIdFromName("Ti-6Al-4V"), undefined);
   assert.equal(literatureAlloyIdFromName(undefined), undefined);
+});
+
+test("alongside a CALPHAD result: same card plus the not-comparable note; alone: no note", () => {
+  const alone = text(render("in718"));
+  assert.ok(!alone.includes("Not comparable directly"), alone);
+  for (const name of ["in718", "in625"]) {
+    const markup = renderToStaticMarkup(<LiteratureSolidificationCard literature={BLOCKS[name]} alongsideCalphad />);
+    const t = text(markup);
+    assert.match(markup, /data-lit-comparison-note/);
+    assert.ok(t.includes("Literature solidification estimate (not CALPHAD)"), t);
+    assert.ok(t.includes(LITERATURE_VS_CALPHAD_NOTE), t);
+    assert.ok(t.includes("mole percent") && t.includes("do-not-use") && t.includes("fraction of the liquid") && t.includes("eutectic"), t);
+  }
 });

@@ -1467,6 +1467,16 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
                     <div key={line}>{line}</div>
                   ))}
                   {scheilBlock.validity && <div className="text-slate-400">Validity: {scheilBlock.validity}</div>}
+                  {(solveResult.knownDeviations ?? []).flatMap((d) => d.notes ?? []).length > 0 && (
+                    <div className="mt-1 pt-1 border-t border-amber-500/30 text-amber-200" data-testid="scheil-known-deviations">
+                      <div className="font-semibold">Known deviations for this alloy and database (not corrected):</div>
+                      <ul className="list-disc pl-4">
+                        {(solveResult.knownDeviations ?? []).flatMap((d) => d.notes ?? []).map((note) => (
+                          <li key={note}>{note}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                   <div className="text-amber-300">Evidence: {scheilBlock.evidence ?? "unvalidated"} (calculated path, no experimental comparison here)</div>
                 </div>
               )}
@@ -1559,6 +1569,10 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
                 spellCheck={false}
               />
             </div>
+          )}
+
+          {usePythonEngine && provenanceLabels.isPycalphad && solveResult.literatureSolidification != null && (
+            <LiteratureSolidificationCard literature={solveResult.literatureSolidification} alongsideCalphad />
           )}
         </div>
         )}

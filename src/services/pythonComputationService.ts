@@ -125,8 +125,8 @@ export interface PythonCalphadSolveResult
   multiElementScheilNote?: string;
   /** Set when the Python CALPHAD engine answered "unavailable"; the numbers are then the client screening model's. */
   pythonUnavailable?: CalphadUnavailable;
-  /** Unavailable IN718 / IN625 only: read-only literature solidification estimate (weld/DTA studies; not CALPHAD). */
-  literatureSolidification?: unknown;
+  /** IN718 / IN625 only (any status): read-only literature solidification estimate (weld/DTA studies; not CALPHAD). */
+  literatureSolidification?: unknown; knownDeviations?: { systemId?: string; notes?: string[]; criticalTemperatureNote?: string | null }[] /* pycalphad: stated database deviations */;
   activeComponents?: string[];
   unsupportedElements?: string[];
   databaseSuitability?: string;

@@ -1,4 +1,4 @@
-"""CALPHAD unavailable IN718 / IN625 requests carry a read-only literature estimate; CALPHAD fields are unchanged."""
+"""IN718 / IN625 requests carry a read-only literature estimate (unavailable or successful CALPHAD result); CALPHAD fields are unchanged."""
 import json
 import subprocess
 import sys
@@ -73,6 +73,20 @@ class LiteratureSolidificationTests(unittest.TestCase):
         lit625 = run("Inconel 625", IN625, "in625")
         self.assertEqual(lit625["status"], "unavailable")
         self.assertEqual(lit625["literatureSolidification"]["alloyId"], "in625")
+
+    def test_attached_next_to_a_successful_calphad_result_without_touching_it(self):
+        """The default interpreter has no pycalphad, so a successful result is simulated; the attach helper is the same code main() calls."""
+        ok = {"status": "computed", "success": True, "criticalTemperatures": {"liquidusC": 1350.4},
+              "scheilSolidification": {"status": "pycalphad-scheil-gulliver", "phaseAmounts": {"LAVES": 0.0086}},
+              "knownDeviations": [{"systemId": "in718", "notes": ["Do not use the Scheil LAVES amount"]}]}
+        before = json.loads(json.dumps(ok))
+        out = calphad_solver.attach_literature_solidification(ok, "in718")
+        lit = out.pop("literatureSolidification")
+        self.assertEqual(lit, calphad_solver.literature_solidification_block("in718"))
+        self.assertEqual(out, before)
+        self.assertEqual(calphad_solver.attach_literature_solidification(dict(before), "in625")["literatureSolidification"]["alloyId"], "in625")
+        for aid in (None, "ss316l", "316l"):
+            self.assertNotIn("literatureSolidification", calphad_solver.attach_literature_solidification(dict(before), aid))
 
     def test_316l_and_unknown_ids_get_no_block(self):
         for alloy_id in (None, "ss316l", "in718x"):
