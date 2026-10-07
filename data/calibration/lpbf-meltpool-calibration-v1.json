@@ -1,0 +1,2443 @@
+{
+ "calibrationId": "lpbf-meltpool-calib-2026-10-07-41484169bfd2",
+ "catalogSentinelSources": [
+  "guo-316l-2024",
+  "nist-amb2022-03-in718"
+ ],
+ "cells": [
+  {
+   "beamStatuses": {
+    "37.5": "rejected",
+    "75": "rejected"
+   },
+   "flags": {
+    "boundHit": false,
+    "etaInconsistentWithMeasuredAbsorptance": false,
+    "etaSplit": false,
+    "offsetDominant": false
+   },
+   "heldOutScore": [
+    {
+     "coverage90": {
+      "coverage": 0.982275,
+      "k": 665,
+      "n": 677,
+      "wilson95": [
+       0.969275,
+       0.989832
+      ]
+     },
+     "heldOut": "hofmann-316l-2026",
+     "mapeDefault": 10.7488,
+     "mapeServed": 14.8039,
+     "nRows": 677,
+     "nSets": 378,
+     "rung": "eta2",
+     "skill": -0.377262,
+     "skillCi95": [
+      -0.437984,
+      -0.319282
+     ],
+     "trainedOn": [
+      "ku-leuven-316l-2021"
+     ]
+    },
+    {
+     "coverage90": {
+      "coverage": 0.931818,
+      "k": 41,
+      "n": 44,
+      "wilson95": [
+       0.81775,
+       0.976541
+      ]
+     },
+     "heldOut": "ku-leuven-316l-2021",
+     "mapeDefault": 16.6897,
+     "mapeServed": 18.5586,
+     "nRows": 44,
+     "nSets": 44,
+     "rung": "eta",
+     "skill": -0.111977,
+     "skillCi95": [
+      -0.14699,
+      -0.081101
+     ],
+     "trainedOn": [
+      "hofmann-316l-2026"
+     ]
+    }
+   ],
+   "interval": {
+    "levels": [
+     0.8,
+     0.9
+    ],
+    "m": 0.0509679,
+    "sSource": 0.192516,
+    "sWithin": 0.116132
+   },
+   "kernel": "eagar-tsai",
+   "material": "316L Stainless Steel",
+   "params": {
+    "cD": {
+     "conduction": -0.298929,
+     "keyhole": -0.0391316,
+     "transition": -0.0585216
+    },
+    "cDSource": {
+     "conduction": "class",
+     "keyhole": "class",
+     "transition": "class"
+    },
+    "etaD": 0.46,
+    "etaD_ci90": [
+     0.43,
+     0.485
+    ],
+    "etaJoint": 0.435,
+    "etaJoint_ci90": [
+     0.415,
+     0.46
+    ],
+    "etaPrior": 0.42,
+    "etaW": 0.395,
+    "etaW_ci90": [
+     0.385,
+     0.42
+    ]
+   },
+   "quantity": "width",
+   "reasons": [
+    "sourceDependentEta",
+    "noRungImprovesAcrossSources: no ladder rung beats default on the inner training score",
+    "held-out source hofmann-316l-2026: skill CI95 lower bound -0.438 < -0.02",
+    "held-out source ku-leuven-316l-2021: skill CI95 lower bound -0.147 < -0.02",
+    "no held-out source with skill CI95 lower bound > 0"
+   ],
+   "rung": "default",
+   "status": "rejected",
+   "withinSourceScore": [
+    {
+     "nRows": 677,
+     "nSets": 378,
+     "skill": 0.0330982,
+     "skillCi95": [
+      0.0130134,
+      0.0527223
+     ],
+     "source": "hofmann-316l-2026"
+    },
+    {
+     "nRows": 44,
+     "nSets": 44,
+     "skill": 0.285291,
+     "skillCi95": [
+      0.143107,
+      0.407006
+     ],
+     "source": "ku-leuven-316l-2021"
+    }
+   ]
+  },
+  {
+   "beamStatuses": {
+    "37.5": "within-source-only",
+    "75": "rejected"
+   },
+   "flags": {
+    "boundHit": false,
+    "etaInconsistentWithMeasuredAbsorptance": false,
+    "etaSplit": false,
+    "offsetDominant": false
+   },
+   "heldOutScore": [
+    {
+     "coverage90": {
+      "coverage": 0.812408,
+      "k": 550,
+      "n": 677,
+      "wilson95": [
+       0.781268,
+       0.840022
+      ]
+     },
+     "heldOut": "hofmann-316l-2026",
+     "mapeDefault": 36.8633,
+     "mapeServed": 36.8633,
+     "nRows": 677,
+     "nSets": 378,
+     "rung": "default",
+     "skill": 0.0,
+     "skillCi95": [
+      0.0,
+      0.0
+     ],
+     "trainedOn": [
+      "ku-leuven-316l-2021"
+     ]
+    },
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 44,
+      "n": 44,
+      "wilson95": [
+       0.919704,
+       1.0
+      ]
+     },
+     "heldOut": "ku-leuven-316l-2021",
+     "mapeDefault": 28.9647,
+     "mapeServed": 31.3202,
+     "nRows": 44,
+     "nSets": 44,
+     "rung": "eta2+dOffset",
+     "skill": -0.0813224,
+     "skillCi95": [
+      -0.142815,
+      -0.0266113
+     ],
+     "trainedOn": [
+      "hofmann-316l-2026"
+     ]
+    }
+   ],
+   "interval": {
+    "levels": [
+     0.8,
+     0.9
+    ],
+    "m": -0.0544892,
+    "sSource": 0.348414,
+    "sWithin": 0.339601
+   },
+   "kernel": "eagar-tsai",
+   "material": "316L Stainless Steel",
+   "params": {
+    "cD": {
+     "conduction": -0.298929,
+     "keyhole": -0.0391316,
+     "transition": -0.0585216
+    },
+    "cDSource": {
+     "conduction": "class",
+     "keyhole": "class",
+     "transition": "class"
+    },
+    "etaD": 0.46,
+    "etaD_ci90": [
+     0.43,
+     0.485
+    ],
+    "etaJoint": 0.435,
+    "etaJoint_ci90": [
+     0.415,
+     0.46
+    ],
+    "etaPrior": 0.42,
+    "etaW": 0.395,
+    "etaW_ci90": [
+     0.385,
+     0.42
+    ]
+   },
+   "quantity": "depth",
+   "reasons": [
+    "unresolvedInput: decision differs between beam readings 37.5=within-source-only, 75=rejected"
+   ],
+   "rung": "default",
+   "status": "rejected",
+   "withinSourceScore": [
+    {
+     "nRows": 677,
+     "nSets": 378,
+     "skill": 0.0716889,
+     "skillCi95": [
+      0.0328445,
+      0.108884
+     ],
+     "source": "hofmann-316l-2026"
+    },
+    {
+     "nRows": 44,
+     "nSets": 44,
+     "skill": -0.0980389,
+     "skillCi95": [
+      -0.277188,
+      0.0328971
+     ],
+     "source": "ku-leuven-316l-2021"
+    }
+   ]
+  },
+  {
+   "beamStatuses": {
+    "37.5": "rejected",
+    "75": "rejected"
+   },
+   "flags": {
+    "boundHit": false,
+    "etaInconsistentWithMeasuredAbsorptance": false,
+    "etaSplit": false,
+    "offsetDominant": false
+   },
+   "heldOutScore": [
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 14,
+      "n": 14,
+      "wilson95": [
+       0.784689,
+       1.0
+      ]
+     },
+     "heldOut": "ku-leuven-ti64-2021",
+     "mapeDefault": 8.41057,
+     "mapeServed": 8.41057,
+     "nRows": 14,
+     "nSets": 14,
+     "rung": "default",
+     "skill": 0.0,
+     "skillCi95": [
+      0.0,
+      0.0
+     ],
+     "trainedOn": [
+      "totis-ti64-2021"
+     ]
+    },
+    {
+     "coverage90": {
+      "coverage": 0.9875,
+      "k": 79,
+      "n": 80,
+      "wilson95": [
+       0.932537,
+       0.99779
+      ]
+     },
+     "heldOut": "totis-ti64-2021",
+     "mapeDefault": 18.7112,
+     "mapeServed": 21.0875,
+     "nRows": 80,
+     "nSets": 80,
+     "rung": "eta2",
+     "skill": -0.126999,
+     "skillCi95": [
+      -0.219341,
+      -0.0408563
+     ],
+     "trainedOn": [
+      "ku-leuven-ti64-2021"
+     ]
+    }
+   ],
+   "interval": {
+    "levels": [
+     0.8,
+     0.9
+    ],
+    "m": 0.0538682,
+    "sSource": 0.192516,
+    "sWithin": 0.228801
+   },
+   "kernel": "eagar-tsai",
+   "material": "Ti-6Al-4V",
+   "params": {
+    "cD": {
+     "conduction": -0.62717,
+     "keyhole": 0.0969476,
+     "transition": 0.250359
+    },
+    "cDSource": {
+     "conduction": "class",
+     "keyhole": "class",
+     "transition": "class"
+    },
+    "etaD": 0.37,
+    "etaD_ci90": [
+     0.305,
+     0.4
+    ],
+    "etaJoint": 0.385,
+    "etaJoint_ci90": [
+     0.36,
+     0.4
+    ],
+    "etaPrior": 0.35,
+    "etaW": 0.405,
+    "etaW_ci90": [
+     0.38975,
+     0.415
+    ]
+   },
+   "quantity": "width",
+   "reasons": [
+    "noRungImprovesAcrossSources: no ladder rung beats default on the inner training score",
+    "held-out source totis-ti64-2021: skill CI95 lower bound -0.219 < -0.02",
+    "no held-out source with skill CI95 lower bound > 0",
+    "within-source skill CI95 lower bound not > 0 on any source"
+   ],
+   "rung": "default",
+   "status": "rejected",
+   "withinSourceScore": [
+    {
+     "nRows": 80,
+     "nSets": 80,
+     "skill": -0.0074087,
+     "skillCi95": [
+      -0.0238528,
+      0.00955558
+     ],
+     "source": "totis-ti64-2021"
+    }
+   ]
+  },
+  {
+   "beamStatuses": {
+    "37.5": "rejected",
+    "75": "rejected"
+   },
+   "flags": {
+    "boundHit": false,
+    "etaInconsistentWithMeasuredAbsorptance": false,
+    "etaSplit": false,
+    "offsetDominant": false
+   },
+   "heldOutScore": [
+    {
+     "coverage90": {
+      "coverage": 0.857143,
+      "k": 12,
+      "n": 14,
+      "wilson95": [
+       0.600586,
+       0.959906
+      ]
+     },
+     "heldOut": "ku-leuven-ti64-2021",
+     "mapeDefault": 28.6491,
+     "mapeServed": 28.6491,
+     "nRows": 14,
+     "nSets": 14,
+     "rung": "default",
+     "skill": 0.0,
+     "skillCi95": [
+      0.0,
+      0.0
+     ],
+     "trainedOn": [
+      "totis-ti64-2021"
+     ]
+    },
+    {
+     "coverage90": {
+      "coverage": 0.975,
+      "k": 78,
+      "n": 80,
+      "wilson95": [
+       0.913356,
+       0.993117
+      ]
+     },
+     "heldOut": "totis-ti64-2021",
+     "mapeDefault": 36.5268,
+     "mapeServed": 41.2095,
+     "nRows": 80,
+     "nSets": 80,
+     "rung": "eta2",
+     "skill": -0.128198,
+     "skillCi95": [
+      -0.255697,
+      -0.0261598
+     ],
+     "trainedOn": [
+      "ku-leuven-ti64-2021"
+     ]
+    }
+   ],
+   "interval": {
+    "levels": [
+     0.8,
+     0.9
+    ],
+    "m": 0.207057,
+    "sSource": 0.348414,
+    "sWithin": 0.322877
+   },
+   "kernel": "eagar-tsai",
+   "material": "Ti-6Al-4V",
+   "params": {
+    "cD": {
+     "conduction": -0.62717,
+     "keyhole": 0.0969476,
+     "transition": 0.250359
+    },
+    "cDSource": {
+     "conduction": "class",
+     "keyhole": "class",
+     "transition": "class"
+    },
+    "etaD": 0.37,
+    "etaD_ci90": [
+     0.305,
+     0.4
+    ],
+    "etaJoint": 0.385,
+    "etaJoint_ci90": [
+     0.36,
+     0.4
+    ],
+    "etaPrior": 0.35,
+    "etaW": 0.405,
+    "etaW_ci90": [
+     0.38975,
+     0.415
+    ]
+   },
+   "quantity": "depth",
+   "reasons": [
+    "noRungImprovesAcrossSources: no ladder rung beats default on the inner training score",
+    "held-out source totis-ti64-2021: skill CI95 lower bound -0.256 < -0.02",
+    "no held-out source with skill CI95 lower bound > 0",
+    "within-source skill CI95 lower bound not > 0 on any source"
+   ],
+   "rung": "default",
+   "status": "rejected",
+   "withinSourceScore": [
+    {
+     "nRows": 80,
+     "nSets": 80,
+     "skill": -0.0117382,
+     "skillCi95": [
+      -0.0740098,
+      0.0622716
+     ],
+     "source": "totis-ti64-2021"
+    }
+   ]
+  },
+  {
+   "beamStatuses": null,
+   "flags": {
+    "boundHit": true,
+    "etaInconsistentWithMeasuredAbsorptance": false,
+    "etaSplit": true,
+    "offsetDominant": false
+   },
+   "heldOutScore": [],
+   "interval": {
+    "levels": [
+     0.8,
+     0.9
+    ],
+    "m": -0.0363926,
+    "sSource": 0.261205,
+    "sWithin": 0.137208
+   },
+   "kernel": "eagar-tsai",
+   "material": "Inconel 625",
+   "params": {
+    "cD": {
+     "conduction": 0.0,
+     "keyhole": 0.0,
+     "transition": 0.0
+    },
+    "cDSource": {
+     "conduction": "zero",
+     "keyhole": "zero",
+     "transition": "zero"
+    },
+    "etaD": 0.6,
+    "etaD_ci90": [
+     0.32,
+     0.6
+    ],
+    "etaJoint": 0.375,
+    "etaJoint_ci90": [
+     0.3195,
+     0.6
+    ],
+    "etaPrior": 0.38,
+    "etaW": 0.25,
+    "etaW_ci90": [
+     0.25,
+     0.445
+    ]
+   },
+   "quantity": "width",
+   "reasons": [
+    "boundHit",
+    "etaSplit",
+    "single source: no leave-one-source-out available"
+   ],
+   "rung": "eta2",
+   "status": "rejected",
+   "withinSourceScore": []
+  },
+  {
+   "beamStatuses": null,
+   "flags": {
+    "boundHit": false,
+    "etaInconsistentWithMeasuredAbsorptance": false,
+    "etaSplit": false,
+    "offsetDominant": false
+   },
+   "heldOutScore": [],
+   "interval": {
+    "levels": [
+     0.8,
+     0.9
+    ],
+    "m": 0.0236099,
+    "sSource": 0.348414,
+    "sWithin": 0.32803
+   },
+   "kernel": "eagar-tsai",
+   "material": "Inconel 625",
+   "params": {
+    "cD": {
+     "conduction": 0.0,
+     "keyhole": 0.0,
+     "transition": 0.0
+    },
+    "cDSource": {
+     "conduction": "zero",
+     "keyhole": "zero",
+     "transition": "zero"
+    },
+    "etaD": 0.6,
+    "etaD_ci90": [
+     0.32,
+     0.6
+    ],
+    "etaJoint": 0.375,
+    "etaJoint_ci90": [
+     0.3195,
+     0.6
+    ],
+    "etaPrior": 0.38,
+    "etaW": 0.25,
+    "etaW_ci90": [
+     0.25,
+     0.445
+    ]
+   },
+   "quantity": "depth",
+   "reasons": [
+    "noRungImprovesAcrossSources: no ladder rung beats default on the inner training score",
+    "single source: no leave-one-source-out available",
+    "no within-source evaluation possible: no source has enough parameter sets for grouped k-fold"
+   ],
+   "rung": "default",
+   "status": "rejected",
+   "withinSourceScore": []
+  },
+  {
+   "beamStatuses": null,
+   "flags": {},
+   "heldOutScore": [],
+   "interval": null,
+   "kernel": "eagar-tsai",
+   "material": "Inconel 718",
+   "params": null,
+   "quantity": "width",
+   "reasons": [
+    "no trainable measured source for this alloy"
+   ],
+   "rung": null,
+   "status": "no-data",
+   "withinSourceScore": []
+  },
+  {
+   "beamStatuses": null,
+   "flags": {},
+   "heldOutScore": [],
+   "interval": null,
+   "kernel": "eagar-tsai",
+   "material": "Inconel 718",
+   "params": null,
+   "quantity": "depth",
+   "reasons": [
+    "no trainable measured source for this alloy"
+   ],
+   "rung": null,
+   "status": "no-data",
+   "withinSourceScore": []
+  },
+  {
+   "beamStatuses": null,
+   "flags": {},
+   "heldOutScore": [],
+   "interval": null,
+   "kernel": "eagar-tsai",
+   "material": "AlSi10Mg",
+   "params": null,
+   "quantity": "width",
+   "reasons": [
+    "no trainable measured source for this alloy"
+   ],
+   "rung": null,
+   "status": "no-data",
+   "withinSourceScore": []
+  },
+  {
+   "beamStatuses": null,
+   "flags": {},
+   "heldOutScore": [],
+   "interval": null,
+   "kernel": "eagar-tsai",
+   "material": "AlSi10Mg",
+   "params": null,
+   "quantity": "depth",
+   "reasons": [
+    "no trainable measured source for this alloy"
+   ],
+   "rung": null,
+   "status": "no-data",
+   "withinSourceScore": []
+  },
+  {
+   "beamStatuses": {
+    "37.5": "rejected",
+    "75": "rejected"
+   },
+   "flags": {
+    "boundHit": false,
+    "etaInconsistentWithMeasuredAbsorptance": false,
+    "etaSplit": false,
+    "offsetDominant": false
+   },
+   "heldOutScore": [
+    {
+     "coverage90": {
+      "coverage": 0.932331,
+      "k": 620,
+      "n": 665,
+      "wilson95": [
+       0.910651,
+       0.949045
+      ]
+     },
+     "heldOut": "hofmann-316l-2026",
+     "mapeDefault": 15.2262,
+     "mapeServed": 21.024,
+     "nRows": 677,
+     "nSets": 378,
+     "rung": "eta2",
+     "skill": -0.380771,
+     "skillCi95": [
+      -0.421733,
+      -0.341876
+     ],
+     "trainedOn": [
+      "ku-leuven-316l-2021"
+     ]
+    },
+    {
+     "coverage90": {
+      "coverage": 0.818182,
+      "k": 36,
+      "n": 44,
+      "wilson95": [
+       0.680394,
+       0.904872
+      ]
+     },
+     "heldOut": "ku-leuven-316l-2021",
+     "mapeDefault": 16.1184,
+     "mapeServed": 26.7319,
+     "nRows": 44,
+     "nSets": 44,
+     "rung": "eta2",
+     "skill": -0.658464,
+     "skillCi95": [
+      -0.859937,
+      -0.491085
+     ],
+     "trainedOn": [
+      "hofmann-316l-2026"
+     ]
+    }
+   ],
+   "interval": {
+    "levels": [
+     0.8,
+     0.9
+    ],
+    "m": 0.117308,
+    "sSource": 0.203262,
+    "sWithin": 0.152209
+   },
+   "kernel": "goldak",
+   "material": "316L Stainless Steel",
+   "params": {
+    "cD": {
+     "conduction": -0.460452,
+     "keyhole": -0.0391316,
+     "transition": -0.0951662
+    },
+    "cDSource": {
+     "conduction": "class",
+     "keyhole": "class",
+     "transition": "class"
+    },
+    "etaD": 0.46,
+    "etaD_ci90": [
+     0.415,
+     0.485
+    ],
+    "etaJoint": 0.455,
+    "etaJoint_ci90": [
+     0.415,
+     0.47
+    ],
+    "etaPrior": 0.42,
+    "etaW": 0.44,
+    "etaW_ci90": [
+     0.415,
+     0.47
+    ]
+   },
+   "quantity": "width",
+   "reasons": [
+    "sourceDependentEta",
+    "unresolvedRows",
+    "noRungImprovesAcrossSources: no ladder rung beats default on the inner training score",
+    "held-out source hofmann-316l-2026: skill CI95 lower bound -0.422 < -0.02",
+    "held-out source hofmann-316l-2026: rung leaves more rows unresolved than default",
+    "held-out source ku-leuven-316l-2021: skill CI95 lower bound -0.860 < -0.02",
+    "no held-out source with skill CI95 lower bound > 0"
+   ],
+   "rung": "default",
+   "status": "rejected",
+   "withinSourceScore": [
+    {
+     "nRows": 677,
+     "nSets": 378,
+     "skill": 0.1828,
+     "skillCi95": [
+      0.128664,
+      0.229089
+     ],
+     "source": "hofmann-316l-2026"
+    },
+    {
+     "nRows": 44,
+     "nSets": 44,
+     "skill": 0.215742,
+     "skillCi95": [
+      0.0681832,
+      0.339868
+     ],
+     "source": "ku-leuven-316l-2021"
+    }
+   ]
+  },
+  {
+   "beamStatuses": {
+    "37.5": "within-source-only",
+    "75": "within-source-only"
+   },
+   "flags": {
+    "boundHit": false,
+    "etaInconsistentWithMeasuredAbsorptance": false,
+    "etaSplit": false,
+    "offsetDominant": false
+   },
+   "heldOutScore": [
+    {
+     "coverage90": {
+      "coverage": 0.710253,
+      "k": 478,
+      "n": 673,
+      "wilson95": [
+       0.674863,
+       0.743256
+      ]
+     },
+     "heldOut": "hofmann-316l-2026",
+     "mapeDefault": 42.5062,
+     "mapeServed": 42.5062,
+     "nRows": 677,
+     "nSets": 378,
+     "rung": "default",
+     "skill": 0.0,
+     "skillCi95": [
+      0.0,
+      0.0
+     ],
+     "trainedOn": [
+      "ku-leuven-316l-2021"
+     ]
+    },
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 44,
+      "n": 44,
+      "wilson95": [
+       0.919704,
+       1.0
+      ]
+     },
+     "heldOut": "ku-leuven-316l-2021",
+     "mapeDefault": 28.9647,
+     "mapeServed": 28.9647,
+     "nRows": 44,
+     "nSets": 44,
+     "rung": "default",
+     "skill": 0.0,
+     "skillCi95": [
+      0.0,
+      0.0
+     ],
+     "trainedOn": [
+      "hofmann-316l-2026"
+     ]
+    }
+   ],
+   "interval": {
+    "levels": [
+     0.8,
+     0.9
+    ],
+    "m": -0.127602,
+    "sSource": 0.332897,
+    "sWithin": 0.386148
+   },
+   "kernel": "goldak",
+   "material": "316L Stainless Steel",
+   "params": {
+    "cD": {
+     "conduction": -0.460452,
+     "keyhole": -0.0391316,
+     "transition": -0.0951662
+    },
+    "cDSource": {
+     "conduction": "class",
+     "keyhole": "class",
+     "transition": "class"
+    },
+    "etaD": 0.46,
+    "etaD_ci90": [
+     0.415,
+     0.485
+    ],
+    "etaJoint": 0.455,
+    "etaJoint_ci90": [
+     0.415,
+     0.47
+    ],
+    "etaPrior": 0.42,
+    "etaW": 0.44,
+    "etaW_ci90": [
+     0.415,
+     0.47
+    ]
+   },
+   "quantity": "depth",
+   "reasons": [
+    "noRungImprovesAcrossSources: no ladder rung beats default on the inner training score",
+    "held-out source hofmann-316l-2026: 90 % PI coverage Wilson upper bound 0.743 < 0.9",
+    "no held-out source with skill CI95 lower bound > 0"
+   ],
+   "rung": "default",
+   "status": "within-source-only",
+   "withinSourceScore": [
+    {
+     "nRows": 677,
+     "nSets": 378,
+     "skill": 0.0833014,
+     "skillCi95": [
+      0.0485825,
+      0.122474
+     ],
+     "source": "hofmann-316l-2026"
+    },
+    {
+     "nRows": 44,
+     "nSets": 44,
+     "skill": -0.0980389,
+     "skillCi95": [
+      -0.277188,
+      0.0328971
+     ],
+     "source": "ku-leuven-316l-2021"
+    }
+   ]
+  },
+  {
+   "beamStatuses": {
+    "37.5": "rejected",
+    "75": "rejected"
+   },
+   "flags": {
+    "boundHit": false,
+    "etaInconsistentWithMeasuredAbsorptance": true,
+    "etaSplit": false,
+    "offsetDominant": false
+   },
+   "heldOutScore": [
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 14,
+      "n": 14,
+      "wilson95": [
+       0.784689,
+       1.0
+      ]
+     },
+     "heldOut": "ku-leuven-ti64-2021",
+     "mapeDefault": 10.9905,
+     "mapeServed": 10.9905,
+     "nRows": 14,
+     "nSets": 14,
+     "rung": "default",
+     "skill": 0.0,
+     "skillCi95": [
+      0.0,
+      0.0
+     ],
+     "trainedOn": [
+      "totis-ti64-2021"
+     ]
+    },
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 80,
+      "n": 80,
+      "wilson95": [
+       0.954182,
+       1.0
+      ]
+     },
+     "heldOut": "totis-ti64-2021",
+     "mapeDefault": 20.6297,
+     "mapeServed": 22.9598,
+     "nRows": 80,
+     "nSets": 80,
+     "rung": "eta2",
+     "skill": -0.112954,
+     "skillCi95": [
+      -0.237379,
+      -0.00504648
+     ],
+     "trainedOn": [
+      "ku-leuven-ti64-2021"
+     ]
+    }
+   ],
+   "interval": {
+    "levels": [
+     0.8,
+     0.9
+    ],
+    "m": 0.0520702,
+    "sSource": 0.245355,
+    "sWithin": 0.288601
+   },
+   "kernel": "goldak",
+   "material": "Ti-6Al-4V",
+   "params": {
+    "cD": {
+     "conduction": -0.693147,
+     "keyhole": 0.110543,
+     "transition": 0.191648
+    },
+    "cDSource": {
+     "conduction": "class",
+     "keyhole": "class",
+     "transition": "class"
+    },
+    "etaD": 0.365,
+    "etaD_ci90": [
+     0.305,
+     0.3905
+    ],
+    "etaJoint": 0.385,
+    "etaJoint_ci90": [
+     0.365,
+     0.41
+    ],
+    "etaPrior": 0.35,
+    "etaW": 0.425,
+    "etaW_ci90": [
+     0.405,
+     0.45
+    ]
+   },
+   "quantity": "width",
+   "reasons": [
+    "etaInconsistentWithMeasuredAbsorptance",
+    "held-out source totis-ti64-2021: skill CI95 lower bound -0.237 < -0.02",
+    "no held-out source with skill CI95 lower bound > 0"
+   ],
+   "rung": "eta",
+   "status": "rejected",
+   "withinSourceScore": [
+    {
+     "nRows": 80,
+     "nSets": 80,
+     "skill": 0.0,
+     "skillCi95": [
+      0.0,
+      0.0
+     ],
+     "source": "totis-ti64-2021"
+    }
+   ]
+  },
+  {
+   "beamStatuses": {
+    "37.5": "rejected",
+    "75": "rejected"
+   },
+   "flags": {
+    "boundHit": false,
+    "etaInconsistentWithMeasuredAbsorptance": false,
+    "etaSplit": false,
+    "offsetDominant": false
+   },
+   "heldOutScore": [
+    {
+     "coverage90": {
+      "coverage": 0.928571,
+      "k": 13,
+      "n": 14,
+      "wilson95": [
+       0.685313,
+       0.987278
+      ]
+     },
+     "heldOut": "ku-leuven-ti64-2021",
+     "mapeDefault": 28.6491,
+     "mapeServed": 28.6491,
+     "nRows": 14,
+     "nSets": 14,
+     "rung": "default",
+     "skill": 0.0,
+     "skillCi95": [
+      0.0,
+      0.0
+     ],
+     "trainedOn": [
+      "totis-ti64-2021"
+     ]
+    },
+    {
+     "coverage90": {
+      "coverage": 0.975,
+      "k": 78,
+      "n": 80,
+      "wilson95": [
+       0.913356,
+       0.993117
+      ]
+     },
+     "heldOut": "totis-ti64-2021",
+     "mapeDefault": 39.0595,
+     "mapeServed": 43.3146,
+     "nRows": 80,
+     "nSets": 80,
+     "rung": "eta2",
+     "skill": -0.108938,
+     "skillCi95": [
+      -0.238454,
+      -0.0119875
+     ],
+     "trainedOn": [
+      "ku-leuven-ti64-2021"
+     ]
+    }
+   ],
+   "interval": {
+    "levels": [
+     0.8,
+     0.9
+    ],
+    "m": 0.19342,
+    "sSource": 0.332897,
+    "sWithin": 0.332478
+   },
+   "kernel": "goldak",
+   "material": "Ti-6Al-4V",
+   "params": {
+    "cD": {
+     "conduction": -0.693147,
+     "keyhole": 0.110543,
+     "transition": 0.191648
+    },
+    "cDSource": {
+     "conduction": "class",
+     "keyhole": "class",
+     "transition": "class"
+    },
+    "etaD": 0.365,
+    "etaD_ci90": [
+     0.305,
+     0.3905
+    ],
+    "etaJoint": 0.385,
+    "etaJoint_ci90": [
+     0.365,
+     0.41
+    ],
+    "etaPrior": 0.35,
+    "etaW": 0.425,
+    "etaW_ci90": [
+     0.405,
+     0.45
+    ]
+   },
+   "quantity": "depth",
+   "reasons": [
+    "noRungImprovesAcrossSources: no ladder rung beats default on the inner training score",
+    "held-out source totis-ti64-2021: skill CI95 lower bound -0.238 < -0.02",
+    "no held-out source with skill CI95 lower bound > 0",
+    "within-source skill CI95 lower bound not > 0 on any source"
+   ],
+   "rung": "default",
+   "status": "rejected",
+   "withinSourceScore": [
+    {
+     "nRows": 80,
+     "nSets": 80,
+     "skill": -0.0213261,
+     "skillCi95": [
+      -0.0814001,
+      0.0544084
+     ],
+     "source": "totis-ti64-2021"
+    }
+   ]
+  },
+  {
+   "beamStatuses": null,
+   "flags": {
+    "boundHit": false,
+    "etaInconsistentWithMeasuredAbsorptance": false,
+    "etaSplit": false,
+    "offsetDominant": false
+   },
+   "heldOutScore": [],
+   "interval": {
+    "levels": [
+     0.8,
+     0.9
+    ],
+    "m": -0.002767,
+    "sSource": 0.337097,
+    "sWithin": 0.0942245
+   },
+   "kernel": "goldak",
+   "material": "Inconel 625",
+   "params": {
+    "cD": {
+     "conduction": 0.0,
+     "keyhole": 0.0,
+     "transition": 0.0
+    },
+    "cDSource": {
+     "conduction": "zero",
+     "keyhole": "zero",
+     "transition": "zero"
+    },
+    "etaD": 0.6,
+    "etaD_ci90": [
+     0.5,
+     0.6
+    ],
+    "etaJoint": 0.585,
+    "etaJoint_ci90": [
+     0.5,
+     0.6
+    ],
+    "etaPrior": 0.38,
+    "etaW": 0.525,
+    "etaW_ci90": [
+     0.505,
+     0.57
+    ]
+   },
+   "quantity": "width",
+   "reasons": [
+    "single source: no leave-one-source-out available",
+    "no within-source evaluation possible: no source has enough parameter sets for grouped k-fold"
+   ],
+   "rung": "eta2",
+   "status": "rejected",
+   "withinSourceScore": []
+  },
+  {
+   "beamStatuses": null,
+   "flags": {
+    "boundHit": false,
+    "etaInconsistentWithMeasuredAbsorptance": false,
+    "etaSplit": false,
+    "offsetDominant": false
+   },
+   "heldOutScore": [],
+   "interval": {
+    "levels": [
+     0.8,
+     0.9
+    ],
+    "m": 0.256192,
+    "sSource": 0.332897,
+    "sWithin": 0.80487
+   },
+   "kernel": "goldak",
+   "material": "Inconel 625",
+   "params": {
+    "cD": {
+     "conduction": 0.0,
+     "keyhole": 0.0,
+     "transition": 0.0
+    },
+    "cDSource": {
+     "conduction": "zero",
+     "keyhole": "zero",
+     "transition": "zero"
+    },
+    "etaD": 0.6,
+    "etaD_ci90": [
+     0.5,
+     0.6
+    ],
+    "etaJoint": 0.585,
+    "etaJoint_ci90": [
+     0.5,
+     0.6
+    ],
+    "etaPrior": 0.38,
+    "etaW": 0.525,
+    "etaW_ci90": [
+     0.505,
+     0.57
+    ]
+   },
+   "quantity": "depth",
+   "reasons": [
+    "noRungImprovesAcrossSources: no ladder rung beats default on the inner training score",
+    "single source: no leave-one-source-out available",
+    "no within-source evaluation possible: no source has enough parameter sets for grouped k-fold"
+   ],
+   "rung": "default",
+   "status": "rejected",
+   "withinSourceScore": []
+  },
+  {
+   "beamStatuses": null,
+   "flags": {},
+   "heldOutScore": [],
+   "interval": null,
+   "kernel": "goldak",
+   "material": "Inconel 718",
+   "params": null,
+   "quantity": "width",
+   "reasons": [
+    "no trainable measured source for this alloy"
+   ],
+   "rung": null,
+   "status": "no-data",
+   "withinSourceScore": []
+  },
+  {
+   "beamStatuses": null,
+   "flags": {},
+   "heldOutScore": [],
+   "interval": null,
+   "kernel": "goldak",
+   "material": "Inconel 718",
+   "params": null,
+   "quantity": "depth",
+   "reasons": [
+    "no trainable measured source for this alloy"
+   ],
+   "rung": null,
+   "status": "no-data",
+   "withinSourceScore": []
+  },
+  {
+   "beamStatuses": null,
+   "flags": {},
+   "heldOutScore": [],
+   "interval": null,
+   "kernel": "goldak",
+   "material": "AlSi10Mg",
+   "params": null,
+   "quantity": "width",
+   "reasons": [
+    "no trainable measured source for this alloy"
+   ],
+   "rung": null,
+   "status": "no-data",
+   "withinSourceScore": []
+  },
+  {
+   "beamStatuses": null,
+   "flags": {},
+   "heldOutScore": [],
+   "interval": null,
+   "kernel": "goldak",
+   "material": "AlSi10Mg",
+   "params": null,
+   "quantity": "depth",
+   "reasons": [
+    "no trainable measured source for this alloy"
+   ],
+   "rung": null,
+   "status": "no-data",
+   "withinSourceScore": []
+  },
+  {
+   "beamStatuses": {
+    "37.5": "rejected",
+    "75": "rejected"
+   },
+   "flags": {
+    "boundHit": false,
+    "etaInconsistentWithMeasuredAbsorptance": false,
+    "etaSplit": false,
+    "offsetDominant": false
+   },
+   "heldOutScore": [
+    {
+     "coverage90": {
+      "coverage": 0.963893,
+      "k": 614,
+      "n": 637,
+      "wilson95": [
+       0.946403,
+       0.975822
+      ]
+     },
+     "heldOut": "hofmann-316l-2026",
+     "mapeDefault": 26.198,
+     "mapeServed": 32.2982,
+     "nRows": 677,
+     "nSets": 378,
+     "rung": "eta2",
+     "skill": -0.232852,
+     "skillCi95": [
+      -0.335999,
+      -0.123243
+     ],
+     "trainedOn": [
+      "ku-leuven-316l-2021"
+     ]
+    },
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 44,
+      "n": 44,
+      "wilson95": [
+       0.919704,
+       1.0
+      ]
+     },
+     "heldOut": "ku-leuven-316l-2021",
+     "mapeDefault": 57.6725,
+     "mapeServed": 57.6725,
+     "nRows": 44,
+     "nSets": 44,
+     "rung": "default",
+     "skill": 0.0,
+     "skillCi95": [
+      0.0,
+      0.0
+     ],
+     "trainedOn": [
+      "hofmann-316l-2026"
+     ]
+    }
+   ],
+   "interval": {
+    "levels": [
+     0.8,
+     0.9
+    ],
+    "m": -0.121546,
+    "sSource": 0.496395,
+    "sWithin": 0.30631
+   },
+   "kernel": "rosenthal",
+   "material": "316L Stainless Steel",
+   "params": {
+    "cD": {
+     "conduction": -0.126698,
+     "keyhole": 0.014894,
+     "transition": 0.038587
+    },
+    "cDSource": {
+     "conduction": "class",
+     "keyhole": "class",
+     "transition": "class"
+    },
+    "etaD": 0.335,
+    "etaD_ci90": [
+     0.315,
+     0.35
+    ],
+    "etaJoint": 0.34,
+    "etaJoint_ci90": [
+     0.315,
+     0.36
+    ],
+    "etaPrior": 0.42,
+    "etaW": 0.415,
+    "etaW_ci90": [
+     0.345,
+     0.57
+    ]
+   },
+   "quantity": "width",
+   "reasons": [
+    "unresolvedRows",
+    "noRungImprovesAcrossSources: no ladder rung beats default on the inner training score",
+    "held-out source hofmann-316l-2026: skill CI95 lower bound -0.336 < -0.02",
+    "held-out source hofmann-316l-2026: rung leaves more rows unresolved than default",
+    "no held-out source with skill CI95 lower bound > 0"
+   ],
+   "rung": "default",
+   "status": "rejected",
+   "withinSourceScore": [
+    {
+     "nRows": 677,
+     "nSets": 378,
+     "skill": 0.0,
+     "skillCi95": [
+      0.0,
+      0.0
+     ],
+     "source": "hofmann-316l-2026"
+    },
+    {
+     "nRows": 44,
+     "nSets": 44,
+     "skill": 0.16864,
+     "skillCi95": [
+      0.124401,
+      0.235525
+     ],
+     "source": "ku-leuven-316l-2021"
+    }
+   ]
+  },
+  {
+   "beamStatuses": {
+    "37.5": "rejected",
+    "75": "within-source-only"
+   },
+   "flags": {
+    "boundHit": false,
+    "etaInconsistentWithMeasuredAbsorptance": false,
+    "etaSplit": false,
+    "offsetDominant": false
+   },
+   "heldOutScore": [
+    {
+     "coverage90": {
+      "coverage": 0.97352,
+      "k": 625,
+      "n": 642,
+      "wilson95": [
+       0.958005,
+       0.983403
+      ]
+     },
+     "heldOut": "hofmann-316l-2026",
+     "mapeDefault": 59.1906,
+     "mapeServed": 32.7408,
+     "nRows": 677,
+     "nSets": 378,
+     "rung": "eta",
+     "skill": 0.446857,
+     "skillCi95": [
+      0.400273,
+      0.489721
+     ],
+     "trainedOn": [
+      "ku-leuven-316l-2021"
+     ]
+    },
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 44,
+      "n": 44,
+      "wilson95": [
+       0.919704,
+       1.0
+      ]
+     },
+     "heldOut": "ku-leuven-316l-2021",
+     "mapeDefault": 44.0033,
+     "mapeServed": 44.0033,
+     "nRows": 44,
+     "nSets": 44,
+     "rung": "default",
+     "skill": 0.0,
+     "skillCi95": [
+      0.0,
+      0.0
+     ],
+     "trainedOn": [
+      "hofmann-316l-2026"
+     ]
+    }
+   ],
+   "interval": {
+    "levels": [
+     0.8,
+     0.9
+    ],
+    "m": -0.302873,
+    "sSource": 0.563099,
+    "sWithin": 0.356395
+   },
+   "kernel": "rosenthal",
+   "material": "316L Stainless Steel",
+   "params": {
+    "cD": {
+     "conduction": -0.126698,
+     "keyhole": 0.014894,
+     "transition": 0.038587
+    },
+    "cDSource": {
+     "conduction": "class",
+     "keyhole": "class",
+     "transition": "class"
+    },
+    "etaD": 0.335,
+    "etaD_ci90": [
+     0.315,
+     0.35
+    ],
+    "etaJoint": 0.34,
+    "etaJoint_ci90": [
+     0.315,
+     0.36
+    ],
+    "etaPrior": 0.42,
+    "etaW": 0.415,
+    "etaW_ci90": [
+     0.345,
+     0.57
+    ]
+   },
+   "quantity": "depth",
+   "reasons": [
+    "unresolvedInput: decision differs between beam readings 37.5=rejected, 75=within-source-only"
+   ],
+   "rung": "default",
+   "status": "rejected",
+   "withinSourceScore": [
+    {
+     "nRows": 677,
+     "nSets": 378,
+     "skill": 0.0,
+     "skillCi95": [
+      0.0,
+      0.0
+     ],
+     "source": "hofmann-316l-2026"
+    },
+    {
+     "nRows": 44,
+     "nSets": 44,
+     "skill": 0.0832623,
+     "skillCi95": [
+      -0.0284197,
+      0.200794
+     ],
+     "source": "ku-leuven-316l-2021"
+    }
+   ]
+  },
+  {
+   "beamStatuses": {
+    "37.5": "rejected",
+    "75": "rejected"
+   },
+   "flags": {
+    "boundHit": false,
+    "etaInconsistentWithMeasuredAbsorptance": false,
+    "etaSplit": false,
+    "offsetDominant": false
+   },
+   "heldOutScore": [
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 14,
+      "n": 14,
+      "wilson95": [
+       0.784689,
+       1.0
+      ]
+     },
+     "heldOut": "ku-leuven-ti64-2021",
+     "mapeDefault": 36.9735,
+     "mapeServed": 36.9735,
+     "nRows": 14,
+     "nSets": 14,
+     "rung": "default",
+     "skill": 0.0,
+     "skillCi95": [
+      0.0,
+      0.0
+     ],
+     "trainedOn": [
+      "totis-ti64-2021"
+     ]
+    },
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 78,
+      "n": 78,
+      "wilson95": [
+       0.953062,
+       1.0
+      ]
+     },
+     "heldOut": "totis-ti64-2021",
+     "mapeDefault": 52.2987,
+     "mapeServed": 51.0456,
+     "nRows": 80,
+     "nSets": 80,
+     "rung": "eta",
+     "skill": 0.0239605,
+     "skillCi95": [
+      -0.0410411,
+      0.0811373
+     ],
+     "trainedOn": [
+      "ku-leuven-ti64-2021"
+     ]
+    }
+   ],
+   "interval": {
+    "levels": [
+     0.8,
+     0.9
+    ],
+    "m": -0.350996,
+    "sSource": 0.496395,
+    "sWithin": 0.326369
+   },
+   "kernel": "rosenthal",
+   "material": "Ti-6Al-4V",
+   "params": {
+    "cD": {
+     "conduction": 0.0964879,
+     "keyhole": 0.0438531,
+     "transition": 0.424826
+    },
+    "cDSource": {
+     "conduction": "alloy",
+     "keyhole": "class",
+     "transition": "class"
+    },
+    "etaD": 0.25,
+    "etaD_ci90": [
+     0.25,
+     0.26
+    ],
+    "etaJoint": 0.25,
+    "etaJoint_ci90": [
+     0.25,
+     0.26
+    ],
+    "etaPrior": 0.35,
+    "etaW": 0.26,
+    "etaW_ci90": [
+     0.25,
+     0.2805
+    ]
+   },
+   "quantity": "width",
+   "reasons": [
+    "unresolvedRows",
+    "noRungImprovesAcrossSources: no ladder rung beats default on the inner training score",
+    "held-out source totis-ti64-2021: skill CI95 lower bound -0.041 < -0.02",
+    "held-out source totis-ti64-2021: rung leaves more rows unresolved than default",
+    "no held-out source with skill CI95 lower bound > 0"
+   ],
+   "rung": "default",
+   "status": "rejected",
+   "withinSourceScore": [
+    {
+     "nRows": 80,
+     "nSets": 80,
+     "skill": -0.015558,
+     "skillCi95": [
+      -0.0455242,
+      0.0117822
+     ],
+     "source": "totis-ti64-2021"
+    }
+   ]
+  },
+  {
+   "beamStatuses": {
+    "37.5": "rejected",
+    "75": "rejected"
+   },
+   "flags": {
+    "boundHit": false,
+    "etaInconsistentWithMeasuredAbsorptance": false,
+    "etaSplit": false,
+    "offsetDominant": false
+   },
+   "heldOutScore": [
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 14,
+      "n": 14,
+      "wilson95": [
+       0.784689,
+       1.0
+      ]
+     },
+     "heldOut": "ku-leuven-ti64-2021",
+     "mapeDefault": 68.9854,
+     "mapeServed": 68.9854,
+     "nRows": 14,
+     "nSets": 14,
+     "rung": "default",
+     "skill": 0.0,
+     "skillCi95": [
+      0.0,
+      0.0
+     ],
+     "trainedOn": [
+      "totis-ti64-2021"
+     ]
+    },
+    {
+     "coverage90": {
+      "coverage": 0.987179,
+      "k": 77,
+      "n": 78,
+      "wilson95": [
+       0.930891,
+       0.997733
+      ]
+     },
+     "heldOut": "totis-ti64-2021",
+     "mapeDefault": 41.4423,
+     "mapeServed": 35.0585,
+     "nRows": 80,
+     "nSets": 80,
+     "rung": "eta2+dOffset",
+     "skill": 0.154042,
+     "skillCi95": [
+      -0.0822064,
+      0.313758
+     ],
+     "trainedOn": [
+      "ku-leuven-ti64-2021"
+     ]
+    }
+   ],
+   "interval": {
+    "levels": [
+     0.8,
+     0.9
+    ],
+    "m": -0.163504,
+    "sSource": 0.563099,
+    "sWithin": 0.446364
+   },
+   "kernel": "rosenthal",
+   "material": "Ti-6Al-4V",
+   "params": {
+    "cD": {
+     "conduction": 0.0964879,
+     "keyhole": 0.0438531,
+     "transition": 0.424826
+    },
+    "cDSource": {
+     "conduction": "alloy",
+     "keyhole": "class",
+     "transition": "class"
+    },
+    "etaD": 0.25,
+    "etaD_ci90": [
+     0.25,
+     0.26
+    ],
+    "etaJoint": 0.25,
+    "etaJoint_ci90": [
+     0.25,
+     0.26
+    ],
+    "etaPrior": 0.35,
+    "etaW": 0.26,
+    "etaW_ci90": [
+     0.25,
+     0.2805
+    ]
+   },
+   "quantity": "depth",
+   "reasons": [
+    "unresolvedRows",
+    "noRungImprovesAcrossSources: no ladder rung beats default on the inner training score",
+    "held-out source totis-ti64-2021: skill CI95 lower bound -0.082 < -0.02",
+    "held-out source totis-ti64-2021: rung leaves more rows unresolved than default",
+    "no held-out source with skill CI95 lower bound > 0"
+   ],
+   "rung": "default",
+   "status": "rejected",
+   "withinSourceScore": [
+    {
+     "nRows": 80,
+     "nSets": 80,
+     "skill": 0.0348681,
+     "skillCi95": [
+      0.00826921,
+      0.0624196
+     ],
+     "source": "totis-ti64-2021"
+    }
+   ]
+  },
+  {
+   "beamStatuses": null,
+   "flags": {
+    "boundHit": false,
+    "etaInconsistentWithMeasuredAbsorptance": false,
+    "etaSplit": false,
+    "offsetDominant": false
+   },
+   "heldOutScore": [],
+   "interval": {
+    "levels": [
+     0.8,
+     0.9
+    ],
+    "m": -0.0704445,
+    "sSource": 0.560987,
+    "sWithin": 0.196261
+   },
+   "kernel": "rosenthal",
+   "material": "Inconel 625",
+   "params": {
+    "cD": {
+     "conduction": 0.0,
+     "keyhole": 0.0,
+     "transition": 0.0
+    },
+    "cDSource": {
+     "conduction": "zero",
+     "keyhole": "zero",
+     "transition": "zero"
+    },
+    "etaD": 0.55,
+    "etaD_ci90": [
+     0.55,
+     0.55
+    ],
+    "etaJoint": 0.55,
+    "etaJoint_ci90": [
+     0.55,
+     0.55
+    ],
+    "etaPrior": 0.38,
+    "etaW": 0.61,
+    "etaW_ci90": [
+     0.55,
+     0.65
+    ]
+   },
+   "quantity": "width",
+   "reasons": [
+    "single source: no leave-one-source-out available",
+    "no within-source evaluation possible: no source has enough parameter sets for grouped k-fold"
+   ],
+   "rung": "eta",
+   "status": "rejected",
+   "withinSourceScore": []
+  },
+  {
+   "beamStatuses": null,
+   "flags": {
+    "boundHit": false,
+    "etaInconsistentWithMeasuredAbsorptance": false,
+    "etaSplit": false,
+    "offsetDominant": false
+   },
+   "heldOutScore": [],
+   "interval": {
+    "levels": [
+     0.8,
+     0.9
+    ],
+    "m": 0.251915,
+    "sSource": 0.563099,
+    "sWithin": 0.404178
+   },
+   "kernel": "rosenthal",
+   "material": "Inconel 625",
+   "params": {
+    "cD": {
+     "conduction": 0.0,
+     "keyhole": 0.0,
+     "transition": 0.0
+    },
+    "cDSource": {
+     "conduction": "zero",
+     "keyhole": "zero",
+     "transition": "zero"
+    },
+    "etaD": 0.55,
+    "etaD_ci90": [
+     0.55,
+     0.55
+    ],
+    "etaJoint": 0.55,
+    "etaJoint_ci90": [
+     0.55,
+     0.55
+    ],
+    "etaPrior": 0.38,
+    "etaW": 0.61,
+    "etaW_ci90": [
+     0.55,
+     0.65
+    ]
+   },
+   "quantity": "depth",
+   "reasons": [
+    "noRungImprovesAcrossSources: no ladder rung beats default on the inner training score",
+    "single source: no leave-one-source-out available",
+    "no within-source evaluation possible: no source has enough parameter sets for grouped k-fold"
+   ],
+   "rung": "default",
+   "status": "rejected",
+   "withinSourceScore": []
+  },
+  {
+   "beamStatuses": null,
+   "flags": {},
+   "heldOutScore": [],
+   "interval": null,
+   "kernel": "rosenthal",
+   "material": "Inconel 718",
+   "params": null,
+   "quantity": "width",
+   "reasons": [
+    "no trainable measured source for this alloy"
+   ],
+   "rung": null,
+   "status": "no-data",
+   "withinSourceScore": []
+  },
+  {
+   "beamStatuses": null,
+   "flags": {},
+   "heldOutScore": [],
+   "interval": null,
+   "kernel": "rosenthal",
+   "material": "Inconel 718",
+   "params": null,
+   "quantity": "depth",
+   "reasons": [
+    "no trainable measured source for this alloy"
+   ],
+   "rung": null,
+   "status": "no-data",
+   "withinSourceScore": []
+  },
+  {
+   "beamStatuses": null,
+   "flags": {},
+   "heldOutScore": [],
+   "interval": null,
+   "kernel": "rosenthal",
+   "material": "AlSi10Mg",
+   "params": null,
+   "quantity": "width",
+   "reasons": [
+    "no trainable measured source for this alloy"
+   ],
+   "rung": null,
+   "status": "no-data",
+   "withinSourceScore": []
+  },
+  {
+   "beamStatuses": null,
+   "flags": {},
+   "heldOutScore": [],
+   "interval": null,
+   "kernel": "rosenthal",
+   "material": "AlSi10Mg",
+   "params": null,
+   "quantity": "depth",
+   "reasons": [
+    "no trainable measured source for this alloy"
+   ],
+   "rung": null,
+   "status": "no-data",
+   "withinSourceScore": []
+  }
+ ],
+ "codeRevision": {
+  "dirtyTrackedPaths": 0,
+  "gitBranch": "feat/lpbf-scorecard-calibration-infra",
+  "gitHead": "ac8e000eb6d8ed892ac46a3da82d5efb07c54aac",
+  "python": "3.12.10"
+ },
+ "config": {
+  "absorptanceBands": {
+   "316L Stainless Steel": {
+    "basis": "Simonds 2018 Table III (stationary spot, polished)",
+    "conduction": [
+     0.31,
+     0.35
+    ],
+    "keyhole": [
+     0.5,
+     0.86
+    ]
+   },
+   "Ti-6Al-4V": {
+    "basis": "NIST mds2-2525 stationary pulse 62.0 % +- 0.10",
+    "keyhole": [
+     0.52,
+     0.72
+    ]
+   },
+   "widenFactor": 1.3
+  },
+  "ballingFlaggedRowsTrainDepth": true,
+  "ballingFlaggedRowsTrainWidth": false,
+  "beamSensitivityUm": {
+   "ku-leuven-316l-2021": [
+    37.5,
+    75.0
+   ],
+   "ku-leuven-ti64-2021": [
+    37.5,
+    75.0
+   ],
+   "rule": "gate decision must be identical under both KU beam readings, else 'rejected: unresolved input'"
+  },
+  "bootstrap": {
+   "paramReplicates": 200,
+   "paramUnit": "parameter set (cluster), stratified by source, theta refit per replicate",
+   "seed": 0,
+   "skillReplicates": 1000,
+   "skillUnit": "test parameter set (cluster), theta fixed, no refit"
+  },
+  "bounds": [
+   0.25,
+   0.8
+  ],
+  "cdClipLn": 0.693147,
+  "dataRoles": {
+   "catalogSentinelNote": "catalog sentinels (used during physics development, not blind): reported separately, never trained on, never in the gate",
+   "catalogSentinels": [
+    "guo-316l-2024",
+    "nist-amb2022-03-in718"
+   ],
+   "noDataAlloys": [
+    "Inconel 718",
+    "AlSi10Mg"
+   ],
+   "singleSourceAlloys": [
+    "Inconel 625"
+   ],
+   "trainable": [
+    "hofmann-316l-2026",
+    "ku-leuven-316l-2021",
+    "totis-ti64-2021",
+    "ku-leuven-ti64-2021",
+    "lane-in625-2020"
+   ]
+  },
+  "fitGrid": {
+   "search": "deterministic grid scan, ties to the smaller eta",
+   "start": 0.25,
+   "step": 0.005,
+   "stop": 0.8
+  },
+  "gate": {
+   "boundHitBootstrapFraction": 0.2,
+   "boundHitSteps": 1,
+   "coverageLevel": 0.9,
+   "coverageWilsonUpperMin": 0.9,
+   "etaConsistencyDLn": 0.15,
+   "etaSplitRatio": 1.3,
+   "minRowsForCoverage": 10,
+   "offsetDominantRatio": 1.25,
+   "p1WithinSourceSkillLbMin": 0.0,
+   "skillLbFloor": -0.02,
+   "unresolvedRule": "a rung that resolves fewer test rows than default fails the gate"
+  },
+  "interval": {
+   "chi2Level": 0.1,
+   "levels": [
+    0.8,
+    0.9
+   ],
+   "minSourcesForSSource": 3,
+   "notInformativeRatio": 2.5,
+   "sSourceInflation": "chi-square upper bound, one-sided 90 % on the SD of per-source mean residuals",
+   "sSourceResiduals": "at a theta fitted WITHOUT the source itself and WITHOUT the held-out source (default eta when no training source is left)",
+   "wilsonConfidence": 0.95,
+   "z": {
+    "0.8": 1.2816,
+    "0.9": 1.6449
+   }
+  },
+  "kernelGrid": {
+   "interpolation": "linear in ln(eta) on ln(width), ln(depth); a node pair with any non-'computed' status makes the row unresolved at that eta",
+   "plusMaterialDefaults": true,
+   "start": 0.2,
+   "step": 0.025,
+   "stop": 0.9
+  },
+  "kernels": [
+   "eagar-tsai",
+   "goldak",
+   "rosenthal"
+  ],
+  "materialDefaults": {
+   "316L Stainless Steel": 0.42,
+   "Inconel 625": 0.38,
+   "Inconel 718": 0.38,
+   "Ti-6Al-4V": 0.35
+  },
+  "minCoverage": 0.95,
+  "minSetsPerClass": 8,
+  "p1": {
+   "k": 5,
+   "minSetsPerSource": 20,
+   "seeds": [
+    0,
+    1,
+    2
+   ]
+  },
+  "prior": {
+   "centre": "material default absorptivity_IR (one rule for every alloy)",
+   "lambda": 0.05,
+   "measuredAbsorptanceRole": "R5 bands and bounds only; never a target and never a 'match'",
+   "penalty": "lambda * ln(eta / eta_prior)^2 added to the set-averaged mean |ln| loss"
+  },
+  "regimeClass": {
+   "basis": "input-only normalised enthalpy at the material default",
+   "thresholds": [
+    15.0,
+    30.0
+   ]
+  },
+  "rounding": {
+   "significantDigits": 6
+  },
+  "rungMarginRel": 0.01,
+  "rungSelection": {
+   "etaRungRule": "the joint eta rung may serve q only if the eta2 q-specific fit also improves q on the inner score",
+   "innerKFold": 5,
+   "innerLoso": "when >= 2 training sources",
+   "innerSeeds": [
+    0,
+    1,
+    2
+   ],
+   "tieBreak": "simpler rung",
+   "where": "inside the training sources only"
+  },
+  "rungs": [
+   "default",
+   "eta",
+   "eta2",
+   "eta2+dOffset"
+  ],
+  "rungsReferenceOnly": [
+   "powerlaw"
+  ],
+  "sourceWeight": {
+   "nSetsFull": 20,
+   "rule": "w_s = min(1, nSets_s / 20), normalised over the training sources"
+  },
+  "version": "lpbf-meltpool-calibration-config-1"
+ },
+ "configSha256": "6926386ddf9ad2a0d9fc787b4dbca7324b20b466e7a806be38b949fbafa1271b",
+ "contentSha256": "41484169bfd2dae8fd028135ce7a64deacef31e2e1ecb374b9983d880f533a21",
+ "envelope": {
+  "316L Stainless Steel": {
+   "beamDiameter_um": [
+    37.5,
+    140.0
+   ],
+   "laserPower_W": [
+    50.0,
+    600.0
+   ],
+   "normalizedEnthalpyDefault": [
+    3.31669,
+    207.196
+   ],
+   "rows": 721,
+   "scanSpeed_mm_s": [
+    225.0,
+    1500.0
+   ],
+   "sources": [
+    "hofmann-316l-2026",
+    "ku-leuven-316l-2021"
+   ]
+  },
+  "Inconel 625": {
+   "beamDiameter_um": [
+    100.0,
+    170.0
+   ],
+   "laserPower_W": [
+    137.9,
+    195.0
+   ],
+   "normalizedEnthalpyDefault": [
+    5.7783,
+    18.5689
+   ],
+   "rows": 23,
+   "scanSpeed_mm_s": [
+    400.0,
+    1200.0
+   ],
+   "sources": [
+    "lane-in625-2020"
+   ]
+  },
+  "Ti-6Al-4V": {
+   "beamDiameter_um": [
+    37.5,
+    50.0
+   ],
+   "laserPower_W": [
+    50.0,
+    400.0
+   ],
+   "normalizedEnthalpyDefault": [
+    7.70916,
+    195.028
+   ],
+   "rows": 94,
+   "scanSpeed_mm_s": [
+    250.0,
+    2500.0
+   ],
+   "sources": [
+    "ku-leuven-ti64-2021",
+    "totis-ti64-2021"
+   ]
+  }
+ },
+ "evidenceKind": "screening-only",
+ "evidenceLabel": "Screening only: nuisance parameters fitted to published tracks; not validation",
+ "generatedAt": "2026-10-07",
+ "heldOutSources": "leave-one-source-out inside each alloy (every trainable source of a 2-source alloy is held out once)",
+ "honesty": "calibration of nuisance parameters against published single tracks; not experimental validation; the frozen screening kernels are read-only; absorptivity is a fitted effective parameter that absorbs model error, not a measured one; estimated material laws; no per-row measurement uncertainty exists in any source; experimentalValidation=false, opticalOperatorMatched=false",
+ "implementationHash": "d92d1a3ae85cd4c1adab6dc734eaae589ef4c275c33f09015aff639998f10ddd",
+ "labelPromotionProposed": "none",
+ "priors": {
+  "316L Stainless Steel": {
+   "basis": "material default absorptivity_IR; measured absorptance only as R5 bands",
+   "bounds": [
+    0.25,
+    0.8
+   ],
+   "eta": 0.42,
+   "lambda": 0.05
+  },
+  "Inconel 625": {
+   "basis": "material default absorptivity_IR; measured absorptance only as R5 bands",
+   "bounds": [
+    0.25,
+    0.8
+   ],
+   "eta": 0.38,
+   "lambda": 0.05
+  },
+  "Inconel 718": {
+   "basis": "material default absorptivity_IR; measured absorptance only as R5 bands",
+   "bounds": [
+    0.25,
+    0.8
+   ],
+   "eta": 0.38,
+   "lambda": 0.05
+  },
+  "Ti-6Al-4V": {
+   "basis": "material default absorptivity_IR; measured absorptance only as R5 bands",
+   "bounds": [
+    0.25,
+    0.8
+   ],
+   "eta": 0.35,
+   "lambda": 0.05
+  }
+ },
+ "proposedEvidenceKind": null,
+ "schema": "lpbf-meltpool-calibration-1",
+ "scorecardRecord": "docs/LPBF_CALIBRATION_SCORECARD_2026-10-07.json",
+ "scorecardSha256": "5d47a2cd16f3b3cbffb574a698b9d19fe6c70b87521645a4009f51bd26ac3874",
+ "tool": {
+  "path": "python/tools/lpbf_calibration_fit.py",
+  "sha256": "3aae27682d375690e9da99ebe0b0745747d3c33ad7329bfc96229e3b2735e8d8"
+ },
+ "trainingData": [
+  {
+   "doi": "10.5281/zenodo.16979848",
+   "material": "316L Stainless Steel",
+   "parameterSets": 378,
+   "rowsUsed": 677,
+   "source": "hofmann-316l-2026",
+   "tableSha256": "d4bbc7a60b536118586f44b64beb0fa20f94133f6d1a8d0fdcf726003720c3d8"
+  },
+  {
+   "doi": "10.6084/m9.figshare.15035733.v1 + 10.6084/m9.figshare.15035703.v1",
+   "material": "316L Stainless Steel",
+   "parameterSets": 44,
+   "rowsUsed": 44,
+   "source": "ku-leuven-316l-2021",
+   "tableSha256": "e031aead71bf64c70a35ae05d64c0c576d33c2ae757a1e5bda68b5da532ac831"
+  },
+  {
+   "doi": "10.17632/s9438vb5xd.1",
+   "material": "Ti-6Al-4V",
+   "parameterSets": 80,
+   "rowsUsed": 80,
+   "source": "totis-ti64-2021",
+   "tableSha256": "3b5794f3a25a5f67fa0d8d1ab006834205ef820b046c24deb15836025825d623"
+  },
+  {
+   "doi": "10.6084/m9.figshare.15035709.v1 + 10.6084/m9.figshare.15035712.v2",
+   "material": "Ti-6Al-4V",
+   "parameterSets": 14,
+   "rowsUsed": 14,
+   "source": "ku-leuven-ti64-2021",
+   "tableSha256": "e031aead71bf64c70a35ae05d64c0c576d33c2ae757a1e5bda68b5da532ac831"
+  },
+  {
+   "doi": "10.1007/s40192-020-00169-1",
+   "material": "Inconel 625",
+   "parameterSets": 6,
+   "rowsUsed": 23,
+   "source": "lane-in625-2020",
+   "tableSha256": "32fe10fb8606a49cdc59e1e3753b40e6be9ea9751dae9ec8ac95c217e6d16179"
+  }
+ ]
+}
