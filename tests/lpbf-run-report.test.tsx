@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { createHash } from "node:crypto";
 import { renderToStaticMarkup } from "react-dom/server";
-import { LpbfRunReportExport } from "../src/components/LpbfRunReportExport";
+import { LpbfRunReportExport, RunReportButtons } from "../src/components/LpbfRunReportExport";
 import { useMaterialSpecimenStore } from "../src/store/useMaterialSpecimenStore";
 import { LPBF_ENGINEERING_DEFAULTS, engineeringSignature, type LpbfEngineeringState } from "../src/store/useLpbfEngineeringStore";
 import type { LpbfBuildContext } from "../src/store/useLpbfWorkflowStore";
@@ -100,8 +100,38 @@ test("a stale run shows the Stale badge", () => {
   const report = reportWith({job:true,stale:true});
   assert.equal(report.resultMatchesCurrentInputs,false);
   const html = build(report);
-  assert.match(html,/<span class="badge" role="status">Stale<\/span>/);
+  assert.match(html,/<span class="badge">Stale<\/span>/);
   assert.match(html,/<td>Differs<\/td>/);
+  assert.ok(!html.includes('role="status">Stale'),"static badges are not live regions");
+  assert.match(html,/staleness can also come from solver settings or scan strategy/);
+  assert.match(html,/describes the current inputs, not the executed run/);
+});
+
+test("an alias specimen name compares against the canonical executed material", () => {
+  const spec = specimen();
+  const store = useMaterialSpecimenStore.getState();
+  const original = store.activeSpecimen;
+  try {
+    useMaterialSpecimenStore.setState({activeSpecimen:{...spec,name:"IN718"}});
+    const report = reportWith({job:true});
+    assert.equal(report.resultMatchesCurrentInputs,true);
+    const html = build(report);
+    assert.match(html,/<th scope="row">Material<\/th><td>Inconel 718<\/td><td>Inconel 718<\/td><td>Same<\/td>/);
+    assert.ok(!html.includes('class="badge"'));
+  } finally {
+    useMaterialSpecimenStore.setState({activeSpecimen:original});
+  }
+});
+
+test("extent status is labelled as build-job geometry, in the build-job section", () => {
+  const html = build(reportWith({job:true}));
+  assert.ok(!html.includes("<dt>Extent status</dt>"));
+  const resultsPart = html.slice(html.indexOf('id="results"'),html.indexOf('id="build-job"'));
+  assert.ok(!/extent/i.test(resultsPart));
+  const buildPart = html.slice(html.indexOf('id="build-job"'),html.indexOf('id="measurements"'));
+  assert.match(buildPart,/<dt>Build-job melt-pool extent status<\/dt><dd>computed<\/dd>/);
+  assert.match(buildPart,/<dt>Build-job extent note<\/dt>/);
+  assert.match(buildPart,/not the transient thermal W\/D\/L/);
 });
 
 test("verdict reasons keep their order and every gate id appears", () => {
@@ -118,11 +148,18 @@ test("verdict reasons keep their order and every gate id appears", () => {
   assert.match(html,/Assumption &lt;b&gt;one&lt;\/b&gt; verbatim/);
 });
 
-test("no build job prints the no-screening statement", () => {
-  const html = build(reportWith({job:true}),null);
+test("no build job prints the no-screening statement and never a verdict", () => {
+  const spec = specimen();
+  const report = createLpbfQualificationReport(spec,context(),baseEngineering(),null,[]);
+  const html = build(report,null);
   assert.match(html,/No build-job screening for the current inputs/);
-  // The embedded dossier was built with the build job in this fixture; only visible text is checked.
   assert.ok(!html.replace(/<script[\s\S]*?<\/script>/g,"").includes("gate-block"));
+});
+
+test("visible verdict follows the hashed dossier, not a divergent extras job", () => {
+  const html = build(reportWith({job:true}),null);
+  assert.match(html,/Fixture headline/);
+  assert.match(html,/<li>Build assumption alpha<\/li>/);
 });
 
 test("the evidence label is report.resultType and no promoted label appears", () => {
@@ -163,4 +200,10 @@ test("the export buttons have accessible names and start enabled", () => {
   assert.match(markup,/<button[^>]*aria-label="Open printable report"[^>]*>/);
   assert.ok(!/disabled=""/.test(markup));
   assert.match(markup,/role="status"/);
+});
+
+test("the busy state disables both buttons and shows the status message", () => {
+  const markup = renderToStaticMarkup(<RunReportButtons busy={true} message="Computing SHA-256 of the dossier JSON..." onAction={()=>undefined}/>);
+  assert.equal((markup.match(/<button[^>]*disabled=""/g) ?? []).length,2);
+  assert.match(markup,/<p role="status"[^>]*>Computing SHA-256 of the dossier JSON\.\.\.<\/p>/);
 });

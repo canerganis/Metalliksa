@@ -1,12 +1,17 @@
 import type { createLpbfQualificationReport } from "./lpbfQualificationReport";
 import type { PythonLpbfBuildJobResult } from "../services/pythonComputationService";
+import { canonicalLpbfMaterialName } from "./lpbfMaterialIdentity";
 import type { SimulationResult } from "../services/lpbfSimulationService";
 
 /** The research qualification dossier this export is built on. */
 export type LpbfQualificationReport = ReturnType<typeof createLpbfQualificationReport>;
 
 export interface LpbfRunReportExtras {
-  /** Build-job screening for the CURRENT input key, or null when none is available for the current inputs. */
+  /**
+   * The same build job (or null) that was passed to createLpbfQualificationReport. The visible verdict and assumptions are
+   * taken from report.buildScreening so they always match the hashed dossier; this job only supplies identity fields
+   * (solver revision, build-job identity, material property revision) that the dossier summary does not carry.
+   */
   buildJob: PythonLpbfBuildJobResult | null;
 }
 export interface LpbfRunReportOptions {
@@ -108,15 +113,17 @@ export function buildLpbfRunReportHtml(report: LpbfQualificationReport, extras: 
   const job = report.job as Job | null;
   const result: SimulationResult | undefined = job?.result;
   const buildJob = extras.buildJob;
+  const screening = report.buildScreening;
   const stale = report.resultMatchesCurrentInputs === false;
-  const verdict = buildJob?.verdict;
+  const verdict = screening?.verdict;
   const executed = (report.executedInput ?? null) as unknown as Record<string, unknown> | null;
   const current = report.currentProcess as unknown as Record<string, unknown>;
+  const noScreening = "no build-job screening for the current inputs";
   const noResult = "no completed thermal simulation is attached";
 
   const header = `<header><p class="muted">Metalliksa · ${escapeHtml(report.scope)} · schema version ${escapeHtml(report.schemaVersion)}</p><h1>LPBF run report</h1><p class="muted">${escapeHtml(report.reportType)} · created ${escapeHtml(options.createdAt)}</p>`
     + `<p class="banner" role="note">Evidence label: <span class="evidence-label">${escapeHtml(report.resultType)}</span> · Qualification status: <span class="qualification-status">${escapeHtml(report.qualificationStatus)}</span> · not experimental validation, not a production release or standards certificate.</p>`
-    + `<p>${escapeHtml(report.resultDescription)}${stale ? ` <span class="badge" role="status">Stale</span>` : ""}</p></header>`;
+    + `<p>${escapeHtml(report.resultDescription)}${stale ? ` <span class="badge">Stale</span>` : ""}</p></header>`;
 
   const ctx = report.buildContext;
   const composition = Object.entries(report.specimen.composition ?? {}).map(([element, value]) => `${element} ${value}`).join(" · ");
@@ -138,10 +145,10 @@ export function buildLpbfRunReportHtml(report: LpbfQualificationReport, extras: 
     const differs = executed !== null && executedValue !== undefined && executedValue !== current[cur];
     return `<tr><th scope="row">${escapeHtml(label)}</th>${cell(shown(current[cur]))}${cell(shown(executedValue))}${cell(executed === null ? "No executed input" : differs ? "Differs" : "Same")}</tr>`;
   });
-  inputRows.push(`<tr><th scope="row">Material</th>${cell(shown(report.specimen.name))}${cell(shown(executed?.material))}${cell(executed === null ? "No executed input" : executed.material === report.specimen.name ? "Same" : "Differs")}</tr>`);
+  inputRows.push(`<tr><th scope="row">Material</th>${cell(shown(canonicalLpbfMaterialName(report.specimen.name)))}${cell(shown(executed?.material))}${cell(executed === null ? "No executed input" : executed.material === canonicalLpbfMaterialName(report.specimen.name) ? "Same" : "Differs")}</tr>`);
   const known = new Set(["material", "properties", "measurements", ...pairs.map(pair => pair[2])]);
   const otherExecuted = executed ? Object.entries(executed).filter(([key, value]) => !known.has(key) && (typeof value === "string" || typeof value === "number" || typeof value === "boolean")) : [];
-  const inputs = section("inputs", "Current and executed inputs", `${stale ? `<p><span class="badge" role="status">Stale</span> Current inputs differ from the executed simulation. Values below are the executed snapshot, not the current draft.</p>` : ""}`
+  const inputs = section("inputs", "Current and executed inputs", `${stale ? `<p><span class="badge">Stale</span> Current inputs or settings differ from the executed simulation. Current and executed values are shown side by side; staleness can also come from solver settings or scan strategy not listed here.</p>` : ""}`
     + `<table><thead><tr><th scope="col">Parameter</th><th scope="col">Current</th><th scope="col">Executed</th><th scope="col">Comparison</th></tr></thead><tbody>${inputRows.join("")}</tbody></table>`
     + `<p>Current scan strategy: ${escapeHtml(shown(report.currentProcess.scanStrategy))}</p>`
     + (otherExecuted.length ? `<h3>Other executed settings</h3><dl>${otherExecuted.map(([key, value]) => row(key, value)).join("")}</dl>` : ""));
@@ -156,7 +163,7 @@ export function buildLpbfRunReportHtml(report: LpbfQualificationReport, extras: 
     row("Execution input hash", unavailable(prov?.executionInputHash, prov ? "not reported by the worker for this run" : solverWhy)),
     row("Implementation fingerprint schema", unavailable(prov?.implementationFingerprintSchema, prov ? "not reported by the worker for this run" : solverWhy)),
     row("Solver binary hash", unavailable(prov?.solverBinaryHash, prov ? "no solver binary was recorded for this backend" : solverWhy)),
-    row("Build-job model", unavailable(buildJob?.modelId, "no build-job screening for the current inputs")),
+    row("Build-job model", unavailable(screening?.modelId, noScreening)),
     row("Build-job solver revision", unavailable(buildJob?.solverRevision, buildJob ? "not reported" : "no build-job screening for the current inputs")),
     row("Build-job identity SHA-256", unavailable(buildJob?.buildJobIdentity?.sha256, buildJob ? "not reported" : "no build-job screening for the current inputs")),
     row("Material property revision", unavailable(buildJob?.materialPropertyRevision, buildJob ? "not reported" : "no build-job screening for the current inputs")),
@@ -166,23 +173,22 @@ export function buildLpbfRunReportHtml(report: LpbfQualificationReport, extras: 
   const energy = report.verification.conservation;
   const results = section("results", "Results", !result
     ? `<p>No completed thermal simulation is attached, so no melt pool dimensions are reported.</p>`
-    : `${stale ? `<p><span class="badge" role="status">Stale</span> Executed job shown; current inputs differ.</p>` : ""}<table><thead><tr><th scope="col">Quantity</th><th scope="col">Value (um)</th></tr></thead><tbody>`
+    : `${stale ? `<p><span class="badge">Stale</span> Executed job shown; current inputs differ.</p>` : ""}<table><thead><tr><th scope="col">Quantity</th><th scope="col">Value (um)</th></tr></thead><tbody>`
       + `<tr><th scope="row">Width (W)</th>${cell(num(result.metrics.width_um))}</tr><tr><th scope="row">Depth (D)</th>${cell(num(result.metrics.depth_um))}</tr><tr><th scope="row">Length (L)</th>${cell(num(result.metrics.length_um))}</tr></tbody></table>`
       + `<dl>${[
-        row("Extent status", unavailable(verdict?.extentStatus, "no build-job screening for the current inputs")),
-        row("Extent note", verdict?.extentNote ? verdict.extentNote : NOT_RECORDED),
         row("Energy conservation check", energy ? `Present (relative error ${energy.relativeError})` : "Not available - not reported for this run"),
         row("Numerical convergence study", report.verification.numericalConvergence ? "Present" : "Not available - not reported for this run"),
         row("Experimental validation", report.verification.experimentalValidation),
       ].join("")}</dl>`);
 
   let verdictBody: string;
-  if (!buildJob || !verdict) verdictBody = `<p>No build-job screening for the current inputs.</p>`;
+  if (!screening || !verdict) verdictBody = `<p>No build-job screening for the current inputs.</p>`;
   else {
     const gates = verdict.gates ?? [];
     const idList = (label: string, ids?: string[]) => row(label, ids && ids.length ? ids.join(", ") : "None");
-    verdictBody = `<p><strong>${escapeHtml(verdict.headline)}</strong></p><dl>${[
+    verdictBody = `${stale ? `<p><span class="badge">Stale</span> This screening describes the current inputs, not the executed run.</p>` : ""}<p class="muted">The extent status describes the build-job melt-pool geometry model, not the transient thermal W/D/L above.</p><p><strong>${escapeHtml(verdict.headline)}</strong></p><dl>${[
       row("Screening verdict", verdict.verdict), row("Verdict reason", text(verdict.verdictReason)),
+      row("Build-job melt-pool extent status", unavailable(verdict.extentStatus, "not reported")), row("Build-job extent note", text(verdict.extentNote)),
       idList("Blocking gates", verdict.blockingGates), idList("Risk gates", verdict.riskGates), idList("Advisory gates", verdict.advisoryGates), idList("Unavailable gates", verdict.unavailableGates),
     ].join("")}</dl><h3>Reasons (in reported order)</h3>${list(verdict.reasons, true)}`
       + `<h3>Gates</h3>${gates.length ? `<table><thead><tr><th scope="col">Gate</th><th scope="col">Status</th><th scope="col">Measured</th><th scope="col">Required</th><th scope="col">Unit</th><th scope="col">Note</th></tr></thead><tbody>${gates.map(gate => `<tr>${cell(gate.id)}${cell(gate.status)}${cell(num(gate.measured, gate.reason || "gate unavailable"))}${cell(num(gate.required, "no threshold"))}${cell(text(gate.unit))}${cell(gate.reason ? `${gate.reason} ${gate.note}`.trim() : gate.note)}</tr>`).join("")}</tbody></table>` : `<p class="muted">${NOT_RECORDED}</p>`}`
@@ -200,7 +206,7 @@ export function buildLpbfRunReportHtml(report: LpbfQualificationReport, extras: 
     + `<h3>Worker-reported evidence</h3>${evidenceRows.length ? `<table><thead><tr><th scope="col">Source</th><th scope="col">Same process vector</th><th scope="col">Uncertainty (um)</th><th scope="col">Independent holdout</th></tr></thead><tbody>${evidenceRows.map(item => `<tr>${cell(text(item.source))}${cell(text(item.sameProcessVector))}${cell(item.uncertainty_um === undefined || item.uncertainty_um === null ? NOT_RECORDED : typeof item.uncertainty_um === "object" ? JSON.stringify(item.uncertainty_um) : item.uncertainty_um)}${cell(item.independentHoldout === null ? "Unknown" : item.independentHoldout ? "Declared independent" : "Calibration data")}</tr>`).join("")}</tbody></table>` : `<p>No worker-reported measurement evidence is attached.</p>`}`);
 
   const research = report.researchEvidence;
-  const sources = section("sources", "Sources", `<h3>Build-job assumptions (verbatim)</h3>${buildJob ? list(buildJob.assumptions) : `<p class="muted">Not available - no build-job screening for the current inputs.</p>`}`
+  const sources = section("sources", "Sources", `<h3>Build-job assumptions (verbatim)</h3>${screening ? list(screening.assumptions) : `<p class="muted">Not available - no build-job screening for the current inputs.</p>`}`
     + `<h3>Thermal simulation assumptions (verbatim)</h3>${result ? list(result.assumptions) : `<p class="muted">Not available - ${noResult}.</p>`}`
     + `<h3>Material</h3><dl>${[
       row("Thermal material source", result ? `${result.material.name}: ${result.material.source} (quality: ${result.material.quality})` : `Not available - ${noResult}`),
