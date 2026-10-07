@@ -1,0 +1,21 @@
+case,setting,spot_um,power_W,speed_mm_s,keyhole_depth_um,depth_read_uncertainty_um,power_read_uncertainty_W,speed_read_uncertainty_mm_s,locator,digitized
+zhao20-bare-v222-p82,bare,100,82,222,,,4,4,Fig. 1A boundary marker / Fig. 2A-2B keyhole depth d1 (Fig. 1A open circle; no matching point in Fig. 2A/2B),true
+zhao20-bare-v300-p98,bare,100,98,300,105,6,4,4,Fig. 1A boundary marker / Fig. 2A-2B keyhole depth d1 (Fig. 1A open circle; depth Fig. 2A/2B),true
+zhao20-bare-v350-p113,bare,100,113,350,138,6,4,4,Fig. 1A boundary marker / Fig. 2A-2B keyhole depth d1 (Fig. 1A open circle; depth Fig. 2A/2B),true
+zhao20-bare-v375-p128,bare,100,128,375,128,6,4,4,Fig. 1A boundary marker / Fig. 2A-2B keyhole depth d1 (no open circle in Fig. 1A at this P-V; point present in Fig. 2A (V) and Fig. 2B (P)),true
+zhao20-bare-v425-p143,bare,100,143,425,140,6,4,4,Fig. 1A boundary marker / Fig. 2A-2B keyhole depth d1 (Fig. 1A open circle; depth Fig. 2A/2B),true
+zhao20-bare-v475-p202,bare,100,202,475,196,6,4,4,Fig. 1A boundary marker / Fig. 2A-2B keyhole depth d1 (Fig. 1A open circle; depth Fig. 2A/2B),true
+zhao20-bare-v522-p321,bare,100,321,522,328,6,4,4,Fig. 1A boundary marker / Fig. 2A-2B keyhole depth d1 (Fig. 1A open circle; depth Fig. 2A/2B),true
+zhao20-bare-v550-p381,bare,100,381,550,354,6,4,4,"Fig. 1A boundary marker / Fig. 2A-2B keyhole depth d1 (Fig. 1A open circle, blue-framed boundary image of Fig. 1B at 382 W; depth Fig. 2A/2B)",true
+zhao20-bare-v600-p561,bare,100,561,600,505,6,4,4,Fig. 1A boundary marker / Fig. 2A-2B keyhole depth d1 (Fig. 1A open circle; depth Fig. 2A/2B),true
+zhao20-powder-v200-p82,powder,100,82,200,15,6,4,4,Fig. 1A boundary marker / Fig. 2A-2B keyhole depth d1 (Fig. 1A open square; depth Fig. 2A/2B),true
+zhao20-powder-v300-p98,powder,100,98,300,16,6,4,4,Fig. 1A boundary marker / Fig. 2A-2B keyhole depth d1 (Fig. 1A open square; depth Fig. 2A/2B),true
+zhao20-powder-v350-p113,powder,100,113,350,42,6,4,4,Fig. 1A boundary marker / Fig. 2A-2B keyhole depth d1 (Fig. 1A open square; depth Fig. 2A/2B),true
+zhao20-powder-v425-p143,powder,100,143,425,62,6,4,4,Fig. 1A boundary marker / Fig. 2A-2B keyhole depth d1 (Fig. 1A open square; depth Fig. 2A/2B),true
+zhao20-powder-v500-p202,powder,100,202,500,102,6,4,4,Fig. 1A boundary marker / Fig. 2A-2B keyhole depth d1 (Fig. 1A open square; depth Fig. 2A/2B),true
+zhao20-powder-v522-p262,powder,100,262,522,160,6,4,4,Fig. 1A boundary marker / Fig. 2A-2B keyhole depth d1 (Fig. 1A open square; depth Fig. 2A/2B),true
+zhao20-powder-v548-p322,powder,100,322,548,192,6,4,4,Fig. 1A boundary marker / Fig. 2A-2B keyhole depth d1 (Fig. 1A open square; depth Fig. 2A/2B),true
+zhao20-powder-v573-p381,powder,100,381,573,218,6,4,4,"Fig. 1A boundary marker / Fig. 2A-2B keyhole depth d1 (Fig. 1A open square, red-framed boundary image of Fig. 1B at 382 W; depth Fig. 2A/2B)",true
+zhao20-powder-v599-p442,powder,100,442,599,255,6,4,4,Fig. 1A boundary marker / Fig. 2A-2B keyhole depth d1 (Fig. 1A open square; depth Fig. 2A/2B),true
+zhao20-powder-v625-p500,powder,100,500,625,338,6,4,4,Fig. 1A boundary marker / Fig. 2A-2B keyhole depth d1 (Fig. 1A open square; depth Fig. 2A/2B),true
+zhao20-powder-v650-p560,powder,100,560,650,358,6,4,4,Fig. 1A boundary marker / Fig. 2A-2B keyhole depth d1 (Fig. 1A open square; depth Fig. 2A/2B),true

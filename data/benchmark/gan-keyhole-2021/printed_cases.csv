@@ -1,0 +1,6 @@
+case,material,substrate,power_W,speed_mm_s,spot_um,keyhole_number_printed,regime_reported,stability_reported,locator,digitized
+gan21-al6061-p416-v750,Al6061,bare plate,416,750,88,7.68,"keyhole (Ke > 6.0 rule, p. 2)",,"Fig. 2a/e labels (P, V, Ke); spot from the Fig. 1a legend (Al6061, spot size 88 um)",false
+gan21-al6061-p416-v600,Al6061,bare plate,416,600,88,10.44,"keyhole (Ke > 6.0 rule, p. 2)",stable keyhole (Fig. 1b),"Fig. 2b/f labels; Fig. 1b caption (416 W, 0.6 m/s, stable keyhole)",false
+gan21-al6061-p520-v600,Al6061,bare plate,520,600,88,15.76,"keyhole (Ke > 6.0 rule, p. 2)",,Fig. 2c/g labels,false
+gan21-al6061-p520-v450,Al6061,bare plate,520,450,88,22.93,"keyhole (Ke > 6.0 rule, p. 2)",,Fig. 2d/h labels,false
+gan21-al6061-p520-v300,Al6061,bare plate,520,300,88,,keyhole,chaotic keyhole (Fig. 1c),"Fig. 1c caption (520 W, 0.3 m/s, chaotic keyhole region)",false

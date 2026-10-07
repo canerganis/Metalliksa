@@ -1,0 +1,15 @@
+case,material,power_W,speed_m_min,fibre_diameter_um,focus_diameter_um,dH_hs_printed,delta_star_printed,side_reported,locator,digitized
+hann11-a,AISI 304,900,2,600,960,4.3,1.3,below vaporization enthalpy (Table 3),"Table 3, weld (a) parameters; focus diameter from the p. 2 text (320/640/960 um for 200/400/600 um fibres)",false
+hann11-b,AISI 304,600,3,400,640,4.3,1.4,below vaporization enthalpy (Table 3),"Table 3, weld (b) parameters; focus diameter from the p. 2 text (320/640/960 um for 200/400/600 um fibres)",false
+hann11-c,AISI 304,900,1,600,960,5.8,1.8,below vaporization enthalpy (Table 3),"Table 3, weld (c) parameters; focus diameter from the p. 2 text (320/640/960 um for 200/400/600 um fibres)",false
+hann11-d,AISI 304,300,3,200,320,5.8,1.9,below vaporization enthalpy (Table 3),"Table 3, weld (d) parameters; focus diameter from the p. 2 text (320/640/960 um for 200/400/600 um fibres)",false
+hann11-e,AISI 304,600,1,400,640,6.9,2.3,below vaporization enthalpy (Table 3),"Table 3, weld (e) parameters; focus diameter from the p. 2 text (320/640/960 um for 200/400/600 um fibres)",false
+hann11-f,AISI 304,300,2,200,320,6.9,2.4,below vaporization enthalpy (Table 3),"Table 3, weld (f) parameters; focus diameter from the p. 2 text (320/640/960 um for 200/400/600 um fibres)",false
+hann11-g,AISI 304,1800,2,600,960,8.6,2.2,below vaporization enthalpy (Table 3),"Table 3, weld (g) parameters; focus diameter from the p. 2 text (320/640/960 um for 200/400/600 um fibres)",false
+hann11-h,AISI 304,1200,3,400,640,8.6,2.8,below vaporization enthalpy (Table 3),"Table 3, weld (h) parameters; focus diameter from the p. 2 text (320/640/960 um for 200/400/600 um fibres)",false
+hann11-i,AISI 304,1200,1,400,640,13.7,4.5,"above vaporization enthalpy, keyholing (Table 4)","Table 4, weld (i) parameters; focus diameter from the p. 2 text (320/640/960 um for 200/400/600 um fibres)",false
+hann11-j,AISI 304,600,2,200,320,13.7,4.7,"above vaporization enthalpy, keyholing (Table 4)","Table 4, weld (j) parameters; focus diameter from the p. 2 text (320/640/960 um for 200/400/600 um fibres)",false
+hann11-k,AISI 304,1200,2,200,320,27.4,12.5,"above vaporization enthalpy, keyholing (Table 4)","Table 4, weld (k) parameters; focus diameter from the p. 2 text (320/640/960 um for 200/400/600 um fibres)",false
+hann11-l,AISI 304,1500,3,200,320,28.9,12.6,"above vaporization enthalpy, keyholing (Table 4)","Table 4, weld (l) parameters; focus diameter from the p. 2 text (320/640/960 um for 200/400/600 um fibres)",false
+hann11-m,AISI 304,1500,2,200,320,34.3,14.9,"above vaporization enthalpy, keyholing (Table 4)","Table 4, weld (m) parameters; focus diameter from the p. 2 text (320/640/960 um for 200/400/600 um fibres)",false
+hann11-n,AISI 304,1800,3,200,320,38.6,15.3,"above vaporization enthalpy, keyholing (Table 4)","Table 4, weld (n) parameters; focus diameter from the p. 2 text (320/640/960 um for 200/400/600 um fibres)",false
