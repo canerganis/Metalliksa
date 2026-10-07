@@ -99,11 +99,11 @@ You need Node (>= 22.13) and Python 3.11 or 3.12 with the CPU LPBF baseline. For
 
 ```powershell
 npm ci
-py -3.12 -m pip install --require-hashes -r python/requirements-lpbf-win-py312.lock
+pip install -r python/requirements-lpbf.in   # default runtime: CPU LPBF baseline + CALPHAD (NumPy, SciPy, pydantic, pycalphad)
 npm run dev
 ```
 
-Then open `http://localhost:3000`. The lock's platform and feature scope are documented at its top; see [package.json](package.json) for the available scripts. The guided IN718 demo is available from the LPBF workspace.
+CALPHAD works in that default runtime (pycalphad 0.11.2 is pinned in `python/requirements-lpbf.in` and the platform locks). Only micrograph machine learning and CUDA need the full set in `python/requirements.txt` (it pulls PyTorch; install it only if you want those features).
 
 ## Workstation layout
 

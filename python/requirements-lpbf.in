@@ -3,3 +3,5 @@
 numpy==2.2.6
 scipy==1.15.3
 pydantic==2.13.5
+# CALPHAD studio: MatCalc open TDBs (python/calphad_solver.py, python/databases/)
+pycalphad==0.11.2

@@ -12,7 +12,7 @@ It is a local research workstation for metal additive manufacturing (LPBF therma
 
 ## Commands
 
-Node >= 22.13 (`.nvmrc` is 24), Python 3.11 or 3.12.
+Node >= 22.13 (`.nvmrc` is 24), Python 3.11 or 3.12. The default Python runtime (`python/requirements-lpbf.in`) includes pycalphad, so CALPHAD runs without a second setup; the GPU/ML stack is the separate `python/requirements.txt`.
 
 ```bash
 npm run dev                  # tsx server.ts, Express + Vite middleware, PORT default 3000
