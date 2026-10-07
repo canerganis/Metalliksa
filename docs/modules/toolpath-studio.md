@@ -4,7 +4,7 @@
 > contract and run `python -m module_contract emit` from `python/`. This page restates the contract;
 > it is not a validation report.
 
-- Migration state: contracted; contract version 0.1.0
+- Migration state: contracted; contract version 0.2.0
 - Maturity: Research (product maturity, not the evidence status of a result)
 - Workspace: lpbf; owner: unassigned (needs maintainer)
 - Seed-derived (copied unreviewed from the module seed): label, description, next, maturity
@@ -36,6 +36,27 @@ Undeclared input keys (read by the authority, not describable by the Field schem
 
 Output fields (no status key, so the output carries no evidence status): `total_segments`, `total_build_time_s`, `total_laser_on_time_s`, `duty_cycle_pct`, `total_energy_input_J`, `total_mark_distance_mm`, `total_jump_distance_mm`, `hotspot_count`, `hotspots`, `skywriting_mitigation_active`, `no_cruise_segment_count`, `marking_segment_count`, `laser_never_fires`, `warnings`.
 
+### `adaptive-feedforward`: `POST /api/python/lpbf-adaptive-feedforward`
+
+Authority: lpbf-worker `adaptive-feedforward`; timeout 20000 ms; GPU none; warm false.
+
+| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `format` | Toolpath format | enum ['gcode', 'cli'] | — | — | — | — | gcode | The authority lower-cases the value and parses anything other than 'cli' as G-code. |
+| `defaultPower_W` | Default laser power | number | W | — | — | — | 280.0 | Converted with float(); no bound is enforced. |
+| `defaultSpeed_mms` | Default scan speed | number | mm/s | — | — | — | 1000.0 | Converted with float(); no bound is enforced. |
+| `apply67DegRotation` | Apply 67° interlayer rotation | boolean | — | — | — | — | false | The authority coerces with bool(); the contract accepts only booleans. |
+| `layerIndex` | Layer index | integer | 1 | — | — | 1 | 1 | Converted with int(); no bound is enforced. When apply67DegRotation is true the rotation angle is 67° x layerIndex; otherwise it is 0. |
+| `accelMax_mms2` | Maximum mirror acceleration | number | mm/s^2 | — | — | — | 40000.0 | Converted with float(); no bound is enforced. |
+| `jumpSpeed_mms` | Jump speed | number | mm/s | — | — | — | 3000.0 | Converted with float(); no bound is enforced. |
+
+— = not established from the authority code or a source; the contract states no bound.
+All keys are optional at the authority, which applies the listed default when a key is absent.
+
+Undeclared input keys (read by the authority, not describable by the Field schema): `content`.
+
+Output fields (no status key, so the output carries no evidence status): `total_segments`, `mitigated_hotspots_count`, `overall_energy_reduction_pct`, `rotation_angle_deg`, `total_mitigated_energy_J`, `mitigated_gcode`, `sample_segments`.
+
 ## Evidence
 
 - Ceiling: screening-only (the strongest class this module may claim; not a result status)
@@ -44,7 +65,7 @@ Output fields (no status key, so the output carries no evidence status): `total_
 - Oracle: pending (ceiling capped at screening-only)
 - Oracle scope: none
 - Oracle in CI: none (oracle pending)
-- Note: Emits no evidence status: the output has no status key. Trapezoidal or triangular galvanometer velocity profiles plus the configured scanner delays; a hotspot is a segment whose average linear energy density exceeds 1.25 times the nominal P/v. No thermal field is solved and no in-situ measurement is compared. Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated.
+- Note: Emits no evidence status: the output has no status key. Trapezoidal or triangular galvanometer velocity profiles plus the configured scanner delays; a hotspot is a segment whose average linear energy density exceeds 1.25 times the nominal P/v. No thermal field is solved and no in-situ measurement is compared. Operation adaptive-feedforward (Feed-forward power tab) emits no evidence status either: the output has no status key. Feed-forward power scaling P_nom * min(1, v_peak / v_nom) from the kinematic peak speed of each vector, plus an optional rotation by 67° x layerIndex about the origin; no sensor signal is read, so nothing is closed-loop, and no defect reduction is measured. Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated.
 
 ## Validity domain
 
@@ -58,6 +79,10 @@ Background work: none; resources: fetch.
 
 - content is the raw G-code or CLI text (default empty: zero segments). The Field schema cannot describe free text, so it is recorded as undeclaredInput.
 - No validity domain is declared: no source-backed applicability range is established for the scanner parameters.
+- Contract 0.2.0: the adaptive-feedforward operation was merged in from the former adaptive-mitigation module (now the Feed-forward power tab of this view); the worker route and RPC are unchanged.
+- mitigated_hotspots_count counts laser vectors whose kinematic peak speed is below 0.99 x the nominal speed; it is not the toolpath-studio hotspot definition (average linear energy density above 1.25 x nominal P/v). overall_energy_reduction_pct uses the nominal-speed time of each vector.
+- The cited inventory row named the route /api/python/lpbf-adaptive-mitigation, which does not exist; the Phase 7 wave 2 fix round corrected it to the served /api/python/lpbf-adaptive-feedforward.
+- No validity domain is declared: no source-backed applicability range is established.
 
 ## Source references
 
@@ -71,6 +96,13 @@ Background work: none; resources: fetch.
 - `src/components/LpbfToolpathStudioLab.tsx::LpbfToolpathStudioLab`
 - `src/services/pythonComputationService.ts::simulateToolpathKinematics`
 - `docs/MODULE_EVIDENCE_INVENTORY.md:30#`toolpath-studio` /`
+- `python/lpbf_worker_rpc.py::_rpc_adaptive_feedforward`
+- `python/lpbf_adaptive_feedforward.py::AdaptiveFeedforwardMitigator.compensate_vector`
+- `python/lpbf_adaptive_feedforward.py::AdaptiveFeedforwardMitigator.process_toolpath`
+- `routes/lpbfSimulation.ts:32#/api/python/lpbf-adaptive-feedforward`
+- `src/components/LpbfToolpathStudioLab.tsx::ToolpathFeedforwardPanel`
+- `src/services/pythonComputationService.ts::processAdaptiveFeedforward`
+- `docs/MODULE_EVIDENCE_INVENTORY.md:34#Merged 2026-10-07 | `adaptive-mitigation``
 
 ## Tests
 

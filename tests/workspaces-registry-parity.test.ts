@@ -20,7 +20,6 @@ test('approved functional names retain module identities and conservative condit
   const expected = {
     '3d-distortion-lab': 'LPBF Workflow',
     'lpbf-optimizer': 'Process Parameter Search',
-    'adaptive-mitigation': 'Corner Power Compensation',
     'experimental-validation': 'Melt Pool vs Measurements',
     'alloy-builder': 'Composition Editor',
     'digital-twin': 'Specimen Records',

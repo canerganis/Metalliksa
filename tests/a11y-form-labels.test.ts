@@ -23,7 +23,6 @@ const PINNED_GUARDED = [
   "src/components/3d-distortion-lab/IndustrialLPBFDecisionLab.tsx",
   "src/components/3d-distortion-lab/MeltPool3DCrossSectionLab.tsx",
   "src/components/LpbfBayesianOptimizerLab.tsx",
-  "src/components/LpbfAdaptiveMitigationLab.tsx",
   "src/components/LpbfToolpathStudioLab.tsx",
   "src/components/MetallurgicalUnitConverter.tsx",
   "src/components/PocketCalculators.tsx",

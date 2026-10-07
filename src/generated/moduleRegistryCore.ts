@@ -161,7 +161,7 @@ export const MODULE_REGISTRY_CORE = {
     },
     {
       "id": "toolpath-studio",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "workspace": "lpbf",
       "label": "Scan Path Kinematics",
       "description": "Parses G-code/CLI scan vectors; galvanometer acceleration, mark/jump delays and local line energy; delays are not machine-calibrated.",
@@ -191,39 +191,13 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "lpbf",
       "label": "Defect Fatigue & Crack Growth",
       "description": "Murakami √area fatigue limit, Kitagawa–Takahashi / El-Haddad diagram and Paris-law crack growth from an entered defect size; screening estimates from a steel-derived formula; surface roughness is not modelled; R enters only through an empirical power-law factor on the fatigue limit and the peak stress of the critical crack size, not the Paris growth rate; the per-alloy constants are internal table values without a literature source.",
-      "next": "adaptive-mitigation",
+      "next": "keyhole-raytracing",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
       "view": {
         "component": "src/components/MurakamiFatigueLab.tsx",
         "export": "MurakamiFatigueLab"
-      },
-      "migrationState": "contracted",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "adaptive-mitigation",
-      "version": "0.1.0",
-      "workspace": "lpbf",
-      "label": "Corner Power Compensation",
-      "description": "Open-loop feed-forward: laser power scaled per vector when the vector cannot reach its commanded speed, 67° layer rotation and G-code export; no sensor feedback, no defect prediction.",
-      "next": "keyhole-raytracing",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/LpbfAdaptiveMitigationLab.tsx",
-        "export": "LpbfAdaptiveMitigationLab"
       },
       "migrationState": "contracted",
       "evidence": {

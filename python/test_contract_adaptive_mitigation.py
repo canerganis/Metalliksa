@@ -1,25 +1,47 @@
-"""Contract scaffold for adaptive-mitigation (Phase 7 wave 2).
+"""Contract scaffold for the adaptive-feedforward operation (Phase 7 wave 2; W4-4 merge).
+
+The adaptive-mitigation module was merged into toolpath-studio (Feed-forward power tab): its operation now lives
+as the second operation of the toolpath-studio contract and adaptive-mitigation is no longer a registry id. The
+file keeps its name because CI lists it. The generic contract checks (round trip, defaults, references, oracle)
+run for toolpath-studio in test_contract_toolpath_studio.py.
 
 Run from the python directory:  python -B -m unittest test_contract_adaptive_mitigation
-The oracle is pending, so the oracle test is skipped and the ceiling stays capped.
 """
+import json
 import unittest
 
-from contract_test_support import (PYTHON_DIR, AuthorityReadsMixin, ContractScaffold, function_node, get_conversions,
+import module_registry as mr
+from contract_test_support import (GENERATED_JSON, PYTHON_DIR, AuthorityReadsMixin, function_node, get_conversions,
                                    get_reads, worker_dispatch)
 
 HANDLER = function_node(PYTHON_DIR / "lpbf_worker_rpc.py", "_rpc_adaptive_feedforward")
 GCODE = "G0 X0 Y0\nG1 X10 Y0 S280 F60000\nG1 X10 Y0.1 S280 F60000\nG1 X0 Y0.1 S280 F60000\n"
 
 
-class AdaptiveMitigationContractScaffold(ContractScaffold, AuthorityReadsMixin, unittest.TestCase):
-    MODULE_ID = "adaptive-mitigation"
+class AdaptiveMitigationContractScaffold(AuthorityReadsMixin, unittest.TestCase):
+    MODULE_ID = "toolpath-studio"
 
     @classmethod
     def setUpClass(cls):
-        super().setUpClass()
-        (cls.operation,) = cls.contract.operations
+        cls.contract = next(c for c in mr.build_registry() if c.id == cls.MODULE_ID)
+        cls.operation = next(o for o in cls.contract.operations if o.id == "adaptive-feedforward")
         cls.result = worker_dispatch(cls.operation.authority.worker_method, {"content": GCODE})
+
+    def test_operation_lives_under_toolpath_studio_and_the_old_module_id_is_gone(self):
+        ids = [c.id for c in mr.build_registry()]
+        self.assertNotIn("adaptive-mitigation", ids)
+        self.assertEqual(sum(1 for c in mr.build_registry()
+                             if any(o.id == "adaptive-feedforward" for o in c.operations)), 1)
+        document = json.loads(GENERATED_JSON.read_text(encoding="utf-8"))
+        self.assertNotIn("adaptive-mitigation", [c["id"] for c in document["contracts"]])
+        generated = next(c for c in document["contracts"] if c["id"] == "toolpath-studio")
+        self.assertIn("adaptive-feedforward", [o["id"] for o in generated["operations"]])
+        self.assertEqual(self.operation.route, "/api/python/lpbf-adaptive-feedforward")
+
+    def test_defaults_pass_and_unknown_keys_are_rejected(self):
+        defaults = {f.key: f.default for f in self.operation.input}
+        self.assertEqual(self.operation.input_problems(defaults), [])
+        self.assertTrue(self.operation.input_problems({**defaults, "zzUnknown": 1}))
 
     def test_every_key_the_worker_reads_is_declared(self):
         self.assert_reads_match(self.operation, get_reads(HANDLER, "payload"))

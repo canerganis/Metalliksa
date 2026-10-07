@@ -2,8 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { toolpathDefaultsError, toolpathWarnings, zeroFlagCaveat } from "../src/components/LpbfToolpathStudioLab";
-import { energyChangeLabel, rotationPreviewDeg, rotationPreviewText } from "../src/components/LpbfAdaptiveMitigationLab";
+import { energyChangeLabel, rotationPreviewDeg, rotationPreviewText, toolpathDefaultsError, toolpathWarnings, zeroFlagCaveat } from "../src/components/LpbfToolpathStudioLab";
 import { fatigueCriteriaDisagreement, parisLifeLabel, withRequestInputs } from "../src/components/MurakamiFatigueLab";
 import {
   attachmentDownloadHref,
@@ -27,7 +26,9 @@ test("toolpath studio: zero-cruise skywriting is a warning, never 'sufficient'",
   assert.doesNotMatch(src, /Skywriting or vector length is sufficient/);
   assert.doesNotMatch(src, /triggering local keyhole porosity/);
   assert.doesNotMatch(src, /hotspots\) are mitigated/);
-  assert.doesNotMatch(src, /from 'recharts'/, "unused chart imports removed");
+  // Recharts came back with the merged feed-forward tab: exactly one chart (its power bars), none in the kinematics tab.
+  assert.equal((src.match(/<BarChart /g) ?? []).length, 1, "no unused chart imports; one chart, in the feed-forward panel");
+  assert.ok(src.indexOf("<BarChart ") > src.indexOf("export const ToolpathFeedforwardPanel"), "the chart belongs to the feed-forward panel");
   assert.match(src, /aria-label="Default Laser Power"/);
   assert.match(src, /aria-label="Default Scan Speed"/);
   assert.doesNotMatch(src, /Overheating Hotspots/);
@@ -62,7 +63,7 @@ test("adaptive mitigation: open-loop wording, no machine-readiness or texture cl
   assert.equal(energyChangeLabel(0), "0 % (no vector scaled)");
   assert.equal(energyChangeLabel(12.5), "−12.5 %");
   assert.equal(energyChangeLabel(undefined), "unavailable");
-  const src = read("src/components/LpbfAdaptiveMitigationLab.tsx");
+  const src = read("src/components/LpbfToolpathStudioLab.tsx");
   assert.doesNotMatch(src, /Ready for Machine/);
   assert.doesNotMatch(src, /Suppresses grain texture/);
   assert.doesNotMatch(src, /Energy Peak Reduction/);

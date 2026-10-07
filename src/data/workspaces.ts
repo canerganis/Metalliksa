@@ -41,8 +41,31 @@ export const LAB_MODULES: readonly NavigationModule[] = MODULES.filter(module =>
 export function isModuleId(value: unknown): value is ModuleId {
   return typeof value === 'string' && MODULES.some(module => module.id === value);
 }
+/**
+ * Module ids that were merged into another module. Old links, bookmarks and the saved last-module state keep
+ * working: the id resolves to the target module and, when set, a tab of it. The old id is never a registry id,
+ * so the navigation and the command palette (both derived from the registry) never list it.
+ */
+export const LEGACY_MODULE_REDIRECTS: Readonly<Record<string, { readonly id: ModuleId; readonly tab?: string }>> = {
+  'adaptive-mitigation': { id: 'toolpath-studio', tab: 'feedforward' },
+};
+function legacyRedirect(value: string): { readonly id: ModuleId; readonly tab?: string } | null {
+  return Object.prototype.hasOwnProperty.call(LEGACY_MODULE_REDIRECTS, value) ? LEGACY_MODULE_REDIRECTS[value] : null;
+}
+/** Hash of the module (with its tab) that a merged module id redirects to, or null when the hash is not a legacy link. */
+export function legacyRedirectHash(hash: string): string | null {
+  const value = hash.replace(/^#\/?/, '').split(/[?\/]/)[0];
+  const target = legacyRedirect(value);
+  if (!target) return null;
+  return target.tab ? `#/${target.id}?tab=${target.tab}` : `#/${target.id}`;
+}
+/** Resolves a stored module id (saved last-module state), following a legacy redirect; null when unknown. */
+export function resolveModuleId(value: unknown): ModuleId | null {
+  if (isModuleId(value)) return value;
+  return typeof value === 'string' ? legacyRedirect(value)?.id ?? null : null;
+}
 export function moduleFromHash(hash: string): ModuleId | null {
   const value = hash.replace(/^#\/?/, '').split(/[?\/]/)[0];
-  return isModuleId(value) ? value : null;
+  return resolveModuleId(value);
 }
 export function moduleHash(id: ModuleId): string { return `#/${id}`; }

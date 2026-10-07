@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { ArrowRight, Search } from 'lucide-react';
-import { MATURITY_BADGE_TITLE, MODULES, WORKSPACES, ModuleId, isModuleId, moduleFromHash, moduleHash } from './data/workspaces';
+import { MATURITY_BADGE_TITLE, MODULES, WORKSPACES, ModuleId, isModuleId, legacyRedirectHash, moduleFromHash, moduleHash, resolveModuleId } from './data/workspaces';
 import { WorkspaceVisibility } from './components/WorkspaceVisibility';
 import { ModuleBoundary } from './components/ModuleBoundary';
 import { useMaterialSpecimenStore } from './store/useMaterialSpecimenStore';
@@ -55,7 +55,6 @@ const SolidificationMicrostructureLab = lazy(() => import("./components/Solidifi
 const ExperimentalValidationLab = lazy(() => import("./components/ExperimentalValidationLab").then(m => ({ default: m.ExperimentalValidationLab }))); // Phase 10
 const LpbfToolpathStudioLab = lazy(() => import("./components/LpbfToolpathStudioLab").then(m => ({ default: m.LpbfToolpathStudioLab }))); // Phase 12
 const MurakamiFatigueLab = lazy(() => import("./components/MurakamiFatigueLab").then(m => ({ default: m.MurakamiFatigueLab }))); // Phase 13
-const LpbfAdaptiveMitigationLab = lazy(() => import("./components/LpbfAdaptiveMitigationLab").then(m => ({ default: m.LpbfAdaptiveMitigationLab }))); // Phase 15
 const KeyholeRaytracingLab = lazy(() => import("./components/KeyholeRaytracingLab").then(m => ({ default: m.KeyholeRaytracingLab }))); // Phase 26
 const LpbfDatasetComparisonLab = lazy(() => import("./components/LpbfDatasetComparisonLab").then(m => ({ default: m.LpbfDatasetComparisonLab })));
 const LpbfCalibrationScorecardLab = lazy(() => import("./components/LpbfCalibrationScorecardLab").then(m => ({ default: m.LpbfCalibrationScorecardLab })));
@@ -76,7 +75,15 @@ export const MODULES_WITHOUT_SHARED_SPECIMEN: ReadonlySet<string> = new Set(['lp
 const isHome = (hash: string) => /^(#\/?(home)?)?$/.test(hash);
 const startsHome = () => isHome(window.location.hash) && !/[?&]lpbf(Stage|SubTab)=/.test(window.location.search);
 
+// A merged module's old link (#/adaptive-mitigation) is rewritten in place to the module and tab that replaced it.
+function rewriteLegacyHash(): void {
+  const target = legacyRedirectHash(window.location.hash);
+  if (!target) return;
+  try { window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}${target}`); } catch { /* Navigation still resolves the module. */ }
+}
+
 function initialTab(): ModuleId {
+  rewriteLegacyHash();
   const linked = moduleFromHash(window.location.hash);
   if (linked) return linked;
   const parameters = new URLSearchParams(window.location.search);
@@ -84,7 +91,7 @@ function initialTab(): ModuleId {
   // Explicit unknown routes go to LPBF instead of silently restoring another workspace. The start page
   // (#/home) is not unknown: it keeps the remembered module as its Continue target.
   if (window.location.hash && !isHome(window.location.hash)) return '3d-distortion-lab';
-  try { const saved = localStorage.getItem('metallixa.workspace.module'); if (isModuleId(saved)) return saved; } catch { /* Optional storage. */ }
+  try { const saved = resolveModuleId(localStorage.getItem('metallixa.workspace.module')); if (saved) return saved; } catch { /* Optional storage. */ }
   return '3d-distortion-lab';
 }
 
@@ -149,7 +156,17 @@ export default function App() {
   }
   useEffect(() => {
     void refreshStatus(false);
-    const onHash = () => isHome(window.location.hash) ? showHome() : activate(moduleFromHash(window.location.hash) ?? '3d-distortion-lab');
+    const onHash = () => {
+      if (isHome(window.location.hash)) { showHome(); return; }
+      // Legacy id: rewrite the hash first, then re-announce it so an already mounted module (its tab) follows.
+      if (legacyRedirectHash(window.location.hash)) {
+        rewriteLegacyHash();
+        activate(moduleFromHash(window.location.hash) ?? '3d-distortion-lab');
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+        return;
+      }
+      activate(moduleFromHash(window.location.hash) ?? '3d-distortion-lab');
+    };
     const onNavigate = (event: Event) => {
       const id = (event as CustomEvent<{ tabId?: string }>).detail?.tabId;
       if (id) navigate(id);
@@ -172,7 +189,6 @@ export default function App() {
       case 'experimental-validation': return <ExperimentalValidationLab />; // Phase 10
       case 'toolpath-studio': return <LpbfToolpathStudioLab />; // Phase 12
       case 'murakami-fatigue': return <MurakamiFatigueLab />; // Phase 13
-      case 'adaptive-mitigation': return <LpbfAdaptiveMitigationLab />; // Phase 15
       case 'keyhole-raytracing': return <KeyholeRaytracingLab />; // Phase 26
       case 'lpbf-dataset-comparison': return <LpbfDatasetComparisonLab />;
       case 'lpbf-calibration-scorecard': return <LpbfCalibrationScorecardLab />;
