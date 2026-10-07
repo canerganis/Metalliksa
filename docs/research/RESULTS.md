@@ -144,3 +144,12 @@ pass only on Zhao bare (n = 4). Pass under Fabbro's own Ti-6Al-4V constants on C
 the served depth path in any alloy.
 
 Commits: 5fdbf431 (pre-declaration), 572d2fc7 (module + tests), this file.
+
+## FV evaporation (20 µm, pre-declared gate) — FAIL
+
+Full tables: `fv_evap_report_20um.md`, raw: `fv_evap_results.json` (361 tasks; mesh 10/5 µm tasks stopped by the lead after the gate had already failed on criterion 2, so mesh convergence is not established).
+- Evaporation removes the boiling-stop: evap-sf completed 89/90 cases, ref arms 3–7/90.
+- Depth is far too shallow everywhere except Ghosh IN625: equal-source FV depth bias −6 … −100 %; powder rows mostly show no melt below the plate datum (Hofmann 60 µm 12/12, KU 316L 5/5, KU Ti64 6/6, Totis 9/12). NIST IN718 −66 % (ET −9 %).
+- Surface temperature reaches 1.5 × T_b and 40–48 % of absorbed power leaves as evaporation, far above the 10–20 % of Fabbro's and Gan's energy balances: with a flat free surface the energy cannot go down a vapour cavity, so it evaporates instead.
+- Gate: criterion 2 FAIL (8 sources worse than Rosenthal by > 5 points); NIST bound PASS; energy residual 5.7e-14 PASS.
+- Conclusion: a conduction-only FV with a flat surface cannot predict LPBF depth in transition/keyhole regimes, with or without evaporation. Depth there needs a deforming free surface / vapour cavity (recoil pressure, multiple reflection) — a CFD-class model, out of scope for this branch.

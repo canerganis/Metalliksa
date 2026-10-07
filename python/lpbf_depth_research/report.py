@@ -38,18 +38,21 @@ def load(path):
 
 
 def fv_wd(x, op):
-    """(W, D_plate) of a completed result for an operator; None when not usable."""
+    """(W, D_plate) of a completed result for an operator; None when not run/completed.
+
+    A completed case whose melt envelope never reaches the plate (powder rows: the pool stays inside the slab) has
+    no cell below z = 0, so the pre-declared operator gives depth 0 (relative error -100 %). It is counted, not
+    dropped: dropping it would hide the lack-of-fusion failure of the arm."""
     if not x or x["status"] != "completed":
         return None, None
-    o = x["operators"]
-    if op == "env-mid":
-        e = o["envMid"]
-        return (e["width_um"] or None), (e["depthPlate_um"] if e["reachesPlate"] else None)
-    if op == "env-full":
-        e = o["envFull"]
-        return (e["width_um"] or None), (e["depthPlate_um"] if e["reachesPlate"] else None)
-    e = o["peak"]
-    return (e["width_um"] or None), (e["depthPlate_um"] if e["reachesPlate"] else None)
+    e = x["operators"]["envMid" if op == "env-mid" else "envFull" if op == "env-full" else "peak"]
+    return (e["width_um"] or None), (e["depthPlate_um"] if e["reachesPlate"] else 0.0)
+
+
+def no_plate(x, op):
+    if not x or x["status"] != "completed":
+        return False
+    return not x["operators"]["envMid" if op == "env-mid" else "envFull" if op == "env-full" else "peak"]["reachesPlate"]
 
 
 def kernel_wd(r, k):
@@ -99,28 +102,34 @@ def main():
 
     def per_source_table(arm, op):
         P(f"\n### Arm `{arm}`, operator `{op}`: depth bias/MAPE % [width bias/MAPE %] on the rows the arm completed, kernels on the SAME rows")
-        P("| source | n | FV | ET C0 | Goldak C0 | Rosenthal C0 | best kernel (D MAPE) |")
-        P("|---|---|---|---|---|---|---|")
+        P("(rows completed but with no melt below the plate datum count with depth 0, i.e. -100 %; their number is the "
+          "'no plate fusion' column; rows without all three kernel values are left out of every column and counted as 'no kernel')")
+        P("| source | n | no plate fusion | no kernel | FV | ET C0 | Goldak C0 | Rosenthal C0 | best kernel (D MAPE) | FV on plate-fusion rows only |")
+        P("|---|---|---|---|---|---|---|---|---|---|")
         per_source = {}
         for name, sel in SOURCES:
             rs = [r for r in main_rows if sel(r)]
-            ok = []
+            ok, nk = [], 0
             for r in rs:
                 x = res.get((r["rowId"], arm, 20.0, 600.0))
                 w, dd = fv_wd(x, op)
                 if dd is None:
                     continue
                 if any(kernel_wd(r, k)[1] is None for k in KERNELS):
+                    nk += 1
                     continue
-                ok.append((r, w, dd))
+                ok.append((r, w, dd, no_plate(x, op)))
+            npl = sum(1 for t in ok if t[3])
             if len(ok) < 3:
-                P(f"| {name} | {len(ok)} | too few completed rows | | | | |")
+                P(f"| {name} | {len(ok)} | {npl} | {nk} | too few completed rows | | | | | |")
                 continue
-            dfv = stats([(dd, r["depth_um"]) for r, w, dd in ok]); wfv = stats([(w, r["width_um"]) for r, w, dd in ok])
-            ks = {k: (stats([(kernel_wd(r, k)[1], r["depth_um"]) for r, _, _ in ok]), stats([(kernel_wd(r, k)[0], r["width_um"]) for r, _, _ in ok])) for k in KERNELS}
+            dfv = stats([(dd, r["depth_um"]) for r, w, dd, _ in ok]); wfv = stats([(w, r["width_um"]) for r, w, dd, _ in ok])
+            dfus = stats([(dd, r["depth_um"]) for r, w, dd, np_ in ok if not np_])
+            ks = {k: (stats([(kernel_wd(r, k)[1], r["depth_um"]) for r, _, _, _ in ok]), stats([(kernel_wd(r, k)[0], r["width_um"]) for r, _, _, _ in ok])) for k in KERNELS}
             best = min(KERNELS, key=lambda k: ks[k][0]["mape"])
-            per_source[name] = dict(n=len(ok), fvD=dfv, fvW=wfv, kernels=ks, best=best)
-            P(f"| {name} | {len(ok)} | {fmt(dfv)} [{fmt(wfv)}] | " + " | ".join(f"{fmt(ks[k][0])} [{fmt(ks[k][1])}]" for k in KERNELS) + f" | {best} {ks[best][0]['mape']:.0f} |")
+            per_source[name] = dict(n=len(ok), noPlate=npl, fvD=dfv, fvW=wfv, fvDfusion=dfus, kernels=ks, best=best)
+            P(f"| {name} | {len(ok)} | {npl} | {nk} | {fmt(dfv)} [{fmt(wfv)}] | " + " | ".join(f"{fmt(ks[k][0])} [{fmt(ks[k][1])}]" for k in KERNELS)
+              + f" | {best} {ks[best][0]['mape']:.0f} | {fmt(dfus)} (n{dfus['n'] if dfus else 0}) |")
         return per_source
 
     def pooled(per_source):
@@ -144,18 +153,23 @@ def main():
                   + ", ".join(f"{k} {pl['kD'][k]:.1f}" for k in KERNELS) + f"; best kernel {pl['best']} ({pl['kD'][pl['best']]:.1f}); "
                   + "kernels W " + ", ".join(f"{k} {pl['kW'][k]:.1f}" for k in KERNELS))
 
-    P("\n### Per band (20 um), arm evap-sf vs evap-v40, operator env-mid: D bias/MAPE on rows both completed; ET C0 beside")
-    P("| source | band | n | evap-sf | evap-v40 | ET C0 |")
+    P("\n### Per band (20 um), arm evap-sf vs evap-v40, operator env-mid: D bias/MAPE on rows both completed (no-plate-fusion rows as depth 0; their count per arm in brackets); ET C0 beside")
+    P("| source | band | n | evap-sf [no fusion] | evap-v40 [no fusion] | ET C0 |")
     P("|---|---|---|---|---|---|")
     for name, sel in SOURCES:
         for b in BANDS:
             rs = [r for r in main_rows if sel(r) and r["band"] == b]
-            ok = [(r, fv_wd(res.get((r["rowId"], "evap-sf", 20.0, 600.0)), "env-mid")[1], fv_wd(res.get((r["rowId"], "evap-v40", 20.0, 600.0)), "env-mid")[1])
-                  for r in rs]
-            ok = [t for t in ok if t[1] is not None and t[2] is not None and kernel_wd(t[0], "eagar-tsai")[1] is not None]
+            ok = []
+            for r in rs:
+                xa, xb = res.get((r["rowId"], "evap-sf", 20.0, 600.0)), res.get((r["rowId"], "evap-v40", 20.0, 600.0))
+                a, c = fv_wd(xa, "env-mid")[1], fv_wd(xb, "env-mid")[1]
+                if a is None or c is None or kernel_wd(r, "eagar-tsai")[1] is None:
+                    continue
+                ok.append((r, a, c, no_plate(xa, "env-mid"), no_plate(xb, "env-mid")))
             if not ok:
                 continue
-            P(f"| {name} | {b} | {len(ok)} | {fmt(stats([(a, r['depth_um']) for r, a, _ in ok]))} | {fmt(stats([(c, r['depth_um']) for r, _, c in ok]))} | {fmt(stats([(kernel_wd(r, 'eagar-tsai')[1], r['depth_um']) for r, _, _ in ok]))} |")
+            P(f"| {name} | {b} | {len(ok)} | {fmt(stats([(a, r['depth_um']) for r, a, _, _, _ in ok]))} [{sum(t[3] for t in ok)}] | "
+              f"{fmt(stats([(c, r['depth_um']) for r, _, c, _, _ in ok]))} [{sum(t[4] for t in ok)}] | {fmt(stats([(kernel_wd(r, 'eagar-tsai')[1], r['depth_um']) for r, _, _, _, _ in ok]))} |")
 
     P("\n### Surface temperature and evaporated energy fraction, arm evap-sf (20 um), per source x band: median T_surf/T_b, median evaporated fraction, max")
     for name, sel in SOURCES:
@@ -182,14 +196,18 @@ def main():
         P(f"  {r['rowId']}: cavity {c:.0f} um, melt FV {e:.0f} um, measured melt {r['depth_um']:.0f} um -> {'ok' if okb else 'VIOLATION'}")
 
     P("\n### Cunningham vapour depth vs cavity proxy (arm evap-sf, 20 um)")
+    nn = lambda v: "n/a" if v is None else f"{v:.0f}"
     for r in rows:
-        if r["depth_um"] is not None:
+        if r["depth_um"] is not None and r["vapor_um"] is None:
             continue
         x = res.get((r["rowId"], "evap-sf", 20.0, 600.0))
         if not x or x["status"] != "completed":
             P(f"  {r['rowId']}: {x['status'] if x else 'not run'}"); continue
         c = x["operators"]["cavityMid"]; e = x["operators"]["envMid"]
-        P(f"  {r['rowId']} ({r['band']}): measured vapour {r['vapor_um']:.0f} um; cavity-mid {c['depthPlate_um']:.0f} um; melt env-mid {e['depthPlate_um']:.0f} um; Fabbro F0 {(r.get('fabbro') or {}).get('F0', float('nan')):.0f} um; T_surf/T_b {x['maxSurfaceTemperature_K'] / x['boiling_K']:.2f}")
+        if r["vapor_um"] is None:
+            P(f"  {r['rowId']} ({r['dataset']} {r['band']}): no measured depth in the dataset (width {nn(r['width_um'])} um); FV env-mid W {nn(e['width_um'])} D {nn(e['depthPlate_um'])} um; excluded from every MAPE")
+            continue
+        P(f"  {r['rowId']} ({r['band']}): measured vapour {r['vapor_um']:.0f} um; cavity-mid {nn(c['depthPlate_um'])} um; melt env-mid {nn(e['depthPlate_um'])} um; Fabbro F0 {nn((r.get('fabbro') or {}).get('F0'))} um; T_surf/T_b {x['maxSurfaceTemperature_K'] / x['boiling_K']:.2f}")
 
     P("\n### Mesh convergence, arm evap-sf, operator env-mid (W / D um; cells; wall s)")
     mesh_ok = True
@@ -224,6 +242,9 @@ def main():
                 P(f"    20 -> 10 um at track {tr:g}: dW {100 * abs(eb['width_um'] - ea['width_um']) / max(eb['width_um'], 1e-9):.0f} % dD {100 * abs(eb['depthPlate_um'] - ea['depthPlate_um']) / max(eb['depthPlate_um'], 1e-9):.0f} %")
 
     P("\n### Energy balance (gate 6) and runtime")
+    P("  (the residual is |absorbed - (bottom + convection/radiation + evaporated + stored)| / absorbed with stored = sum of the"
+      " accumulated cell enthalpy; in an explicit enthalpy scheme this closes to round-off by construction, so it checks only"
+      " that the discrete conduction operator and the sink bookkeeping are conservative, not the physics)")
     worst = 0.0
     for a in arms:
         xs = [x for x in d["results"] if x["arm"] == a and x["status"] == "completed"]

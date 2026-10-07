@@ -2,6 +2,12 @@
 """Pre-declared evaluation harness (docs/research/PREDECLARED_fv_evap.md).
 
 usage: python -B lpbf_depth_research/run_eval.py <depth_tdep_results.json> <out.json> [workers=4] [--dry]
+       [--max N] [--purpose main,mesh10,...]
+
+Resume: finished tasks already in <out.json> (same rows) are kept and skipped. --max N processes at most N of
+the remaining tasks in one invocation (so a chunk finishes inside a tool timeout; call again until 'done').
+--purpose restricts one invocation to the listed task purposes (main, mesh10, mesh5, mesh5-repeat20,
+mesh5-repeat10); the task ids and the task list itself never change.
 
 Subset: 3 rows per source x layer x band stratum (first, middle, last by rowId) of the non-balling rows,
 plus 3 Cunningham vapour-depth rows per spot. Arms at 20 um: evap-sf, evap-v40, ref-sf, ref-v40.
@@ -167,6 +173,16 @@ def main():
             out["results"] = list(done.values())
             print(f"resuming, {len(done)} finished tasks kept", flush=True)
     todo = [(t[0], rows[t[1]], t[2], t[3], t[4], t[5]) for t in tasks if t[0] not in done]
+    if "--purpose" in sys.argv:
+        purposes = set(sys.argv[sys.argv.index("--purpose") + 1].split(","))
+        todo = [t for t in todo if t[5] in purposes]
+    remaining = len(todo)
+    if "--max" in sys.argv:
+        todo = todo[:int(sys.argv[sys.argv.index("--max") + 1])]
+    print(f"this invocation: {len(todo)} of {remaining} remaining tasks ({len(tasks)} total)", flush=True)
+    if not todo:
+        print("done" if len(done) == len(tasks) else "nothing selected", flush=True)
+        return
     ctx = multiprocessing.get_context("spawn")
     t0 = time.perf_counter()
     with ctx.Pool(workers) as pool:
@@ -179,9 +195,12 @@ def main():
                      f"Tsurf {res['maxSurfaceTemperature_K']:.0f} evap {res['energy']['evaporatedFraction']:.2f} "
                      f"res {res['energy']['relativeResidual']:.1e}" if res["status"] == "completed" else res.get("message", "")[:90]),
                   flush=True)
-    out["finishedAt"] = time.strftime("%Y-%m-%dT%H:%M:%S")
+    if len(out["results"]) == len(tasks):
+        out["finishedAt"] = time.strftime("%Y-%m-%dT%H:%M:%S")
+        print("done", flush=True)
+    else:
+        print(f"chunk finished, {len(tasks) - len(out['results'])} tasks remaining", flush=True)
     out_path.write_text(json.dumps(out), encoding="utf-8")
-    print("done", flush=True)
 
 
 if __name__ == "__main__":
