@@ -1,0 +1,220 @@
+{
+ "artefact": "data/calibration/lpbf-meltpool-calibration-v2.json",
+ "calibrationId": "lpbf-meltpool-calib-v2-2026-10-07-70bcce98477c",
+ "cells": [
+  {
+   "kernel": "eagar-tsai",
+   "material": "316L Stainless Steel",
+   "quantity": "width",
+   "status": "rejected",
+   "v1Status": "rejected"
+  },
+  {
+   "kernel": "eagar-tsai",
+   "material": "316L Stainless Steel",
+   "quantity": "depth",
+   "status": "rejected",
+   "v1Status": "rejected"
+  },
+  {
+   "kernel": "eagar-tsai",
+   "material": "Ti-6Al-4V",
+   "quantity": "width",
+   "status": "rejected",
+   "v1Status": "rejected"
+  },
+  {
+   "kernel": "eagar-tsai",
+   "material": "Ti-6Al-4V",
+   "quantity": "depth",
+   "status": "rejected",
+   "v1Status": "rejected"
+  },
+  {
+   "kernel": "eagar-tsai",
+   "material": "Inconel 625",
+   "quantity": "width",
+   "status": "rejected",
+   "v1Status": "rejected"
+  },
+  {
+   "kernel": "eagar-tsai",
+   "material": "Inconel 625",
+   "quantity": "depth",
+   "status": "rejected",
+   "v1Status": "rejected"
+  },
+  {
+   "kernel": "eagar-tsai",
+   "material": "Inconel 718",
+   "quantity": "width",
+   "status": "no-data",
+   "v1Status": "no-data"
+  },
+  {
+   "kernel": "eagar-tsai",
+   "material": "Inconel 718",
+   "quantity": "depth",
+   "status": "no-data",
+   "v1Status": "no-data"
+  },
+  {
+   "kernel": "eagar-tsai",
+   "material": "AlSi10Mg",
+   "quantity": "width",
+   "status": "no-data",
+   "v1Status": "no-data"
+  },
+  {
+   "kernel": "eagar-tsai",
+   "material": "AlSi10Mg",
+   "quantity": "depth",
+   "status": "no-data",
+   "v1Status": "no-data"
+  },
+  {
+   "kernel": "goldak",
+   "material": "316L Stainless Steel",
+   "quantity": "width",
+   "status": "rejected",
+   "v1Status": "rejected"
+  },
+  {
+   "kernel": "goldak",
+   "material": "316L Stainless Steel",
+   "quantity": "depth",
+   "status": "within-source-only",
+   "v1Status": "within-source-only"
+  },
+  {
+   "kernel": "goldak",
+   "material": "Ti-6Al-4V",
+   "quantity": "width",
+   "status": "rejected",
+   "v1Status": "rejected"
+  },
+  {
+   "kernel": "goldak",
+   "material": "Ti-6Al-4V",
+   "quantity": "depth",
+   "status": "rejected",
+   "v1Status": "rejected"
+  },
+  {
+   "kernel": "goldak",
+   "material": "Inconel 625",
+   "quantity": "width",
+   "status": "rejected",
+   "v1Status": "rejected"
+  },
+  {
+   "kernel": "goldak",
+   "material": "Inconel 625",
+   "quantity": "depth",
+   "status": "rejected",
+   "v1Status": "rejected"
+  },
+  {
+   "kernel": "goldak",
+   "material": "Inconel 718",
+   "quantity": "width",
+   "status": "no-data",
+   "v1Status": "no-data"
+  },
+  {
+   "kernel": "goldak",
+   "material": "Inconel 718",
+   "quantity": "depth",
+   "status": "no-data",
+   "v1Status": "no-data"
+  },
+  {
+   "kernel": "goldak",
+   "material": "AlSi10Mg",
+   "quantity": "width",
+   "status": "no-data",
+   "v1Status": "no-data"
+  },
+  {
+   "kernel": "goldak",
+   "material": "AlSi10Mg",
+   "quantity": "depth",
+   "status": "no-data",
+   "v1Status": "no-data"
+  },
+  {
+   "kernel": "rosenthal",
+   "material": "316L Stainless Steel",
+   "quantity": "width",
+   "status": "rejected",
+   "v1Status": "rejected"
+  },
+  {
+   "kernel": "rosenthal",
+   "material": "316L Stainless Steel",
+   "quantity": "depth",
+   "status": "rejected",
+   "v1Status": "rejected"
+  },
+  {
+   "kernel": "rosenthal",
+   "material": "Ti-6Al-4V",
+   "quantity": "width",
+   "status": "rejected",
+   "v1Status": "rejected"
+  },
+  {
+   "kernel": "rosenthal",
+   "material": "Ti-6Al-4V",
+   "quantity": "depth",
+   "status": "rejected",
+   "v1Status": "rejected"
+  },
+  {
+   "kernel": "rosenthal",
+   "material": "Inconel 625",
+   "quantity": "width",
+   "status": "rejected",
+   "v1Status": "rejected"
+  },
+  {
+   "kernel": "rosenthal",
+   "material": "Inconel 625",
+   "quantity": "depth",
+   "status": "rejected",
+   "v1Status": "rejected"
+  },
+  {
+   "kernel": "rosenthal",
+   "material": "Inconel 718",
+   "quantity": "width",
+   "status": "no-data",
+   "v1Status": "no-data"
+  },
+  {
+   "kernel": "rosenthal",
+   "material": "Inconel 718",
+   "quantity": "depth",
+   "status": "no-data",
+   "v1Status": "no-data"
+  },
+  {
+   "kernel": "rosenthal",
+   "material": "AlSi10Mg",
+   "quantity": "width",
+   "status": "no-data",
+   "v1Status": "no-data"
+  },
+  {
+   "kernel": "rosenthal",
+   "material": "AlSi10Mg",
+   "quantity": "depth",
+   "status": "no-data",
+   "v1Status": "no-data"
+  }
+ ],
+ "contentSha256": "70bcce98477cb29bad0077d8ed588a4249312d1d6526814113894c14d3cc6744",
+ "evidenceKind": "screening-only",
+ "schema": "lpbf-meltpool-calibration-summary-2",
+ "servedByRuntime": false
+}
