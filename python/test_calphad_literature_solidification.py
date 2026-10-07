@@ -91,9 +91,10 @@ class LiteratureSolidificationTests(unittest.TestCase):
         self.assertEqual(lit, calphad_solver.literature_solidification_block("in718"))
         self.assertEqual(out, before)
         self.assertEqual(calphad_solver.attach_literature_solidification(dict(before), "in625")["literatureSolidification"]["alloyId"], "in625")
-        for aid in (None, "ss316l", "316l"):
+        for aid in (None, "ss316l", "316l", "in718x"):
             self.assertNotIn("literatureSolidification", calphad_solver.attach_literature_solidification(dict(before), aid))
 
+    @unittest.skipIf(HAS_PYCALPHAD and not SLOW, "real CALPHAD solve; set METALLIX_SLOW_TESTS=1")
     def test_316l_and_unknown_ids_get_no_block(self):
         for alloy_id in (None, "ss316l", "in718x"):
             res = run("316L", SS316L, alloy_id)
