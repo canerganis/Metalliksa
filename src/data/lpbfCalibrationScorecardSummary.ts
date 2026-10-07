@@ -56,6 +56,7 @@ function rangeParts(doc: LpbfCalibrationScorecardDocument, label: string, rows: 
   if (s.length === 0) return null;
   const lo = s.reduce((a, b) => (b.v < a.v ? b : a));
   const hi = s.reduce((a, b) => (b.v > a.v ? b : a));
+  if (lo.row === hi.row) return [`${label}: `, ...withWord(mapeNum(doc, lo.row, lo.v), lo.v), ` (${kernelName(lo.row.kernel)}, ${lo.row.material}, the only cell with a value)`];
   return [`${label}: `, ...withWord(mapeNum(doc, lo.row, lo.v), lo.v), " to ", ...withWord(mapeNum(doc, hi.row, hi.v), hi.v)];
 }
 
@@ -78,7 +79,7 @@ function confusionCells(doc: LpbfCalibrationScorecardDocument): ConfusionCell[] 
 export function summarizeScorecard(doc: LpbfCalibrationScorecardDocument): ScorecardSummary {
   const items: SummaryItem[] = [];
   const counts = statusCounts(doc);
-  const enabledNum: SummaryNumber = { display: String(counts.enabled), source: "gateSummary.enabled (count of headline[].status = enabled)" };
+  const enabledNum: SummaryNumber = { display: String(counts.enabled), source: "headline[].status (count of enabled)" };
   const totalNum: SummaryNumber = { display: String(doc.headline.length), source: "headline.length" };
 
   // (a) calibration outcome

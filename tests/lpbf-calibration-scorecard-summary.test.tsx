@@ -29,8 +29,8 @@ test('every number in the summary text equals the record field it cites (1 dp)',
   for (const it of summary.items) {
     for (const n of it.numbers) {
       const path = n.source.split(' (')[0];
-      if (path === 'gateSummary.enabled' || path === 'headline.length') {
-        assert.equal(n.display, String(path === 'headline.length' ? doc.headline.length : (doc.gateSummary.enabled ?? 0)));
+      if (path === 'headline[].status' || path === 'headline.length') {
+        assert.equal(n.display, String(path === 'headline.length' ? doc.headline.length : statusCounts(doc).enabled));
       } else {
         const v = readField(doc, path);
         assert.equal(typeof v, 'number', `${it.id}: ${n.source}`);

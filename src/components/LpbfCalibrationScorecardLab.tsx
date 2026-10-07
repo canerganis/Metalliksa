@@ -303,7 +303,7 @@ function PlainLanguageCard({ doc }: { doc: LpbfCalibrationScorecardDocument }) {
         <p className="mt-1 text-xs text-slate-600">Metric: {SUMMARY_METRIC_DEFINITION} Screening only, not validation.</p>
         <details className="mt-2 text-xs text-slate-700">
           <summary className="cursor-pointer font-medium">What this does not show</summary>
-          <ul className="mt-1 list-disc space-y-1 pl-5">{summary.notes.map((n) => <li key={n}>{n}</li>)}</ul>
+          <ul className="mt-1 list-disc space-y-1 pl-5">{summary.notes.map((n, i) => <li key={`note-${i}`}>{n}</li>)}</ul>
         </details>
         <p className="mt-3 text-xs"><button type="button" className="underline text-sky-800" onClick={jumpToDetails}>Jump to details</button></p>
       </div>
