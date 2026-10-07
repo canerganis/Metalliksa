@@ -39,7 +39,7 @@ served value changes.
 - Every published single track (Hofmann 316L, KU Leuven 316L/Ti64, Totis Ti64, Lane IN625, Trapp 316L, Ghosh IN625, NIST
   AMB2022-03 IN718) is run through the three frozen kernels at the default absorptivity (flat-plate). The relative error
   `pred / meas - 1` is summarised per kernel x alloy family (316L, Ti64, Ni = IN625 + IN718) x screening regime class
-  (conduction / transition / keyhole / all; thresholds 15 / 30 on the normalised enthalpy) x quantity (depth, width) with
+  (conduction / transition / keyhole / all; thresholds 15 / 20 on the normalised enthalpy, the solver's ENTHALPY_TRANSITION / ENTHALPY_KEYHOLE) x quantity (depth, width) with
   equal source weight: median, 10-90 % range, n rows, n parameter sets, sources, per-source medians.
 - Eligibility (pre-declared in `PREDECLARED_depth_bands_machinecal.md`): at least 2 sources, 10 rows and 3 rows per source,
   otherwise `insufficient-data` (n and the sources are still listed). Eligible cells carry the leave-one-source-out

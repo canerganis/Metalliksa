@@ -80,6 +80,8 @@ test("bandSentence and bandShort are byte-identical to the Python golden fixture
 test("regime class thresholds and lookup match the artefact (family, regime class, quantity)", () => {
   assert.equal(bandRegimeClass(14.99), "conduction");
   assert.equal(bandRegimeClass(15), "transition");
+  assert.equal(bandRegimeClass(19.99), "transition");
+  assert.equal(bandRegimeClass(20), "keyhole");
   assert.equal(bandRegimeClass(30), "keyhole");
   const c = bandFor(summary, "eagar-tsai", "316L Stainless Steel", "all", "depth") as BandCell;
   assert.equal(c.n, 731);

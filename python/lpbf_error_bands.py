@@ -8,7 +8,7 @@ that every surface reuses through the committed JSON. Method pre-declared before
 eligibility (>= 2 sources, >= 10 rows, >= 3 rows per source); leave-one-source-out (LOSO) coverage of the 10-90 %
 band; coverage floor 0.70 (nominal 0.80).
 
-What it is not: it reads no solver and edits no physics. It is NOT part of
+What it is not: it runs no solver and edits no physics (it only imports the two regime-threshold constants of lpbf_thermal_solver so its class matches the app's). It is NOT part of
 ``lpbf_simulation.IMPLEMENTATION_SOURCE_FILES`` and no frozen file may import it (test_lpbf_calibration_frozen.py
 scans for that). No code path reads a band to change a label, a verdict or a gate; the evidence kind of every
 result stays ``screening-only`` and ``experimentalValidation`` stays false.
@@ -27,6 +27,8 @@ import json
 import math
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
+
+from lpbf_thermal_solver import ENTHALPY_KEYHOLE, ENTHALPY_TRANSITION  # the app's own classifier constants (read-only)
 
 BANDS_SCHEMA = "lpbf-meltpool-error-bands-1"
 SUMMARY_SCHEMA = "lpbf-meltpool-error-bands-summary-1"
@@ -53,9 +55,10 @@ HONESTY = ("typical error of the frozen screening kernels on published single tr
 BANDS_CONFIG: Dict[str, Any] = {
     "version": "lpbf-meltpool-error-bands-config-1",
     "kernels": list(KERNELS),
-    "thresholds": [15.0, 30.0],
-    "thresholdBasis": "input-only normalised enthalpy at the material default absorptivity; < 15 conduction, < 30 "
-                      "transition, else keyhole (the app's screening class, not the papers' regime definition)",
+    "thresholds": [float(ENTHALPY_TRANSITION), float(ENTHALPY_KEYHOLE)],
+    "thresholdBasis": "input-only normalised enthalpy at the material default absorptivity; thresholds are the solver's "
+                      "ENTHALPY_TRANSITION / ENTHALPY_KEYHOLE (15 / 20): < 15 conduction, < 20 transition, else keyhole "
+                      "(the app's screening class, not the papers' regime definition)",
     "quantiles": [0.1, 0.5, 0.9],
     "relativeError": "pred / meas - 1 (positive = the model over-predicts)",
     "sourceWeight": "equal",

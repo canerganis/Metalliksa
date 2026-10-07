@@ -32,7 +32,7 @@ REVISION = {"gitHead": "synthetic", "gitBranch": "synthetic", "dirtyTrackedPaths
 FIXTURE = REPO_ROOT / "tests" / "fixtures" / "lpbf-error-band-sentences.json"
 
 
-def solved_row(source, i, rel_depth, rel_width=0.0, material="316L Stainless Steel", enthalpy=20.0):
+def solved_row(source, i, rel_depth, rel_width=0.0, material="316L Stainless Steel", enthalpy=17.0):
     meas_d, meas_w = 100.0 + i, 150.0 + i
     return {"source": source, "rowId": f"{source}-{i:03d}", "material": material, "power_W": 200.0 + i,
             "speed_mm_s": 900.0, "beamDiameter_um": 80.0, "preheat_C": 20.0, "layer_um": 0.0,
@@ -41,7 +41,7 @@ def solved_row(source, i, rel_depth, rel_width=0.0, material="316L Stainless Ste
                      for k in eb.KERNELS}}
 
 
-def synthetic(offsets, n=10, spread=0.05, material="316L Stainless Steel", enthalpy=20.0):
+def synthetic(offsets, n=10, spread=0.05, material="316L Stainless Steel", enthalpy=17.0):
     """{source: offset} -> rows whose relative depth error is offset + a deterministic spread of +-spread."""
     rows = []
     for source, off in offsets.items():
@@ -120,6 +120,8 @@ class StatisticsTests(unittest.TestCase):
         self.assertTrue(in718["sentinelOnly"])
         self.assertEqual(eb.regime_class(14.99), "conduction")
         self.assertEqual(eb.regime_class(15.0), "transition")
+        self.assertEqual(eb.regime_class(19.99), "transition")
+        self.assertEqual(eb.regime_class(20.0), "keyhole")
         self.assertEqual(eb.regime_class(30.0), "keyhole")
 
     def test_unresolved_rows_are_excluded_and_counted(self):
@@ -241,7 +243,7 @@ class ToolTests(unittest.TestCase):
         def fake(task):
             r = task["row"]
             f = {"eagar-tsai": 1.1, "goldak": 0.9, "rosenthal": 1.4}[task["kernel"]]
-            return {"W": r["width_um"] * f, "D": r["depth_um"] * f, "status": "computed", "enthalpy": 20.0}
+            return {"W": r["width_um"] * f, "D": r["depth_um"] * f, "status": "computed", "enthalpy": 17.0}
 
         inputs = []
         for src, mat in (("hofmann-316l-2026", "316L Stainless Steel"), ("ku-leuven-316l-2021", "316L Stainless Steel"),
@@ -336,14 +338,15 @@ class CommittedArtefactTests(unittest.TestCase):
         self.assertAlmostEqual(c["sourceMedian"]["ku-leuven-316l-2021"], -0.28, places=2)
         self.assertAlmostEqual(c["sourceMedian"]["trapp-316l-2017"], -0.37, places=2)
 
-    def test_no_depth_cell_reaches_the_coverage_floor_and_four_width_cells_pass(self):
+    def test_no_depth_cell_reaches_the_coverage_floor_and_five_width_cells_pass(self):
         depth_ok = [c for c in self.art["cells"] if c["quantity"] == "depth" and c["state"] == "band"]
         self.assertEqual(depth_ok, [])
         width_ok = sorted((c["kernel"], c["family"], c["regime"]) for c in self.art["cells"]
                           if c["quantity"] == "width" and c["state"] == "band"
                           and c["family"] in ("316L", "Ti64", "Ni"))  # family cells; the per-alloy Ni views repeat them
         self.assertEqual(width_ok, [("eagar-tsai", "316L", "all"), ("eagar-tsai", "316L", "keyhole"),
-                                    ("goldak", "316L", "keyhole"), ("goldak", "Ni", "conduction")])
+                                    ("goldak", "316L", "keyhole"), ("goldak", "Ni", "conduction"),
+                                    ("rosenthal", "316L", "keyhole")])
 
     def test_evidence_fields_and_sources(self):
         self.assertEqual(self.art["evidenceKind"], "screening-only")

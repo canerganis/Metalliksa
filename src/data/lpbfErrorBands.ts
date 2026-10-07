@@ -148,8 +148,8 @@ export const COMMITTED_ERROR_BANDS: ErrorBandsSummary | null = summarizeErrorBan
 // ---------------------------------------------------------------------------------------------
 // lookup
 // ---------------------------------------------------------------------------------------------
-/** Screening regime class of an input from its normalised enthalpy at the default absorptivity (thresholds 15 / 30). */
-export function bandRegimeClass(enthalpy: number, thresholds: readonly [number, number] = [15, 30]): "conduction" | "transition" | "keyhole" {
+/** Screening regime class of an input from its normalised enthalpy at the default absorptivity (thresholds 15 / 20, the solver's ENTHALPY_TRANSITION / ENTHALPY_KEYHOLE). */
+export function bandRegimeClass(enthalpy: number, thresholds: readonly [number, number] = [15, 20]): "conduction" | "transition" | "keyhole" {
   return enthalpy < thresholds[0] ? "conduction" : enthalpy < thresholds[1] ? "transition" : "keyhole";
 }
 
