@@ -1,6 +1,6 @@
 import React from 'react';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { LpbfCalibrationScorecardLab } from '../src/components/LpbfCalibrationScorecardLab';
@@ -102,4 +102,24 @@ test('every source is listed with its role, and catalog sentinels are marked tes
   assert.ok(doc.sources.some((s) => s.role.startsWith('catalog-sentinel')));
   for (const s of doc.sources) assert.ok(html.includes(`data-source="${s.source}"`));
   assert.ok(html.includes('test-only'));
+});
+
+test('the committed real record (if present) validates, renders, and agrees with the hashed artefact on the gate statuses', () => {
+  const view = 'docs/LPBF_CALIBRATION_SCORECARD_2026-10-07.view.json';
+  const artefact = 'data/calibration/lpbf-meltpool-calibration-v1.json';
+  if (!existsSync(view) || !existsSync(artefact)) return;
+  const real = checkedCalibrationScorecard(JSON.parse(readFileSync(view, 'utf8')));
+  const art = JSON.parse(readFileSync(artefact, 'utf8')) as { cells: { kernel: string; material: string; quantity: string; status: string }[]; evidenceKind: string; proposedEvidenceKind: unknown };
+  assert.equal(art.evidenceKind, 'screening-only');
+  assert.equal(art.proposedEvidenceKind, null);
+  assert.equal(real.evidence.labelPromotionProposed, 'none');
+  assert.equal(real.n01.length, 3, 'N01 sentinel for every kernel');
+  for (const row of real.headline) {
+    const cell = art.cells.find((c) => c.kernel === row.kernel && c.material === row.material && c.quantity === row.quantity);
+    assert.ok(cell, `${row.kernel}/${row.material}/${row.quantity}`);
+    assert.equal(cell.status, row.status);
+  }
+  const out = render(real);
+  assert.ok(out.includes('data-testid="n01-card"'));
+  if (statusCounts(real).enabled === 0) assert.ok(out.includes('data-testid="none-enabled"'));
 });
