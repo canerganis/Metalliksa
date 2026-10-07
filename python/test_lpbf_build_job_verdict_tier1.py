@@ -1,6 +1,8 @@
 """Tier 1 build-job verdict policy (python/lpbf_build_job_solver.py compose_verdict).
 
-- The frozen balling flag (steady-Rosenthal L/W > 3.8) makes a verdict risky, never do-not-print.
+- The balling screen (Eagar-Tsai L/W, lpbf_defect_diagnostics.balling_screen; replaced the frozen
+  steady-Rosenthal L/W > 3.8 flag): High (> 5.5) makes a verdict risky, never do-not-print; Moderate
+  (> 3.85) is an advisory with no verdict effect; an unresolved Eagar-Tsai extent makes the gate unavailable.
 - Recoater / distortion flags are alloy/layer advisories independent of P, v and hatch: reported, never
   verdict-driving, never the dominant gate.
 - The keyhole rule (High and dH > 35 -> do-not-print) is unchanged; since the 2026-10-06 tier-2 bump dH uses
@@ -19,6 +21,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 from lpbf_build_job_solver import ADVISORY_GATES, compose_verdict, solve_lpbf_build_job  # noqa: E402
+from lpbf_defect_diagnostics import balling_screen  # noqa: E402
 from lpbf_thermal_solver import calculate_meltpool_physics  # noqa: E402
 
 _BASE = None
@@ -41,7 +44,7 @@ def _clean(**flags):
     assert th["meltPoolGeometry"]["extentStatus"] == "computed", th["meltPoolGeometry"]["extentStatus"]
     dd = th["defectDiagnostics"]
     dd.update(lackOfFusionStatus="Pass", keyholePorosityRisk="Low (Conduction Mode)",
-              ballingInstabilityRisk="Stable Continuous Track (No Balling)",
+              ballingInstabilityRisk="Stable Continuous Track (No Balling)", ballingScreen=STABLE_BALLING,
               recoaterCrashRisk="Low (Safe Thermal Stress Window)", distortionIndex=0.3)
     th["processParameters"]["normalizedEnthalpy"] = 20.0
     for k, v in flags.items():
@@ -52,7 +55,11 @@ def _clean(**flags):
     return th
 
 
-HIGH_BALLING = "High Balling Risk (Capillary Pinch-Off & Humping)"
+# Eagar-Tsai L, W, D (um) chosen to land in each band of the screen.
+STABLE_BALLING = balling_screen(300.0, 100.0, 40.0, "computed")
+MODERATE_BALLING = balling_screen(450.0, 100.0, 40.0, "computed")
+HIGH_BALLING = balling_screen(600.0, 100.0, 40.0, "computed")
+UNRESOLVED_BALLING = balling_screen(80.0, 44.0, 10.0, "width-floor-applied")
 HIGH_RECOATER = "High (Blade Collision & Part Curl Risk)"
 
 
@@ -64,16 +71,48 @@ class ComposeVerdictTier1(unittest.TestCase):
         self.assertEqual(out["advisories"], [])
 
     def test_only_balling_high_is_risky_with_screen_reason(self):
-        out = compose_verdict(_clean(ballingInstabilityRisk=HIGH_BALLING), "in718")
+        out = compose_verdict(_clean(ballingScreen=HIGH_BALLING), "in718")
         self.assertEqual(out["verdict"], "risky")
         gates = {g["id"]: g["status"] for g in out["gates"]}
         self.assertEqual(gates["balling"], "warn")
         self.assertEqual(out["blockingGates"], [])
         self.assertEqual(out["riskGates"], ["balling"])
         self.assertEqual(out["dominantGate"], "balling")
-        line = next(r for r in out["reasons"] if "balling" in r)
-        self.assertIn("steady-Rosenthal aspect-ratio screen", line)
+        line = next(r for r in out["reasons"] if "alling" in r)
+        self.assertIn("Eagar–Tsai L/W = 6.00 (> 5.5", line)
+        self.assertIn("Eagar-Tsai aspect-ratio screen calibrated on Hofmann 2026 316L single tracks", line)
+        self.assertIn("10.5281/zenodo.16979848", line)
         self.assertIn("not a demonstrated balling prediction", line)
+        gate = next(g for g in out["gates"] if g["id"] == "balling")
+        self.assertEqual((gate["measured"], gate["required"]), (6.0, 5.5))
+
+    def test_balling_moderate_is_an_advisory_without_verdict_effect(self):
+        out = compose_verdict(_clean(ballingScreen=MODERATE_BALLING), "in718")
+        self.assertEqual(out["verdict"], "printable")
+        self.assertEqual(out["dominantGate"], "none")
+        self.assertEqual(out["advisoryGates"], ["balling"])
+        self.assertEqual(out["riskGates"], [])
+        (adv,) = out["advisories"]
+        self.assertTrue(adv.startswith("Advisory: balling screen Moderate"), adv)
+        self.assertIn("Gusarov & Smurov 2010", adv)
+        self.assertIn("Yadroitsev et al. 2010", adv)
+        self.assertIn("42/130", adv)
+        self.assertIn("does not change the verdict", adv)
+
+    def test_balling_unavailable_when_eagar_tsai_extent_unresolved(self):
+        out = compose_verdict(_clean(ballingScreen=UNRESOLVED_BALLING), "in718")
+        self.assertEqual(out["verdict"], "printable")
+        gate = next(g for g in out["gates"] if g["id"] == "balling")
+        self.assertEqual(gate["status"], "unavailable")
+        self.assertIn("width-floor-applied", gate["reason"])
+        self.assertEqual(out["unavailableGates"], ["balling"])
+        self.assertTrue(any(r.startswith("Balling screen unavailable") for r in out["reasons"]))
+
+    def test_legacy_risk_string_without_screen_still_maps(self):
+        th = _clean()
+        del th["defectDiagnostics"]["ballingScreen"]
+        th["defectDiagnostics"]["ballingInstabilityRisk"] = "High Balling Risk (legacy)"
+        self.assertEqual(compose_verdict(th, "in718")["riskGates"], ["balling"])
 
     def test_only_recoater_distortion_high_keeps_printable(self):
         out = compose_verdict(_clean(recoaterCrashRisk=HIGH_RECOATER, distortionIndex=7.59), "in718")
@@ -96,7 +135,7 @@ class ComposeVerdictTier1(unittest.TestCase):
 
     def test_advisories_do_not_change_any_verdict(self):
         cases = [
-            {}, {"ballingInstabilityRisk": HIGH_BALLING}, {"lackOfFusionStatus": "Warning"},
+            {}, {"ballingScreen": HIGH_BALLING}, {"ballingScreen": MODERATE_BALLING}, {"lackOfFusionStatus": "Warning"},
             {"lackOfFusionStatus": "Fail"}, {"keyholePorosityRisk": "High", "normalizedEnthalpy": 32.0},
             {"keyholePorosityRisk": "High", "normalizedEnthalpy": 40.0},
         ]
@@ -138,10 +177,15 @@ class In718EndToEnd(unittest.TestCase):
         th = res["thermal"]
         dh = float(th["processParameters"]["normalizedEnthalpy"])
         self.assertEqual(th["meltPoolGeometry"]["extentStatus"], "computed")
-        self.assertGreater(float(th["meltPoolGeometry"]["aspectRatio_L_over_W"]), 3.8)
+        # The Rosenthal L/W (~7.1) no longer drives balling; the Eagar-Tsai L/W (~5.02, Wave B) is Moderate.
+        self.assertGreater(float(th["meltPoolGeometry"]["aspectRatio_L_over_W"]), 5.5)
+        screen = th["defectDiagnostics"]["ballingScreen"]
+        self.assertEqual(screen["band"], "moderate")
+        self.assertAlmostEqual(screen["lengthToWidth"], 5.016, delta=0.01)
         # Balling and recoater/distortion never block; keyhole is the only possible blocking gate here.
         gates = {g["id"]: g["status"] for g in v["gates"]}
-        self.assertEqual(gates["balling"], "warn")
+        self.assertEqual(gates["balling"], "advisory")
+        self.assertNotIn("balling", v["riskGates"])
         self.assertEqual(gates["recoater"], "advisory")
         self.assertEqual(gates["distortion"], "advisory")
         self.assertTrue(set(v["blockingGates"]) <= {"keyhole"}, v["blockingGates"])

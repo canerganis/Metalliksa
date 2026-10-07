@@ -1173,7 +1173,9 @@ def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
     lof = w <= p["hatch_um"] or d <= p["layer_um"]
     kh = d/max(w, 1e-12) > .5
     result["regime"] = "keyhole-risk (screening)" if kh else "conduction assumption"
-    result["mainRisk"] = "lack-of-fusion" if lof else "keyhole (screening)" if kh else "balling (screening)" if length > math.pi*w else "not established"
+    # No balling mainRisk here: the balling screen (lpbf_defect_diagnostics.balling_screen) is calibrated on the
+    # Eagar-Tsai liquidus L/W, which this path does not compute (the former length > pi*W rule is retired).
+    result["mainRisk"] = "lack-of-fusion" if lof else "keyhole (screening)" if kh else "not established"
     result["recommendation"] = "Reduce hatch/layer spacing; verify penetration experimentally." if lof else "Reduce power or increase speed; verify with free-surface CFD." if kh else "Compare with measured tracks before changing process parameters."
     result["riskScope"] = "Geometric screening only; no probability, density qualification or solidification cracking assessment."
     if bare:
@@ -1200,7 +1202,7 @@ def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
             result["regime"] = "conduction assumption; marginal inter-track penetration"
             result["recommendation"] = "Increase power or decrease speed; inter-track penetration does not reach layer thickness."
         elif field_overlap:
-            result["mainRisk"] = "keyhole (screening)" if kh else "balling (screening)" if length > math.pi*w else "continuous inter-track fusion"
+            result["mainRisk"] = "keyhole (screening)" if kh else "continuous inter-track fusion"
             result["regime"] = "conduction assumption; continuous inter-track fusion"
             result["recommendation"] = "Field-resolved inter-track fusion verified; verify penetration and porosity with free-surface CFD or experiment."
         else:

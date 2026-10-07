@@ -13,6 +13,130 @@ from numbers import Real
 
 MODEL_ID = "elliptic-overlap-screening-v1"
 
+# ---------------------------------------------------------------------------------------------
+# Balling / track-instability screen: ONE rule for every LPBF path. It replaces the frozen
+# steady-Rosenthal L/W > 3.8 flag, the L/W > pi rules and the process-map Pe > 4 rule.
+#
+# Input: the liquidus L/W of the Eagar-Tsai kernel (eagar-tsai-v2, beam-size aware; Eagar & Tsai
+# 1983). The point-source Rosenthal L/W depends on P*v only (no beam radius).
+# Moderate: L/W > pi*sqrt(3/2) = 3.847, the critical wavelength / diameter of a segmented liquid
+#   cylinder on a substrate (Gusarov & Smurov 2010, Phys. Procedia 5:381; Yadroitsev et al. 2010,
+#   J. Mater. Process. Technol. 210:1624; written pi*W/L < sqrt(2/3) in Sheikh et al. 2023,
+#   arXiv 2304.04113, Eq. 7; tabulated in Katagiri et al. 2023, Materials 16:1729, Table 2).
+#   A literature bound for a measured track applied to a model L/W: advisory only.
+# High: L/W > 5.5, EMPIRICAL: chosen on the Hofmann et al. 316L single tracks (Zenodo
+#   10.5281/zenodo.16979848, 677 tracks, 216 balling-flagged) with the Wave B (f3ba9896) Eagar-Tsai
+#   geometry, as the lowest 0.5-step L/W edge above which >= 90 % of the tracks balled (69/71 above
+#   5.5; 2 of 461 non-balled tracks flagged). In-sample, one alloy, one machine; the model L/W has
+#   about +-10 % uncertainty (absorptivity is estimated). A 'risky' screen, not a demonstrated
+#   balling prediction, never a do-not-print gate.
+# No depth (D/W) exemption: an earlier D/W < 1.2 clause was fitted to two Hofmann rows. Deep
+# keyhole tracks above 5.5 (KU Leuven, regime-labelled) are already do-not-print by the keyhole gate.
+# ---------------------------------------------------------------------------------------------
+BALLING_SCREEN_MODEL_ID = "eagar-tsai-aspect-balling-screen-v1"
+BALLING_SCREEN_KERNEL = "eagar-tsai-v2"
+BALLING_LW_MODERATE = math.pi * math.sqrt(1.5)
+BALLING_LW_HIGH = 5.5
+BALLING_LW_RELATIVE_UNCERTAINTY = 0.10
+BALLING_SCREEN_SOURCES = (
+    "Gusarov & Smurov 2010, Phys. Procedia 5:381 (doi 10.1016/j.phpro.2010.08.065) and Yadroitsev et al. 2010, "
+    "J. Mater. Process. Technol. 210:1624 (doi 10.1016/j.jmatprotec.2010.05.010): segmented-cylinder bound "
+    "L/W > pi*sqrt(3/2) = 3.85 (Moderate, advisory)",
+    "Hofmann et al. 316L single tracks, Zenodo 10.5281/zenodo.16979848 (Mater. Des. 262 (2026) 115459): "
+    "empirical High threshold L/W > 5.5 on Eagar-Tsai geometry (in-sample, 316L only)",
+    "Eagar & Tsai 1983, Welding J. 62:346s: beam-size-aware kernel that supplies L and W",
+)
+# Hofmann 316L balled fraction per Eagar-Tsai L/W band (Wave B geometry, all layers, 677 tracks).
+BALLING_SCREEN_EVIDENCE = {
+    "dataset": "hofmann-316l-2026 (10.5281/zenodo.16979848), 677 tracks, 216 balling-flagged",
+    "geometryImplementationHash": "f3ba98969a723702d9dbe15ae623d28f1327356441919ffdd6edf4e74a6a150d",
+    "aucEagarTsaiLW": 0.873,
+    "aucEagarTsaiLWBarePlate": 0.984,
+    "bandBalledFraction": {
+        "stable (<= 3.85)": "34/361",
+        "moderate (3.85-4.5]": "42/130",
+        "moderate (4.5-5.5]": "71/115",
+        "high (> 5.5)": "69/71",
+    },
+    "highThresholdCounts": {"truePositive": 69, "falsePositive": 2, "positives": 216, "negatives": 461},
+    "moderateThresholdCounts": {"truePositive": 182, "falsePositive": 134, "positives": 216, "negatives": 461},
+    "limits": ("calibrated in-sample on one 316L dataset (Aconity Midi, 50-140 um spots); not validated for "
+               "IN718, Ti-6Al-4V or other alloys (no labelled balling set in the repo); the NIST AMB2022-03 IN718 "
+               "285 W / 960 mm/s track is continuous at Eagar-Tsai L/W ~5.1 (Moderate); low-energy powder-layer "
+               "balling is not captured by L/W; experimentalValidation=false"),
+}
+
+
+def _balling_band_rate(lw):
+    rates = BALLING_SCREEN_EVIDENCE["bandBalledFraction"]
+    if lw > BALLING_LW_HIGH:
+        return rates["high (> 5.5)"]
+    if lw > 4.5:
+        return rates["moderate (4.5-5.5]"]
+    if lw > BALLING_LW_MODERATE:
+        return rates["moderate (3.85-4.5]"]
+    return rates["stable (<= 3.85)"]
+
+
+def balling_screen(length_um, width_um, depth_um, extent_status):
+    """Eagar-Tsai aspect-ratio balling screen (see the block comment above).
+
+    ``length_um``/``width_um``/``depth_um`` are the liquidus extents of the Eagar-Tsai kernel and
+    ``extent_status`` its meltPoolGeometry.extentStatus. Returns a JSON-compatible dict whose
+    ``band`` is "high", "moderate", "stable", or None when the Eagar-Tsai extent is not a computed
+    isotherm (unavailable: no band is assigned).
+    """
+    status = str(extent_status) if extent_status is not None else "not-reported"
+    lw = None
+    dw = None
+    try:
+        L, Wd, D = float(length_um), float(width_um), float(depth_um)
+        if math.isfinite(L) and math.isfinite(Wd) and math.isfinite(D) and Wd > 0:
+            lw = L / Wd
+            dw = D / Wd
+    except (TypeError, ValueError):
+        pass
+    out = {
+        "modelId": BALLING_SCREEN_MODEL_ID,
+        "kernel": BALLING_SCREEN_KERNEL,
+        "extentStatus": status,
+        "lengthToWidth": None if lw is None else round(lw, 3),
+        "depthToWidth": None if dw is None else round(dw, 3),
+        "band": None,
+        "moderateThreshold": round(BALLING_LW_MODERATE, 3),
+        "highThreshold": BALLING_LW_HIGH,
+        "relativeUncertainty": BALLING_LW_RELATIVE_UNCERTAINTY,
+        "hofmannBalledFractionInBand": None,
+        "verdictEffect": "none",
+        "basis": ("Eagar-Tsai liquidus L/W: High > 5.5 (empirical, Hofmann 316L, in-sample) -> risky; Moderate > "
+                  "pi*sqrt(3/2) = 3.85 (Gusarov & Smurov 2010 / Yadroitsev et al. 2010) -> advisory only"),
+        "sources": list(BALLING_SCREEN_SOURCES),
+        "evidence": BALLING_SCREEN_EVIDENCE,
+        "experimentalValidation": False,
+        "reason": None,
+    }
+    if status != "computed" or lw is None:
+        out["reason"] = (f"Eagar-Tsai melt-pool extent not resolved ({status}); the balling screen is calibrated on a "
+                         "computed Eagar-Tsai liquidus L/W only, so no band is assigned.")
+        return out
+    out["hofmannBalledFractionInBand"] = _balling_band_rate(lw)
+    if lw > BALLING_LW_HIGH:
+        out["band"] = "high"
+        out["verdictEffect"] = "risky"
+        out["reason"] = (f"Eagar-Tsai L/W {lw:.2f} > {BALLING_LW_HIGH} (empirical 316L threshold; "
+                         f"{out['hofmannBalledFractionInBand']} Hofmann tracks above it balled).")
+    elif lw > BALLING_LW_MODERATE:
+        out["band"] = "moderate"
+        out["verdictEffect"] = "advisory"
+        out["reason"] = (f"Eagar-Tsai L/W {lw:.2f} > pi*sqrt(3/2) = {BALLING_LW_MODERATE:.2f} (Gusarov & Smurov / "
+                         f"Yadroitsev segmented-cylinder bound); {out['hofmannBalledFractionInBand']} Hofmann 316L "
+                         "tracks in this band balled. Advisory only.")
+    else:
+        out["band"] = "stable"
+        out["reason"] = (f"Eagar-Tsai L/W {lw:.2f} <= pi*sqrt(3/2) = {BALLING_LW_MODERATE:.2f}; "
+                         f"{out['hofmannBalledFractionInBand']} Hofmann 316L tracks in this band balled.")
+    return out
+
 
 def _dimension(name, value, *, positive=False):
     if isinstance(value, bool) or not isinstance(value, Real):
@@ -34,12 +158,14 @@ def _finite_ratio(numerator, denominator):
     return value if math.isfinite(value) else None
 
 
-def defect_diagnostics(width_um, depth_um, length_um, hatch_um, layer_um, *, aggregate=False):
+def defect_diagnostics(width_um, depth_um, length_um, hatch_um, layer_um, *, aggregate=False, balling=None):
     """Return finite JSON-compatible geometry screens or explicit unresolved values.
 
     Dimensions are micrometres. Invalid inputs raise ValueError. ``aggregate``
     denotes bounding dimensions of multiple tracks, which cannot be screened as
     a single melt-pool cross-section. Null risks mean physically unresolved.
+    ``balling`` is a ``balling_screen()`` result (Eagar-Tsai L/W). Without it no balling
+    risk is assigned: the screen is not calibrated on any other geometry.
     """
     width = _dimension("width_um", width_um)
     depth = _dimension("depth_um", depth_um)
@@ -48,6 +174,8 @@ def defect_diagnostics(width_um, depth_um, length_um, hatch_um, layer_um, *, agg
     layer = _dimension("layer_um", layer_um, positive=True)
     if not isinstance(aggregate, bool):
         raise ValueError("aggregate must be a boolean")
+    if balling is not None and not (isinstance(balling, dict) and balling.get("modelId") == BALLING_SCREEN_MODEL_ID):
+        raise ValueError("balling must be a balling_screen() result")
 
     limitations = [
         "Geometric screening only; no pore probability, porosity estimate, or certification.",
@@ -88,23 +216,21 @@ def defect_diagnostics(width_um, depth_um, length_um, hatch_um, layer_um, *, agg
 
     result["keyhole"]["depthToWidth"] = _finite_ratio(depth, width)
     result["balling"]["lengthToWidth"] = _finite_ratio(length, width)
-    # Balling Instability (Rayleigh-Plateau Criterion)
-    # Cylindrical capillary breakup when length/width > \pi (Yadroitsev continuity threshold)
-    lw_ratio = result["balling"]["lengthToWidth"]
-    if lw_ratio is not None:
-        if lw_ratio > math.pi * 1.2:
-            result["balling"]["risk"] = "high"
-            result["balling"]["reason"] = f"L/W ratio {lw_ratio:.2f} significantly exceeds Rayleigh-Plateau limit (\u03c0). High risk of severe balling and track discontinuity."
-        elif lw_ratio > math.pi:
-            result["balling"]["risk"] = "moderate"
-            result["balling"]["reason"] = f"L/W ratio {lw_ratio:.2f} exceeds \u03c0 limit. Marginal capillary instability expected."
-        else:
-            result["balling"]["risk"] = "low"
-            result["balling"]["reason"] = f"L/W ratio {lw_ratio:.2f} < \u03c0 indicates stable continuous track without capillary breakup."
+    # Balling: one screen (balling_screen, Eagar-Tsai L/W). The L/W of the geometry given here is
+    # reported but not banded: the thresholds are not calibrated on Rosenthal, Goldak or transient L/W.
+    if balling is None:
+        result["balling"]["reason"] = (
+            "No balling risk from this geometry: the balling screen uses the Eagar-Tsai liquidus L/W "
+            f"({BALLING_SCREEN_MODEL_ID}), which was not supplied for this result.")
+    else:
+        result["balling"]["screen"] = balling
+        result["balling"]["risk"] = {"high": "high", "moderate": "moderate", "stable": "low"}.get(balling["band"])
+        result["balling"]["reason"] = balling["reason"]
         result["provenance"].append({
-            "title": "Yadroitsev et al. (2010)",
-            "url": "https://doi.org/10.1016/j.jmatprotec.2010.01.011",
-            "use": "Rayleigh-Plateau capillary instability for single-track balling (L/W > \u03c0).",
+            "title": "Gusarov & Smurov (2010); Yadroitsev et al. (2010); Hofmann et al. 316L tracks (Zenodo 16979848)",
+            "url": "https://doi.org/10.1016/j.jmatprotec.2010.05.010",
+            "use": ("Eagar-Tsai L/W balling screen: Moderate > pi*sqrt(3/2) = 3.85 (literature bound, advisory), "
+                    "High > 5.5 (empirical 316L threshold, in-sample)."),
         })
 
     # Keyhole: no stability/porosity verdict from D/W alone (see limitations; risk stays None). The

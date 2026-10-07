@@ -574,6 +574,8 @@ export interface PythonBayesianOptimizationResult {
   gateSummary?: {
     blockingGateCounts: Record<string, number>;
     riskGateCounts: Record<string, number>;
+    /** Advisory gates (no verdict / score effect), e.g. balling Moderate, recoater, distortion. */
+    advisoryGateCounts?: Record<string, number>;
     inconclusiveExtentStatusCounts: Record<string, number>;
   };
   /** States that the keyhole gate is frozen solver physics, pending a planned bump. */
@@ -593,6 +595,9 @@ export interface PythonBayesianIterationDiagnostics {
   aspectRatio_L_over_W: number | null;
   keyholeRisk: string | null;
   keyholeHigh: boolean | null;
+  /** Balling screen band from the Eagar–Tsai L/W (null: extent not computed). */
+  ballingBand?: "high" | "moderate" | "stable" | null;
+  ballingLengthToWidthEagarTsai?: number | null;
 }
 
 // Phase 8: Solidification Microstructure Lab result type.
@@ -1728,7 +1733,10 @@ export interface PythonLPBFResult {
     hOverW?: number;
     tOverD?: number;
     keyholePorosityRisk: string;
+    /** Band text of the balling screen ("High…", "Moderate…", "Stable…", "Unavailable…"); see ballingScreen. */
     ballingInstabilityRisk: string;
+    /** Eagar–Tsai L/W balling screen (python lpbf_defect_diagnostics.balling_screen). */
+    ballingScreen?: PythonLpbfBallingScreen;
     /** "Not evaluated from scan parameters (...)" since the 2026-10-06 tier-2 bump: the index is alloy/layer/preheat-only. */
     recoaterCrashRisk: string;
     /** Heuristic 0.72·E·α·ΔT/(1−ν) with fixed uncited constants; not a stress solve. */
@@ -1815,7 +1823,29 @@ export interface PythonLPBFResult {
       width_um: number;
       depth_um: number;
     }[];
+    /** The quick grid marks no balling zone (no melt-pool length); balling is screened at the operating point. */
+    ballingNote?: string;
   };
+}
+
+/** python/lpbf_defect_diagnostics.balling_screen: Eagar–Tsai liquidus L/W; High > 5.5 (empirical, Hofmann 316L,
+ *  risky), Moderate > 3.85 (Gusarov & Smurov / Yadroitsev bound, advisory), null band = extent not computed. */
+export interface PythonLpbfBallingScreen {
+  modelId: string;
+  kernel: string;
+  extentStatus: string;
+  lengthToWidth: number | null;
+  depthToWidth: number | null;
+  band: "high" | "moderate" | "stable" | null;
+  moderateThreshold: number;
+  highThreshold: number;
+  relativeUncertainty: number;
+  hofmannBalledFractionInBand: string | null;
+  verdictEffect: "risky" | "advisory" | "none";
+  basis: string;
+  sources: string[];
+  experimentalValidation: false;
+  reason: string | null;
 }
 
 export interface StochasticPropertyStats {

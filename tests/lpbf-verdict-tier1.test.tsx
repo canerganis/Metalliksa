@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
-import { BlockingGateSummary, formatIterationAspectRatio, formatIterationGates } from "../src/components/LpbfBayesianOptimizerLab";
+import { BlockingGateSummary, formatIterationAspectRatio, formatIterationBalling, formatIterationGates } from "../src/components/LpbfBayesianOptimizerLab";
 import { toActionableReason } from "../src/utils/lpbfActionableReasons";
 import type { PythonBayesianOptimizationResult } from "../src/services/pythonComputationService";
 
@@ -66,9 +66,21 @@ test("all-zero run shows the dominant blocking gates and the frozen keyhole note
   assert.match(bare, /Keyhole gate note not returned/);
 });
 
+test("balling cell shows the Eagar–Tsai L/W band and its verdict effect", () => {
+  const d = {
+    blockingGates: [], riskGates: [], advisoryGates: ["balling"], reasons: [], extentStatus: "computed",
+    normalizedEnthalpy: 20, aspectRatio_L_over_W: 7.11, keyholeRisk: null, keyholeHigh: false,
+    ballingBand: "moderate" as const, ballingLengthToWidthEagarTsai: 5.016,
+  };
+  assert.equal(formatIterationBalling(d), "moderate (5.02; advisory)");
+  assert.equal(formatIterationBalling({ ...d, ballingBand: "high", ballingLengthToWidthEagarTsai: 6 }), "high (6.00; risky)");
+  assert.equal(formatIterationBalling({ ...d, ballingBand: null }), "unavailable (Eagar–Tsai extent not computed)");
+  assert.equal(formatIterationBalling({ ...d, ballingBand: undefined }), "not returned");
+});
+
 test("optimizer table has the failing-gate diagnostic columns", () => {
   const src = read("src/components/LpbfBayesianOptimizerLab.tsx");
-  for (const col of ["Gates \\(fail / warn / advisory\\)", "Extent", "ΔH/hₛ", "L/W", "Keyhole flag"]) assert.match(src, new RegExp(`<th scope="col"[^>]*>${col}</th>`), col);
+  for (const col of ["Gates \\(fail / warn / advisory\\)", "Extent", "ΔH/hₛ", "L/W", "Balling \\(Eagar–Tsai L/W\\)", "Keyhole flag"]) assert.match(src, new RegExp(`<th scope="col"[^>]*>${col}</th>`), col);
   assert.ok(src.includes("<BlockingGateSummary result={result} />"));
 });
 
@@ -77,13 +89,21 @@ test("advisory reasons get no P/v action; balling screen still gets its action",
   assert.equal(toActionableReason(adv), adv);
   const rec = "Advisory: recoater crash / part curl flag High (distortion index 7.59 > 2.0) — alloy/layer advisory independent of P, v and hatch.";
   assert.equal(toActionableReason(rec), rec);
-  assert.match(toActionableReason("Plateau–Rayleigh balling screen: L/W = 7.59 (> 3.8) — steady-Rosenthal aspect-ratio screen."), /Action:/);
+  const ball = toActionableReason("Balling screen High: Eagar–Tsai L/W = 6.00 (> 5.5; 69/71 Hofmann 316L tracks above it balled) — Eagar-Tsai aspect-ratio screen.");
+  assert.match(ball, /Action:/);
+  // L/W grows with P·v and shrinks with spot size: the action must not say "raise power".
+  assert.match(ball, /lower the power–speed product/);
+  assert.doesNotMatch(ball, /raise power/);
+  const mod = "Advisory: balling screen Moderate — Eagar–Tsai L/W = 5.02 > 3.85; it does not change the verdict.";
+  assert.equal(toActionableReason(mod), mod);
 });
 
 test("Python advisory / balling-screen wording and the 'advisory' gate status reach the TS contract", () => {
   const py = read("python/lpbf_build_job_solver.py");
   assert.match(py, /ADVISORY_GATES = \("recoater", "distortion"\)/);
   assert.match(py, /not a demonstrated balling/);
+  assert.match(py, /Eagar-Tsai aspect-ratio screen calibrated on Hofmann 2026 316L single tracks/);
+  assert.doesNotMatch(py, /> 3\.8\)/);
   assert.match(py, /rec_status = "advisory" if recoater_high else "pass"/);
   assert.match(py, /dist_status = "advisory" if distortion_high else "pass"/);
   const ts = read("src/services/pythonComputationService.ts");

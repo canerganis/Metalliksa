@@ -18,7 +18,7 @@ import sys
 import math
 sys.path.insert(0, 'python')
 
-from lpbf_defect_diagnostics import defect_diagnostics
+from lpbf_defect_diagnostics import balling_screen, defect_diagnostics
 from lpbf_part_porosity_aggregator import aggregate_part_porosity
 from lpbf_scanner_kinematics import calculate_scanner_kinematics
 
@@ -27,10 +27,11 @@ kinematics = calculate_scanner_kinematics(1000.0, 500.0, 200000.0)
 assert kinematics['warning'] is not None, "Should warn about short track"
 assert kinematics['effectiveMidTrackSpeed_mms'] < 1000.0, "Should not reach nominal speed"
 
-# 2. Defect Diagnostics (Rayleigh-Plateau Balling)
-# L/W > pi
-diag_balling = defect_diagnostics(width_um=50, depth_um=30, length_um=200, hatch_um=40, layer_um=20)
-assert diag_balling['balling']['risk'] in ['high', 'moderate'], "Balling risk should be elevated"
+# 2. Defect Diagnostics (balling): the band comes only from the Eagar-Tsai L/W screen (High > 5.5)
+assert defect_diagnostics(width_um=50, depth_um=30, length_um=200, hatch_um=40, layer_um=20)['balling']['risk'] is None
+screen = balling_screen(300.0, 50.0, 30.0, 'computed')
+diag_balling = defect_diagnostics(width_um=50, depth_um=30, length_um=200, hatch_um=40, layer_um=20, balling=screen)
+assert diag_balling['balling']['risk'] == 'high', "Eagar-Tsai L/W 6 > 5.5 should be High"
 assert diag_balling['balling']['lengthToWidth'] == 4.0
 
 # Keyhole (Wave B LA-3): D/W alone gives no risk verdict; King et al. 2014 sec. 5.2 mode indicator only

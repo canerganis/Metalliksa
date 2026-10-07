@@ -425,7 +425,7 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-emerald-500" /> Conduction</span>
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-rose-500" /> Keyhole</span>
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-amber-500" /> LoF</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-purple-500" /> Balling</span>
+                <span className="flex items-center gap-1">Balling: operating point only (Eagar–Tsai L/W screen)</span>
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-sky-300" /> Literature DOI</span>
               </div>
             </>
@@ -477,7 +477,7 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
                 label="Balling"
                 value={geometryResolved ? shortRisk(thermal.defectDiagnostics.ballingInstabilityRisk) : "unavailable"}
                 ok={!geometryResolved || !thermal.defectDiagnostics.ballingInstabilityRisk.startsWith("High")}
-                hint={geometryResolved ? undefined : extentLabel}
+                hint={geometryResolved ? ballingHint(thermal.defectDiagnostics.ballingScreen) : extentLabel}
               />
             </div>
           ) : (
@@ -671,6 +671,12 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
     </div>
   );
 };
+
+function ballingHint(screen: { lengthToWidth: number | null; band: string | null } | undefined): string {
+  if (!screen) return "Eagar–Tsai L/W screen not returned";
+  if (screen.band === null || screen.lengthToWidth === null) return "Eagar–Tsai extent not computed";
+  return `Eagar–Tsai L/W ${screen.lengthToWidth.toFixed(2)} · High > 5.5 (316L-calibrated) · Moderate advisory > 3.85`;
+}
 
 function shortRisk(s: string): string {
   return s.split(" ")[0] || s;

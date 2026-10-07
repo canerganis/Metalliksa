@@ -32,7 +32,7 @@ export function toActionableReason(line: string): string {
     return `${line} Action: lower laser power or raise scan speed / spot size to drop I₀ and ΔH/hₛ.`;
   }
   if (/balling/i.test(line) || /Plateau/i.test(line)) {
-    return `${line} Action: lower scan speed or raise power to shorten melt-pool L/W.`;
+    return `${line} Action: lower the power–speed product (P·v) or enlarge the spot to shorten the Eagar–Tsai L/W; qualify on single tracks.`;
   }
   if (/Recoater/i.test(line)) {
     return `${line} Action: recoater here is a residual-stress heuristic, not a blade simulation — lower P, raise preheat, or change scan strategy; qualify on coupons.`;

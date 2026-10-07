@@ -284,9 +284,28 @@ PARAMETER_INDEPENDENT_ADVISORY_NOTE = (
     "alloy properties, preheat and layer thickness (not on P, v or hatch); it does not change the verdict"
 )
 BALLING_SCREEN_NOTE = (
-    "steady-Rosenthal aspect-ratio screen (frozen L/W > 3.8 flag), not a demonstrated balling "
-    "prediction; reported as risky, not do-not-print"
+    "Eagar-Tsai aspect-ratio screen calibrated on Hofmann 2026 316L single tracks (Zenodo 10.5281/zenodo.16979848; "
+    "High threshold 5.5 chosen in-sample, model L/W uncertainty about +-10 %); not a demonstrated balling "
+    "prediction for other alloys; reported as risky, never do-not-print"
 )
+BALLING_LITERATURE_NOTE = (
+    "pi*sqrt(3/2) segmented-cylinder bound of Gusarov & Smurov 2010 (doi 10.1016/j.phpro.2010.08.065) and "
+    "Yadroitsev et al. 2010 (doi 10.1016/j.jmatprotec.2010.05.010)"
+)
+_LEGACY_BALLING_BANDS = (("High", "high"), ("Moderate", "moderate"), ("Stable", "stable"))
+
+
+def _balling_screen_of(def_):
+    """(band, screen) from defectDiagnostics.ballingScreen; a thermal dict without the screen (hand-built
+    test input) falls back to the ballingInstabilityRisk prefix with no L/W."""
+    screen = def_.get("ballingScreen")
+    if isinstance(screen, dict):
+        return screen.get("band"), screen
+    risk = str(def_.get("ballingInstabilityRisk") or "")
+    for prefix, band in _LEGACY_BALLING_BANDS:
+        if risk.startswith(prefix):
+            return band, {}
+    return None, {}
 
 
 def compose_verdict(thermal, alloy_id, extras=None):
@@ -318,7 +337,12 @@ def compose_verdict(thermal, alloy_id, extras=None):
     lof_fail = def_["lackOfFusionStatus"] == "Fail"
     lof_warn = def_["lackOfFusionStatus"] == "Warning"
     keyhole_high = str(def_["keyholePorosityRisk"]).startswith("High")
-    balling_high = str(def_["ballingInstabilityRisk"]).startswith("High")
+    balling_band, balling = _balling_screen_of(def_)
+    balling_high = balling_band == "high"
+    balling_moderate = balling_band == "moderate"
+    balling_unavailable = balling_band is None
+    balling_lw = balling.get("lengthToWidth")
+    balling_lw_text = "n/a" if balling_lw is None else f"{float(balling_lw):.2f}"
     # The frozen solver no longer bands recoaterCrashRisk (alloy/layer/preheat-only index, not evaluated
     # from scan parameters); the advisory keeps its documented threshold on the unchanged index.
     recoater_high = float(def_["distortionIndex"]) > 2.0
@@ -343,7 +367,7 @@ def compose_verdict(thermal, alloy_id, extras=None):
     if not geometry_resolved:
         # Geometry-derived flags are heuristic here: neutralise them so no reason, verdict or
         # dominant gate is built from screening-substitute W/D/L numbers.
-        lof_fail = lof_warn = balling_high = False
+        lof_fail = lof_warn = balling_high = balling_moderate = False
 
     reasons = []
     if not geometry_resolved:
@@ -365,10 +389,23 @@ def compose_verdict(thermal, alloy_id, extras=None):
         reasons.append(f"Keyhole porosity: ΔH/hₛ = {dh} (King onset ~30).")
     if balling_high:
         reasons.append(
-            f"Plateau–Rayleigh balling screen: L/W = {thermal['meltPoolGeometry']['aspectRatio_L_over_W']} "
-            f"(> 3.8) — {BALLING_SCREEN_NOTE}."
+            f"Balling screen High: Eagar–Tsai L/W = {balling_lw_text} (> {balling.get('highThreshold', 5.5)}; "
+            f"{balling.get('hofmannBalledFractionInBand') or 'n/a'} Hofmann 316L tracks above it balled) — "
+            f"{BALLING_SCREEN_NOTE}."
+        )
+    elif geometry_resolved and balling_unavailable:
+        reasons.append(
+            f"Balling screen unavailable: Eagar–Tsai melt-pool extent not resolved "
+            f"({balling.get('extentStatus', 'not reported')}); no balling band is assigned and the verdict does "
+            "not include a balling screen."
         )
     advisories = []
+    if balling_moderate:
+        advisories.append(
+            f"Advisory: balling screen Moderate — Eagar–Tsai L/W = {balling_lw_text} > 3.85, the "
+            f"{BALLING_LITERATURE_NOTE}; {balling.get('hofmannBalledFractionInBand') or 'n/a'} Hofmann 316L tracks "
+            "in this band balled (316L only, L/W uncertainty about +-10 %). It does not change the verdict."
+        )
     if recoater_high:
         advisories.append(
             f"Advisory: recoater crash / part curl flag High (distortion index {def_['distortionIndex']} > 2.0) — "
@@ -421,12 +458,13 @@ def compose_verdict(thermal, alloy_id, extras=None):
     tang_r = round(tang, 3)
     tang_status = "fail" if lof_fail else ("warn" if lof_warn else "pass")
     kh_status = "fail" if (keyhole_high and dh > 35) else ("warn" if keyhole_high else "pass")
-    ball_status = "warn" if balling_high else "pass"
+    ball_status = ("warn" if balling_high else "advisory" if balling_moderate
+                   else "unavailable" if balling_unavailable else "pass")
     lit_status = "pass" if win["inside"] else "warn"
     rec_status = "advisory" if recoater_high else "pass"
     dist_status = "advisory" if distortion_high else "pass"
     ds_status = "fail" if downskin_fail else ("warn" if downskin_warn else "pass")
-    aspect = float(thermal["meltPoolGeometry"]["aspectRatio_L_over_W"])
+    ball_measured = None if balling_lw is None else round(float(balling_lw), 2)
 
     gates = [
         _gate(
@@ -464,11 +502,13 @@ def compose_verdict(thermal, alloy_id, extras=None):
         _gate(
             "balling",
             ball_status,
-            aspect,
-            None,
+            ball_measured,
+            5.5,
             "1",
-            "Plateau–Rayleigh aspect L/W from steady Rosenthal length — High (> 3.8) → warn (risky). "
-            "Aspect-ratio screen, not a demonstrated balling prediction.",
+            "Eagar–Tsai liquidus L/W (beam-size aware, whatever kernel the job uses for W/D): High (> 5.5, "
+            "empirical, Hofmann 316L, in-sample) → warn (risky); Moderate (> 3.85 = π√(3/2), Gusarov & Smurov "
+            "2010 / Yadroitsev et al. 2010) → advisory, no verdict effect; Eagar–Tsai extent not computed → "
+            "unavailable. Aspect-ratio screen, not a demonstrated balling prediction.",
         ),
         _gate(
             "literature_pv",
@@ -506,6 +546,11 @@ def compose_verdict(thermal, alloy_id, extras=None):
         ),
     ]
     unavailable_gates = []
+    if geometry_resolved and balling_unavailable:
+        for g in gates:
+            if g["id"] == "balling":
+                g["reason"] = f"Eagar–Tsai melt-pool extent not resolved ({balling.get('extentStatus', 'not reported')})"
+        unavailable_gates.append("balling")
     if not geometry_resolved:
         for g in gates:
             if g["id"] in GEOMETRY_DEPENDENT_GATES:

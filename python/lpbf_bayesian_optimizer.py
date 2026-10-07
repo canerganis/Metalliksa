@@ -132,6 +132,7 @@ def _iteration_diagnostics(vd, th):
     geo = th.get('meltPoolGeometry') or {}
     dd = th.get('defectDiagnostics') or {}
     kh = dd.get('keyholePorosityRisk')
+    bs = dd.get('ballingScreen') if isinstance(dd.get('ballingScreen'), dict) else {}
     return {
         'blockingGates': list(vd.get('blockingGates') or []),
         'riskGates': list(vd.get('riskGates') or []),
@@ -142,23 +143,30 @@ def _iteration_diagnostics(vd, th):
         'aspectRatio_L_over_W': geo.get('aspectRatio_L_over_W'),
         'keyholeRisk': kh,
         'keyholeHigh': None if kh is None else str(kh).startswith('High'),
+        # Balling screen (Eagar-Tsai L/W): 'high' -> risky (warn gate), 'moderate' -> advisory only (scored as
+        # the verdict, i.e. not penalised), None -> Eagar-Tsai extent not computed.
+        'ballingBand': bs.get('band'),
+        'ballingLengthToWidthEagarTsai': bs.get('lengthToWidth'),
     }
 
 
 def _gate_summary(iters):
     """Counts of the gates that held candidates back (fail -> do-not-print, unresolved extent -> inconclusive)."""
-    blocking, risk, inconclusive = {}, {}, {}
+    blocking, risk, advisory, inconclusive = {}, {}, {}, {}
     for it in iters:
         d = it.get('diagnostics') or {}
         for g in d.get('blockingGates') or []:
             blocking[g] = blocking.get(g, 0) + 1
         for g in d.get('riskGates') or []:
             risk[g] = risk.get(g, 0) + 1
+        for g in d.get('advisoryGates') or []:
+            advisory[g] = advisory.get(g, 0) + 1
         if it.get('verdict') == 'inconclusive':
             k = str(d.get('extentStatus') or 'not-reported')
             inconclusive[k] = inconclusive.get(k, 0) + 1
     order = lambda m: dict(sorted(m.items(), key=lambda kv: (-kv[1], kv[0])))
     return {'blockingGateCounts': order(blocking), 'riskGateCounts': order(risk),
+            'advisoryGateCounts': order(advisory),
             'inconclusiveExtentStatusCounts': order(inconclusive)}
 
 

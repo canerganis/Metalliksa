@@ -455,8 +455,8 @@ def check_extent_status_consumers():
     comp = run_job({**common, "laserPower_W": 285, "scanSpeed_mm_s": 960})
     assert comp["thermal"]["meltPoolGeometry"]["extentStatus"] == "computed"
     cv = comp["verdict"]
-    # Tier 1 verdict policy: balling (steady-Rosenthal L/W screen) is risky, not do-not-print;
-    # recoater / distortion are advisories. Since the 2026-10-06 tier-2 bump dH uses the flat-plate
+    # Tier 1 verdict policy: balling (Eagar-Tsai L/W screen; High > 5.5 risky, Moderate > 3.85 advisory)
+    # never blocks; here ET L/W ~5.1 is Moderate -> advisory. Recoater / distortion are advisories. Since the 2026-10-06 tier-2 bump dH uses the flat-plate
     # absorptivity on every machine (~30.8, keyhole warn -> risky), with or without CUDA.
     dh = float(comp["thermal"]["processParameters"]["normalizedEnthalpy"])
     assert comp["thermal"]["processParameters"]["absorptionModel"] == "flat-plate"
@@ -467,11 +467,12 @@ def check_extent_status_consumers():
     assert cv["unavailableGates"] == [] and cv["geometryIndependentFailGates"] == []
     assert {g["id"]: g["status"] for g in cv["gates"]} == {
         "lof_tang": "pass", "lof_wh": "pass", "lof_dt": "pass", "keyhole": "fail" if keyhole_blocks else "warn",
-        "balling": "warn", "literature_pv": "pass", "recoater": "advisory", "distortion": "advisory",
+        "balling": "advisory", "literature_pv": "pass", "recoater": "advisory", "distortion": "advisory",
         "downskin": "pass"}, cv["gates"]
     assert cv["dominantGate"] == "keyhole"
     assert cv["blockingGates"] == (["keyhole"] if keyhole_blocks else []), (dh, cv["blockingGates"])
-    assert cv["advisoryGates"] == ["recoater", "distortion"]
+    assert cv["advisoryGates"] == ["balling", "recoater", "distortion"]
+    assert comp["thermal"]["defectDiagnostics"]["ballingScreen"]["band"] == "moderate"
     assert all("reason" not in g and g["measured"] is not None or g["id"] == "downskin" for g in cv["gates"])
     assert not any("not resolved" in r for r in cv["reasons"])
 
@@ -558,8 +559,9 @@ def main():
         "lpbf-build-job-kinetics-li1998-extent-v7",
         "lpbf-build-job-kinetics-li1998-extent-v8",
         "lpbf-build-job-flat-absorptivity-peak-extent-v10",
+        "lpbf-build-job-waveb-front-field-marangoni-v11",
     ), BUILD_JOB_SOLVER_REVISION
-    assert BUILD_JOB_SOLVER_REVISION == "lpbf-build-job-waveb-front-field-marangoni-v11"
+    assert BUILD_JOB_SOLVER_REVISION == "lpbf-build-job-eagar-tsai-balling-screen-v12"
     assert ti["processSeed"] == 42
     assert ti["scanStrategy"]["id"] == "stripe"
     assert ti["uq"] is None  # lazy default

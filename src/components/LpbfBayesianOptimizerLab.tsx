@@ -44,6 +44,15 @@ export function formatIterationAspectRatio(d: PythonBayesianIterationDiagnostics
   return `${d.aspectRatio_L_over_W} (unavailable: ${d.extentStatus})`;
 }
 
+/** Balling screen cell: Eagar–Tsai L/W and band (High → risky, Moderate → advisory, no score effect). */
+export function formatIterationBalling(d: PythonBayesianIterationDiagnostics | undefined | null): string {
+  if (d == null || d.ballingBand === undefined) return "not returned";
+  if (d.ballingBand === null) return "unavailable (Eagar–Tsai extent not computed)";
+  const lw = d.ballingLengthToWidthEagarTsai == null ? "?" : d.ballingLengthToWidthEagarTsai.toFixed(2);
+  const effect = d.ballingBand === "high" ? "risky" : d.ballingBand === "moderate" ? "advisory" : "no effect";
+  return `${d.ballingBand} (${lw}; ${effect})`;
+}
+
 const formatCounts = (m: Record<string, number> | undefined): string =>
   m && Object.keys(m).length ? Object.entries(m).map(([k, n]) => `${k} ×${n}`).join(", ") : "none";
 
@@ -58,6 +67,7 @@ export const BlockingGateSummary: React.FC<{ result: PythonBayesianOptimizationR
           <p>Do-not-print (failing gate): <span className="font-mono">{formatCounts(s.blockingGateCounts)}</span></p>
           <p>Inconclusive (melt-pool extent not resolved): <span className="font-mono">{formatCounts(s.inconclusiveExtentStatusCounts)}</span></p>
           <p>Risky (warn gate, scored 0.5 when no gate fails): <span className="font-mono">{formatCounts(s.riskGateCounts)}</span></p>
+          <p>Advisory (no verdict or score effect, e.g. balling Moderate): <span className="font-mono">{formatCounts(s.advisoryGateCounts)}</span></p>
         </>
       ) : (
         <p>Gate summary not returned by the backend.</p>
@@ -316,7 +326,7 @@ export const LpbfBayesianOptimizerLab: React.FC = () => {
                   <table className="w-full whitespace-nowrap text-xs text-slate-300 [&_td]:pr-2 [&_th]:pr-2">
                     <caption className="sr-only">Per-iteration parameters, screening verdict, score and the gates behind the verdict</caption>
                     <thead className="text-slate-500 text-left">
-                      <tr><th scope="col">#</th><th scope="col">P (W)</th><th scope="col">v (mm/s)</th><th scope="col">h (µm)</th><th scope="col">t (µm)</th><th scope="col">Verdict</th><th scope="col">Score</th><th scope="col" className="px-1">Gates (fail / warn / advisory)</th><th scope="col">Extent</th><th scope="col">ΔH/hₛ</th><th scope="col">L/W</th><th scope="col">Keyhole flag</th></tr>
+                      <tr><th scope="col">#</th><th scope="col">P (W)</th><th scope="col">v (mm/s)</th><th scope="col">h (µm)</th><th scope="col">t (µm)</th><th scope="col">Verdict</th><th scope="col">Score</th><th scope="col" className="px-1">Gates (fail / warn / advisory)</th><th scope="col">Extent</th><th scope="col">ΔH/hₛ</th><th scope="col">L/W</th><th scope="col">Balling (Eagar–Tsai L/W)</th><th scope="col">Keyhole flag</th></tr>
                     </thead>
                     <tbody>
                       {result.iterations.map(it => {
@@ -342,6 +352,7 @@ export const LpbfBayesianOptimizerLab: React.FC = () => {
                             <td className="font-mono">{d?.extentStatus ?? "not returned"}</td>
                             <td className="font-mono">{d?.normalizedEnthalpy ?? "not returned"}</td>
                             <td className="font-mono">{formatIterationAspectRatio(d)}</td>
+                            <td className="font-mono">{formatIterationBalling(d)}</td>
                             <td>{d == null || d.keyholeHigh == null ? "not returned" : d.keyholeHigh ? "High" : "not High"}</td>
                           </tr>
                         );

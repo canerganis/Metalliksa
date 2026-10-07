@@ -22,7 +22,7 @@ _MAX_ENTRIES = 64
 
 # Increment when build-job solver behavior changes so a warm worker cannot
 # return results produced by an earlier implementation for identical inputs.
-BUILD_JOB_SOLVER_REVISION = "lpbf-build-job-waveb-front-field-marangoni-v11"
+BUILD_JOB_SOLVER_REVISION = "lpbf-build-job-eagar-tsai-balling-screen-v12"
 BUILD_JOB_MODEL_ID = "rosenthal-screening-v1"
 
 

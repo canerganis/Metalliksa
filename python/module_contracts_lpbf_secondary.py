@@ -111,7 +111,7 @@ def build_lpbf_optimizer_contract(seed: Mapping[str, str]) -> ModuleContract:
             "src/services/pythonComputationService.ts:715-727#lpbf-bayesian-optimize",
             "routes/physics.ts:78-79#120000",
             "python/lpbf_bayesian_optimizer.py::run_bayesian_optimization",
-            "python/lpbf_bayesian_optimizer.py:299-326#nIterations",
+            "python/lpbf_bayesian_optimizer.py:307-334#nIterations",
         ),
     )
 

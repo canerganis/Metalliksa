@@ -27,7 +27,7 @@ from in625_thermal_material import LATENT_HEAT_J_KG as IN625_LATENT_HEAT_J_KG
 from goldak_solver import GoldakField, MODEL_ID as GOLDAK_MODEL_ID, seed_goldak_axes
 from solidification_front import MODEL_ID as SOLIDIFICATION_MODEL_ID, evaluate_solidification
 from marangoni_screening import MODEL_ID as MARANGONI_MODEL_ID, marangoni_screening
-from lpbf_defect_diagnostics import defect_diagnostics
+from lpbf_defect_diagnostics import balling_screen, defect_diagnostics
 
 # Secondary alloys only. Ti-6Al-4V, 316L, AlSi10Mg, IN718 live in four_alloy_materials.py.
 SECONDARY_THERMOPHYSICAL_DB = {
@@ -294,6 +294,116 @@ def _axial_peak_x(T_field, lo_x, hi_x, n_scan=97, refine_iters=40):
     return x_peak
 
 
+def _liquidus_extent(T_field, T_liq, x_peak, search_len, search_half_w, search_depth, d_beam, r_beam,
+                     w_analytical, normalized_enthalpy):
+    """Liquidus extents of a conduction field anchored at its axial peak x_peak (moved verbatim out of
+    calculate_meltpool_physics so the Eagar–Tsai balling companion runs the identical search)."""
+    # 4. Liquidus extents from the conduction field (Rosenthal or Eagar–Tsai). The search box is a
+    # seed, not a cap: when the isotherm is still liquid at the box edge the box is doubled (up to
+    # 8x); if it is still at the edge after that the status says so instead of calling it computed.
+    extent_flags = []
+
+    def _extent_with_growth(pred, hi, label):
+        bound = hi
+        for _ in range(3):
+            value = _binary_extent(pred, 0.0, bound)
+            if value < bound:
+                return value
+            bound *= 2.0
+        value = _binary_extent(pred, 0.0, bound)
+        if value >= bound:
+            extent_flags.append(label)
+        return value
+
+    # Probes are anchored at the axial peak x_peak and search outward (front/rear distances are
+    # measured from x_peak); a field that is below liquidus even at its peak is genuinely unmelted.
+    front_rel = _extent_with_growth(lambda s: T_field(x_peak + s, 0.0, 0.0) >= T_liq, search_len,
+                                    "front-search-limit")
+    rear_rel = _extent_with_growth(lambda s: T_field(x_peak - s, 0.0, 0.0) >= T_liq, search_len * 1.4,
+                                   "rear-search-limit")
+    if float(T_field(x_peak, 0.0, 0.0)) >= T_liq:
+        x_front = x_peak + front_rel
+        x_rear = rear_rel - x_peak
+    else:
+        x_front = 0.0
+        x_rear = 0.0
+    half_w = 0.0
+    for frac in (-0.35, -0.15, -0.05, 0.0, 0.35):
+        x_probe = x_peak + (frac * rear_rel if frac <= 0.0 else frac * front_rel)
+        half_w = max(half_w, _extent_with_growth(lambda y, x_probe=x_probe: T_field(x_probe, y, 0.0) >= T_liq,
+                                                 search_half_w, "width-search-limit"))
+    d_iso = 0.0
+    for frac in (-0.25, -0.1, -0.04, 0.0):
+        x_probe = x_peak + frac * rear_rel
+        d_iso = max(d_iso, _extent_with_growth(lambda z, x_probe=x_probe: T_field(x_probe, 0.0, z) >= T_liq,
+                                               search_depth, "depth-search-limit"))
+
+    # The conduction field did not produce a resolvable liquidus extent (no melt or a pool below the
+    # search resolution): the width/depth below are a HEURISTIC substitute, reported as such in
+    # meltPoolGeometry.extentStatus, never presented as a computed isotherm.
+    extent_status = "computed"
+    extent_note = None
+    if half_w < 8e-6 or d_iso < 3e-6:
+        extent_status = "heuristic-width-fallback"
+        extent_note = ("The conduction field has no resolvable liquidus extent at these inputs (half-width "
+                       f"{half_w*1e6:.1f} um, depth {d_iso*1e6:.1f} um before substitution); width/depth/length are "
+                       "the screening heuristic sqrt(w_analytical^2 + (0.65 d_beam)^2) and its depth ratio, not a "
+                       "computed isotherm. Treat this geometry as not resolved.")
+        w_fb = math.sqrt(max(1e-12, w_analytical ** 2 + (0.65 * d_beam) ** 2))
+        half_w = max(half_w, w_fb / 2.0)
+        d_iso = max(d_iso, half_w * (0.38 + 0.10 * min(1.0, normalized_enthalpy / ENTHALPY_TRANSITION)))
+        if x_front < 1e-6:
+            x_front = r_beam * 0.45
+        if x_rear < 1e-6:
+            x_rear = max(w_fb, half_w * 2.2)
+
+    if extent_status == "computed" and 2.0 * half_w < d_beam * 0.55:
+        extent_status = "width-floor-applied"
+        extent_note = (f"The computed liquidus half-width ({half_w*1e6:.1f} um) is below the screening width floor "
+                       f"0.55 x beam diameter ({0.55*d_beam*1e6:.1f} um); the reported width is the floor, not the "
+                       "computed isotherm. Treat the width as not resolved.")
+    if extent_status == "computed" and extent_flags:
+        extent_status = "search-box-limited"
+        extent_note = ("The liquidus isotherm was still liquid at the edge of the (8x-grown) search box for: "
+                       + ", ".join(sorted(set(extent_flags)))
+                       + "; the reported extent is a lower bound, not a converged isotherm length.")
+    w_melt_m = max(2.0 * half_w, d_beam * 0.55)
+    d_iso = max(d_iso, 4e-6)
+    # Uncapped Rosenthal length (no Peclet fake ceiling). Floor only for numerical sanity.
+    l_melt_m = max(x_front + x_rear, d_beam)
+    x_front = max(x_front, r_beam * 0.35)
+    x_rear = max(r_beam * 0.8, l_melt_m - x_front)
+    l_melt_m = x_front + x_rear
+    return {"extent_status": extent_status, "extent_note": extent_note, "w_melt_m": w_melt_m, "d_iso": d_iso,
+            "x_front": x_front, "x_rear": x_rear, "l_melt_m": l_melt_m}
+
+
+def _eagar_tsai_companion(T_preheat, P_laser, eta_base, k_th, alpha_th, rho, cp, r_beam, d_beam, v_scan, T_liq,
+                          fabbro_depth_m, normalized_enthalpy):
+    """Eagar–Tsai liquidus L/W/D for the balling screen when the requested kernel is not Eagar–Tsai.
+
+    Same inputs as an eagar-tsai run of calculate_meltpool_physics (absorbed power eta_base*P, no latent
+    factor, mushy-blend k/alpha, Fabbro depth floor) and the same evaluation sequence on a fresh field, so
+    the numbers equal that run's meltPoolGeometry. Returns (length_um, width_um, depth_um, extentStatus).
+    """
+    P_geom = eta_base * P_laser
+    field = EagarTsaiField(T_preheat, P_geom, k_th, alpha_th, r_beam).bind_speed(v_scan)
+    T_field = field.temperature_C
+    denom_thermal = rho * cp * max(50.0, T_liq - T_preheat) * v_scan
+    w_analytical = math.sqrt(max(1e-12, (8.0 / (math.pi * math.e)) * (P_geom / denom_thermal)))
+    search_half_w = max(d_beam * 1.8, w_analytical * 1.8, 50e-6)
+    search_len = max(d_beam * 3.0, w_analytical * 4.5, 80e-6)
+    search_depth = max(d_beam * 2.2, w_analytical * 2.0, 40e-6, fabbro_depth_m * 1.35)
+    T_field(0.0, 0.0, 0.0)
+    x_peak = _axial_peak_x(T_field, -search_len * 1.4 * 8.0, search_len)
+    T_field(x_peak, 0.0, 0.0)
+    ext = _liquidus_extent(T_field, T_liq, x_peak, search_len, search_half_w, search_depth, d_beam, r_beam,
+                           w_analytical, normalized_enthalpy)
+    d_iso = max(ext["d_iso"], 4e-6)
+    d_melt_m = d_iso + max(0.0, fabbro_depth_m - d_iso)
+    return ext["l_melt_m"] * 1e6, ext["w_melt_m"] * 1e6, d_melt_m * 1e6, ext["extent_status"]
+
+
 def _normalize_heat_source(heat_source: str | None) -> str:
     if heat_source is None or (isinstance(heat_source, str) and not heat_source.strip()):
         return "rosenthal"
@@ -515,82 +625,16 @@ def calculate_meltpool_physics(
     x_peak = _axial_peak_x(T_field, -search_len * 1.4 * 8.0, search_len)
     t_axial_max_C = max(t_peak_C, float(T_field(x_peak, 0.0, 0.0)))
 
-    # 4. Liquidus extents from the conduction field (Rosenthal or Eagar–Tsai). The search box is a
-    # seed, not a cap: when the isotherm is still liquid at the box edge the box is doubled (up to
-    # 8x); if it is still at the edge after that the status says so instead of calling it computed.
-    extent_flags = []
-
-    def _extent_with_growth(pred, hi, label):
-        bound = hi
-        for _ in range(3):
-            value = _binary_extent(pred, 0.0, bound)
-            if value < bound:
-                return value
-            bound *= 2.0
-        value = _binary_extent(pred, 0.0, bound)
-        if value >= bound:
-            extent_flags.append(label)
-        return value
-
-    # Probes are anchored at the axial peak x_peak and search outward (front/rear distances are
-    # measured from x_peak); a field that is below liquidus even at its peak is genuinely unmelted.
-    front_rel = _extent_with_growth(lambda s: T_field(x_peak + s, 0.0, 0.0) >= T_liq, search_len,
-                                    "front-search-limit")
-    rear_rel = _extent_with_growth(lambda s: T_field(x_peak - s, 0.0, 0.0) >= T_liq, search_len * 1.4,
-                                   "rear-search-limit")
-    if float(T_field(x_peak, 0.0, 0.0)) >= T_liq:
-        x_front = x_peak + front_rel
-        x_rear = rear_rel - x_peak
-    else:
-        x_front = 0.0
-        x_rear = 0.0
-    half_w = 0.0
-    for frac in (-0.35, -0.15, -0.05, 0.0, 0.35):
-        x_probe = x_peak + (frac * rear_rel if frac <= 0.0 else frac * front_rel)
-        half_w = max(half_w, _extent_with_growth(lambda y, x_probe=x_probe: T_field(x_probe, y, 0.0) >= T_liq,
-                                                 search_half_w, "width-search-limit"))
-    d_iso = 0.0
-    for frac in (-0.25, -0.1, -0.04, 0.0):
-        x_probe = x_peak + frac * rear_rel
-        d_iso = max(d_iso, _extent_with_growth(lambda z, x_probe=x_probe: T_field(x_probe, 0.0, z) >= T_liq,
-                                               search_depth, "depth-search-limit"))
-
-    # The conduction field did not produce a resolvable liquidus extent (no melt or a pool below the
-    # search resolution): the width/depth below are a HEURISTIC substitute, reported as such in
-    # meltPoolGeometry.extentStatus, never presented as a computed isotherm.
-    extent_status = "computed"
-    extent_note = None
-    if half_w < 8e-6 or d_iso < 3e-6:
-        extent_status = "heuristic-width-fallback"
-        extent_note = ("The conduction field has no resolvable liquidus extent at these inputs (half-width "
-                       f"{half_w*1e6:.1f} um, depth {d_iso*1e6:.1f} um before substitution); width/depth/length are "
-                       "the screening heuristic sqrt(w_analytical^2 + (0.65 d_beam)^2) and its depth ratio, not a "
-                       "computed isotherm. Treat this geometry as not resolved.")
-        w_fb = math.sqrt(max(1e-12, w_analytical ** 2 + (0.65 * d_beam) ** 2))
-        half_w = max(half_w, w_fb / 2.0)
-        d_iso = max(d_iso, half_w * (0.38 + 0.10 * min(1.0, normalized_enthalpy / ENTHALPY_TRANSITION)))
-        if x_front < 1e-6:
-            x_front = r_beam * 0.45
-        if x_rear < 1e-6:
-            x_rear = max(w_fb, half_w * 2.2)
-
-    if extent_status == "computed" and 2.0 * half_w < d_beam * 0.55:
-        extent_status = "width-floor-applied"
-        extent_note = (f"The computed liquidus half-width ({half_w*1e6:.1f} um) is below the screening width floor "
-                       f"0.55 x beam diameter ({0.55*d_beam*1e6:.1f} um); the reported width is the floor, not the "
-                       "computed isotherm. Treat the width as not resolved.")
-    if extent_status == "computed" and extent_flags:
-        extent_status = "search-box-limited"
-        extent_note = ("The liquidus isotherm was still liquid at the edge of the (8x-grown) search box for: "
-                       + ", ".join(sorted(set(extent_flags)))
-                       + "; the reported extent is a lower bound, not a converged isotherm length.")
-    w_melt_m = max(2.0 * half_w, d_beam * 0.55)
-    d_iso = max(d_iso, 4e-6)
-    # Uncapped Rosenthal length (no Peclet fake ceiling). Floor only for numerical sanity.
-    l_melt_m = max(x_front + x_rear, d_beam)
-    x_front = max(x_front, r_beam * 0.35)
-    x_rear = max(r_beam * 0.8, l_melt_m - x_front)
-    l_melt_m = x_front + x_rear
+    # 4. Liquidus extents from the conduction field (Rosenthal, Eagar–Tsai or Goldak): _liquidus_extent.
+    ext = _liquidus_extent(T_field, T_liq, x_peak, search_len, search_half_w, search_depth, d_beam, r_beam,
+                           w_analytical, normalized_enthalpy)
+    extent_status = ext["extent_status"]
+    extent_note = ext["extent_note"]
+    w_melt_m = ext["w_melt_m"]
+    d_iso = ext["d_iso"]
+    x_front = ext["x_front"]
+    x_rear = ext["x_rear"]
+    l_melt_m = ext["l_melt_m"]
 
     # Keyhole extra: Fabbro on Melt Pool lab fields. The Rosenthal Build Job increment below is an
     # uncited screening heuristic: King et al. 2014 supply only the 15/30 dH/hs thresholds it is
@@ -684,14 +728,27 @@ def calculate_meltpool_physics(
         lof_risk = "Full Fusion Bonding (Tang (h/W)^2+(t/D)^2 ≤ 0.80)"
         lof_status = "Pass"
 
-    # B) Plateau-Rayleigh Capillary Balling Defect (L / W > pi)
+    # B) Balling / track-instability screen (lpbf_defect_diagnostics.balling_screen): Eagar–Tsai liquidus
+    # L/W whatever kernel was requested (the point-source Rosenthal L/W has no beam radius). Replaces the
+    # frozen steady-Rosenthal L/W > 3.8 flag (planned bump on top of Wave B f3ba9896).
     aspect_L_over_W = l_melt_um / max(1.0, w_melt_um)
-    if aspect_L_over_W > 3.8:
-        balling_risk = "High Balling Risk (Capillary Pinch-Off & Humping)"
-    elif aspect_L_over_W > 3.1416:
-        balling_risk = "Moderate (Melt Bead Undulation)"
+    if source == "eagar-tsai":
+        et_extent = (l_melt_um, w_melt_um, d_melt_um, extent_status)
     else:
-        balling_risk = "Stable Continuous Track (No Balling)"
+        et_extent = _eagar_tsai_companion(T_preheat, P_laser, eta_base, k_th, alpha_th, rho, cp, r_beam, d_beam,
+                                          v_scan, T_liq, fabbro["depth_m"], normalized_enthalpy)
+    balling = balling_screen(*et_extent)
+    if balling["band"] == "high":
+        balling_risk = (f"High Balling Risk (Eagar-Tsai L/W {balling['lengthToWidth']:.2f} > "
+                        f"{balling['highThreshold']}; empirical 316L-calibrated screen)")
+    elif balling["band"] == "moderate":
+        balling_risk = (f"Moderate (Eagar-Tsai L/W {balling['lengthToWidth']:.2f} > {balling['moderateThreshold']:.2f}, "
+                        "Gusarov/Yadroitsev bound; advisory)")
+    elif balling["band"] == "stable":
+        balling_risk = (f"Stable Continuous Track (Eagar-Tsai L/W {balling['lengthToWidth']:.2f} <= "
+                        f"{balling['moderateThreshold']:.2f})")
+    else:
+        balling_risk = f"Unavailable (Eagar-Tsai extent {balling['extentStatus']}; no balling band)"
 
     # C) Powder Denudation & Spatter Entrainment Width
     # Denudation width w_denude ~ W * (1 + 0.45 * (P_recoil / 50))
@@ -871,10 +928,8 @@ def calculate_meltpool_physics(
             if tang_pt > 1.0:
                 pt_regime = "Lack of Fusion Zone"
                 color_code = "#f59e0b"  # Amber
-            # Check Balling
-            elif (w_um * (1.6 + 0.55 * min(6.0, (v_m * w_m) / (2.0 * alpha_th)))) / max(1.0, w_um) > 3.8:
-                pt_regime = "Balling Instability Zone"
-                color_code = "#a855f7"  # Purple
+            # No balling cell: the balling screen needs the Eagar–Tsai liquidus L/W, which this quick grid
+            # does not compute (the former (1.6 + 0.55 min(6, Pe)) > 3.8 rule was Pe > 4, uncited).
 
             process_map_grid.append({
                 "power_W": int(p_val),
@@ -980,7 +1035,7 @@ def calculate_meltpool_physics(
             "powderDenudationWidth_um": round(denudation_width_um, 1)
         },
         "geometricDefectScreen": defect_diagnostics(
-            w_melt_um, d_melt_um, l_melt_um, float(hatch_spacing_um), float(layer_thickness_um)),
+            w_melt_um, d_melt_um, l_melt_um, float(hatch_spacing_um), float(layer_thickness_um), balling=balling),
         "defectDiagnostics": {
             "lackOfFusionStatus": lof_status,
             "lackOfFusionRisk": lof_risk,
@@ -990,6 +1045,7 @@ def calculate_meltpool_physics(
             "tOverD": round(t_over_d, 3),
             "keyholePorosityRisk": keyhole_porosity_risk,
             "ballingInstabilityRisk": balling_risk,
+            "ballingScreen": balling,
             "recoaterCrashRisk": recoater_risk,
             "effectiveResidualStress_MPa": round(effective_residual_stress_mpa, 1),
             "distortionIndex": round(distortion_index, 2),
@@ -1032,7 +1088,9 @@ def calculate_meltpool_physics(
                 "regime": regime,
                 "lofStatus": lof_status
             },
-            "grid": process_map_grid
+            "grid": process_map_grid,
+            "ballingNote": ("Balling is screened at the operating point only (defectDiagnostics.ballingScreen, "
+                            "Eagar-Tsai L/W); the quick grid has no melt-pool length and marks no balling zone."),
         }
     }
     if material_name == "Inconel 625":
