@@ -1,3 +1,12 @@
+## Güncel devam noktası — 2026-10-07 / W4 main'de ve GitHub'da (`7c459301`, CI #3 yeşil)
+
+- **Nb segregasyonu / Laves (IN718):** build job `segregation` bloğu, revizyon v14; DuPont–Robino–Marder (SAND97-1669C, Tablo 3) kapalı form, `Literature estimate`, üst sınır. IN718 nominal Nb: Laves ≤ %6,2 (C=0), %2,6 (C=0,08). IN718 kaynak alaşım aralığının dışında, LPBF kaynak rejiminin dışında diye işaretli. IN625 `unavailable` (DuPont 1996 MMTA okunmadı). Dondurulmuş fizik dosyalarına dokunulmadı (parmak izi `d92d1a3a…`).
+- **Sıradaki deney + kalibrasyon kiti:** `python/tools/lpbf_next_experiment.py` plan/CSV/plaka yerleşimi/ölçüm şablonu; kullanıcı ölçümü `Measured (user-supplied)` etiketiyle ayrı klasöre; optimizer'da "Plan experiments" sekmesi yalnız yükler/gösterir.
+- **Açık liderlik tablosu:** `python/lpbf_benchmark.py` (ağsız CLI, aynı held-out protokol), skor tablosu sayfasında salt okunur panel; sahte giriş yok.
+- **adaptive-mitigation → toolpath-studio "Feed-forward" sekmesi;** eski rota yönlendirilir, ayrı modül kaldırıldı (kullanıcı onayıyla).
+- **Doğrulama:** tsc temiz; TS 1570 / 0 FAIL; Python CI listesi + 4 yeni W4 modülü OK; registry --check, ceiling review 0, bundle PASS; GitHub CI #2 ve #3 yeşil. CI listesi commit'i (`7c459301`) bakımcının kendi Ceiling-Review onayıyla.
+- **Açık:** IN625 için DuPont 1996; literatür modeli (IN718, C=0,08: %2,6 Laves) ile yerel mc_ni Scheil (Laves yok) uyuşmuyor, ikisi de doğrulanmamış; LA-6 ve Gusarov 2007 sonraki bump; deney planı varsayılanları (9×9 ızgara, ağırlıklar) incelenmedi.
+
 ## Güncel devam noktası — 2026-10-07 / Fizik 49/49 + W2 skor tablosu + W3 ürün yerel main'de (`2af96e73`)
 
 - **Fizik:** 49 doğrulanmış fizik-motoru bulgusu main'de (Dalga A 24 donmamış; Tier 2 + Dalga B donmuş, parmak izi `d92d1a3a…`, VERSION enthalpy-fv-6). Sonuçlar CUDA'dan bağımsız; balling Eagar–Tsai L/W ekranı (risky, sert kapı değil). V1 kabulü `d92d1a3a`'ya gerçek sunucu tekrarıyla bağlandı.
