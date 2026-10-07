@@ -55,3 +55,14 @@ grid and checked by re-plotting the read points on the figure.
   any threshold bump.
 - No UI was wired. `docs/LPBF_KEYHOLE_BENCHMARK_2026-10-07.view.json` is a read-only summary a scorecard or the
   process-window view could show later (label: literature comparison, screening only).
+
+## Added with the keyhole-regime bump
+
+- Cunningham Supplementary Materials read (`aav4687_cunningham_sm.pdf`, SM pp. 2-5): 1/e^2 spot, Fig. 3A red line = melt-pool
+  transition at d/w ~ 0.5, "at higher velocities, even the deep vapor depressions become more stable" (p. 5).
+- Gan 2021 SI and Supplementary Data 1/2 read: Data 1 Ti-6Al-4V rows (71) are ingested as
+  `data/benchmark/gan-keyhole-2021/supplementary_data1_ti64.csv` (cross-check only); SI Eqs. 23/37 define r0 as the 1/e^2
+  radius; Data 2 lists r0 = 75 um for the 140 um cases (inconsistent with Data 1).
+- King et al. 2014 accepted manuscript (OSTI 1502044, LLNL-JRNL-642426): Table 3 constants and the 30 +/- 4 threshold are
+  now a primary-source row in `published_relations.csv` (`king2014-keyhole-threshold-316l`).
+
