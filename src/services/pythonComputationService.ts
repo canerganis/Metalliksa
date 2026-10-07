@@ -1268,6 +1268,37 @@ class PythonComputationService {
   }
 
   /**
+   * Opt-in calibrated melt-pool mode (screening only, not validation). Same inputs as solveLPBFThermalPhysics plus
+   * the explicit calibrationMode flag; the response carries the UNCHANGED screening result and a calibrated block
+   * for gate-enabled cells only. The default path (solveLPBFThermalPhysics) is never routed through here.
+   */
+  async solveLPBFCalibratedMeltpool(payload: {
+    material: string;
+    laserPower_W: number;
+    scanSpeed_mm_s: number;
+    beamDiameter_um: number;
+    preheatTemp_C?: number;
+    layerThickness_um?: number;
+    hatchSpacing_um?: number;
+    laserWavelength?: "IR_1064nm" | "Green_515nm" | "Blue_450nm";
+    heatSource?: "rosenthal" | "eagar-tsai" | "goldak";
+    sulfur_ppm?: number;
+  }, signal?: AbortSignal): Promise<LPBFCalibratedMeltpoolResult> {
+    const res = await fetch("/api/python/lpbf-calibrated-meltpool", {
+      signal,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...payload, calibrationMode: true }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`LPBF calibrated melt-pool proxy error: HTTP ${res.status}`);
+    }
+
+    return await res.json();
+  }
+
+  /**
    * CAD/STL hatch discretization and LPBF build-time estimate (galvo + recoater).
    */
   async solveSTLSlicerBuildTime(payload: {
@@ -1624,6 +1655,39 @@ export interface PythonLpbfBuildJobResult {
   kinematics?: any;
   microstructure?: any;
   kinetics?: any;
+}
+
+/** Output of POST /api/python/lpbf-calibrated-meltpool (python/lpbf_calibration_layer.apply_calibration). */
+export interface LPBFCalibratedMeltpoolResult {
+  screening: PythonLPBFResult;
+  evidenceKind: "screening-only";
+  calibrated: {
+    available: boolean;
+    reason?: string | null;
+    width_um: number | null;
+    depth_um: number | null;
+    width_pi80_um?: [number, number];
+    width_pi90_um?: [number, number];
+    depth_pi80_um?: [number, number];
+    depth_pi90_um?: [number, number];
+    widthReason?: string;
+    depthReason?: string;
+    cells?: Record<string, { status: string; rung?: string }>;
+    regimeLabel?: string | null;
+    regimeAtEtaD_sensitivity?: string | null;
+    depthOverWidth?: number | null;
+    depthOverWidthReason?: string | null;
+  };
+  calibration: {
+    calibrationId: string;
+    contentSha256: string;
+    fittedOn: string[];
+    heldOutScore: Record<string, string>;
+    evidenceKind: "screening-only";
+    label: string;
+  } | null;
+  outsideTrainingEnvelope: boolean;
+  envelopeNotes: string[];
 }
 
 export interface PythonLPBFResult {

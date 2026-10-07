@@ -58,6 +58,7 @@ const MurakamiFatigueLab = lazy(() => import("./components/MurakamiFatigueLab").
 const LpbfAdaptiveMitigationLab = lazy(() => import("./components/LpbfAdaptiveMitigationLab").then(m => ({ default: m.LpbfAdaptiveMitigationLab }))); // Phase 15
 const KeyholeRaytracingLab = lazy(() => import("./components/KeyholeRaytracingLab").then(m => ({ default: m.KeyholeRaytracingLab }))); // Phase 26
 const LpbfDatasetComparisonLab = lazy(() => import("./components/LpbfDatasetComparisonLab").then(m => ({ default: m.LpbfDatasetComparisonLab })));
+const LpbfCalibrationScorecardLab = lazy(() => import("./components/LpbfCalibrationScorecardLab").then(m => ({ default: m.LpbfCalibrationScorecardLab })));
 
 const AdvancedResearchHub = lazy(() => import("./components/AdvancedResearchHub").then(m => ({ default: m.AdvancedResearchHub })));
 const PhaseDiagramViewer = lazy(() => import("./components/PhaseDiagramViewer").then(m => ({ default: m.PhaseDiagramViewer })));
@@ -71,7 +72,7 @@ export type DisciplineHubId = typeof WORKSPACES[number]['id'];
 
 // The start page: no hash, "#", "#/" or "#/home". Any other hash is a module link (unknown -> LPBF).
 // Modules whose data are not about the shared specimen (the shared-material block and the context panel would describe the wrong material).
-export const MODULES_WITHOUT_SHARED_SPECIMEN: ReadonlySet<string> = new Set(['lpbf-dataset-comparison']);
+export const MODULES_WITHOUT_SHARED_SPECIMEN: ReadonlySet<string> = new Set(['lpbf-dataset-comparison', 'lpbf-calibration-scorecard']);
 const isHome = (hash: string) => /^(#\/?(home)?)?$/.test(hash);
 const startsHome = () => isHome(window.location.hash) && !/[?&]lpbf(Stage|SubTab)=/.test(window.location.search);
 
@@ -174,6 +175,7 @@ export default function App() {
       case 'adaptive-mitigation': return <LpbfAdaptiveMitigationLab />; // Phase 15
       case 'keyhole-raytracing': return <KeyholeRaytracingLab />; // Phase 26
       case 'lpbf-dataset-comparison': return <LpbfDatasetComparisonLab />;
+      case 'lpbf-calibration-scorecard': return <LpbfCalibrationScorecardLab />;
       case 'research-hub': return <AdvancedResearchHub />;
       case 'experimental-data': return <EvidenceWorkspace mode="experimental" />;
       case 'traceability': return <EvidenceWorkspace mode="traceability" />;

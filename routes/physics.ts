@@ -110,3 +110,9 @@ physicsRouter.post("/api/python/micrograph-measure", (req: Request, res: Respons
   }
   return handlePythonDispatch("python/micrograph_measure.py", req.body, res, MICROGRAPH_TIMEOUT_MS);
 });
+
+// Opt-in calibrated melt-pool mode (screening only, not validation): the frozen solver run with a fitted
+// effective absorptivity for gate-enabled cells only. A NEW route; /api/python/lpbf-thermal-solver is untouched.
+physicsRouter.post("/api/python/lpbf-calibrated-meltpool", (req: Request, res: Response) => {
+  return handlePythonDispatch("python/lpbf_calibrated_meltpool.py", req.body, res);
+});

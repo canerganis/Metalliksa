@@ -18,6 +18,7 @@ export const MODULE_VIEWS: Record<ListedModuleId, ModuleView> = {
   'adaptive-mitigation': lazy(() => import('../components/LpbfAdaptiveMitigationLab').then(m => ({ default: m.LpbfAdaptiveMitigationLab }))),
   'keyhole-raytracing': lazy(() => import('../components/KeyholeRaytracingLab').then(m => ({ default: m.KeyholeRaytracingLab }))),
   'lpbf-dataset-comparison': lazy(() => import('../components/LpbfDatasetComparisonLab').then(m => ({ default: m.LpbfDatasetComparisonLab }))),
+  'lpbf-calibration-scorecard': lazy(() => import('../components/LpbfCalibrationScorecardLab').then(m => ({ default: m.LpbfCalibrationScorecardLab }))),
   'database': lazy(() => import('../components/MaterialsDatabaseView').then(m => ({ default: m.MaterialsDatabaseView }))),
   'alloy-builder': lazy(() => import('../components/AlloyBuilder').then(m => ({ default: m.AlloyBuilder }))),
   'phase-diagram': lazy(() => import('../components/PhaseDiagramViewer').then(m => ({ default: m.PhaseDiagramViewer }))),

@@ -69,6 +69,14 @@
     "label": "Dataset Comparison (LPBF)",
     "scope": "Research",
     "description": "Screening kernels (Rosenthal, Eagar–Tsai v2, Goldak v3) against published single-track measurements (Hofmann 316L 2026, Totis Ti-6Al-4V 2021); comparison, not validation; Python-generated record",
+    "next": "lpbf-calibration-scorecard"
+  },
+  {
+    "id": "lpbf-calibration-scorecard",
+    "workspace": "lpbf",
+    "label": "Calibration Scorecard (LPBF)",
+    "scope": "Research",
+    "description": "Held-out errors of the screening melt-pool kernels with nuisance absorptivity fitted outside the frozen code: leave-one-source-out per kernel, alloy and regime, interval coverage, regime confusion, Guo N01 failure; screening only, not validation; Python-generated record",
     "next": "database"
   },
   {

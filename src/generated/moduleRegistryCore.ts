@@ -269,13 +269,39 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "lpbf",
       "label": "Dataset Comparison (LPBF)",
       "description": "Screening kernels (Rosenthal, Eagar–Tsai v2, Goldak v3) against published single-track measurements (Hofmann 316L 2026, Totis Ti-6Al-4V 2021); comparison, not validation; Python-generated record",
-      "next": "database",
+      "next": "lpbf-calibration-scorecard",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
       "view": {
         "component": "src/components/LpbfDatasetComparisonLab.tsx",
         "export": "LpbfDatasetComparisonLab"
+      },
+      "migrationState": "contracted",
+      "evidence": {
+        "ceiling": "screening-only"
+      },
+      "tests": {
+        "oracle": {
+          "status": "pending",
+          "ciNote": null,
+          "scope": null
+        }
+      }
+    },
+    {
+      "id": "lpbf-calibration-scorecard",
+      "version": "0.1.0",
+      "workspace": "lpbf",
+      "label": "Calibration Scorecard (LPBF)",
+      "description": "Held-out errors of the screening melt-pool kernels with nuisance absorptivity fitted outside the frozen code: leave-one-source-out per kernel, alloy and regime, interval coverage, regime confusion, Guo N01 failure; screening only, not validation; Python-generated record",
+      "next": "database",
+      "maturity": "Research",
+      "navigation": "listed",
+      "hiddenReason": null,
+      "view": {
+        "component": "src/components/LpbfCalibrationScorecardLab.tsx",
+        "export": "LpbfCalibrationScorecardLab"
       },
       "migrationState": "contracted",
       "evidence": {

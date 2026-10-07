@@ -54,7 +54,7 @@ test('legacy contracts keep the pending-oracle cap and forbid every claim key', 
 
 test('contracted modules (wave 1 pilots and wave 2) stay bounded: no emitted status, screening-only ceiling, every claim forbidden', () => {
   const contracted = registry.contracts.filter(contract => contract.migrationState === 'contracted');
-  assert.deepEqual(contracted.map(contract => contract.id), ['toolpath-studio', 'murakami-fatigue', 'adaptive-mitigation', 'keyhole-raytracing', 'lpbf-dataset-comparison', 'database', 'alloy-builder', 'phase-diagram', 'ttt-cct-kinetics', 'micrograph', 'eds-lab', 'icme-motor', 'materials-project', 'experimental-data', 'uq-lab', 'traceability']);
+  assert.deepEqual(contracted.map(contract => contract.id), ['toolpath-studio', 'murakami-fatigue', 'adaptive-mitigation', 'keyhole-raytracing', 'lpbf-dataset-comparison', 'lpbf-calibration-scorecard', 'database', 'alloy-builder', 'phase-diagram', 'ttt-cct-kinetics', 'micrograph', 'eds-lab', 'icme-motor', 'materials-project', 'experimental-data', 'uq-lab', 'traceability']);
   for (const contract of contracted) {
     assert.deepEqual(contract.evidence.emits, [], contract.id);
     assert.equal(contract.evidence.ceiling, 'screening-only', contract.id);

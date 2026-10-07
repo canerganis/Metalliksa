@@ -38,6 +38,7 @@ from module_contract import (
     Authority, Evidence, InputField, Lifecycle, ModuleContract, Operation, Oracle, OutputSchema, TestRefs, View,
 )
 from module_contracts_dataset_view import build_dataset_view_contract
+from module_contracts_calibration_scorecard import build_calibration_scorecard_contract
 from module_contracts_eds import build_eds_contract
 from module_contracts_composition import build_composition_contract
 from module_contracts_elasticity import build_elasticity_contract
@@ -170,6 +171,8 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
         _op("lpbf-job-cancel", "DELETE", "/api/lpbf/jobs/:id", _worker("cancel")),
         _op("lpbf-job-artifact", "GET", "/api/lpbf/jobs/:id/artifacts/:name", _worker("artifact")),
         _THERMAL_SOLVER,
+        _op("lpbf-calibrated-meltpool", "POST", "/api/python/lpbf-calibrated-meltpool",
+            _py("lpbf_calibrated_meltpool", _PHYSICS_TIMEOUT_MS, warm=False)),
         _op("stl-slicer-build-time", "POST", "/api/python/stl-slicer-build-time",
             _py("stl_slicer_build_time_solver", _PHYSICS_TIMEOUT_MS, warm=True)),
         _op("lpbf-source-catalog", "GET", "/api/lpbf/sources", _NODE),
@@ -993,6 +996,7 @@ CONTRACTED_BUILDERS = {
     "materials-project": build_elasticity_contract,
     "eds-lab": build_eds_contract,
     "lpbf-dataset-comparison": build_dataset_view_contract,
+    "lpbf-calibration-scorecard": build_calibration_scorecard_contract,
     "keyhole-raytracing": _keyhole_contract,
     "uq-lab": _uq_contract,
     # Phase 7 wave 2

@@ -1,0 +1,4219 @@
+{
+ "catalogSentinels": {
+  "note": "Guo N01/N04-N06 and NIST AMB2022-03 Table 4 were used while the frozen physics was developed (PROOF 023, the Goldak fix, test_goldak_fabbro bands): they are development data, not blind held-out data. N01 (260 W, 520 mm/s, keyhole, D_meas 180 um) is a documented keyhole-depth failure: it is NOT fitted, it is in no training split, and calibration does not fix it.",
+  "title": "catalog sentinels (used during physics development, not blind)"
+ },
+ "configSha256": "66b29428d7e6874c68128ffba04fccc199b205e415f085ed464cf66d1fbaad6f",
+ "coverage": [
+  {
+   "coverage": 1.0,
+   "heldOut": "hofmann-316l-2026",
+   "k": 34,
+   "kernel": "eagar-tsai",
+   "level": 80,
+   "material": "316L Stainless Steel",
+   "n": 34,
+   "notInformative": null,
+   "quantity": "width",
+   "widthRatio": 2.99797,
+   "wilson95": [
+    0.898485,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "hofmann-316l-2026",
+   "k": 34,
+   "kernel": "eagar-tsai",
+   "level": 90,
+   "material": "316L Stainless Steel",
+   "n": 34,
+   "notInformative": true,
+   "quantity": "width",
+   "widthRatio": 4.09256,
+   "wilson95": [
+    0.898485,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "ku-leuven-316l-2021",
+   "k": 27,
+   "kernel": "eagar-tsai",
+   "level": 80,
+   "material": "316L Stainless Steel",
+   "n": 27,
+   "notInformative": null,
+   "quantity": "width",
+   "widthRatio": 2.85847,
+   "wilson95": [
+    0.875445,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "ku-leuven-316l-2021",
+   "k": 27,
+   "kernel": "eagar-tsai",
+   "level": 90,
+   "material": "316L Stainless Steel",
+   "n": 27,
+   "notInformative": true,
+   "quantity": "width",
+   "widthRatio": 3.84977,
+   "wilson95": [
+    0.875445,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "hofmann-316l-2026",
+   "k": 34,
+   "kernel": "eagar-tsai",
+   "level": 80,
+   "material": "316L Stainless Steel",
+   "n": 34,
+   "notInformative": null,
+   "quantity": "depth",
+   "widthRatio": 4.16187,
+   "wilson95": [
+    0.898485,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "hofmann-316l-2026",
+   "k": 34,
+   "kernel": "eagar-tsai",
+   "level": 90,
+   "material": "316L Stainless Steel",
+   "n": 34,
+   "notInformative": true,
+   "quantity": "depth",
+   "widthRatio": 6.23505,
+   "wilson95": [
+    0.898485,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "ku-leuven-316l-2021",
+   "k": 27,
+   "kernel": "eagar-tsai",
+   "level": 80,
+   "material": "316L Stainless Steel",
+   "n": 27,
+   "notInformative": null,
+   "quantity": "depth",
+   "widthRatio": 4.17571,
+   "wilson95": [
+    0.875445,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "ku-leuven-316l-2021",
+   "k": 27,
+   "kernel": "eagar-tsai",
+   "level": 90,
+   "material": "316L Stainless Steel",
+   "n": 27,
+   "notInformative": true,
+   "quantity": "depth",
+   "widthRatio": 6.26169,
+   "wilson95": [
+    0.875445,
+    1.0
+   ]
+  },
+  {
+   "coverage": 0.6875,
+   "heldOut": "ku-leuven-ti64-2021",
+   "k": 11,
+   "kernel": "eagar-tsai",
+   "level": 80,
+   "material": "Ti-6Al-4V",
+   "n": 16,
+   "notInformative": null,
+   "quantity": "width",
+   "widthRatio": 1.55622,
+   "wilson95": [
+    0.444044,
+    0.858354
+   ]
+  },
+  {
+   "coverage": 0.9375,
+   "heldOut": "ku-leuven-ti64-2021",
+   "k": 15,
+   "kernel": "eagar-tsai",
+   "level": 90,
+   "material": "Ti-6Al-4V",
+   "n": 16,
+   "notInformative": false,
+   "quantity": "width",
+   "widthRatio": 1.76408,
+   "wilson95": [
+    0.716713,
+    0.988881
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "totis-ti64-2021",
+   "k": 32,
+   "kernel": "eagar-tsai",
+   "level": 80,
+   "material": "Ti-6Al-4V",
+   "n": 32,
+   "notInformative": null,
+   "quantity": "width",
+   "widthRatio": 1.98556,
+   "wilson95": [
+    0.892821,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "totis-ti64-2021",
+   "k": 32,
+   "kernel": "eagar-tsai",
+   "level": 90,
+   "material": "Ti-6Al-4V",
+   "n": 32,
+   "notInformative": false,
+   "quantity": "width",
+   "widthRatio": 2.41171,
+   "wilson95": [
+    0.892821,
+    1.0
+   ]
+  },
+  {
+   "coverage": 0.0,
+   "heldOut": "ku-leuven-ti64-2021",
+   "k": 0,
+   "kernel": "eagar-tsai",
+   "level": 80,
+   "material": "Ti-6Al-4V",
+   "n": 16,
+   "notInformative": null,
+   "quantity": "depth",
+   "widthRatio": 1.42418,
+   "wilson95": [
+    0.0,
+    0.193608
+   ]
+  },
+  {
+   "coverage": 0.0,
+   "heldOut": "ku-leuven-ti64-2021",
+   "k": 0,
+   "kernel": "eagar-tsai",
+   "level": 90,
+   "material": "Ti-6Al-4V",
+   "n": 16,
+   "notInformative": false,
+   "quantity": "depth",
+   "widthRatio": 1.57433,
+   "wilson95": [
+    0.0,
+    0.193608
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "totis-ti64-2021",
+   "k": 32,
+   "kernel": "eagar-tsai",
+   "level": 80,
+   "material": "Ti-6Al-4V",
+   "n": 32,
+   "notInformative": null,
+   "quantity": "depth",
+   "widthRatio": 2.69662,
+   "wilson95": [
+    0.892821,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "totis-ti64-2021",
+   "k": 32,
+   "kernel": "eagar-tsai",
+   "level": 90,
+   "material": "Ti-6Al-4V",
+   "n": 32,
+   "notInformative": true,
+   "quantity": "depth",
+   "widthRatio": 3.57228,
+   "wilson95": [
+    0.892821,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "hofmann-316l-2026",
+   "k": 34,
+   "kernel": "goldak",
+   "level": 80,
+   "material": "316L Stainless Steel",
+   "n": 34,
+   "notInformative": null,
+   "quantity": "width",
+   "widthRatio": 2.71977,
+   "wilson95": [
+    0.898485,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "hofmann-316l-2026",
+   "k": 34,
+   "kernel": "goldak",
+   "level": 90,
+   "material": "316L Stainless Steel",
+   "n": 34,
+   "notInformative": true,
+   "quantity": "width",
+   "widthRatio": 3.61169,
+   "wilson95": [
+    0.898485,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "ku-leuven-316l-2021",
+   "k": 27,
+   "kernel": "goldak",
+   "level": 80,
+   "material": "316L Stainless Steel",
+   "n": 27,
+   "notInformative": null,
+   "quantity": "width",
+   "widthRatio": 2.61667,
+   "wilson95": [
+    0.875445,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "ku-leuven-316l-2021",
+   "k": 27,
+   "kernel": "goldak",
+   "level": 90,
+   "material": "316L Stainless Steel",
+   "n": 27,
+   "notInformative": true,
+   "quantity": "width",
+   "widthRatio": 3.43692,
+   "wilson95": [
+    0.875445,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "hofmann-316l-2026",
+   "k": 34,
+   "kernel": "goldak",
+   "level": 80,
+   "material": "316L Stainless Steel",
+   "n": 34,
+   "notInformative": null,
+   "quantity": "depth",
+   "widthRatio": 4.13802,
+   "wilson95": [
+    0.898485,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "hofmann-316l-2026",
+   "k": 34,
+   "kernel": "goldak",
+   "level": 90,
+   "material": "316L Stainless Steel",
+   "n": 34,
+   "notInformative": true,
+   "quantity": "depth",
+   "widthRatio": 6.18925,
+   "wilson95": [
+    0.898485,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "ku-leuven-316l-2021",
+   "k": 27,
+   "kernel": "goldak",
+   "level": 80,
+   "material": "316L Stainless Steel",
+   "n": 27,
+   "notInformative": null,
+   "quantity": "depth",
+   "widthRatio": 4.1296,
+   "wilson95": [
+    0.875445,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "ku-leuven-316l-2021",
+   "k": 27,
+   "kernel": "goldak",
+   "level": 90,
+   "material": "316L Stainless Steel",
+   "n": 27,
+   "notInformative": true,
+   "quantity": "depth",
+   "widthRatio": 6.17308,
+   "wilson95": [
+    0.875445,
+    1.0
+   ]
+  },
+  {
+   "coverage": 0.0,
+   "heldOut": "ku-leuven-ti64-2021",
+   "k": 0,
+   "kernel": "goldak",
+   "level": 80,
+   "material": "Ti-6Al-4V",
+   "n": 16,
+   "notInformative": null,
+   "quantity": "width",
+   "widthRatio": 1.24744,
+   "wilson95": [
+    0.0,
+    0.193608
+   ]
+  },
+  {
+   "coverage": 0.0,
+   "heldOut": "ku-leuven-ti64-2021",
+   "k": 0,
+   "kernel": "goldak",
+   "level": 90,
+   "material": "Ti-6Al-4V",
+   "n": 16,
+   "notInformative": false,
+   "quantity": "width",
+   "widthRatio": 1.32813,
+   "wilson95": [
+    0.0,
+    0.193608
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "totis-ti64-2021",
+   "k": 32,
+   "kernel": "goldak",
+   "level": 80,
+   "material": "Ti-6Al-4V",
+   "n": 32,
+   "notInformative": null,
+   "quantity": "width",
+   "widthRatio": 2.08302,
+   "wilson95": [
+    0.892821,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "totis-ti64-2021",
+   "k": 32,
+   "kernel": "goldak",
+   "level": 90,
+   "material": "Ti-6Al-4V",
+   "n": 32,
+   "notInformative": true,
+   "quantity": "width",
+   "widthRatio": 2.56469,
+   "wilson95": [
+    0.892821,
+    1.0
+   ]
+  },
+  {
+   "coverage": 0.0,
+   "heldOut": "ku-leuven-ti64-2021",
+   "k": 0,
+   "kernel": "goldak",
+   "level": 80,
+   "material": "Ti-6Al-4V",
+   "n": 16,
+   "notInformative": null,
+   "quantity": "depth",
+   "widthRatio": 1.25865,
+   "wilson95": [
+    0.0,
+    0.193608
+   ]
+  },
+  {
+   "coverage": 0.0,
+   "heldOut": "ku-leuven-ti64-2021",
+   "k": 0,
+   "kernel": "goldak",
+   "level": 90,
+   "material": "Ti-6Al-4V",
+   "n": 16,
+   "notInformative": false,
+   "quantity": "depth",
+   "widthRatio": 1.34346,
+   "wilson95": [
+    0.0,
+    0.193608
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "totis-ti64-2021",
+   "k": 32,
+   "kernel": "goldak",
+   "level": 80,
+   "material": "Ti-6Al-4V",
+   "n": 32,
+   "notInformative": null,
+   "quantity": "depth",
+   "widthRatio": 2.41072,
+   "wilson95": [
+    0.892821,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "totis-ti64-2021",
+   "k": 32,
+   "kernel": "goldak",
+   "level": 90,
+   "material": "Ti-6Al-4V",
+   "n": 32,
+   "notInformative": true,
+   "quantity": "depth",
+   "widthRatio": 3.09368,
+   "wilson95": [
+    0.892821,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "hofmann-316l-2026",
+   "k": 34,
+   "kernel": "rosenthal",
+   "level": 80,
+   "material": "316L Stainless Steel",
+   "n": 34,
+   "notInformative": null,
+   "quantity": "width",
+   "widthRatio": 3.61457,
+   "wilson95": [
+    0.898485,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "hofmann-316l-2026",
+   "k": 34,
+   "kernel": "rosenthal",
+   "level": 90,
+   "material": "316L Stainless Steel",
+   "n": 34,
+   "notInformative": true,
+   "quantity": "width",
+   "widthRatio": 5.20296,
+   "wilson95": [
+    0.898485,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "ku-leuven-316l-2021",
+   "k": 27,
+   "kernel": "rosenthal",
+   "level": 80,
+   "material": "316L Stainless Steel",
+   "n": 27,
+   "notInformative": null,
+   "quantity": "width",
+   "widthRatio": 3.3515,
+   "wilson95": [
+    0.875445,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "ku-leuven-316l-2021",
+   "k": 27,
+   "kernel": "rosenthal",
+   "level": 90,
+   "material": "316L Stainless Steel",
+   "n": 27,
+   "notInformative": true,
+   "quantity": "width",
+   "widthRatio": 4.72205,
+   "wilson95": [
+    0.875445,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "hofmann-316l-2026",
+   "k": 34,
+   "kernel": "rosenthal",
+   "level": 80,
+   "material": "316L Stainless Steel",
+   "n": 34,
+   "notInformative": null,
+   "quantity": "depth",
+   "widthRatio": 4.56597,
+   "wilson95": [
+    0.898485,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "hofmann-316l-2026",
+   "k": 34,
+   "kernel": "rosenthal",
+   "level": 90,
+   "material": "316L Stainless Steel",
+   "n": 34,
+   "notInformative": true,
+   "quantity": "depth",
+   "widthRatio": 7.02252,
+   "wilson95": [
+    0.898485,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "ku-leuven-316l-2021",
+   "k": 27,
+   "kernel": "rosenthal",
+   "level": 80,
+   "material": "316L Stainless Steel",
+   "n": 27,
+   "notInformative": null,
+   "quantity": "depth",
+   "widthRatio": 4.61734,
+   "wilson95": [
+    0.875445,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "ku-leuven-316l-2021",
+   "k": 27,
+   "kernel": "rosenthal",
+   "level": 90,
+   "material": "316L Stainless Steel",
+   "n": 27,
+   "notInformative": true,
+   "quantity": "depth",
+   "widthRatio": 7.1241,
+   "wilson95": [
+    0.875445,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "ku-leuven-ti64-2021",
+   "k": 16,
+   "kernel": "rosenthal",
+   "level": 80,
+   "material": "Ti-6Al-4V",
+   "n": 16,
+   "notInformative": null,
+   "quantity": "width",
+   "widthRatio": 2.02052,
+   "wilson95": [
+    0.806392,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "ku-leuven-ti64-2021",
+   "k": 16,
+   "kernel": "rosenthal",
+   "level": 90,
+   "material": "Ti-6Al-4V",
+   "n": 16,
+   "notInformative": false,
+   "quantity": "width",
+   "widthRatio": 2.46635,
+   "wilson95": [
+    0.806392,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "totis-ti64-2021",
+   "k": 32,
+   "kernel": "rosenthal",
+   "level": 80,
+   "material": "Ti-6Al-4V",
+   "n": 32,
+   "notInformative": null,
+   "quantity": "width",
+   "widthRatio": 2.06167,
+   "wilson95": [
+    0.892821,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "totis-ti64-2021",
+   "k": 32,
+   "kernel": "rosenthal",
+   "level": 90,
+   "material": "Ti-6Al-4V",
+   "n": 32,
+   "notInformative": true,
+   "quantity": "width",
+   "widthRatio": 2.531,
+   "wilson95": [
+    0.892821,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "ku-leuven-ti64-2021",
+   "k": 16,
+   "kernel": "rosenthal",
+   "level": 80,
+   "material": "Ti-6Al-4V",
+   "n": 16,
+   "notInformative": null,
+   "quantity": "depth",
+   "widthRatio": 1.92234,
+   "wilson95": [
+    0.806392,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "ku-leuven-ti64-2021",
+   "k": 16,
+   "kernel": "rosenthal",
+   "level": 90,
+   "material": "Ti-6Al-4V",
+   "n": 16,
+   "notInformative": false,
+   "quantity": "depth",
+   "widthRatio": 2.3136,
+   "wilson95": [
+    0.806392,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "totis-ti64-2021",
+   "k": 32,
+   "kernel": "rosenthal",
+   "level": 80,
+   "material": "Ti-6Al-4V",
+   "n": 32,
+   "notInformative": null,
+   "quantity": "depth",
+   "widthRatio": 3.60912,
+   "wilson95": [
+    0.892821,
+    1.0
+   ]
+  },
+  {
+   "coverage": 1.0,
+   "heldOut": "totis-ti64-2021",
+   "k": 32,
+   "kernel": "rosenthal",
+   "level": 90,
+   "material": "Ti-6Al-4V",
+   "n": 32,
+   "notInformative": true,
+   "quantity": "depth",
+   "widthRatio": 5.19291,
+   "wilson95": [
+    0.892821,
+    1.0
+   ]
+  }
+ ],
+ "evidence": {
+  "experimentalValidation": false,
+  "kind": "screening-only",
+  "label": "Screening only: nuisance parameters fitted to published tracks; not validation",
+  "labelPromotionProposed": "none",
+  "opticalOperatorMatched": false,
+  "statement": "SYNTHETIC TEST FIXTURE (no real data). calibration of nuisance parameters against published single tracks; not experimental validation; the frozen screening kernels are read-only; absorptivity is a fitted effective parameter that absorbs model error, not a measured one; estimated material laws; no per-row measurement uncertainty exists in any source; experimentalValidation=false, opticalOperatorMatched=false"
+ },
+ "gateSummary": {
+  "enabled": 1,
+  "no-data": 12,
+  "rejected": 10,
+  "within-source-only": 7
+ },
+ "generatedAt": "2026-10-07",
+ "headline": [
+  {
+   "beamStatuses": {
+    "37.5": "rejected",
+    "75": "rejected"
+   },
+   "flagNotes": [
+    "etaInconsistentWithMeasuredAbsorptance: fitted effective eta disagrees with measured absorptance (conduction band 0.24-0.45, eta 0.540) -> eta is absorbing model error (diagnostic, not a validation claim)"
+   ],
+   "flags": [
+    "etaInconsistentWithMeasuredAbsorptance"
+   ],
+   "headline": {
+    "equalSourceWeight": {
+     "mapeDefault": 11.0153,
+     "mapeServed": 7.03912
+    },
+    "rowWeighted": {
+     "mapeDefault": 10.6455,
+     "mapeServed": 7.04593
+    }
+   },
+   "kernel": "eagar-tsai",
+   "material": "316L Stainless Steel",
+   "p1": [
+    {
+     "mapeDefault": 7.79288,
+     "mapeServed": 2.89477,
+     "nRows": 34,
+     "nSets": 30,
+     "skill": 0.628536,
+     "skillCi95": [
+      0.519804,
+      0.723157
+     ],
+     "source": "hofmann-316l-2026"
+    },
+    {
+     "mapeDefault": 14.2377,
+     "mapeServed": 2.54983,
+     "nRows": 27,
+     "nSets": 24,
+     "skill": 0.82091,
+     "skillCi95": [
+      0.749373,
+      0.863523
+     ],
+     "source": "ku-leuven-316l-2021"
+    }
+   ],
+   "p2": [
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 34,
+      "n": 34,
+      "wilson95": [
+       0.898485,
+       1.0
+      ]
+     },
+     "heldOut": "hofmann-316l-2026",
+     "intervalNotInformative90": true,
+     "mapeDefault": 7.79288,
+     "mapePowerlaw": 7.64715,
+     "mapeServed": 7.09841,
+     "nRows": 34,
+     "nSets": 30,
+     "rung": "eta2",
+     "skill": 0.0891159,
+     "skillCi95": [
+      -0.313686,
+      0.328166
+     ],
+     "trainedOn": [
+      "ku-leuven-316l-2021"
+     ],
+     "unresolvedDefault": 0,
+     "unresolvedServed": 0,
+     "verdictVsDefault": "inconclusive",
+     "verdictVsPowerlaw": "beats",
+     "widthRatio90": 4.09256
+    },
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 27,
+      "n": 27,
+      "wilson95": [
+       0.875445,
+       1.0
+      ]
+     },
+     "heldOut": "ku-leuven-316l-2021",
+     "intervalNotInformative90": true,
+     "mapeDefault": 14.2377,
+     "mapePowerlaw": 6.75844,
+     "mapeServed": 6.97984,
+     "nRows": 27,
+     "nSets": 24,
+     "rung": "eta2",
+     "skill": 0.509764,
+     "skillCi95": [
+      0.463471,
+      0.550215
+     ],
+     "trainedOn": [
+      "hofmann-316l-2026"
+     ],
+     "unresolvedDefault": 0,
+     "unresolvedServed": 0,
+     "verdictVsDefault": "beats",
+     "verdictVsPowerlaw": "inconclusive",
+     "widthRatio90": 3.84977
+    }
+   ],
+   "params": {
+    "boundHitFractionD": 0.0,
+    "boundHitFractionW": 0.0,
+    "cD": {
+     "conduction": 0.00530385,
+     "keyhole": 0.00530385,
+     "transition": 0.00530385
+    },
+    "etaD": 0.45,
+    "etaD_ci90": [
+     0.45,
+     0.455
+    ],
+    "etaJoint": 0.46,
+    "etaJoint_ci90": [
+     0.455,
+     0.465
+    ],
+    "etaPrior": 0.42,
+    "etaW": 0.54,
+    "etaW_ci90": [
+     0.52225,
+     0.55
+    ]
+   },
+   "quantity": "width",
+   "reasons": [
+    "etaInconsistentWithMeasuredAbsorptance",
+    "held-out source hofmann-316l-2026: skill CI95 lower bound -0.314 < -0.02"
+   ],
+   "servedRung": "eta2",
+   "status": "rejected"
+  },
+  {
+   "beamStatuses": {
+    "37.5": "enabled",
+    "75": "enabled"
+   },
+   "flagNotes": [],
+   "flags": [],
+   "headline": {
+    "equalSourceWeight": {
+     "mapeDefault": 7.46274,
+     "mapeServed": 3.06869
+    },
+    "rowWeighted": {
+     "mapeDefault": 7.56864,
+     "mapeServed": 3.07055
+    }
+   },
+   "kernel": "eagar-tsai",
+   "material": "316L Stainless Steel",
+   "p1": [
+    {
+     "mapeDefault": 8.38556,
+     "mapeServed": 3.3317,
+     "nRows": 34,
+     "nSets": 30,
+     "skill": 0.602686,
+     "skillCi95": [
+      0.508783,
+      0.695579
+     ],
+     "source": "hofmann-316l-2026"
+    },
+    {
+     "mapeDefault": 6.53993,
+     "mapeServed": 2.89169,
+     "nRows": 27,
+     "nSets": 24,
+     "skill": 0.557841,
+     "skillCi95": [
+      0.381381,
+      0.688471
+     ],
+     "source": "ku-leuven-316l-2021"
+    }
+   ],
+   "p2": [
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 34,
+      "n": 34,
+      "wilson95": [
+       0.898485,
+       1.0
+      ]
+     },
+     "heldOut": "hofmann-316l-2026",
+     "intervalNotInformative90": true,
+     "mapeDefault": 8.38556,
+     "mapePowerlaw": 3.31867,
+     "mapeServed": 3.08488,
+     "nRows": 34,
+     "nSets": 30,
+     "rung": "eta2",
+     "skill": 0.63212,
+     "skillCi95": [
+      0.571718,
+      0.708051
+     ],
+     "trainedOn": [
+      "ku-leuven-316l-2021"
+     ],
+     "unresolvedDefault": 0,
+     "unresolvedServed": 0,
+     "verdictVsDefault": "beats",
+     "verdictVsPowerlaw": "inconclusive",
+     "widthRatio90": 6.23505
+    },
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 27,
+      "n": 27,
+      "wilson95": [
+       0.875445,
+       1.0
+      ]
+     },
+     "heldOut": "ku-leuven-316l-2021",
+     "intervalNotInformative90": true,
+     "mapeDefault": 6.53993,
+     "mapePowerlaw": 3.3727,
+     "mapeServed": 3.0525,
+     "nRows": 27,
+     "nSets": 24,
+     "rung": "eta2",
+     "skill": 0.533252,
+     "skillCi95": [
+      0.284497,
+      0.703991
+     ],
+     "trainedOn": [
+      "hofmann-316l-2026"
+     ],
+     "unresolvedDefault": 0,
+     "unresolvedServed": 0,
+     "verdictVsDefault": "beats",
+     "verdictVsPowerlaw": "inconclusive",
+     "widthRatio90": 6.26169
+    }
+   ],
+   "params": {
+    "boundHitFractionD": 0.0,
+    "boundHitFractionW": 0.0,
+    "cD": {
+     "conduction": 0.00530385,
+     "keyhole": 0.00530385,
+     "transition": 0.00530385
+    },
+    "etaD": 0.45,
+    "etaD_ci90": [
+     0.45,
+     0.455
+    ],
+    "etaJoint": 0.46,
+    "etaJoint_ci90": [
+     0.455,
+     0.465
+    ],
+    "etaPrior": 0.42,
+    "etaW": 0.54,
+    "etaW_ci90": [
+     0.52225,
+     0.55
+    ]
+   },
+   "quantity": "depth",
+   "reasons": [],
+   "servedRung": "eta2",
+   "status": "enabled"
+  },
+  {
+   "beamStatuses": {
+    "37.5": "rejected",
+    "75": "rejected"
+   },
+   "flagNotes": [],
+   "flags": [],
+   "headline": {
+    "equalSourceWeight": {
+     "mapeDefault": 11.2337,
+     "mapeServed": 21.2898
+    },
+    "rowWeighted": {
+     "mapeDefault": 9.49295,
+     "mapeServed": 20.4811
+    }
+   },
+   "kernel": "eagar-tsai",
+   "material": "Ti-6Al-4V",
+   "p1": [
+    {
+     "mapeDefault": 6.01138,
+     "mapeServed": 3.9051,
+     "nRows": 32,
+     "nSets": 28,
+     "skill": 0.350383,
+     "skillCi95": [
+      0.117087,
+      0.49901
+     ],
+     "source": "totis-ti64-2021"
+    }
+   ],
+   "p2": [
+    {
+     "coverage90": {
+      "coverage": 0.9375,
+      "k": 15,
+      "n": 16,
+      "wilson95": [
+       0.716713,
+       0.988881
+      ]
+     },
+     "heldOut": "ku-leuven-ti64-2021",
+     "intervalNotInformative90": false,
+     "mapeDefault": 16.4561,
+     "mapePowerlaw": 24.3258,
+     "mapeServed": 23.7161,
+     "nRows": 16,
+     "nSets": 14,
+     "rung": "eta2",
+     "skill": -0.441178,
+     "skillCi95": [
+      -0.484854,
+      -0.410566
+     ],
+     "trainedOn": [
+      "totis-ti64-2021"
+     ],
+     "unresolvedDefault": 0,
+     "unresolvedServed": 0,
+     "verdictVsDefault": "does-not-beat",
+     "verdictVsPowerlaw": "inconclusive",
+     "widthRatio90": 1.76408
+    },
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 32,
+      "n": 32,
+      "wilson95": [
+       0.892821,
+       1.0
+      ]
+     },
+     "heldOut": "totis-ti64-2021",
+     "intervalNotInformative90": false,
+     "mapeDefault": 6.01138,
+     "mapePowerlaw": 19.3399,
+     "mapeServed": 18.8635,
+     "nRows": 32,
+     "nSets": 28,
+     "rung": "eta2",
+     "skill": -2.13797,
+     "skillCi95": [
+      -2.63178,
+      -1.81341
+     ],
+     "trainedOn": [
+      "ku-leuven-ti64-2021"
+     ],
+     "unresolvedDefault": 0,
+     "unresolvedServed": 0,
+     "verdictVsDefault": "does-not-beat",
+     "verdictVsPowerlaw": "inconclusive",
+     "widthRatio90": 2.41171
+    }
+   ],
+   "params": {
+    "boundHitFractionD": 0.0,
+    "boundHitFractionW": 0.0,
+    "cD": {
+     "conduction": -0.0163167,
+     "keyhole": -0.0148638,
+     "transition": -0.0148638
+    },
+    "etaD": 0.39,
+    "etaD_ci90": [
+     0.385,
+     0.395
+    ],
+    "etaJoint": 0.385,
+    "etaJoint_ci90": [
+     0.38,
+     0.38775
+    ],
+    "etaPrior": 0.35,
+    "etaW": 0.355,
+    "etaW_ci90": [
+     0.35,
+     0.365
+    ]
+   },
+   "quantity": "width",
+   "reasons": [
+    "sourceDependentEta",
+    "noRungImprovesAcrossSources: no ladder rung beats default on the inner training score",
+    "held-out source ku-leuven-ti64-2021: skill CI95 lower bound -0.485 < -0.02",
+    "held-out source totis-ti64-2021: skill CI95 lower bound -2.632 < -0.02",
+    "no held-out source with skill CI95 lower bound > 0"
+   ],
+   "servedRung": "default",
+   "status": "rejected"
+  },
+  {
+   "beamStatuses": {
+    "37.5": "rejected",
+    "75": "rejected"
+   },
+   "flagNotes": [],
+   "flags": [],
+   "headline": {
+    "equalSourceWeight": {
+     "mapeDefault": 18.7442,
+     "mapeServed": 29.2653
+    },
+    "rowWeighted": {
+     "mapeDefault": 14.8606,
+     "mapeServed": 30.8775
+    }
+   },
+   "kernel": "eagar-tsai",
+   "material": "Ti-6Al-4V",
+   "p1": [
+    {
+     "mapeDefault": 7.09338,
+     "mapeServed": 3.41391,
+     "nRows": 32,
+     "nSets": 28,
+     "skill": 0.518719,
+     "skillCi95": [
+      0.330703,
+      0.654142
+     ],
+     "source": "totis-ti64-2021"
+    }
+   ],
+   "p2": [
+    {
+     "coverage90": {
+      "coverage": 0.0,
+      "k": 0,
+      "n": 16,
+      "wilson95": [
+       0.0,
+       0.193608
+      ]
+     },
+     "heldOut": "ku-leuven-ti64-2021",
+     "intervalNotInformative90": false,
+     "mapeDefault": 30.3949,
+     "mapePowerlaw": 25.2445,
+     "mapeServed": 24.4288,
+     "nRows": 16,
+     "nSets": 14,
+     "rung": "eta",
+     "skill": 0.196288,
+     "skillCi95": [
+      0.187936,
+      0.207367
+     ],
+     "trainedOn": [
+      "totis-ti64-2021"
+     ],
+     "unresolvedDefault": 0,
+     "unresolvedServed": 0,
+     "verdictVsDefault": "beats",
+     "verdictVsPowerlaw": "beats",
+     "widthRatio90": 1.57433
+    },
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 32,
+      "n": 32,
+      "wilson95": [
+       0.892821,
+       1.0
+      ]
+     },
+     "heldOut": "totis-ti64-2021",
+     "intervalNotInformative90": true,
+     "mapeDefault": 7.09338,
+     "mapePowerlaw": 34.2152,
+     "mapeServed": 34.1019,
+     "nRows": 32,
+     "nSets": 28,
+     "rung": "eta2",
+     "skill": -3.80756,
+     "skillCi95": [
+      -4.89744,
+      -2.91537
+     ],
+     "trainedOn": [
+      "ku-leuven-ti64-2021"
+     ],
+     "unresolvedDefault": 0,
+     "unresolvedServed": 0,
+     "verdictVsDefault": "does-not-beat",
+     "verdictVsPowerlaw": "inconclusive",
+     "widthRatio90": 3.57228
+    }
+   ],
+   "params": {
+    "boundHitFractionD": 0.0,
+    "boundHitFractionW": 0.0,
+    "cD": {
+     "conduction": -0.0163167,
+     "keyhole": -0.0148638,
+     "transition": -0.0148638
+    },
+    "etaD": 0.39,
+    "etaD_ci90": [
+     0.385,
+     0.395
+    ],
+    "etaJoint": 0.385,
+    "etaJoint_ci90": [
+     0.38,
+     0.38775
+    ],
+    "etaPrior": 0.35,
+    "etaW": 0.355,
+    "etaW_ci90": [
+     0.35,
+     0.365
+    ]
+   },
+   "quantity": "depth",
+   "reasons": [
+    "sourceDependentEta",
+    "noRungImprovesAcrossSources: no ladder rung beats default on the inner training score",
+    "held-out source ku-leuven-ti64-2021: 90 % PI coverage Wilson upper bound 0.194 < 0.9",
+    "held-out source totis-ti64-2021: skill CI95 lower bound -4.897 < -0.02"
+   ],
+   "servedRung": "default",
+   "status": "rejected"
+  },
+  {
+   "beamStatuses": null,
+   "flagNotes": [],
+   "flags": [],
+   "headline": null,
+   "kernel": "eagar-tsai",
+   "material": "Inconel 625",
+   "p1": [
+    {
+     "mapeDefault": 9.19949,
+     "mapeServed": 2.83679,
+     "nRows": 26,
+     "nSets": 23,
+     "skill": 0.691636,
+     "skillCi95": [
+      0.611357,
+      0.75793
+     ],
+     "source": "lane-in625-2020"
+    }
+   ],
+   "p2": [],
+   "params": {
+    "boundHitFractionD": 0.0,
+    "boundHitFractionW": 0.0,
+    "cD": {
+     "conduction": 0.00327354,
+     "keyhole": 0.00327354,
+     "transition": 0.00327354
+    },
+    "etaD": 0.425,
+    "etaD_ci90": [
+     0.415,
+     0.43
+    ],
+    "etaJoint": 0.43,
+    "etaJoint_ci90": [
+     0.42225,
+     0.435
+    ],
+    "etaPrior": 0.38,
+    "etaW": 0.46,
+    "etaW_ci90": [
+     0.45,
+     0.475
+    ]
+   },
+   "quantity": "width",
+   "reasons": [
+    "single source: no leave-one-source-out available"
+   ],
+   "servedRung": "eta2",
+   "status": "within-source-only"
+  },
+  {
+   "beamStatuses": null,
+   "flagNotes": [],
+   "flags": [],
+   "headline": null,
+   "kernel": "eagar-tsai",
+   "material": "Inconel 625",
+   "p1": [
+    {
+     "mapeDefault": 9.63426,
+     "mapeServed": 4.51992,
+     "nRows": 26,
+     "nSets": 23,
+     "skill": 0.530849,
+     "skillCi95": [
+      0.385619,
+      0.663917
+     ],
+     "source": "lane-in625-2020"
+    }
+   ],
+   "p2": [],
+   "params": {
+    "boundHitFractionD": 0.0,
+    "boundHitFractionW": 0.0,
+    "cD": {
+     "conduction": 0.00327354,
+     "keyhole": 0.00327354,
+     "transition": 0.00327354
+    },
+    "etaD": 0.425,
+    "etaD_ci90": [
+     0.415,
+     0.43
+    ],
+    "etaJoint": 0.43,
+    "etaJoint_ci90": [
+     0.42225,
+     0.435
+    ],
+    "etaPrior": 0.38,
+    "etaW": 0.46,
+    "etaW_ci90": [
+     0.45,
+     0.475
+    ]
+   },
+   "quantity": "depth",
+   "reasons": [
+    "single source: no leave-one-source-out available"
+   ],
+   "servedRung": "eta",
+   "status": "within-source-only"
+  },
+  {
+   "beamStatuses": null,
+   "flagNotes": [],
+   "flags": [],
+   "headline": null,
+   "kernel": "eagar-tsai",
+   "material": "Inconel 718",
+   "p1": [],
+   "p2": [],
+   "params": null,
+   "quantity": "width",
+   "reasons": [
+    "no trainable measured source for this alloy"
+   ],
+   "servedRung": null,
+   "status": "no-data"
+  },
+  {
+   "beamStatuses": null,
+   "flagNotes": [],
+   "flags": [],
+   "headline": null,
+   "kernel": "eagar-tsai",
+   "material": "Inconel 718",
+   "p1": [],
+   "p2": [],
+   "params": null,
+   "quantity": "depth",
+   "reasons": [
+    "no trainable measured source for this alloy"
+   ],
+   "servedRung": null,
+   "status": "no-data"
+  },
+  {
+   "beamStatuses": null,
+   "flagNotes": [],
+   "flags": [],
+   "headline": null,
+   "kernel": "eagar-tsai",
+   "material": "AlSi10Mg",
+   "p1": [],
+   "p2": [],
+   "params": null,
+   "quantity": "width",
+   "reasons": [
+    "no trainable measured source for this alloy"
+   ],
+   "servedRung": null,
+   "status": "no-data"
+  },
+  {
+   "beamStatuses": null,
+   "flagNotes": [],
+   "flags": [],
+   "headline": null,
+   "kernel": "eagar-tsai",
+   "material": "AlSi10Mg",
+   "p1": [],
+   "p2": [],
+   "params": null,
+   "quantity": "depth",
+   "reasons": [
+    "no trainable measured source for this alloy"
+   ],
+   "servedRung": null,
+   "status": "no-data"
+  },
+  {
+   "beamStatuses": {
+    "37.5": "within-source-only",
+    "75": "within-source-only"
+   },
+   "flagNotes": [],
+   "flags": [],
+   "headline": {
+    "equalSourceWeight": {
+     "mapeDefault": 6.91298,
+     "mapeServed": 7.11416
+    },
+    "rowWeighted": {
+     "mapeDefault": 6.56452,
+     "mapeServed": 7.08594
+    }
+   },
+   "kernel": "goldak",
+   "material": "316L Stainless Steel",
+   "p1": [
+    {
+     "mapeDefault": 3.87639,
+     "mapeServed": 2.94204,
+     "nRows": 34,
+     "nSets": 30,
+     "skill": 0.241038,
+     "skillCi95": [
+      0.0571558,
+      0.382769
+     ],
+     "source": "hofmann-316l-2026"
+    },
+    {
+     "mapeDefault": 9.94957,
+     "mapeServed": 2.62007,
+     "nRows": 27,
+     "nSets": 24,
+     "skill": 0.736665,
+     "skillCi95": [
+      0.61942,
+      0.795099
+     ],
+     "source": "ku-leuven-316l-2021"
+    }
+   ],
+   "p2": [
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 34,
+      "n": 34,
+      "wilson95": [
+       0.898485,
+       1.0
+      ]
+     },
+     "heldOut": "hofmann-316l-2026",
+     "intervalNotInformative90": true,
+     "mapeDefault": 3.87639,
+     "mapePowerlaw": 7.64715,
+     "mapeServed": 6.86825,
+     "nRows": 34,
+     "nSets": 30,
+     "rung": "eta2",
+     "skill": -0.771814,
+     "skillCi95": [
+      -1.76227,
+      -0.245431
+     ],
+     "trainedOn": [
+      "ku-leuven-316l-2021"
+     ],
+     "unresolvedDefault": 0,
+     "unresolvedServed": 0,
+     "verdictVsDefault": "does-not-beat",
+     "verdictVsPowerlaw": "beats",
+     "widthRatio90": 3.61169
+    },
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 27,
+      "n": 27,
+      "wilson95": [
+       0.875445,
+       1.0
+      ]
+     },
+     "heldOut": "ku-leuven-316l-2021",
+     "intervalNotInformative90": true,
+     "mapeDefault": 9.94957,
+     "mapePowerlaw": 6.75844,
+     "mapeServed": 7.36007,
+     "nRows": 27,
+     "nSets": 24,
+     "rung": "eta2",
+     "skill": 0.260263,
+     "skillCi95": [
+      0.228581,
+      0.289557
+     ],
+     "trainedOn": [
+      "hofmann-316l-2026"
+     ],
+     "unresolvedDefault": 0,
+     "unresolvedServed": 0,
+     "verdictVsDefault": "beats",
+     "verdictVsPowerlaw": "does-not-beat",
+     "widthRatio90": 3.43692
+    }
+   ],
+   "params": {
+    "boundHitFractionD": 0.0,
+    "boundHitFractionW": 0.0,
+    "cD": {
+     "conduction": 0.00197516,
+     "keyhole": 0.00197516,
+     "transition": 0.00197516
+    },
+    "etaD": 0.43,
+    "etaD_ci90": [
+     0.43,
+     0.435
+    ],
+    "etaJoint": 0.435,
+    "etaJoint_ci90": [
+     0.43,
+     0.44
+    ],
+    "etaPrior": 0.42,
+    "etaW": 0.49,
+    "etaW_ci90": [
+     0.475,
+     0.5
+    ]
+   },
+   "quantity": "width",
+   "reasons": [
+    "noRungImprovesAcrossSources: no ladder rung beats default on the inner training score",
+    "held-out source hofmann-316l-2026: skill CI95 lower bound -1.762 < -0.02"
+   ],
+   "servedRung": "default",
+   "status": "within-source-only"
+  },
+  {
+   "beamStatuses": {
+    "37.5": "rejected",
+    "75": "rejected"
+   },
+   "flagNotes": [],
+   "flags": [],
+   "headline": {
+    "equalSourceWeight": {
+     "mapeDefault": 3.66722,
+     "mapeServed": 3.12496
+    },
+    "rowWeighted": {
+     "mapeDefault": 3.71651,
+     "mapeServed": 3.12591
+    }
+   },
+   "kernel": "goldak",
+   "material": "316L Stainless Steel",
+   "p1": [
+    {
+     "mapeDefault": 4.0967,
+     "mapeServed": 3.26772,
+     "nRows": 34,
+     "nSets": 30,
+     "skill": 0.202354,
+     "skillCi95": [
+      -0.060086,
+      0.380589
+     ],
+     "source": "hofmann-316l-2026"
+    },
+    {
+     "mapeDefault": 3.23775,
+     "mapeServed": 2.95223,
+     "nRows": 27,
+     "nSets": 24,
+     "skill": 0.0881846,
+     "skillCi95": [
+      -0.206271,
+      0.307539
+     ],
+     "source": "ku-leuven-316l-2021"
+    }
+   ],
+   "p2": [
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 34,
+      "n": 34,
+      "wilson95": [
+       0.898485,
+       1.0
+      ]
+     },
+     "heldOut": "hofmann-316l-2026",
+     "intervalNotInformative90": true,
+     "mapeDefault": 4.0967,
+     "mapePowerlaw": 3.31867,
+     "mapeServed": 3.13322,
+     "nRows": 34,
+     "nSets": 30,
+     "rung": "eta2+dOffset",
+     "skill": 0.235183,
+     "skillCi95": [
+      0.136582,
+      0.340469
+     ],
+     "trainedOn": [
+      "ku-leuven-316l-2021"
+     ],
+     "unresolvedDefault": 0,
+     "unresolvedServed": 0,
+     "verdictVsDefault": "beats",
+     "verdictVsPowerlaw": "inconclusive",
+     "widthRatio90": 6.18925
+    },
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 27,
+      "n": 27,
+      "wilson95": [
+       0.875445,
+       1.0
+      ]
+     },
+     "heldOut": "ku-leuven-316l-2021",
+     "intervalNotInformative90": true,
+     "mapeDefault": 3.23775,
+     "mapePowerlaw": 3.3727,
+     "mapeServed": 3.1167,
+     "nRows": 27,
+     "nSets": 24,
+     "rung": "eta2+dOffset",
+     "skill": 0.0373886,
+     "skillCi95": [
+      -0.511805,
+      0.337365
+     ],
+     "trainedOn": [
+      "hofmann-316l-2026"
+     ],
+     "unresolvedDefault": 0,
+     "unresolvedServed": 0,
+     "verdictVsDefault": "inconclusive",
+     "verdictVsPowerlaw": "inconclusive",
+     "widthRatio90": 6.17308
+    }
+   ],
+   "params": {
+    "boundHitFractionD": 0.0,
+    "boundHitFractionW": 0.0,
+    "cD": {
+     "conduction": 0.00197516,
+     "keyhole": 0.00197516,
+     "transition": 0.00197516
+    },
+    "etaD": 0.43,
+    "etaD_ci90": [
+     0.43,
+     0.435
+    ],
+    "etaJoint": 0.435,
+    "etaJoint_ci90": [
+     0.43,
+     0.44
+    ],
+    "etaPrior": 0.42,
+    "etaW": 0.49,
+    "etaW_ci90": [
+     0.475,
+     0.5
+    ]
+   },
+   "quantity": "depth",
+   "reasons": [
+    "held-out source ku-leuven-316l-2021: skill CI95 lower bound -0.512 < -0.02",
+    "within-source skill CI95 lower bound not > 0 on any source"
+   ],
+   "servedRung": "eta2",
+   "status": "rejected"
+  },
+  {
+   "beamStatuses": {
+    "37.5": "rejected",
+    "75": "rejected"
+   },
+   "flagNotes": [],
+   "flags": [],
+   "headline": {
+    "equalSourceWeight": {
+     "mapeDefault": 12.9647,
+     "mapeServed": 20.2372
+    },
+    "rowWeighted": {
+     "mapeDefault": 9.85997,
+     "mapeServed": 18.9785
+    }
+   },
+   "kernel": "goldak",
+   "material": "Ti-6Al-4V",
+   "p1": [
+    {
+     "mapeDefault": 3.65053,
+     "mapeServed": 3.69633,
+     "nRows": 32,
+     "nSets": 28,
+     "skill": -0.012547,
+     "skillCi95": [
+      -0.0527871,
+      0.0243063
+     ],
+     "source": "totis-ti64-2021"
+    }
+   ],
+   "p2": [
+    {
+     "coverage90": {
+      "coverage": 0.0,
+      "k": 0,
+      "n": 16,
+      "wilson95": [
+       0.0,
+       0.193608
+      ]
+     },
+     "heldOut": "ku-leuven-ti64-2021",
+     "intervalNotInformative90": false,
+     "mapeDefault": 22.2789,
+     "mapePowerlaw": 24.3258,
+     "mapeServed": 24.0133,
+     "nRows": 16,
+     "nSets": 14,
+     "rung": "eta",
+     "skill": -0.0778531,
+     "skillCi95": [
+      -0.0834043,
+      -0.0737885
+     ],
+     "trainedOn": [
+      "totis-ti64-2021"
+     ],
+     "unresolvedDefault": 0,
+     "unresolvedServed": 0,
+     "verdictVsDefault": "does-not-beat",
+     "verdictVsPowerlaw": "inconclusive",
+     "widthRatio90": 1.32813
+    },
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 32,
+      "n": 32,
+      "wilson95": [
+       0.892821,
+       1.0
+      ]
+     },
+     "heldOut": "totis-ti64-2021",
+     "intervalNotInformative90": true,
+     "mapeDefault": 3.65053,
+     "mapePowerlaw": 19.3399,
+     "mapeServed": 16.4611,
+     "nRows": 32,
+     "nSets": 28,
+     "rung": "eta2",
+     "skill": -3.50923,
+     "skillCi95": [
+      -4.53026,
+      -2.70926
+     ],
+     "trainedOn": [
+      "ku-leuven-ti64-2021"
+     ],
+     "unresolvedDefault": 0,
+     "unresolvedServed": 0,
+     "verdictVsDefault": "does-not-beat",
+     "verdictVsPowerlaw": "beats",
+     "widthRatio90": 2.56469
+    }
+   ],
+   "params": {
+    "boundHitFractionD": 0.0,
+    "boundHitFractionW": 0.0,
+    "cD": {
+     "conduction": -0.0258867,
+     "keyhole": -0.0244348,
+     "transition": -0.0244348
+    },
+    "etaD": 0.375,
+    "etaD_ci90": [
+     0.37,
+     0.38
+    ],
+    "etaJoint": 0.365,
+    "etaJoint_ci90": [
+     0.36,
+     0.365
+    ],
+    "etaPrior": 0.35,
+    "etaW": 0.325,
+    "etaW_ci90": [
+     0.315,
+     0.33275
+    ]
+   },
+   "quantity": "width",
+   "reasons": [
+    "sourceDependentEta",
+    "noRungImprovesAcrossSources: no ladder rung beats default on the inner training score",
+    "held-out source ku-leuven-ti64-2021: skill CI95 lower bound -0.083 < -0.02",
+    "held-out source ku-leuven-ti64-2021: 90 % PI coverage Wilson upper bound 0.194 < 0.9",
+    "held-out source totis-ti64-2021: skill CI95 lower bound -4.530 < -0.02",
+    "no held-out source with skill CI95 lower bound > 0"
+   ],
+   "servedRung": "default",
+   "status": "rejected"
+  },
+  {
+   "beamStatuses": {
+    "37.5": "rejected",
+    "75": "rejected"
+   },
+   "flagNotes": [],
+   "flags": [],
+   "headline": {
+    "equalSourceWeight": {
+     "mapeDefault": 15.2793,
+     "mapeServed": 29.3314
+    },
+    "rowWeighted": {
+     "mapeDefault": 11.4008,
+     "mapeServed": 30.8331
+    }
+   },
+   "kernel": "goldak",
+   "material": "Ti-6Al-4V",
+   "p1": [
+    {
+     "mapeDefault": 3.64392,
+     "mapeServed": 3.63684,
+     "nRows": 32,
+     "nSets": 28,
+     "skill": 0.00194376,
+     "skillCi95": [
+      -0.246647,
+      0.148228
+     ],
+     "source": "totis-ti64-2021"
+    }
+   ],
+   "p2": [
+    {
+     "coverage90": {
+      "coverage": 0.0,
+      "k": 0,
+      "n": 16,
+      "wilson95": [
+       0.0,
+       0.193608
+      ]
+     },
+     "heldOut": "ku-leuven-ti64-2021",
+     "intervalNotInformative90": false,
+     "mapeDefault": 26.9147,
+     "mapePowerlaw": 25.2445,
+     "mapeServed": 24.8265,
+     "nRows": 16,
+     "nSets": 14,
+     "rung": "eta",
+     "skill": 0.0775846,
+     "skillCi95": [
+      0.0738772,
+      0.0825668
+     ],
+     "trainedOn": [
+      "totis-ti64-2021"
+     ],
+     "unresolvedDefault": 0,
+     "unresolvedServed": 0,
+     "verdictVsDefault": "beats",
+     "verdictVsPowerlaw": "beats",
+     "widthRatio90": 1.34346
+    },
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 32,
+      "n": 32,
+      "wilson95": [
+       0.892821,
+       1.0
+      ]
+     },
+     "heldOut": "totis-ti64-2021",
+     "intervalNotInformative90": true,
+     "mapeDefault": 3.64392,
+     "mapePowerlaw": 34.2152,
+     "mapeServed": 33.8364,
+     "nRows": 32,
+     "nSets": 28,
+     "rung": "eta2",
+     "skill": -8.2857,
+     "skillCi95": [
+      -11.8884,
+      -6.27966
+     ],
+     "trainedOn": [
+      "ku-leuven-ti64-2021"
+     ],
+     "unresolvedDefault": 0,
+     "unresolvedServed": 0,
+     "verdictVsDefault": "does-not-beat",
+     "verdictVsPowerlaw": "inconclusive",
+     "widthRatio90": 3.09368
+    }
+   ],
+   "params": {
+    "boundHitFractionD": 0.0,
+    "boundHitFractionW": 0.0,
+    "cD": {
+     "conduction": -0.0258867,
+     "keyhole": -0.0244348,
+     "transition": -0.0244348
+    },
+    "etaD": 0.375,
+    "etaD_ci90": [
+     0.37,
+     0.38
+    ],
+    "etaJoint": 0.365,
+    "etaJoint_ci90": [
+     0.36,
+     0.365
+    ],
+    "etaPrior": 0.35,
+    "etaW": 0.325,
+    "etaW_ci90": [
+     0.315,
+     0.33275
+    ]
+   },
+   "quantity": "depth",
+   "reasons": [
+    "sourceDependentEta",
+    "noRungImprovesAcrossSources: no ladder rung beats default on the inner training score",
+    "held-out source ku-leuven-ti64-2021: 90 % PI coverage Wilson upper bound 0.194 < 0.9",
+    "held-out source totis-ti64-2021: skill CI95 lower bound -11.888 < -0.02"
+   ],
+   "servedRung": "default",
+   "status": "rejected"
+  },
+  {
+   "beamStatuses": null,
+   "flagNotes": [],
+   "flags": [],
+   "headline": null,
+   "kernel": "goldak",
+   "material": "Inconel 625",
+   "p1": [
+    {
+     "mapeDefault": 4.67967,
+     "mapeServed": 3.24223,
+     "nRows": 26,
+     "nSets": 23,
+     "skill": 0.307167,
+     "skillCi95": [
+      0.13232,
+      0.463895
+     ],
+     "source": "lane-in625-2020"
+    }
+   ],
+   "p2": [],
+   "params": {
+    "boundHitFractionD": 0.0,
+    "boundHitFractionW": 0.0,
+    "cD": {
+     "conduction": 0.00268485,
+     "keyhole": 0.00268485,
+     "transition": 0.00268485
+    },
+    "etaD": 0.405,
+    "etaD_ci90": [
+     0.395,
+     0.41
+    ],
+    "etaJoint": 0.41,
+    "etaJoint_ci90": [
+     0.4,
+     0.41
+    ],
+    "etaPrior": 0.38,
+    "etaW": 0.42,
+    "etaW_ci90": [
+     0.405,
+     0.43
+    ]
+   },
+   "quantity": "width",
+   "reasons": [
+    "single source: no leave-one-source-out available"
+   ],
+   "servedRung": "eta",
+   "status": "within-source-only"
+  },
+  {
+   "beamStatuses": null,
+   "flagNotes": [],
+   "flags": [],
+   "headline": null,
+   "kernel": "goldak",
+   "material": "Inconel 625",
+   "p1": [
+    {
+     "mapeDefault": 6.09525,
+     "mapeServed": 4.48489,
+     "nRows": 26,
+     "nSets": 23,
+     "skill": 0.264199,
+     "skillCi95": [
+      0.0560701,
+      0.459054
+     ],
+     "source": "lane-in625-2020"
+    }
+   ],
+   "p2": [],
+   "params": {
+    "boundHitFractionD": 0.0,
+    "boundHitFractionW": 0.0,
+    "cD": {
+     "conduction": 0.00268485,
+     "keyhole": 0.00268485,
+     "transition": 0.00268485
+    },
+    "etaD": 0.405,
+    "etaD_ci90": [
+     0.395,
+     0.41
+    ],
+    "etaJoint": 0.41,
+    "etaJoint_ci90": [
+     0.4,
+     0.41
+    ],
+    "etaPrior": 0.38,
+    "etaW": 0.42,
+    "etaW_ci90": [
+     0.405,
+     0.43
+    ]
+   },
+   "quantity": "depth",
+   "reasons": [
+    "single source: no leave-one-source-out available"
+   ],
+   "servedRung": "eta",
+   "status": "within-source-only"
+  },
+  {
+   "beamStatuses": null,
+   "flagNotes": [],
+   "flags": [],
+   "headline": null,
+   "kernel": "goldak",
+   "material": "Inconel 718",
+   "p1": [],
+   "p2": [],
+   "params": null,
+   "quantity": "width",
+   "reasons": [
+    "no trainable measured source for this alloy"
+   ],
+   "servedRung": null,
+   "status": "no-data"
+  },
+  {
+   "beamStatuses": null,
+   "flagNotes": [],
+   "flags": [],
+   "headline": null,
+   "kernel": "goldak",
+   "material": "Inconel 718",
+   "p1": [],
+   "p2": [],
+   "params": null,
+   "quantity": "depth",
+   "reasons": [
+    "no trainable measured source for this alloy"
+   ],
+   "servedRung": null,
+   "status": "no-data"
+  },
+  {
+   "beamStatuses": null,
+   "flagNotes": [],
+   "flags": [],
+   "headline": null,
+   "kernel": "goldak",
+   "material": "AlSi10Mg",
+   "p1": [],
+   "p2": [],
+   "params": null,
+   "quantity": "width",
+   "reasons": [
+    "no trainable measured source for this alloy"
+   ],
+   "servedRung": null,
+   "status": "no-data"
+  },
+  {
+   "beamStatuses": null,
+   "flagNotes": [],
+   "flags": [],
+   "headline": null,
+   "kernel": "goldak",
+   "material": "AlSi10Mg",
+   "p1": [],
+   "p2": [],
+   "params": null,
+   "quantity": "depth",
+   "reasons": [
+    "no trainable measured source for this alloy"
+   ],
+   "servedRung": null,
+   "status": "no-data"
+  },
+  {
+   "beamStatuses": {
+    "37.5": "rejected",
+    "75": "rejected"
+   },
+   "flagNotes": [
+    "etaSplit: |ln(eta_D/eta_W)| = 0.29 > ln 1.3 (eta_W 0.665, eta_D 0.500): one physical absorptivity cannot be both",
+    "etaInconsistentWithMeasuredAbsorptance: fitted effective eta disagrees with measured absorptance (conduction band 0.24-0.45, eta 0.665) -> eta is absorbing model error (diagnostic, not a validation claim)"
+   ],
+   "flags": [
+    "etaInconsistentWithMeasuredAbsorptance",
+    "etaSplit"
+   ],
+   "headline": {
+    "equalSourceWeight": {
+     "mapeDefault": 19.9138,
+     "mapeServed": 7.16713
+    },
+    "rowWeighted": {
+     "mapeDefault": 19.581,
+     "mapeServed": 7.13938
+    }
+   },
+   "kernel": "rosenthal",
+   "material": "316L Stainless Steel",
+   "p1": [
+    {
+     "mapeDefault": 17.0136,
+     "mapeServed": 2.88763,
+     "nRows": 34,
+     "nSets": 30,
+     "skill": 0.830275,
+     "skillCi95": [
+      0.783608,
+      0.878473
+     ],
+     "source": "hofmann-316l-2026"
+    },
+    {
+     "mapeDefault": 22.814,
+     "mapeServed": 2.53507,
+     "nRows": 27,
+     "nSets": 24,
+     "skill": 0.888881,
+     "skillCi95": [
+      0.847635,
+      0.916893
+     ],
+     "source": "ku-leuven-316l-2021"
+    }
+   ],
+   "p2": [
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 34,
+      "n": 34,
+      "wilson95": [
+       0.898485,
+       1.0
+      ]
+     },
+     "heldOut": "hofmann-316l-2026",
+     "intervalNotInformative90": true,
+     "mapeDefault": 17.0136,
+     "mapePowerlaw": 7.64715,
+     "mapeServed": 6.92528,
+     "nRows": 34,
+     "nSets": 30,
+     "rung": "eta2",
+     "skill": 0.592956,
+     "skillCi95": [
+      0.473434,
+      0.677393
+     ],
+     "trainedOn": [
+      "ku-leuven-316l-2021"
+     ],
+     "unresolvedDefault": 0,
+     "unresolvedServed": 0,
+     "verdictVsDefault": "beats",
+     "verdictVsPowerlaw": "beats",
+     "widthRatio90": 5.20296
+    },
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 27,
+      "n": 27,
+      "wilson95": [
+       0.875445,
+       1.0
+      ]
+     },
+     "heldOut": "ku-leuven-316l-2021",
+     "intervalNotInformative90": true,
+     "mapeDefault": 22.814,
+     "mapePowerlaw": 6.75844,
+     "mapeServed": 7.40899,
+     "nRows": 27,
+     "nSets": 24,
+     "rung": "eta2",
+     "skill": 0.675244,
+     "skillCi95": [
+      0.632787,
+      0.709552
+     ],
+     "trainedOn": [
+      "hofmann-316l-2026"
+     ],
+     "unresolvedDefault": 0,
+     "unresolvedServed": 0,
+     "verdictVsDefault": "beats",
+     "verdictVsPowerlaw": "does-not-beat",
+     "widthRatio90": 4.72205
+    }
+   ],
+   "params": {
+    "boundHitFractionD": 0.0,
+    "boundHitFractionW": 0.0,
+    "cD": {
+     "conduction": 0.00530385,
+     "keyhole": 0.00530385,
+     "transition": 0.00530385
+    },
+    "etaD": 0.5,
+    "etaD_ci90": [
+     0.5,
+     0.505
+    ],
+    "etaJoint": 0.515,
+    "etaJoint_ci90": [
+     0.505,
+     0.515
+    ],
+    "etaPrior": 0.42,
+    "etaW": 0.665,
+    "etaW_ci90": [
+     0.634,
+     0.675
+    ]
+   },
+   "quantity": "width",
+   "reasons": [
+    "etaSplit",
+    "etaInconsistentWithMeasuredAbsorptance"
+   ],
+   "servedRung": "eta2",
+   "status": "rejected"
+  },
+  {
+   "beamStatuses": {
+    "37.5": "rejected",
+    "75": "rejected"
+   },
+   "flagNotes": [
+    "etaSplit: |ln(eta_D/eta_W)| = 0.29 > ln 1.3 (eta_W 0.665, eta_D 0.500): one physical absorptivity cannot be both",
+    "etaInconsistentWithMeasuredAbsorptance: fitted effective eta disagrees with measured absorptance (conduction band 0.24-0.45, eta 0.500) -> eta is absorbing model error (diagnostic, not a validation claim)"
+   ],
+   "flags": [
+    "etaInconsistentWithMeasuredAbsorptance",
+    "etaSplit"
+   ],
+   "headline": {
+    "equalSourceWeight": {
+     "mapeDefault": 16.6926,
+     "mapeServed": 3.05277
+    },
+    "rowWeighted": {
+     "mapeDefault": 16.7906,
+     "mapeServed": 3.05645
+    }
+   },
+   "kernel": "rosenthal",
+   "material": "316L Stainless Steel",
+   "p1": [
+    {
+     "mapeDefault": 17.547,
+     "mapeServed": 3.06229,
+     "nRows": 34,
+     "nSets": 30,
+     "skill": 0.825481,
+     "skillCi95": [
+      0.787719,
+      0.86682
+     ],
+     "source": "hofmann-316l-2026"
+    },
+    {
+     "mapeDefault": 15.8382,
+     "mapeServed": 2.93862,
+     "nRows": 27,
+     "nSets": 24,
+     "skill": 0.814459,
+     "skillCi95": [
+      0.765658,
+      0.861966
+     ],
+     "source": "ku-leuven-316l-2021"
+    }
+   ],
+   "p2": [
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 34,
+      "n": 34,
+      "wilson95": [
+       0.898485,
+       1.0
+      ]
+     },
+     "heldOut": "hofmann-316l-2026",
+     "intervalNotInformative90": true,
+     "mapeDefault": 17.547,
+     "mapePowerlaw": 3.31867,
+     "mapeServed": 3.08488,
+     "nRows": 34,
+     "nSets": 30,
+     "rung": "eta2",
+     "skill": 0.824194,
+     "skillCi95": [
+      0.78361,
+      0.865942
+     ],
+     "trainedOn": [
+      "ku-leuven-316l-2021"
+     ],
+     "unresolvedDefault": 0,
+     "unresolvedServed": 0,
+     "verdictVsDefault": "beats",
+     "verdictVsPowerlaw": "inconclusive",
+     "widthRatio90": 7.02252
+    },
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 27,
+      "n": 27,
+      "wilson95": [
+       0.875445,
+       1.0
+      ]
+     },
+     "heldOut": "ku-leuven-316l-2021",
+     "intervalNotInformative90": true,
+     "mapeDefault": 15.8382,
+     "mapePowerlaw": 3.3727,
+     "mapeServed": 3.02066,
+     "nRows": 27,
+     "nSets": 24,
+     "rung": "eta2",
+     "skill": 0.80928,
+     "skillCi95": [
+      0.742997,
+      0.869934
+     ],
+     "trainedOn": [
+      "hofmann-316l-2026"
+     ],
+     "unresolvedDefault": 0,
+     "unresolvedServed": 0,
+     "verdictVsDefault": "beats",
+     "verdictVsPowerlaw": "inconclusive",
+     "widthRatio90": 7.1241
+    }
+   ],
+   "params": {
+    "boundHitFractionD": 0.0,
+    "boundHitFractionW": 0.0,
+    "cD": {
+     "conduction": 0.00530385,
+     "keyhole": 0.00530385,
+     "transition": 0.00530385
+    },
+    "etaD": 0.5,
+    "etaD_ci90": [
+     0.5,
+     0.505
+    ],
+    "etaJoint": 0.515,
+    "etaJoint_ci90": [
+     0.505,
+     0.515
+    ],
+    "etaPrior": 0.42,
+    "etaW": 0.665,
+    "etaW_ci90": [
+     0.634,
+     0.675
+    ]
+   },
+   "quantity": "depth",
+   "reasons": [
+    "etaSplit",
+    "etaInconsistentWithMeasuredAbsorptance"
+   ],
+   "servedRung": "eta2",
+   "status": "rejected"
+  },
+  {
+   "beamStatuses": {
+    "37.5": "rejected",
+    "75": "rejected"
+   },
+   "flagNotes": [],
+   "flags": [],
+   "headline": {
+    "equalSourceWeight": {
+     "mapeDefault": 10.2119,
+     "mapeServed": 21.5009
+    },
+    "rowWeighted": {
+     "mapeDefault": 11.9,
+     "mapeServed": 20.6634
+    }
+   },
+   "kernel": "rosenthal",
+   "material": "Ti-6Al-4V",
+   "p1": [
+    {
+     "mapeDefault": 15.2761,
+     "mapeServed": 3.67863,
+     "nRows": 32,
+     "nSets": 28,
+     "skill": 0.75919,
+     "skillCi95": [
+      0.701552,
+      0.80879
+     ],
+     "source": "totis-ti64-2021"
+    }
+   ],
+   "p2": [
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 16,
+      "n": 16,
+      "wilson95": [
+       0.806392,
+       1.0
+      ]
+     },
+     "heldOut": "ku-leuven-ti64-2021",
+     "intervalNotInformative90": false,
+     "mapeDefault": 5.14777,
+     "mapePowerlaw": 24.3258,
+     "mapeServed": 24.0133,
+     "nRows": 16,
+     "nSets": 14,
+     "rung": "eta2",
+     "skill": -3.6648,
+     "skillCi95": [
+      -4.78212,
+      -2.97667
+     ],
+     "trainedOn": [
+      "totis-ti64-2021"
+     ],
+     "unresolvedDefault": 0,
+     "unresolvedServed": 0,
+     "verdictVsDefault": "does-not-beat",
+     "verdictVsPowerlaw": "inconclusive",
+     "widthRatio90": 2.46635
+    },
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 32,
+      "n": 32,
+      "wilson95": [
+       0.892821,
+       1.0
+      ]
+     },
+     "heldOut": "totis-ti64-2021",
+     "intervalNotInformative90": true,
+     "mapeDefault": 15.2761,
+     "mapePowerlaw": 19.3399,
+     "mapeServed": 18.9884,
+     "nRows": 32,
+     "nSets": 28,
+     "rung": "eta2",
+     "skill": -0.243016,
+     "skillCi95": [
+      -0.263007,
+      -0.226358
+     ],
+     "trainedOn": [
+      "ku-leuven-ti64-2021"
+     ],
+     "unresolvedDefault": 0,
+     "unresolvedServed": 0,
+     "verdictVsDefault": "does-not-beat",
+     "verdictVsPowerlaw": "inconclusive",
+     "widthRatio90": 2.531
+    }
+   ],
+   "params": {
+    "boundHitFractionD": 0.0,
+    "boundHitFractionW": 0.0,
+    "cD": {
+     "conduction": -0.0201565,
+     "keyhole": -0.0187037,
+     "transition": -0.0187037
+    },
+    "etaD": 0.435,
+    "etaD_ci90": [
+     0.43,
+     0.44
+    ],
+    "etaJoint": 0.435,
+    "etaJoint_ci90": [
+     0.43,
+     0.44
+    ],
+    "etaPrior": 0.35,
+    "etaW": 0.435,
+    "etaW_ci90": [
+     0.43,
+     0.44775
+    ]
+   },
+   "quantity": "width",
+   "reasons": [
+    "sourceDependentEta",
+    "noRungImprovesAcrossSources: no ladder rung beats default on the inner training score",
+    "held-out source ku-leuven-ti64-2021: skill CI95 lower bound -4.782 < -0.02",
+    "held-out source totis-ti64-2021: skill CI95 lower bound -0.263 < -0.02",
+    "no held-out source with skill CI95 lower bound > 0"
+   ],
+   "servedRung": "default",
+   "status": "rejected"
+  },
+  {
+   "beamStatuses": {
+    "37.5": "rejected",
+    "75": "rejected"
+   },
+   "flagNotes": [],
+   "flags": [],
+   "headline": {
+    "equalSourceWeight": {
+     "mapeDefault": 26.8539,
+     "mapeServed": 29.3314
+    },
+    "rowWeighted": {
+     "mapeDefault": 23.3533,
+     "mapeServed": 30.8331
+    }
+   },
+   "kernel": "rosenthal",
+   "material": "Ti-6Al-4V",
+   "p1": [
+    {
+     "mapeDefault": 16.3523,
+     "mapeServed": 3.45831,
+     "nRows": 32,
+     "nSets": 28,
+     "skill": 0.788512,
+     "skillCi95": [
+      0.728718,
+      0.833367
+     ],
+     "source": "totis-ti64-2021"
+    }
+   ],
+   "p2": [
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 16,
+      "n": 16,
+      "wilson95": [
+       0.806392,
+       1.0
+      ]
+     },
+     "heldOut": "ku-leuven-ti64-2021",
+     "intervalNotInformative90": false,
+     "mapeDefault": 37.3554,
+     "mapePowerlaw": 25.2445,
+     "mapeServed": 24.8265,
+     "nRows": 16,
+     "nSets": 14,
+     "rung": "eta2",
+     "skill": 0.335397,
+     "skillCi95": [
+      0.323692,
+      0.350638
+     ],
+     "trainedOn": [
+      "totis-ti64-2021"
+     ],
+     "unresolvedDefault": 0,
+     "unresolvedServed": 0,
+     "verdictVsDefault": "beats",
+     "verdictVsPowerlaw": "beats",
+     "widthRatio90": 2.3136
+    },
+    {
+     "coverage90": {
+      "coverage": 1.0,
+      "k": 32,
+      "n": 32,
+      "wilson95": [
+       0.892821,
+       1.0
+      ]
+     },
+     "heldOut": "totis-ti64-2021",
+     "intervalNotInformative90": true,
+     "mapeDefault": 16.3523,
+     "mapePowerlaw": 34.2152,
+     "mapeServed": 33.8363,
+     "nRows": 32,
+     "nSets": 28,
+     "rung": "eta2",
+     "skill": -1.06921,
+     "skillCi95": [
+      -1.29789,
+      -0.842777
+     ],
+     "trainedOn": [
+      "ku-leuven-ti64-2021"
+     ],
+     "unresolvedDefault": 0,
+     "unresolvedServed": 0,
+     "verdictVsDefault": "does-not-beat",
+     "verdictVsPowerlaw": "inconclusive",
+     "widthRatio90": 5.19291
+    }
+   ],
+   "params": {
+    "boundHitFractionD": 0.0,
+    "boundHitFractionW": 0.0,
+    "cD": {
+     "conduction": -0.0201565,
+     "keyhole": -0.0187037,
+     "transition": -0.0187037
+    },
+    "etaD": 0.435,
+    "etaD_ci90": [
+     0.43,
+     0.44
+    ],
+    "etaJoint": 0.435,
+    "etaJoint_ci90": [
+     0.43,
+     0.44
+    ],
+    "etaPrior": 0.35,
+    "etaW": 0.435,
+    "etaW_ci90": [
+     0.43,
+     0.44775
+    ]
+   },
+   "quantity": "depth",
+   "reasons": [
+    "sourceDependentEta",
+    "noRungImprovesAcrossSources: no ladder rung beats default on the inner training score",
+    "held-out source totis-ti64-2021: skill CI95 lower bound -1.298 < -0.02"
+   ],
+   "servedRung": "default",
+   "status": "rejected"
+  },
+  {
+   "beamStatuses": null,
+   "flagNotes": [],
+   "flags": [],
+   "headline": null,
+   "kernel": "rosenthal",
+   "material": "Inconel 625",
+   "p1": [
+    {
+     "mapeDefault": 18.2796,
+     "mapeServed": 2.92761,
+     "nRows": 26,
+     "nSets": 23,
+     "skill": 0.839842,
+     "skillCi95": [
+      0.8094,
+      0.872449
+     ],
+     "source": "lane-in625-2020"
+    }
+   ],
+   "p2": [],
+   "params": {
+    "boundHitFractionD": 0.0,
+    "boundHitFractionW": 0.0,
+    "cD": {
+     "conduction": 0.00798755,
+     "keyhole": 0.00798755,
+     "transition": 0.00798755
+    },
+    "etaD": 0.47,
+    "etaD_ci90": [
+     0.46225,
+     0.475
+    ],
+    "etaJoint": 0.485,
+    "etaJoint_ci90": [
+     0.475,
+     0.485
+    ],
+    "etaPrior": 0.38,
+    "etaW": 0.565,
+    "etaW_ci90": [
+     0.54725,
+     0.585
+    ]
+   },
+   "quantity": "width",
+   "reasons": [
+    "single source: no leave-one-source-out available"
+   ],
+   "servedRung": "eta2",
+   "status": "within-source-only"
+  },
+  {
+   "beamStatuses": null,
+   "flagNotes": [],
+   "flags": [],
+   "headline": null,
+   "kernel": "rosenthal",
+   "material": "Inconel 625",
+   "p1": [
+    {
+     "mapeDefault": 18.6684,
+     "mapeServed": 4.36729,
+     "nRows": 26,
+     "nSets": 23,
+     "skill": 0.76606,
+     "skillCi95": [
+      0.71488,
+      0.825321
+     ],
+     "source": "lane-in625-2020"
+    }
+   ],
+   "p2": [],
+   "params": {
+    "boundHitFractionD": 0.0,
+    "boundHitFractionW": 0.0,
+    "cD": {
+     "conduction": 0.00798755,
+     "keyhole": 0.00798755,
+     "transition": 0.00798755
+    },
+    "etaD": 0.47,
+    "etaD_ci90": [
+     0.46225,
+     0.475
+    ],
+    "etaJoint": 0.485,
+    "etaJoint_ci90": [
+     0.475,
+     0.485
+    ],
+    "etaPrior": 0.38,
+    "etaW": 0.565,
+    "etaW_ci90": [
+     0.54725,
+     0.585
+    ]
+   },
+   "quantity": "depth",
+   "reasons": [
+    "single source: no leave-one-source-out available"
+   ],
+   "servedRung": "eta2",
+   "status": "within-source-only"
+  },
+  {
+   "beamStatuses": null,
+   "flagNotes": [],
+   "flags": [],
+   "headline": null,
+   "kernel": "rosenthal",
+   "material": "Inconel 718",
+   "p1": [],
+   "p2": [],
+   "params": null,
+   "quantity": "width",
+   "reasons": [
+    "no trainable measured source for this alloy"
+   ],
+   "servedRung": null,
+   "status": "no-data"
+  },
+  {
+   "beamStatuses": null,
+   "flagNotes": [],
+   "flags": [],
+   "headline": null,
+   "kernel": "rosenthal",
+   "material": "Inconel 718",
+   "p1": [],
+   "p2": [],
+   "params": null,
+   "quantity": "depth",
+   "reasons": [
+    "no trainable measured source for this alloy"
+   ],
+   "servedRung": null,
+   "status": "no-data"
+  },
+  {
+   "beamStatuses": null,
+   "flagNotes": [],
+   "flags": [],
+   "headline": null,
+   "kernel": "rosenthal",
+   "material": "AlSi10Mg",
+   "p1": [],
+   "p2": [],
+   "params": null,
+   "quantity": "width",
+   "reasons": [
+    "no trainable measured source for this alloy"
+   ],
+   "servedRung": null,
+   "status": "no-data"
+  },
+  {
+   "beamStatuses": null,
+   "flagNotes": [],
+   "flags": [],
+   "headline": null,
+   "kernel": "rosenthal",
+   "material": "AlSi10Mg",
+   "p1": [],
+   "p2": [],
+   "params": null,
+   "quantity": "depth",
+   "reasons": [
+    "no trainable measured source for this alloy"
+   ],
+   "servedRung": null,
+   "status": "no-data"
+  }
+ ],
+ "implementationHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+ "n01": [
+  {
+   "kernel": "eagar-tsai",
+   "measured": {
+    "depth_um": 180.0,
+    "width_um": 114.0
+   },
+   "rungs": {
+    "default": {
+     "depthFactor": 0.689439,
+     "depthInsideFactor2": true,
+     "depth_um": 124.099,
+     "insideFactor2": true,
+     "widthFactor": 1.97958,
+     "width_um": 225.672
+    },
+    "eta": {
+     "depthFactor": 0.755102,
+     "depthInsideFactor2": true,
+     "depth_um": 135.918,
+     "insideFactor2": false,
+     "widthFactor": 2.0717,
+     "width_um": 236.174
+    },
+    "eta2": {
+     "depthFactor": 0.738689,
+     "depthInsideFactor2": true,
+     "depth_um": 132.964,
+     "insideFactor2": false,
+     "widthFactor": 2.24464,
+     "width_um": 255.889
+    },
+    "eta2+dOffset": {
+     "depthFactor": 0.742617,
+     "depthInsideFactor2": true,
+     "depth_um": 133.671,
+     "insideFactor2": false,
+     "widthFactor": 2.24464,
+     "width_um": 255.889
+    }
+   },
+   "servedRungDepth": "eta2",
+   "servedRungWidth": "eta2",
+   "statement": "known keyhole-depth failure; not fitted; N01 never in training"
+  },
+  {
+   "kernel": "goldak",
+   "measured": {
+    "depth_um": 180.0,
+    "width_um": 114.0
+   },
+   "rungs": {
+    "default": {
+     "depthFactor": 0.723911,
+     "depthInsideFactor2": true,
+     "depth_um": 130.304,
+     "insideFactor2": false,
+     "widthFactor": 2.07856,
+     "width_um": 236.956
+    },
+    "eta": {
+     "depthFactor": 0.749769,
+     "depthInsideFactor2": true,
+     "depth_um": 134.958,
+     "insideFactor2": false,
+     "widthFactor": 2.11535,
+     "width_um": 241.15
+    },
+    "eta2": {
+     "depthFactor": 0.741151,
+     "depthInsideFactor2": true,
+     "depth_um": 133.407,
+     "insideFactor2": false,
+     "widthFactor": 2.2451,
+     "width_um": 255.942
+    },
+    "eta2+dOffset": {
+     "depthFactor": 0.742616,
+     "depthInsideFactor2": true,
+     "depth_um": 133.671,
+     "insideFactor2": false,
+     "widthFactor": 2.2451,
+     "width_um": 255.942
+    }
+   },
+   "servedRungDepth": "eta2",
+   "servedRungWidth": "default",
+   "statement": "known keyhole-depth failure; not fitted; N01 never in training"
+  },
+  {
+   "kernel": "rosenthal",
+   "measured": {
+    "depth_um": 180.0,
+    "width_um": 114.0
+   },
+   "rungs": {
+    "default": {
+     "depthFactor": 0.620494,
+     "depthInsideFactor2": true,
+     "depth_um": 111.689,
+     "insideFactor2": true,
+     "widthFactor": 1.78162,
+     "width_um": 203.105
+    },
+    "eta": {
+     "depthFactor": 0.760849,
+     "depthInsideFactor2": true,
+     "depth_um": 136.953,
+     "insideFactor2": true,
+     "widthFactor": 1.97286,
+     "width_um": 224.906
+    },
+    "eta2": {
+     "depthFactor": 0.738689,
+     "depthInsideFactor2": true,
+     "depth_um": 132.964,
+     "insideFactor2": false,
+     "widthFactor": 2.24183,
+     "width_um": 255.569
+    },
+    "eta2+dOffset": {
+     "depthFactor": 0.742617,
+     "depthInsideFactor2": true,
+     "depth_um": 133.671,
+     "insideFactor2": false,
+     "widthFactor": 2.24183,
+     "width_um": 255.569
+    }
+   },
+   "servedRungDepth": "eta2",
+   "servedRungWidth": "eta2",
+   "statement": "known keyhole-depth failure; not fitted; N01 never in training"
+  }
+ ],
+ "notes": [
+  "SYNTHETIC TEST FIXTURE: numbers come from a synthetic kernel and synthetic measurements.",
+  "It is not experimental validation. Effective absorptivity is a fitted nuisance parameter that absorbs every other model error (material laws, the Fabbro keyhole term, the flat-plate path, spot definition, assumed 20 C preheat); it must not be read as a measured absorptivity of any alloy.",
+  "No source reports per-row measurement uncertainty, sectioning position or replicate scatter; intervals cover parameter-set resampling and the between-source offset only, not measurement error.",
+  "Between-source offsets (machine, powder, atmosphere, operator) are larger than anything a per-alloy absorptivity removes; a calibration that helps inside one source usually does not transfer to the next.",
+  "Only two 316L sources and two Ti-6Al-4V sources are available for leave-one-source-out; Inconel 625 has one source (within-source only); Inconel 718 and AlSi10Mg have no trainable source (no-data).",
+  "KU Leuven's beam diameter (37.5 vs 75 um) is unresolved; the gate decision is required to be identical under both readings, otherwise the cell is rejected as 'unresolved input'.",
+  "The catalog sentinels (Guo, NIST IN718) were used while the frozen physics was developed; they are reported separately and are not blind held-out data.",
+  "The served default screening output, the Build Job verdict and the balling screen are unchanged by this work; calibration never re-scores a Build Job."
+ ],
+ "provenance": {
+  "codeRevision": {
+   "dirtyTrackedPaths": 0,
+   "gitBranch": "synthetic",
+   "gitHead": "synthetic",
+   "python": "3"
+  },
+  "kernel": {
+   "absorptionPath": "flat-plate (absorption_model='flat-plate'; powder_bed_raytracer pinned unimportable)",
+   "tableSha256": "30a8ec6259133c56bb61e0cb73e224792f641a468d21c819f53f39739fa241a4",
+   "uniqueInputs": 115
+  },
+  "tool": {
+   "path": "python/tools/lpbf_calibration_fit.py",
+   "sha256": "21402e5c8f748a9f798df48a49276842f348d18a767eb6d1bd6363945547c256"
+  }
+ },
+ "quick": false,
+ "regimeConfusion": {
+  "byAlloy": {
+   "316L Stainless Steel": {
+    "beam37.5": {
+     "atDefaultEta": {
+      "accuracy": 1.0,
+      "keyholeOnly": {
+       "fn": 0,
+       "fp": 0,
+       "precision": 1.0,
+       "recall": 1.0,
+       "tn": 26,
+       "tp": 1
+      },
+      "labels": [
+       "conduction",
+       "transition",
+       "keyhole"
+      ],
+      "matrix": {
+       "conduction": {
+        "conduction": 22,
+        "keyhole": 0,
+        "transition": 0
+       },
+       "keyhole": {
+        "conduction": 0,
+        "keyhole": 1,
+        "transition": 0
+       },
+       "transition": {
+        "conduction": 0,
+        "keyhole": 0,
+        "transition": 4
+       }
+      },
+      "n": 27
+     },
+     "n": 27
+    },
+    "beam75": {
+     "atDefaultEta": {
+      "accuracy": 1.0,
+      "keyholeOnly": {
+       "fn": 0,
+       "fp": 0,
+       "precision": 1.0,
+       "recall": 1.0,
+       "tn": 26,
+       "tp": 1
+      },
+      "labels": [
+       "conduction",
+       "transition",
+       "keyhole"
+      ],
+      "matrix": {
+       "conduction": {
+        "conduction": 22,
+        "keyhole": 0,
+        "transition": 0
+       },
+       "keyhole": {
+        "conduction": 0,
+        "keyhole": 1,
+        "transition": 0
+       },
+       "transition": {
+        "conduction": 0,
+        "keyhole": 0,
+        "transition": 4
+       }
+      },
+      "n": 27
+     },
+     "n": 27
+    },
+    "perKernelSensitivity": {
+     "eagar-tsai": {
+      "atEtaD": {
+       "accuracy": 0.962963,
+       "keyholeOnly": {
+        "fn": 0,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "tn": 26,
+        "tp": 1
+       },
+       "labels": [
+        "conduction",
+        "transition",
+        "keyhole"
+       ],
+       "matrix": {
+        "conduction": {
+         "conduction": 21,
+         "keyhole": 0,
+         "transition": 1
+        },
+        "keyhole": {
+         "conduction": 0,
+         "keyhole": 1,
+         "transition": 0
+        },
+        "transition": {
+         "conduction": 0,
+         "keyhole": 0,
+         "transition": 4
+        }
+       },
+       "n": 27
+      },
+      "etaD": 0.45,
+      "geometryKeyholeDoverW": {
+       "fitFrom": "trained without ku-leuven-316l-2021 (leave-one-source-out)",
+       "measuredKeyholeByAspectRatio": 0,
+       "nRows": 27,
+       "rung": {
+        "default": {
+         "accuracy": 1.0,
+         "fn": 0,
+         "fp": 0,
+         "n": 27,
+         "precision": null,
+         "recall": null,
+         "tn": 27,
+         "tp": 0
+        },
+        "eta": {
+         "accuracy": 1.0,
+         "fn": 0,
+         "fp": 0,
+         "n": 27,
+         "precision": null,
+         "recall": null,
+         "tn": 27,
+         "tp": 0
+        },
+        "eta2": {
+         "accuracy": 1.0,
+         "fn": 0,
+         "fp": 0,
+         "n": 27,
+         "precision": null,
+         "recall": null,
+         "tn": 27,
+         "tp": 0
+        },
+        "eta2+dOffset": {
+         "accuracy": 1.0,
+         "fn": 0,
+         "fp": 0,
+         "n": 27,
+         "precision": null,
+         "recall": null,
+         "tn": 27,
+         "tp": 0
+        }
+       }
+      }
+     },
+     "goldak": {
+      "atEtaD": {
+       "accuracy": 0.962963,
+       "keyholeOnly": {
+        "fn": 0,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "tn": 26,
+        "tp": 1
+       },
+       "labels": [
+        "conduction",
+        "transition",
+        "keyhole"
+       ],
+       "matrix": {
+        "conduction": {
+         "conduction": 21,
+         "keyhole": 0,
+         "transition": 1
+        },
+        "keyhole": {
+         "conduction": 0,
+         "keyhole": 1,
+         "transition": 0
+        },
+        "transition": {
+         "conduction": 0,
+         "keyhole": 0,
+         "transition": 4
+        }
+       },
+       "n": 27
+      },
+      "etaD": 0.43,
+      "geometryKeyholeDoverW": {
+       "fitFrom": "trained without ku-leuven-316l-2021 (leave-one-source-out)",
+       "measuredKeyholeByAspectRatio": 0,
+       "nRows": 27,
+       "rung": {
+        "default": {
+         "accuracy": 1.0,
+         "fn": 0,
+         "fp": 0,
+         "n": 27,
+         "precision": null,
+         "recall": null,
+         "tn": 27,
+         "tp": 0
+        },
+        "eta": {
+         "accuracy": 1.0,
+         "fn": 0,
+         "fp": 0,
+         "n": 27,
+         "precision": null,
+         "recall": null,
+         "tn": 27,
+         "tp": 0
+        },
+        "eta2": {
+         "accuracy": 1.0,
+         "fn": 0,
+         "fp": 0,
+         "n": 27,
+         "precision": null,
+         "recall": null,
+         "tn": 27,
+         "tp": 0
+        },
+        "eta2+dOffset": {
+         "accuracy": 1.0,
+         "fn": 0,
+         "fp": 0,
+         "n": 27,
+         "precision": null,
+         "recall": null,
+         "tn": 27,
+         "tp": 0
+        }
+       }
+      }
+     },
+     "rosenthal": {
+      "atEtaD": {
+       "accuracy": 0.962963,
+       "keyholeOnly": {
+        "fn": 0,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "tn": 26,
+        "tp": 1
+       },
+       "labels": [
+        "conduction",
+        "transition",
+        "keyhole"
+       ],
+       "matrix": {
+        "conduction": {
+         "conduction": 21,
+         "keyhole": 0,
+         "transition": 1
+        },
+        "keyhole": {
+         "conduction": 0,
+         "keyhole": 1,
+         "transition": 0
+        },
+        "transition": {
+         "conduction": 0,
+         "keyhole": 0,
+         "transition": 4
+        }
+       },
+       "n": 27
+      },
+      "etaD": 0.5,
+      "geometryKeyholeDoverW": {
+       "fitFrom": "trained without ku-leuven-316l-2021 (leave-one-source-out)",
+       "measuredKeyholeByAspectRatio": 0,
+       "nRows": 27,
+       "rung": {
+        "default": {
+         "accuracy": 1.0,
+         "fn": 0,
+         "fp": 0,
+         "n": 27,
+         "precision": null,
+         "recall": null,
+         "tn": 27,
+         "tp": 0
+        },
+        "eta": {
+         "accuracy": 1.0,
+         "fn": 0,
+         "fp": 0,
+         "n": 27,
+         "precision": null,
+         "recall": null,
+         "tn": 27,
+         "tp": 0
+        },
+        "eta2": {
+         "accuracy": 1.0,
+         "fn": 0,
+         "fp": 0,
+         "n": 27,
+         "precision": null,
+         "recall": null,
+         "tn": 27,
+         "tp": 0
+        },
+        "eta2+dOffset": {
+         "accuracy": 1.0,
+         "fn": 0,
+         "fp": 0,
+         "n": 27,
+         "precision": null,
+         "recall": null,
+         "tn": 27,
+         "tp": 0
+        }
+       }
+      }
+     }
+    }
+   },
+   "Ti-6Al-4V": {
+    "beam37.5": {
+     "atDefaultEta": {
+      "accuracy": 1.0,
+      "keyholeOnly": {
+       "fn": 0,
+       "fp": 0,
+       "precision": null,
+       "recall": null,
+       "tn": 16,
+       "tp": 0
+      },
+      "labels": [
+       "conduction",
+       "transition",
+       "keyhole"
+      ],
+      "matrix": {
+       "conduction": {
+        "conduction": 13,
+        "keyhole": 0,
+        "transition": 0
+       },
+       "keyhole": {
+        "conduction": 0,
+        "keyhole": 0,
+        "transition": 0
+       },
+       "transition": {
+        "conduction": 0,
+        "keyhole": 0,
+        "transition": 3
+       }
+      },
+      "n": 16
+     },
+     "n": 16
+    },
+    "beam75": {
+     "atDefaultEta": {
+      "accuracy": 1.0,
+      "keyholeOnly": {
+       "fn": 0,
+       "fp": 0,
+       "precision": null,
+       "recall": null,
+       "tn": 16,
+       "tp": 0
+      },
+      "labels": [
+       "conduction",
+       "transition",
+       "keyhole"
+      ],
+      "matrix": {
+       "conduction": {
+        "conduction": 13,
+        "keyhole": 0,
+        "transition": 0
+       },
+       "keyhole": {
+        "conduction": 0,
+        "keyhole": 0,
+        "transition": 0
+       },
+       "transition": {
+        "conduction": 0,
+        "keyhole": 0,
+        "transition": 3
+       }
+      },
+      "n": 16
+     },
+     "n": 16
+    },
+    "perKernelSensitivity": {
+     "eagar-tsai": {
+      "atEtaD": {
+       "accuracy": 1.0,
+       "keyholeOnly": {
+        "fn": 0,
+        "fp": 0,
+        "precision": null,
+        "recall": null,
+        "tn": 16,
+        "tp": 0
+       },
+       "labels": [
+        "conduction",
+        "transition",
+        "keyhole"
+       ],
+       "matrix": {
+        "conduction": {
+         "conduction": 13,
+         "keyhole": 0,
+         "transition": 0
+        },
+        "keyhole": {
+         "conduction": 0,
+         "keyhole": 0,
+         "transition": 0
+        },
+        "transition": {
+         "conduction": 0,
+         "keyhole": 0,
+         "transition": 3
+        }
+       },
+       "n": 16
+      },
+      "etaD": 0.39,
+      "geometryKeyholeDoverW": {
+       "fitFrom": "trained without ku-leuven-ti64-2021 (leave-one-source-out)",
+       "measuredKeyholeByAspectRatio": 0,
+       "nRows": 16,
+       "rung": {
+        "default": {
+         "accuracy": 1.0,
+         "fn": 0,
+         "fp": 0,
+         "n": 16,
+         "precision": null,
+         "recall": null,
+         "tn": 16,
+         "tp": 0
+        },
+        "eta": {
+         "accuracy": 1.0,
+         "fn": 0,
+         "fp": 0,
+         "n": 16,
+         "precision": null,
+         "recall": null,
+         "tn": 16,
+         "tp": 0
+        },
+        "eta2": {
+         "accuracy": 1.0,
+         "fn": 0,
+         "fp": 0,
+         "n": 16,
+         "precision": null,
+         "recall": null,
+         "tn": 16,
+         "tp": 0
+        },
+        "eta2+dOffset": {
+         "accuracy": 1.0,
+         "fn": 0,
+         "fp": 0,
+         "n": 16,
+         "precision": null,
+         "recall": null,
+         "tn": 16,
+         "tp": 0
+        }
+       }
+      }
+     },
+     "goldak": {
+      "atEtaD": {
+       "accuracy": 1.0,
+       "keyholeOnly": {
+        "fn": 0,
+        "fp": 0,
+        "precision": null,
+        "recall": null,
+        "tn": 16,
+        "tp": 0
+       },
+       "labels": [
+        "conduction",
+        "transition",
+        "keyhole"
+       ],
+       "matrix": {
+        "conduction": {
+         "conduction": 13,
+         "keyhole": 0,
+         "transition": 0
+        },
+        "keyhole": {
+         "conduction": 0,
+         "keyhole": 0,
+         "transition": 0
+        },
+        "transition": {
+         "conduction": 0,
+         "keyhole": 0,
+         "transition": 3
+        }
+       },
+       "n": 16
+      },
+      "etaD": 0.375,
+      "geometryKeyholeDoverW": {
+       "fitFrom": "trained without ku-leuven-ti64-2021 (leave-one-source-out)",
+       "measuredKeyholeByAspectRatio": 0,
+       "nRows": 16,
+       "rung": {
+        "default": {
+         "accuracy": 1.0,
+         "fn": 0,
+         "fp": 0,
+         "n": 16,
+         "precision": null,
+         "recall": null,
+         "tn": 16,
+         "tp": 0
+        },
+        "eta": {
+         "accuracy": 1.0,
+         "fn": 0,
+         "fp": 0,
+         "n": 16,
+         "precision": null,
+         "recall": null,
+         "tn": 16,
+         "tp": 0
+        },
+        "eta2": {
+         "accuracy": 1.0,
+         "fn": 0,
+         "fp": 0,
+         "n": 16,
+         "precision": null,
+         "recall": null,
+         "tn": 16,
+         "tp": 0
+        },
+        "eta2+dOffset": {
+         "accuracy": 1.0,
+         "fn": 0,
+         "fp": 0,
+         "n": 16,
+         "precision": null,
+         "recall": null,
+         "tn": 16,
+         "tp": 0
+        }
+       }
+      }
+     },
+     "rosenthal": {
+      "atEtaD": {
+       "accuracy": 1.0,
+       "keyholeOnly": {
+        "fn": 0,
+        "fp": 0,
+        "precision": null,
+        "recall": null,
+        "tn": 16,
+        "tp": 0
+       },
+       "labels": [
+        "conduction",
+        "transition",
+        "keyhole"
+       ],
+       "matrix": {
+        "conduction": {
+         "conduction": 13,
+         "keyhole": 0,
+         "transition": 0
+        },
+        "keyhole": {
+         "conduction": 0,
+         "keyhole": 0,
+         "transition": 0
+        },
+        "transition": {
+         "conduction": 0,
+         "keyhole": 0,
+         "transition": 3
+        }
+       },
+       "n": 16
+      },
+      "etaD": 0.435,
+      "geometryKeyholeDoverW": {
+       "fitFrom": "trained without ku-leuven-ti64-2021 (leave-one-source-out)",
+       "measuredKeyholeByAspectRatio": 0,
+       "nRows": 16,
+       "rung": {
+        "default": {
+         "accuracy": 1.0,
+         "fn": 0,
+         "fp": 0,
+         "n": 16,
+         "precision": null,
+         "recall": null,
+         "tn": 16,
+         "tp": 0
+        },
+        "eta": {
+         "accuracy": 1.0,
+         "fn": 0,
+         "fp": 0,
+         "n": 16,
+         "precision": null,
+         "recall": null,
+         "tn": 16,
+         "tp": 0
+        },
+        "eta2": {
+         "accuracy": 1.0,
+         "fn": 0,
+         "fp": 0,
+         "n": 16,
+         "precision": null,
+         "recall": null,
+         "tn": 16,
+         "tp": 0
+        },
+        "eta2+dOffset": {
+         "accuracy": 1.0,
+         "fn": 0,
+         "fp": 0,
+         "n": 16,
+         "precision": null,
+         "recall": null,
+         "tn": 16,
+         "tp": 0
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "labelSource": "KU Leuven published regime labels (verbatim, Coen 2021)"
+ },
+ "schema": "lpbf-calibration-scorecard-view-1",
+ "sources": [
+  {
+   "citation": "synthetic fixture",
+   "doi": "10.0000/synthetic",
+   "license": "synthetic",
+   "loaderExcluded": [],
+   "loaderRows": 34,
+   "material": "316L Stainless Steel",
+   "parameterSets": 30,
+   "role": "trainable",
+   "rowsUsed": 34,
+   "source": "hofmann-316l-2026",
+   "tableSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+   "citation": "synthetic fixture",
+   "doi": "10.0000/synthetic",
+   "license": "synthetic",
+   "loaderExcluded": [],
+   "loaderRows": 27,
+   "material": "316L Stainless Steel",
+   "parameterSets": 24,
+   "role": "trainable",
+   "rowsUsed": 27,
+   "source": "ku-leuven-316l-2021",
+   "tableSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+   "citation": "synthetic fixture",
+   "doi": "10.0000/synthetic",
+   "license": "synthetic",
+   "loaderExcluded": [],
+   "loaderRows": 32,
+   "material": "Ti-6Al-4V",
+   "parameterSets": 28,
+   "role": "trainable",
+   "rowsUsed": 32,
+   "source": "totis-ti64-2021",
+   "tableSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+   "citation": "synthetic fixture",
+   "doi": "10.0000/synthetic",
+   "license": "synthetic",
+   "loaderExcluded": [],
+   "loaderRows": 16,
+   "material": "Ti-6Al-4V",
+   "parameterSets": 14,
+   "role": "trainable",
+   "rowsUsed": 16,
+   "source": "ku-leuven-ti64-2021",
+   "tableSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+   "citation": "synthetic fixture",
+   "doi": "10.0000/synthetic",
+   "license": "synthetic",
+   "loaderExcluded": [],
+   "loaderRows": 26,
+   "material": "Inconel 625",
+   "parameterSets": 23,
+   "role": "trainable",
+   "rowsUsed": 26,
+   "source": "lane-in625-2020",
+   "tableSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+   "citation": "synthetic fixture",
+   "doi": "10.0000/synthetic",
+   "license": "synthetic",
+   "loaderExcluded": [],
+   "loaderRows": 4,
+   "material": "316L Stainless Steel",
+   "parameterSets": 4,
+   "role": "catalog-sentinel (test-only)",
+   "rowsUsed": 4,
+   "source": "guo-316l-2024",
+   "tableSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+   "citation": "synthetic fixture",
+   "doi": "10.0000/synthetic",
+   "license": "synthetic",
+   "loaderExcluded": [],
+   "loaderRows": 4,
+   "material": "Inconel 718",
+   "parameterSets": 4,
+   "role": "catalog-sentinel (test-only)",
+   "rowsUsed": 4,
+   "source": "nist-amb2022-03-in718",
+   "tableSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  }
+ ],
+ "unresolved": {
+  "loader": [
+   {
+    "excludedByLoader": [],
+    "loaderRows": 4,
+    "source": "guo-316l-2024"
+   },
+   {
+    "excludedByLoader": [],
+    "loaderRows": 34,
+    "source": "hofmann-316l-2026"
+   },
+   {
+    "excludedByLoader": [],
+    "loaderRows": 27,
+    "source": "ku-leuven-316l-2021"
+   },
+   {
+    "excludedByLoader": [],
+    "loaderRows": 16,
+    "source": "ku-leuven-ti64-2021"
+   },
+   {
+    "excludedByLoader": [],
+    "loaderRows": 26,
+    "source": "lane-in625-2020"
+   },
+   {
+    "excludedByLoader": [],
+    "loaderRows": 4,
+    "source": "nist-amb2022-03-in718"
+   },
+   {
+    "excludedByLoader": [],
+    "loaderRows": 32,
+    "source": "totis-ti64-2021"
+   }
+  ],
+  "notGeometrySources": [
+   {
+    "reason": "no power / no beam diameter in the source rows: not a geometry row set",
+    "source": "cmu-ti64-2026"
+   },
+   {
+    "reason": "width/depth units and width operator unresolved: excluded everywhere",
+    "source": "ku-leuven-in718-2021"
+   },
+   {
+    "reason": "stationary-spot absorptance: used as R5 bands and bounds only",
+    "source": "simonds-316l-2018, nist-mds2-2525"
+   },
+   {
+    "reason": "thermal-history targets, not melt-pool geometry: out of scope",
+    "source": "nist thermal targets"
+   }
+  ],
+  "perKernelSource": [
+   {
+    "kernel": "eagar-tsai",
+    "resolvedAtDefault": 34,
+    "role": "trainable",
+    "rowsUsed": 34,
+    "source": "hofmann-316l-2026",
+    "statusAtDefault": {
+     "computed": 34
+    },
+    "unresolvedAtDefault": 0
+   },
+   {
+    "kernel": "eagar-tsai",
+    "resolvedAtDefault": 27,
+    "role": "trainable",
+    "rowsUsed": 27,
+    "source": "ku-leuven-316l-2021",
+    "statusAtDefault": {
+     "computed": 27
+    },
+    "unresolvedAtDefault": 0
+   },
+   {
+    "kernel": "eagar-tsai",
+    "resolvedAtDefault": 16,
+    "role": "trainable",
+    "rowsUsed": 16,
+    "source": "ku-leuven-ti64-2021",
+    "statusAtDefault": {
+     "computed": 16
+    },
+    "unresolvedAtDefault": 0
+   },
+   {
+    "kernel": "eagar-tsai",
+    "resolvedAtDefault": 26,
+    "role": "trainable",
+    "rowsUsed": 26,
+    "source": "lane-in625-2020",
+    "statusAtDefault": {
+     "computed": 26
+    },
+    "unresolvedAtDefault": 0
+   },
+   {
+    "kernel": "eagar-tsai",
+    "resolvedAtDefault": 32,
+    "role": "trainable",
+    "rowsUsed": 32,
+    "source": "totis-ti64-2021",
+    "statusAtDefault": {
+     "computed": 32
+    },
+    "unresolvedAtDefault": 0
+   },
+   {
+    "kernel": "eagar-tsai",
+    "resolvedAtDefault": 4,
+    "role": "catalog-sentinel",
+    "rowsUsed": 4,
+    "source": "guo-316l-2024",
+    "statusAtDefault": {
+     "computed": 4
+    },
+    "unresolvedAtDefault": 0
+   },
+   {
+    "kernel": "eagar-tsai",
+    "resolvedAtDefault": 4,
+    "role": "catalog-sentinel",
+    "rowsUsed": 4,
+    "source": "nist-amb2022-03-in718",
+    "statusAtDefault": {
+     "computed": 4
+    },
+    "unresolvedAtDefault": 0
+   },
+   {
+    "kernel": "goldak",
+    "resolvedAtDefault": 34,
+    "role": "trainable",
+    "rowsUsed": 34,
+    "source": "hofmann-316l-2026",
+    "statusAtDefault": {
+     "computed": 34
+    },
+    "unresolvedAtDefault": 0
+   },
+   {
+    "kernel": "goldak",
+    "resolvedAtDefault": 27,
+    "role": "trainable",
+    "rowsUsed": 27,
+    "source": "ku-leuven-316l-2021",
+    "statusAtDefault": {
+     "computed": 27
+    },
+    "unresolvedAtDefault": 0
+   },
+   {
+    "kernel": "goldak",
+    "resolvedAtDefault": 16,
+    "role": "trainable",
+    "rowsUsed": 16,
+    "source": "ku-leuven-ti64-2021",
+    "statusAtDefault": {
+     "computed": 16
+    },
+    "unresolvedAtDefault": 0
+   },
+   {
+    "kernel": "goldak",
+    "resolvedAtDefault": 26,
+    "role": "trainable",
+    "rowsUsed": 26,
+    "source": "lane-in625-2020",
+    "statusAtDefault": {
+     "computed": 26
+    },
+    "unresolvedAtDefault": 0
+   },
+   {
+    "kernel": "goldak",
+    "resolvedAtDefault": 32,
+    "role": "trainable",
+    "rowsUsed": 32,
+    "source": "totis-ti64-2021",
+    "statusAtDefault": {
+     "computed": 32
+    },
+    "unresolvedAtDefault": 0
+   },
+   {
+    "kernel": "goldak",
+    "resolvedAtDefault": 4,
+    "role": "catalog-sentinel",
+    "rowsUsed": 4,
+    "source": "guo-316l-2024",
+    "statusAtDefault": {
+     "computed": 4
+    },
+    "unresolvedAtDefault": 0
+   },
+   {
+    "kernel": "goldak",
+    "resolvedAtDefault": 4,
+    "role": "catalog-sentinel",
+    "rowsUsed": 4,
+    "source": "nist-amb2022-03-in718",
+    "statusAtDefault": {
+     "computed": 4
+    },
+    "unresolvedAtDefault": 0
+   },
+   {
+    "kernel": "rosenthal",
+    "resolvedAtDefault": 34,
+    "role": "trainable",
+    "rowsUsed": 34,
+    "source": "hofmann-316l-2026",
+    "statusAtDefault": {
+     "computed": 34
+    },
+    "unresolvedAtDefault": 0
+   },
+   {
+    "kernel": "rosenthal",
+    "resolvedAtDefault": 27,
+    "role": "trainable",
+    "rowsUsed": 27,
+    "source": "ku-leuven-316l-2021",
+    "statusAtDefault": {
+     "computed": 27
+    },
+    "unresolvedAtDefault": 0
+   },
+   {
+    "kernel": "rosenthal",
+    "resolvedAtDefault": 16,
+    "role": "trainable",
+    "rowsUsed": 16,
+    "source": "ku-leuven-ti64-2021",
+    "statusAtDefault": {
+     "computed": 16
+    },
+    "unresolvedAtDefault": 0
+   },
+   {
+    "kernel": "rosenthal",
+    "resolvedAtDefault": 26,
+    "role": "trainable",
+    "rowsUsed": 26,
+    "source": "lane-in625-2020",
+    "statusAtDefault": {
+     "computed": 26
+    },
+    "unresolvedAtDefault": 0
+   },
+   {
+    "kernel": "rosenthal",
+    "resolvedAtDefault": 32,
+    "role": "trainable",
+    "rowsUsed": 32,
+    "source": "totis-ti64-2021",
+    "statusAtDefault": {
+     "computed": 32
+    },
+    "unresolvedAtDefault": 0
+   },
+   {
+    "kernel": "rosenthal",
+    "resolvedAtDefault": 4,
+    "role": "catalog-sentinel",
+    "rowsUsed": 4,
+    "source": "guo-316l-2024",
+    "statusAtDefault": {
+     "computed": 4
+    },
+    "unresolvedAtDefault": 0
+   },
+   {
+    "kernel": "rosenthal",
+    "resolvedAtDefault": 4,
+    "role": "catalog-sentinel",
+    "rowsUsed": 4,
+    "source": "nist-amb2022-03-in718",
+    "statusAtDefault": {
+     "computed": 4
+    },
+    "unresolvedAtDefault": 0
+   }
+  ],
+  "rule": "unresolved test rows count as failures (mapeUnresolvedAsFail, a rung that resolves fewer rows than default fails the gate); MAPE columns are on the common resolved subset and always listed with the unresolved count"
+ }
+}

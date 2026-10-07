@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { LpbfEngineeringSimulation } from "./LpbfEngineeringSimulation";
+import { CalibratedMeltpoolPanel } from "./CalibratedMeltpoolPanel";
 import * as THREE from "three";
 import { useVisibleAnimationFrame } from "../../hooks/useVisibleAnimationFrame";
 import {
@@ -1162,6 +1163,13 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
               </div>
             )}
           </div>
+
+          {/* Opt-in calibrated mode: screening only, not validation; no control is rendered while no cell passes the held-out gate. */}
+          <CalibratedMeltpoolPanel
+            heatSource={heatSource}
+            material={selectedMaterial}
+            request={{ laserPower_W, scanSpeed_mm_s: scanSpeed_mms, beamDiameter_um, preheatTemp_C, layerThickness_um, hatchSpacing_um, laserWavelength, sulfur_ppm: sulfurPpm }}
+          />
 
           {/* Solidification Kinetics & Microstructure */}
           <div className="p-3.5 rounded-xl bg-[#090e18] border border-[#162032] space-y-2.5">

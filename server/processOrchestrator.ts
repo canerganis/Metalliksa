@@ -190,6 +190,7 @@ export const DISPATCHABLE_SCRIPTS: ReadonlySet<string> = new Set([
   "icme_multiscale_pipeline_solver",
   "kinetics_ttt_cct_solver",
   "lpbf_bayesian_optimizer",
+  "lpbf_calibrated_meltpool",
   "lpbf_thermal_solver",
   "micrograph_measure",
   "pourbaix_solver",

@@ -160,7 +160,7 @@ test('the real committed record renders real sensitivity numbers (no n/a) and ke
 
 test('App skips the shared-material block and the context panel for this module (source guard)', () => {
   const app = readFileSync('src/App.tsx', 'utf8');
-  assert.match(app, /MODULES_WITHOUT_SHARED_SPECIMEN[^=]*=\s*new Set\(\['lpbf-dataset-comparison'\]\)/);
+  assert.match(app, /MODULES_WITHOUT_SHARED_SPECIMEN[^=]*=\s*new Set\(\['lpbf-dataset-comparison', 'lpbf-calibration-scorecard'\]\)/);
   assert.match(app, /!MODULES_WITHOUT_SHARED_SPECIMEN\.has\(activeTab\) && <details/);
   assert.match(app, /!MODULES_WITHOUT_SHARED_SPECIMEN\.has\(activeTab\) && <SilentBoundary><Suspense fallback=\{null\}><ScientificContextPanel/);
 });
