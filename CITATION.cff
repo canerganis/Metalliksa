@@ -8,7 +8,7 @@ authors:
     family-names: Erganis
     alias: canerganis
 repository-code: "https://github.com/canerganis/metalliksa"
-license: MIT
+license: AGPL-3.0-only
 version: "0.1.0"
 date-released: 2026-10-08
 abstract: >-

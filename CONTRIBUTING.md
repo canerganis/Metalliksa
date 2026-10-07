@@ -32,3 +32,9 @@ Run one file with `npx tsx --test tests/<file>.test.ts` and one Python test with
 - Stage explicit paths (`git add <file>`); avoid `git add .` and `git add -A`.
 - Do not edit the frozen LPBF physics, goldens or the implementation fingerprint except through a planned, reviewed bump (see [PROOF.md](PROOF.md)). Files listed in `.github/CODEOWNERS`, including `.github/workflows/ci.yml`, need maintainer review.
 - UI and documentation text is English.
+
+## Licensing of contributions
+
+Metalliksa is dual-licensed (AGPL-3.0-only or commercial, see [LICENSING.md](LICENSING.md)). By submitting a
+contribution you agree that it is licensed under the AGPL-3.0-only **and** that the copyright holder may also
+distribute it under the commercial licence. If you cannot agree to this, please open an issue first.

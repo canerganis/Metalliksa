@@ -13,7 +13,7 @@
 [![React](https://img.shields.io/badge/React-18-1f2937?logo=react&logoColor=white)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-typed-1f2937?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Python solvers](https://img.shields.io/badge/Python-LPBF%20solvers-1f2937?logo=python&logoColor=white)](https://www.python.org)
-[![License: MIT](https://img.shields.io/badge/license-MIT-1f2937)](LICENSE)
+[![License: AGPL-3.0 or commercial](https://img.shields.io/badge/license-AGPL--3.0%20%7C%20commercial-1f2937)](LICENSING.md)
 [![Evidence first](https://img.shields.io/badge/evidence-first-1f2937)](#evidence-and-limits)
 
 </div>
@@ -176,4 +176,4 @@ When adding a comparison, retain the source file identity and hash, the measurem
 
 ## License
 
-The software is released under the [MIT License](LICENSE). Third-party datasets and transcribed source material retain their own attribution and license terms. Solver outputs are research screening results, not qualified engineering data.
+Metalliksa is dual-licensed. The open-source licence is the [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-only): you may use, study, modify and share it, and if you distribute it or offer it to others over a network, you must release your complete corresponding source under the same licence. For use in a closed-source or proprietary product, a separate commercial licence is available from the copyright holder; see [LICENSING.md](LICENSING.md). Releases up to commit `bb449579` were published under the MIT License and remain available under it. Third-party datasets, the MatCalc open databases (ODbL) and transcribed source material keep their own attribution and licence terms. Solver outputs are research screening results, not qualified engineering data.

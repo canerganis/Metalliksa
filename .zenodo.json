@@ -7,7 +7,7 @@
       "name": "Erganis, Muhammet Can"
     }
   ],
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "access_right": "open",
   "keywords": [
     "laser powder bed fusion",
@@ -24,5 +24,6 @@
       "relation": "isSupplementTo",
       "scheme": "url"
     }
-  ]
+  ],
+  "notes": "Dual-licensed: AGPL-3.0-only, or a commercial licence from the copyright holder for proprietary use (see LICENSING.md)."
 }
