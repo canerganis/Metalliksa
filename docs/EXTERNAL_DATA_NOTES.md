@@ -58,3 +58,7 @@ The ambiguous case is two mc_fe PDMN_B2 parameters written `273.00 273 +46000-23
 - pycalphad warns that the type-definition character `%` appears in many phases of the repaired mc_ni without a matching TYPE_DEFINITION line; its effect was not analysed.
 
 A successful load or an equilibrium is not validation. The small runs in the handoff only show that the repaired files calculate and return plausible phases.
+
+## Python runtime
+
+The default runtime (`python/requirements-lpbf.in`, locks `python/requirements-lpbf-*-py312.lock`) includes pycalphad 0.11.2, so the repaired MatCalc TDBs load without a second environment. The `scientific-win-py312-cu128` runtime is only the GPU/ML stack.

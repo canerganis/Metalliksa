@@ -139,11 +139,11 @@ Requirements: Node 22.13 or newer and Python 3.11 or 3.12.
 
 ```bash
 npm ci
-pip install -r python/requirements-lpbf.in   # CPU LPBF baseline (NumPy, SciPy, pydantic)
+pip install -r python/requirements-lpbf.in   # default runtime: CPU LPBF baseline + CALPHAD (NumPy, SciPy, pydantic, pycalphad)
 npm run dev
 ```
 
-CALPHAD, micrograph machine learning and CUDA need the full set in `python/requirements.txt` (it pulls PyTorch; install it only if you want those features).
+CALPHAD works in that default runtime (pycalphad 0.11.2 is pinned in `python/requirements-lpbf.in` and the platform locks). Only micrograph machine learning and CUDA need the full set in `python/requirements.txt` (it pulls PyTorch; install it only if you want those features).
 
 Then open `http://localhost:3000`.
 
