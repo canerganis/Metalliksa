@@ -76,46 +76,60 @@ class PseudoTernaryD97(unittest.TestCase):
         r = seg.pseudo_ternary_path(4.92, 0.081, NI)
         self.assertEqual(r["status"], "computed")
         self.assertAlmostEqual(r["liquidAtPrimaryEnd"]["C_wt"], 0.24, delta=0.01)
-        self.assertAlmostEqual(r["fLaves"], 0.02, delta=0.005)
+        self.assertAlmostEqual(r["fGammaLavesConstituent"], 0.02, delta=0.005)
         # This implementation gives 0.087 liquid at the end of primary solidification (Eq. 1 at the Eq. 6
         # intersection), against "0.10" in the D97 text; stated, not tuned.
         self.assertAlmostEqual(r["fEutecticTotal"], 0.087, delta=0.002)
-        self.assertAlmostEqual(r["fNbC"], 0.065, delta=0.003)
+        self.assertAlmostEqual(r["fGammaNbCConstituent"], 0.065, delta=0.003)
         self.assertEqual(r["terminatedBy"], "laves-point")
 
     def test_d97_high_c_low_nb_alloys_form_no_laves(self):
         # D97: Ni base alloys 2, 3.5 and 4 (high C / low Nb) showed no Laves phase.
         for nb, c in ((1.95, 0.132), (1.94, 0.075), (1.91, 0.155)):
             r = seg.pseudo_ternary_path(nb, c, NI)
-            self.assertEqual(r["fLaves"], 0.0, (nb, c, r))
-            self.assertGreater(r["fNbC"], 0.0)
+            self.assertEqual(r["fGammaLavesConstituent"], 0.0, (nb, c, r))
+            self.assertGreater(r["fGammaNbCConstituent"], 0.0)
             self.assertEqual(r["terminatedBy"], "liquid-exhausted-on-NbC-line")
 
     def test_mass_bookkeeping(self):
         r = seg.pseudo_ternary_path(5.125, 0.08, NI)
-        self.assertAlmostEqual(r["fNbC"] + r["fLaves"], r["fEutecticTotal"], places=12)
+        self.assertAlmostEqual(r["fGammaNbCConstituent"] + r["fGammaLavesConstituent"], r["fEutecticTotal"], places=12)
         self.assertLessEqual(r["fEutecticTotal"], 1.0)
 
     def test_step_convergence(self):
         coarse = seg.pseudo_ternary_path(5.125, 0.08, NI)
         fine = seg.pseudo_ternary_path(5.125, 0.08, NI, step_wt_nb=seg.EUTECTIC_STEP_WT_NB / 10.0)
-        self.assertLess(abs(coarse["fLaves"] - fine["fLaves"]), 1e-3)
+        self.assertLess(abs(coarse["fGammaLavesConstituent"] - fine["fGammaLavesConstituent"]), 1e-3)
 
     def test_binary_is_upper_bound_on_laves_over_carbon(self):
         f_bin = seg.scheil_eutectic_fraction(5.125, NI["C_Nb_laves"]["value"], NI["k_gamma_Nb"]["value"])
         prev = f_bin
         for c in (0.001, 0.005, 0.01, 0.02, 0.04, 0.06, 0.08, 0.12, 0.17):
             r = seg.pseudo_ternary_path(5.125, c, NI)
-            self.assertLessEqual(r["fLaves"], prev + 1e-12, c)
-            prev = r["fLaves"]
+            self.assertLessEqual(r["fGammaLavesConstituent"], prev + 1e-12, c)
+            prev = r["fGammaLavesConstituent"]
 
     def test_low_carbon_reaches_laves_point_before_nbc_line(self):
         r = seg.pseudo_ternary_path(1.82, 0.010, NI)  # D97 alloy 3
-        self.assertEqual(r["fNbC"], 0.0)
-        self.assertAlmostEqual(r["fLaves"], seg.scheil_eutectic_fraction(1.82, 23.1, 0.46), places=12)
+        self.assertEqual(r["fGammaNbCConstituent"], 0.0)
+        self.assertAlmostEqual(r["fGammaLavesConstituent"], seg.scheil_eutectic_fraction(1.82, 23.1, 0.46), places=12)
 
     def test_primary_nbc_field_is_outside_model(self):
         self.assertEqual(seg.pseudo_ternary_path(5.0, 1.0, NI)["status"], "outside-model")
+
+    def test_documented_discrepancy_with_d97_measurements(self):
+        # Documented discrepancy, NOT a calibration target (nothing is tuned to these numbers).
+        # D97 Fig. 3 (QIA of GTA welds, read from the bar chart, about +-0.5 vol%):
+        #   alloy 5 (Table 1: 5.17 Nb, 0.013 C): gamma/Laves about 2 vol%  -> model about 3x high
+        #   alloy 8 (Table 1: 4.72 Nb, 0.170 C): gamma/Laves about 1.5 vol% on about 14 vol% gamma/NbC
+        #                                        -> model predicts no gamma/Laves at all
+        a5 = seg.pseudo_ternary_path(5.17, 0.013, NI)
+        self.assertAlmostEqual(a5["fGammaLavesConstituent"], 0.0625, delta=0.001)
+        self.assertGreater(a5["fGammaLavesConstituent"], 2.0 * 0.02)  # over-prediction vs Fig. 3
+        a8 = seg.pseudo_ternary_path(4.72, 0.170, NI)
+        self.assertEqual(a8["fGammaLavesConstituent"], 0.0)  # under-prediction vs Fig. 3 (measured > 0)
+        self.assertAlmostEqual(a8["fGammaNbCConstituent"], 0.148, delta=0.002)
+        self.assertEqual(a8["terminatedBy"], "liquid-exhausted-on-NbC-line")
 
 
 class Provenance(unittest.TestCase):
@@ -153,10 +167,10 @@ class AlloyStatus(unittest.TestCase):
         self.assertEqual(b["schema"], seg.SCHEMA)
         self.assertEqual([p["label"] for p in b["band"]], ["min", "nominal", "max"])
         self.assertEqual([p["Nb_wt"] for p in b["band"]], [4.75, 5.125, 5.5])
-        lav = [p["binaryUpperBound"]["fLaves"] for p in b["band"]]
+        lav = [p["binaryUpperBound"]["fGammaLavesConstituent"] for p in b["band"]]
         self.assertEqual(lav, sorted(lav))
         for p in b["band"]:
-            self.assertLessEqual(p["pseudoTernaryAtCmax"]["fLaves"], p["binaryUpperBound"]["fLaves"])
+            self.assertLessEqual(p["pseudoTernaryAtCmax"]["fGammaLavesConstituent"], p["binaryUpperBound"]["fGammaLavesConstituent"])
         self.assertEqual(b["k_Nb"]["value"], 0.46)
         self.assertIn("Table", b["k_Nb"]["locator"])
         self.assertEqual(b["riskClass"], "eutectic Laves expected (Scheil)")
@@ -170,6 +184,36 @@ class AlloyStatus(unittest.TestCase):
         self.assertEqual(seg_ratio["coreRatioToNominal"], 0.46)
         self.assertTrue(all(r["ratioToNominal"] > 1.0 for r in seg_ratio["interdendritic"]))
         json.dumps(b, allow_nan=False)
+
+    def test_source_agreement_and_quantity_notes(self):
+        b = seg.segregation_estimate("in718", _micro("available"))
+        note = b["sourceAgreementNote"]
+        self.assertEqual(note, seg.SOURCE_AGREEMENT_NOTE)
+        self.assertIn("Fig. 9b", note)
+        self.assertIn("predicts no gamma/Laves", note)
+        self.assertIn("not an upper bound on measured", b["upperBoundNote"])
+        self.assertIn("not phase fractions", b["quantity"])
+        self.assertIn("not a bound on measurement", b["binaryBoundNote"])
+
+    def test_risk_class_is_stated_positive_by_construction(self):
+        b = seg.segregation_estimate("in718", _micro("available"))
+        self.assertIs(b["riskClassPositiveByConstruction"], True)
+        self.assertIn("positive by construction", b["riskClassRule"])
+        for nb in (0.5, 1.0, 5.0):  # binary Scheil: f_e > 0 for every Nb > 0
+            self.assertGreater(seg.scheil_eutectic_fraction(nb, 23.1, 0.46), 0.0)
+
+    def test_app_nominal_composition_is_explained(self):
+        b = seg.segregation_estimate("in718", _micro("available"))
+        self.assertIn("alloy_registry", b["composition"]["appNominalNote"])
+        self.assertIn("no cited source", b["composition"]["appNominalNote"])
+
+    def test_fe_balance_uses_containment(self):
+        # A specification whose Fe range overlaps the source range at one end is still outside.
+        info = {"balanceByDifference_wt": {"min": 11.0, "max": 25.0}}
+        v = seg._validity("in718", info, "ni-base")
+        self.assertTrue(any(r.startswith("Fe") for r in v["outsideSourceCompositionReasons"]))
+        inside = seg._validity("in718", {"balanceByDifference_wt": {"min": 10.5, "max": 11.0}}, "ni-base")
+        self.assertFalse(any(r.startswith("Fe") for r in inside["outsideSourceCompositionReasons"]))
 
     def test_in625_unavailable_unverified(self):
         b = seg.segregation_estimate("in625", _micro("available"))

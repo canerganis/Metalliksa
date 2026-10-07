@@ -38,8 +38,8 @@ test("available (IN718): label chip as text, k with citation, Nb band, risk clas
   // Nb band rows min / nominal / max with Python's fractions (%, one decimal).
   for (const p of block.band) {
     assert.match(markup, new RegExp(`data-seg-band-row="${p.label}"`));
-    assert.ok(t.includes(`${(p.binaryUpperBound.fLaves * 100).toFixed(1)} %`), `${p.label} ${t}`);
-    assert.ok(t.includes(`${(p.pseudoTernaryAtCmax.fLaves * 100).toFixed(1)} %`), `${p.label} ${t}`);
+    assert.ok(t.includes(`${(p.binaryUpperBound.fGammaLavesConstituent * 100).toFixed(1)} %`), `${p.label} ${t}`);
+    assert.ok(t.includes(`${(p.pseudoTernaryAtCmax.fGammaLavesConstituent * 100).toFixed(1)} %`), `${p.label} ${t}`);
   }
   assert.ok(t.includes("upper bound"), t);
   assert.ok(t.includes(`Laves risk class: ${block.riskClass}`), t);
@@ -56,6 +56,14 @@ test("available (IN718): label chip as text, k with citation, Nb band, risk clas
   for (const r of block.validity.outsideSourceCompositionReasons) assert.ok(t.includes(r), r);
   assert.match(markup, /data-seg-upper-bound/);
   assert.ok(t.includes(block.upperBoundNote), t);
+  // The source's own measurements disagree with the model in both directions (D97 Fig. 9b): shown next to it.
+  assert.match(markup, /data-seg-source-agreement/);
+  assert.ok(t.includes(block.sourceAgreementNote) && block.sourceAgreementNote.includes("Fig. 9b"), t);
+  assert.ok(t.includes("binary; model upper bound over C only"), t);
+  assert.ok(!t.includes("C = 0 (upper bound)"), t);
+  assert.match(markup, /data-seg-quantity/);
+  assert.ok(t.includes("not phase fractions"), t);
+  assert.ok(t.includes("positive by construction"), t);
   for (const word of ["Validated", "Calibrated", "Measured"]) assert.ok(!t.includes(word), word);
 });
 
@@ -111,4 +119,10 @@ test("rendered inside the microstructure panel via the optional prop, absent wit
   assert.match(withSeg, /<section[^>]*aria-labelledby="[^"]+"/);
   const without = renderToStaticMarkup(<BuildJobMicrostructurePanel micro={micro} />);
   assert.doesNotMatch(without, /data-seg-status/);
+  // Composition-only result is still shown when the microstructure block is missing (e.g. old payload).
+  const noMicro = renderToStaticMarkup(
+    <BuildJobMicrostructurePanel micro={undefined} segregation={BLOCKS.available_in718_285_960} />,
+  );
+  assert.match(noMicro, /data-seg-status="available"/);
+  assert.equal(renderToStaticMarkup(<BuildJobMicrostructurePanel micro={undefined} />), "");
 });

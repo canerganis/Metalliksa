@@ -149,6 +149,13 @@ SOURCE_COMPOSITION_RANGE: Dict[str, Dict[str, Any]] = {
     },
 }
 
+# The app's own alloy_registry composition carries no cited source; the band uses the read specification instead.
+APP_NOMINAL_NOTE: Dict[str, str] = {
+    "in718": ("The app's alloy_registry in718 composition_wt (Nb 5.1, C 0.04 wt%) has no cited source, so the band "
+              "uses the SMC-045 specification limits instead. Nb 5.1 lies inside the band (4.75-5.50) and C 0.04 inside "
+              "the C range covered by the C = 0 and C max columns."),
+}
+
 SOURCE_PROCESS = ("gas tungsten arc (GTA) autogenous welds and DTA samples of investment-cast experimental alloys "
                   "(D97 Experimental Procedure)")
 
@@ -164,11 +171,26 @@ FS_SEGREGATION_POINTS = (0.9, 0.95)
 UPPER_BOUND_NOTE = (
     "Upper bound with respect to effects that are not modelled and that all reduce segregation: solid-state "
     "back-diffusion of Nb, solute trapping at high solidification rate and dendrite-tip undercooling. It is not a "
-    "bound with respect to the choice of k_Nb (see validity)."
+    "bound with respect to the choice of k_Nb (see validity), and it is not an upper bound on measured Laves content "
+    "(see sourceAgreementNote)."
+)
+SOURCE_AGREEMENT_NOTE = (
+    "Not conservative against measurement, even in the source's own weld regime: D97 Fig. 9b (measured vs calculated "
+    "gamma/Laves) shows several alloys with measured gamma/Laves above the calculated value, including alloys for "
+    "which the model predicts no gamma/Laves (measured about 0.5-1.5 vol%, e.g. Ni-base alloy 8 in Fig. 3), and "
+    "low-C Ni-base alloys where the model is about 2-3x high (alloys 5 and 7: measured about 2-3 vol% in Fig. 3). "
+    "D97 also reports that Fe and Si raise the gamma/Laves amount; IN718 contains about 18 wt% Fe plus Mo, which the "
+    "source alloys do not."
+)
+QUANTITY_NOTE = (
+    "fGammaLavesConstituent and fGammaNbCConstituent are fractions of the gamma/Laves and gamma/NbC eutectic-type "
+    "constituents (remaining liquid that transforms, eutectic gamma included; D97 terminology), not phase fractions "
+    "of Laves or NbC."
 )
 BINARY_BOUND_NOTE = (
     "Binary gamma-Nb Scheil (C = 0): carbon ties Nb up as NbC, so within this model the binary value is an upper "
-    "bound on the gamma/Laves fraction for any carbon content."
+    "bound over carbon content on the gamma/Laves constituent fraction (a model statement, not a bound on "
+    "measurement)."
 )
 
 
@@ -233,7 +255,7 @@ def pseudo_ternary_path(c0_nb: float, c0_c: float, cset: Mapping[str, Dict[str, 
     _check_positive("step_wt_nb", step_wt_nb)
     if c0_nb >= ce_nb:
         return {"status": "computed", "primaryEnd": "nominal Nb at or above the gamma/Laves point",
-                "fLiquidPrimaryEnd": 1.0, "fNbC": 0.0, "fLaves": 1.0, "fEutecticTotal": 1.0,
+                "fLiquidPrimaryEnd": 1.0, "fGammaNbCConstituent": 0.0, "fGammaLavesConstituent": 1.0, "fEutecticTotal": 1.0,
                 "terminatedBy": "nominal-composition"}
     if c0_c >= a + b * c0_nb:
         return {"status": "outside-model",
@@ -262,7 +284,7 @@ def pseudo_ternary_path(c0_nb: float, c0_c: float, cset: Mapping[str, Dict[str, 
         f_laves = scheil_eutectic_fraction(c0_nb, ce_nb, k_nb)
         return {"status": "computed", "primaryEnd": "gamma/Laves point (primary path stays below the NbC line)",
                 "fLiquidPrimaryEnd": f_laves, "liquidAtPrimaryEnd": {"Nb_wt": ce_nb, "C_wt": None},
-                "fNbC": 0.0, "fLaves": f_laves, "fEutecticTotal": f_laves, "terminatedBy": "laves-point"}
+                "fGammaNbCConstituent": 0.0, "fGammaLavesConstituent": f_laves, "fEutecticTotal": f_laves, "terminatedBy": "laves-point"}
     fl = (clnb / c0_nb) ** (1.0 / (k_nb - 1.0))  # Eq. 1
     f_primary_end = fl
     liquid_primary_end = {"Nb_wt": clnb, "C_wt": clc}
@@ -284,7 +306,7 @@ def pseudo_ternary_path(c0_nb: float, c0_c: float, cset: Mapping[str, Dict[str, 
     f_laves = fl if terminated == "laves-point" else 0.0
     return {"status": "computed", "primaryEnd": "gamma/NbC line of twofold saturation",
             "fLiquidPrimaryEnd": f_primary_end, "liquidAtPrimaryEnd": liquid_primary_end,
-            "fNbC": f_primary_end - f_laves, "fLaves": f_laves, "fEutecticTotal": f_primary_end,
+            "fGammaNbCConstituent": f_primary_end - f_laves, "fGammaLavesConstituent": f_laves, "fEutecticTotal": f_primary_end,
             "terminatedBy": terminated, "stepWtNb": step_wt_nb,
             "liquidAtTermination": {"Nb_wt": clnb, "C_wt": clc}}
 
@@ -306,15 +328,15 @@ def _band_point(label: str, nb: float, c_max: Optional[float], cset) -> Dict[str
     f_bin = scheil_eutectic_fraction(nb, ce, k_nb)
     point: Dict[str, Any] = {
         "label": label, "Nb_wt": nb,
-        "binaryUpperBound": {"C_wt": 0.0, "fLaves": _r(f_bin), "riskClass": laves_risk_class(f_bin)},
+        "binaryUpperBound": {"C_wt": 0.0, "fGammaLavesConstituent": _r(f_bin), "riskClass": laves_risk_class(f_bin)},
     }
     if c_max is not None:
         tern = pseudo_ternary_path(nb, c_max, cset)
         if tern["status"] == "computed":
             point["pseudoTernaryAtCmax"] = {
-                "C_wt": c_max, "fNbC": _r(tern["fNbC"]), "fLaves": _r(tern["fLaves"]),
+                "C_wt": c_max, "fGammaNbCConstituent": _r(tern["fGammaNbCConstituent"]), "fGammaLavesConstituent": _r(tern["fGammaLavesConstituent"]),
                 "fEutecticTotal": _r(tern["fEutecticTotal"]), "fLiquidPrimaryEnd": _r(tern["fLiquidPrimaryEnd"]),
-                "terminatedBy": tern["terminatedBy"], "riskClass": laves_risk_class(tern["fLaves"]),
+                "terminatedBy": tern["terminatedBy"], "riskClass": laves_risk_class(tern["fGammaLavesConstituent"]),
             }
         else:
             point["pseudoTernaryAtCmax"] = {"C_wt": c_max, "status": tern["status"], "reason": tern.get("reason")}
@@ -355,6 +377,7 @@ def _spec_band(alloy_id: str) -> Tuple[Dict[str, float], Optional[float], Dict[s
         "C_wt": {"min": None, "max": c_max, "note": "maximum only; C = 0 is the binary upper-bound end"},
         "balanceElement": spec["balance"],
         "balanceByDifference_wt": {"min": round(100.0 - others_max, 2), "max": round(100.0 - others_min, 2)},
+        "appNominalNote": APP_NOMINAL_NOTE.get(alloy_id),
     }
     return band, c_max, info
 
@@ -365,8 +388,8 @@ def _validity(alloy_id: str, spec_info: Dict[str, Any], set_id: str) -> Dict[str
     outside: List[str] = []
     fe = spec_info["balanceByDifference_wt"]
     fe_lo, fe_hi = src["range"]["Fe"]
-    if fe["min"] > fe_hi or fe["max"] < fe_lo:
-        outside.append(f"Fe (balance, {fe['min']}-{fe['max']} wt% by difference) is outside the source "
+    if fe["min"] < fe_lo or fe["max"] > fe_hi:
+        outside.append(f"Fe (balance, {fe['min']}-{fe['max']} wt% by difference) extends outside the source "
                        f"{fe_lo}-{fe_hi} wt%")
     nb_lo, nb_hi = src["range"]["Nb"]
     s_lo, s_hi = spec["Nb"]
@@ -439,8 +462,8 @@ def segregation_estimate(alloy_id: str, microstructure: Optional[Mapping[str, An
         ratios = _segregation_ratios(band["nominal"], CONSTANTS[set_id])
     except LookupError as exc:
         return _unavailable(aid, str(exc))
-    any_laves = any((p["binaryUpperBound"]["fLaves"] or 0) > 0
-                    or (p.get("pseudoTernaryAtCmax", {}).get("fLaves") or 0) > 0 for p in points)
+    any_laves = any((p["binaryUpperBound"]["fGammaLavesConstituent"] or 0) > 0
+                    or (p.get("pseudoTernaryAtCmax", {}).get("fGammaLavesConstituent") or 0) > 0 for p in points)
     return {
         "schema": SCHEMA,
         "modelId": MODEL_ID,
@@ -454,16 +477,23 @@ def segregation_estimate(alloy_id: str, microstructure: Optional[Mapping[str, An
                  "citation": SOURCES["D97"]["citation"], "locator": CONSTANTS[set_id]["k_gamma_Nb"]["locator"]},
         "composition": spec_info,
         "band": points,
-        "bandNote": ("fLaves at C = 0 (binary upper bound) and at the specification maximum C with the pseudo-ternary "
-                     "model; fractions are of the liquid, which D97 compares with measured volume %"),
+        "bandNote": ("gamma/Laves constituent fraction at C = 0 (binary; model upper bound over C only) and at the "
+                     "specification maximum C with the pseudo-ternary model; fractions are of the liquid, which D97 "
+                     "compares with measured volume %"),
+        "quantity": QUANTITY_NOTE,
         "feBaseSensitivity": {"constantSet": "fe-base", "constants": _constants_view("fe-base"),
                               "point": sensitivity,
                               "note": "bracketing sensitivity with the D97 Fe-base constants; not an interpolation"},
         "segregation": ratios,
         "riskClass": laves_risk_class(1.0 if any_laves else 0.0),
-        "riskClassRule": "f_Laves > 0 at any band point under the Scheil-type model; no fitted threshold",
+        "riskClassRule": ("gamma/Laves constituent > 0 at any band point under the Scheil-type model; no fitted "
+                          "threshold. Binary Scheil without back-diffusion predicts a terminal gamma/Laves eutectic for "
+                          "any Nb > 0, so this class is positive by construction for every Nb-bearing composition and "
+                          "does not discriminate between compositions."),
+        "riskClassPositiveByConstruction": True,
         "processCoupling": _process_coupling(microstructure),
         "upperBoundNote": UPPER_BOUND_NOTE,
+        "sourceAgreementNote": SOURCE_AGREEMENT_NOTE,
         "binaryBoundNote": BINARY_BOUND_NOTE,
         "notModelled": ["solid-state back-diffusion of Nb", "solute trapping (no kinetic constant is introduced)",
                         "dendrite-tip undercooling", "Mo, Ti, Al and Si effects on the Laves reaction",

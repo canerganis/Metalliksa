@@ -9,8 +9,8 @@ import { FlaskConical } from "lucide-react";
 
 interface SegBandEntry {
   C_wt?: number | null;
-  fLaves?: number | null;
-  fNbC?: number | null;
+  fGammaLavesConstituent?: number | null;
+  fGammaNbCConstituent?: number | null;
   fEutecticTotal?: number | null;
   riskClass?: string | null;
   status?: string | null;
@@ -51,6 +51,8 @@ export interface BuildJobSegregationLike {
     note?: string | null;
   } | null;
   upperBoundNote?: string | null;
+  sourceAgreementNote?: string | null;
+  quantity?: string | null;
   binaryBoundNote?: string | null;
   validity?: {
     outsideSourceRegime?: boolean;
@@ -121,7 +123,7 @@ const AvailableBody: React.FC<{ s: BuildJobSegregationLike }> = ({ s }) => {
         <thead>
           <tr className="text-slate-500">
             <th scope="col" className="text-left font-normal">Nb (wt%)</th>
-            <th scope="col" className="text-left font-normal">γ/Laves, C = 0 (upper bound)</th>
+            <th scope="col" className="text-left font-normal">γ/Laves, C = 0 (binary; model upper bound over C only)</th>
             <th scope="col" className="text-left font-normal">γ/Laves at C max</th>
             <th scope="col" className="text-left font-normal">γ/NbC at C max</th>
           </tr>
@@ -135,15 +137,16 @@ const AvailableBody: React.FC<{ s: BuildJobSegregationLike }> = ({ s }) => {
                 <th scope="row" className="text-left font-normal">
                   {num(p.Nb_wt, 3)} <span className="text-slate-500">({p.label})</span>
                 </th>
-                <td>{pct(p.binaryUpperBound?.fLaves)}</td>
-                <td>{ternaryOk ? pct(t.fLaves) : `— ${t?.reason ?? ""}`}</td>
-                <td>{ternaryOk ? pct(t.fNbC) : "—"}</td>
+                <td>{pct(p.binaryUpperBound?.fGammaLavesConstituent)}</td>
+                <td>{ternaryOk ? pct(t.fGammaLavesConstituent) : `— ${t?.reason ?? ""}`}</td>
+                <td>{ternaryOk ? pct(t.fGammaNbCConstituent) : "—"}</td>
               </tr>
             );
           })}
         </tbody>
       </table>
       {s.bandNote && <p className="text-[9px] text-slate-500">{s.bandNote}</p>}
+      {s.quantity && <p className="text-[9px] text-slate-500" data-seg-quantity>{s.quantity}</p>}
       <p className="text-[11px] text-slate-300" data-seg-risk>
         Laves risk class: <strong className="text-white">{s.riskClass}</strong>
         {s.riskClassRule ? <span className="text-slate-500"> ({s.riskClassRule})</span> : null}
@@ -164,7 +167,7 @@ const AvailableBody: React.FC<{ s: BuildJobSegregationLike }> = ({ s }) => {
       {fe && (
         <p className="text-[10px] text-slate-400" data-seg-sensitivity>
           Fe-base constant set (k<sub>Nb</sub> = {num(s.feBaseSensitivity?.constants?.k_gamma_Nb?.value, 2)}), nominal Nb: γ/Laves{" "}
-          {pct(fe.binaryUpperBound?.fLaves)} at C = 0, {pct(fe.pseudoTernaryAtCmax?.fLaves)} at C max — {s.feBaseSensitivity?.note}
+          {pct(fe.binaryUpperBound?.fGammaLavesConstituent)} at C = 0, {pct(fe.pseudoTernaryAtCmax?.fGammaLavesConstituent)} at C max — {s.feBaseSensitivity?.note}
         </p>
       )}
       <div className="text-[10px] text-slate-400" data-seg-coupling={pc?.status ?? "unavailable"}>
@@ -192,6 +195,11 @@ const AvailableBody: React.FC<{ s: BuildJobSegregationLike }> = ({ s }) => {
         </div>
       )}
       {s.upperBoundNote && <p className="text-[10px] text-slate-400" data-seg-upper-bound>{s.upperBoundNote}</p>}
+      {s.sourceAgreementNote && (
+        <p className="text-[10px] text-amber-200" data-seg-source-agreement>
+          Agreement with the source measurements: {s.sourceAgreementNote}
+        </p>
+      )}
       {s.binaryBoundNote && <p className="text-[9px] text-slate-500">{s.binaryBoundNote}</p>}
     </>
   );

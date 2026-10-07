@@ -107,10 +107,10 @@ def literature(c_wt: float) -> Dict[str, Any]:
     ni = seg.CONSTANTS["ni-base"]
     if c_wt <= 0:
         f = seg.scheil_eutectic_fraction(nb, ni["C_Nb_laves"]["value"], ni["k_gamma_Nb"]["value"])
-        return {"model": "binary gamma-Nb Scheil (upper bound)", "Nb_wt": nb, "C_wt": 0.0, "fLaves": round(f, 4)}
+        return {"model": "binary gamma-Nb Scheil (upper bound)", "Nb_wt": nb, "C_wt": 0.0, "fGammaLavesConstituent": round(f, 4)}
     r = seg.pseudo_ternary_path(nb, c_wt, ni)
-    return {"model": "D97 pseudo-ternary", "Nb_wt": nb, "C_wt": c_wt, "fLaves": round(r["fLaves"], 4),
-            "fNbC": round(r["fNbC"], 4)}
+    return {"model": "D97 pseudo-ternary", "Nb_wt": nb, "C_wt": c_wt, "fGammaLavesConstituent": round(r["fGammaLavesConstituent"], 4),
+            "fGammaNbCConstituent": round(r["fGammaNbCConstituent"], 4)}
 
 
 STEP0 = """## Step 0: database decision (recorded before modelling)
@@ -129,6 +129,11 @@ STEP0 = """## Step 0: database decision (recorded before modelling)
 """
 
 
+def _is_mc_carbide(phase: str) -> bool:
+    name = phase.upper()
+    return name.startswith("MC") or "NBC" in name or name.startswith("FCC_A1#")
+
+
 def render_md(result: Dict[str, Any]) -> str:
     lines = [
         f"# LPBF Scheil / Laves cross-check ({result['date']})",
@@ -144,10 +149,13 @@ def render_md(result: Dict[str, Any]) -> str:
         "(screening)); fractions of the liquid, mass basis; C = 0 is the binary upper bound, C = 0.08 the pseudo-ternary "
         "model at the specification maximum.",
         "- pycalphad side: `calphad_solver.scheil_gulliver`; phase amounts in moles of atoms. Indicative comparison only.",
+        "- The two columns are not directly comparable: the literature column is the gamma/Laves eutectic-type "
+        "constituent (fraction of the liquid, eutectic gamma included), the LAVES column is the amount of the LAVES "
+        "phase alone, so the constituent is necessarily larger than the phase amount for the same path.",
         "- IN718 composition: midpoints of SMC-045 Table 1 for Ni, Cr, Nb, Mo, Ti, Al, Fe balance; minor max-only "
         f"elements left out: {', '.join(result.get('omittedMinorElements', []))}.",
         "",
-        "| Case | Literature f_Laves | pycalphad Scheil status | LAVES (mol atoms) | Other solids (mol atoms) | Terminal T (degC) | Remaining liquid |",
+        "| Case | Literature gamma/Laves constituent (fraction of liquid) | pycalphad Scheil status | LAVES (mol atoms) | Other solids (mol atoms) | Terminal T (degC) | Remaining liquid |",
         "|---|---|---|---|---|---|---|",
     ]
     for case in result["cases"]:
@@ -159,9 +167,15 @@ def render_md(result: Dict[str, Any]) -> str:
         if status != "complete":
             status += f" ({py.get('terminationReason') or py.get('reason')})"
         lines.append("| {} | {} | {} | {} | {} | {} | {} |".format(
-            case["name"], "n/a (constants not verified)" if lit is None else lit["fLaves"], status,
+            case["name"], "n/a (constants not verified)" if lit is None else lit["fGammaLavesConstituent"], status,
             py.get("lavesMolesOfAtoms") if py.get("lavesMolesOfAtoms") is not None else "none formed",
             others, py.get("terminalTemperatureC"), py.get("remainingLiquidFraction")))
+    no_mc = [c["name"] for c in result["cases"]
+             if (c.get("literature") or {}).get("C_wt", 0) > 0
+             and not any(_is_mc_carbide(k) for k in (c["pycalphad"].get("phaseAmountsMolesOfAtoms") or {}))]
+    if no_mc:
+        lines += ["", "No MC carbide formed in the pycalphad path for: " + "; ".join(no_mc) + ". The pseudo-ternary "
+                      "model removes Nb into gamma/NbC at that carbon level, so the comparison in that row is doubtful."]
     if not any(c["name"].startswith("IN625") for c in result["cases"]):
         lines += ["", "IN625 was not run: the repository holds no cited IN625 composition limits and its literature "
                       "constants are not verified (the segregation block reports IN625 as unavailable)."]

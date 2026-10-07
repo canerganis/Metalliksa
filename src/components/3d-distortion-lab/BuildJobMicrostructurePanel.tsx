@@ -44,7 +44,14 @@ export const BuildJobMicrostructurePanel: React.FC<{
   micro: BuildJobMicrostructureLike | null | undefined;
   segregation?: unknown;
 }> = ({ micro, segregation }) => {
-  if (!micro) return null;
+  // The segregation result is composition-only, so it is still shown when the microstructure block is missing.
+  if (!micro) {
+    return segregation !== undefined && segregation !== null ? (
+      <div>
+        <BuildJobSegregationPanel segregation={segregation} />
+      </div>
+    ) : null;
+  }
   // A block without a known status (an old worker's Rosenthal block) is never shown as available.
   const known = typeof micro.status === "string" && KNOWN_STATUS.includes(micro.status);
   const m: BuildJobMicrostructureLike = known ? micro : { status: "unavailable", reason: "legacy block without status" };

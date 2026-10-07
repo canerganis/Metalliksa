@@ -102,7 +102,8 @@
    "balanceByDifference_wt": {
     "min": 11.13,
     "max": 24.6
-   }
+   },
+   "appNominalNote": "The app's alloy_registry in718 composition_wt (Nb 5.1, C 0.04 wt%) has no cited source, so the band uses the SMC-045 specification limits instead. Nb 5.1 lies inside the band (4.75-5.50) and C 0.04 inside the C range covered by the C = 0 and C max columns."
   },
   "band": [
    {
@@ -110,13 +111,13 @@
     "Nb_wt": 4.75,
     "binaryUpperBound": {
      "C_wt": 0.0,
-     "fLaves": 0.0534,
+     "fGammaLavesConstituent": 0.0534,
      "riskClass": "eutectic Laves expected (Scheil)"
     },
     "pseudoTernaryAtCmax": {
      "C_wt": 0.08,
-     "fNbC": 0.0631,
-     "fLaves": 0.0181,
+     "fGammaNbCConstituent": 0.0631,
+     "fGammaLavesConstituent": 0.0181,
      "fEutecticTotal": 0.0812,
      "fLiquidPrimaryEnd": 0.0812,
      "terminatedBy": "laves-point",
@@ -128,13 +129,13 @@
     "Nb_wt": 5.125,
     "binaryUpperBound": {
      "C_wt": 0.0,
-     "fLaves": 0.0615,
+     "fGammaLavesConstituent": 0.0615,
      "riskClass": "eutectic Laves expected (Scheil)"
     },
     "pseudoTernaryAtCmax": {
      "C_wt": 0.08,
-     "fNbC": 0.0658,
-     "fLaves": 0.0264,
+     "fGammaNbCConstituent": 0.0658,
+     "fGammaLavesConstituent": 0.0264,
      "fEutecticTotal": 0.0922,
      "fLiquidPrimaryEnd": 0.0922,
      "terminatedBy": "laves-point",
@@ -146,13 +147,13 @@
     "Nb_wt": 5.5,
     "binaryUpperBound": {
      "C_wt": 0.0,
-     "fLaves": 0.0701,
+     "fGammaLavesConstituent": 0.0701,
      "riskClass": "eutectic Laves expected (Scheil)"
     },
     "pseudoTernaryAtCmax": {
      "C_wt": 0.08,
-     "fNbC": 0.0684,
-     "fLaves": 0.0352,
+     "fGammaNbCConstituent": 0.0684,
+     "fGammaLavesConstituent": 0.0352,
      "fEutecticTotal": 0.1036,
      "fLiquidPrimaryEnd": 0.1036,
      "terminatedBy": "laves-point",
@@ -160,7 +161,8 @@
     }
    }
   ],
-  "bandNote": "fLaves at C = 0 (binary upper bound) and at the specification maximum C with the pseudo-ternary model; fractions are of the liquid, which D97 compares with measured volume %",
+  "bandNote": "gamma/Laves constituent fraction at C = 0 (binary; model upper bound over C only) and at the specification maximum C with the pseudo-ternary model; fractions are of the liquid, which D97 compares with measured volume %",
+  "quantity": "fGammaLavesConstituent and fGammaNbCConstituent are fractions of the gamma/Laves and gamma/NbC eutectic-type constituents (remaining liquid that transforms, eutectic gamma included; D97 terminology), not phase fractions of Laves or NbC.",
   "feBaseSensitivity": {
    "constantSet": "fe-base",
    "constants": {
@@ -234,13 +236,13 @@
     "Nb_wt": 5.125,
     "binaryUpperBound": {
      "C_wt": 0.0,
-     "fLaves": 0.1585,
+     "fGammaLavesConstituent": 0.1585,
      "riskClass": "eutectic Laves expected (Scheil)"
     },
     "pseudoTernaryAtCmax": {
      "C_wt": 0.08,
-     "fNbC": 0.0761,
-     "fLaves": 0.1193,
+     "fGammaNbCConstituent": 0.0761,
+     "fGammaLavesConstituent": 0.1193,
      "fEutecticTotal": 0.1954,
      "fLiquidPrimaryEnd": 0.1954,
      "terminatedBy": "laves-point",
@@ -271,7 +273,8 @@
    "note": "When the remaining liquid at fs is below the eutectic fraction the liquid has reached the gamma/Laves composition and the ratio is capped there (atEutecticComposition = true)."
   },
   "riskClass": "eutectic Laves expected (Scheil)",
-  "riskClassRule": "f_Laves > 0 at any band point under the Scheil-type model; no fitted threshold",
+  "riskClassRule": "gamma/Laves constituent > 0 at any band point under the Scheil-type model; no fitted threshold. Binary Scheil without back-diffusion predicts a terminal gamma/Laves eutectic for any Nb > 0, so this class is positive by construction for every Nb-bearing composition and does not discriminate between compositions.",
+  "riskClassPositiveByConstruction": true,
   "processCoupling": {
    "status": "available",
    "reason": null,
@@ -284,8 +287,9 @@
    "usedInCalculation": false,
    "note": "G and R are copied for context only: the Scheil-type result depends on composition alone. Solute trapping and back-diffusion at this solidification rate are not modelled."
   },
-  "upperBoundNote": "Upper bound with respect to effects that are not modelled and that all reduce segregation: solid-state back-diffusion of Nb, solute trapping at high solidification rate and dendrite-tip undercooling. It is not a bound with respect to the choice of k_Nb (see validity).",
-  "binaryBoundNote": "Binary gamma-Nb Scheil (C = 0): carbon ties Nb up as NbC, so within this model the binary value is an upper bound on the gamma/Laves fraction for any carbon content.",
+  "upperBoundNote": "Upper bound with respect to effects that are not modelled and that all reduce segregation: solid-state back-diffusion of Nb, solute trapping at high solidification rate and dendrite-tip undercooling. It is not a bound with respect to the choice of k_Nb (see validity), and it is not an upper bound on measured Laves content (see sourceAgreementNote).",
+  "sourceAgreementNote": "Not conservative against measurement, even in the source's own weld regime: D97 Fig. 9b (measured vs calculated gamma/Laves) shows several alloys with measured gamma/Laves above the calculated value, including alloys for which the model predicts no gamma/Laves (measured about 0.5-1.5 vol%, e.g. Ni-base alloy 8 in Fig. 3), and low-C Ni-base alloys where the model is about 2-3x high (alloys 5 and 7: measured about 2-3 vol% in Fig. 3). D97 also reports that Fe and Si raise the gamma/Laves amount; IN718 contains about 18 wt% Fe plus Mo, which the source alloys do not.",
+  "binaryBoundNote": "Binary gamma-Nb Scheil (C = 0): carbon ties Nb up as NbC, so within this model the binary value is an upper bound over carbon content on the gamma/Laves constituent fraction (a model statement, not a bound on measurement).",
   "notModelled": [
    "solid-state back-diffusion of Nb",
    "solute trapping (no kinetic constant is introduced)",
@@ -330,7 +334,7 @@
    ],
    "outsideSourceComposition": true,
    "outsideSourceCompositionReasons": [
-    "Fe (balance, 11.13-24.6 wt% by difference) is outside the source 10.39-11.12 wt%",
+    "Fe (balance, 11.13-24.6 wt% by difference) extends outside the source 10.39-11.12 wt%",
     "Nb specification 4.75-5.5 wt% extends outside the source 1.82-5.17 wt%",
     "Mo (2.8-3.3 wt% in the specification) is absent from the source alloys",
     "Ti (0.65-1.15 wt% in the specification) is absent from the source alloys",
@@ -445,7 +449,8 @@
    "balanceByDifference_wt": {
     "min": 11.13,
     "max": 24.6
-   }
+   },
+   "appNominalNote": "The app's alloy_registry in718 composition_wt (Nb 5.1, C 0.04 wt%) has no cited source, so the band uses the SMC-045 specification limits instead. Nb 5.1 lies inside the band (4.75-5.50) and C 0.04 inside the C range covered by the C = 0 and C max columns."
   },
   "band": [
    {
@@ -453,13 +458,13 @@
     "Nb_wt": 4.75,
     "binaryUpperBound": {
      "C_wt": 0.0,
-     "fLaves": 0.0534,
+     "fGammaLavesConstituent": 0.0534,
      "riskClass": "eutectic Laves expected (Scheil)"
     },
     "pseudoTernaryAtCmax": {
      "C_wt": 0.08,
-     "fNbC": 0.0631,
-     "fLaves": 0.0181,
+     "fGammaNbCConstituent": 0.0631,
+     "fGammaLavesConstituent": 0.0181,
      "fEutecticTotal": 0.0812,
      "fLiquidPrimaryEnd": 0.0812,
      "terminatedBy": "laves-point",
@@ -471,13 +476,13 @@
     "Nb_wt": 5.125,
     "binaryUpperBound": {
      "C_wt": 0.0,
-     "fLaves": 0.0615,
+     "fGammaLavesConstituent": 0.0615,
      "riskClass": "eutectic Laves expected (Scheil)"
     },
     "pseudoTernaryAtCmax": {
      "C_wt": 0.08,
-     "fNbC": 0.0658,
-     "fLaves": 0.0264,
+     "fGammaNbCConstituent": 0.0658,
+     "fGammaLavesConstituent": 0.0264,
      "fEutecticTotal": 0.0922,
      "fLiquidPrimaryEnd": 0.0922,
      "terminatedBy": "laves-point",
@@ -489,13 +494,13 @@
     "Nb_wt": 5.5,
     "binaryUpperBound": {
      "C_wt": 0.0,
-     "fLaves": 0.0701,
+     "fGammaLavesConstituent": 0.0701,
      "riskClass": "eutectic Laves expected (Scheil)"
     },
     "pseudoTernaryAtCmax": {
      "C_wt": 0.08,
-     "fNbC": 0.0684,
-     "fLaves": 0.0352,
+     "fGammaNbCConstituent": 0.0684,
+     "fGammaLavesConstituent": 0.0352,
      "fEutecticTotal": 0.1036,
      "fLiquidPrimaryEnd": 0.1036,
      "terminatedBy": "laves-point",
@@ -503,7 +508,8 @@
     }
    }
   ],
-  "bandNote": "fLaves at C = 0 (binary upper bound) and at the specification maximum C with the pseudo-ternary model; fractions are of the liquid, which D97 compares with measured volume %",
+  "bandNote": "gamma/Laves constituent fraction at C = 0 (binary; model upper bound over C only) and at the specification maximum C with the pseudo-ternary model; fractions are of the liquid, which D97 compares with measured volume %",
+  "quantity": "fGammaLavesConstituent and fGammaNbCConstituent are fractions of the gamma/Laves and gamma/NbC eutectic-type constituents (remaining liquid that transforms, eutectic gamma included; D97 terminology), not phase fractions of Laves or NbC.",
   "feBaseSensitivity": {
    "constantSet": "fe-base",
    "constants": {
@@ -577,13 +583,13 @@
     "Nb_wt": 5.125,
     "binaryUpperBound": {
      "C_wt": 0.0,
-     "fLaves": 0.1585,
+     "fGammaLavesConstituent": 0.1585,
      "riskClass": "eutectic Laves expected (Scheil)"
     },
     "pseudoTernaryAtCmax": {
      "C_wt": 0.08,
-     "fNbC": 0.0761,
-     "fLaves": 0.1193,
+     "fGammaNbCConstituent": 0.0761,
+     "fGammaLavesConstituent": 0.1193,
      "fEutecticTotal": 0.1954,
      "fLiquidPrimaryEnd": 0.1954,
      "terminatedBy": "laves-point",
@@ -614,7 +620,8 @@
    "note": "When the remaining liquid at fs is below the eutectic fraction the liquid has reached the gamma/Laves composition and the ratio is capped there (atEutecticComposition = true)."
   },
   "riskClass": "eutectic Laves expected (Scheil)",
-  "riskClassRule": "f_Laves > 0 at any band point under the Scheil-type model; no fitted threshold",
+  "riskClassRule": "gamma/Laves constituent > 0 at any band point under the Scheil-type model; no fitted threshold. Binary Scheil without back-diffusion predicts a terminal gamma/Laves eutectic for any Nb > 0, so this class is positive by construction for every Nb-bearing composition and does not discriminate between compositions.",
+  "riskClassPositiveByConstruction": true,
   "processCoupling": {
    "status": "unavailable",
    "reason": "microstructure degenerate-floor: solidification front degenerate: floor-clamped R/cooling (R <= 1e-4 m/s or cooling <= 1 K/s), not a computed value",
@@ -627,8 +634,9 @@
    "usedInCalculation": false,
    "note": "G and R are copied for context only: the Scheil-type result depends on composition alone. Solute trapping and back-diffusion at this solidification rate are not modelled."
   },
-  "upperBoundNote": "Upper bound with respect to effects that are not modelled and that all reduce segregation: solid-state back-diffusion of Nb, solute trapping at high solidification rate and dendrite-tip undercooling. It is not a bound with respect to the choice of k_Nb (see validity).",
-  "binaryBoundNote": "Binary gamma-Nb Scheil (C = 0): carbon ties Nb up as NbC, so within this model the binary value is an upper bound on the gamma/Laves fraction for any carbon content.",
+  "upperBoundNote": "Upper bound with respect to effects that are not modelled and that all reduce segregation: solid-state back-diffusion of Nb, solute trapping at high solidification rate and dendrite-tip undercooling. It is not a bound with respect to the choice of k_Nb (see validity), and it is not an upper bound on measured Laves content (see sourceAgreementNote).",
+  "sourceAgreementNote": "Not conservative against measurement, even in the source's own weld regime: D97 Fig. 9b (measured vs calculated gamma/Laves) shows several alloys with measured gamma/Laves above the calculated value, including alloys for which the model predicts no gamma/Laves (measured about 0.5-1.5 vol%, e.g. Ni-base alloy 8 in Fig. 3), and low-C Ni-base alloys where the model is about 2-3x high (alloys 5 and 7: measured about 2-3 vol% in Fig. 3). D97 also reports that Fe and Si raise the gamma/Laves amount; IN718 contains about 18 wt% Fe plus Mo, which the source alloys do not.",
+  "binaryBoundNote": "Binary gamma-Nb Scheil (C = 0): carbon ties Nb up as NbC, so within this model the binary value is an upper bound over carbon content on the gamma/Laves constituent fraction (a model statement, not a bound on measurement).",
   "notModelled": [
    "solid-state back-diffusion of Nb",
    "solute trapping (no kinetic constant is introduced)",
@@ -673,7 +681,7 @@
    ],
    "outsideSourceComposition": true,
    "outsideSourceCompositionReasons": [
-    "Fe (balance, 11.13-24.6 wt% by difference) is outside the source 10.39-11.12 wt%",
+    "Fe (balance, 11.13-24.6 wt% by difference) extends outside the source 10.39-11.12 wt%",
     "Nb specification 4.75-5.5 wt% extends outside the source 1.82-5.17 wt%",
     "Mo (2.8-3.3 wt% in the specification) is absent from the source alloys",
     "Ti (0.65-1.15 wt% in the specification) is absent from the source alloys",

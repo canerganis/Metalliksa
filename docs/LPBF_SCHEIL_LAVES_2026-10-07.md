@@ -21,12 +21,15 @@ Local analysis run of `python/tools/xcheck_scheil_laves.py`. Both columns are ca
 - TDB: `mc_ni_repaired.tdb` (sha256 `c914f534cc99...`), pycalphad 0.11.2
 - Literature side: `lpbf_solidification_segregation` (DuPont, Robino & Marder 1997, Literature estimate (screening)); fractions of the liquid, mass basis; C = 0 is the binary upper bound, C = 0.08 the pseudo-ternary model at the specification maximum.
 - pycalphad side: `calphad_solver.scheil_gulliver`; phase amounts in moles of atoms. Indicative comparison only.
+- The two columns are not directly comparable: the literature column is the gamma/Laves eutectic-type constituent (fraction of the liquid, eutectic gamma included), the LAVES column is the amount of the LAVES phase alone, so the constituent is necessarily larger than the phase amount for the same path.
 - IN718 composition: midpoints of SMC-045 Table 1 for Ni, Cr, Nb, Mo, Ti, Al, Fe balance; minor max-only elements left out: Co, Mn, Si, P, S, B, Cu.
 
-| Case | Literature f_Laves | pycalphad Scheil status | LAVES (mol atoms) | Other solids (mol atoms) | Terminal T (degC) | Remaining liquid |
+| Case | Literature gamma/Laves constituent (fraction of liquid) | pycalphad Scheil status | LAVES (mol atoms) | Other solids (mol atoms) | Terminal T (degC) | Remaining liquid |
 |---|---|---|---|---|---|---|
 | IN718 midpoint, C=0.0 | 0.0615 | complete | 0.01935 | DELTA 0.010412, ETA 0.023378, FCC_A1 0.94686 | 1127.85 | 0.0 |
 | IN718 midpoint, C=0.08 | 0.0264 | complete | none formed | DELTA 0.038886, ETA 0.0212, FCC_A1 0.93701, SIGMA 0.002903 | 1103.83 | 0.0 |
+
+No MC carbide formed in the pycalphad path for: IN718 midpoint, C=0.08. The pseudo-ternary model removes Nb into gamma/NbC at that carbon level, so the comparison in that row is doubtful.
 
 IN625 was not run: the repository holds no cited IN625 composition limits and its literature constants are not verified (the segregation block reports IN625 as unavailable).
 
