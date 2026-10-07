@@ -2,10 +2,11 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 title: Metalliksa
 type: software
-# Status: under active development (pre-1.0); the version below follows package.json.
+# Status: under active development (pre-1.0).
 authors:
-  # TODO(maintainer): replace this GitHub alias with the real given-names / family-names.
-  - alias: canerganis
+  - given-names: Muhammet Can
+    family-names: Erganis
+    alias: canerganis
 repository-code: "https://github.com/canerganis/metalliksa"
 license: MIT
 version: "0.1.0"
