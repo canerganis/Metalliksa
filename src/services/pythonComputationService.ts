@@ -1432,6 +1432,41 @@ class PythonComputationService {
     // Client-side fallback with exact same ASTM G102 formulas
     return fallbackClientTafelCorrosionRate(payload);
   }
+
+  /**
+   * LPBF process-window map (python/lpbf_process_window.py; screening only, not validation). Returns the raw JSON
+   * document: callers must pass it through checkedProcessWindow (src/data/lpbfProcessWindow.ts) before rendering.
+   * Refusals (HTTP 422 / errorKind "validation") and unreachable-engine failures are thrown as typed errors so the
+   * view can tell them apart; nothing is retried or substituted.
+   */
+  async runLpbfProcessWindow(data: LpbfProcessWindowRequest, signal?: AbortSignal): Promise<unknown> {
+    let res: Response;
+    try {
+      res = await fetch("/api/python/lpbf-process-window", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        signal,
+      });
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") throw err;
+      throw new LpbfProcessWindowRequestError("engine-unavailable", null, err instanceof Error ? err.message : "Network request failed.");
+    }
+    let body: any = null;
+    try { body = await res.json(); } catch { /* body not JSON */ }
+    if (!res.ok) {
+      const detail = typeof body?.error === "string" ? body.error : `HTTP ${res.status}`;
+      throw new LpbfProcessWindowRequestError(body?.errorKind === "validation" ? "validation" : "engine-unavailable", res.status, detail);
+    }
+    if (body === null || typeof body !== "object") {
+      throw new LpbfProcessWindowRequestError("engine-unavailable", res.status, "The engine returned a non-JSON response.");
+    }
+    if (body.success !== true) {
+      throw new LpbfProcessWindowRequestError(body.errorKind === "validation" ? "validation" : "engine-unavailable", res.status,
+        typeof body.error === "string" ? body.error : "The engine returned a failure without a reason.");
+    }
+    return body;
+  }
 }
 
 export interface PythonSTLSlicerResult {
@@ -2053,6 +2088,7 @@ export interface PythonStochasticUQResult {
     criticalFlaw_P10_mm: number | null;
     criticalFlaw_status: string;
   };
+
 }
 
 export interface PythonICMEMultiScaleResult {
@@ -2189,6 +2225,7 @@ export interface PythonICMEMultiScaleResult {
     lsDyna: string;
     ansys: string;
   };
+
 }
 
 export const pythonComputationService = new PythonComputationService();
@@ -2486,4 +2523,136 @@ export async function calculatePythonTafelCorrosionRate(
   payload: TafelPythonCorrosionRateInput
 ): Promise<TafelPythonCorrosionRateResult> {
   return pythonComputationService.calculateTafelCorrosionRate(payload);
+}
+
+
+// ---- LPBF process-window map (python/lpbf_process_window.py) -------------------------------------------------
+export type LpbfProcessWindowVerdict = "printable" | "risky" | "do-not-print" | "inconclusive";
+export type LpbfProcessWindowCellVerdict = LpbfProcessWindowVerdict | "error";
+
+export interface LpbfProcessWindowRequest {
+  alloyId: string;
+  beamDiameter_um: number;
+  layer_um: number;
+  hatch_um: number;
+  preheatTemp_C: number;
+  powers?: number[];
+  speeds?: number[];
+  overlayBeamTolerance_pct?: number;
+}
+
+export interface LpbfProcessWindowCell {
+  iP: number;
+  iV: number;
+  power_W: number;
+  speed_mm_s: number;
+  verdict: LpbfProcessWindowCellVerdict;
+  headline: string;
+  dominantGate: string | null;
+  blockingGates: string[];
+  riskGates: string[];
+  advisoryGates: string[];
+  unavailableGates: string[];
+  reasons: string[];
+  extentStatus: string | null;
+  insideLiteratureBox: boolean | null;
+  normalizedEnthalpy: number | null;
+  ballingBand: string | null;
+  width_um: number | null;
+  depth_um: number | null;
+  error: string | null;
+}
+
+export interface LpbfProcessWindowPointVerdict {
+  verdict: LpbfProcessWindowCellVerdict;
+  dominantGate: string | null;
+  extentStatus: string | null;
+  modelWidth_um: number | null;
+  modelDepth_um: number | null;
+  error: string | null;
+}
+
+export interface LpbfProcessWindowPoint {
+  datasetId: string;
+  rowId: string;
+  power_W: number;
+  speed_mm_s: number;
+  beamDiameter_um: number | null;
+  layer_um: number | null;
+  preheat_C: number | null;
+  measuredWidth_um: number | null;
+  measuredDepth_um: number | null;
+  modelVerdict: LpbfProcessWindowPointVerdict;
+}
+
+export interface LpbfProcessWindowDataset {
+  id: string;
+  label: string;
+  status: "available" | "unavailable";
+  reason: string | null;
+  material?: string | null;
+  doi?: string | null;
+  url?: string | null;
+  license?: string | null;
+  citation?: string | null;
+  caveats?: string[];
+  nRows: number;
+  nShown: number;
+  hiddenByBeam: number;
+  hiddenNoBeam: number;
+  hiddenOutsideRange: number;
+  points: LpbfProcessWindowPoint[];
+}
+
+export interface LpbfProcessWindowResponse {
+  success: true;
+  engine: string;
+  alloyId: string;
+  request: {
+    alloyId: string;
+    beamDiameter_um: number;
+    layer_um: number;
+    hatch_um: number;
+    preheatTemp_C: number;
+    overlayBeamTolerance_pct: number;
+  };
+  grid: {
+    powers_W: number[];
+    speeds_mm_s: number[];
+    nP: number;
+    nV: number;
+    nCells: number;
+    literatureBox: { powerMin_W: number; powerMax_W: number; speedMin_mm_s: number; speedMax_mm_s: number };
+    rangeBasis: {
+      power: { basis: "default" | "request"; min_W: number; max_W: number; n: number; rule: string };
+      speed: { basis: "default" | "request"; min_mm_s: number; max_mm_s: number; n: number; rule: string };
+    };
+  };
+  cells: LpbfProcessWindowCell[];
+  counts: Record<LpbfProcessWindowCellVerdict, number>;
+  gridAdvisories: { gate: string; note: string; cells: number }[];
+  overlay: {
+    beamTolerance_pct: number;
+    beamWindow_um: [number, number];
+    note: string | null;
+    measurementKind: string;
+    datasets: LpbfProcessWindowDataset[];
+  };
+  evidence: { kind: "screening-only"; experimentalValidation: false; statement: string };
+  provenance: { modelId: string; solverRevision: string; implementationHash: string; absorptionModel: string | null };
+  cache: { hit: boolean; key: string; stored?: boolean };
+  computeMs: number;
+  originalComputeMs?: number | null;
+}
+
+/** kind "validation": the engine refused the request (HTTP 422); "engine-unavailable": no usable answer. */
+export class LpbfProcessWindowRequestError extends Error {
+  readonly kind: "validation" | "engine-unavailable";
+  readonly status: number | null;
+  constructor(kind: "validation" | "engine-unavailable", status: number | null, message: string) {
+    super(message);
+    this.name = "LpbfProcessWindowRequestError";
+    this.kind = kind;
+    this.status = status;
+  }
 }

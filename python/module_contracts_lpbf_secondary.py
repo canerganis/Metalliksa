@@ -21,7 +21,8 @@ from module_contract import (
 CONTRACT_VERSION = "0.1.0"
 
 
-def _contract(seed: Mapping[str, str], operation: Operation, notes, sources) -> ModuleContract:
+def _contract(seed: Mapping[str, str], operation, notes, sources) -> ModuleContract:
+    operations = tuple(operation) if isinstance(operation, (tuple, list)) else (operation,)
     return ModuleContract(
         id=seed["id"],
         version=CONTRACT_VERSION,
@@ -48,7 +49,7 @@ def _contract(seed: Mapping[str, str], operation: Operation, notes, sources) -> 
             docs=f"docs/modules/{seed['id']}.md",
         ),
         migration_state="contracted",
-        operations=(operation,),
+        operations=operations,
         lifecycle=Lifecycle(background_work="none", resources=("fetch",)),
         legacy_notes=tuple(notes),
         source_refs=tuple(sources),
@@ -80,9 +81,28 @@ def build_lpbf_optimizer_contract(seed: Mapping[str, str]) -> ModuleContract:
             status_key=None,
         ),
     )
+    process_window = Operation(
+        id="process-window",
+        method="POST",
+        route="/api/python/lpbf-process-window",
+        authority=Authority(
+            kind="python-ipc",
+            script="python/lpbf_process_window.py",
+            timeout_ms=60000,
+            warm=False,
+        ),
+        # Axis arrays (powers, speeds) and the string alloyId are outside InputField's scalar vocabulary.
+        undeclared_input=("alloyId", "beamDiameter_um", "layer_um", "hatch_um", "preheatTemp_C", "powers", "speeds",
+                          "overlayBeamTolerance_pct"),
+        output=OutputSchema(
+            fields=("success", "error", "errorKind", "engine", "alloyId", "request", "grid", "cells", "counts",
+                    "gridAdvisories", "overlay", "provenance", "cache", "computeMs", "originalComputeMs"),
+            status_key=None,
+        ),
+    )
     return _contract(
         seed,
-        operation,
+        (operation, process_window),
         notes=(
             "The view submits only on Run Optimization. Its body is alloyId (a solver alloy key derived from the "
             "active material name by src/utils/lpbfOptimizerAlloy.ts), nested paramBounds for laserPower_W (W), "
@@ -101,6 +121,23 @@ def build_lpbf_optimizer_contract(seed: Mapping[str, str]) -> ModuleContract:
             "candidate scores above 0 the result has bestParams=null and noPositiveScore=true. bestScore and the UI's "
             "best candidate are heuristic software outputs, not a qualified process recommendation, experimental result "
             "or validated optimum.",
+            "process-window (first tab of the lab, nothing runs until Compute): POST /api/python/lpbf-process-window "
+            "evaluates the same calculate_meltpool_physics -> compose_verdict pair as the optimizer objective on a "
+            "power x speed grid (default 11 x 11 over 0.5 x literature-box minimum to 1.5 x maximum; 2-15 values per "
+            "axis, at most 225 cells, P <= 1500 W, v <= 10000 mm/s, strictly increasing, no clamping, no fallback alloy). "
+            "Required body: alloyId, beamDiameter_um, layer_um, hatch_um (all > 0) and preheatTemp_C (>= 0 and below the "
+            "solidus); optional powers, speeds and overlayBeamTolerance_pct (default 10). Refusals use errorKind "
+            "'validation' (HTTP 422). A cell whose solver call raises is reported as verdict 'error' and never coloured "
+            "as a verdict; width and depth are given only when extentStatus is 'computed'. Responses are cached in an "
+            "imported module (16-entry LRU keyed by the normalised request, the solver revision and the implementation "
+            "hash) and report cache.hit; the response also carries an evidence object (not listed in the output fields: the SDK reserves that name) with kind 'screening-only' and experimentalValidation false; incomplete results (error cells, unavailable datasets) are not cached.",
+            "process-window overlay: published single-track measurements (Hofmann 316L, Totis Ti-6Al-4V, KU Leuven "
+            "IN718 with unit-unresolved dimensions, NIST AMB2022-03 Table 4 IN718) are filtered to the request beam "
+            "diameter within the tolerance and to the mapped P/v range, with hidden counts reported; each point gets the "
+            "model verdict at its own P/v with the request's beam, layer, hatch and preheat. A loader that fails makes "
+            "only its dataset 'unavailable'; AlSi10Mg has no source. The response is screening only "
+            "(evidence.kind 'screening-only', experimentalValidation false); measurements are geometry, not print "
+            "outcomes, and no overlay point carries a verdict colour.",
             "The script imports numpy and scipy at module load and has no dependency-unavailable envelope or "
             "fallback. Dispatch/IPC errors surface through the route/service failure path. The request has a "
             "120000 ms Python-IPC timeout and is not warm. The browser holds request/result/loading/error state; "
@@ -112,6 +149,11 @@ def build_lpbf_optimizer_contract(seed: Mapping[str, str]) -> ModuleContract:
             "routes/physics.ts:78-79#120000",
             "python/lpbf_bayesian_optimizer.py::run_bayesian_optimization",
             "python/lpbf_bayesian_optimizer.py:307-334#nIterations",
+            "src/components/LpbfProcessWindowMap.tsx::LpbfProcessWindowMap",
+            "src/services/pythonComputationService.ts:1442-1446#lpbf-process-window",
+            "routes/physics.ts:123-125#60000",
+            "python/lpbf_process_window.py::run_process_window",
+            "python/lpbf_process_window.py:35-35#MAX_CELLS = 225",
         ),
     )
 

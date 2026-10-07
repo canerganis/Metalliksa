@@ -50,6 +50,42 @@ class LpbfSecondaryContractTests(unittest.TestCase):
         self.assertTrue(any("not a qualified process recommendation" in note
                             for note in contract.legacy_notes))
 
+    def test_optimizer_contract_declares_the_process_window_operation(self):
+        contract = build_lpbf_optimizer_contract(self.seed("lpbf-optimizer"))
+        self.assertEqual([op.id for op in contract.operations], ["bayesian-optimize", "process-window"])
+        operation = contract.operations[1]
+        self.assertEqual((operation.method, operation.route),
+                         ("POST", "/api/python/lpbf-process-window"))
+        self.assertEqual((operation.authority.kind, operation.authority.script,
+                          operation.authority.timeout_ms, operation.authority.warm),
+                         ("python-ipc", "python/lpbf_process_window.py", 60000, False))
+        self.assertEqual(operation.undeclared_input,
+                         ("alloyId", "beamDiameter_um", "layer_um", "hatch_um", "preheatTemp_C",
+                          "powers", "speeds", "overlayBeamTolerance_pct"))
+        payload = {"alloyId": "in718", "beamDiameter_um": 80, "layer_um": 40, "hatch_um": 110,
+                   "preheatTemp_C": 80, "powers": [100, 200], "speeds": [500, 600],
+                   "overlayBeamTolerance_pct": 10}
+        self.assertEqual(operation.input_problems(payload), [])
+        self.assertEqual(operation.output.status_key, None)
+        for field in ("success", "errorKind", "grid", "cells", "counts", "gridAdvisories", "overlay",
+                      "provenance", "cache", "computeMs"):
+            self.assertIn(field, operation.output.fields)
+        self.assertEqual(contract.evidence.ceiling, "screening-only")
+        self.assertEqual(contract.evidence.emits, ())
+        notes = " ".join(contract.legacy_notes)
+        self.assertIn("process-window", notes)
+        self.assertIn("16-entry LRU", notes)
+        self.assertIn("no overlay point carries a verdict colour", notes)
+        self.assertIn("never coloured as a verdict", notes)
+        # the optimizer operation is unchanged
+        self.assertEqual(contract.operations[0].route, "/api/python/lpbf-bayesian-optimize")
+        # the script exists, the route is served, and the IPC allow-lists name it
+        root = Path(__file__).resolve().parent.parent
+        self.assertTrue((root / "python" / "lpbf_process_window.py").is_file())
+        self.assertIn('"/api/python/lpbf-process-window"', (root / "routes" / "physics.ts").read_text(encoding="utf-8"))
+        self.assertIn('"lpbf_process_window"', (root / "server" / "processOrchestrator.ts").read_text(encoding="utf-8"))
+        self.assertIn('"lpbf_process_window"', (root / "python" / "persistent_ipc_service.py").read_text(encoding="utf-8"))
+
     def test_solidification_inventory_matches_worker_and_unavailable_union(self):
         seed = self.seed("solidification-microstructure")
         contract = build_solidification_microstructure_contract(seed)

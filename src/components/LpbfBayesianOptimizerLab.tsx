@@ -18,6 +18,7 @@ import {
   CartesianGrid,
   Legend
 } from "recharts";
+import { LpbfProcessWindowMap } from "./LpbfProcessWindowMap";
 import { pythonComputationService, PythonBayesianOptimizationResult, PythonBayesianIterationDiagnostics } from "../services/pythonComputationService";
 import { useMaterialSpecimenStore } from "../store/useMaterialSpecimenStore";
 import {
@@ -79,7 +80,8 @@ export const BlockingGateSummary: React.FC<{ result: PythonBayesianOptimizationR
   );
 };
 
-export const LpbfBayesianOptimizerLab: React.FC = () => {
+/** The unchanged Bayesian search panel (second tab of the Process Parameter Search lab). */
+export const LpbfOptimizerSearchPanel: React.FC = () => {
   const specimen = useMaterialSpecimenStore(s => s.activeSpecimen);
   
   const [bounds, setBounds] = useState({
@@ -370,6 +372,55 @@ export const LpbfBayesianOptimizerLab: React.FC = () => {
             </div>
           )}
         </div>
+      </div>
+    </div>
+  );
+};
+
+
+type LabTab = "window" | "search";
+const LAB_TABS: readonly { id: LabTab; label: string }[] = [
+  { id: "window", label: "Process-window map" },
+  { id: "search", label: "Parameter search (Bayesian)" },
+];
+
+/** Process Parameter Search lab: the process-window map first, the unchanged optimizer in the second tab. */
+export const LpbfBayesianOptimizerLab: React.FC = () => {
+  const [tab, setTab] = useState<LabTab>("window");
+  const [visited, setVisited] = useState<ReadonlySet<LabTab>>(() => new Set<LabTab>(["window"]));
+  const refs = React.useRef<Record<string, HTMLButtonElement | null>>({});
+  const select = (next: LabTab, focus = false) => {
+    setTab(next);
+    setVisited(previous => new Set([...previous, next]));
+    if (focus) refs.current[next]?.focus();
+  };
+  const onKeyDown = (event: React.KeyboardEvent) => {
+    const index = LAB_TABS.findIndex(t => t.id === tab);
+    const move = (to: number) => { event.preventDefault(); select(LAB_TABS[(to + LAB_TABS.length) % LAB_TABS.length].id, true); };
+    if (event.key === "ArrowRight") move(index + 1);
+    else if (event.key === "ArrowLeft") move(index - 1);
+    else if (event.key === "Home") move(0);
+    else if (event.key === "End") move(LAB_TABS.length - 1);
+  };
+  return (
+    <div className="space-y-4">
+      <div role="tablist" aria-label="Process Parameter Search" className="flex flex-wrap gap-2 border-b border-slate-800" onKeyDown={onKeyDown}>
+        {LAB_TABS.map(t => (
+          <button
+            key={t.id} ref={el => { refs.current[t.id] = el; }} type="button" role="tab" id={`pps-tab-${t.id}`}
+            aria-selected={tab === t.id} aria-controls={`pps-panel-${t.id}`} tabIndex={tab === t.id ? 0 : -1}
+            onClick={() => select(t.id)}
+            className={`-mb-px border-b-2 px-3 py-2 text-sm font-medium ${tab === t.id ? "border-sky-400 text-sky-200" : "border-transparent text-slate-400 hover:text-slate-200"}`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <div role="tabpanel" id="pps-panel-window" aria-labelledby="pps-tab-window" hidden={tab !== "window"}>
+        {visited.has("window") && <LpbfProcessWindowMap />}
+      </div>
+      <div role="tabpanel" id="pps-panel-search" aria-labelledby="pps-tab-search" hidden={tab !== "search"}>
+        {visited.has("search") && <LpbfOptimizerSearchPanel />}
       </div>
     </div>
   );

@@ -417,6 +417,23 @@ export const MODULE_REGISTRY = {
           "input": [],
           "undeclaredInput": [],
           "output": null
+        },
+        {
+          "id": "process-window",
+          "method": "POST",
+          "route": "/api/python/lpbf-process-window",
+          "authority": {
+            "kind": "python-ipc",
+            "script": "python/lpbf_process_window.py",
+            "workerMethod": null,
+            "timeoutMs": 60000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": null
         }
       ],
       "validityDomain": null,

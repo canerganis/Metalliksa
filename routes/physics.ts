@@ -116,3 +116,10 @@ physicsRouter.post("/api/python/micrograph-measure", (req: Request, res: Respons
 physicsRouter.post("/api/python/lpbf-calibrated-meltpool", (req: Request, res: Response) => {
   return handlePythonDispatch("python/lpbf_calibrated_meltpool.py", req.body, res);
 });
+
+// LPBF process-window map (screening only, not validation): P x v grid of the frozen screening verdict plus a
+// published-measurement overlay. 11 x 11 default grid at about 20 ms per cell, plus one model verdict per overlay
+// point. A NEW route appended at the end of this file; no existing route or line reference moves.
+physicsRouter.post("/api/python/lpbf-process-window", (req: Request, res: Response) => {
+  return handlePythonDispatch("python/lpbf_process_window.py", req.body, res, 60000);
+});

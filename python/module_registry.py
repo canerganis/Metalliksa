@@ -181,6 +181,8 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
     "lpbf-optimizer": (
         _op("bayesian-optimize", "POST", "/api/python/lpbf-bayesian-optimize",
             _py("lpbf_bayesian_optimizer", 120000, warm=False)),
+        _op("process-window", "POST", "/api/python/lpbf-process-window",
+            _py("lpbf_process_window", 60000, warm=False)),
     ),
     "solidification-microstructure": (_worker_op("solidification-microstructure"),),
     "experimental-validation": (
