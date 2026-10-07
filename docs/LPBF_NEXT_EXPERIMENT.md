@@ -104,3 +104,10 @@ network or worker call and runs no solver. Computing a plan inside the app is a 
 A proposal ranked by model disagreement, interval width and data coverage; it does not check printability, does not
 choose parameters to print, and validates nothing. User measurements carry no per-row uncertainty and are not
 independently verified. CI modules to add (not edited here): `test_lpbf_next_experiment`, `test_lpbf_user_measurements`.
+
+## Notes added after review
+
+- Material names: an alias such as `316L` is resolved to the canonical name used by the training rows and calibration cells (`316L Stainless Steel`) and the plan records the canonical name. When no training row exists for the material, `plan.json` carries `candidates.trainingNote` saying so, and the panel shows it; the coverage term then has nothing to measure against.
+- Do not round or reformat the power, speed and spot columns of `measurement_template.csv` in a spreadsheet: the import joins on `track_id` with identical values and refuses lossy rounding (for example `158.5` shown as `159`).
+- The calibration interval width is reported for context only. It is constant per material (null when no enabled cell exists) and never changes the ranking inside a plan.
+- Known gap: the tab keyboard test checks the handler source and the tablist markup; the repo has no DOM test environment (jsdom), so no key event is dispatched in a unit test.

@@ -135,6 +135,24 @@ class NextExperimentTests(unittest.TestCase):
         none = plan()
         self.assertFalse(none["calibration"]["available"])
 
+    def test_alias_resolves_to_the_canonical_training_name(self):
+        rows = [{"material": MATERIAL, "power_W": 200.0, "speed_mm_s": 800.0, "beamDiameter_um": 100.0,
+                 "regimeClass": "conduction", "source": "s", "set": 1}]
+
+        def loader(material):  # default-loader semantics: alias-aware match, canonical name on the rows
+            return rows if ne.same_material(MATERIAL, material) else []
+        p = plan(material="316L", training_loader=loader)
+        self.assertEqual(p["material"], MATERIAL)
+        self.assertEqual(p["candidates"]["trainingPoints"], 1)
+        self.assertIsNone(p["candidates"]["trainingNote"])
+        self.assertTrue(ne.same_material("316L", MATERIAL))
+        self.assertFalse(ne.same_material("Ti-6Al-4V", MATERIAL))
+
+    def test_zero_training_plan_says_so(self):
+        p = plan()
+        self.assertEqual(p["candidates"]["trainingPoints"], 0)
+        self.assertIn("no training rows for", p["candidates"]["trainingNote"])
+
     def test_real_artefact_is_read_and_hashed(self):
         try:
             art = layer.load_calibration()

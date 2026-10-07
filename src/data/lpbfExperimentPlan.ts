@@ -47,6 +47,7 @@ export interface ExperimentPlanDocument {
   readonly configSha256: string;
   readonly calibration: { readonly available: boolean; readonly contentSha256?: string; readonly configSha256?: string; readonly calibrationId?: string; readonly reason?: string };
   readonly intervalWidth: { readonly lnHiOverLo: number | null; readonly note: string };
+  readonly candidates?: { readonly trainingPoints?: number; readonly trainingNote?: string | null };
   readonly plate: { readonly x_mm: number; readonly y_mm: number; readonly pitch_mm: number; readonly trackLength_mm: number; readonly edgeMargin_mm: number };
   readonly points: readonly ExperimentPlanPoint[];
   readonly commands: readonly string[];
@@ -137,6 +138,10 @@ export function checkedExperimentPlan(raw: unknown): ExperimentPlanDocument {
   const iv = obj(raw, "intervalWidth", "plan");
   num(iv, "lnHiOverLo", "intervalWidth", { nullable: true });
   str(iv, "note", "intervalWidth");
+  if (raw.candidates !== undefined) {
+    const cand = obj(raw, "candidates", "plan");
+    if (cand.trainingNote !== undefined && cand.trainingNote !== null && typeof cand.trainingNote !== "string") fail("candidates.trainingNote must be a string or null");
+  }
   const plate = obj(raw, "plate", "plan");
   for (const k of ["x_mm", "y_mm", "pitch_mm", "trackLength_mm", "edgeMargin_mm"]) num(plate, k, "plate", { positive: true });
   if (!Array.isArray(raw.points) || raw.points.length === 0) return fail("points must be a non-empty array");

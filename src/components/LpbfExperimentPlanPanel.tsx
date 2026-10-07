@@ -64,6 +64,9 @@ export function ExperimentPlanView({ plan }: { plan: ExperimentPlanDocument }) {
           : `Calibration artefact not used: ${plan.calibration.reason}.`}{" "}
         Calibration interval width: {plan.intervalWidth.lnHiOverLo === null ? "not available (null)" : `ln(hi/lo) = ${fmt(plan.intervalWidth.lnHiOverLo)}`} - {plan.intervalWidth.note}
       </p>
+      {plan.candidates?.trainingNote ? (
+        <p className="text-xs text-amber-200" role="status" data-testid="plan-training-note">{plan.candidates.trainingNote}</p>
+      ) : null}
       <div className="flex flex-wrap gap-2">
         {([
           ["print_plan.csv", () => printPlanCsv(plan)],
@@ -146,7 +149,7 @@ export const LpbfExperimentPlanPanel: React.FC = () => {
         <h3 className="text-base font-semibold text-slate-100">Plan experiments</h3>
         <p className="text-sm text-amber-200" data-testid="plan-label">{LPBF_EXPERIMENT_PLAN_LABEL}</p>
         <p className="text-xs text-slate-400">
-          Candidates are ranked by disagreement between the three frozen screening kernels, the calibration interval width (when a calibrated cell is enabled) and how far they sit from the existing training data. The plan is computed on the command line; this panel only loads and displays it. It does not run the solver and makes no network or worker call.
+          Candidates are ranked by disagreement between the three frozen screening kernels and by how far they sit from the existing training data. The calibration interval width is reported for context only: it is constant per material (null when no calibrated cell is enabled) and does not change the order. The plan is computed on the command line; this panel only loads and displays it. It does not run the solver and makes no network or worker call.
         </p>
       </header>
       <div className="space-y-2">

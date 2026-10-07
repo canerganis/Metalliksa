@@ -234,7 +234,17 @@ def interval_width(calib: Optional[Dict[str, Any]], material: str, calib_note: O
 def default_training_loader(material: str) -> List[Dict[str, Any]]:
     _tools_on_path()
     import lpbf_calibration_fit as fit
-    return [r for r in fit.load_rows()["trainable"] if r["material"] == material]
+    return [r for r in fit.load_rows()["trainable"] if same_material(r["material"], material)]
+
+
+def same_material(a: str, b: str) -> bool:
+    """True when two names denote one material: identical, or the same alloy id in four_alloy_materials (so the
+    alias '316L' matches the canonical training name '316L Stainless Steel')."""
+    if a == b:
+        return True
+    from four_alloy_materials import resolve_alloy_id
+    ia = resolve_alloy_id(a)
+    return ia is not None and ia == resolve_alloy_id(b)
 
 
 def regime_class(material: str, P: float, v: float, spot: float, preheat: float) -> str:
@@ -260,6 +270,15 @@ def plan_experiment(spec: Dict[str, Any], *, calibration: Any = "default", solve
     regime_fn = regime_fn or regime_class
     cands = candidate_grid(req)
 
+    # training points of this material (plus the user's existing points)
+    train_rows = (training_loader or default_training_loader)(material)
+    # canonical name: the one the training rows and calibration cells use (an alias must not zero the coverage term)
+    if train_rows:
+        material = train_rows[0]["material"]
+        req["material"] = material
+    training_note = (None if train_rows else
+                     f"no training rows for {material}: the coverage term has no training data to measure against "
+                     "(every candidate counts as under-covered with no nearest-point distance)")
     # calibration artefact (optional: its absence is stated, never hidden)
     calib, calib_note = None, None
     if isinstance(calibration, dict):
@@ -272,8 +291,6 @@ def plan_experiment(spec: Dict[str, Any], *, calibration: Any = "default", solve
             calib_note = f"calibration artefact unavailable ({exc}): interval width is null"
     iv = interval_width(calib, material, calib_note)
 
-    # training points of this material (plus the user's existing points)
-    train_rows = (training_loader or default_training_loader)(material)
     train_pts = [{"power_W": r["power_W"], "speed_mm_s": r["speed_mm_s"], "beamDiameter_um": r["beamDiameter_um"]}
                  for r in train_rows]
     sets_by_class: Dict[str, set] = {"conduction": set(), "transition": set(), "keyhole": set()}
@@ -381,7 +398,8 @@ def plan_experiment(spec: Dict[str, Any], *, calibration: Any = "default", solve
                         {"available": False, "reason": calib_note or "no calibration artefact supplied"}),
         "intervalWidth": {"lnHiOverLo": iv["value"], "cells": st.round_sig(iv["cells"], 6), "note": iv["note"]},
         "candidates": {"total": len(cands), "scored": len(raw), "excluded": excluded,
-                       "trainingPoints": len(train_pts), "existingPoints": len(req["existing"])},
+                       "trainingPoints": len(train_pts), "existingPoints": len(req["existing"]),
+                       "trainingNote": training_note},
         "plate": layout["plate"], "points": points,
         "commands": [
             "python -B python/tools/lpbf_next_experiment.py import --plan <plan-dir>/plan.json "

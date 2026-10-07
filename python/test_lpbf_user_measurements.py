@@ -215,6 +215,15 @@ class ScorecardHookTests(unittest.TestCase):
     def tearDownClass(cls):
         T.CFG = cls._cfg
 
+    def test_no_flag_output_matches_the_pre_hook_golden_sha(self):
+        # sha256 of dump_json(build_document(no user sources)) on the synthetic fixtures with tool.sha256 masked,
+        # taken from the code at base b0dbdc59 (before the hook existed): the hook must not change it.
+        d = json.loads(T.dump_json(self.plain))
+        d["tool"]["sha256"] = "0" * 64
+        import hashlib
+        self.assertEqual(hashlib.sha256(T.dump_json(d).encode()).hexdigest(),
+                         "5c6ac5fafd340983b5eecbb88d4c260d1911d9bf33665a248c6d33c4e0bf5e58")
+
     def test_no_flag_output_is_byte_identical(self):
         self.assertEqual(T.dump_json(run_doc()), T.dump_json(self.plain))
         self.assertEqual(T.dump_json(run_doc([])), T.dump_json(self.plain))
