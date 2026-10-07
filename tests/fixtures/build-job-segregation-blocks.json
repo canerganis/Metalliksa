@@ -285,14 +285,14 @@
    "PDAS_um": 0.67,
    "source": "build job microstructure block (copied, not recomputed)",
    "usedInCalculation": false,
-   "note": "G and R are copied for context only: the Scheil-type result depends on composition alone. Solute trapping and back-diffusion at this solidification rate are not modelled."
+   "note": "G and R are copied for context: the equilibrium-k Scheil-type result depends on composition alone. R is used only by the separate rapidSolidification screening estimate (Aziz k(V)); back-diffusion at this solidification rate is not modelled."
   },
   "upperBoundNote": "Upper bound with respect to effects that are not modelled and that all reduce segregation: solid-state back-diffusion of Nb, solute trapping at high solidification rate and dendrite-tip undercooling. It is not a bound with respect to the choice of k_Nb (see validity), and it is not an upper bound on measured Laves content (see sourceAgreementNote).",
   "sourceAgreementNote": "Not conservative against measurement, even in the source's own weld regime: D97 Fig. 9b (measured vs calculated gamma/Laves) shows several alloys with measured gamma/Laves above the calculated value, including alloys for which the model predicts no gamma/Laves (measured about 0.5-1.5 vol%, e.g. Ni-base alloy 8 in Fig. 3), and low-C Ni-base alloys where the model is about 2-3x high (alloys 5 and 7: measured about 2-3 vol% in Fig. 3). D97 also reports that Fe and Si raise the gamma/Laves amount; IN718 contains about 18 wt% Fe plus Mo, which the source alloys do not.",
   "binaryBoundNote": "Binary gamma-Nb Scheil (C = 0): carbon ties Nb up as NbC, so within this model the binary value is an upper bound over carbon content on the gamma/Laves constituent fraction (a model statement, not a bound on measurement).",
   "notModelled": [
    "solid-state back-diffusion of Nb",
-   "solute trapping (no kinetic constant is introduced)",
+   "solute trapping in the equilibrium-k upper bound (screening k(V) is given separately in rapidSolidification)",
    "dendrite-tip undercooling",
    "Mo, Ti, Al and Si effects on the Laves reaction",
    "mechanical consequences of Laves"
@@ -344,6 +344,211 @@
    "outsideSourceRegime": true,
    "outsideSourceRegimeReason": "LPBF is not among the source processes (GTA welds, DTA samples); the k values and the Scheil assumption were not established at LPBF solidification rates",
    "kTransferNote": "D98 reports k_Nb = 0.45 for its Ni base alloys (Fe about 11 wt%) and 0.25 for its Fe base alloys (Fe about 45 wt%) and attributes the drop to Fe. The source gives no k_Nb(Fe) relation here, so no interpolation is made; the Fe-base result is shown as a bracketing sensitivity."
+  },
+  "rapidSolidification": {
+   "status": "available",
+   "reason": null,
+   "R_m_s": 0.0684,
+   "R_source": "build job microstructure block (screening-field mean R, copied)",
+   "k_e": 0.45,
+   "kEff": {
+    "min": 0.5494,
+    "max": 0.5761
+   },
+   "nominalBinaryFGammaLaves": {
+    "min": 0.0287,
+    "max": 0.0354
+   },
+   "byVD": [
+    {
+     "V_D_m_s": 0.23,
+     "kEff": 0.5761,
+     "band": [
+      {
+       "label": "min",
+       "Nb_wt": 4.75,
+       "binary": {
+        "C_wt": 0.0,
+        "fGammaLavesConstituent": 0.024
+       },
+       "pseudoTernaryAtCmax": {
+        "C_wt": 0.08,
+        "fGammaNbCConstituent": 0.0482,
+        "fGammaLavesConstituent": 0.0,
+        "fEutecticTotal": 0.0482,
+        "terminatedBy": "liquid-exhausted-on-NbC-line"
+       }
+      },
+      {
+       "label": "nominal",
+       "Nb_wt": 5.125,
+       "binary": {
+        "C_wt": 0.0,
+        "fGammaLavesConstituent": 0.0287
+       },
+       "pseudoTernaryAtCmax": {
+        "C_wt": 0.08,
+        "fGammaNbCConstituent": 0.0563,
+        "fGammaLavesConstituent": 0.0,
+        "fEutecticTotal": 0.0563,
+        "terminatedBy": "liquid-exhausted-on-NbC-line"
+       }
+      },
+      {
+       "label": "max",
+       "Nb_wt": 5.5,
+       "binary": {
+        "C_wt": 0.0,
+        "fGammaLavesConstituent": 0.0339
+       },
+       "pseudoTernaryAtCmax": {
+        "C_wt": 0.08,
+        "fGammaNbCConstituent": 0.0649,
+        "fGammaLavesConstituent": 0.0,
+        "fEutecticTotal": 0.0649,
+        "terminatedBy": "liquid-exhausted-on-NbC-line"
+       }
+      }
+     ],
+     "segregation": {
+      "Nb_wt": 5.125,
+      "coreRatioToNominal": 0.576,
+      "coreNb_wt": 2.952,
+      "interdendritic": [
+       {
+        "fs": 0.9,
+        "liquidNb_wt": 13.603,
+        "ratioToNominal": 2.654,
+        "atEutecticComposition": false
+       },
+       {
+        "fs": 0.95,
+        "liquidNb_wt": 18.249,
+        "ratioToNominal": 3.561,
+        "atEutecticComposition": false
+       }
+      ]
+     }
+    },
+    {
+     "V_D_m_s": 0.31,
+     "kEff": 0.5494,
+     "band": [
+      {
+       "label": "min",
+       "Nb_wt": 4.75,
+       "binary": {
+        "C_wt": 0.0,
+        "fGammaLavesConstituent": 0.0299
+       },
+       "pseudoTernaryAtCmax": {
+        "C_wt": 0.08,
+        "fGammaNbCConstituent": 0.0564,
+        "fGammaLavesConstituent": 0.0,
+        "fEutecticTotal": 0.0564,
+        "terminatedBy": "liquid-exhausted-on-NbC-line"
+       }
+      },
+      {
+       "label": "nominal",
+       "Nb_wt": 5.125,
+       "binary": {
+        "C_wt": 0.0,
+        "fGammaLavesConstituent": 0.0354
+       },
+       "pseudoTernaryAtCmax": {
+        "C_wt": 0.08,
+        "fGammaNbCConstituent": 0.0652,
+        "fGammaLavesConstituent": 0.0,
+        "fEutecticTotal": 0.0652,
+        "terminatedBy": "liquid-exhausted-on-NbC-line"
+       }
+      },
+      {
+       "label": "max",
+       "Nb_wt": 5.5,
+       "binary": {
+        "C_wt": 0.0,
+        "fGammaLavesConstituent": 0.0414
+       },
+       "pseudoTernaryAtCmax": {
+        "C_wt": 0.08,
+        "fGammaNbCConstituent": 0.0739,
+        "fGammaLavesConstituent": 0.0007,
+        "fEutecticTotal": 0.0746,
+        "terminatedBy": "laves-point"
+       }
+      }
+     ],
+     "segregation": {
+      "Nb_wt": 5.125,
+      "coreRatioToNominal": 0.549,
+      "coreNb_wt": 2.816,
+      "interdendritic": [
+       {
+        "fs": 0.9,
+        "liquidNb_wt": 14.464,
+        "ratioToNominal": 2.822,
+        "atEutecticComposition": false
+       },
+       {
+        "fs": 0.95,
+        "liquidNb_wt": 19.766,
+        "ratioToNominal": 3.857,
+        "atEutecticComposition": false
+       }
+      ]
+     }
+    }
+   ],
+   "bandNote": "same formulas and band as the equilibrium-k result with k_Nb replaced by k(R) at each end of the V_D range; the lower V_D gives the higher k(R) and the smaller fraction",
+   "modelId": "aziz-continuous-growth-k-of-v-scheil-screening-v1",
+   "evidenceLabel": "Literature estimate (screening): Aziz continuous-growth k(V) with V_D 0.23-0.31 m/s, a range Ghosh et al. 2017 fitted to binary Ni-Nb phase-field results (not measured), applied to this module's equilibrium k_Nb at the build job's screening R; extrapolates weld-calibrated Scheil formulas; not a prediction of LPBF segregation",
+   "model": {
+    "equation": "k(V) = (k_e + V/V_D) / (1 + V/V_D)",
+    "source": "S. Ghosh, L. Ma, N. Ofori-Opoku, J.E. Guyer, 'On the primary spacing and microsegregation of cellular dendrites in laser deposited Ni-Nb alloys', Modelling Simul. Mater. Sci. Eng. 25 (2017) 065002, doi:10.1088/1361-651X/aa7369",
+    "locator": "G17 Eq. 12 (Section 3.2.4), after Aziz 1982 (G17 ref. 66, not read here)",
+    "originalCitation": "M.J. Aziz, 'Model for solute redistribution during rapid solidification', J. Appl. Phys. 53 (1982) 1158"
+   },
+   "V_D_m_s": {
+    "min": 0.23,
+    "max": 0.31,
+    "unit": "m/s",
+    "values": [
+     {
+      "value": 0.23,
+      "unit": "m/s",
+      "source": "G17",
+      "locator": "G17 Section 3.2.4: Eq. 12 fitted to the 1D planar-front phase-field results (k_v = c0/c_max, Fig. 13); G18 uses the same 0.23 m/s for IN625 (text with Fig. 4)",
+      "verified": true,
+      "sourceCitation": "S. Ghosh, L. Ma, N. Ofori-Opoku, J.E. Guyer, 'On the primary spacing and microsegregation of cellular dendrites in laser deposited Ni-Nb alloys', Modelling Simul. Mater. Sci. Eng. 25 (2017) 065002, doi:10.1088/1361-651X/aa7369"
+     },
+     {
+      "value": 0.31,
+      "unit": "m/s",
+      "source": "G17",
+      "locator": "G17 Section 3.2.4 and Fig. 12: Eq. 12 fitted to the 2D steady-state cell-tip values k_v = cs*/c_max",
+      "verified": true,
+      "sourceCitation": "S. Ghosh, L. Ma, N. Ofori-Opoku, J.E. Guyer, 'On the primary spacing and microsegregation of cellular dendrites in laser deposited Ni-Nb alloys', Modelling Simul. Mater. Sci. Eng. 25 (2017) 065002, doi:10.1088/1361-651X/aa7369"
+     }
+    ],
+    "nature": "Modelling range, not a measurement. G17 fitted the Aziz function to the partitioning of its own phase-field model, in which the anti-trapping current does not remove trapping at these velocities (Section 3.2.4 and Summary), and states that no experimental V_D for Ni-Nb is available. K17 (lines 385-391) likewise says the diffuse interface artificially magnifies trapping at LPBF speeds. Both fits use k_e = 0.48 (binary Ni-Nb, G17 Table 2)."
+   },
+   "replacesUpperBound": false,
+   "extrapolationNote": "Extrapolation: the eutectic-fraction formulas (D96 Eq. 5; D97/D98 pseudo-ternary) were calibrated on GTA welds and DTA samples with the equilibrium k. Here k_Nb is replaced by k(R) and held constant over the whole solidification at the single build-job R, so the numbers show the direction and rough size of the trapping effect, not a validated LPBF fraction.",
+   "kTransferNote": "V_D was fitted with k_e = 0.48 (G17, G18); this module applies it with its own equilibrium k_Nb (D98 0.45 for IN718, C88 0.51 for IN625). No source gives V_D for these k_e or for multicomponent IN718/IN625.",
+   "notModelled": [
+    "velocity-dependent liquidus slope (G17 Eq. 14) and dendrite-tip undercooling / tip composition (G17 Eqs. 9-10, 15)",
+    "curvature correction of k (G17 Eq. 13)",
+    "trapping of carbon: k_C stays at its equilibrium value (no source V_D for C)",
+    "variation of R along the melt-pool boundary (one mean R from the build job; G17 Section 3.1: 0.01-0.3 m/s, K17 lines 243-246: 0.01-0.17 m/s)",
+    "solid-state back-diffusion of Nb"
+   ]
+  },
+  "lpbfObservations": {
+   "status": "unavailable",
+   "reason": "no as-built LPBF IN718 segregation measurement among the sources read: Z18, L17 and K17 are LPBF IN625, G17 is a binary Ni-Nb simulation",
+   "observations": []
   }
  },
  "in718_degenerate_floor_synthetic": {
@@ -632,14 +837,14 @@
    "PDAS_um": null,
    "source": "build job microstructure block (copied, not recomputed)",
    "usedInCalculation": false,
-   "note": "G and R are copied for context only: the Scheil-type result depends on composition alone. Solute trapping and back-diffusion at this solidification rate are not modelled."
+   "note": "G and R are copied for context: the equilibrium-k Scheil-type result depends on composition alone. R is used only by the separate rapidSolidification screening estimate (Aziz k(V)); back-diffusion at this solidification rate is not modelled."
   },
   "upperBoundNote": "Upper bound with respect to effects that are not modelled and that all reduce segregation: solid-state back-diffusion of Nb, solute trapping at high solidification rate and dendrite-tip undercooling. It is not a bound with respect to the choice of k_Nb (see validity), and it is not an upper bound on measured Laves content (see sourceAgreementNote).",
   "sourceAgreementNote": "Not conservative against measurement, even in the source's own weld regime: D97 Fig. 9b (measured vs calculated gamma/Laves) shows several alloys with measured gamma/Laves above the calculated value, including alloys for which the model predicts no gamma/Laves (measured about 0.5-1.5 vol%, e.g. Ni-base alloy 8 in Fig. 3), and low-C Ni-base alloys where the model is about 2-3x high (alloys 5 and 7: measured about 2-3 vol% in Fig. 3). D97 also reports that Fe and Si raise the gamma/Laves amount; IN718 contains about 18 wt% Fe plus Mo, which the source alloys do not.",
   "binaryBoundNote": "Binary gamma-Nb Scheil (C = 0): carbon ties Nb up as NbC, so within this model the binary value is an upper bound over carbon content on the gamma/Laves constituent fraction (a model statement, not a bound on measurement).",
   "notModelled": [
    "solid-state back-diffusion of Nb",
-   "solute trapping (no kinetic constant is introduced)",
+   "solute trapping in the equilibrium-k upper bound (screening k(V) is given separately in rapidSolidification)",
    "dendrite-tip undercooling",
    "Mo, Ti, Al and Si effects on the Laves reaction",
    "mechanical consequences of Laves"
@@ -691,6 +896,58 @@
    "outsideSourceRegime": true,
    "outsideSourceRegimeReason": "LPBF is not among the source processes (GTA welds, DTA samples); the k values and the Scheil assumption were not established at LPBF solidification rates",
    "kTransferNote": "D98 reports k_Nb = 0.45 for its Ni base alloys (Fe about 11 wt%) and 0.25 for its Fe base alloys (Fe about 45 wt%) and attributes the drop to Fe. The source gives no k_Nb(Fe) relation here, so no interpolation is made; the Fe-base result is shown as a bracketing sensitivity."
+  },
+  "rapidSolidification": {
+   "status": "unavailable",
+   "reason": "no usable solidification rate R (microstructure status 'degenerate-floor')",
+   "R_m_s": null,
+   "modelId": "aziz-continuous-growth-k-of-v-scheil-screening-v1",
+   "evidenceLabel": "Literature estimate (screening): Aziz continuous-growth k(V) with V_D 0.23-0.31 m/s, a range Ghosh et al. 2017 fitted to binary Ni-Nb phase-field results (not measured), applied to this module's equilibrium k_Nb at the build job's screening R; extrapolates weld-calibrated Scheil formulas; not a prediction of LPBF segregation",
+   "model": {
+    "equation": "k(V) = (k_e + V/V_D) / (1 + V/V_D)",
+    "source": "S. Ghosh, L. Ma, N. Ofori-Opoku, J.E. Guyer, 'On the primary spacing and microsegregation of cellular dendrites in laser deposited Ni-Nb alloys', Modelling Simul. Mater. Sci. Eng. 25 (2017) 065002, doi:10.1088/1361-651X/aa7369",
+    "locator": "G17 Eq. 12 (Section 3.2.4), after Aziz 1982 (G17 ref. 66, not read here)",
+    "originalCitation": "M.J. Aziz, 'Model for solute redistribution during rapid solidification', J. Appl. Phys. 53 (1982) 1158"
+   },
+   "V_D_m_s": {
+    "min": 0.23,
+    "max": 0.31,
+    "unit": "m/s",
+    "values": [
+     {
+      "value": 0.23,
+      "unit": "m/s",
+      "source": "G17",
+      "locator": "G17 Section 3.2.4: Eq. 12 fitted to the 1D planar-front phase-field results (k_v = c0/c_max, Fig. 13); G18 uses the same 0.23 m/s for IN625 (text with Fig. 4)",
+      "verified": true,
+      "sourceCitation": "S. Ghosh, L. Ma, N. Ofori-Opoku, J.E. Guyer, 'On the primary spacing and microsegregation of cellular dendrites in laser deposited Ni-Nb alloys', Modelling Simul. Mater. Sci. Eng. 25 (2017) 065002, doi:10.1088/1361-651X/aa7369"
+     },
+     {
+      "value": 0.31,
+      "unit": "m/s",
+      "source": "G17",
+      "locator": "G17 Section 3.2.4 and Fig. 12: Eq. 12 fitted to the 2D steady-state cell-tip values k_v = cs*/c_max",
+      "verified": true,
+      "sourceCitation": "S. Ghosh, L. Ma, N. Ofori-Opoku, J.E. Guyer, 'On the primary spacing and microsegregation of cellular dendrites in laser deposited Ni-Nb alloys', Modelling Simul. Mater. Sci. Eng. 25 (2017) 065002, doi:10.1088/1361-651X/aa7369"
+     }
+    ],
+    "nature": "Modelling range, not a measurement. G17 fitted the Aziz function to the partitioning of its own phase-field model, in which the anti-trapping current does not remove trapping at these velocities (Section 3.2.4 and Summary), and states that no experimental V_D for Ni-Nb is available. K17 (lines 385-391) likewise says the diffuse interface artificially magnifies trapping at LPBF speeds. Both fits use k_e = 0.48 (binary Ni-Nb, G17 Table 2)."
+   },
+   "replacesUpperBound": false,
+   "extrapolationNote": "Extrapolation: the eutectic-fraction formulas (D96 Eq. 5; D97/D98 pseudo-ternary) were calibrated on GTA welds and DTA samples with the equilibrium k. Here k_Nb is replaced by k(R) and held constant over the whole solidification at the single build-job R, so the numbers show the direction and rough size of the trapping effect, not a validated LPBF fraction.",
+   "kTransferNote": "V_D was fitted with k_e = 0.48 (G17, G18); this module applies it with its own equilibrium k_Nb (D98 0.45 for IN718, C88 0.51 for IN625). No source gives V_D for these k_e or for multicomponent IN718/IN625.",
+   "notModelled": [
+    "velocity-dependent liquidus slope (G17 Eq. 14) and dendrite-tip undercooling / tip composition (G17 Eqs. 9-10, 15)",
+    "curvature correction of k (G17 Eq. 13)",
+    "trapping of carbon: k_C stays at its equilibrium value (no source V_D for C)",
+    "variation of R along the melt-pool boundary (one mean R from the build job; G17 Section 3.1: 0.01-0.3 m/s, K17 lines 243-246: 0.01-0.17 m/s)",
+    "solid-state back-diffusion of Nb"
+   ]
+  },
+  "lpbfObservations": {
+   "status": "unavailable",
+   "reason": "no as-built LPBF IN718 segregation measurement among the sources read: Z18, L17 and K17 are LPBF IN625, G17 is a binary Ni-Nb simulation",
+   "observations": []
   }
  },
  "in625_available": {
@@ -939,7 +1196,7 @@
    "PDAS_um": 0.67,
    "source": "build job microstructure block (copied, not recomputed)",
    "usedInCalculation": false,
-   "note": "G and R are copied for context only: the Scheil-type result depends on composition alone. Solute trapping and back-diffusion at this solidification rate are not modelled."
+   "note": "G and R are copied for context: the equilibrium-k Scheil-type result depends on composition alone. R is used only by the separate rapidSolidification screening estimate (Aziz k(V)); back-diffusion at this solidification rate is not modelled."
   },
   "upperBoundNote": "Upper bound with respect to effects that are not modelled and that all reduce the terminal constituent: solid-state back-diffusion of Nb, solute trapping at high solidification rate, dendrite-tip undercooling, and Nb tied up as NbC by carbon (no carbon model for alloy 625). It is not a bound with respect to k_Nb or C_e. Against the C88 low-Fe measurements the estimate is high (see sourceAgreementNote), but that is one set of four heats at DTA cooling, not a guarantee.",
   "sourceAgreementNote": "C88 low-Fe alloy 625 (alloys 5-8, Nb 3.53-3.61 wt%, rapid-scan DTA specimens): measured total minor constituent 0.3-1.3 vol% (Section III-B); this model with each alloy's own k_Nb (Table VIII) and C_e 18.9 gives 2.9-3.4 %, about 2.4-9.8x the measurement (high in every case). D96's own check on its Fe-diluted overlay: Eq. 5 with C_0 2.07, k 0.46 and C_e 18.9 gives 1.7 vol% (this module: 1.66 %) against 1.3-2.2 vol% measured.",
@@ -1013,7 +1270,7 @@
    "carbon (gamma/NbC): no alloy 625 constants",
    "silicon (promotes Laves and M6C, C88)",
    "solid-state back-diffusion of Nb",
-   "solute trapping (no kinetic constant is introduced)",
+   "solute trapping in the equilibrium-k upper bound (screening k(V) is given separately in rapidSolidification)",
    "dendrite-tip undercooling",
    "dependence of k_Nb and C_e on Fe, Mo and Si",
    "mechanical consequences of Laves"
@@ -1083,6 +1340,304 @@
    },
    "d96SourceNote": "D96 is a single Fe-diluted (28.14 wt% Fe) GMAW overlay (Table II); wrought and LPBF IN625 (Fe <= 5 wt%) are outside it, so its k_Nb is used only as a cross-check.",
    "phaseIdentityNote": "Phase identity not established. In low-Fe alloy 625 (Fe about 2.3 wt%) C88 found the terminal constituent to depend on C and Si: with 0.038 wt% C and no added Si only gamma/NbC formed (alloy 6, no Laves); with low C and no added Si a small amount of mostly Laves formed (alloy 5); Si (0.38-0.46 wt%) promoted Laves and, at low C, M6C (Sections III-B and IV-B, Tables IV and IX). D96 adds that Fe favours Laves over NbC (Section IV-B). The IN625 specification allows C up to 0.10 and Si up to 0.50 wt%, so the computed number is a gamma/Laves-type estimate with C_e = 18.9 wt% Nb, not a Laves prediction; the constituent may be gamma/NbC, gamma/Laves or both."
+  },
+  "rapidSolidification": {
+   "status": "available",
+   "reason": null,
+   "R_m_s": 0.0684,
+   "R_source": "build job microstructure block (screening-field mean R, copied)",
+   "k_e": 0.51,
+   "kEff": {
+    "min": 0.5986,
+    "max": 0.6223
+   },
+   "nominalBinaryFGammaLaves": {
+    "min": 0.0129,
+    "max": 0.0166
+   },
+   "byVD": [
+    {
+     "V_D_m_s": 0.23,
+     "kEff": 0.6223,
+     "band": [
+      {
+       "label": "min",
+       "Nb_wt": 3.15,
+       "binary": {
+        "C_wt": 0.0,
+        "fGammaLavesConstituent": 0.0087
+       }
+      },
+      {
+       "label": "nominal",
+       "Nb_wt": 3.65,
+       "binary": {
+        "C_wt": 0.0,
+        "fGammaLavesConstituent": 0.0129
+       }
+      },
+      {
+       "label": "max",
+       "Nb_wt": 4.15,
+       "binary": {
+        "C_wt": 0.0,
+        "fGammaLavesConstituent": 0.0181
+       }
+      }
+     ],
+     "segregation": {
+      "Nb_wt": 3.65,
+      "coreRatioToNominal": 0.622,
+      "coreNb_wt": 2.271,
+      "interdendritic": [
+       {
+        "fs": 0.9,
+        "liquidNb_wt": 8.709,
+        "ratioToNominal": 2.386,
+        "atEutecticComposition": false
+       },
+       {
+        "fs": 0.95,
+        "liquidNb_wt": 11.315,
+        "ratioToNominal": 3.1,
+        "atEutecticComposition": false
+       }
+      ]
+     }
+    },
+    {
+     "V_D_m_s": 0.31,
+     "kEff": 0.5986,
+     "band": [
+      {
+       "label": "min",
+       "Nb_wt": 3.15,
+       "binary": {
+        "C_wt": 0.0,
+        "fGammaLavesConstituent": 0.0115
+       }
+      },
+      {
+       "label": "nominal",
+       "Nb_wt": 3.65,
+       "binary": {
+        "C_wt": 0.0,
+        "fGammaLavesConstituent": 0.0166
+       }
+      },
+      {
+       "label": "max",
+       "Nb_wt": 4.15,
+       "binary": {
+        "C_wt": 0.0,
+        "fGammaLavesConstituent": 0.0229
+       }
+      }
+     ],
+     "segregation": {
+      "Nb_wt": 3.65,
+      "coreRatioToNominal": 0.599,
+      "coreNb_wt": 2.185,
+      "interdendritic": [
+       {
+        "fs": 0.9,
+        "liquidNb_wt": 9.199,
+        "ratioToNominal": 2.52,
+        "atEutecticComposition": false
+       },
+       {
+        "fs": 0.95,
+        "liquidNb_wt": 12.15,
+        "ratioToNominal": 3.329,
+        "atEutecticComposition": false
+       }
+      ]
+     }
+    }
+   ],
+   "bandNote": "same formulas and band as the equilibrium-k result with k_Nb replaced by k(R) at each end of the V_D range; the lower V_D gives the higher k(R) and the smaller fraction",
+   "modelId": "aziz-continuous-growth-k-of-v-scheil-screening-v1",
+   "evidenceLabel": "Literature estimate (screening): Aziz continuous-growth k(V) with V_D 0.23-0.31 m/s, a range Ghosh et al. 2017 fitted to binary Ni-Nb phase-field results (not measured), applied to this module's equilibrium k_Nb at the build job's screening R; extrapolates weld-calibrated Scheil formulas; not a prediction of LPBF segregation",
+   "model": {
+    "equation": "k(V) = (k_e + V/V_D) / (1 + V/V_D)",
+    "source": "S. Ghosh, L. Ma, N. Ofori-Opoku, J.E. Guyer, 'On the primary spacing and microsegregation of cellular dendrites in laser deposited Ni-Nb alloys', Modelling Simul. Mater. Sci. Eng. 25 (2017) 065002, doi:10.1088/1361-651X/aa7369",
+    "locator": "G17 Eq. 12 (Section 3.2.4), after Aziz 1982 (G17 ref. 66, not read here)",
+    "originalCitation": "M.J. Aziz, 'Model for solute redistribution during rapid solidification', J. Appl. Phys. 53 (1982) 1158"
+   },
+   "V_D_m_s": {
+    "min": 0.23,
+    "max": 0.31,
+    "unit": "m/s",
+    "values": [
+     {
+      "value": 0.23,
+      "unit": "m/s",
+      "source": "G17",
+      "locator": "G17 Section 3.2.4: Eq. 12 fitted to the 1D planar-front phase-field results (k_v = c0/c_max, Fig. 13); G18 uses the same 0.23 m/s for IN625 (text with Fig. 4)",
+      "verified": true,
+      "sourceCitation": "S. Ghosh, L. Ma, N. Ofori-Opoku, J.E. Guyer, 'On the primary spacing and microsegregation of cellular dendrites in laser deposited Ni-Nb alloys', Modelling Simul. Mater. Sci. Eng. 25 (2017) 065002, doi:10.1088/1361-651X/aa7369"
+     },
+     {
+      "value": 0.31,
+      "unit": "m/s",
+      "source": "G17",
+      "locator": "G17 Section 3.2.4 and Fig. 12: Eq. 12 fitted to the 2D steady-state cell-tip values k_v = cs*/c_max",
+      "verified": true,
+      "sourceCitation": "S. Ghosh, L. Ma, N. Ofori-Opoku, J.E. Guyer, 'On the primary spacing and microsegregation of cellular dendrites in laser deposited Ni-Nb alloys', Modelling Simul. Mater. Sci. Eng. 25 (2017) 065002, doi:10.1088/1361-651X/aa7369"
+     }
+    ],
+    "nature": "Modelling range, not a measurement. G17 fitted the Aziz function to the partitioning of its own phase-field model, in which the anti-trapping current does not remove trapping at these velocities (Section 3.2.4 and Summary), and states that no experimental V_D for Ni-Nb is available. K17 (lines 385-391) likewise says the diffuse interface artificially magnifies trapping at LPBF speeds. Both fits use k_e = 0.48 (binary Ni-Nb, G17 Table 2)."
+   },
+   "replacesUpperBound": false,
+   "extrapolationNote": "Extrapolation: the eutectic-fraction formulas (D96 Eq. 5; D97/D98 pseudo-ternary) were calibrated on GTA welds and DTA samples with the equilibrium k. Here k_Nb is replaced by k(R) and held constant over the whole solidification at the single build-job R, so the numbers show the direction and rough size of the trapping effect, not a validated LPBF fraction.",
+   "kTransferNote": "V_D was fitted with k_e = 0.48 (G17, G18); this module applies it with its own equilibrium k_Nb (D98 0.45 for IN718, C88 0.51 for IN625). No source gives V_D for these k_e or for multicomponent IN718/IN625.",
+   "notModelled": [
+    "velocity-dependent liquidus slope (G17 Eq. 14) and dendrite-tip undercooling / tip composition (G17 Eqs. 9-10, 15)",
+    "curvature correction of k (G17 Eq. 13)",
+    "trapping of carbon: k_C stays at its equilibrium value (no source V_D for C)",
+    "variation of R along the melt-pool boundary (one mean R from the build job; G17 Section 3.1: 0.01-0.3 m/s, K17 lines 243-246: 0.01-0.17 m/s)",
+    "solid-state back-diffusion of Nb"
+   ]
+  },
+  "lpbfObservations": {
+   "status": "available",
+   "alloy": "IN625",
+   "evidenceKind": "Measured (literature, as-built LPBF IN625); simulations listed separately",
+   "sources": {
+    "Z18": "F. Zhang, L.E. Levine, A.J. Allen, M.R. Stoudt, G. Lindwall, E.A. Lass, M.E. Williams, Y. Idell, C.E. Campbell, 'Effect of heat treatment on the microstructural evolution of a nickel-based superalloy additive-manufactured by laser powder bed fusion', Acta Materialia 152 (2018) 200, doi:10.1016/j.actamat.2018.03.017",
+    "L17": "E.A. Lass, M.R. Stoudt, M.E. Williams, M.B. Katz, L.E. Levine, T.Q. Phan, T.H. Gnaeupel-Herold, D.S. Ng, 'Formation of the Ni3Nb delta-phase in stress-relieved Inconel 625 produced via laser powder-bed fusion additive manufacturing', Metall. Mater. Trans. A (2017), doi:10.1007/s11661-017-4304-6",
+    "K17": "T. Keller, G. Lindwall, S. Ghosh, L. Ma, B.M. Lane, F. Zhang, U.R. Kattner, E.A. Lass, J.C. Heigel, Y. Idell, M.E. Williams, A.J. Allen, J.E. Guyer, L.E. Levine, 'Application of finite element, phase-field, and CALPHAD-based methods to additive manufacturing of Ni-based superalloys', Acta Materialia (2017), doi:10.1016/j.actamat.2017.05.003",
+    "G18": "S. Ghosh, L. Ma, L.E. Levine, R.E. Ricker, M.R. Stoudt, J.C. Heigel, J.E. Guyer, 'Single-track melt-pool measurements and microstructures in Inconel 625', JOM (2018), doi:10.1007/s11837-018-2771-x"
+   },
+   "build": {
+    "machine": "EOS M270",
+    "power_W": 195,
+    "scanSpeed_mm_s": 800,
+    "layer_um": 20,
+    "hatch_um": 100,
+    "locator": "L17 Section II; Z18 Materials and Methods (Manufacturing of Materials); K17 lines 154-162"
+   },
+   "powderNb_wt": {
+    "value": 3.75,
+    "unit": "wt%",
+    "locator": "Z18 Table 1; L17 Table I; K17 Table 1 (ICP; the XRF column gives 3.06)"
+   },
+   "solidificationVelocity": [
+    {
+     "source": "K17",
+     "min": 0.01,
+     "max": 0.17,
+     "unit": "m/s",
+     "basis": "FEA of this build, melt-pool bottom to trailing edge",
+     "locator": "K17 lines 243-246 and 323-325"
+    },
+    {
+     "source": "Z18",
+     "min": 0.001,
+     "max": 0.03,
+     "unit": "m/s",
+     "basis": "quoted from an FEA of a binary Ni-Nb model alloy with the same build parameters",
+     "locator": "Z18 Materials and Methods (Manufacturing of Materials)"
+    }
+   ],
+   "observations": [
+    {
+     "source": "Z18",
+     "kind": "measured",
+     "quantity": "Nb mass fraction along an as-built EDS line scan",
+     "Nb_wt": {
+      "min": 2.81,
+      "max": 5.84
+     },
+     "Mo_wt": {
+      "min": 9.35,
+      "max": 10.85
+     },
+     "probe": "2 um step and beam size, 300 s dwell, about 200 um long; Z18 states the values are averages over the probed volume. Cells are about 1 um apart (L17), so the scan smooths the cell-scale profile: its minimum overstates the cell-core Nb and its maximum understates the interdendritic peak.",
+     "locator": "Z18 Results, 'As-built AM IN625', Figs. 3 and 4"
+    },
+    {
+     "source": "Z18",
+     "kind": "measured",
+     "quantity": "phases in as-built material (synchrotron XRD)",
+     "result": "FCC only, fitted as two FCC lattices (3.6009 and 3.6196 Angstrom, attributed to strain and composition gradients); no secondary phase reported; detection limit not stated",
+     "locator": "Z18 Fig. 2(a) and Table 2"
+    },
+    {
+     "source": "L17",
+     "kind": "measured",
+     "quantity": "phases and segregation in as-built material",
+     "result": "laboratory XRD shows only FCC peaks; EDS maps show Nb and Mo enriched between dendrites (qualitative, no numbers); primary spacing about 1 um, secondary about 300 nm",
+     "locator": "L17 Section III-A, Figs. 2 and 3"
+    },
+    {
+     "source": "K17",
+     "kind": "measured",
+     "quantity": "precipitates in as-built material (STEM, synchrotron XRD)",
+     "result": "50-200 nm precipitates near cell/dendrite boundaries that could not be indexed in the as-built state; XRD of the as-built sample identifies only FCC",
+     "locator": "K17 lines 172-178 (Fig. 3) and 187-188 (Fig. 4)"
+    }
+   ],
+   "literatureSimulations": [
+    {
+     "source": "K17",
+     "kind": "simulation (binary Ni-4Nb phase-field, not measured)",
+     "result": "at V_s = 25 mm/s: cell centreline 3.0 wt% Nb, intercellular liquid midpoint 9.4 wt%, pinched-off droplets 16 wt%, below the 22.5 wt% eutectic; binary Scheil with k = 0.48 gives 1.9 wt% at the core and 21 wt% at 1 % liquid",
+     "caveat": "K17 lines 385-391: the diffuse interface artificially lowers the simulated segregation at these speeds",
+     "locator": "K17 lines 283-291 (Fig. 9)"
+    },
+    {
+     "source": "K17",
+     "kind": "simulation (Scheil-Gulliver with TCNI8, multicomponent)",
+     "result": "last liquid at 1250 K holds up to about 29 wt% Nb and 20 wt% Mo",
+     "locator": "K17 lines 255-258 (Fig. 7b); quoted again in Z18 Results"
+    },
+    {
+     "source": "G18",
+     "kind": "simulation (binary Ni-4Nb phase-field, IN625 single tracks, no anti-trapping flux)",
+     "result": "partition coefficient between 0.58 and 0.72 depending on R",
+     "locator": "G18 text with Fig. 4"
+    }
+   ],
+   "comparison": {
+    "Nb_wt": 3.75,
+    "NbBasis": "powder Nb of the observed builds (Z18 Table 1)",
+    "velocityRange_m_s": {
+     "min": 0.001,
+     "max": 0.17,
+     "note": "union of the K17 and Z18 ranges"
+    },
+    "equilibriumK": {
+     "k": 0.51,
+     "coreRatioToNominal": 0.51,
+     "fGammaLavesConstituent": 0.0369
+    },
+    "kOfV": {
+     "kEff": {
+      "min": 0.5116,
+      "max": 0.7182
+     },
+     "coreRatioToNominal": {
+      "min": 0.512,
+      "max": 0.718
+     },
+     "fGammaLavesConstituent": {
+      "min": 0.0032,
+      "max": 0.0365
+     }
+    },
+    "measured": {
+     "lowestRatioToNominal": 0.749,
+     "highestRatioToNominal": 1.557,
+     "note": "Z18 EDS extremes over the powder Nb; 2 um probe averages (see observations)"
+    },
+    "coreBelowLowestMeasured": {
+     "equilibriumK": true,
+     "kOfVMax": true
+    },
+    "discriminating": false,
+    "note": "Non-discriminating. The only quantitative as-built Nb data (Z18 EDS, 2 um probe) average over cells about 1 um wide, so they bound the cell-scale profile only loosely: both the equilibrium k (0.51) and the k(V) range give a core ratio below the lowest measured ratio, as they must if the probe averages, and neither can be confirmed or ruled out by it. No as-built study reports a Laves or NbC fraction: XRD shows FCC only (Z18, L17, K17) without a stated detection limit, and K17 sees unindexed 50-200 nm precipitates at cell boundaries. The computed terminal fractions (a few vol% at equilibrium k, less with k(V)) are therefore not tested by these observations."
+   }
   }
  },
  "ss316l_not_applicable": {

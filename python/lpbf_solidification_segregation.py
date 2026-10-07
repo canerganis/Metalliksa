@@ -52,11 +52,20 @@ Model ([D97] Eqs. 1-8 = [D98] Eqs. 13c, 14, 2, 4, 21, 12):
     C_e = C_Nb,L->(gamma+Laves). Carbon ties Nb up as NbC, so the binary value is an upper bound
     on the Laves fraction within this model (stated in the output).
 
-What is NOT modelled (so the numbers are an upper bound on segregation only with respect to
-these effects, which all reduce it): solid-state back-diffusion of Nb, solute trapping at
-LPBF solidification rates, dendrite-tip undercooling ([D97] Eq. 1 assumes it negligible). No
-kinetic constant (Aziz V_D or similar) is introduced. The constants come from GTA welds and
-DTA samples of experimental alloys (no Mo, Ti, Al), so LPBF is always outside the source regime.
+What is NOT modelled in the equilibrium-k result (so those numbers are an upper bound on segregation
+only with respect to these effects, which all reduce it): solid-state back-diffusion of Nb, solute
+trapping at LPBF solidification rates, dendrite-tip undercooling ([D97] Eq. 1 assumes it negligible).
+The constants come from GTA welds and DTA samples of experimental alloys (no Mo, Ti, Al), so LPBF is
+always outside the source regime.
+
+Solute trapping is reported separately (rapidSolidification sub-block, screening only): the Aziz
+continuous-growth function k(V) = (k_e + V/V_D) / (1 + V/V_D) as written in Ghosh et al. 2017 (G17)
+Eq. 12, with V_D carried as the range 0.23-0.31 m/s that G17 fitted to its own Ni-5Nb phase-field
+results (1D planar front and 2D cell tips). G17 states that no experimental V_D for Ni-Nb is available
+and that part of the trapping in its model is numerical, so V_D is a modelling value, not a
+measurement. The equilibrium-k upper bound is never replaced. As-built LPBF IN625 observations from
+the NIST studies (Zhang 2018, Lass 2017, Keller 2017) are attached as lpbfObservations for comparison
+only; nothing is tuned to them.
 
 Every constant is a CONSTANTS entry {value, unit, source, locator, verified}. An entry that was
 not confirmed against a source actually read has verified=False and value None; an alloy that
@@ -127,6 +136,60 @@ SOURCES: Dict[str, Dict[str, Any]] = {
         "read": True,
         "note": ("composition limits for UNS N06625 (wrought product); no LPBF powder specification (e.g. ASTM F3056) "
                  "was read"),
+    },
+    "G17": {
+        "citation": ("S. Ghosh, L. Ma, N. Ofori-Opoku, J.E. Guyer, 'On the primary spacing and microsegregation of "
+                     "cellular dendrites in laser deposited Ni-Nb alloys', Modelling Simul. Mater. Sci. Eng. 25 (2017) "
+                     "065002, doi:10.1088/1361-651X/aa7369"),
+        "url": "https://doi.org/10.1088/1361-651X/aa7369",
+        "read": True,
+        "note": ("full text read; binary Ni-5 wt% Nb phase-field (IN718 approximated as binary, k_e 0.48, Table 2) at "
+                 "laser-melt-pool G and V; Section 3.2.4 states the Aziz function (Eq. 12) and fits V_D to the "
+                 "simulated partitioning"),
+    },
+    "G18": {
+        "citation": ("S. Ghosh, L. Ma, L.E. Levine, R.E. Ricker, M.R. Stoudt, J.C. Heigel, J.E. Guyer, 'Single-track "
+                     "melt-pool measurements and microstructures in Inconel 625', JOM (2018), "
+                     "doi:10.1007/s11837-018-2771-x"),
+        "url": "https://doi.org/10.1007/s11837-018-2771-x",
+        "read": True,
+        "note": ("full text read; binary Ni-4 wt% Nb phase-field of IN625 single tracks with the anti-trapping flux "
+                 "switched off; quotes V_d = 0.23 m/s and k between 0.58 and 0.72 (text with Fig. 4). Its printed "
+                 "Aziz expression is inverted (it gives k > 1), so the G17 Eq. 12 form is used"),
+    },
+    "K17": {
+        "citation": ("T. Keller, G. Lindwall, S. Ghosh, L. Ma, B.M. Lane, F. Zhang, U.R. Kattner, E.A. Lass, J.C. Heigel, "
+                     "Y. Idell, M.E. Williams, A.J. Allen, J.E. Guyer, L.E. Levine, 'Application of finite element, "
+                     "phase-field, and CALPHAD-based methods to additive manufacturing of Ni-based superalloys', "
+                     "Acta Materialia (2017), doi:10.1016/j.actamat.2017.05.003"),
+        "url": "https://doi.org/10.1016/j.actamat.2017.05.003",
+        "read": True,
+        "note": ("accepted manuscript read (line-numbered; locators use its line numbers); LPBF IN625, EOS M270, "
+                 "195 W, 0.8 m/s; FEA, Scheil/DICTRA and binary Ni-Nb phase-field; as-built TEM and XRD"),
+    },
+    "L17": {
+        "citation": ("E.A. Lass, M.R. Stoudt, M.E. Williams, M.B. Katz, L.E. Levine, T.Q. Phan, T.H. Gnaeupel-Herold, "
+                     "D.S. Ng, 'Formation of the Ni3Nb delta-phase in stress-relieved Inconel 625 produced via laser "
+                     "powder-bed fusion additive manufacturing', Metall. Mater. Trans. A (2017), "
+                     "doi:10.1007/s11661-017-4304-6"),
+        "url": "https://doi.org/10.1007/s11661-017-4304-6",
+        "read": True,
+        "note": "full text read; as-built and stress-relieved LPBF IN625 (EOS M270, 195 W, 800 mm/s)",
+    },
+    "Z18": {
+        "citation": ("F. Zhang, L.E. Levine, A.J. Allen, M.R. Stoudt, G. Lindwall, E.A. Lass, M.E. Williams, Y. Idell, "
+                     "C.E. Campbell, 'Effect of heat treatment on the microstructural evolution of a nickel-based "
+                     "superalloy additive-manufactured by laser powder bed fusion', Acta Materialia 152 (2018) 200, "
+                     "doi:10.1016/j.actamat.2018.03.017"),
+        "url": "https://doi.org/10.1016/j.actamat.2018.03.017",
+        "read": True,
+        "note": "accepted manuscript read; as-built LPBF IN625 EDS line scan and synchrotron XRD (EOS M270, 195 W)",
+    },
+    "A82": {
+        "citation": "M.J. Aziz, 'Model for solute redistribution during rapid solidification', J. Appl. Phys. 53 (1982) 1158",
+        "url": None,
+        "read": False,
+        "note": "original of the continuous-growth function; NOT read here, the function is taken as stated in G17 Eq. 12",
     },
 }
 
@@ -528,8 +591,9 @@ def _process_coupling(microstructure: Optional[Mapping[str, Any]]) -> Dict[str, 
     keys = ("G_K_m", "R_m_s", "coolingRate_K_s", "morphology", "PDAS_um")
     base = {"source": "build job microstructure block (copied, not recomputed)",
             "usedInCalculation": False,
-            "note": ("G and R are copied for context only: the Scheil-type result depends on composition alone. "
-                     "Solute trapping and back-diffusion at this solidification rate are not modelled.")}
+            "note": ("G and R are copied for context: the equilibrium-k Scheil-type result depends on composition "
+                     "alone. R is used only by the separate rapidSolidification screening estimate (Aziz k(V)); "
+                     "back-diffusion at this solidification rate is not modelled.")}
     if not isinstance(microstructure, Mapping):
         return {"status": "unavailable", "reason": "no microstructure block", **{k: None for k in keys}, **base}
     status = microstructure.get("status")
@@ -600,13 +664,15 @@ def segregation_estimate(alloy_id: str, microstructure: Optional[Mapping[str, An
         "upperBoundNote": UPPER_BOUND_NOTE,
         "sourceAgreementNote": SOURCE_AGREEMENT_NOTE,
         "binaryBoundNote": BINARY_BOUND_NOTE,
-        "notModelled": ["solid-state back-diffusion of Nb", "solute trapping (no kinetic constant is introduced)",
+        "notModelled": ["solid-state back-diffusion of Nb", "solute trapping in the equilibrium-k upper bound (screening k(V) is given separately in rapidSolidification)",
                         "dendrite-tip undercooling", "Mo, Ti, Al and Si effects on the Laves reaction",
                         "mechanical consequences of Laves"],
         "classIINote": ("D98 Table 2 class II point (C_Nb, C_C) is not exactly on the regressed gamma/NbC line "
                         "(a + b * C_Nb gives about 0.044 wt% C at 23.1 wt% Nb, against 0.04 tabulated); the eutectic-type integration stops "
                         "when C_l,Nb reaches C_Nb,L->(gamma+Laves)."),
         "validity": _validity(aid, spec_info, set_id),
+        "rapidSolidification": _rapid_solidification(aid, microstructure),
+        "lpbfObservations": lpbf_observations(aid),
     }
 
 
@@ -820,15 +886,280 @@ def _in625_estimate(microstructure: Optional[Mapping[str, Any]]) -> Dict[str, An
                             "wt% C) and would lower the gamma/Laves estimate; no carbon model is applied because "
                             "neither source gives carbon constants for alloy 625."),
         "notModelled": ["carbon (gamma/NbC): no alloy 625 constants", "silicon (promotes Laves and M6C, C88)",
-                        "solid-state back-diffusion of Nb", "solute trapping (no kinetic constant is introduced)",
+                        "solid-state back-diffusion of Nb", "solute trapping in the equilibrium-k upper bound (screening k(V) is given separately in rapidSolidification)",
                         "dendrite-tip undercooling", "dependence of k_Nb and C_e on Fe, Mo and Si",
                         "mechanical consequences of Laves"],
         "validity": _in625_validity(),
+        "rapidSolidification": _rapid_solidification("in625", microstructure),
+        "lpbfObservations": lpbf_observations("in625"),
+    }
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# Rapid solidification (screening): velocity-dependent partition coefficient. Reported in a separate sub-block; the
+# equilibrium-k upper bound above is never changed by it.
+
+RAPID_MODEL_ID = "aziz-continuous-growth-k-of-v-scheil-screening-v1"
+RAPID_EVIDENCE_LABEL = (
+    "Literature estimate (screening): Aziz continuous-growth k(V) with V_D 0.23-0.31 m/s, a range Ghosh et al. 2017 "
+    "fitted to binary Ni-Nb phase-field results (not measured), applied to this module's equilibrium k_Nb at the build "
+    "job's screening R; extrapolates weld-calibrated Scheil formulas; not a prediction of LPBF segregation"
+)
+AZIZ_EQUATION = "k(V) = (k_e + V/V_D) / (1 + V/V_D)"
+V_D_VALUES = (
+    _c(0.23, "m/s", "G17", "G17 Section 3.2.4: Eq. 12 fitted to the 1D planar-front phase-field results (k_v = c0/c_max, "
+                           "Fig. 13); G18 uses the same 0.23 m/s for IN625 (text with Fig. 4)"),
+    _c(0.31, "m/s", "G17", "G17 Section 3.2.4 and Fig. 12: Eq. 12 fitted to the 2D steady-state cell-tip values "
+                           "k_v = cs*/c_max"),
+)
+V_D_NATURE_NOTE = (
+    "Modelling range, not a measurement. G17 fitted the Aziz function to the partitioning of its own phase-field model, "
+    "in which the anti-trapping current does not remove trapping at these velocities (Section 3.2.4 and Summary), and "
+    "states that no experimental V_D for Ni-Nb is available. K17 (lines 385-391) likewise says the diffuse interface "
+    "artificially magnifies trapping at LPBF speeds. Both fits use k_e = 0.48 (binary Ni-Nb, G17 Table 2)."
+)
+RAPID_EXTRAPOLATION_NOTE = (
+    "Extrapolation: the eutectic-fraction formulas (D96 Eq. 5; D97/D98 pseudo-ternary) were calibrated on GTA welds "
+    "and DTA samples with the equilibrium k. Here k_Nb is replaced by k(R) and held constant over the whole "
+    "solidification at the single build-job R, so the numbers show the direction and rough size of the trapping effect, "
+    "not a validated LPBF fraction."
+)
+RAPID_K_TRANSFER_NOTE = (
+    "V_D was fitted with k_e = 0.48 (G17, G18); this module applies it with its own equilibrium k_Nb (D98 0.45 for "
+    "IN718, C88 0.51 for IN625). No source gives V_D for these k_e or for multicomponent IN718/IN625."
+)
+RAPID_NOT_MODELLED = [
+    "velocity-dependent liquidus slope (G17 Eq. 14) and dendrite-tip undercooling / tip composition (G17 Eqs. 9-10, 15)",
+    "curvature correction of k (G17 Eq. 13)",
+    "trapping of carbon: k_C stays at its equilibrium value (no source V_D for C)",
+    "variation of R along the melt-pool boundary (one mean R from the build job; G17 Section 3.1: 0.01-0.3 m/s, "
+    "K17 lines 243-246: 0.01-0.17 m/s)",
+    "solid-state back-diffusion of Nb",
+]
+_RAPID_FS = FS_SEGREGATION_POINTS
+
+
+def aziz_partition_coefficient(k_e: float, v_m_s: float, v_d_m_s: float) -> float:
+    """Aziz continuous-growth k(V) = (k_e + V/V_D) / (1 + V/V_D) as written in G17 Eq. 12."""
+    _check_k(k_e)
+    _check_positive("v_d_m_s", v_d_m_s)
+    if not (isinstance(v_m_s, (int, float)) and math.isfinite(v_m_s) and v_m_s >= 0.0):
+        raise SegregationModelError("v_m_s must be a finite number >= 0")
+    x = v_m_s / v_d_m_s
+    return (k_e + x) / (1.0 + x)
+
+
+def _with_k(cset: Mapping[str, Dict[str, Any]], k: float) -> Dict[str, Dict[str, Any]]:
+    out = dict(cset)
+    out["k_gamma_Nb"] = dict(cset["k_gamma_Nb"], value=k, locator="Aziz k(V) from the equilibrium value (G17 Eq. 12)")
+    return out
+
+
+def _v_d_view() -> Dict[str, Any]:
+    vals = [float(v["value"]) for v in V_D_VALUES]
+    return {"min": min(vals), "max": max(vals), "unit": "m/s",
+            "values": [dict(v, sourceCitation=SOURCES[v["source"]]["citation"]) for v in V_D_VALUES],
+            "nature": V_D_NATURE_NOTE}
+
+
+def _rapid_base() -> Dict[str, Any]:
+    return {
+        "modelId": RAPID_MODEL_ID,
+        "evidenceLabel": RAPID_EVIDENCE_LABEL,
+        "model": {"equation": AZIZ_EQUATION, "source": SOURCES["G17"]["citation"],
+                  "locator": "G17 Eq. 12 (Section 3.2.4), after Aziz 1982 (G17 ref. 66, not read here)",
+                  "originalCitation": SOURCES["A82"]["citation"]},
+        "V_D_m_s": _v_d_view(),
+        "replacesUpperBound": False,
+        "extrapolationNote": RAPID_EXTRAPOLATION_NOTE,
+        "kTransferNote": RAPID_K_TRANSFER_NOTE,
+        "notModelled": list(RAPID_NOT_MODELLED),
+    }
+
+
+def _rapid_inputs(alloy_id: str):
+    """(cset, band, c_max or None) of the equilibrium-k result for this alloy."""
+    if alloy_id == "in625":
+        band, _ = _in625_band()
+        return CONSTANTS[IN625_SET], band, None
+    band, c_max, _ = _spec_band(alloy_id)
+    return CONSTANTS["ni-base"], band, c_max
+
+
+def _rapid_point(nb: float, c_max: Optional[float], cset) -> Dict[str, Any]:
+    k = _value(cset, "k_gamma_Nb")
+    f_bin = scheil_eutectic_fraction(nb, _value(cset, "C_Nb_laves"), k)
+    out: Dict[str, Any] = {"binary": {"C_wt": 0.0, "fGammaLavesConstituent": _r(f_bin)}}
+    if c_max is not None:
+        tern = pseudo_ternary_path(nb, c_max, cset)
+        if tern["status"] == "computed":
+            out["pseudoTernaryAtCmax"] = {"C_wt": c_max, "fGammaNbCConstituent": _r(tern["fGammaNbCConstituent"]),
+                                          "fGammaLavesConstituent": _r(tern["fGammaLavesConstituent"]),
+                                          "fEutecticTotal": _r(tern["fEutecticTotal"]),
+                                          "terminatedBy": tern["terminatedBy"]}
+        else:
+            out["pseudoTernaryAtCmax"] = {"C_wt": c_max, "status": tern["status"], "reason": tern.get("reason")}
+    return out
+
+
+def _rapid_solidification(alloy_id: str, microstructure: Optional[Mapping[str, Any]]) -> Dict[str, Any]:
+    base = _rapid_base()
+    status = microstructure.get("status") if isinstance(microstructure, Mapping) else None
+    r = microstructure.get("R_m_s") if isinstance(microstructure, Mapping) else None
+    if status not in ("available", "screening-fallback"):
+        why = "no microstructure block" if status is None else f"microstructure status {status!r}"
+        return {"status": "unavailable", "reason": f"no usable solidification rate R ({why})", "R_m_s": None, **base}
+    if not (isinstance(r, (int, float)) and not isinstance(r, bool) and math.isfinite(r) and r > 0.0):
+        return {"status": "unavailable", "reason": "microstructure R_m_s missing, non-finite or not positive",
+                "R_m_s": None, **base}
+    cset, band, c_max = _rapid_inputs(alloy_id)
+    k_e = _value(cset, "k_gamma_Nb")
+    by_vd = []
+    try:
+        for v_d in sorted(float(v["value"]) for v in V_D_VALUES):
+            k_eff = aziz_partition_coefficient(k_e, float(r), v_d)
+            mod = _with_k(cset, k_eff)
+            seg_rows = _segregation_ratios(band["nominal"], mod)
+            by_vd.append({
+                "V_D_m_s": v_d, "kEff": _r(k_eff),
+                "band": [{"label": lbl, "Nb_wt": band[lbl], **_rapid_point(band[lbl], c_max, mod)}
+                         for lbl in ("min", "nominal", "max")],
+                "segregation": {"Nb_wt": band["nominal"], "coreRatioToNominal": seg_rows["coreRatioToNominal"],
+                                "coreNb_wt": seg_rows["coreNb_wt"], "interdendritic": seg_rows["interdendritic"]},
+            })
+    except SegregationModelError as exc:
+        return {"status": "unavailable", "reason": f"k(V) estimate not computable: {exc}", "R_m_s": r, **base}
+    k_vals = [row["kEff"] for row in by_vd]
+    nominal_f = [next(p for p in row["band"] if p["label"] == "nominal")["binary"]["fGammaLavesConstituent"]
+                 for row in by_vd]
+    return {
+        "status": status,
+        "reason": microstructure.get("reason") if status == "screening-fallback" else None,
+        "R_m_s": r,
+        "R_source": "build job microstructure block (screening-field mean R, copied)",
+        "k_e": k_e,
+        "kEff": {"min": min(k_vals), "max": max(k_vals)},
+        "nominalBinaryFGammaLaves": {"min": min(nominal_f), "max": max(nominal_f)},
+        "byVD": by_vd,
+        "bandNote": ("same formulas and band as the equilibrium-k result with k_Nb replaced by k(R) at each end of the "
+                     "V_D range; the lower V_D gives the higher k(R) and the smaller fraction"),
+        **base,
+    }
+
+
+# As-built LPBF IN625 observations (NIST builds: EOS M270, 195 W, 800 mm/s). Measured values are copied with their
+# locators; nothing in the model is tuned to them.
+LPBF_IN625_BUILD = {
+    "machine": "EOS M270", "power_W": 195, "scanSpeed_mm_s": 800, "layer_um": 20, "hatch_um": 100,
+    "locator": "L17 Section II; Z18 Materials and Methods (Manufacturing of Materials); K17 lines 154-162",
+}
+LPBF_IN625_POWDER_NB = {"value": 3.75, "unit": "wt%",
+                        "locator": "Z18 Table 1; L17 Table I; K17 Table 1 (ICP; the XRF column gives 3.06)"}
+LPBF_IN625_VELOCITY = (
+    {"source": "K17", "min": 0.01, "max": 0.17, "unit": "m/s",
+     "basis": "FEA of this build, melt-pool bottom to trailing edge", "locator": "K17 lines 243-246 and 323-325"},
+    {"source": "Z18", "min": 0.001, "max": 0.03, "unit": "m/s",
+     "basis": "quoted from an FEA of a binary Ni-Nb model alloy with the same build parameters",
+     "locator": "Z18 Materials and Methods (Manufacturing of Materials)"},
+)
+Z18_EDS_NB = {"min": 2.81, "max": 5.84}
+LPBF_IN625_OBSERVATIONS = (
+    {"source": "Z18", "kind": "measured", "quantity": "Nb mass fraction along an as-built EDS line scan",
+     "Nb_wt": dict(Z18_EDS_NB), "Mo_wt": {"min": 9.35, "max": 10.85},
+     "probe": ("2 um step and beam size, 300 s dwell, about 200 um long; Z18 states the values are averages over the "
+               "probed volume. Cells are about 1 um apart (L17), so the scan smooths the cell-scale profile: its "
+               "minimum overstates the cell-core Nb and its maximum understates the interdendritic peak."),
+     "locator": "Z18 Results, 'As-built AM IN625', Figs. 3 and 4"},
+    {"source": "Z18", "kind": "measured", "quantity": "phases in as-built material (synchrotron XRD)",
+     "result": ("FCC only, fitted as two FCC lattices (3.6009 and 3.6196 Angstrom, attributed to strain and "
+                "composition gradients); no secondary phase reported; detection limit not stated"),
+     "locator": "Z18 Fig. 2(a) and Table 2"},
+    {"source": "L17", "kind": "measured", "quantity": "phases and segregation in as-built material",
+     "result": ("laboratory XRD shows only FCC peaks; EDS maps show Nb and Mo enriched between dendrites "
+                "(qualitative, no numbers); primary spacing about 1 um, secondary about 300 nm"),
+     "locator": "L17 Section III-A, Figs. 2 and 3"},
+    {"source": "K17", "kind": "measured", "quantity": "precipitates in as-built material (STEM, synchrotron XRD)",
+     "result": ("50-200 nm precipitates near cell/dendrite boundaries that could not be indexed in the as-built state; "
+                "XRD of the as-built sample identifies only FCC"),
+     "locator": "K17 lines 172-178 (Fig. 3) and 187-188 (Fig. 4)"},
+)
+LPBF_IN625_SIMULATIONS = (
+    {"source": "K17", "kind": "simulation (binary Ni-4Nb phase-field, not measured)",
+     "result": ("at V_s = 25 mm/s: cell centreline 3.0 wt% Nb, intercellular liquid midpoint 9.4 wt%, pinched-off "
+                "droplets 16 wt%, below the 22.5 wt% eutectic; binary Scheil with k = 0.48 gives 1.9 wt% at the core "
+                "and 21 wt% at 1 % liquid"),
+     "caveat": "K17 lines 385-391: the diffuse interface artificially lowers the simulated segregation at these speeds",
+     "locator": "K17 lines 283-291 (Fig. 9)"},
+    {"source": "K17", "kind": "simulation (Scheil-Gulliver with TCNI8, multicomponent)",
+     "result": "last liquid at 1250 K holds up to about 29 wt% Nb and 20 wt% Mo",
+     "locator": "K17 lines 255-258 (Fig. 7b); quoted again in Z18 Results"},
+    {"source": "G18", "kind": "simulation (binary Ni-4Nb phase-field, IN625 single tracks, no anti-trapping flux)",
+     "result": "partition coefficient between 0.58 and 0.72 depending on R",
+     "locator": "G18 text with Fig. 4"},
+)
+LPBF_COMPARISON_NOTE = (
+    "Non-discriminating. The only quantitative as-built Nb data (Z18 EDS, 2 um probe) average over cells about 1 um "
+    "wide, so they bound the cell-scale profile only loosely: both the equilibrium k (0.51) and the k(V) range give a "
+    "core ratio below the lowest measured ratio, as they must if the probe averages, and neither can be confirmed or "
+    "ruled out by it. No as-built study reports a Laves or NbC fraction: XRD shows FCC only (Z18, L17, K17) without a "
+    "stated detection limit, and K17 sees unindexed 50-200 nm precipitates at cell boundaries. The computed terminal "
+    "fractions (a few vol% at equilibrium k, less with k(V)) are therefore not tested by these observations."
+)
+
+
+def _in625_lpbf_comparison() -> Dict[str, Any]:
+    cset = CONSTANTS[IN625_SET]
+    k_e = _value(cset, "k_gamma_Nb")
+    ce = _value(cset, "C_Nb_laves")
+    c0 = LPBF_IN625_POWDER_NB["value"]
+    v_lo = min(v["min"] for v in LPBF_IN625_VELOCITY)
+    v_hi = max(v["max"] for v in LPBF_IN625_VELOCITY)
+    vd = [float(v["value"]) for v in V_D_VALUES]
+    k_min = aziz_partition_coefficient(k_e, v_lo, max(vd))
+    k_max = aziz_partition_coefficient(k_e, v_hi, min(vd))
+    meas_core = Z18_EDS_NB["min"] / c0
+    meas_peak = Z18_EDS_NB["max"] / c0
+    return {
+        "Nb_wt": c0, "NbBasis": "powder Nb of the observed builds (Z18 Table 1)",
+        "velocityRange_m_s": {"min": v_lo, "max": v_hi, "note": "union of the K17 and Z18 ranges"},
+        "equilibriumK": {"k": k_e, "coreRatioToNominal": _r(k_e, 3),
+                         "fGammaLavesConstituent": _r(scheil_eutectic_fraction(c0, ce, k_e))},
+        "kOfV": {"kEff": {"min": _r(k_min), "max": _r(k_max)},
+                 "coreRatioToNominal": {"min": _r(k_min, 3), "max": _r(k_max, 3)},
+                 "fGammaLavesConstituent": {"min": _r(scheil_eutectic_fraction(c0, ce, k_max)),
+                                            "max": _r(scheil_eutectic_fraction(c0, ce, k_min))}},
+        "measured": {"lowestRatioToNominal": _r(meas_core, 3), "highestRatioToNominal": _r(meas_peak, 3),
+                     "note": "Z18 EDS extremes over the powder Nb; 2 um probe averages (see observations)"},
+        "coreBelowLowestMeasured": {"equilibriumK": k_e <= meas_core, "kOfVMax": k_max <= meas_core},
+        "discriminating": False,
+        "note": LPBF_COMPARISON_NOTE,
+    }
+
+
+def lpbf_observations(alloy_id: str) -> Dict[str, Any]:
+    """As-built LPBF observations from the read sources, with a non-tuned comparison to this module's numbers."""
+    if alloy_id != "in625":
+        return {"status": "unavailable",
+                "reason": ("no as-built LPBF IN718 segregation measurement among the sources read: Z18, L17 and K17 "
+                           "are LPBF IN625, G17 is a binary Ni-Nb simulation"),
+                "observations": []}
+    return {
+        "status": "available",
+        "alloy": "IN625",
+        "evidenceKind": "Measured (literature, as-built LPBF IN625); simulations listed separately",
+        "sources": {key: SOURCES[key]["citation"] for key in ("Z18", "L17", "K17", "G18")},
+        "build": dict(LPBF_IN625_BUILD),
+        "powderNb_wt": dict(LPBF_IN625_POWDER_NB),
+        "solidificationVelocity": [dict(v) for v in LPBF_IN625_VELOCITY],
+        "observations": [copy.deepcopy(o) for o in LPBF_IN625_OBSERVATIONS],
+        "literatureSimulations": [dict(s) for s in LPBF_IN625_SIMULATIONS],
+        "comparison": _in625_lpbf_comparison(),
     }
 
 
 def build_job_segregation(alloy_id: str, microstructure: Optional[Mapping[str, Any]]) -> Dict[str, Any]:
-    """Build-job entry point: composition-only estimate plus G/R/morphology copied from the microstructure block."""
+    """Build-job entry point: composition-only estimate, G/R copied from the microstructure block, and the R-dependent
+    k(V) screening sub-block (rapidSolidification)."""
     return segregation_estimate(alloy_id, microstructure)
 
 

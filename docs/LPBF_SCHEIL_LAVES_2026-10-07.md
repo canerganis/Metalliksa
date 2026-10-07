@@ -127,3 +127,69 @@ Effect on the IN718 band (Nb 4.75 / 5.125 / 5.50 wt%): binary C = 0 gamma/Laves 
 0.0198 / 0.0282 / 0.0372 (D98) from 0.0181 / 0.0264 / 0.0352 (D97). Fe-base sensitivity at nominal Nb, C 0.08:
 gamma/Laves 0.1245 and gamma/NbC 0.0675 (D98), from 0.1193 and 0.0761 (D97). The IN718 build-job output changes, so
 `BUILD_JOB_SOLVER_REVISION` moves v14 to v15 and the sha256 pin of the IN718 block was re-pinned deliberately.
+
+## Solute trapping k(V) (screening) and as-built LPBF IN625 observations
+
+Sources read from maintainer-supplied PDFs (not in the repository): S. Ghosh, L. Ma, N. Ofori-Opoku, J.E. Guyer,
+Modelling Simul. Mater. Sci. Eng. 25 (2017) 065002 (G17, DOI 10.1088/1361-651X/aa7369); S. Ghosh et al., JOM (2018)
+(G18, DOI 10.1007/s11837-018-2771-x); T. Keller et al., Acta Mater. (2017), accepted manuscript (K17, DOI
+10.1016/j.actamat.2017.05.003); E.A. Lass et al., Metall. Mater. Trans. A (2017) (L17, DOI 10.1007/s11661-017-4304-6);
+F. Zhang et al., Acta Mater. 152 (2018) 200, accepted manuscript (Z18, DOI 10.1016/j.actamat.2018.03.017).
+
+What the sources support:
+
+- Model: the Aziz continuous-growth function k(V) = (k_e + V/V_D) / (1 + V/V_D), G17 Eq. 12 (Section 3.2.4, citing
+  Aziz 1982, which was not read).
+- V_D: 0.31 m/s (G17 fit to the 2D cell-tip k_v = cs*/c_max, Fig. 12) and 0.23 m/s (G17 fit to 1D planar-front
+  simulations, Fig. 13). G18 uses 0.23 m/s for IN625. Both are fits to binary Ni-Nb phase-field results with
+  k_e = 0.48, in a model whose anti-trapping current does not remove trapping at these speeds (G17 Section 3.2.4 and
+  Summary; K17 lines 385-391). G17 states that no experimental V_D for Ni-Nb is available. V_D is therefore carried as
+  the modelling range 0.23-0.31 m/s, not as a measured constant.
+
+Implementation (`rapidSolidification` in each Nb-alloy segregation block): when the build-job microstructure block is
+`available` or `screening-fallback` with a finite R > 0, k_Nb is replaced by k(R) at both ends of the V_D range and the
+same formulas as the equilibrium-k result are evaluated (IN718: binary and D98 pseudo-ternary at C max with k_C kept
+at its equilibrium value; IN625: binary D96 Eq. 5). The equilibrium-k upper bound is not changed (`replacesUpperBound`
+false). Stated limits: the weld-calibrated eutectic-fraction formulas are extrapolated with a single constant k(R);
+V_D was fitted with k_e = 0.48, not with D98 0.45 or C88 0.51; the velocity-dependent liquidus slope, tip undercooling,
+curvature correction, carbon trapping, the spread of R along the melt-pool boundary and back-diffusion are not modelled.
+
+Numbers at the build-job fixture R = 0.0684 m/s (IN718, 285 W, 960 mm/s):
+
+| | equilibrium k (unchanged) | k(R), V_D 0.31 m/s | k(R), V_D 0.23 m/s |
+|---|---|---|---|
+| IN718 k_Nb | 0.45 | 0.5494 | 0.5761 |
+| IN718 gamma/Laves, C = 0, Nb 4.75 / 5.125 / 5.50 | 0.0564 / 0.0647 / 0.0736 | 0.0299 / 0.0354 / 0.0414 | 0.0240 / 0.0287 / 0.0339 |
+| IN718 gamma/Laves at C 0.08 | 0.0198 / 0.0282 / 0.0372 | 0 / 0 / 0.0007 | 0 / 0 / 0 |
+| IN718 gamma/NbC at C 0.08 | 0.0692 / 0.0720 / 0.0747 | 0.0564 / 0.0652 / 0.0739 | 0.0482 / 0.0563 / 0.0649 |
+| IN625 k_Nb | 0.51 | 0.5986 | 0.6223 |
+| IN625 gamma/Laves-type, Nb 3.15 / 3.65 / 4.15 | 0.0258 / 0.0349 / 0.0453 | 0.0115 / 0.0166 / 0.0229 | 0.0087 / 0.0129 / 0.0181 |
+
+With k(R) the IN718 pseudo-ternary path at C max runs out of liquid on the gamma/NbC line before the Laves point
+(Laves about 0). That follows from raising k_Nb while k_C stays at equilibrium and is a property of the extrapolated
+model, not a sourced result.
+
+As-built LPBF IN625 (`lpbfObservations`, IN625 only; no LPBF IN718 measurement was among the sources):
+
+- Build: EOS M270, 195 W, 800 mm/s, 20 um layer, 100 um hatch (L17 Section II; Z18 Materials and Methods); powder Nb
+  3.75 wt% (Z18 Table 1, L17 Table I, K17 Table 1 ICP). Solidification velocity 0.01-0.17 m/s (K17 FEA, lines 243-246,
+  323-325) or 0.001-0.03 m/s (Z18, quoted from an FEA of a Ni-Nb model alloy).
+- Z18: EDS line scan (2 um beam and step) Nb 2.81-5.84 wt%, Mo 9.35-10.85 wt% (Results, Figs. 3-4); averages over the
+  probed volume, which is wider than the about 1 um cells. Synchrotron XRD as-built: FCC only (Fig. 2(a), Table 2).
+- L17: as-built XRD FCC only; EDS maps qualitatively show Nb and Mo enriched between dendrites; primary spacing about
+  1 um, secondary about 300 nm (Section III-A, Figs. 2-3).
+- K17: as-built STEM shows 50-200 nm precipitates near cell boundaries that could not be indexed; as-built XRD FCC only
+  (lines 172-178, 187-188). Listed separately as simulations: phase-field Ni-4Nb at 25 mm/s gives 3.0 wt% Nb in the
+  cell core, 9.4 wt% between cells and 16 wt% in pinched droplets (lines 283-291); Scheil-Gulliver (TCNI8) last liquid
+  up to about 29 wt% Nb (lines 255-258). G18 reports k 0.58-0.72 from its phase-field (text with Fig. 4).
+
+Comparison (computed at Nb 3.75, not tuned): core ratio 0.51 (equilibrium k) and 0.512-0.718 (k(V) over 0.001-0.17
+m/s and V_D 0.23-0.31) both lie below the lowest EDS ratio 0.749, as they must when a 2 um probe averages over 1 um
+cells; the data cannot separate equilibrium k from k(V). Terminal fraction 3.69 % (equilibrium k) and 0.32-3.65 %
+(k(V)); no as-built study reports a Laves or NbC fraction (XRD shows FCC only, detection limit not stated), so the
+terminal fraction is not tested by these observations (`discriminating` false).
+
+Build-job output gains the two sub-blocks, so `BUILD_JOB_SOLVER_REVISION` moves v15 to v16 and
+`tests/fixtures/build-job-segregation-blocks.json` was regenerated. The equilibrium-k numbers and every other text
+are pinned byte-identical to 8895cc5c by sha256 of the block without the new sub-blocks, `notModelled` and
+`processCoupling.note` (the two texts reworded to point at the k(V) block).
