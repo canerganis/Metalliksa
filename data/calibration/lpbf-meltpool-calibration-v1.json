@@ -1,5 +1,5 @@
 {
- "calibrationId": "lpbf-meltpool-calib-2026-10-07-41484169bfd2",
+ "calibrationId": "lpbf-meltpool-calib-2026-10-07-965590d6ecf1",
  "catalogSentinelSources": [
   "guo-316l-2024",
   "nist-amb2022-03-in718"
@@ -147,9 +147,9 @@
    },
    "flags": {
     "boundHit": false,
-    "etaInconsistentWithMeasuredAbsorptance": false,
+    "etaInconsistentWithMeasuredAbsorptance": true,
     "etaSplit": false,
-    "offsetDominant": false
+    "offsetDominant": true
    },
    "heldOutScore": [
     {
@@ -402,9 +402,9 @@
    },
    "flags": {
     "boundHit": false,
-    "etaInconsistentWithMeasuredAbsorptance": false,
+    "etaInconsistentWithMeasuredAbsorptance": true,
     "etaSplit": false,
-    "offsetDominant": false
+    "offsetDominant": true
    },
    "heldOutScore": [
     {
@@ -582,7 +582,7 @@
    "flags": {
     "boundHit": false,
     "etaInconsistentWithMeasuredAbsorptance": false,
-    "etaSplit": false,
+    "etaSplit": true,
     "offsetDominant": false
    },
    "heldOutScore": [],
@@ -843,9 +843,9 @@
    },
    "flags": {
     "boundHit": false,
-    "etaInconsistentWithMeasuredAbsorptance": false,
+    "etaInconsistentWithMeasuredAbsorptance": true,
     "etaSplit": false,
-    "offsetDominant": false
+    "offsetDominant": true
    },
    "heldOutScore": [
     {
@@ -1099,9 +1099,9 @@
    },
    "flags": {
     "boundHit": false,
-    "etaInconsistentWithMeasuredAbsorptance": false,
+    "etaInconsistentWithMeasuredAbsorptance": true,
     "etaSplit": false,
-    "offsetDominant": false
+    "offsetDominant": true
    },
    "heldOutScore": [
     {
@@ -1537,7 +1537,7 @@
    },
    "flags": {
     "boundHit": false,
-    "etaInconsistentWithMeasuredAbsorptance": false,
+    "etaInconsistentWithMeasuredAbsorptance": true,
     "etaSplit": false,
     "offsetDominant": false
    },
@@ -1667,8 +1667,8 @@
     "75": "rejected"
    },
    "flags": {
-    "boundHit": false,
-    "etaInconsistentWithMeasuredAbsorptance": false,
+    "boundHit": true,
+    "etaInconsistentWithMeasuredAbsorptance": true,
     "etaSplit": false,
     "offsetDominant": false
    },
@@ -1792,10 +1792,10 @@
     "75": "rejected"
    },
    "flags": {
-    "boundHit": false,
-    "etaInconsistentWithMeasuredAbsorptance": false,
+    "boundHit": true,
+    "etaInconsistentWithMeasuredAbsorptance": true,
     "etaSplit": false,
-    "offsetDominant": false
+    "offsetDominant": true
    },
    "heldOutScore": [
     {
@@ -2094,7 +2094,7 @@
  "codeRevision": {
   "dirtyTrackedPaths": 0,
   "gitBranch": "feat/lpbf-scorecard-calibration-infra",
-  "gitHead": "ac8e000eb6d8ed892ac46a3da82d5efb07c54aac",
+  "gitHead": "26a33d4d56e152b7007394e8a44fb34ae9c319ab",
   "python": "3.12.10"
  },
  "config": {
@@ -2274,7 +2274,7 @@
   "version": "lpbf-meltpool-calibration-config-1"
  },
  "configSha256": "6926386ddf9ad2a0d9fc787b4dbca7324b20b466e7a806be38b949fbafa1271b",
- "contentSha256": "41484169bfd2dae8fd028135ce7a64deacef31e2e1ecb374b9983d880f533a21",
+ "contentSha256": "965590d6ecf1c766755bda14673f4144975d038dd023f06a24bf0c569e444528",
  "envelope": {
   "316L Stainless Steel": {
    "beamDiameter_um": [
@@ -2393,10 +2393,10 @@
  "proposedEvidenceKind": null,
  "schema": "lpbf-meltpool-calibration-1",
  "scorecardRecord": "docs/LPBF_CALIBRATION_SCORECARD_2026-10-07.json",
- "scorecardSha256": "5d47a2cd16f3b3cbffb574a698b9d19fe6c70b87521645a4009f51bd26ac3874",
+ "scorecardSha256": "88e6b6eb73d3f404e2b11c95b66e8ae485467a42c5d1927c9c64ace0633673cd",
  "tool": {
   "path": "python/tools/lpbf_calibration_fit.py",
-  "sha256": "3aae27682d375690e9da99ebe0b0745747d3c33ad7329bfc96229e3b2735e8d8"
+  "sha256": "69354bd05420b2b5bd6ec4cacb9728b082f26c65103a72f171b69ffdf657ad41"
  },
  "trainingData": [
   {

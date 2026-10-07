@@ -1,0 +1,189 @@
+{
+ "artefact": "data/calibration/lpbf-meltpool-calibration-v1.json",
+ "calibrationId": "lpbf-meltpool-calib-2026-10-07-965590d6ecf1",
+ "cells": [
+  {
+   "kernel": "eagar-tsai",
+   "material": "316L Stainless Steel",
+   "quantity": "width",
+   "status": "rejected"
+  },
+  {
+   "kernel": "eagar-tsai",
+   "material": "316L Stainless Steel",
+   "quantity": "depth",
+   "status": "rejected"
+  },
+  {
+   "kernel": "eagar-tsai",
+   "material": "Ti-6Al-4V",
+   "quantity": "width",
+   "status": "rejected"
+  },
+  {
+   "kernel": "eagar-tsai",
+   "material": "Ti-6Al-4V",
+   "quantity": "depth",
+   "status": "rejected"
+  },
+  {
+   "kernel": "eagar-tsai",
+   "material": "Inconel 625",
+   "quantity": "width",
+   "status": "rejected"
+  },
+  {
+   "kernel": "eagar-tsai",
+   "material": "Inconel 625",
+   "quantity": "depth",
+   "status": "rejected"
+  },
+  {
+   "kernel": "eagar-tsai",
+   "material": "Inconel 718",
+   "quantity": "width",
+   "status": "no-data"
+  },
+  {
+   "kernel": "eagar-tsai",
+   "material": "Inconel 718",
+   "quantity": "depth",
+   "status": "no-data"
+  },
+  {
+   "kernel": "eagar-tsai",
+   "material": "AlSi10Mg",
+   "quantity": "width",
+   "status": "no-data"
+  },
+  {
+   "kernel": "eagar-tsai",
+   "material": "AlSi10Mg",
+   "quantity": "depth",
+   "status": "no-data"
+  },
+  {
+   "kernel": "goldak",
+   "material": "316L Stainless Steel",
+   "quantity": "width",
+   "status": "rejected"
+  },
+  {
+   "kernel": "goldak",
+   "material": "316L Stainless Steel",
+   "quantity": "depth",
+   "status": "within-source-only"
+  },
+  {
+   "kernel": "goldak",
+   "material": "Ti-6Al-4V",
+   "quantity": "width",
+   "status": "rejected"
+  },
+  {
+   "kernel": "goldak",
+   "material": "Ti-6Al-4V",
+   "quantity": "depth",
+   "status": "rejected"
+  },
+  {
+   "kernel": "goldak",
+   "material": "Inconel 625",
+   "quantity": "width",
+   "status": "rejected"
+  },
+  {
+   "kernel": "goldak",
+   "material": "Inconel 625",
+   "quantity": "depth",
+   "status": "rejected"
+  },
+  {
+   "kernel": "goldak",
+   "material": "Inconel 718",
+   "quantity": "width",
+   "status": "no-data"
+  },
+  {
+   "kernel": "goldak",
+   "material": "Inconel 718",
+   "quantity": "depth",
+   "status": "no-data"
+  },
+  {
+   "kernel": "goldak",
+   "material": "AlSi10Mg",
+   "quantity": "width",
+   "status": "no-data"
+  },
+  {
+   "kernel": "goldak",
+   "material": "AlSi10Mg",
+   "quantity": "depth",
+   "status": "no-data"
+  },
+  {
+   "kernel": "rosenthal",
+   "material": "316L Stainless Steel",
+   "quantity": "width",
+   "status": "rejected"
+  },
+  {
+   "kernel": "rosenthal",
+   "material": "316L Stainless Steel",
+   "quantity": "depth",
+   "status": "rejected"
+  },
+  {
+   "kernel": "rosenthal",
+   "material": "Ti-6Al-4V",
+   "quantity": "width",
+   "status": "rejected"
+  },
+  {
+   "kernel": "rosenthal",
+   "material": "Ti-6Al-4V",
+   "quantity": "depth",
+   "status": "rejected"
+  },
+  {
+   "kernel": "rosenthal",
+   "material": "Inconel 625",
+   "quantity": "width",
+   "status": "rejected"
+  },
+  {
+   "kernel": "rosenthal",
+   "material": "Inconel 625",
+   "quantity": "depth",
+   "status": "rejected"
+  },
+  {
+   "kernel": "rosenthal",
+   "material": "Inconel 718",
+   "quantity": "width",
+   "status": "no-data"
+  },
+  {
+   "kernel": "rosenthal",
+   "material": "Inconel 718",
+   "quantity": "depth",
+   "status": "no-data"
+  },
+  {
+   "kernel": "rosenthal",
+   "material": "AlSi10Mg",
+   "quantity": "width",
+   "status": "no-data"
+  },
+  {
+   "kernel": "rosenthal",
+   "material": "AlSi10Mg",
+   "quantity": "depth",
+   "status": "no-data"
+  }
+ ],
+ "contentSha256": "965590d6ecf1c766755bda14673f4144975d038dd023f06a24bf0c569e444528",
+ "evidenceKind": "screening-only",
+ "schema": "lpbf-meltpool-calibration-summary-1"
+}

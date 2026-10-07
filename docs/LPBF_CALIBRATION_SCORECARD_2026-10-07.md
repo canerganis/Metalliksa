@@ -2,7 +2,7 @@
 
 **Screening only: nuisance parameters fitted to published tracks; not validation.** Evidence kind `screening-only`; label promotion proposed: **none**; `experimentalValidation` = false; `opticalOperatorMatched` = false.
 
-Schema `lpbf-calibration-scorecard-1`; implementation fingerprint `d92d1a3ae85cd4c1adab6dc734eaae589ef4c275c33f09015aff639998f10ddd`; config sha256 `6926386ddf9ad2a0d9fc787b4dbca7324b20b466e7a806be38b949fbafa1271b`; code revision `ac8e000eb6d8ed892ac46a3da82d5efb07c54aac` (feat/lpbf-scorecard-calibration-infra; dirty tracked paths: 0); tool sha256 `3aae27682d375690e9da99ebe0b0745747d3c33ad7329bfc96229e3b2735e8d8`; quick mode: False.
+Schema `lpbf-calibration-scorecard-1`; implementation fingerprint `d92d1a3ae85cd4c1adab6dc734eaae589ef4c275c33f09015aff639998f10ddd`; config sha256 `6926386ddf9ad2a0d9fc787b4dbca7324b20b466e7a806be38b949fbafa1271b`; code revision `26a33d4d56e152b7007394e8a44fb34ae9c319ab` (feat/lpbf-scorecard-calibration-infra; dirty tracked paths: 0); tool sha256 `69354bd05420b2b5bd6ec4cacb9728b082f26c65103a72f171b69ffdf657ad41`; quick mode: False.
 
 Honesty: calibration of nuisance parameters against published single tracks; not experimental validation; the frozen screening kernels are read-only; absorptivity is a fitted effective parameter that absorbs model error, not a measured one; estimated material laws; no per-row measurement uncertainty exists in any source; experimentalValidation=false, opticalOperatorMatched=false.
 
@@ -124,31 +124,71 @@ Sources without a within-source evaluation (not silently dropped):
 | kernel | alloy | q | rung | eta_W | eta_D | eta joint | c_D by class | flags |
 |---|---|---|---|---|---|---|---|---|
 | eagar-tsai | 316L Stainless Steel | width | default | 0.395 [0.385, 0.420] | 0.460 [0.430, 0.485] | 0.435 [0.415, 0.460] | conduction -0.30, keyhole -0.04, transition -0.06 | - |
-| eagar-tsai | 316L Stainless Steel | depth | default | 0.395 [0.385, 0.420] | 0.460 [0.430, 0.485] | 0.435 [0.415, 0.460] | conduction -0.30, keyhole -0.04, transition -0.06 | - |
+| eagar-tsai | 316L Stainless Steel | depth | default | 0.395 [0.385, 0.420] | 0.460 [0.430, 0.485] | 0.435 [0.415, 0.460] | conduction -0.30, keyhole -0.04, transition -0.06 | etaInconsistentWithMeasuredAbsorptance, offsetDominant |
 | eagar-tsai | Ti-6Al-4V | width | default | 0.405 [0.390, 0.415] | 0.370 [0.305, 0.400] | 0.385 [0.360, 0.400] | conduction -0.63, keyhole +0.10, transition +0.25 | - |
-| eagar-tsai | Ti-6Al-4V | depth | default | 0.405 [0.390, 0.415] | 0.370 [0.305, 0.400] | 0.385 [0.360, 0.400] | conduction -0.63, keyhole +0.10, transition +0.25 | - |
+| eagar-tsai | Ti-6Al-4V | depth | default | 0.405 [0.390, 0.415] | 0.370 [0.305, 0.400] | 0.385 [0.360, 0.400] | conduction -0.63, keyhole +0.10, transition +0.25 | etaInconsistentWithMeasuredAbsorptance, offsetDominant |
 | eagar-tsai | Inconel 625 | width | eta2 | 0.250 [0.250, 0.445] | 0.600 [0.320, 0.600] | 0.375 [0.320, 0.600] | conduction +0.00, keyhole +0.00, transition +0.00 | boundHit, etaSplit |
-| eagar-tsai | Inconel 625 | depth | default | 0.250 [0.250, 0.445] | 0.600 [0.320, 0.600] | 0.375 [0.320, 0.600] | conduction +0.00, keyhole +0.00, transition +0.00 | - |
+| eagar-tsai | Inconel 625 | depth | default | 0.250 [0.250, 0.445] | 0.600 [0.320, 0.600] | 0.375 [0.320, 0.600] | conduction +0.00, keyhole +0.00, transition +0.00 | etaSplit |
 | goldak | 316L Stainless Steel | width | default | 0.440 [0.415, 0.470] | 0.460 [0.415, 0.485] | 0.455 [0.415, 0.470] | conduction -0.46, keyhole -0.04, transition -0.10 | - |
-| goldak | 316L Stainless Steel | depth | default | 0.440 [0.415, 0.470] | 0.460 [0.415, 0.485] | 0.455 [0.415, 0.470] | conduction -0.46, keyhole -0.04, transition -0.10 | - |
+| goldak | 316L Stainless Steel | depth | default | 0.440 [0.415, 0.470] | 0.460 [0.415, 0.485] | 0.455 [0.415, 0.470] | conduction -0.46, keyhole -0.04, transition -0.10 | etaInconsistentWithMeasuredAbsorptance, offsetDominant |
 | goldak | Ti-6Al-4V | width | eta | 0.425 [0.405, 0.450] | 0.365 [0.305, 0.391] | 0.385 [0.365, 0.410] | conduction -0.69, keyhole +0.11, transition +0.19 | etaInconsistentWithMeasuredAbsorptance |
-| goldak | Ti-6Al-4V | depth | default | 0.425 [0.405, 0.450] | 0.365 [0.305, 0.391] | 0.385 [0.365, 0.410] | conduction -0.69, keyhole +0.11, transition +0.19 | - |
+| goldak | Ti-6Al-4V | depth | default | 0.425 [0.405, 0.450] | 0.365 [0.305, 0.391] | 0.385 [0.365, 0.410] | conduction -0.69, keyhole +0.11, transition +0.19 | etaInconsistentWithMeasuredAbsorptance, offsetDominant |
 | goldak | Inconel 625 | width | eta2 | 0.525 [0.505, 0.570] | 0.600 [0.500, 0.600] | 0.585 [0.500, 0.600] | conduction +0.00, keyhole +0.00, transition +0.00 | - |
 | goldak | Inconel 625 | depth | default | 0.525 [0.505, 0.570] | 0.600 [0.500, 0.600] | 0.585 [0.500, 0.600] | conduction +0.00, keyhole +0.00, transition +0.00 | - |
 | rosenthal | 316L Stainless Steel | width | default | 0.415 [0.345, 0.570] | 0.335 [0.315, 0.350] | 0.340 [0.315, 0.360] | conduction -0.13, keyhole +0.01, transition +0.04 | - |
-| rosenthal | 316L Stainless Steel | depth | default | 0.415 [0.345, 0.570] | 0.335 [0.315, 0.350] | 0.340 [0.315, 0.360] | conduction -0.13, keyhole +0.01, transition +0.04 | - |
-| rosenthal | Ti-6Al-4V | width | default | 0.260 [0.250, 0.281] | 0.250 [0.250, 0.260] | 0.250 [0.250, 0.260] | conduction +0.10, keyhole +0.04, transition +0.42 | - |
-| rosenthal | Ti-6Al-4V | depth | default | 0.260 [0.250, 0.281] | 0.250 [0.250, 0.260] | 0.250 [0.250, 0.260] | conduction +0.10, keyhole +0.04, transition +0.42 | - |
+| rosenthal | 316L Stainless Steel | depth | default | 0.415 [0.345, 0.570] | 0.335 [0.315, 0.350] | 0.340 [0.315, 0.360] | conduction -0.13, keyhole +0.01, transition +0.04 | etaInconsistentWithMeasuredAbsorptance |
+| rosenthal | Ti-6Al-4V | width | default | 0.260 [0.250, 0.281] | 0.250 [0.250, 0.260] | 0.250 [0.250, 0.260] | conduction +0.10, keyhole +0.04, transition +0.42 | boundHit, etaInconsistentWithMeasuredAbsorptance |
+| rosenthal | Ti-6Al-4V | depth | default | 0.260 [0.250, 0.281] | 0.250 [0.250, 0.260] | 0.250 [0.250, 0.260] | conduction +0.10, keyhole +0.04, transition +0.42 | boundHit, etaInconsistentWithMeasuredAbsorptance, offsetDominant |
 | rosenthal | Inconel 625 | width | eta | 0.610 [0.550, 0.650] | 0.550 [0.550, 0.550] | 0.550 [0.550, 0.550] | conduction +0.00, keyhole +0.00, transition +0.00 | - |
 | rosenthal | Inconel 625 | depth | default | 0.610 [0.550, 0.650] | 0.550 [0.550, 0.550] | 0.550 [0.550, 0.550] | conduction +0.00, keyhole +0.00, transition +0.00 | - |
 
 Parameters are listed for every cell for diagnosis; the `rung` column says what would be served, and nothing is served unless the status is `enabled`. A `default` rung means no ladder rung beat the unchanged screening result on the training-only inner score.
 
+### Physics-compensation diagnostics
+
+Computed for every fitted cell, including cells whose served rung is `default` (where they cannot veto anything because nothing is served; `gate` = no). They show where a kernel is wrong and the fit compensates with an unphysical absorptivity or offset.
+
+| kernel | alloy | q | gate relevant | bound-hit fraction (bootstrap) | ln(eta_D/eta_W) | max abs c_D | measured-absorptance mismatch | diagnostic flags |
+|---|---|---|---|---|---|---|---|---|
+| eagar-tsai | 316L Stainless Steel | width | no | 0.00 | 0.15 | 0.30 | none | - |
+| eagar-tsai | 316L Stainless Steel | depth | no | 0.00 | 0.15 | 0.30 | conduction (eta 0.460 vs 0.24-0.46) | etaInconsistentWithMeasuredAbsorptance, offsetDominant |
+| eagar-tsai | Ti-6Al-4V | width | no | 0.00 | 0.09 | 0.63 | none | - |
+| eagar-tsai | Ti-6Al-4V | depth | no | 0.00 | 0.09 | 0.63 | keyhole (eta 0.370 vs 0.40-0.94) | etaInconsistentWithMeasuredAbsorptance, offsetDominant |
+| eagar-tsai | Inconel 625 | width | yes | 0.61 | 0.88 | 0.00 | none | boundHit, etaSplit |
+| eagar-tsai | Inconel 625 | depth | no | 0.00 | 0.88 | 0.00 | none | etaSplit |
+| goldak | 316L Stainless Steel | width | no | 0.00 | 0.04 | 0.46 | none | - |
+| goldak | 316L Stainless Steel | depth | no | 0.00 | 0.04 | 0.46 | conduction (eta 0.460 vs 0.24-0.46) | etaInconsistentWithMeasuredAbsorptance, offsetDominant |
+| goldak | Ti-6Al-4V | width | yes | 0.00 | 0.15 | 0.69 | keyhole (eta 0.385 vs 0.40-0.94) | etaInconsistentWithMeasuredAbsorptance |
+| goldak | Ti-6Al-4V | depth | no | 0.00 | 0.15 | 0.69 | keyhole (eta 0.365 vs 0.40-0.94) | etaInconsistentWithMeasuredAbsorptance, offsetDominant |
+| goldak | Inconel 625 | width | yes | 0.00 | 0.13 | 0.00 | none | - |
+| goldak | Inconel 625 | depth | no | 0.00 | 0.13 | 0.00 | none | - |
+| rosenthal | 316L Stainless Steel | width | no | 0.00 | 0.21 | 0.13 | none | - |
+| rosenthal | 316L Stainless Steel | depth | no | 0.00 | 0.21 | 0.13 | keyhole (eta 0.335 vs 0.38-1.12) | etaInconsistentWithMeasuredAbsorptance |
+| rosenthal | Ti-6Al-4V | width | no | 0.41 | 0.04 | 0.42 | keyhole (eta 0.260 vs 0.40-0.94) | boundHit, etaInconsistentWithMeasuredAbsorptance |
+| rosenthal | Ti-6Al-4V | depth | no | 0.93 | 0.04 | 0.42 | keyhole (eta 0.250 vs 0.40-0.94) | boundHit, etaInconsistentWithMeasuredAbsorptance, offsetDominant |
+| rosenthal | Inconel 625 | width | yes | 0.00 | 0.10 | 0.00 | none | - |
+| rosenthal | Inconel 625 | depth | no | 0.00 | 0.10 | 0.00 | none | - |
+
 ### Physics-compensation notes
 
-- eagar-tsai / Inconel 625 / width: boundHit: eta (W) 0.250 within 1 grid step of a bound or in > 20 % of bootstrap replicates
+- eagar-tsai / 316L Stainless Steel / depth: offsetDominant: |c_D| 0.30 > ln 1.25 for a class (diagnostic only: the served rung has no class offset)
+- eagar-tsai / 316L Stainless Steel / depth: etaInconsistentWithMeasuredAbsorptance: fitted effective eta disagrees with measured absorptance (conduction band 0.24-0.45, eta 0.460) -> eta is absorbing model error (diagnostic, not a validation claim) (diagnostic only: default rung served)
+- eagar-tsai / Ti-6Al-4V / depth: offsetDominant: |c_D| 0.63 > ln 1.25 for a class (diagnostic only: the served rung has no class offset)
+- eagar-tsai / Ti-6Al-4V / depth: etaInconsistentWithMeasuredAbsorptance: fitted effective eta disagrees with measured absorptance (keyhole band 0.40-0.94, eta 0.370) -> eta is absorbing model error (diagnostic, not a validation claim) (diagnostic only: default rung served)
+- eagar-tsai / Inconel 625 / width: boundHit: eta (W) 0.250 within 1 fine-grid step of a bound or in > 20 % of bootstrap replicates
 - eagar-tsai / Inconel 625 / width: etaSplit: |ln(eta_D/eta_W)| = 0.88 > ln 1.3 (eta_W 0.250, eta_D 0.600): one physical absorptivity cannot be both
+- eagar-tsai / Inconel 625 / depth: etaSplit: |ln(eta_D/eta_W)| = 0.88 > ln 1.3 (eta_W 0.250, eta_D 0.600): one physical absorptivity cannot be both (diagnostic only: the served rung does not use two separate etas)
+- goldak / 316L Stainless Steel / depth: offsetDominant: |c_D| 0.46 > ln 1.25 for a class (diagnostic only: the served rung has no class offset)
+- goldak / 316L Stainless Steel / depth: etaInconsistentWithMeasuredAbsorptance: fitted effective eta disagrees with measured absorptance (conduction band 0.24-0.45, eta 0.460) -> eta is absorbing model error (diagnostic, not a validation claim) (diagnostic only: default rung served)
 - goldak / Ti-6Al-4V / width: etaInconsistentWithMeasuredAbsorptance: fitted effective eta disagrees with measured absorptance (keyhole band 0.40-0.94, eta 0.385) -> eta is absorbing model error (diagnostic, not a validation claim)
+- goldak / Ti-6Al-4V / depth: offsetDominant: |c_D| 0.69 > ln 1.25 for a class (diagnostic only: the served rung has no class offset)
+- goldak / Ti-6Al-4V / depth: etaInconsistentWithMeasuredAbsorptance: fitted effective eta disagrees with measured absorptance (keyhole band 0.40-0.94, eta 0.365) -> eta is absorbing model error (diagnostic, not a validation claim) (diagnostic only: default rung served)
+- rosenthal / 316L Stainless Steel / depth: etaInconsistentWithMeasuredAbsorptance: fitted effective eta disagrees with measured absorptance (keyhole band 0.38-1.12, eta 0.335) -> eta is absorbing model error (diagnostic, not a validation claim) (diagnostic only: default rung served)
+- rosenthal / Ti-6Al-4V / width: boundHit: eta (W) 0.260 within 1 fine-grid step of a bound or in > 20 % of bootstrap replicates (diagnostic only: default rung served)
+- rosenthal / Ti-6Al-4V / width: etaInconsistentWithMeasuredAbsorptance: fitted effective eta disagrees with measured absorptance (keyhole band 0.40-0.94, eta 0.260) -> eta is absorbing model error (diagnostic, not a validation claim) (diagnostic only: default rung served)
+- rosenthal / Ti-6Al-4V / depth: boundHit: eta (D) 0.250 within 1 fine-grid step of a bound or in > 20 % of bootstrap replicates (diagnostic only: default rung served)
+- rosenthal / Ti-6Al-4V / depth: offsetDominant: |c_D| 0.42 > ln 1.25 for a class (diagnostic only: the served rung has no class offset)
+- rosenthal / Ti-6Al-4V / depth: etaInconsistentWithMeasuredAbsorptance: fitted effective eta disagrees with measured absorptance (keyhole band 0.40-0.94, eta 0.250) -> eta is absorbing model error (diagnostic, not a validation claim) (diagnostic only: default rung served)
 
 ## Regime confusion vs KU Leuven published labels
 
