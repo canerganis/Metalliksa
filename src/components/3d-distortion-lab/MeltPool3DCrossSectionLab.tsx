@@ -231,13 +231,16 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
 
     if (isKeyhole) {
       badgeColor = "bg-rose-500/20 text-rose-300 border-rose-500/50 shadow-[0_0_12px_rgba(244,63,94,0.3)]";
-      desc = `Keyhole-mode onset (ΔH/hs ≥ 20; melt-pool D/W > 0.5 screening, King 2014 / Cunningham 2019 converted to this index). The ${sourceLabel} conduction estimate and Fabbro depth proxy do not resolve a cavity or pore entrapment. Keyhole mode is not keyhole porosity.`;
+      desc = `Keyhole-mode onset (ΔH/hs ≥ 20, a provisional screening choice; melt-pool D/W > 0.5, King 2014 / Cunningham 2019 converted to this index). The ${sourceLabel} conduction estimate and Fabbro depth proxy do not resolve a cavity or pore entrapment. Keyhole mode is not keyhole porosity.`;
       keyRisk = "Keyhole-mode screening indicator";
     } else if (isTransition) {
       badgeColor = "bg-amber-500/20 text-amber-300 border-amber-500/40";
       desc = `Transition band (15 ≤ ΔH/hs < 20). ${sourceLabel} conduction estimate; free-surface shape unresolved.`;
       keyRisk = "Moderate / Near Threshold";
     }
+
+    const materialNote = pyResult?.meltPoolGeometry?.regimeMaterialNote;
+    if (materialNote) desc += ` Alloy note: ${materialNote}.`;
 
     return {
       enthalpy: parseFloat(enthalpy.toFixed(2)),
@@ -1256,7 +1259,7 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-1.5 bg-[#050810] rounded-lg border border-slate-800">
-                  <span className="text-slate-300">Keyhole porosity screen (proxy):</span>
+                  <span className="text-slate-300">Keyhole porosity (unresolved; legacy screen):</span>
                   <span className={`font-bold ${pyResult.defectDiagnostics.keyholePorosityRisk.startsWith("High") ? "text-rose-400" : pyResult.defectDiagnostics.keyholePorosityRisk.startsWith("Possible") ? "text-amber-400" : "text-emerald-400"}`}>
                     {pyResult.defectDiagnostics.keyholePorosityRisk}
                   </span>

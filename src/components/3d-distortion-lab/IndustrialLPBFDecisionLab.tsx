@@ -461,7 +461,7 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
                 label="ΔH/hₛ"
                 value={String(thermal.processParameters.normalizedEnthalpy)}
                 ok={keyholeGateStatus === undefined ? undefined : keyholeGateStatus === "pass" || keyholeGateStatus === "advisory"}
-                hint="porosity proxy ≥ 30 · regime keyhole ≥ 20"
+                hint="porosity unresolved: legacy screen ≥ 30 · regime keyhole ≥ 20 (provisional)"
               />
               <Metric
                 label="P–v literature"

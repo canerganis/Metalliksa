@@ -147,11 +147,28 @@ class UnchangedNumerics(unittest.TestCase):
         self.assertIn("Keyhole mode is not keyhole porosity", solver.REGIME_THRESHOLD_BASIS)
         self.assertIn("transferred, not derived, for IN718/IN625/AlSi10Mg", solver.REGIME_THRESHOLD_BASIS)
 
+    def test_regime_material_notes_and_wording(self):
+        # A low index must not read as an assurance; the threshold is a provisional screening choice.
+        self.assertIn("provisional screening choice", solver.REGIME_THRESHOLD_BASIS)
+        self.assertIn("not a derived exact threshold", solver.REGIME_THRESHOLD_BASIS)
+        self.assertIn("a low index is not an assurance", solver.REGIME_THRESHOLD_BASIS)
+        expect = {"Inconel 625": "threshold misses keyhole in the available dataset (measured keyhole indices 13.9-18.6)",
+                  "Inconel 718": "threshold not validated for this alloy",
+                  "AlSi10Mg": "threshold not validated for this alloy"}
+        for mat, note in expect.items():
+            self.assertEqual(solver.regime_material_note(mat), note, mat)
+            self.assertEqual(_run(mat, 200, 800, 80, 80)["meltPoolGeometry"]["regimeMaterialNote"], note, mat)
+        for mat in ("Ti-6Al-4V", "316L Stainless Steel"):
+            self.assertIn("derived for this alloy", solver.regime_material_note(mat))
+
     def test_fabbro_unchanged(self):
         nist = fabbro_keyhole_depth_m(285.0, 0.960, 67e-6, 11.4, 11.4 / (8190.0 * 435.0), 2850.0, 23.5, 0.38, 35.0)
         self.assertAlmostEqual(nist["depth_m"] * 1e6, 123.9, delta=0.05)
         model = _run("Inconel 718", 285, 960, 67, 23.5, 40.0, 110.0, heat_source="eagar-tsai")["keyholeModel"]
         self.assertIn("under-predicts Ti-6Al-4V", model["depthBenchmarkNote"])
+        self.assertIn("Cause not resolved; candidate mechanisms", model["depthBenchmarkNote"])
+        self.assertIn("beam-diameter convention", model["depthBenchmarkNote"])
+        self.assertIn("no vaporisation heat sink", model["depthBenchmarkNote"])
         self.assertIn(model["depthBenchmarkNote"], model["basis"])
 
 
@@ -164,6 +181,9 @@ class PorosityDecoupled(unittest.TestCase):
         risk = res["defectDiagnostics"]["keyholePorosityRisk"]
         self.assertTrue(risk.startswith("Possible"), risk)
         self.assertIs(res["defectDiagnostics"]["keyholePorosityResolved"], False)
+        self.assertIn("legacy screening level", risk)
+        self.assertIn("porosity unresolved", risk)
+        self.assertIn("not evidence of safety", res["defectDiagnostics"]["keyholePorosityBasis"])
         self.assertIn("independent of the regime threshold", res["defectDiagnostics"]["keyholePorosityBasis"])
         high = _run("Inconel 718", 280, 940, 80, 80)
         self.assertEqual(high["processParameters"]["normalizedEnthalpy"], 30.58)

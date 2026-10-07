@@ -401,7 +401,7 @@ def compose_verdict(thermal, alloy_id, extras=None):
             f"Tang overlap marginal: (h/W)²+(t/D)² = {tang:.3f} (pass ≤0.80)."
         )
     if keyhole_high:
-        reasons.append(f"Keyhole porosity screen High: ΔH/hₛ = {dh} (proxy ≥ 30; not a porosity boundary).")
+        reasons.append(f"Keyhole porosity screen High: ΔH/hₛ = {dh} (legacy screening level ≥ 30; porosity unresolved, not a porosity boundary).")
     if balling_high:
         reasons.append(
             f"Balling screen High: Eagar–Tsai L/W = {balling_lw_text} (> {balling.get('highThreshold', 5.5)}; "
@@ -417,8 +417,8 @@ def compose_verdict(thermal, alloy_id, extras=None):
     advisories = []
     if keyhole_possible:
         advisories.append(
-            f"Advisory: keyhole porosity possible (ΔH/hₛ {dh} in 15–30); Zhao 2020 Ti-6Al-4V pores at 16–28 "
-            "for v ≤ 445 mm/s; this index does not resolve it."
+            f"Advisory: keyhole porosity possible (legacy screening level, ΔH/hₛ {dh} in 15–30); Zhao 2020 "
+            "Ti-6Al-4V pores at 16–28 for v ≤ 445 mm/s; porosity unresolved, this index does not resolve it."
         )
     if balling_absorption_note and geometry_resolved:
         advisories.append("Advisory: " + balling_absorption_note)
@@ -525,7 +525,7 @@ def compose_verdict(thermal, alloy_id, extras=None):
             dh,
             30.0,
             "1",
-            "Keyhole-porosity screen on ΔH/hₛ (proxy, not a porosity boundary): High ≥ 30 → warn, "
+            "Keyhole-porosity legacy screening level on ΔH/hₛ (porosity unresolved, not a porosity boundary): High ≥ 30 → warn, "
             "High and > 35 → fail, 15–30 → advisory. The regime keyhole-mode onset (ΔH/hₛ = 20) is separate.",
         ),
         _gate(

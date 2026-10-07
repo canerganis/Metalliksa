@@ -1817,6 +1817,8 @@ export interface PythonLPBFResult {
     regime: string;
     /** Derivation of the regime thresholds (python REGIME_THRESHOLD_BASIS). */
     regimeBasis?: string;
+    /** Per-alloy note shown with the regime (threshold derived / misses keyhole in the dataset / not validated). */
+    regimeMaterialNote?: string;
     /** Only "computed" is a closed, unfloored liquidus isotherm (python/lpbf_thermal_solver.py). */
     extentStatus: MeltPoolExtentStatus;
     extentNote: string | null;

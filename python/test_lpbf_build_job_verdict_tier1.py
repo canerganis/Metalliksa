@@ -197,6 +197,7 @@ class ComposeVerdictTier1(unittest.TestCase):
         adv = next(a for a in out["advisories"] if "keyhole porosity possible" in a)
         self.assertTrue(adv.startswith("Advisory:"), adv)
         self.assertIn("ΔH/hₛ 25.0 in 15–30", adv)
+        self.assertIn("porosity unresolved", adv)
         gate = next(g for g in out["gates"] if g["id"] == "keyhole")
         self.assertEqual((gate["measured"], gate["required"]), (25.0, 30.0))
         self.assertIn("regime keyhole-mode onset (ΔH/hₛ = 20) is separate", gate["note"])
@@ -205,7 +206,7 @@ class ComposeVerdictTier1(unittest.TestCase):
         self.assertEqual(compose_verdict(_clean(keyholePorosityRisk=high, normalizedEnthalpy=35.01), "in718")["verdict"], "do-not-print")
         reason = next(r for r in compose_verdict(_clean(keyholePorosityRisk=high, normalizedEnthalpy=30.0), "in718")["reasons"]
                       if r.startswith("Keyhole porosity screen High"))
-        self.assertIn("proxy ≥ 30; not a porosity boundary", reason)
+        self.assertIn("legacy screening level ≥ 30; porosity unresolved, not a porosity boundary", reason)
 
     def test_lof_fail_still_do_not_print(self):
         out = compose_verdict(_clean(lackOfFusionStatus="Fail"), "in718")
