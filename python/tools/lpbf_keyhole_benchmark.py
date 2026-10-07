@@ -58,6 +58,15 @@ REPORT_THRESHOLDS = (15.0, 20.0, 30.0)  # per-source sensitivity (keyhole-mode r
 HELD_OUT_DW = 0.5  # melt-pool depth / width above which a track is keyhole mode (King 2014, Cunningham 2019)
 KERNELS = ("rosenthal", "eagar-tsai")
 LAYER_UM, HATCH_UM = 30.0, 100.0  # irrelevant to the single-track keyhole quantities; recorded
+# Fabbro 2020 Sec. 3.4: his d is the uniform / half-maximum diameter; FWHM = sqrt(ln2 / 2) x the 1/e2 diameter = 0.5887 d.
+FWHM_OVER_1E2 = math.sqrt(math.log(2.0) / 2.0)
+FABBRO_FWHM_LABEL = "diagnostic, not served"
+FABBRO_FWHM_BASIS = ("fabbroDepthFwhm_um = fabbro_keyhole_depth_m with d = sqrt(ln2/2) x the 1/e2 beam diameter, same "
+                     "absorptivity, properties and dH/hs ramp as the served call (Fabbro 2020 Sec. 3.4: his d is the "
+                     "half-maximum diameter). Diagnostic, not served: the served fabbroDepth_um keeps the 1/e2 diameter "
+                     "(D-3a record: the FWHM convention breaks the vapour <= melt-depth bound on IN718/316L).")
+BEAM_CONVENTION_SCHEMA = "lpbf-keyhole-beam-convention-1"
+DEFAULT_BEAM_CONVENTION_OUT = PYTHON_DIR.parent / "docs" / "LPBF_KEYHOLE_BEAM_CONVENTION_2026-10-07.json"
 REGIMES3 = ("conduction", "transition", "keyhole")
 LINE_SPEEDS = tuple(range(400, 1201, 100))
 HONESTY = ("Comparison of the app's existing screening with published Ti-6Al-4V x-ray measurements; digitized figure "
@@ -169,6 +178,89 @@ def kernel_block(P: float, v: float, spot: float, preheat: float) -> Dict[str, A
                   "solverIndex_dHhs": r3(res["processParameters"]["normalizedEnthalpy"]),
                   "keyholePorosityRisk": res["defectDiagnostics"]["keyholePorosityRisk"]}
     return out
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# Fabbro half-maximum-diameter diagnostic (computed here from the frozen Fabbro function; nothing served changes)
+# ---------------------------------------------------------------------------------------------------------------
+def fabbro_fwhm_diagnostic(material: str, power_W: float, speed_mm_s: float, spot_um: float, preheat_C: float,
+                           heat_source: str = "eagar-tsai") -> Dict[str, Any]:
+    """Run the unchanged solver once, record the exact arguments of its fabbro_keyhole_depth_m call, and repeat that
+    call with d = FWHM (sqrt(ln2/2) x the 1/e2 diameter). Returns the served depth (equal to
+    keyholeModel.fabbroDepth_um), the FWHM depth, and the scope flag
+
+    aspectRatioInScope = (e / d_FWHM >= 1) and (2 <= Pe <= 10), with e and Pe both on the FWHM basis (Fabbro's own d);
+    the served-basis aspect ratio and Peclet flag are returned next to it."""
+    from lpbf_thermal_solver import calculate_meltpool_physics
+    from fabbro_keyhole import fabbro_keyhole_depth_m as fabbro_fn
+    captured: List[tuple] = []
+
+    def recorder(*args: Any, **kwargs: Any) -> Dict[str, Any]:
+        captured.append(args)
+        return fabbro_fn(*args, **kwargs)
+
+    original = solver.fabbro_keyhole_depth_m
+    solver.fabbro_keyhole_depth_m = recorder
+    try:
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            res = calculate_meltpool_physics(material, power_W, speed_mm_s, spot_um, preheat_C, LAYER_UM, HATCH_UM,
+                                             heat_source=heat_source, absorption_model="flat-plate")
+    finally:
+        solver.fabbro_keyhole_depth_m = original
+    if len(captured) != 1:
+        raise RuntimeError(f"expected one fabbro_keyhole_depth_m call, saw {len(captured)}")
+    args = list(captured[0])
+    served = fabbro_fn(*args)
+    args[2] = args[2] * FWHM_OVER_1E2
+    fwhm = fabbro_fn(*args)
+    d_fwhm_m = max(8e-6, args[2])
+    r_fwhm = fwhm["depth_m"] / d_fwhm_m
+    return {"fabbroDepth_um": r3(res["keyholeModel"]["fabbroDepth_um"]),
+            "fabbroDepthFwhm_um": r3(fwhm["depth_m"] * 1e6),
+            "beamDiameterFwhm_um": r3(d_fwhm_m * 1e6),
+            "aspectRatioFwhm_e_over_dFwhm": r3(r_fwhm), "pecletFwhm": r3(fwhm["peclet"]),
+            "pecletInFitRangeFwhm": fwhm["pecletInFitRange"],
+            "aspectRatioServed_e_over_d1e2": r3(served["aspectRatio_e_over_d"]),
+            "pecletServed": r3(served["peclet"]), "pecletInFitRangeServed": served["pecletInFitRange"],
+            "aspectRatioInScope": bool(r_fwhm >= 1.0 and fwhm["pecletInFitRange"]),
+            "label": FABBRO_FWHM_LABEL}
+
+
+def beam_convention_record() -> Dict[str, Any]:
+    """Additive diagnostic record: served Fabbro depth vs the half-maximum-diameter diagnostic on the Ti-6Al-4V
+    literature sets (Cunningham 2019 vapour-depression depths, Zhao 2020 boundary depths), with the scope flag."""
+    cun = kl.load_cunningham_depths()["rows"]
+    zb = kl.load_zhao_boundary()["rows"]
+    sets = (("cunningham95", [r for r in cun if r["beamDiameter_um"] == 95.0], "vaporDepressionDepth_um"),
+            ("cunningham140", [r for r in cun if r["beamDiameter_um"] == 140.0], "vaporDepressionDepth_um"),
+            ("zhaoBoundaryBare", [r for r in zb if r["setting"] == "bare"], "keyholeDepth_um"),
+            ("zhaoBoundaryPowder", [r for r in zb if r["setting"] == "powder"], "keyholeDepth_um"))
+    out_sets: Dict[str, Any] = {}
+    cases: List[Dict[str, Any]] = []
+    for name, rows, meas in sets:
+        diag = []
+        for r in rows:
+            d = fabbro_fwhm_diagnostic(kl.APP_MATERIAL_TI64, r["power_W"], r["speed_mm_s"], r["beamDiameter_um"],
+                                       r["preheat_C"])
+            diag.append((r, d))
+            cases.append({"set": name, "rowId": r["rowId"], "power_W": r["power_W"], "speed_mm_s": r["speed_mm_s"],
+                          "beamDiameter_um": r["beamDiameter_um"], "measuredDepth_um": r[meas],
+                          "fabbroDepth_um": d["fabbroDepth_um"], "fabbroDepthFwhm_um": d["fabbroDepthFwhm_um"],
+                          "aspectRatioFwhm": d["aspectRatioFwhm_e_over_dFwhm"], "pecletFwhm": d["pecletFwhm"],
+                          "aspectRatioInScope": d["aspectRatioInScope"]})
+        out_sets[name] = {
+            "n": len(rows),
+            "servedFabbro": depth_stats((d["fabbroDepth_um"], r[meas], 0.0) for r, d in diag),
+            "fabbroFwhmDiagnostic": depth_stats((d["fabbroDepthFwhm_um"], r[meas], 0.0) for r, d in diag),
+            "aspectRatioInScope": f"{sum(d['aspectRatioInScope'] for _, d in diag)}/{len(diag)}",
+            "rowsWithServedFabbroDepth": sum(1 for r, d in diag if d["fabbroDepth_um"] > 0)}
+    return {"schema": BEAM_CONVENTION_SCHEMA, "generatedAt": GENERATED_AT, "label": FABBRO_FWHM_LABEL,
+            "basis": FABBRO_FWHM_BASIS, "fwhmOver1e2": round(FWHM_OVER_1E2, 5),
+            "scopeRule": "aspectRatioInScope = (e / d_FWHM >= 1) and (2 <= Pe <= 10), FWHM basis (Fabbro 2020 Sec. 2.1)",
+            "servedValuesChanged": False, "sets": out_sets, "cases": cases,
+            "note": ("Cunningham and Gan Supplementary Data 1 are the same experiments (not independent). Measured "
+                     "depths are digitized; 20 C preheat assumed for every row. The FWHM diagnostic is not served.")}
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -707,7 +799,15 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--out", default=str(DEFAULT_OUT))
     ap.add_argument("--no-kernels", action="store_true", help="index-only (no solver calls)")
+    ap.add_argument("--beam-convention", action="store_true",
+                    help="write the additive Fabbro half-maximum-diameter diagnostic record instead "
+                         "(default out: docs/LPBF_KEYHOLE_BEAM_CONVENTION_2026-10-07.json)")
     a = ap.parse_args(argv)
+    if a.beam_convention:
+        out = Path(a.out) if a.out != str(DEFAULT_OUT) else DEFAULT_BEAM_CONVENTION_OUT
+        out.write_text(json.dumps(beam_convention_record(), indent=1, sort_keys=True) + "\n", encoding="utf-8",
+                       newline="\n")
+        return 0
     text = json.dumps(evaluate(run_kernels=not a.no_kernels), indent=1, sort_keys=True) + "\n"
     doc = json.loads(text)  # .md and .view.json are rendered from the committed (key-sorted) JSON
     out = Path(a.out)

@@ -22,8 +22,10 @@ Files:
   d/2): a Gan-internal inconsistency, recorded and not used.
 
 The relations (Eqs. 1, 2, 5-9) are in `../keyhole-reference-relations-2026/published_relations.csv`. Gan's
-Al6061 block of Supplementary Data 1 is not ingested. Gan's Ti-6Al-4V points are Cunningham
-2019 data and are not ingested.
+Al6061 block of Supplementary Data 1 is not ingested. Gan's Ti-6Al-4V points (Fig. 1a) were not digitized; the Supplementary
+Data 1 Ti-6Al-4V rows ARE ingested (71 rows, `supplementary_data1_ti64.csv`, `load_gan_data1_ti64`) and are flagged
+`independentOfCunningham2019 = false`: they are the same experiments as Cunningham 2019, so they never count as a second
+dataset or as independent evidence.
 
 Loader: `python/lpbf_keyhole_literature.py` (SHA-256 pinned, locator and `digitized` flag on every row). Report: `docs/LPBF_KEYHOLE_BENCHMARK_2026-10-07.*`; notes: `docs/LPBF_KEYHOLE_LITERATURE_NOTES_2026-10-07.md`.
 Evidence kind: published measurement / published relation. Comparison only; not experimental validation and not in the calibration training set.

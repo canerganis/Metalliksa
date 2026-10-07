@@ -54,6 +54,15 @@ HONESTY_STATEMENT = ("comparison, not validation; screening kernels; estimated m
                      "uncertainty model; a failing comparison is reported, not fitted away")
 HEADER_MD = ("**Comparison of screening kernels against published single-track measurements; not experimental "
              "validation; estimated material laws; absorptivity assumed.**")
+# Declared depth-datum sensitivity (zero served-value drift): the measured depth of these sources is taken from the
+# substrate surface, a kernel depth from the free (powder) surface. The column is reported ALONGSIDE the served
+# prediction and never replaces it.
+PACKING_PHI = 0.60  # Trapp et al. 2017 (estimated packing density of about 60 %)
+DEPTH_DATUM_SUBSTRATE_DATASETS = {
+    "hofmann-316l-2026": "substrate surface (Hofmann et al. 2026, Fig. 2)",
+    "totis-ti64-2021": "printed-base top surface under the powder layer (Vaglio et al. 2020, Fig. 1/2b)",
+}
+DEPTH_DATUM_WORDING = "geometric assumption (h_surface = φ·t); powder denudation not modelled"
 REF_SOURCE_PENETRATION_UM = 40.0
 REF_MESH_UM = 20.0
 REF_TRACK_LENGTH_UM = 600.0
@@ -81,6 +90,17 @@ def pin_flat_plate(allow_raytracer: bool = False) -> None:
 # ---------------------------------------------------------------------------------------------
 # pure statistics (no solver)
 # ---------------------------------------------------------------------------------------------
+def depth_datum_correction_um(dataset: Any, layer_um: Optional[float]) -> Optional[Dict[str, Any]]:
+    """Declared sensitivity column `depthDatumCorrection_um` = phi * t for powder-layer rows of sources whose depth
+    datum is the substrate (None for bare rows and for every other source). A kernel depth from the powder surface
+    minus this value is the sensitivity reading; the served depth is never changed."""
+    datum = DEPTH_DATUM_SUBSTRATE_DATASETS.get(str(dataset))
+    if datum is None or not layer_um or layer_um <= 0:
+        return None
+    return {"depthDatumCorrection_um": round(PACKING_PHI * float(layer_um), 3), "phi": PACKING_PHI,
+            "datum": datum, "basis": DEPTH_DATUM_WORDING, "servedDepthUnchanged": True}
+
+
 def _stats(pairs: Sequence[tuple]) -> Optional[Dict[str, float]]:
     """pairs of (predicted, measured). Returns None when empty."""
     if not pairs:
@@ -424,8 +444,12 @@ def build_limits(out_rows: Sequence[Dict[str, Any]], summary: Dict[str, Any],
     lim.append(f"Balling-flagged rows ({n_ball}) are inside the pooled 'all' headline statistics; a continuous-track "
                "screening kernel is not meant to describe them.")
     n_totis = sum(1 for r in out_rows if str(r["dataset"]).startswith("totis"))
-    lim.append(f"The Totis depth reference line (original substrate surface vs powder surface) is not stated by the "
-               f"source; the {n_totis} Totis depths carry an unknown offset.")
+    lim.append(f"The Totis depth datum is the top of the printed base under the 25 um powder layer (Vaglio et al. 2020, "
+               f"Fig. 1/2b; the workbook does not state it) and the Hofmann datum is the substrate surface (Fig. 2); "
+               f"the kernels compute depth from the free surface, so the {n_totis} Totis and the Hofmann powder-layer "
+               f"depths carry an offset, reported as the declared sensitivity column `sensitivity."
+               f"depthDatumCorrection_um` = phi*t with phi = {PACKING_PHI:g} (" + DEPTH_DATUM_WORDING + "), never "
+               f"applied to the served depth.")
     lim.append("The kernels ignore powder-layer thickness (identical predictions at 0/30/60 um; see "
                "assumptions.layer_um), so any trend with powder-layer thickness is in the measurements only.")
     lim.append(f"Absorption path: {absorption['path']} absorptivity_IR "
@@ -481,12 +505,16 @@ def build_document(quick: bool, jobs: int, ref_budget_s: float, skip_reference: 
         for key in ("widthSigma_um", "depthSigma_um", "sampleCount"):
             if r.get(key) is not None:
                 measured[key] = r[key]
-        out_rows.append({
+        out_row = {
             "dataset": r["dataset"], "rowId": r["rowId"],
             "inputs": {"material": r["material"], "power_W": r["power_W"], "speed_mm_s": r["speed_mm_s"],
                        "beamDiameter_um": r["beamDiameter_um"], "layer_um": r["layer_um"],
                        "preheat_C": r["preheat_C"]},
-            "measured": measured, "regime": r["regime"], "predictions": p})
+            "measured": measured, "regime": r["regime"], "predictions": p}
+        datum = depth_datum_correction_um(r["dataset"], r["layer_um"])
+        if datum is not None:  # additive key; predictions above are the served values
+            out_row["sensitivity"] = datum
+        out_rows.append(out_row)
 
     # Preserve the newly added source rows without fabricating missing process inputs or resolving
     # KU Leuven's unresolved width/depth units and half-width operator. These rows are explicitly excluded.
@@ -894,6 +922,18 @@ def render_markdown(doc: Dict[str, Any], view_name: Optional[str] = None,
           ab["note"], "", "## Limits", ""]
     for x in doc["limits"]:
         L.append(f"- {x}")
+    n_sens = sum(1 for r in doc["rows"] if r.get("sensitivity"))
+    if n_sens:
+        by_layer: Dict[Any, int] = {}
+        for r in doc["rows"]:
+            if r.get("sensitivity"):
+                key = (r["dataset"], r["sensitivity"]["depthDatumCorrection_um"])
+                by_layer[key] = by_layer.get(key, 0) + 1
+        L += ["", "## Depth-datum sensitivity column (declared; not applied to the served depth)", "",
+              f"`rows[].sensitivity.depthDatumCorrection_um` = phi*t with phi = {PACKING_PHI:g} (Trapp 2017) on "
+              f"{n_sens} powder-layer rows of sources whose measured depth starts at the substrate; "
+              f"{DEPTH_DATUM_WORDING}. It is reported alongside the served `predictions` and never replaces them.", ""]
+        L += [f"- {ds}: {n} rows, correction {c:g} um" for (ds, c), n in sorted(by_layer.items())]
     scope = doc.get("summaryScope")
     L += ["", "## Summary: kernel x regime (" + ("2026-10-05 dataset scope pooled; wave 2 rows excluded, see the "
           "wave 2 scorecard" if scope else "all datasets pooled") + ")", ""]

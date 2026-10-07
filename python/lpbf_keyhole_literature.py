@@ -18,8 +18,8 @@ What was taken (comparison inputs only; nothing here calibrates, validates or ch
   Fig. 1A maximum-pore-size markers (pores observed), all DIGITIZED.
 * Gan et al. 2021, Nat. Commun. 12, 2379 (doi:10.1038/s41467-021-22704-0, CC BY 4.0): keyhole-number relations
   (Eqs. 1, 2, 5-9) and the five Al6061 cases whose P, V and Ke are PRINTED in Figs. 1-2. The per-case Fig. 1a data are
-  in Supplementary Data 1 (not available here). Gan's Ti-6Al-4V points are Cunningham 2019 (its ref. 2) and are NOT
-  taken again (no double counting).
+  in Supplementary Data 1; its 71 Ti-6Al-4V rows are ingested as a cross-check (load_gan_data1_ti64) and flagged
+  independentOfCunningham2019 = False: they are Cunningham 2019 (Gan ref. 2), never counted as a second dataset.
 * Huang et al. 2022, Nat. Commun. 13, 1170 (doi:10.1038/s41467-022-28694-x, CC BY 4.0): Al7A77 / Al regime labels
   printed in Figs. 1, 4 and the text; the front-wall-angle relation and the normalised-enthalpy-product thresholds.
   Huang's Ti-6Al-4V points are Cunningham 2019 and Zhao 2020 data (its refs. 25, 16) and are NOT taken again.
@@ -352,11 +352,13 @@ def load_gan_data1_ti64(verify: bool = True) -> Dict[str, Any]:
              "ganTable1": {"k_W_mK": float(r["k_W_mK"]), "rho_kg_m3": float(r["rho_kg_m3"]),
                            "cp_J_kgK": float(r["cp_J_kgK"]), "alpha_m2_s": float(r["alpha_m2_s"]),
                            "TlMinusT0_K": float(r["Tl_minus_T0_K"]), "TvMinusT0_K": float(r["Tv_minus_T0_K"])},
+             "independentOfCunningham2019": False, "sameExperimentsAs": CUN_PROVENANCE["id"],
              "locator": r["locator"], "digitized": r["digitized"] == "true"} for r in recs]
     prov = {"id": "gan-keyhole-2021-supplementary-data1", "doi": "10.1038/s41467-021-22704-0",
             "license": "CC BY 4.0 (Nat. Commun. supplementary data); Ti-6Al-4V rows copied as published",
             "source": {"file": "gan2021_data1.xlsx", "sha256": GAN_DATA1_XLSX_SHA256, "note": SOURCE_NOTE},
             "overlap": "Cunningham 2019 Ti-6Al-4V cases (Gan ref. 2); cross-check only, never a second dataset.",
+            "independentOfCunningham2019": False, "sameExperimentsAs": CUN_PROVENANCE["id"],
             "file": GAN_DATA1_TABLE.name, "fileSha256": sha256_file(GAN_DATA1_TABLE), "rows": len(rows),
             "transcribed": TRANSCRIBED}
     return {"rows": rows, "provenance": prov}
