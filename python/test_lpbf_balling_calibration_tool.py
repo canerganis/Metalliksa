@@ -1,6 +1,7 @@
 """tools/lpbf_balling_calibration.py reproduces the committed calibration table from the records."""
 import os
 import sys
+import tempfile
 import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -18,14 +19,11 @@ TABLE = os.path.join(DOCS, "LPBF_BALLING_CALIBRATION_2026-10-07.md")
 @unittest.skipUnless(all(os.path.isfile(p) for p in (AFTER, BEFORE, TABLE)), "records not present")
 class CalibrationTool(unittest.TestCase):
     def test_committed_table_is_reproduced(self):
-        out = os.path.join(HERE, ".tmp-balling-calibration.md")
-        try:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = os.path.join(tmp, "balling-calibration.md")
             self.assertEqual(cal.main(["--before", BEFORE, "--record", AFTER, "--out", out]), 0)
             with open(out, encoding="utf-8") as a, open(TABLE, encoding="utf-8") as b:
                 self.assertEqual(a.read(), b.read())
-        finally:
-            if os.path.exists(out):
-                os.remove(out)
 
     def test_threshold_shift_from_wave_b(self):
         import json

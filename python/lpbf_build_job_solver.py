@@ -285,13 +285,18 @@ PARAMETER_INDEPENDENT_ADVISORY_NOTE = (
 )
 BALLING_SCREEN_NOTE = (
     "Eagar-Tsai aspect-ratio screen calibrated on Hofmann 2026 316L single tracks (Zenodo 10.5281/zenodo.16979848; "
-    "High threshold 5.5 chosen in-sample, model L/W uncertainty about +-10 %); not a demonstrated balling "
-    "prediction for other alloys; reported as risky, never do-not-print"
+    "High threshold 5.5 chosen in-sample, model L/W uncertainty about +-10 %; low recall and spot-size dependent: "
+    "69/216 balled tracks flagged overall, 3/38 at a 140 um spot, so a track below 5.5 is not balling-cleared); "
+    "not a demonstrated balling prediction for other alloys; reported as risky, never do-not-print"
 )
 BALLING_LITERATURE_NOTE = (
-    "pi*sqrt(3/2) segmented-cylinder bound of Gusarov & Smurov 2010 (doi 10.1016/j.phpro.2010.08.065) and "
+    "pi*sqrt(3/2) segmented-cylinder bound, derived in Gusarov, Yadroitsev, Bertrand & Smurov 2007 "
+    "(Appl. Surf. Sci. 254:975, doi 10.1016/j.apsusc.2007.08.074) and cited via Gusarov & Smurov 2010 (doi 10.1016/j.phpro.2010.08.065) and "
     "Yadroitsev et al. 2010 (doi 10.1016/j.jmatprotec.2010.05.010)"
 )
+# The High/Moderate thresholds were calibrated on flat-plate-absorptivity Eagar-Tsai geometry; the
+# Eagar-Tsai L/W scales roughly as sqrt(A), so another absorption model is disclosed, never re-banded.
+BALLING_CALIBRATION_ABSORPTION_MODEL = "flat-plate"
 _LEGACY_BALLING_BANDS = (("High", "high"), ("Moderate", "moderate"), ("Stable", "stable"))
 
 
@@ -343,6 +348,14 @@ def compose_verdict(thermal, alloy_id, extras=None):
     balling_unavailable = balling_band is None
     balling_lw = balling.get("lengthToWidth")
     balling_lw_text = "n/a" if balling_lw is None else f"{float(balling_lw):.2f}"
+    absorption_model = thermal["processParameters"].get("absorptionModel")
+    balling_absorption_note = None
+    if absorption_model not in (None, BALLING_CALIBRATION_ABSORPTION_MODEL) and balling_band is not None:
+        balling_absorption_note = (
+            f"Balling screen absorptivity: this run uses the {absorption_model} absorption model, but the L/W "
+            f"thresholds were calibrated on {BALLING_CALIBRATION_ABSORPTION_MODEL} absorptivity (Eagar–Tsai L/W "
+            "scales roughly as sqrt(A)); the band is reported unchanged."
+        )
     # The frozen solver no longer bands recoaterCrashRisk (alloy/layer/preheat-only index, not evaluated
     # from scan parameters); the advisory keeps its documented threshold on the unchanged index.
     recoater_high = float(def_["distortionIndex"]) > 2.0
@@ -400,6 +413,8 @@ def compose_verdict(thermal, alloy_id, extras=None):
             "not include a balling screen."
         )
     advisories = []
+    if balling_absorption_note and geometry_resolved:
+        advisories.append("Advisory: " + balling_absorption_note)
     if balling_moderate:
         advisories.append(
             f"Advisory: balling screen Moderate — Eagar–Tsai L/W = {balling_lw_text} > 3.85, the "
@@ -452,6 +467,11 @@ def compose_verdict(thermal, alloy_id, extras=None):
         "do-not-print": "Do not print — change P, v, h, or t before a build",
         "inconclusive": f"Inconclusive — melt-pool geometry not resolved ({extent_status}); see reasons",
     }[verdict]
+
+    balling_screened = geometry_resolved and not balling_unavailable
+    if geometry_resolved and balling_unavailable:
+        # A verdict without the balling screen is not balling-cleared: say so in the headline.
+        headline += " (balling not screened: Eagar–Tsai extent not computed)"
 
     lw = round(width_over_hatch, 3)
     dt = round(depth_over_layer, 3)
@@ -600,6 +620,8 @@ def compose_verdict(thermal, alloy_id, extras=None):
         "extentNote": extent_note,
         "verdictReason": geometry_reason,
         "unavailableGates": unavailable_gates,
+        "ballingScreened": balling_screened,
+        "ballingAbsorptionModel": absorption_model if balling_screened else None,
         "geometryIndependentFailGates": geometry_independent_fail_gates,
         # Verdict-driving gate ids ("fail" -> do-not-print, "warn" -> risky) and the advisory-only
         # gates that never change the verdict (see ADVISORY_GATES).

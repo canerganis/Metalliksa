@@ -95,6 +95,7 @@ class ComposeVerdictTier1(unittest.TestCase):
         (adv,) = out["advisories"]
         self.assertTrue(adv.startswith("Advisory: balling screen Moderate"), adv)
         self.assertIn("Gusarov & Smurov 2010", adv)
+        self.assertIn("10.1016/j.apsusc.2007.08.074", adv)
         self.assertIn("Yadroitsev et al. 2010", adv)
         self.assertIn("42/130", adv)
         self.assertIn("does not change the verdict", adv)
@@ -107,6 +108,33 @@ class ComposeVerdictTier1(unittest.TestCase):
         self.assertIn("width-floor-applied", gate["reason"])
         self.assertEqual(out["unavailableGates"], ["balling"])
         self.assertTrue(any(r.startswith("Balling screen unavailable") for r in out["reasons"]))
+        # A printable verdict without the screen is not balling-cleared: the headline and flag say so.
+        self.assertFalse(out["ballingScreened"])
+        self.assertIsNone(out["ballingAbsorptionModel"])
+        self.assertTrue(out["headline"].startswith("Printable"), out["headline"])
+        self.assertIn("balling not screened", out["headline"])
+
+    def test_screened_verdict_headline_has_no_balling_note(self):
+        out = compose_verdict(_clean(ballingScreen=STABLE_BALLING), "in718")
+        self.assertTrue(out["ballingScreened"])
+        self.assertNotIn("balling not screened", out["headline"])
+
+    def test_high_reason_discloses_recall_and_spot_dependence(self):
+        out = compose_verdict(_clean(ballingScreen=HIGH_BALLING), "in718")
+        line = next(r for r in out["reasons"] if r.startswith("Balling screen High"))
+        self.assertIn("69/216 balled tracks flagged overall, 3/38 at a 140 um spot", line)
+
+    def test_non_flat_plate_absorption_is_disclosed_not_rebanded(self):
+        th = _clean(ballingScreen=MODERATE_BALLING)
+        th["processParameters"]["absorptionModel"] = "powder-raytrace"
+        out = compose_verdict(th, "in718")
+        self.assertEqual(out["verdict"], "printable")
+        self.assertEqual(out["ballingAbsorptionModel"], "powder-raytrace")
+        self.assertEqual(out["advisoryGates"], ["balling"])
+        note = next(a for a in out["advisories"] if "absorptivity" in a)
+        self.assertIn("calibrated on flat-plate absorptivity", note)
+        flat = compose_verdict(_clean(ballingScreen=MODERATE_BALLING), "in718")
+        self.assertFalse(any("absorptivity:" in a for a in flat["advisories"]))
 
     def test_legacy_risk_string_without_screen_still_maps(self):
         th = _clean()

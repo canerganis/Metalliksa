@@ -1478,6 +1478,10 @@ export interface PythonLpbfBuildJobVerdict {
   extentNote?: string | null;
   verdictReason?: string | null;
   unavailableGates?: string[];
+  /** false when the Eagar–Tsai balling screen did not run (gate unavailable); a verdict is then not balling-cleared. */
+  ballingScreened?: boolean;
+  /** Absorption model of the screened L/W; thresholds were calibrated on "flat-plate". */
+  ballingAbsorptionModel?: string | null;
   geometryIndependentFailGates?: string[];
   /** Gate ids with status "fail" (drive do-not-print). */
   blockingGates?: string[];
