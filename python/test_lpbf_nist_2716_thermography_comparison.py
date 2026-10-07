@@ -103,7 +103,7 @@ class ComparisonToolTest(unittest.TestCase):
     def test_e_fingerprint_field_equals_expected(self):
         expected = (PYTHON_DIR / "lpbf_implementation_fingerprint.expected").read_text(encoding="utf-8").strip()
         self.assertEqual(self.doc["implementationFingerprint"], expected)
-        self.assertTrue(expected.startswith("f3ba9896"))
+        self.assertTrue(expected.startswith("d92d1a3a"))
         checks = {c["id"]: c for c in self.doc["checks"]}
         self.assertEqual(checks["A2-physics-fingerprint"]["result"], "skipped")  # --quick does not run the test
         self.assertIn("--quick", checks["A2-physics-fingerprint"]["detail"])
@@ -162,9 +162,9 @@ class ComparisonToolTest(unittest.TestCase):
 
     def test_k_committed_record_is_current(self):
         """The committed docs record equals a fresh full run (needs the fingerprint test; about 15 s)."""
-        # The current record (fingerprint f3ba9896, Wave B physics bump); the 11b04b8f and ddd8358a (tier-2)
-        # records are kept unchanged as history.
-        committed = PYTHON_DIR.parent / "docs" / "LPBF_NIST_2716_THERMOGRAPHY_COMPARISON_2026-10-07_waveb-physics.json"
+        # The current record (fingerprint d92d1a3a, balling-screen bump; numbers equal the f3ba9896 Wave B
+        # record, only the fingerprint differs); the 11b04b8f, ddd8358a and f3ba9896 records are kept as history.
+        committed = PYTHON_DIR.parent / "docs" / "LPBF_NIST_2716_THERMOGRAPHY_COMPARISON_2026-10-07_balling-screen.json"
         doc = tool.build_document(False, "2026-10-07")
         self.assertEqual(tool.serialize(doc), committed.read_text(encoding="utf-8"))
         self.assertEqual(tool.render_markdown(doc), committed.with_suffix(".md").read_text(encoding="utf-8"))
