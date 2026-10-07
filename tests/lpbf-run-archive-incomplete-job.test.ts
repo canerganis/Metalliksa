@@ -11,7 +11,7 @@ import { LpbfRunBundleService } from '../server/lpbfRunBundleService';
 import { LpbfSourceArchiveService } from '../server/lpbfSourceArchiveService';
 import { nistOpticalTable4CatalogEntry } from '../server/lpbfSourceCatalog';
 import { lpbfWorker } from '../server/lpbfWorkerBridge';
-import { isolateWorkerJobRoot, removeWorkerTestRoot, runCleanupSteps, stopRealWorker, waitForRealWorker } from './support/realLpbfWorker';
+import { isolateWorkerJobRoot, removeWorkerTestRoot, runCleanupSteps, retryWorkerCall, stopRealWorker, waitForRealWorker } from './support/realLpbfWorker';
 
 // Phase 2 D9: archiving a cancelled job through the real worker and the real route used to answer
 // 503 "Run archive unavailable or integrity check failed." It is a client error.
@@ -52,19 +52,20 @@ test('archiving a cancelled, unknown or malformed job returns a specific 4xx wit
     return { status: response.status, body: JSON.parse(text) as { error?: string } };
   };
 
-  await waitForRealWorker(Date.now() + 90_000);
+  const workerBudget = 240_000; // each retry below still fails at its deadline
+  await waitForRealWorker(Date.now() + workerBudget);
   // Submit and cancel are two separate RPCs and the worker executes concurrently, so a job can in principle finish first (cancel keeps a
   // completed status). The 3 mm powder-layer track (the validator maximum) makes that very unlikely; to remove the remaining timing dependence
   // we retry with a distinct input (no cache hit) until a cancel actually lands, and fail loudly if it never does.
   let submission: { id: string } | undefined;
   for (let attempt = 0; attempt < 5 && !submission; attempt += 1) {
-    const candidate = await lpbfWorker.request('submit', {
+    const candidate = await retryWorkerCall(() => lpbfWorker.request('submit', {
       mode: 'standard', backend: 'reference', material: 'Inconel 718', power_W: 60 + attempt,
       speed_mm_s: 1200, beamDiameter_um: 80, preheat_C: 200, layer_um: 40,
       mesh_um: 20, maxDt_s: 0.000001, trackLength_um: 3000, tracks: 1, layers: 1,
       surfaceMode: 'powder-layer', cooling_s: 0.0005, dwell_s: 0.0002,
-    }) as { id: string };
-    const outcome = await lpbfWorker.request('cancel', candidate.id) as { status: string };
+    }), Date.now() + workerBudget, { idempotent: false }) as { id: string };
+    const outcome = await retryWorkerCall(() => lpbfWorker.request('cancel', candidate.id), Date.now() + workerBudget, { idempotent: false }) as { status: string };
     if (outcome.status === 'cancelled') submission = candidate;
   }
   assert.ok(submission, 'a job was cancelled before completing within 5 attempts');

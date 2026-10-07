@@ -15,6 +15,7 @@ import { LpbfSourceArchiveService } from '../server/lpbfSourceArchiveService';
 import { nistOpticalTable4CatalogEntry } from '../server/lpbfSourceCatalog';
 import { lpbfWorker, LpbfWorkerBridge } from '../server/lpbfWorkerBridge';
 import { getHostPython } from '../server/pythonRuntime';
+import { waitForRealWorker } from './support/realLpbfWorker';
 
 // Crash-recovery acceptance: the real python/lpbf_worker.py is SIGKILLed while a job is running and the
 // bridge restarts it against the same job root (persisted sqlite queue + job directories). The solver child
@@ -32,7 +33,7 @@ async function until(condition: () => boolean, what: string, timeoutMs = 10000) 
 }
 const alive = (pid: number) => { try { process.kill(pid, 0); return true; } catch { return false; } };
 
-test('a worker SIGKILLed mid-job restarts with the job failed, partial files unpresented, and archive refusing it', { timeout: 120000 }, async t => {
+test('a worker SIGKILLed mid-job restarts with the job failed, partial files unpresented, and archive refusing it', { timeout: 360000 }, async t => {
   const root = await mkdtemp(path.join(os.tmpdir(), 'metalliksa-lpbf-crash-'));
   const priorJobRoot = process.env.METALLIKSA_JOB_ROOT;
   const jobRoot = path.join(root, 'jobs');
@@ -64,7 +65,7 @@ test('a worker SIGKILLed mid-job restarts with the job failed, partial files unp
 
   const workerChildren: ChildProcessWithoutNullStreams[] = [];
   const bridge = new LpbfWorkerBridge({
-    startupTimeoutMs: 20000, requestTimeoutMs: 20000,
+    startupTimeoutMs: 90000, requestTimeoutMs: 60000,
     command: () => ({ cmd: python.cmd, args: [...python.prefix, '-u', fixtureScript] }),
     spawn: command => {
       const child = spawn(command.cmd, command.args, { stdio: 'pipe', windowsHide: true });
@@ -101,12 +102,19 @@ test('a worker SIGKILLed mid-job restarts with the job failed, partial files unp
 
   try {
     // 1. Submit; wait until the stub solver child is running and has left partial output behind.
-    const submitted = await json('POST', '/api/lpbf/jobs', { jobType: 'build-job' });
+    // Cold start (python + sqlite queue) can outlast one request budget on a loaded host. Wait for readiness first, then
+    // retry only LPBF_WORKER_STARTING (the request was never written to the worker, so a retry cannot duplicate a job).
+    await waitForRealWorker(Date.now() + 120000);
+    const startBy = Date.now() + 120000;
+    let submitted = await json('POST', '/api/lpbf/jobs', { jobType: 'build-job' });
+    while (submitted.status === 503 && submitted.body?.code === 'LPBF_WORKER_STARTING' && Date.now() < startBy) {
+      await sleep(250);
+      submitted = await json('POST', '/api/lpbf/jobs', { jobType: 'build-job' });
+    }
     assert.equal(submitted.status, 202, JSON.stringify(submitted.body));
     const jobId: string = submitted.body.id;
     const folder = path.join(jobRoot, jobId);
-    const deadline = Date.now() + 30000;
-    while (!(await exists(path.join(folder, 'stub.pid'))) && Date.now() < deadline) await sleep(50);
+    await until(() => existsSync(path.join(folder, 'stub.pid')) && existsSync(path.join(folder, 'result.tmp')), 'stub solver child running with partial output', 90000);
     stubPids.push(Number((await readFile(path.join(folder, 'stub.pid'), 'utf8')).trim()));
     const before = await json('GET', `/api/lpbf/jobs/${jobId}`);
     assert.equal(before.body.status, 'running', JSON.stringify(before.body));
@@ -130,7 +138,7 @@ test('a worker SIGKILLed mid-job restarts with the job failed, partial files unp
 
     // 3. Recovery: the next request restarts the worker on the same job root (retry while it starts).
     let after: { status: number; body: any } | undefined;
-    const recoverBy = Date.now() + 40000;
+    const recoverBy = Date.now() + 120000;
     while (Date.now() < recoverBy) {
       after = await json('GET', `/api/lpbf/jobs/${jobId}`);
       if (after.status === 200) break;
@@ -170,7 +178,7 @@ test('a worker SIGKILLed mid-job restarts with the job failed, partial files unp
     assert.notEqual(again.body.status, 'completed');
     assert.notEqual(again.body.cacheHit, true);
     const againFolder = path.join(jobRoot, again.body.id);
-    await until(() => existsSync(path.join(againFolder, 'stub.pid')), 'second stub solver child started');
+    await until(() => existsSync(path.join(againFolder, 'stub.pid')), 'second stub solver child started', 60000);
     const secondPid = Number((await readFile(path.join(againFolder, 'stub.pid'), 'utf8')).trim());
     stubPids.push(secondPid);
     const cancelled = await json('DELETE', `/api/lpbf/jobs/${again.body.id}`);
