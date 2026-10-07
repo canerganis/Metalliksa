@@ -8,7 +8,8 @@ import { FirstRunCard, TourPanel } from '../src/components/GuidedDemo';
 import { MELT_POOL_LITERATURE_CASES } from '../src/data/meltPoolLiteratureCases';
 import { checkedCalibrationScorecard } from '../src/data/lpbfCalibrationScorecard';
 import type { SimulationJob } from '../src/services/lpbfSimulationService';
-import { GUIDED_DEMO_STORAGE_KEY, readGuidedDemoOutcome, writeGuidedDemoOutcome } from '../src/store/useGuidedDemoStore';
+import { useMaterialSpecimenStore } from '../src/store/useMaterialSpecimenStore';
+import { GUIDED_DEMO_STORAGE_KEY, readGuidedDemoOutcome, useGuidedDemoStore, writeGuidedDemoOutcome } from '../src/store/useGuidedDemoStore';
 import { compareToMeasurement, demoCase, demoProcessPatch, runMatchesCase, scorecardStatementFor } from '../src/utils/guidedDemo';
 
 const c = demoCase();
@@ -80,7 +81,7 @@ test('compareToMeasurement is unavailable, with a reason and no numbers, when it
     ['running job', compareToMeasurement(c, fixtureJob({ status: 'running' })), /running/],
     ['inputs mismatch', compareToMeasurement(c, fixtureJob({ settings: { power_W: 286 } })), /different material or process inputs/],
     ['extent not computed', compareToMeasurement(c, fixtureJob({ metrics: { extentStatus: 'width-floor-applied' } })), /extent is not computed \(status: width-floor-applied/],
-    ['extent not reported', compareToMeasurement(c, fixtureJob({ metrics: { extentStatus: undefined } })), /not-reported/],
+    ['extent not reported', compareToMeasurement(c, fixtureJob({ metrics: { extentStatus: undefined } })), /does not report a melt-pool extent status/],
   ];
   for (const [name, result, reason] of cases) {
     assert.equal(result.available, false, name);
@@ -154,5 +155,47 @@ test('the tour panel has its heading, step counter and named buttons, and never 
   for (const match of text.matchAll(/validat\w*/gi)) {
     const before = text.slice(Math.max(0, match.index! - 40), match.index!).toLowerCase();
     assert.match(before, /\b(not|no|never|isn't|without)\b/, `"${match[0]}" must appear only in negation: ...${before}`);
+  }
+});
+
+test('comparison carries the surface configuration and caveats a powder-layer run against the bare-track measurement', () => {
+  const powder = compareToMeasurement(c, fixtureJob({ settings: { surfaceMode: 'powder-layer', layer_um: 40, hatch_um: 110 } }));
+  assert.ok(powder.available);
+  if (powder.available) assert.deepEqual(powder.surface, { mode: 'powder-layer', layer_um: 40, hatch_um: 110, bareTrack: false });
+  const bare = compareToMeasurement(c, fixtureJob({ settings: { surfaceMode: 'bare-plate' } }));
+  assert.ok(bare.available);
+  if (bare.available) assert.equal(bare.surface.bareTrack, true);
+});
+
+test('store: start snapshots and loads the case, restore writes the snapshot back, finish and exit persist', async () => {
+  // COMMITTED_CALIBRATION_SCORECARD is import.meta.glob-backed and null under tsx, so the production scorecard wiring is covered only by the docs JSON test above.
+  const map = new Map<string, string>();
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { getItem: (k: string) => map.get(k) ?? null, setItem: (k: string, v: string) => { map.set(k, v); } } });
+  try {
+    const before = useMaterialSpecimenStore.getState().activeSpecimen;
+    await useGuidedDemoStore.getState().start();
+    const state = useGuidedDemoStore.getState();
+    assert.equal(state.active, true);
+    assert.equal(state.step, 1);
+    assert.equal(state.startError, '');
+    assert.equal(state.previousSpecimen, before);
+    const lpbf = useMaterialSpecimenStore.getState().activeSpecimen.lpbf;
+    assert.equal(lpbf.laserPower_W, 285);
+    assert.equal(lpbf.scanSpeed_mms, 960);
+    assert.equal(lpbf.beamDiameter_um, 67);
+    assert.equal(lpbf.preheatTemp_C, 23.5);
+    useGuidedDemoStore.getState().restorePrevious();
+    assert.equal(useMaterialSpecimenStore.getState().activeSpecimen, before);
+    assert.equal(useGuidedDemoStore.getState().previousSpecimen, null);
+    useGuidedDemoStore.getState().exit();
+    assert.equal(useGuidedDemoStore.getState().active, false);
+    assert.equal(map.get(GUIDED_DEMO_STORAGE_KEY), 'dismissed');
+    await useGuidedDemoStore.getState().start();
+    useGuidedDemoStore.getState().finish();
+    assert.equal(map.get(GUIDED_DEMO_STORAGE_KEY), 'completed');
+    assert.equal(useGuidedDemoStore.getState().active, false);
+  } finally {
+    useGuidedDemoStore.setState({ active: false, previousSpecimen: null, step: 1 });
+    Reflect.deleteProperty(globalThis, 'localStorage');
   }
 });

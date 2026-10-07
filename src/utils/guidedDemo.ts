@@ -66,7 +66,7 @@ export interface ComparisonRow {
   withinOneSd: boolean;
 }
 export type MeasurementComparison =
-  | { available: true; n: number; rows: [ComparisonRow, ComparisonRow]; solverId: string; implementationHash: string | null; caseId: string; doi: string }
+  | { available: true; n: number; rows: [ComparisonRow, ComparisonRow]; solverId: string; implementationHash: string | null; caseId: string; doi: string; surface: { mode: string | null; layer_um: number | null; hatch_um: number | null; bareTrack: boolean } }
   | { available: false; reason: string };
 
 function extentFields(job: SimulationJob): MeltPoolExtentFields | undefined {
@@ -84,8 +84,13 @@ export function compareToMeasurement(c: DemoCase, job: SimulationJob | undefined
   }
   const extent = meltPoolExtentInfo(extentFields(job));
   if (!extent.computed) {
-    return { available: false, reason: `The melt-pool extent is not computed (status: ${extent.status}; ${extent.description}). Width and depth from this run are not an isotherm and are excluded from the comparison.` };
+    const why = extent.status === "not-reported"
+      ? "The solver does not report a melt-pool extent status for this run, so the tour cannot confirm that width and depth are a closed liquidus isotherm and does not compare them."
+      : `The melt-pool extent is not computed (status: ${extent.status}; ${extent.description}). Width and depth from this run are not an isotherm and are excluded from the comparison.`;
+    return { available: false, reason: why };
   }
+  const settingsExtra = result.settings as unknown as { surfaceMode?: string; layer_um?: unknown; hatch_um?: unknown };
+  const finiteOrNull = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
   const { width_um, depth_um } = result.metrics;
   if (!Number.isFinite(width_um) || !Number.isFinite(depth_um)) return { available: false, reason: "The completed job reports no finite width and depth." };
   const row = (quantity: "width" | "depth", predicted: number, measured: number, sd: number): ComparisonRow => {
@@ -95,6 +100,7 @@ export function compareToMeasurement(c: DemoCase, job: SimulationJob | undefined
   return {
     available: true, n: c.measurementCount, caseId: c.id, doi: c.doi,
     rows: [row("width", width_um, c.publishedWidth_um, c.widthStdDev_um), row("depth", depth_um, c.publishedDepth_um, c.depthStdDev_um)],
+    surface: { mode: settingsExtra.surfaceMode ?? null, layer_um: finiteOrNull(settingsExtra.layer_um), hatch_um: finiteOrNull(settingsExtra.hatch_um), bareTrack: settingsExtra.surfaceMode === "bare-plate" },
     solverId: result.solver.id, implementationHash: result.provenance?.implementationHash ?? null,
   };
 }

@@ -50,7 +50,7 @@ function showStep(step: GuidedDemoStep): void {
   let tries = 0;
   const wait = () => {
     if (document.querySelector(WORKSPACE_SELECTOR)) { if (tries > 0) send(); return; }
-    if (++tries <= 50 && useGuidedDemoStore.getState().step === step) setTimeout(wait, 100);
+    if (++tries <= 50 && useGuidedDemoStore.getState().active && useGuidedDemoStore.getState().step === step) setTimeout(wait, 100);
   };
   wait();
 }
@@ -60,6 +60,8 @@ export interface GuidedDemoState {
   step: GuidedDemoStep;
   /** The specimen as it was before the tour loaded the case; null when nothing was changed. */
   previousSpecimen: ActiveSpecimenState | null;
+  /** Why the last start failed; empty otherwise. Rendered with role=alert. */
+  startError: string;
   /** Async: the case module loads on demand so the app shell does not carry the literature data. */
   start: () => Promise<void>;
   goTo: (step: GuidedDemoStep) => void;
@@ -74,15 +76,20 @@ export const useGuidedDemoStore = create<GuidedDemoState>((set, get) => ({
   active: false,
   step: 1,
   previousSpecimen: null,
+  startError: "",
   start: async () => {
+    try {
     const { demoCase, demoProcessPatch } = await import("../utils/guidedDemo");
     const specimens = useMaterialSpecimenStore.getState();
     const c = demoCase(); // throws before anything is changed when the case is missing
     const snapshot = get().previousSpecimen ?? specimens.activeSpecimen;
     specimens.loadPreset("inconel-718");
     useMaterialSpecimenStore.getState().updateLpbfProcess(demoProcessPatch(c));
-    set({ active: true, step: 1, previousSpecimen: snapshot });
+    set({ active: true, step: 1, previousSpecimen: snapshot, startError: "" });
     showStep(1);
+    } catch (reason) {
+      set({ startError: reason instanceof Error ? reason.message : "The tour could not start." });
+    }
   },
   goTo: step => { set({ step }); showStep(step); },
   next: () => { const { step } = get(); if (step < GUIDED_DEMO_STEPS) get().goTo((step + 1) as GuidedDemoStep); },

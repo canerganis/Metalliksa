@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useMaterialSpecimenStore } from "../store/useMaterialSpecimenStore";
-import { useLpbfEngineeringStore } from "../store/useLpbfEngineeringStore";
+import { useEngineeringField, useLpbfEngineeringStore } from "../store/useLpbfEngineeringStore";
 import { GUIDED_DEMO_STEPS, readGuidedDemoOutcome, useGuidedDemoStore, writeGuidedDemoOutcome, type GuidedDemoStep } from "../store/useGuidedDemoStore";
 import { COMMITTED_CALIBRATION_SCORECARD } from "../data/lpbfCalibrationScorecardRecord";
 import type { LpbfCalibrationScorecardDocument } from "../data/lpbfCalibrationScorecard";
@@ -28,18 +28,23 @@ export interface GuidedDemoProps {
 /** First-run card, then the docked tour panel. Mounted lazily by App. */
 export function GuidedDemo({ home, engine, engineChecking, storage, scorecard = COMMITTED_CALIBRATION_SCORECARD }: GuidedDemoProps) {
   const active = useGuidedDemoStore(s => s.active);
-  return active ? <TourPanel engine={engine} engineChecking={engineChecking} scorecard={scorecard} /> : <FirstRunCard home={home} storage={storage} />;
+  const startError = useGuidedDemoStore(s => s.startError);
+  if (active) return <TourPanel engine={engine} engineChecking={engineChecking} scorecard={scorecard} />;
+  return <>
+    <FirstRunCard home={home} storage={storage} />
+    {startError && !home && <p role="alert" className="fixed bottom-4 right-4 z-40 max-w-sm rounded-xl border border-amber-500/50 bg-slate-950 p-3 text-xs text-amber-200 print:hidden">{startError}</p>}
+  </>;
 }
 
 export function FirstRunCard({ home, storage }: { home: boolean; storage?: StorageLike }) {
   const [skipped, setSkipped] = useState(false);
-  const [error, setError] = useState("");
+  const error = useGuidedDemoStore(s => s.startError);
   if (!home || skipped || readGuidedDemoOutcome(storage) !== null) return null;
   const skip = () => { writeGuidedDemoOutcome("dismissed", storage); setSkipped(true); };
-  const start = () => { useGuidedDemoStore.getState().start().catch(reason => setError(reason instanceof Error ? reason.message : "The tour could not start.")); };
+  const start = () => { void useGuidedDemoStore.getState().start(); };
   return <section role="region" aria-labelledby="guided-demo-card-title" className="mk-plate mb-5 px-4 py-3 text-sm text-slate-300 print:hidden">
     <h2 id="guided-demo-card-title" className="text-sm font-medium text-slate-100">New here? Take a 4-step tour</h2>
-    <p className="mt-1 text-xs text-slate-400">Load one published NIST AMB2022-03 Inconel 718 track, run a screening job, and compare it with the measurement. Starting replaces the shared material and process values; you can restore them. Nothing runs without your confirmation.</p>
+    <p className="mt-1 text-xs text-slate-400">Load one published NIST AMB2022-03 Inconel 718 track and run a screening job. The comparison with the measurement is currently unavailable for Screening runs, because the solver does not report a melt-pool extent status. Starting replaces the shared material and process values; you can restore them. Nothing runs without your confirmation.</p>
     {error && <p role="alert" className="mt-2 text-xs text-amber-200">{error}</p>}
     <div className="mt-3 flex flex-wrap gap-2"><button type="button" className={button} onClick={start}>Start tour</button><button type="button" className={button} onClick={skip}>Skip</button></div>
   </section>;
@@ -56,18 +61,23 @@ export function TourPanel({ engine, engineChecking, scorecard }: { engine: Pytho
   const heading = useRef<HTMLHeadingElement>(null);
   const [restored, setRestored] = useState(false);
   const { demo, error } = useCase();
+  const panel = useRef<HTMLElement>(null);
 
   useEffect(() => { heading.current?.focus(); }, [step]);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape" || event.defaultPrevented || visibleModalOpen()) return;
+      const target = event.target instanceof HTMLElement ? event.target : null;
+      const insidePanel = !!target && !!panel.current?.contains(target);
+      const editable = !!target && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
+      if (!insidePanel && editable) return;
       useGuidedDemoStore.getState().exit();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
-  return <section role="region" aria-labelledby="guided-demo-title"
+  return <section ref={panel} role="region" aria-labelledby="guided-demo-title"
     className="fixed inset-x-0 bottom-0 z-40 flex h-[50vh] flex-col overflow-hidden rounded-t-xl border border-slate-600 bg-slate-950 p-4 text-sm text-slate-300 shadow-xl sm:inset-x-auto sm:bottom-4 sm:right-4 sm:h-auto sm:max-h-[80vh] sm:w-[26rem] sm:rounded-xl print:hidden">
     <p className="text-[11px] uppercase tracking-widest text-sky-300">{`Guided tour · Step ${step} of ${GUIDED_DEMO_STEPS}`}</p>
     <h2 id="guided-demo-title" ref={heading} tabIndex={-1} className="mt-1 text-base font-medium text-slate-100">{STEP_TITLES[step]}</h2>
@@ -111,12 +121,12 @@ function jobLine(job: SimulationJob | undefined, error: string): string {
 
 function RunStep({ engine, engineChecking }: { engine: PythonEngineStatus | null; engineChecking: boolean }) {
   const job = useLpbfEngineeringStore(s => s.job);
-  const mode = useLpbfEngineeringStore(s => s.mode);
+  const [mode, setMode] = useEngineeringField("mode");
   const error = useLpbfEngineeringStore(s => s.error);
   const engineText = engineChecking ? "Checking the Python engine…" : engine?.online ? "Python engine: available." : "Python engine: unavailable. A run cannot start until it is reachable; no result is faked.";
   return <>
     <p>Choose <strong className="text-slate-100">Quick Screening</strong> on the Thermal Simulation stage and press Run yourself. The tour never submits a run.</p>
-    <p>Selected mode: <span className="font-mono text-slate-100">{mode}</span>. <button type="button" className="underline" disabled={mode === "screening"} onClick={() => useLpbfEngineeringStore.setState({ mode: "screening" })}>Preselect Screening</button></p>
+    <p>Selected mode: <span className="font-mono text-slate-100">{mode}</span>. <button type="button" className="underline" disabled={mode === "screening"} onClick={() => setMode("screening")}>Preselect Screening</button></p>
     <p className="text-amber-200">A new run replaces the current result{job ? ` (currently ${job.status})` : ""}.</p>
     <p role="status" aria-live="polite">{jobLine(job, error)}</p>
     <p role="status" className={engine?.online ? "text-slate-300" : "text-amber-200"}>{engineText}</p>
@@ -134,9 +144,15 @@ function CompareStep({ demo }: { demo: DemoCase }) {
         <thead><tr><th scope="col">Quantity</th><th scope="col">Predicted (µm)</th><th scope="col">Measured ± SD (µm)</th><th scope="col">Diff (µm)</th><th scope="col">Diff (%)</th><th scope="col">Within 1 SD</th></tr></thead>
         <tbody>{comparison.rows.map(row => <tr key={row.quantity}><th scope="row">{row.quantity}</th><td>{fmt1(row.predicted_um)}</td><td>{fmt1(row.measured_um)} ± {fmt1(row.sd_um)}</td><td>{fmt1(row.diff_um)}</td><td>{fmt1(row.diff_pct)}</td><td>{row.withinOneSd ? "yes" : "no"}</td></tr>)}</tbody>
       </table>
+      {comparison.surface.bareTrack
+        ? <p>The run used a bare plate, like the measurement.</p>
+        : <p className="text-amber-200">Caveat: the run used a powder layer{comparison.surface.layer_um !== null ? ` (layer ${fmt1(comparison.surface.layer_um)} µm` : ""}{comparison.surface.hatch_um !== null ? `, hatch ${fmt1(comparison.surface.hatch_um)} µm)` : comparison.surface.layer_um !== null ? ")" : ""}, while the NIST measurement is a single track on a bare plate. The two are not the same configuration.</p>}
       <p>Measured: mean of n = {comparison.n} cross-sections; SD is the published spread, not a model uncertainty. Diff = predicted - measured.</p>
       <p>Solver <span className="font-mono">{comparison.solverId}</span> · implementation hash <span className="font-mono break-all">{comparison.implementationHash ?? "not reported"}</span></p>
-    </> : <p role="status" className="text-amber-200">Comparison unavailable. {comparison.reason}</p>}
+    </> : <>
+      <p role="status" className="text-amber-200">Comparison unavailable. {comparison.reason}</p>
+      <p className="text-slate-400">Screening runs currently do not report a melt-pool extent status, so this comparison is expected to stay unavailable until the solver reports one. The tour shows no numbers in that case.</p>
+    </>}
     <Cite demo={demo} />
   </>;
 }
@@ -144,6 +160,6 @@ function CompareStep({ demo }: { demo: DemoCase }) {
 function ScorecardStep({ scorecard }: { scorecard: LpbfCalibrationScorecardDocument | null }) {
   return <>
     <p role="status">{scorecardStatementFor("Inconel 718", scorecard)}</p>
-    <p className="text-slate-400">The scorecard is open behind this panel. Finish closes the tour; you can restore your previous material at any time.</p>
+    <p className="text-slate-400">The scorecard is open behind this panel. Restore my previous material is available here until you finish or exit; a page reload discards the saved snapshot.</p>
   </>;
 }
