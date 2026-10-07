@@ -8,7 +8,7 @@ authors:
   - alias: canerganis
 repository-code: "https://github.com/canerganis/metalliksa"
 license: MIT
-version: 1.0.0
+version: "0.1.0"
 date-released: 2026-10-08
 abstract: >-
   Open research workstation for LPBF melt-pool and process-window screening.
