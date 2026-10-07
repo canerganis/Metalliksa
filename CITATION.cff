@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: Metalliksa
+type: software
+# Status: under active development (pre-1.0); the version below follows package.json.
+authors:
+  # TODO(maintainer): replace this GitHub alias with the real given-names / family-names.
+  - alias: canerganis
+repository-code: "https://github.com/canerganis/metalliksa"
+license: MIT
+version: 1.0.0
+date-released: 2026-10-08
+abstract: >-
+  Open research workstation for LPBF melt-pool and process-window screening.
+  Results carry their evidence level and limits; no experimental validation is claimed.
+keywords:
+  - laser powder bed fusion
+  - additive manufacturing
+  - melt pool
+  - CALPHAD

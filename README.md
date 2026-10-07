@@ -6,6 +6,10 @@
 
 **An open research workstation for LPBF melt-pool and process-window screening, built so every result carries its evidence and limits.**
 
+*Why it is different: every number shows its source, its evidence level and its limits.*
+
+[![CI](https://github.com/canerganis/metalliksa/actions/workflows/ci.yml/badge.svg)](https://github.com/canerganis/metalliksa/actions/workflows/ci.yml)
+[![Status: active development](https://img.shields.io/badge/status-active%20development-b45309)](STATUS.md)
 [![React](https://img.shields.io/badge/React-18-1f2937?logo=react&logoColor=white)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-typed-1f2937?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Python solvers](https://img.shields.io/badge/Python-LPBF%20solvers-1f2937?logo=python&logoColor=white)](https://www.python.org)
@@ -19,6 +23,42 @@
 </p>
 
 <p align="center"><sub>The Overview artwork is an original illustration generated in code, not a simulation result.</sub></p>
+
+> **Project status: under active development (pre-1.0).** Interfaces, data formats and results can change. See [STATUS.md](STATUS.md) for the current state and [docs/GOOD_FIRST_ISSUES.md](docs/GOOD_FIRST_ISSUES.md) to help.
+
+## Screenshots
+
+Real captures of the running app (local build, Inconel 718 preset). All results are screening output, not validation.
+
+<table>
+  <tr>
+    <td width="50%"><a href="docs/assets/screenshots/lpbf-optimizer.png"><img src="docs/assets/screenshots/lpbf-optimizer.png" alt="Process-window map: a power by speed grid of screening verdicts with the screening-only warning" /></a><br /><sub><b>Process-window map.</b> Power x speed screening verdicts; the banner states it is not a validation or a print recommendation.</sub></td>
+    <td width="50%"><a href="docs/assets/screenshots/lpbf-calibration-scorecard.png"><img src="docs/assets/screenshots/lpbf-calibration-scorecard.png" alt="Calibration scorecard: 0 of 30 cells passed the gate" /></a><br /><sub><b>Calibration scorecard.</b> 0 of 30 cells pass the gate, so calibrated mode is not offered.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><a href="docs/assets/screenshots/keyhole-benchmark.png"><img src="docs/assets/screenshots/keyhole-benchmark.png" alt="Keyhole regime benchmark against published X-ray data" /></a><br /><sub><b>Keyhole benchmark.</b> Screening compared with published X-ray data, with sources and DOIs listed.</sub></td>
+    <td width="50%"><a href="docs/assets/screenshots/phase-diagram.png"><img src="docs/assets/screenshots/phase-diagram.png" alt="Phase Diagrams and CALPHAD view" /></a><br /><sub><b>CALPHAD studio.</b> Open MatCalc databases through pycalphad, with a stated scope and limitation panel.</sub></td>
+  </tr>
+</table>
+
+The guided NIST IN718 tour (285 W, 960 mm/s) is [also captured](docs/assets/screenshots/guided-demo.png).
+
+## Quick start in 3 commands
+
+```powershell
+npm ci
+pip install -r python/requirements-lpbf.in
+npm run dev
+```
+
+Needs Node >= 22.13 and Python 3.11 or 3.12. Details are in [Quick start](#quick-start) below.
+
+## Honest results
+
+- **Keyhole benchmark:** screening compared with published X-ray measurements shows substantial regime and depth mismatches. It is a comparison, not a validation. [Benchmark and methods](docs/LPBF_KEYHOLE_BENCHMARK_2026-10-07.md).
+- **Calibration v2 scorecard:** pre-registered; no cell is enabled. [Scorecard](docs/LPBF_CALIBRATION_SCORECARD_v2_2026-10-07.md) and [pre-registration](docs/LPBF_CALIBRATION_V2_PREREGISTRATION_2026-10-07.md).
+- **Depth does not transfer between labs:** held-out depth errors are large and differ by source, so the app shows typical published-data error instead of a calibrated band. See the [held-out evaluation](docs/LPBF_CALIBRATION_HELDOUT_2026-10-06.md) and [PROOF.md](PROOF.md).
+- `experimentalValidation=false`. More in [Evidence and limits](#evidence-and-limits).
 
 ---
 
