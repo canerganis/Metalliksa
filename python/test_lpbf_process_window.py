@@ -286,6 +286,31 @@ class ProcessWindowTests(unittest.TestCase):
         self.assertTrue(out["success"])
         self.assertEqual(len(out["cells"]), 4)
 
+    def test_cache_key_depends_on_own_source_hash(self):
+        norm = {"alloyId": "in718"}
+        base = pwc.make_key(norm, "rev", "hash")
+        with mock.patch.object(pwc, "_OWN_SOURCES_HASH", "edited-source"):
+            self.assertNotEqual(base, pwc.make_key(norm, "rev", "hash"))
+
+    def test_unknown_verdict_becomes_error_cell(self):
+        with mock.patch("lpbf_build_job_solver.compose_verdict", return_value={"verdict": "brand-new"}):
+            out = pw.run_process_window(request(powers=[200, 250], speeds=[800, 900]))
+        self.assertTrue(out["success"])
+        self.assertTrue(all(c["verdict"] == "error" for c in out["cells"]))
+        self.assertEqual(out["counts"]["error"], 4)
+
+    def test_main_unexpected_exception_prints_one_engine_json(self):
+        import io
+        from contextlib import redirect_stdout
+        buf = io.StringIO()
+        with mock.patch.object(pw, "run_process_window", side_effect=RuntimeError("boom")),                 mock.patch("sys.stdin", io.StringIO(json.dumps(request()))), redirect_stdout(buf):
+            pw.main()
+        lines = [ln for ln in buf.getvalue().splitlines() if ln.strip()]
+        self.assertEqual(len(lines), 1)
+        out = json.loads(lines[0])
+        self.assertFalse(out["success"])
+        self.assertEqual(out["errorKind"], "engine")
+
     def test_main_refuses_empty_and_invalid_json_with_one_json(self):
         for stdin in ("", "{not json"):
             proc = subprocess.run([sys.executable, str(HERE / "lpbf_process_window.py")], input=stdin,

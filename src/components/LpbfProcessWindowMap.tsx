@@ -346,14 +346,14 @@ export const ProcessWindowTable: React.FC<{ result: LpbfProcessWindowResponse }>
   </details>
 );
 
-const DatasetNotes: React.FC<{ dataset: LpbfProcessWindowDataset }> = ({ dataset }) => (
+const DatasetNotes: React.FC<{ dataset: LpbfProcessWindowDataset; tolerancePct: number }> = ({ dataset, tolerancePct }) => (
   <li data-testid={`pw-dataset-${dataset.id}`} className="space-y-0.5">
     <p className="font-semibold text-slate-200">{dataset.label}</p>
     {dataset.status === "unavailable" ? (
       <p role="alert" className="text-amber-300" data-testid="pw-dataset-unavailable">Unavailable: {dataset.reason}. The map above is unaffected.</p>
     ) : (
       <p>
-        {dataset.nRows} rows: {dataset.nShown} shown, {dataset.hiddenByBeam} hidden by the beam-diameter filter (outside {"±"}{PROCESS_WINDOW_BEAM_TOLERANCE_PCT} % of the request),
+        {dataset.nRows} rows: {dataset.nShown} shown, {dataset.hiddenByBeam} hidden by the beam-diameter filter (outside {"±"}{tolerancePct} % of the request),
         {" "}{dataset.hiddenOutsideRange} outside the mapped P/v range{dataset.hiddenNoBeam ? `, ${dataset.hiddenNoBeam} without a beam diameter` : ""}.
         {dataset.doi ? <> DOI <span className="font-mono">{dataset.doi}</span>.</> : null}
       </p>
@@ -375,7 +375,7 @@ export const ProcessWindowMeasurements: React.FC<{ result: LpbfProcessWindowResp
         ({result.overlay.beamWindow_um[0]}-{result.overlay.beamWindow_um[1]} um). The model verdict is computed at each point{"'"}s P/v with this request{"'"}s beam, layer, hatch and preheat, not at the experiment{"'"}s own layer and preheat.
       </p>
       {result.overlay.note && <p className="text-xs text-amber-300" data-testid="pw-overlay-note">{result.overlay.note}</p>}
-      <ul className="space-y-2 text-xs text-slate-400">{result.overlay.datasets.map(d => <DatasetNotes key={d.id} dataset={d} />)}</ul>
+      <ul className="space-y-2 text-xs text-slate-400">{result.overlay.datasets.map(d => <DatasetNotes key={d.id} dataset={d} tolerancePct={result.overlay.beamTolerance_pct} />)}</ul>
       {rows.length > 0 ? (
         <div className="max-h-80 overflow-auto" tabIndex={0} role="region" aria-label="Measurement points (scrollable)">
           <table className="w-full whitespace-nowrap text-xs text-slate-300 [&_td]:pr-3 [&_th]:pr-3">
@@ -559,6 +559,10 @@ export const LpbfProcessWindowMap: React.FC = () => {
 
   const powerAxis = parseAxis(pMin, pMax, pN, "Power", "W", PROCESS_WINDOW_MAX_POWER_W);
   const speedAxis = parseAxis(vMin, vMax, vN, "Speed", "mm/s", PROCESS_WINDOW_MAX_SPEED_MM_S);
+  const defP = box ? defaultAxisRange({ min: box.powerMin_W, max: box.powerMax_W }) : null;
+  const defV = box ? defaultAxisRange({ min: box.speedMin_mm_s, max: box.speedMax_mm_s }) : null;
+  const powersAreDefault = !!defP && powerAxis.ok && Number(pMin) === defP.min && Number(pMax) === defP.max && Number(pN) === PROCESS_WINDOW_DEFAULT_AXIS;
+  const speedsAreDefault = !!defV && speedAxis.ok && Number(vMin) === defV.min && Number(vMax) === defV.max && Number(vN) === PROCESS_WINDOW_DEFAULT_AXIS;
   const processProblems: string[] = [];
   const positive = (value: number, name: string) => { if (!(Number.isFinite(value) && value > 0)) processProblems.push(`${name} must be a positive number (Material & Parameters).`); };
   positive(lpbf.beamDiameter_um, "Beam diameter");
@@ -596,8 +600,11 @@ export const LpbfProcessWindowMap: React.FC = () => {
     try {
       const raw = await pythonComputationService.runLpbfProcessWindow({
         alloyId: currentInputs.alloyId, beamDiameter_um: currentInputs.beamDiameter_um, layer_um: currentInputs.layer_um,
-        hatch_um: currentInputs.hatch_um, preheatTemp_C: currentInputs.preheatTemp_C, powers: currentInputs.powers,
-        speeds: currentInputs.speeds, overlayBeamTolerance_pct: currentInputs.overlayBeamTolerance_pct,
+        hatch_um: currentInputs.hatch_um, preheatTemp_C: currentInputs.preheatTemp_C,
+        // Axes still holding the alloy default are omitted so the engine reports its own default rule.
+        ...(powersAreDefault ? {} : { powers: currentInputs.powers }),
+        ...(speedsAreDefault ? {} : { speeds: currentInputs.speeds }),
+        overlayBeamTolerance_pct: currentInputs.overlayBeamTolerance_pct,
       }, controller.signal);
       let result: LpbfProcessWindowResponse;
       try {

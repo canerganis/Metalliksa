@@ -2088,7 +2088,6 @@ export interface PythonStochasticUQResult {
     criticalFlaw_P10_mm: number | null;
     criticalFlaw_status: string;
   };
-
 }
 
 export interface PythonICMEMultiScaleResult {
@@ -2225,7 +2224,6 @@ export interface PythonICMEMultiScaleResult {
     lsDyna: string;
     ansys: string;
   };
-
 }
 
 export const pythonComputationService = new PythonComputationService();

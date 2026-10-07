@@ -184,6 +184,8 @@ def _evaluate(resolved: str, power: float, speed: float, norm: Dict[str, Any]) -
         hatch_spacing_um=norm["hatch_um"],
         laser_wavelength="IR_1064nm")
     vd = build_job.compose_verdict(th, resolved)
+    if vd.get("verdict") not in VERDICTS:
+        raise ValueError(f"unknown verdict {vd.get('verdict')!r} from compose_verdict")
     return th, vd
 
 
@@ -408,7 +410,10 @@ def main() -> None:
         return
     # Solver imports (e.g. NVIDIA Warp) print banners to stdout; keep stdout for the one JSON document only.
     with contextlib.redirect_stdout(sys.stderr):
-        result = run_process_window(data)
+        try:
+            result = run_process_window(data)
+        except Exception as e:  # unexpected engine failure still yields exactly one JSON document
+            result = _refuse("engine", f"{type(e).__name__}: {e}")
     print(json.dumps(result, allow_nan=False))
 
 

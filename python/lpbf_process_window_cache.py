@@ -16,6 +16,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import os
 import threading
 from collections import OrderedDict
 from typing import Any, Dict, Optional
@@ -40,9 +41,32 @@ def implementation_hash() -> str:
         return _IMPL_HASH
 
 
+def _source_hash(filename: str) -> str:
+    try:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), filename), "rb") as fh:
+            return hashlib.sha256(fh.read()).hexdigest()
+    except OSError:
+        return "unavailable"
+
+
+# Hashes of the files whose edits change a cell or the response schema but are not part of the solver
+# implementation fingerprint. Computed once per worker (the dispatched script itself is re-exec'd each call).
+_OWN_SOURCES_HASH: Optional[str] = None
+
+
+def own_sources_hash() -> str:
+    global _OWN_SOURCES_HASH
+    if _OWN_SOURCES_HASH is None:
+        _OWN_SOURCES_HASH = hashlib.sha256(
+            "|".join(_source_hash(f) for f in ("lpbf_process_window.py", "lpbf_build_job_solver.py", "lpbf_process_window_cache.py")).encode()
+        ).hexdigest()
+    return _OWN_SOURCES_HASH
+
+
 def make_key(normalized_request: Dict[str, Any], solver_revision: str, impl_hash: str) -> str:
     body = json.dumps(
-        {"request": normalized_request, "solverRevision": solver_revision, "implementationHash": impl_hash},
+        {"request": normalized_request, "solverRevision": solver_revision, "implementationHash": impl_hash,
+         "processWindowSources": own_sources_hash()},
         sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False)
     return hashlib.sha256(body.encode("utf-8")).hexdigest()
 
