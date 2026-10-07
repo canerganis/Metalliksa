@@ -111,7 +111,7 @@ function P2Table({ rows }: { rows: readonly ScorecardHeadlineRow[] }) {
           {lines.map(({ r, p }) => (
             <tr key={`${r.kernel}/${r.material}/${r.quantity}/${p.heldOut}`} className="border-b border-slate-100 align-top">
               <td className="p-2">{KERNEL_LABELS[r.kernel] ?? r.kernel} · {r.material} · {r.quantity}</td>
-              <td className="p-2">{p.heldOut}</td>
+              <td className="p-2">{p.heldOut}{p.role === "test-only" ? <span data-role="test-only" className="ml-1 text-slate-600">(test-only{p.reading && p.reading !== "stated" ? `, spot ${p.reading} um` : ""})</span> : null}</td>
               <td className="p-2">{p.rung}</td>
               <td className="p-2">{p.nRows} / {p.nSets}</td>
               <td className="p-2">{p.unresolvedDefault} / {p.unresolvedServed}</td>
@@ -277,6 +277,40 @@ function ParamsTable({ rows }: { rows: readonly ScorecardHeadlineRow[] }) {
 }
 
 // The app routes on the URL hash (an unknown hash opens LPBF), so the jump scrolls and focuses instead of navigating.
+function VersionCard({ doc }: { doc: LpbfCalibrationScorecardDocument }) {
+  if (!doc.calibrationVersion) return null;
+  const rows = doc.v1Comparison ?? [];
+  return (
+    <Card>
+      <CardHeader><CardTitle>Calibration {doc.calibrationVersion}: what changed against v1</CardTitle></CardHeader>
+      <CardContent>
+        <p data-testid="version-note" className="mb-2 text-xs text-slate-700">
+          Pre-registered in <code>{doc.preRegistration?.doc}</code> before the run. Supersedes <code>{doc.supersedes?.record ?? "v1"}</code>, which stays committed and unchanged. {doc.supersedes?.note}
+          {doc.reproducesV1TrainableOnly === true ? " Re-running the v1 protocol inside v2 reproduces every v1 status." : ""}
+        </p>
+        <div className="overflow-x-auto">
+          <table data-testid="version-table" className="w-full text-left text-xs">
+            <caption className="mb-2 text-left text-slate-600">Gate status per cell: v1 record, the v1 protocol re-run inside v2, and v2 with the test-only held-out sources.</caption>
+            <thead><tr className="border-b border-slate-200 text-slate-600">
+              <th scope="col" className="p-2">Cell</th><th scope="col" className="p-2">v1</th><th scope="col" className="p-2">v2 trainable-only</th><th scope="col" className="p-2">v2</th>
+            </tr></thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={`${r.kernel}/${r.material}/${r.quantity}`} className="border-b border-slate-100">
+                  <td className="p-2">{KERNEL_LABELS[r.kernel] ?? r.kernel} · {r.material} · {r.quantity}</td>
+                  <td className="p-2">{r.v1 ? <StatusChip status={r.v1} /> : "n/a"}</td>
+                  <td className="p-2"><StatusChip status={r.v2TrainableOnly} /></td>
+                  <td className="p-2"><StatusChip status={r.v2} />{r.changed ? " changed" : ""}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function jumpToDetails() {
   const target = document.getElementById("detailed-tables");
   if (!target) return;
@@ -329,10 +363,12 @@ export function LpbfCalibrationScorecardLab({ document: doc = COMMITTED_CALIBRAT
       <header className="p-4">
         <h1 className="text-lg font-semibold text-slate-100">Calibration Scorecard (LPBF melt pool)</h1>
         <p className="mt-1 text-sm text-slate-300"><span data-testid="evidence-badge" className="mr-2 inline-block rounded border border-sky-300 bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-900">Screening only</span>{doc.evidence.statement}</p>
-        <p className="mt-1 text-xs text-slate-400">Label promotion proposed: <strong>{doc.evidence.labelPromotionProposed}</strong>. Generated {doc.generatedAt}; implementation fingerprint <code>{doc.implementationHash}</code>; config sha256 <code>{doc.configSha256}</code>.{doc.quick ? " SMOKE RUN: not a record." : ""}</p>
+        <p className="mt-1 text-xs text-slate-400">Label promotion proposed: <strong>{doc.evidence.labelPromotionProposed}</strong>. Generated {doc.generatedAt}; implementation fingerprint <code>{doc.implementationHash}</code>; config sha256 <code>{doc.configSha256}</code>.{doc.calibrationVersion ? ` Calibration ${doc.calibrationVersion} (supersedes ${doc.supersedes?.record ?? "v1"}).` : ""}{doc.quick ? " SMOKE RUN: not a record." : ""}</p>
       </header>
 
       <PlainLanguageCard doc={doc} />
+
+      <VersionCard doc={doc} />
 
       <N01Card n01={doc.n01} note={doc.catalogSentinels.note} />
 

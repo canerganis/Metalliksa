@@ -38,6 +38,10 @@ export interface ScorecardP2Row {
   readonly intervalNotInformative90?: boolean | null;
   readonly mapePowerlaw?: number | null;
   readonly verdictVsPowerlaw?: string | null;
+  /** v2 records: "trainable fold" or "test-only" (scored with the alloy's final served fit, never trained). */
+  readonly role?: string | null;
+  /** v2 records: the nuisance reading of a test-only source (e.g. assumed spot size), "stated" when none. */
+  readonly reading?: string | null;
 }
 
 export interface ScorecardP1Row {
@@ -88,6 +92,20 @@ export interface ScorecardHeadlineRow {
   readonly p1: readonly ScorecardP1Row[];
   readonly params: ScorecardParams | null;
   readonly beamStatuses?: Readonly<Record<string, string>> | null;
+  /** v2 records only. */
+  readonly v1Status?: GateStatus | null;
+  readonly statusTrainableOnly?: GateStatus | null;
+  readonly readingStatuses?: Readonly<Record<string, string>> | null;
+}
+
+export interface ScorecardVersionComparisonRow {
+  readonly kernel: string;
+  readonly material: string;
+  readonly quantity: string;
+  readonly v1: GateStatus | null;
+  readonly v2TrainableOnly: GateStatus;
+  readonly v2: GateStatus;
+  readonly changed: boolean;
 }
 
 export interface ScorecardConfusion {
@@ -182,6 +200,12 @@ export interface LpbfCalibrationScorecardDocument {
     readonly notGeometrySources: readonly { readonly source: string; readonly reason: string }[];
   };
   readonly betweenSource?: Readonly<Record<string, unknown>>;
+  /** Present on calibration v2 records (a new pre-registered version that supersedes v1; v1 stays committed). */
+  readonly calibrationVersion?: string;
+  readonly preRegistration?: { readonly doc: string; readonly config: string; readonly configCommit?: string | null; readonly statement: string };
+  readonly supersedes?: { readonly record?: string | null; readonly configSha256?: string | null; readonly calibrationId?: string | null; readonly note?: string };
+  readonly v1Comparison?: readonly ScorecardVersionComparisonRow[];
+  readonly reproducesV1TrainableOnly?: boolean | null;
   readonly notes: readonly string[];
   readonly provenance: {
     readonly codeRevision: Readonly<Record<string, unknown>>;
@@ -262,6 +286,21 @@ export function checkedCalibrationScorecard(raw: unknown): LpbfCalibrationScorec
   if (!isRecord(raw.unresolved) || !Array.isArray(raw.unresolved.perKernelSource)) fail("unresolved block is malformed");
   if (!isRecord(raw.regimeConfusion) || !isRecord(raw.regimeConfusion.byAlloy)) fail("regimeConfusion is malformed");
   if (!isRecord(raw.provenance)) fail("provenance is not an object");
+  if (raw.calibrationVersion !== undefined) {
+    requireString(raw.calibrationVersion, "calibrationVersion");
+    if (!isRecord(raw.preRegistration)) fail("a versioned record must carry its preRegistration block");
+    requireString(raw.preRegistration.doc, "preRegistration.doc");
+    if (!isRecord(raw.supersedes)) fail("a versioned record must say which record it supersedes");
+  }
+  if (raw.v1Comparison !== undefined) {
+    for (const [i, row] of requireArray(raw.v1Comparison, "v1Comparison").entries()) {
+      if (!isRecord(row)) fail(`v1Comparison[${i}] is not an object`);
+      for (const f of ["v2TrainableOnly", "v2"]) {
+        if (!GATE_STATUSES.includes(row[f] as GateStatus)) fail(`v1Comparison[${i}].${f}`);
+      }
+      if (row.v1 !== null && !GATE_STATUSES.includes(row.v1 as GateStatus)) fail(`v1Comparison[${i}].v1`);
+    }
+  }
   return raw as unknown as LpbfCalibrationScorecardDocument;
 }
 
