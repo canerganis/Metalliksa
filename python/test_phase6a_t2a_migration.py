@@ -62,8 +62,14 @@ class GoldenRegressionTest(unittest.TestCase):
         self.assertEqual(golden.canonical(doc["input"]), golden.canonical(cases.CASES[solver][case]))
         # Stored input text must equal the payload text (order-sensitive solvers).
         self.assertEqual(json.dumps(doc["input"]), json.dumps(cases.CASES[solver][case]))
-        fresh = golden.run_solver(solver, doc["input"])
         expected_code = cases.EXPECTED_BEHAVIOUR_CHANGES.get((solver, case))
+        if (cases.EXPECTED_UNAVAILABLE_CHANGES.get((solver, case)) is not None
+                and expected_code is None and calphad_solver.PYCALPHAD_AVAILABLE):
+            # Decide before solving: with pycalphad this case is a real (minutes-long) equilibrium that
+            # this golden never covers; the golden freezes the no-pycalphad 'unavailable' envelope.
+            self.skipTest("pycalphad is importable: this interpreter takes the real path; the golden "
+                          "freezes the no-pycalphad 'unavailable' envelope of the locked interpreter")
+        fresh = golden.run_solver(solver, doc["input"])
         if expected_code is not None:
             self.assertEqual(fresh["exitCode"], 2, fresh["stderr"])
             out = fresh["stdout"]
@@ -84,9 +90,6 @@ class GoldenRegressionTest(unittest.TestCase):
             self.assertIs(doc["stdout"]["success"], True)
             self.assertEqual(doc["stdout"]["engine"], "subregular-adaptive-minimizer")
             self.assertIs(doc["stdout"]["isEmpirical"], False)
-            if calphad_solver.PYCALPHAD_AVAILABLE:
-                self.skipTest("pycalphad is importable: this interpreter takes the real path; the golden "
-                              "freezes the no-pycalphad 'unavailable' envelope of the locked interpreter")
             self.assertEqual(fresh["exitCode"], 0, fresh["stderr"])
             out = fresh["stdout"]
             for key, value in expected_unavailable.items():
@@ -586,7 +589,11 @@ class EnvelopeAndProvenanceTest(unittest.TestCase):
         self.assertIn("provenance", out)
 
     def test_provenance(self):
-        fresh = golden.run_solver("calphad_solver", cases.CASES["calphad_solver"]["in718_wt_pct"])
+        # A one-point Fe-Cr request: no database assesses an Fe base, so the solver answers 'unavailable'
+        # without an equilibrium solve (the in718 case is a minutes-long real solve with pycalphad) and the
+        # provenance block is attached either way, with or without pycalphad.
+        fresh = golden.run_solver("calphad_solver", {"elements": {"Fe": 50, "Cr": 50}, "tMin": 1000,
+                                                     "tMax": 1000, "tStep": 100})
         prov = fresh["provenance"]["provenance"]
         self.assertEqual(prov["gasConstantR_J_molK"], pc.GAS_CONSTANT_R.value)
         self.assertEqual(prov["constantsVersion"], pc.CONSTANTS_VERSION)

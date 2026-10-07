@@ -538,16 +538,34 @@ class TestAffinityLane(unittest.TestCase):
         self.assertEqual(self.pools[0].max_in_flight, 1)
         self.assertEqual(self.lane.snapshot()["completed"], 5)
 
+    def _wait_until(self, predicate, what, limit_s=30.0):
+        """Poll a condition instead of sleeping a guessed time (thread start-up is slow on a loaded host)."""
+        deadline = time.monotonic() + limit_s
+        while not predicate():
+            self.assertLess(time.monotonic(), deadline, "timed out waiting for " + what)
+            time.sleep(0.005)
+
     def test_a_newer_request_with_the_same_key_supersedes_the_queued_one(self):
-        first = self.run_async((_sleep_then, 0.4, "running"), 10.0, key="studio-1")
-        time.sleep(0.1)  # first is running
-        stale = self.run_async((_sleep_then, 0.0, "stale"), 10.0, key="studio-1")
-        time.sleep(0.05)
-        other = self.run_async((_sleep_then, 0.0, "other-client"), 10.0, key="studio-2")
-        time.sleep(0.05)
-        latest = self.run_async((_sleep_then, 0.0, "latest"), 10.0, key="studio-1")
+        gate = threading.Event()
+        started = threading.Event()
+
+        def hold():
+            started.set()
+            gate.wait(30)
+            return "running"
+        try:
+            first = self.run_async((hold,), 60.0, key="studio-1")
+            self.assertTrue(started.wait(30), "the first job never started")  # first is running in the pool
+            stale = self.run_async((_sleep_then, 0.0, "stale"), 60.0, key="studio-1")
+            self._wait_until(lambda: self.lane.snapshot()["queued"] == 1, "stale to queue")
+            other = self.run_async((_sleep_then, 0.0, "other-client"), 60.0, key="studio-2")
+            self._wait_until(lambda: self.lane.snapshot()["queued"] == 2, "other-client to queue")
+            latest = self.run_async((_sleep_then, 0.0, "latest"), 60.0, key="studio-1")
+            self._wait_until(lambda: self.lane.snapshot()["superseded"] == 1, "stale to be superseded")
+        finally:
+            gate.set()
         for t, _ in (first, stale, other, latest):
-            t.join(10)
+            t.join(30)
         self.assertEqual(first[1]["out"]["result"], "running")  # a running job is never superseded
         self.assertEqual(stale[1]["out"]["outcome"], "superseded")
         self.assertEqual(other[1]["out"]["result"], "other-client")  # another client's request is kept
