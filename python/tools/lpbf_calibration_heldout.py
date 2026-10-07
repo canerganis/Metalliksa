@@ -88,11 +88,6 @@ SPLIT_RULE = ("parameter set = (material, power_W, speed_mm_s, beamDiameter_um);
               "random.Random(seed) and dealt round-robin into k folds.")
 
 
-def pin_flat_plate() -> None:
-    """Same pin as the comparison harness: the solver's optional ray tracer import fails -> flat-plate path."""
-    sys.modules[RAYTRACER_MODULE] = None
-
-
 def absorptivity_grid(defaults: Sequence[float] = ()) -> List[float]:
     n = int(round((GRID_STOP - GRID_START) / GRID_STEP)) + 1
     vals = {round(GRID_START + i * GRID_STEP, 4) for i in range(n)}
@@ -107,36 +102,10 @@ def a_key(a: float) -> str:
 # ---------------------------------------------------------------------------------------------
 # rows and splits (pure)
 # ---------------------------------------------------------------------------------------------
-def set_key(row: Dict[str, Any]) -> tuple:
-    return (row["material"], float(row["power_W"]), float(row["speed_mm_s"]), float(row["beamDiameter_um"]))
-
-
-def regime_class_from_enthalpy(h: float) -> str:
-    if h < ENTHALPY_TRANSITION:
-        return "conduction"
-    if h < ENTHALPY_KEYHOLE:
-        return "transition"
-    return "keyhole"
-
-
-def grouped_kfold(rows: Sequence[Dict[str, Any]], k: int, seed: int) -> List[Tuple[list, list]]:
-    """[(train_rows, test_rows)] with whole parameter sets on one side; deterministic for a seed."""
-    keys = sorted({set_key(r) for r in rows})
-    rng = random.Random(seed)
-    rng.shuffle(keys)
-    fold_of = {key: i % k for i, key in enumerate(keys)}
-    folds = []
-    for f in range(k):
-        test = [r for r in rows if fold_of[set_key(r)] == f]
-        train = [r for r in rows if fold_of[set_key(r)] != f]
-        folds.append((train, test))
-    return folds
-
-
-def assert_no_leak(train: Sequence[Dict[str, Any]], test: Sequence[Dict[str, Any]]) -> None:
-    overlap = {set_key(r) for r in train} & {set_key(r) for r in test}
-    if overlap:
-        raise AssertionError(f"parameter sets straddle train and test: {sorted(overlap)[:3]}")
+# The leakage rule (set_key / grouped_kfold / assert_no_leak), pin_flat_plate and the regime classes live in ONE place,
+# python/lpbf_calibration_stats.py, so the held-out tool and the scorecard cannot drift apart.
+from lpbf_calibration_stats import (  # noqa: E402,F401
+    assert_no_leak, grouped_kfold, pin_flat_plate, regime_class_from_enthalpy, set_key)
 
 
 # ---------------------------------------------------------------------------------------------
@@ -280,7 +249,7 @@ def fit_power_law(train: Sequence[Dict[str, Any]], field: str) -> Dict[str, Any]
         per_set.setdefault(set_key(r), []).append(math.log(r[field]))
     keys = sorted(per_set)
     y = [sum(per_set[k]) / len(per_set[k]) for k in keys]
-    rows = [dict(zip(("material", "power_W", "speed_mm_s", "beamDiameter_um"), k)) for k in keys]
+    rows = [dict(zip(("source", "material", "power_W", "speed_mm_s", "beamDiameter_um"), k)) for k in keys]
     used = [f for f in POWERLAW_FEATURES if len({r[f] for r in rows}) > 1]
     X = [[1.0] + [math.log(r[f]) for f in used] for r in rows]
     p = len(X[0])
