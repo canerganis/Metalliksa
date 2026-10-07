@@ -4,13 +4,14 @@ import { engineeringSignature, type LpbfEngineeringState } from "../store/useLpb
 import type { LpbfBuildContext } from "../store/useLpbfWorkflowStore";
 import type { PythonLpbfBuildJobResult } from "../services/pythonComputationService";
 import { isResultStale } from "./lpbfResultStaleness";
+import { COMMITTED_ERROR_BANDS, bandSubjectFromThermal, publishedTrackBandsReport, type ErrorBandsSummary } from "../data/lpbfErrorBands";
 
 export function sharedSimulationInput(specimen: ActiveSpecimenState) {
   const process = specimen.lpbf;
   return {material: canonicalLpbfMaterialName(specimen.name), power_W:process.laserPower_W,speed_mm_s:process.scanSpeed_mms,beamDiameter_um:process.beamDiameter_um,preheat_C:process.preheatTemp_C,layer_um:process.layer_um,hatch_um:process.hatch_um};
 }
 
-export function createLpbfQualificationReport(specimen: ActiveSpecimenState, context: LpbfBuildContext, engineering: LpbfEngineeringState, buildJob: PythonLpbfBuildJobResult | null, researchEvidence: unknown[] = []) {
+export function createLpbfQualificationReport(specimen: ActiveSpecimenState, context: LpbfBuildContext, engineering: LpbfEngineeringState, buildJob: PythonLpbfBuildJobResult | null, researchEvidence: unknown[] = [], errorBands: ErrorBandsSummary | null = COMMITTED_ERROR_BANDS) {
   const result = engineering.job?.status === "completed" ? engineering.job.result : undefined;
   const currentSignature = engineeringSignature(sharedSimulationInput(specimen), engineering, specimen.lpbf.scanStrategy);
   const stale = isResultStale(engineering.resultSignature, currentSignature, !!result);
@@ -41,6 +42,7 @@ export function createLpbfQualificationReport(specimen: ActiveSpecimenState, con
     job: engineering.job ? {...engineering.job, result} : null,
     resultMatchesCurrentInputs: result ? !stale : null,
     buildScreening: buildJob ? {modelId:buildJob.modelId,verdict:buildJob.verdict,assumptions:buildJob.assumptions,qualification:buildJob.qualification ?? null,uq:buildJob.uq ?? null,ambench:buildJob.ambench ?? null} : null,
+    publishedTrackBands: buildJob ? publishedTrackBandsReport(errorBands, bandSubjectFromThermal(buildJob.thermal)) : null,
     researchEvidence,
     measurementDraft: {width_um:engineering.width,depth_um:engineering.depth,source:engineering.source,specimenOrDoi:engineering.specimen,uncertainty_um:engineering.uncertainty,holdout:engineering.holdout,replicates:engineering.measurements,status:"User-supplied; only worker-reported evidence is part of the executed comparison"},
     verification: {conservation:result?.energyBalance ?? null,numericalConvergence:result?.convergenceStudy ?? null,experimentalValidation:"Unresolved"},

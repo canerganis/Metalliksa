@@ -52,6 +52,7 @@ import {
 import { buildGoldakCaeCard } from "../../utils/goldakCaeCard";
 import { literatureErrorUnavailableText } from "../../utils/meltPoolExtentStatus";
 import { MeltPoolExtentNotice } from "../MeltPoolExtentNotice";
+import { PublishedTrackBands } from "../PublishedTrackBands";
 import { DISTORTION_HEURISTIC_NOTE } from "../../utils/distortionHeuristic";
 
 export interface MeltPool3DCrossSectionProps {
@@ -1113,6 +1114,7 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
                   </div>
                 </div>
                 <MeltPoolExtentNotice geometry={pyResult.meltPoolGeometry} />
+                <PublishedTrackBands thermal={pyResult} />
 
                 <div className="space-y-1 text-[11px] text-slate-300">
                   <div className="flex justify-between py-0.5 border-b border-slate-800/60">

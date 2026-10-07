@@ -10,6 +10,8 @@ import {
 import { useMaterialSpecimenStore } from "../store/useMaterialSpecimenStore";
 import { LITERATURE_PV_WINDOWS } from "../utils/lpbfFourAlloySchema";
 import { resolveOptimizerAlloy } from "../utils/lpbfOptimizerAlloy";
+import { COMMITTED_ERROR_BANDS, bandSubjectFromProcessWindowCell, type ErrorBandsSummary } from "../data/lpbfErrorBands";
+import { PublishedTrackBands } from "./PublishedTrackBands";
 import {
   HATCH_PATTERN_ID,
   PROCESS_WINDOW_BEAM_TOLERANCE_PCT,
@@ -267,7 +269,13 @@ export const ProcessWindowHeatmap: React.FC<HeatmapProps> = ({ result, selected,
 // ---------------------------------------------------------------------------------------------------------
 const gateList = (gates: string[]): string => (gates.length ? gates.join(", ") : "none");
 
-export const ProcessWindowCellDetail: React.FC<{ cell: LpbfProcessWindowCell | null; advisories: LpbfProcessWindowResponse["gridAdvisories"] }> = ({ cell, advisories }) => {
+export const ProcessWindowCellDetail: React.FC<{
+  cell: LpbfProcessWindowCell | null;
+  advisories: LpbfProcessWindowResponse["gridAdvisories"];
+  /** Alloy, engine model and beam of the result the cell belongs to, so the published-track error of the selected cell can be printed. */
+  bandContext?: { alloyId: string; modelId: string | null | undefined; beamDiameter_um: number } | null;
+  bandSummary?: ErrorBandsSummary | null;
+}> = ({ cell, advisories, bandContext = null, bandSummary = COMMITTED_ERROR_BANDS }) => {
   if (!cell) {
     return <p data-testid="pw-detail-empty" className="text-sm text-slate-400">Select a cell (click it, or Tab to the grid and use the arrow keys) to see its gates and reasons.</p>;
   }
@@ -298,6 +306,7 @@ export const ProcessWindowCellDetail: React.FC<{ cell: LpbfProcessWindowCell | n
             <dt className="text-slate-500">Balling band</dt><dd className="font-mono">{cell.ballingBand ?? "not available"}</dd>
             <dt className="text-slate-500">Inside literature P-v box</dt><dd className="font-mono">{cell.insideLiteratureBox ? "yes" : "no"}</dd>
           </dl>
+          {bandContext && <PublishedTrackBands subject={bandSubjectFromProcessWindowCell(cell, bandContext)} summary={bandSummary} testIdPrefix="pw-band" />}
           {cell.reasons.length > 0 && (
             <div>
               <p className="text-xs font-semibold text-slate-400">Reasons (verbatim from the engine)</p>
@@ -463,7 +472,8 @@ export const ProcessWindowResultView: React.FC<ProcessWindowResultViewProps> = (
           <ProcessWindowLegend result={result} />
         </div>
         <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-3">
-          <ProcessWindowCellDetail cell={cell} advisories={result.gridAdvisories} />
+          <ProcessWindowCellDetail cell={cell} advisories={result.gridAdvisories}
+            bandContext={{ alloyId: result.alloyId, modelId: result.provenance.modelId, beamDiameter_um: result.request.beamDiameter_um }} />
         </div>
       </div>
       <ProcessWindowTable result={result} />

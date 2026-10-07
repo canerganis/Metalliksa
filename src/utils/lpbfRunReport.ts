@@ -214,6 +214,14 @@ export function buildLpbfRunReportHtml(report: LpbfQualificationReport, extras: 
       row("Material property SHA-256", unavailable(buildJob?.materialPropertySha256, buildJob ? "not reported" : "no build-job screening for the current inputs")),
     ].join("")}</dl><h3>Research evidence</h3>${research.length ? `<ul>${research.map(item => `<li><code>${escapeHtml(JSON.stringify(item))}</code></li>`).join("")}</ul>` : `<p>No linked research evidence records.</p>`}`);
 
+  const bands = report.publishedTrackBands;
+  const bandsSection = !bands ? "" : section("error-bands", "Published-track error bands",
+    `<p class="muted">${escapeHtml(bands.statement)} Reporting text only: no label, verdict or gate reads these bands. Kernel ${escapeHtml(bands.kernel)}, alloy ${escapeHtml(bands.material)}, screening regime class ${escapeHtml(bands.regime)} (default absorptivity).</p>`
+    + bands.entries.map(entry => `<h3>${escapeHtml(entry.quantity === "depth" ? "Depth" : "Width")} (${escapeHtml(entry.state)})</h3><p>${escapeHtml(entry.sentence)}</p>`
+      + `<dl>${row("Cell", entry.cell ?? "No published cell for this kernel, alloy and regime class")}</dl>`
+      + (entry.sources.length ? `<table><thead><tr><th scope="col">Source</th><th scope="col">Source id</th><th scope="col">DOI</th><th scope="col">Rows</th></tr></thead><tbody>${entry.sources.map(src => `<tr>${cell(src.name)}${cell(src.id)}${cell(text(src.doi))}${cell(src.rows)}</tr>`).join("")}</tbody></table>` : `<p class="muted">No sources: ${NOT_RECORDED}</p>`)).join("")
+    + `<dl>${[row("Band artefact id", bands.bandsId), row("Band artefact SHA-256", bands.contentSha256), row("Band implementation hash", bands.implementationHash)].join("")}</dl>`);
+
   const limitations = section("limitations", "Limitations", list(report.limitations));
   const reproduce = section("reproduce", "Reproduce", `<ol><li>Open the Metalliksa LPBF Engineering workspace and enter the context fields exactly as printed above.</li>`
     + `<li>Set the process vector to the executed values, not the current values, and select the requested mode and the solver backend recorded above.</li>`
@@ -225,5 +233,5 @@ export function buildLpbfRunReportHtml(report: LpbfQualificationReport, extras: 
   const data = `<script type="application/json" id="dossier-data">${serializeLpbfRunReportDossier(report, options.createdAt)}</script>`;
   return `<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">`
     + `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:"><meta name="referrer" content="no-referrer">`
-    + `<title>${escapeHtml(`LPBF run report ${text(ctx.buildId)}`)}</title><style>${STYLE}</style></head><body><main>${header}${context}${inputs}${identity}${results}${verdictSection}${measurements}${sources}${limitations}${reproduce}${data}</main></body></html>\n`;
+    + `<title>${escapeHtml(`LPBF run report ${text(ctx.buildId)}`)}</title><style>${STYLE}</style></head><body><main>${header}${context}${inputs}${identity}${results}${verdictSection}${measurements}${bandsSection}${sources}${limitations}${reproduce}${data}</main></body></html>\n`;
 }
