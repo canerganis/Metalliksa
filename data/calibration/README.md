@@ -18,3 +18,12 @@ Melt Pool lab. **Screening only, not validation.** It is written only by `python
   final fit, the between-source term or the gate; they are reported in a separate block of the scorecard.
 
 Check without recomputing: `npm run lpbf:calibration:check`.
+
+## Calibration v2 (2026-10-07)
+
+`lpbf-meltpool-calibration-v2.json` (+ `.summary.json`) is a NEW pre-registered version
+(`python/lpbf_calibration_config_v2.py`, `docs/LPBF_CALIBRATION_V2_PREREGISTRATION_2026-10-07.md`), written only by
+`python/tools/lpbf_calibration_fit_v2.py` (`npm run lpbf:calibration:v2`, check: `npm run lpbf:calibration:v2:check`).
+It adds Ghosh 2018 IN625 and Trapp 2017 316L as test-only held-out sources (never trained; they can only block a
+cell) and a diagnostic absorptivity envelope (Trapp 2017, Ye 2019). v1 is unchanged and still verifies. The runtime
+layer accepts only the v1 config hash, so calibrated mode never reads the v2 artefact (`servedByRuntime: false`).
