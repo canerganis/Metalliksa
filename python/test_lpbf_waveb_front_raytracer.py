@@ -3,8 +3,11 @@
 Self-contained: KS-1/KS-8 use analytic fields and module constants only; the ray-tracer checks run only
 when warp + CUDA are importable (the module hard-codes cuda:0) and are skipped otherwise.
 """
+import importlib
 import math
+import sys
 import unittest
+from unittest import mock
 
 import numpy as np
 
@@ -104,8 +107,13 @@ def _cuda():
 class PowderBedRaytracerKS4KS6KS7(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        import powder_bed_raytracer as pbr
-        cls.pbr = pbr
+        # tools/lpbf_dataset_comparison.py and tools/lpbf_powder_layer_analysis.py pin the flat-plate path by
+        # setting sys.modules["powder_bed_raytracer"] = None and never restore it; when their tests run first
+        # in the same process the import below would fail. Drop only that None pin, for this import only.
+        with mock.patch.dict(sys.modules):
+            if "powder_bed_raytracer" in sys.modules and sys.modules["powder_bed_raytracer"] is None:
+                del sys.modules["powder_bed_raytracer"]
+            cls.pbr = importlib.import_module("powder_bed_raytracer")
 
     def test_energy_closure_and_convergence(self):
         a = self.pbr.calculate_powder_bed_absorptivity(40.0, 0.18, 100000)
