@@ -83,7 +83,7 @@ Benchmark inputs are kept with manifests, source locators, units and checksums w
 
 Some tabular values are transcribed or digitized from published papers and figures. Their source, locator, uncertainty or digitization flag is recorded in the data manifests and benchmark notes. **The papers and publisher PDFs are not redistributed in this repository**; consult each source and its stated license before reuse. The data archive README and each dataset's `LICENSE-ATTRIBUTION.md` describe dataset-specific terms and attribution. Do not assume that the repository's software license also licenses third-party source data.
 
-The optional local `mc_ni` thermodynamic database used in the Scheil cross-check is not committed. Its derivative licensing terms are documented in the Scheil/Laves note and external-data notes; it is not needed by the default LPBF workflow.
+The CALPHAD studio uses the MatCalc open thermodynamic databases `mc_ni` (Ni base) and `mc_fe` (Fe base), released under ODbL 1.0 / DbCL 1.0 by TU Wien. The repository carries syntax-repaired copies for pycalphad; attribution, hashes and the change log are in [python/databases/MATCALC_OPEN_DATABASES_LICENSE.md](python/databases/MATCALC_OPEN_DATABASES_LICENSE.md). Results from these databases are CALPHAD calculations, not validated against experiment; known deviations are shown with each result.
 
 ### What the archive checks mean
 
