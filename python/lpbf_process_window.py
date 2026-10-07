@@ -356,7 +356,7 @@ def run_process_window(data: Any) -> Dict[str, Any]:
     key = _cache.make_key(norm, revision, impl_hash)
     cached = _cache.get(key)
     if cached is not None:
-        cached["cache"] = {"hit": True, "key": key}
+        cached["cache"] = {"hit": True, "key": key, "scope": "python-worker-process"}
         cached["originalComputeMs"] = cached.get("computeMs")
         cached["computeMs"] = round((time.time() - t0) * 1000.0, 1)
         return cached
@@ -385,7 +385,7 @@ def run_process_window(data: Any) -> Dict[str, Any]:
         "evidence": {"kind": "screening-only", "experimentalValidation": False, "statement": EVIDENCE_STATEMENT},
         "provenance": {"modelId": BUILD_JOB_MODEL_ID, "solverRevision": revision,
                        "implementationHash": impl_hash, "absorptionModel": absorption},
-        "cache": {"hit": False, "key": key},
+        "cache": {"hit": False, "key": key, "scope": "python-worker-process"},
     }
     response["computeMs"] = round((time.time() - t0) * 1000.0, 1)
     # Only complete results are cached: a solver error or an unavailable dataset may be transient.

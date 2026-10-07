@@ -169,6 +169,8 @@ class ProcessWindowTests(unittest.TestCase):
         first = pw.run_process_window(payload)
         second = pw.run_process_window(payload)
         self.assertFalse(first["cache"]["hit"])
+        self.assertEqual(first["cache"]["scope"], "python-worker-process")
+        self.assertEqual(second["cache"]["scope"], "python-worker-process")
         self.assertTrue(second["cache"]["hit"])
         self.assertEqual(first["cache"]["key"], second["cache"]["key"])
         self.assertEqual(first["cells"], second["cells"])

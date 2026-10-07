@@ -417,7 +417,7 @@ export const ProcessWindowResultStatus: React.FC<{ result: LpbfProcessWindowResp
     )}
     {source === "engine-cache" && (
       <p role="status" data-testid="pw-cache-engine" className="text-xs text-sky-300">
-        Served from the engine cache: an identical request, solver revision and implementation hash was already computed
+        Served from the engine cache (per Python worker process): an identical request, solver revision and implementation hash was already computed
         {result.originalComputeMs != null ? ` (${result.originalComputeMs} ms originally)` : ""}; nothing was recomputed.
       </p>
     )}
@@ -502,7 +502,7 @@ export const ProcessWindowPhaseNotice: React.FC<{ phase: ProcessWindowPhase; all
     {phase.kind === "refused" && (
       <div role="alert" data-testid="pw-refusal" className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">
         <Info className="h-5 w-5 shrink-0" aria-hidden="true" />
-        <p>The engine refused this request: {phase.message} Nothing was clamped or substituted.</p>
+        <p>The engine refused this request: {phase.message}{/[.!?]$/.test(phase.message) ? "" : "."} Nothing was clamped or substituted.</p>
       </div>
     )}
     {phase.kind === "invalid" && (

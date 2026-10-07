@@ -2640,7 +2640,8 @@ export interface LpbfProcessWindowResponse {
   };
   evidence: { kind: "screening-only"; experimentalValidation: false; statement: string };
   provenance: { modelId: string; solverRevision: string; implementationHash: string; absorptionModel: string | null };
-  cache: { hit: boolean; key: string; stored?: boolean };
+  /** scope: the cache lives in one Python worker process, so identical requests handled by another worker are misses. */
+  cache: { hit: boolean; key: string; stored?: boolean; scope?: string };
   computeMs: number;
   originalComputeMs?: number | null;
 }

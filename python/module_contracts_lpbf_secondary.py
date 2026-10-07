@@ -130,7 +130,7 @@ def build_lpbf_optimizer_contract(seed: Mapping[str, str]) -> ModuleContract:
             "'validation' (HTTP 422). A cell whose solver call raises is reported as verdict 'error' and never coloured "
             "as a verdict; width and depth are given only when extentStatus is 'computed'. Responses are cached in an "
             "imported module (16-entry LRU keyed by the normalised request, the solver revision and the implementation "
-            "hash) and report cache.hit; the response also carries an evidence object (not listed in the output fields: the SDK reserves that name) with kind 'screening-only' and experimentalValidation false; incomplete results (error cells, unavailable datasets) are not cached.",
+            "hash) and report cache.hit with scope python-worker-process (each pool worker has its own cache, so the first identical requests may miss); the response also carries an evidence object (not listed in the output fields: the SDK reserves that name) with kind 'screening-only' and experimentalValidation false; incomplete results (error cells, unavailable datasets) are not cached.",
             "process-window overlay: published single-track measurements (Hofmann 316L, Totis Ti-6Al-4V, KU Leuven "
             "IN718 with unit-unresolved dimensions, NIST AMB2022-03 Table 4 IN718) are filtered to the request beam "
             "diameter within the tolerance and to the mapped P/v range, with hidden counts reported; each point gets the "
