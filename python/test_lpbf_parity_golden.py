@@ -33,11 +33,11 @@ _SPEC.loader.exec_module(parity)
 PRE_BUMP_FINGERPRINT = "7482697c458b6c1aa2a77829f2fbce0c4ce4ac9466e9a3583e97b9a799b5e483"
 # Main before the 5c bump (design 5c stage B); that bump record's "from" side.
 PRE_BUMP_REVISION = "520903802a5cb89e368af60f68e53f232c99046d"
-# The goldens are recorded at this implementation (re-recorded after the 2026-10-07 Wave B physics
-# bump ddd8358a -> f3ba9896), and GOLDEN_REVISION is a commit carrying it (the re-pin commit of
-# feat/lpbf-physics-bump-wave-b): the "from" side of the next bump.
-GOLDEN_FINGERPRINT = "f3ba98969a723702d9dbe15ae623d28f1327356441919ffdd6edf4e74a6a150d"
-GOLDEN_REVISION = "012c99000afd2781df3dd00112db6229b48e8227"
+# The goldens are recorded at this implementation (re-recorded after the 2026-10-07 balling-screen
+# bump f3ba9896 -> d92d1a3a, on top of Wave B), and GOLDEN_REVISION is a commit carrying it (the
+# re-pin commit of feat/lpbf-balling-criterion): the "from" side of the next bump.
+GOLDEN_FINGERPRINT = "d92d1a3ae85cd4c1adab6dc734eaae589ef4c275c33f09015aff639998f10ddd"
+GOLDEN_REVISION = "2a0eb47ab6cec454d3af534e0746930285998281"
 SLOW = os.environ.get("LPBF_PARITY_SLOW") == "1"
 # Off the reference machine every case test is skipped (the goldens are bit-exact for one
 # environment). METALLIKSA_REQUIRE_PARITY=1 turns such a "NOT VERIFIED" skip into a failure,
@@ -104,8 +104,10 @@ class ParityHarnessTests(unittest.TestCase):
         # Wave B (2026-10-07): LA-3 (keyhole risk null + King mode indicator) and the LT-3 top-level
         # solidificationResolution label move the stripped digest 6a5e59be... -> ff428b93...; the V1
         # metrics, numericalDiagnostics, artifacts and identity digests are bit-equal.
+        # Balling screen (2026-10-07, f3ba9896 -> d92d1a3a): geometricDefectScreen.balling carries no risk
+        # without the Eagar-Tsai L/W ("low" -> null, new reason) and moves it ff428b93... -> f9b41280...
         self.assertEqual(observations["result.canonicalSha256"],
-                         "ff428b93852d32f0b80a871770108b62c58b0784aa4c5e353c9301d10f26d4c6")
+                         "f9b41280636caff0569846df95d30819a2708d774a7832c4be523e6fb181c3c0")
         self.assertEqual(observations["result.key.solidificationResolution"] is not None, True)
         self.assertEqual(observations["result.implementationHashOccurrencesAfterStrip"], 0)
         self.assertEqual(observations["result.artifactsImplementationHashOccurrences"], 0)

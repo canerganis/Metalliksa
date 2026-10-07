@@ -4,9 +4,9 @@
  "group": "G5",
  "description": "evaporationModel=True short powder track",
  "slow": false,
- "recordedImplementationHash": "f3ba98969a723702d9dbe15ae623d28f1327356441919ffdd6edf4e74a6a150d",
+ "recordedImplementationHash": "d92d1a3ae85cd4c1adab6dc734eaae589ef4c275c33f09015aff639998f10ddd",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "93f94e34b5e6be1dfc5c6236e58e1d8ed3c1517e",
+ "recordedGitHead": "2a0eb47ab6cec454d3af534e0746930285998281",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -69,12 +69,12 @@
  },
  "recordedRuns_s": [
   3.5,
-  3.4
+  3.3
  ],
  "recordedTwice": true,
  "observations": {
-  "result.canonicalSha256": "d42837f032b5ad107cb6eddf5cd9f867dd6c34ae168840c5cba12e7ccdbdd55d",
-  "result.orderedTypedSha256": "3421000da3e8f8db974afbcf6ee07d1138596abd9eebff174b264da14b46b438",
+  "result.canonicalSha256": "a5fdc09b25f72b1dc49631528c501818575475d2eab92146ace915cf7a2f7139",
+  "result.orderedTypedSha256": "09361c651f3f9e230adf8cea02e23f9ce6f18d352e202544b2804936fc07b4a6",
   "result.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -149,7 +149,7 @@
   "result.key.scanPath": "dc3e33ed474765b3e39a505f1c66a57f2edc24dbbce56e8bf39fb3727e217e9c",
   "result.key.massBalance": "df3c166301bce35854b1ccfba15685bf5cbc80d6d86aacf68637b79fae432c0f",
   "result.key.phaseAudit": "89022afb09f782ab6b8ba40a2007e8b214d337bab7ad8699e1f9d655ff1bb85f",
-  "result.key.geometricDefectScreen": "cd0a72fcf380367920b5b0c1737f0cf254d6f3d5e326c20f1a5f58729c7777d2",
+  "result.key.geometricDefectScreen": "51fae7ce727c4fdc7cc35f33af9f418a8bf52bb2ae8fed1307a1cd55a5cfe722",
   "result.key.regime": "8402f9dee3219d19f615e013b48c1880ccf31bc2e1badfb4e04de65d76e2547e",
   "result.key.mainRisk": "3e47a880ef2d2d03259ff6adc09f4e6ae9ec408f168c8327752846fb584d73fd",
   "result.key.recommendation": "f8d6898175c7acb736377dc94259b1a1e55e937d669cfe302362297e1ad64bde",
@@ -743,8 +743,8 @@
    },
    "balling": {
     "lengthToWidth": 4.999999999999999,
-    "risk": "high",
-    "reason": "L/W ratio 5.00 significantly exceeds Rayleigh-Plateau limit (\u03c0). High risk of severe balling and track discontinuity."
+    "risk": null,
+    "reason": "No balling risk from this geometry: the balling screen uses the Eagar-Tsai liquidus L/W (eagar-tsai-aspect-balling-screen-v1), which was not supplied for this result."
    },
    "gasPore": {
     "risk": null,
@@ -759,11 +759,6 @@
      "title": "Harkin et al. (2023), Equation 5",
      "url": "https://link.springer.com/article/10.1007/s00170-023-11163-0",
      "use": "Semi-elliptical overlap criterion; empirical material-specific correction excluded."
-    },
-    {
-     "title": "Yadroitsev et al. (2010)",
-     "url": "https://doi.org/10.1016/j.jmatprotec.2010.01.011",
-     "use": "Rayleigh-Plateau capillary instability for single-track balling (L/W > \u03c0)."
     },
     {
      "title": "King et al. (2014), J. Mater. Process. Technol. 214, 2915, sec. 5.2",

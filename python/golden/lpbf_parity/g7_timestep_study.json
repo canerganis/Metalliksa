@@ -4,9 +4,9 @@
  "group": "G7",
  "description": "study='timestep' (2x and sqrt(2)x maxDt)",
  "slow": false,
- "recordedImplementationHash": "f3ba98969a723702d9dbe15ae623d28f1327356441919ffdd6edf4e74a6a150d",
+ "recordedImplementationHash": "d92d1a3ae85cd4c1adab6dc734eaae589ef4c275c33f09015aff639998f10ddd",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "93f94e34b5e6be1dfc5c6236e58e1d8ed3c1517e",
+ "recordedGitHead": "2a0eb47ab6cec454d3af534e0746930285998281",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  2.0,
-  1.9
+  1.8,
+  1.8
  ],
  "recordedTwice": true,
  "observations": {
-  "result.canonicalSha256": "f23d177bcce4ad69b02408269de63bcbb48a11c74d0a2024fde065c02fcfc753",
-  "result.orderedTypedSha256": "4acf97fc77a270a95992518b62428312bd1ab70c6a387de3de4d6c1d96a8b446",
+  "result.canonicalSha256": "21e6e0a25af432e0da74f28f2153dc5ecfeddd238986b5fa35049828c95dfb76",
+  "result.orderedTypedSha256": "900ffb54eee7a7a6b5a6a8c7f13c001a96e63be8c115d771d4a0c7cb9bf1812d",
   "result.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -146,7 +146,7 @@
   "result.key.massBalance": "df3c166301bce35854b1ccfba15685bf5cbc80d6d86aacf68637b79fae432c0f",
   "result.key.phaseAudit": "ae091d27f961edd95e45d3d32234c9e6e5f952e9d70db43293159240fefca025",
   "result.key.convergenceStudy": "55d4e06f8cd45563a133daaeb2b7ed32930fe593eaea0b1cad3f765fce9dfb4d",
-  "result.key.geometricDefectScreen": "c8568df656a6295fea25971a00f187e442dc832ebacf9708189087673ba10fcc",
+  "result.key.geometricDefectScreen": "2080d9acc958cbcd33f70ff3b97a7481ae62163194cce6b85f093faf6cd803b0",
   "result.key.regime": "40fd22838049669095e60b9df57f0c4721939348b454b4c8d571bbdc8aedd490",
   "result.key.mainRisk": "3e47a880ef2d2d03259ff6adc09f4e6ae9ec408f168c8327752846fb584d73fd",
   "result.key.recommendation": "f8d6898175c7acb736377dc94259b1a1e55e937d669cfe302362297e1ad64bde",
@@ -394,7 +394,7 @@
    "balling": {
     "lengthToWidth": null,
     "risk": null,
-    "reason": "Elongation alone cannot resolve capillary breakup, wetting, or track continuity."
+    "reason": "No balling risk from this geometry: the balling screen uses the Eagar-Tsai liquidus L/W (eagar-tsai-aspect-balling-screen-v1), which was not supplied for this result."
    },
    "gasPore": {
     "risk": null,

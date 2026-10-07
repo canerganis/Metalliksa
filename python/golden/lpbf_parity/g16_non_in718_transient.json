@@ -4,9 +4,9 @@
  "group": "G16",
  "description": "Standard transient for Ti-6Al-4V, 316L and AlSi10Mg",
  "slow": false,
- "recordedImplementationHash": "f3ba98969a723702d9dbe15ae623d28f1327356441919ffdd6edf4e74a6a150d",
+ "recordedImplementationHash": "d92d1a3ae85cd4c1adab6dc734eaae589ef4c275c33f09015aff639998f10ddd",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "93f94e34b5e6be1dfc5c6236e58e1d8ed3c1517e",
+ "recordedGitHead": "2a0eb47ab6cec454d3af534e0746930285998281",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  4.4,
-  4.4
+  4.0,
+  3.9
  ],
  "recordedTwice": true,
  "observations": {
-  "ti6al4v.canonicalSha256": "9101d96b090334756f534549ebb7b99119cff81923093a00fded6c46bef7fea0",
-  "ti6al4v.orderedTypedSha256": "932b8b79ff82516c394baf300e5a09e8397bce4684aadab37e31d80935631097",
+  "ti6al4v.canonicalSha256": "80445ad9de58c60cf4910e5e04055bbc95226974ef062c12bb62020073cd1b2f",
+  "ti6al4v.orderedTypedSha256": "1a66e658fd994f8bd9110fdf3989c9325f4f1485c680382700650730b2f2af95",
   "ti6al4v.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -144,7 +144,7 @@
   "ti6al4v.key.scanPath": "dc3e33ed474765b3e39a505f1c66a57f2edc24dbbce56e8bf39fb3727e217e9c",
   "ti6al4v.key.massBalance": "76a18c37ca1159ef0fcb6d6f0483efa7736fc770b403d21b9e86686171436628",
   "ti6al4v.key.phaseAudit": "3bf522be3ae00071f6ccc0ffebe92d0c9691d52533302a37e023106d9e1c640a",
-  "ti6al4v.key.geometricDefectScreen": "3501e48bd12ff39c1259c6253c645e1b9294b54c4902600ad67815a945c47980",
+  "ti6al4v.key.geometricDefectScreen": "0a2e63a5dc730f3ccfe878d655ff0359032f234b3a65b7e4b37ba1ef20084c57",
   "ti6al4v.key.regime": "8402f9dee3219d19f615e013b48c1880ccf31bc2e1badfb4e04de65d76e2547e",
   "ti6al4v.key.mainRisk": "3e47a880ef2d2d03259ff6adc09f4e6ae9ec408f168c8327752846fb584d73fd",
   "ti6al4v.key.recommendation": "f8d6898175c7acb736377dc94259b1a1e55e937d669cfe302362297e1ad64bde",
@@ -164,8 +164,8 @@
   "ti6al4v.label": "Unvalidated transient thermal",
   "ti6al4v.confidence": "low",
   "ti6al4v.implementationHashOccurrencesAfterStrip": 0,
-  "ss316l.canonicalSha256": "2b404609291cd19da25230a3572e7716df96486f456c70ab8dc92aaff1a3e0c9",
-  "ss316l.orderedTypedSha256": "cbce487b925f0d29393b4164cdf79374ca00e57a113a9748f9c60d0ec8b00c80",
+  "ss316l.canonicalSha256": "1ec3512be66322420751e8a74946909de20167f177d2f17a772073b1b6c07d3c",
+  "ss316l.orderedTypedSha256": "fc4e9af029db46a7592bcda92bcdfb8588c3be7736490ad962b3f64a65f8be65",
   "ss316l.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -235,7 +235,7 @@
   "ss316l.key.scanPath": "dc3e33ed474765b3e39a505f1c66a57f2edc24dbbce56e8bf39fb3727e217e9c",
   "ss316l.key.massBalance": "48b2429657aeea969474d5f154a72cc6153e2ca5747816eadc93ac731d8ccd13",
   "ss316l.key.phaseAudit": "12e9bca04f7810290d71ed931cd75d53226a8dc48bf917b13679d5c22d8ddb3d",
-  "ss316l.key.geometricDefectScreen": "1a42c6337e7d7f483ea4cf40ba309ecd64af558e7072c78ee6a06a72aa3019a4",
+  "ss316l.key.geometricDefectScreen": "4e362a5de7ceb94d7d4819592a85991363867cf804bcb42ba5a087a48de69463",
   "ss316l.key.regime": "8402f9dee3219d19f615e013b48c1880ccf31bc2e1badfb4e04de65d76e2547e",
   "ss316l.key.mainRisk": "3e47a880ef2d2d03259ff6adc09f4e6ae9ec408f168c8327752846fb584d73fd",
   "ss316l.key.recommendation": "f8d6898175c7acb736377dc94259b1a1e55e937d669cfe302362297e1ad64bde",
@@ -255,8 +255,8 @@
   "ss316l.label": "Unvalidated transient thermal",
   "ss316l.confidence": "low",
   "ss316l.implementationHashOccurrencesAfterStrip": 0,
-  "alsi10mg.canonicalSha256": "34c1a212d94042feebe26fd2060e2bcc813c7d7504bb1ec0c849d5a9162c5362",
-  "alsi10mg.orderedTypedSha256": "6612fc68ebbe21d77fde01234a6bbafe2bf1ec8f3ec4180b5fb8a282219ed6d0",
+  "alsi10mg.canonicalSha256": "a6591cbf4a384a440609ac3fdf803ca8f5bd8764e3906338586e64229a2b0efd",
+  "alsi10mg.orderedTypedSha256": "63dd7e96234ec5ca3a9d64641656f1b2ff03f86b4e1b6cca825dc742beba9ac4",
   "alsi10mg.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -326,7 +326,7 @@
   "alsi10mg.key.scanPath": "dc3e33ed474765b3e39a505f1c66a57f2edc24dbbce56e8bf39fb3727e217e9c",
   "alsi10mg.key.massBalance": "703f979690e4dc9e68bbf717347866acf2dd6240bf8b056d35c388898e30b6fd",
   "alsi10mg.key.phaseAudit": "ae091d27f961edd95e45d3d32234c9e6e5f952e9d70db43293159240fefca025",
-  "alsi10mg.key.geometricDefectScreen": "778a4c43db2599c173ecacacfc95424e876ce37adee0e3f15671e1049060454b",
+  "alsi10mg.key.geometricDefectScreen": "5575c45e51ae4ca74d1450b006d840df261fa0d9073d82ad41be1089cce18c1c",
   "alsi10mg.key.regime": "8402f9dee3219d19f615e013b48c1880ccf31bc2e1badfb4e04de65d76e2547e",
   "alsi10mg.key.mainRisk": "3e47a880ef2d2d03259ff6adc09f4e6ae9ec408f168c8327752846fb584d73fd",
   "alsi10mg.key.recommendation": "f8d6898175c7acb736377dc94259b1a1e55e937d669cfe302362297e1ad64bde",
@@ -480,8 +480,8 @@
    },
    "balling": {
     "lengthToWidth": 1.0,
-    "risk": "low",
-    "reason": "L/W ratio 1.00 < \u03c0 indicates stable continuous track without capillary breakup."
+    "risk": null,
+    "reason": "No balling risk from this geometry: the balling screen uses the Eagar-Tsai liquidus L/W (eagar-tsai-aspect-balling-screen-v1), which was not supplied for this result."
    },
    "gasPore": {
     "risk": null,
@@ -496,11 +496,6 @@
      "title": "Harkin et al. (2023), Equation 5",
      "url": "https://link.springer.com/article/10.1007/s00170-023-11163-0",
      "use": "Semi-elliptical overlap criterion; empirical material-specific correction excluded."
-    },
-    {
-     "title": "Yadroitsev et al. (2010)",
-     "url": "https://doi.org/10.1016/j.jmatprotec.2010.01.011",
-     "use": "Rayleigh-Plateau capillary instability for single-track balling (L/W > \u03c0)."
     },
     {
      "title": "King et al. (2014), J. Mater. Process. Technol. 214, 2915, sec. 5.2",
@@ -898,8 +893,8 @@
    },
    "balling": {
     "lengthToWidth": 2.9999999999999996,
-    "risk": "low",
-    "reason": "L/W ratio 3.00 < \u03c0 indicates stable continuous track without capillary breakup."
+    "risk": null,
+    "reason": "No balling risk from this geometry: the balling screen uses the Eagar-Tsai liquidus L/W (eagar-tsai-aspect-balling-screen-v1), which was not supplied for this result."
    },
    "gasPore": {
     "risk": null,
@@ -914,11 +909,6 @@
      "title": "Harkin et al. (2023), Equation 5",
      "url": "https://link.springer.com/article/10.1007/s00170-023-11163-0",
      "use": "Semi-elliptical overlap criterion; empirical material-specific correction excluded."
-    },
-    {
-     "title": "Yadroitsev et al. (2010)",
-     "url": "https://doi.org/10.1016/j.jmatprotec.2010.01.011",
-     "use": "Rayleigh-Plateau capillary instability for single-track balling (L/W > \u03c0)."
     },
     {
      "title": "King et al. (2014), J. Mater. Process. Technol. 214, 2915, sec. 5.2",
@@ -1309,8 +1299,8 @@
    },
    "balling": {
     "lengthToWidth": 4.0,
-    "risk": "high",
-    "reason": "L/W ratio 4.00 significantly exceeds Rayleigh-Plateau limit (\u03c0). High risk of severe balling and track discontinuity."
+    "risk": null,
+    "reason": "No balling risk from this geometry: the balling screen uses the Eagar-Tsai liquidus L/W (eagar-tsai-aspect-balling-screen-v1), which was not supplied for this result."
    },
    "gasPore": {
     "risk": null,
@@ -1325,11 +1315,6 @@
      "title": "Harkin et al. (2023), Equation 5",
      "url": "https://link.springer.com/article/10.1007/s00170-023-11163-0",
      "use": "Semi-elliptical overlap criterion; empirical material-specific correction excluded."
-    },
-    {
-     "title": "Yadroitsev et al. (2010)",
-     "url": "https://doi.org/10.1016/j.jmatprotec.2010.01.011",
-     "use": "Rayleigh-Plateau capillary instability for single-track balling (L/W > \u03c0)."
     },
     {
      "title": "King et al. (2014), J. Mater. Process. Technol. 214, 2915, sec. 5.2",

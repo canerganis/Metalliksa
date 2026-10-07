@@ -4,9 +4,9 @@
  "group": "G6",
  "description": "Screening (Goldak/Rosenthal) and the honest high-fidelity fallback",
  "slow": false,
- "recordedImplementationHash": "f3ba98969a723702d9dbe15ae623d28f1327356441919ffdd6edf4e74a6a150d",
+ "recordedImplementationHash": "d92d1a3ae85cd4c1adab6dc734eaae589ef4c275c33f09015aff639998f10ddd",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "93f94e34b5e6be1dfc5c6236e58e1d8ed3c1517e",
+ "recordedGitHead": "2a0eb47ab6cec454d3af534e0746930285998281",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  5.1,
-  5.2
+  5.0,
+  5.1
  ],
  "recordedTwice": true,
  "observations": {
-  "screening.canonicalSha256": "f85f308655739c47ef87762570ff2ea0e177e1ddcc853e7602b627d8283f164d",
-  "screening.orderedTypedSha256": "1480ebad050b185ecd33b6be27717ac1f53e0a2f5363058032ebbc8296de2d8e",
+  "screening.canonicalSha256": "7ba2cd5656903ae1dc837924ca21fb1892dcc47789dfcc38324d9f239e4eae7e",
+  "screening.orderedTypedSha256": "7417bc54f4f60816c45aa4233458fac6e53fe7ba6cfe49bc717f1fc24f1b3375",
   "screening.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -118,9 +118,9 @@
   "screening.key.assumptions": "b92c3612941ad13942f8e847409052ec2ae2018681536c5d4c0f834e921ca7ef",
   "screening.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "screening.key.metrics": "5662934c0f81df7b2d1b43891643f2ec1db6d3554284e6a0c67d16ee387a3538",
-  "screening.key.geometricDefectScreen": "ad27ced5ca9b2f25a6aead0a244388281c4c54757d2259b3b4e0322bd47e91cd",
+  "screening.key.geometricDefectScreen": "acf5ab60cd5e7594e73a29207b4b736687021d48189b7302b32a8d8c3e9333c8",
   "screening.key.regime": "40fd22838049669095e60b9df57f0c4721939348b454b4c8d571bbdc8aedd490",
-  "screening.key.mainRisk": "1497fd8c59f82b61822181a127ff0da60d7df8c098e27e54b41ee5c0f55fb74a",
+  "screening.key.mainRisk": "99524db4cbe5bfd2aa2a3b185c78355359043617d0c2f802a8fc0ab6e8ef1ef8",
   "screening.key.recommendation": "9f8af9e48aaf7e009bbf332a3176f5692a8c3f2778c53d195be0496ceb440575",
   "screening.key.riskScope": "2adf65f914144aa74a543b186d23d1f8ceaeb9040bd5d3c23e29d0b686f9607e",
   "screening.key.resourceEstimate": "e1a1a19007daa86d3dd860ab8a76fc23c63a4d5d124cad690c928eb28528c868",
@@ -138,8 +138,8 @@
   "screening.label": "Screening only",
   "screening.confidence": "low",
   "screening.implementationHashOccurrencesAfterStrip": 0,
-  "highFidelityFallback.canonicalSha256": "467e010771b32ac1ab146711532d40cc07fb9c24cb869c720acf2d28747cbe67",
-  "highFidelityFallback.orderedTypedSha256": "6f5d1b3b088c11603be0e46e45a6a556c48b43536c613b035be42d5fafa75a35",
+  "highFidelityFallback.canonicalSha256": "4ae4f64519e8fbe529f74aea00a4a17346c18c4c82a328797281423df1a2721b",
+  "highFidelityFallback.orderedTypedSha256": "f2ae7592e2cbd21c0dffb470a6e9cf81940b7b4e612c93dfe6210de41e06fb13",
   "highFidelityFallback.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -183,9 +183,9 @@
   "highFidelityFallback.key.assumptions": "b92c3612941ad13942f8e847409052ec2ae2018681536c5d4c0f834e921ca7ef",
   "highFidelityFallback.key.fallbackReason": "6e4dd5716eb9a19c332be02caf7d68e7dcf8b128c09279475225cfc2ff3ddaec",
   "highFidelityFallback.key.metrics": "5662934c0f81df7b2d1b43891643f2ec1db6d3554284e6a0c67d16ee387a3538",
-  "highFidelityFallback.key.geometricDefectScreen": "ad27ced5ca9b2f25a6aead0a244388281c4c54757d2259b3b4e0322bd47e91cd",
+  "highFidelityFallback.key.geometricDefectScreen": "acf5ab60cd5e7594e73a29207b4b736687021d48189b7302b32a8d8c3e9333c8",
   "highFidelityFallback.key.regime": "40fd22838049669095e60b9df57f0c4721939348b454b4c8d571bbdc8aedd490",
-  "highFidelityFallback.key.mainRisk": "1497fd8c59f82b61822181a127ff0da60d7df8c098e27e54b41ee5c0f55fb74a",
+  "highFidelityFallback.key.mainRisk": "99524db4cbe5bfd2aa2a3b185c78355359043617d0c2f802a8fc0ab6e8ef1ef8",
   "highFidelityFallback.key.recommendation": "9f8af9e48aaf7e009bbf332a3176f5692a8c3f2778c53d195be0496ceb440575",
   "highFidelityFallback.key.riskScope": "2adf65f914144aa74a543b186d23d1f8ceaeb9040bd5d3c23e29d0b686f9607e",
   "highFidelityFallback.key.resourceEstimate": "e1a1a19007daa86d3dd860ab8a76fc23c63a4d5d124cad690c928eb28528c868",
@@ -203,8 +203,8 @@
   "highFidelityFallback.label": "Screening only",
   "highFidelityFallback.confidence": "low",
   "highFidelityFallback.implementationHashOccurrencesAfterStrip": 0,
-  "screeningTi64.canonicalSha256": "6748217ee2f028f87d7585c82fd3ec1ad984cb25d045927ef50d26bf97486504",
-  "screeningTi64.orderedTypedSha256": "10b5b1c869d5453da630fe50b421876dd87dc5dcf4baba324b63634b71be3c00",
+  "screeningTi64.canonicalSha256": "1eceed8e3d06817e68bb5d1cdb87b81412e54a4a67e2f7ad7e6f16c47788b85f",
+  "screeningTi64.orderedTypedSha256": "7ddd567774a23206e195fe41e7eb90144f621774fe8a0dcc238d624a33fb89e0",
   "screeningTi64.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -248,9 +248,9 @@
   "screeningTi64.key.assumptions": "b92c3612941ad13942f8e847409052ec2ae2018681536c5d4c0f834e921ca7ef",
   "screeningTi64.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "screeningTi64.key.metrics": "1a09a5e4d7b10c770cf0c737122a86c44c4b38cb543a95cd839bcc6ada46440d",
-  "screeningTi64.key.geometricDefectScreen": "4004b4d6625274d0d737e52fe326a7d022d8140716accccb1fffe6e4c49a8541",
+  "screeningTi64.key.geometricDefectScreen": "429e409b8eaba0f6ecf432b646958fd58d3fc4c1dbf3115b7683326a561265fa",
   "screeningTi64.key.regime": "40fd22838049669095e60b9df57f0c4721939348b454b4c8d571bbdc8aedd490",
-  "screeningTi64.key.mainRisk": "1497fd8c59f82b61822181a127ff0da60d7df8c098e27e54b41ee5c0f55fb74a",
+  "screeningTi64.key.mainRisk": "99524db4cbe5bfd2aa2a3b185c78355359043617d0c2f802a8fc0ab6e8ef1ef8",
   "screeningTi64.key.recommendation": "9f8af9e48aaf7e009bbf332a3176f5692a8c3f2778c53d195be0496ceb440575",
   "screeningTi64.key.riskScope": "2adf65f914144aa74a543b186d23d1f8ceaeb9040bd5d3c23e29d0b686f9607e",
   "screeningTi64.key.resourceEstimate": "e74a48a39a602cb6c9c79f17a9f1dc608fe68ab7e31388ddc5e67c3fbe1b5d93",
@@ -268,8 +268,8 @@
   "screeningTi64.label": "Screening only",
   "screeningTi64.confidence": "low",
   "screeningTi64.implementationHashOccurrencesAfterStrip": 0,
-  "highFidelityFallbackWithOpenfoam.canonicalSha256": "0c1d5f8fc7406685867a5ce15a19ce195eae618b1de9d43dd8d04f89ec7e7343",
-  "highFidelityFallbackWithOpenfoam.orderedTypedSha256": "e62e75b2f99ac360561e210dd1049836c951def84879ea733aa6f10ecaaa5417",
+  "highFidelityFallbackWithOpenfoam.canonicalSha256": "8d3024d6269b2d65f343cfce04a404f6330b9ca8fa247923fbe9846a9f9253d5",
+  "highFidelityFallbackWithOpenfoam.orderedTypedSha256": "349134595214cc54b4d3baf98675be6f0c33792612b54cc3f3a9324958c066c2",
   "highFidelityFallbackWithOpenfoam.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -313,9 +313,9 @@
   "highFidelityFallbackWithOpenfoam.key.assumptions": "b92c3612941ad13942f8e847409052ec2ae2018681536c5d4c0f834e921ca7ef",
   "highFidelityFallbackWithOpenfoam.key.fallbackReason": "6f422ebac6e741612c1f4552bcd6df77dfdaf0e405954690205b62f3ca79cea6",
   "highFidelityFallbackWithOpenfoam.key.metrics": "5662934c0f81df7b2d1b43891643f2ec1db6d3554284e6a0c67d16ee387a3538",
-  "highFidelityFallbackWithOpenfoam.key.geometricDefectScreen": "ad27ced5ca9b2f25a6aead0a244388281c4c54757d2259b3b4e0322bd47e91cd",
+  "highFidelityFallbackWithOpenfoam.key.geometricDefectScreen": "acf5ab60cd5e7594e73a29207b4b736687021d48189b7302b32a8d8c3e9333c8",
   "highFidelityFallbackWithOpenfoam.key.regime": "40fd22838049669095e60b9df57f0c4721939348b454b4c8d571bbdc8aedd490",
-  "highFidelityFallbackWithOpenfoam.key.mainRisk": "1497fd8c59f82b61822181a127ff0da60d7df8c098e27e54b41ee5c0f55fb74a",
+  "highFidelityFallbackWithOpenfoam.key.mainRisk": "99524db4cbe5bfd2aa2a3b185c78355359043617d0c2f802a8fc0ab6e8ef1ef8",
   "highFidelityFallbackWithOpenfoam.key.recommendation": "9f8af9e48aaf7e009bbf332a3176f5692a8c3f2778c53d195be0496ceb440575",
   "highFidelityFallbackWithOpenfoam.key.riskScope": "2adf65f914144aa74a543b186d23d1f8ceaeb9040bd5d3c23e29d0b686f9607e",
   "highFidelityFallbackWithOpenfoam.key.resourceEstimate": "e1a1a19007daa86d3dd860ab8a76fc23c63a4d5d124cad690c928eb28528c868",
@@ -434,8 +434,8 @@
    },
    "balling": {
     "lengthToWidth": 5.774999999999999,
-    "risk": "high",
-    "reason": "L/W ratio 5.77 significantly exceeds Rayleigh-Plateau limit (\u03c0). High risk of severe balling and track discontinuity."
+    "risk": null,
+    "reason": "No balling risk from this geometry: the balling screen uses the Eagar-Tsai liquidus L/W (eagar-tsai-aspect-balling-screen-v1), which was not supplied for this result."
    },
    "gasPore": {
     "risk": null,
@@ -452,11 +452,6 @@
      "use": "Semi-elliptical overlap criterion; empirical material-specific correction excluded."
     },
     {
-     "title": "Yadroitsev et al. (2010)",
-     "url": "https://doi.org/10.1016/j.jmatprotec.2010.01.011",
-     "use": "Rayleigh-Plateau capillary instability for single-track balling (L/W > \u03c0)."
-    },
-    {
      "title": "King et al. (2014), J. Mater. Process. Technol. 214, 2915, sec. 5.2",
      "url": "https://doi.org/10.1016/j.jmatprotec.2014.06.005",
      "use": "Keyhole-mode classification when melt-pool depth exceeds the half-width (D/W > 0.5); label only."
@@ -464,7 +459,7 @@
    ]
   },
   "highFidelityFallback.key.label": "Screening only",
-  "highFidelityFallback.key.mainRisk": "balling (screening)",
+  "highFidelityFallback.key.mainRisk": "not established",
   "highFidelityFallback.key.material": {
    "solidus_K": 1533.15,
    "liquidus_K": 1609.15,
@@ -708,8 +703,8 @@
    },
    "balling": {
     "lengthToWidth": 5.774999999999999,
-    "risk": "high",
-    "reason": "L/W ratio 5.77 significantly exceeds Rayleigh-Plateau limit (\u03c0). High risk of severe balling and track discontinuity."
+    "risk": null,
+    "reason": "No balling risk from this geometry: the balling screen uses the Eagar-Tsai liquidus L/W (eagar-tsai-aspect-balling-screen-v1), which was not supplied for this result."
    },
    "gasPore": {
     "risk": null,
@@ -726,11 +721,6 @@
      "use": "Semi-elliptical overlap criterion; empirical material-specific correction excluded."
     },
     {
-     "title": "Yadroitsev et al. (2010)",
-     "url": "https://doi.org/10.1016/j.jmatprotec.2010.01.011",
-     "use": "Rayleigh-Plateau capillary instability for single-track balling (L/W > \u03c0)."
-    },
-    {
      "title": "King et al. (2014), J. Mater. Process. Technol. 214, 2915, sec. 5.2",
      "url": "https://doi.org/10.1016/j.jmatprotec.2014.06.005",
      "use": "Keyhole-mode classification when melt-pool depth exceeds the half-width (D/W > 0.5); label only."
@@ -738,7 +728,7 @@
    ]
   },
   "highFidelityFallbackWithOpenfoam.key.label": "Screening only",
-  "highFidelityFallbackWithOpenfoam.key.mainRisk": "balling (screening)",
+  "highFidelityFallbackWithOpenfoam.key.mainRisk": "not established",
   "highFidelityFallbackWithOpenfoam.key.material": {
    "solidus_K": 1533.15,
    "liquidus_K": 1609.15,
@@ -982,8 +972,8 @@
    },
    "balling": {
     "lengthToWidth": 5.774999999999999,
-    "risk": "high",
-    "reason": "L/W ratio 5.77 significantly exceeds Rayleigh-Plateau limit (\u03c0). High risk of severe balling and track discontinuity."
+    "risk": null,
+    "reason": "No balling risk from this geometry: the balling screen uses the Eagar-Tsai liquidus L/W (eagar-tsai-aspect-balling-screen-v1), which was not supplied for this result."
    },
    "gasPore": {
     "risk": null,
@@ -1000,11 +990,6 @@
      "use": "Semi-elliptical overlap criterion; empirical material-specific correction excluded."
     },
     {
-     "title": "Yadroitsev et al. (2010)",
-     "url": "https://doi.org/10.1016/j.jmatprotec.2010.01.011",
-     "use": "Rayleigh-Plateau capillary instability for single-track balling (L/W > \u03c0)."
-    },
-    {
      "title": "King et al. (2014), J. Mater. Process. Technol. 214, 2915, sec. 5.2",
      "url": "https://doi.org/10.1016/j.jmatprotec.2014.06.005",
      "use": "Keyhole-mode classification when melt-pool depth exceeds the half-width (D/W > 0.5); label only."
@@ -1012,7 +997,7 @@
    ]
   },
   "screening.key.label": "Screening only",
-  "screening.key.mainRisk": "balling (screening)",
+  "screening.key.mainRisk": "not established",
   "screening.key.material": {
    "solidus_K": 1533.15,
    "liquidus_K": 1609.15,
@@ -1256,8 +1241,8 @@
    },
    "balling": {
     "lengthToWidth": 7.199999999999999,
-    "risk": "high",
-    "reason": "L/W ratio 7.20 significantly exceeds Rayleigh-Plateau limit (\u03c0). High risk of severe balling and track discontinuity."
+    "risk": null,
+    "reason": "No balling risk from this geometry: the balling screen uses the Eagar-Tsai liquidus L/W (eagar-tsai-aspect-balling-screen-v1), which was not supplied for this result."
    },
    "gasPore": {
     "risk": null,
@@ -1274,11 +1259,6 @@
      "use": "Semi-elliptical overlap criterion; empirical material-specific correction excluded."
     },
     {
-     "title": "Yadroitsev et al. (2010)",
-     "url": "https://doi.org/10.1016/j.jmatprotec.2010.01.011",
-     "use": "Rayleigh-Plateau capillary instability for single-track balling (L/W > \u03c0)."
-    },
-    {
      "title": "King et al. (2014), J. Mater. Process. Technol. 214, 2915, sec. 5.2",
      "url": "https://doi.org/10.1016/j.jmatprotec.2014.06.005",
      "use": "Keyhole-mode classification when melt-pool depth exceeds the half-width (D/W > 0.5); label only."
@@ -1286,7 +1266,7 @@
    ]
   },
   "screeningTi64.key.label": "Screening only",
-  "screeningTi64.key.mainRisk": "balling (screening)",
+  "screeningTi64.key.mainRisk": "not established",
   "screeningTi64.key.material": {
    "solidus_K": 1877.15,
    "liquidus_K": 1933.15,
