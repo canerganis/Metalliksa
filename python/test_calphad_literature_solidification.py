@@ -1,5 +1,7 @@
 """IN718 / IN625 requests carry a read-only literature estimate (unavailable or successful CALPHAD result); CALPHAD fields are unchanged."""
+import importlib.util
 import json
+import os
 import subprocess
 import sys
 import unittest
@@ -9,6 +11,10 @@ import calphad_solver
 import lpbf_solidification_segregation as seg
 
 HERE = Path(__file__).resolve().parent
+# With pycalphad installed (default runtime since the MatCalc TDBs), the subprocess runs a real IN718/IN625
+# equilibrium that takes minutes on a loaded machine; run it only in the slow lane.
+HAS_PYCALPHAD = importlib.util.find_spec("pycalphad") is not None
+SLOW = os.environ.get("METALLIX_SLOW_TESTS") == "1"
 IN718 = {"Ni": 52.5, "Cr": 19.0, "Fe": 18.5, "Nb": 5.1, "Mo": 3.0, "Ti": 0.9, "Al": 0.5, "C": 0.04}
 IN625 = {"Ni": 61.0, "Cr": 21.5, "Mo": 9.0, "Nb": 3.65, "Fe": 4.0, "Ti": 0.2, "Al": 0.2, "C": 0.05}
 SS316L = {"Fe": 65.5, "Cr": 17.0, "Ni": 12.0, "Mo": 2.5, "Mn": 2.0, "Si": 0.75, "C": 0.03}
@@ -19,7 +25,7 @@ def run(name, elements, alloy_id=None):
     if alloy_id:
         payload["literatureAlloyId"] = alloy_id
     proc = subprocess.run([sys.executable, str(HERE / "calphad_solver.py"), "-"], input=json.dumps(payload),
-                          capture_output=True, text=True, cwd=str(HERE), timeout=120)
+                          capture_output=True, text=True, cwd=str(HERE), timeout=900 if HAS_PYCALPHAD else 120)
     return json.loads(proc.stdout)
 
 
@@ -56,10 +62,11 @@ class LiteratureSolidificationTests(unittest.TestCase):
         for aid in (None, "", "ss316l", "316l", "ti6al4v", "in738"):
             self.assertIsNone(calphad_solver.literature_solidification_block(aid))
 
+    @unittest.skipIf(HAS_PYCALPHAD and not SLOW, "real CALPHAD solve; set METALLIX_SLOW_TESTS=1")
     def test_response_field_and_unchanged_calphad_status(self):
         base = run("Inconel 718", IN718)
         with_lit = run("Inconel 718", IN718, "in718")
-        self.assertEqual(base["status"], "unavailable")
+        self.assertEqual(base["status"], with_lit["status"])
         self.assertNotIn("literatureSolidification", base)
         lit = with_lit.pop("literatureSolidification")
         self.assertEqual(lit["alloyId"], "in718")
@@ -71,7 +78,6 @@ class LiteratureSolidificationTests(unittest.TestCase):
             with_lit.pop(key, None)
         self.assertEqual(base, with_lit)
         lit625 = run("Inconel 625", IN625, "in625")
-        self.assertEqual(lit625["status"], "unavailable")
         self.assertEqual(lit625["literatureSolidification"]["alloyId"], "in625")
 
     def test_attached_next_to_a_successful_calphad_result_without_touching_it(self):
