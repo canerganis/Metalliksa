@@ -18,7 +18,8 @@ class ToolpathContractScaffold(ContractScaffold, AuthorityReadsMixin, unittest.T
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        (cls.operation,) = cls.contract.operations
+        # Two operations since contract 0.2.0 (adaptive-feedforward is covered in test_contract_adaptive_mitigation.py).
+        cls.operation = next(o for o in cls.contract.operations if o.id == "toolpath-kinematics")
         cls.result = worker_dispatch(cls.operation.authority.worker_method, {"content": GCODE})
 
     def test_every_key_the_worker_reads_is_declared(self):
@@ -42,6 +43,9 @@ class ToolpathContractScaffold(ContractScaffold, AuthorityReadsMixin, unittest.T
         self.assertEqual(len(self.operation.input_problems({"format": "step"})), 1)
         as_unknown = worker_dispatch("toolpath-kinematics", {"content": GCODE, "format": "step"})
         self.assertEqual(as_unknown, self.result)
+
+    def test_the_view_serves_exactly_the_kinematics_and_feedforward_operations(self):
+        self.assertEqual([o.id for o in self.contract.operations], ["toolpath-kinematics", "adaptive-feedforward"])
 
     def test_recorded_laser_off_delay_is_not_used(self):
         delayed = worker_dispatch("toolpath-kinematics", {"content": GCODE, "laserOffDelay_us": 99999.0})

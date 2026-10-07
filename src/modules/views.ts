@@ -15,7 +15,6 @@ export const MODULE_VIEWS: Record<ListedModuleId, ModuleView> = {
   'experimental-validation': lazy(() => import('../components/ExperimentalValidationLab').then(m => ({ default: m.ExperimentalValidationLab }))),
   'toolpath-studio': lazy(() => import('../components/LpbfToolpathStudioLab').then(m => ({ default: m.LpbfToolpathStudioLab }))),
   'murakami-fatigue': lazy(() => import('../components/MurakamiFatigueLab').then(m => ({ default: m.MurakamiFatigueLab }))),
-  'adaptive-mitigation': lazy(() => import('../components/LpbfAdaptiveMitigationLab').then(m => ({ default: m.LpbfAdaptiveMitigationLab }))),
   'keyhole-raytracing': lazy(() => import('../components/KeyholeRaytracingLab').then(m => ({ default: m.KeyholeRaytracingLab }))),
   'lpbf-dataset-comparison': lazy(() => import('../components/LpbfDatasetComparisonLab').then(m => ({ default: m.LpbfDatasetComparisonLab }))),
   'lpbf-calibration-scorecard': lazy(() => import('../components/LpbfCalibrationScorecardLab').then(m => ({ default: m.LpbfCalibrationScorecardLab }))),

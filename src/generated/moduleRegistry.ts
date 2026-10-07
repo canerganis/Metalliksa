@@ -611,7 +611,7 @@ export const MODULE_REGISTRY = {
     },
     {
       "id": "toolpath-studio",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "owner": "unassigned (needs maintainer)",
       "workspace": "lpbf",
       "label": "Scan Path Kinematics",
@@ -837,6 +837,161 @@ export const MODULE_REGISTRY = {
             "transportValues": {},
             "transportObjects": {}
           }
+        },
+        {
+          "id": "adaptive-feedforward",
+          "method": "POST",
+          "route": "/api/python/lpbf-adaptive-feedforward",
+          "authority": {
+            "kind": "lpbf-worker",
+            "script": null,
+            "workerMethod": "adaptive-feedforward",
+            "timeoutMs": 20000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [
+            {
+              "key": "format",
+              "label": "Toolpath format",
+              "valueType": "enum",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "toolpath-format",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": "gcode",
+              "required": false,
+              "enum": [
+                "gcode",
+                "cli"
+              ],
+              "note": "The authority lower-cases the value and parses anything other than 'cli' as G-code.",
+              "unitSelector": null,
+              "unitOptions": {}
+            },
+            {
+              "key": "defaultPower_W",
+              "label": "Default laser power",
+              "valueType": "number",
+              "unit": "W",
+              "displayUnits": [],
+              "quantityKind": "power",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 280.0,
+              "required": false,
+              "enum": [],
+              "note": "Converted with float(); no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
+            },
+            {
+              "key": "defaultSpeed_mms",
+              "label": "Default scan speed",
+              "valueType": "number",
+              "unit": "mm/s",
+              "displayUnits": [],
+              "quantityKind": "speed",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 1000.0,
+              "required": false,
+              "enum": [],
+              "note": "Converted with float(); no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
+            },
+            {
+              "key": "apply67DegRotation",
+              "label": "Apply 67° interlayer rotation",
+              "valueType": "boolean",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "flag",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": false,
+              "required": false,
+              "enum": [],
+              "note": "The authority coerces with bool(); the contract accepts only booleans.",
+              "unitSelector": null,
+              "unitOptions": {}
+            },
+            {
+              "key": "layerIndex",
+              "label": "Layer index",
+              "valueType": "integer",
+              "unit": "1",
+              "displayUnits": [],
+              "quantityKind": "count",
+              "min": null,
+              "max": null,
+              "step": 1,
+              "default": 1,
+              "required": false,
+              "enum": [],
+              "note": "Converted with int(); no bound is enforced. When apply67DegRotation is true the rotation angle is 67° x layerIndex; otherwise it is 0.",
+              "unitSelector": null,
+              "unitOptions": {}
+            },
+            {
+              "key": "accelMax_mms2",
+              "label": "Maximum mirror acceleration",
+              "valueType": "number",
+              "unit": "mm/s^2",
+              "displayUnits": [],
+              "quantityKind": "acceleration",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 40000.0,
+              "required": false,
+              "enum": [],
+              "note": "Converted with float(); no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
+            },
+            {
+              "key": "jumpSpeed_mms",
+              "label": "Jump speed",
+              "valueType": "number",
+              "unit": "mm/s",
+              "displayUnits": [],
+              "quantityKind": "speed",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": 3000.0,
+              "required": false,
+              "enum": [],
+              "note": "Converted with float(); no bound is enforced.",
+              "unitSelector": null,
+              "unitOptions": {}
+            }
+          ],
+          "undeclaredInput": [
+            "content"
+          ],
+          "output": {
+            "fields": [
+              "total_segments",
+              "mitigated_hotspots_count",
+              "overall_energy_reduction_pct",
+              "rotation_angle_deg",
+              "total_mitigated_energy_J",
+              "mitigated_gcode",
+              "sample_segments"
+            ],
+            "statusKey": null,
+            "transportValues": {},
+            "transportObjects": {}
+          }
         }
       ],
       "validityDomain": null,
@@ -851,7 +1006,7 @@ export const MODULE_REGISTRY = {
           "productionReady",
           "airworthy"
         ],
-        "note": "Emits no evidence status: the output has no status key. Trapezoidal or triangular galvanometer velocity profiles plus the configured scanner delays; a hotspot is a segment whose average linear energy density exceeds 1.25 times the nominal P/v. No thermal field is solved and no in-situ measurement is compared. Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated."
+        "note": "Emits no evidence status: the output has no status key. Trapezoidal or triangular galvanometer velocity profiles plus the configured scanner delays; a hotspot is a segment whose average linear energy density exceeds 1.25 times the nominal P/v. No thermal field is solved and no in-situ measurement is compared. Operation adaptive-feedforward (Feed-forward power tab) emits no evidence status either: the output has no status key. Feed-forward power scaling P_nom * min(1, v_peak / v_nom) from the kinematic peak speed of each vector, plus an optional rotation by 67° x layerIndex about the origin; no sensor signal is read, so nothing is closed-loop, and no defect reduction is measured. Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated."
       },
       "lifecycle": {
         "backgroundWork": "none",
@@ -872,7 +1027,11 @@ export const MODULE_REGISTRY = {
       "migrationState": "contracted",
       "legacyNotes": [
         "content is the raw G-code or CLI text (default empty: zero segments). The Field schema cannot describe free text, so it is recorded as undeclaredInput.",
-        "No validity domain is declared: no source-backed applicability range is established for the scanner parameters."
+        "No validity domain is declared: no source-backed applicability range is established for the scanner parameters.",
+        "Contract 0.2.0: the adaptive-feedforward operation was merged in from the former adaptive-mitigation module (now the Feed-forward power tab of this view); the worker route and RPC are unchanged.",
+        "mitigated_hotspots_count counts laser vectors whose kinematic peak speed is below 0.99 x the nominal speed; it is not the toolpath-studio hotspot definition (average linear energy density above 1.25 x nominal P/v). overall_energy_reduction_pct uses the nominal-speed time of each vector.",
+        "The cited inventory row named the route /api/python/lpbf-adaptive-mitigation, which does not exist; the Phase 7 wave 2 fix round corrected it to the served /api/python/lpbf-adaptive-feedforward.",
+        "No validity domain is declared: no source-backed applicability range is established."
       ],
       "sourceRefs": [
         "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
@@ -884,7 +1043,14 @@ export const MODULE_REGISTRY = {
         "routes/lpbfSimulation.ts:30#/api/python/lpbf-toolpath-kinematics",
         "src/components/LpbfToolpathStudioLab.tsx::LpbfToolpathStudioLab",
         "src/services/pythonComputationService.ts::simulateToolpathKinematics",
-        "docs/MODULE_EVIDENCE_INVENTORY.md:30#`toolpath-studio` /"
+        "docs/MODULE_EVIDENCE_INVENTORY.md:30#`toolpath-studio` /",
+        "python/lpbf_worker_rpc.py::_rpc_adaptive_feedforward",
+        "python/lpbf_adaptive_feedforward.py::AdaptiveFeedforwardMitigator.compensate_vector",
+        "python/lpbf_adaptive_feedforward.py::AdaptiveFeedforwardMitigator.process_toolpath",
+        "routes/lpbfSimulation.ts:32#/api/python/lpbf-adaptive-feedforward",
+        "src/components/LpbfToolpathStudioLab.tsx::ToolpathFeedforwardPanel",
+        "src/services/pythonComputationService.ts::processAdaptiveFeedforward",
+        "docs/MODULE_EVIDENCE_INVENTORY.md:34#Merged 2026-10-07 | `adaptive-mitigation`"
       ],
       "seedDerived": [
         "label",
@@ -900,7 +1066,7 @@ export const MODULE_REGISTRY = {
       "workspace": "lpbf",
       "label": "Defect Fatigue & Crack Growth",
       "description": "Murakami √area fatigue limit, Kitagawa–Takahashi / El-Haddad diagram and Paris-law crack growth from an entered defect size; screening estimates from a steel-derived formula; surface roughness is not modelled; R enters only through an empirical power-law factor on the fatigue limit and the peak stress of the critical crack size, not the Paris growth rate; the per-alloy constants are internal table values without a literature source.",
-      "next": "adaptive-mitigation",
+      "next": "keyhole-raytracing",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -1082,233 +1248,6 @@ export const MODULE_REGISTRY = {
         "src/components/MurakamiFatigueLab.tsx::MurakamiFatigueLab",
         "src/services/pythonComputationService.ts::computeMurakamiFatigue",
         "docs/MODULE_EVIDENCE_INVENTORY.md:32#`murakami-fatigue` /"
-      ],
-      "seedDerived": [
-        "label",
-        "description",
-        "next",
-        "maturity"
-      ]
-    },
-    {
-      "id": "adaptive-mitigation",
-      "version": "0.1.0",
-      "owner": "unassigned (needs maintainer)",
-      "workspace": "lpbf",
-      "label": "Corner Power Compensation",
-      "description": "Open-loop feed-forward: laser power scaled per vector when the vector cannot reach its commanded speed, 67° layer rotation and G-code export; no sensor feedback, no defect prediction.",
-      "next": "keyhole-raytracing",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/LpbfAdaptiveMitigationLab.tsx",
-        "export": "LpbfAdaptiveMitigationLab"
-      },
-      "operations": [
-        {
-          "id": "adaptive-feedforward",
-          "method": "POST",
-          "route": "/api/python/lpbf-adaptive-feedforward",
-          "authority": {
-            "kind": "lpbf-worker",
-            "script": null,
-            "workerMethod": "adaptive-feedforward",
-            "timeoutMs": 20000,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": null
-          },
-          "input": [
-            {
-              "key": "format",
-              "label": "Toolpath format",
-              "valueType": "enum",
-              "unit": null,
-              "displayUnits": [],
-              "quantityKind": "toolpath-format",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": "gcode",
-              "required": false,
-              "enum": [
-                "gcode",
-                "cli"
-              ],
-              "note": "The authority lower-cases the value and parses anything other than 'cli' as G-code.",
-              "unitSelector": null,
-              "unitOptions": {}
-            },
-            {
-              "key": "defaultPower_W",
-              "label": "Default laser power",
-              "valueType": "number",
-              "unit": "W",
-              "displayUnits": [],
-              "quantityKind": "power",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": 280.0,
-              "required": false,
-              "enum": [],
-              "note": "Converted with float(); no bound is enforced.",
-              "unitSelector": null,
-              "unitOptions": {}
-            },
-            {
-              "key": "defaultSpeed_mms",
-              "label": "Default scan speed",
-              "valueType": "number",
-              "unit": "mm/s",
-              "displayUnits": [],
-              "quantityKind": "speed",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": 1000.0,
-              "required": false,
-              "enum": [],
-              "note": "Converted with float(); no bound is enforced.",
-              "unitSelector": null,
-              "unitOptions": {}
-            },
-            {
-              "key": "apply67DegRotation",
-              "label": "Apply 67° interlayer rotation",
-              "valueType": "boolean",
-              "unit": null,
-              "displayUnits": [],
-              "quantityKind": "flag",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": false,
-              "required": false,
-              "enum": [],
-              "note": "The authority coerces with bool(); the contract accepts only booleans.",
-              "unitSelector": null,
-              "unitOptions": {}
-            },
-            {
-              "key": "layerIndex",
-              "label": "Layer index",
-              "valueType": "integer",
-              "unit": "1",
-              "displayUnits": [],
-              "quantityKind": "count",
-              "min": null,
-              "max": null,
-              "step": 1,
-              "default": 1,
-              "required": false,
-              "enum": [],
-              "note": "Converted with int(); no bound is enforced. When apply67DegRotation is true the rotation angle is 67° x layerIndex; otherwise it is 0.",
-              "unitSelector": null,
-              "unitOptions": {}
-            },
-            {
-              "key": "accelMax_mms2",
-              "label": "Maximum mirror acceleration",
-              "valueType": "number",
-              "unit": "mm/s^2",
-              "displayUnits": [],
-              "quantityKind": "acceleration",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": 40000.0,
-              "required": false,
-              "enum": [],
-              "note": "Converted with float(); no bound is enforced.",
-              "unitSelector": null,
-              "unitOptions": {}
-            },
-            {
-              "key": "jumpSpeed_mms",
-              "label": "Jump speed",
-              "valueType": "number",
-              "unit": "mm/s",
-              "displayUnits": [],
-              "quantityKind": "speed",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": 3000.0,
-              "required": false,
-              "enum": [],
-              "note": "Converted with float(); no bound is enforced.",
-              "unitSelector": null,
-              "unitOptions": {}
-            }
-          ],
-          "undeclaredInput": [
-            "content"
-          ],
-          "output": {
-            "fields": [
-              "total_segments",
-              "mitigated_hotspots_count",
-              "overall_energy_reduction_pct",
-              "rotation_angle_deg",
-              "total_mitigated_energy_J",
-              "mitigated_gcode",
-              "sample_segments"
-            ],
-            "statusKey": null,
-            "transportValues": {},
-            "transportObjects": {}
-          }
-        }
-      ],
-      "validityDomain": null,
-      "evidence": {
-        "emits": [],
-        "ceiling": "screening-only",
-        "forbiddenClaims": [
-          "qualified",
-          "certified",
-          "validated",
-          "measured",
-          "productionReady",
-          "airworthy"
-        ],
-        "note": "Emits no evidence status: the output has no status key. Feed-forward power scaling P_nom * min(1, v_peak / v_nom) from the kinematic peak speed of each vector, plus an optional rotation by 67° x layerIndex about the origin; no sensor signal is read, so nothing is closed-loop, and no defect reduction is measured. Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated."
-      },
-      "lifecycle": {
-        "backgroundWork": "none",
-        "resources": [
-          "fetch"
-        ]
-      },
-      "tests": {
-        "schema": "python/test_contract_adaptive_mitigation.py",
-        "oracle": {
-          "status": "pending",
-          "ref": null,
-          "ciNote": null,
-          "scope": null
-        },
-        "docs": "docs/modules/adaptive-mitigation.md"
-      },
-      "migrationState": "contracted",
-      "legacyNotes": [
-        "content is the raw G-code or CLI text (default empty: zero segments). The Field schema cannot describe free text, so it is recorded as undeclaredInput.",
-        "mitigated_hotspots_count counts laser vectors whose kinematic peak speed is below 0.99 x the nominal speed; it is not the toolpath-studio hotspot definition (average linear energy density above 1.25 x nominal P/v). overall_energy_reduction_pct uses the nominal-speed time of each vector.",
-        "The cited inventory row named the route /api/python/lpbf-adaptive-mitigation, which does not exist; the Phase 7 wave 2 fix round corrected it to the served /api/python/lpbf-adaptive-feedforward.",
-        "No validity domain is declared: no source-backed applicability range is established."
-      ],
-      "sourceRefs": [
-        "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
-        "python/lpbf_worker_rpc.py::dispatch",
-        "python/lpbf_worker_rpc.py::_rpc_adaptive_feedforward",
-        "python/lpbf_adaptive_feedforward.py::AdaptiveFeedforwardMitigator.compensate_vector",
-        "python/lpbf_adaptive_feedforward.py::AdaptiveFeedforwardMitigator.process_toolpath",
-        "routes/lpbfSimulation.ts:32#/api/python/lpbf-adaptive-feedforward",
-        "src/components/LpbfAdaptiveMitigationLab.tsx::LpbfAdaptiveMitigationLab",
-        "src/services/pythonComputationService.ts::processAdaptiveFeedforward",
-        "docs/MODULE_EVIDENCE_INVENTORY.md:34#`adaptive-mitigation` /"
       ],
       "seedDerived": [
         "label",
@@ -4260,8 +4199,8 @@ export const MODULE_REGISTRY = {
       ],
       "sourceRefs": [
         "python/module_registry.py::build_registry",
-        "src/App.tsx:193-193#case 'phase-diagram': return <PhaseDiagramViewer />;",
-        "src/modules/views.ts:24-24#'phase-diagram': lazy(",
+        "src/App.tsx:209-209#case 'phase-diagram': return <PhaseDiagramViewer />;",
+        "src/modules/views.ts:23-23#'phase-diagram': lazy(",
         "src/components/PhaseDiagramViewer.tsx::PhaseDiagramViewer",
         "src/components/PhaseDiagramViewer.tsx::FEC_ALLOY_PRESETS",
         "src/components/PhaseDiagramViewer.tsx::handleSelectPreset",

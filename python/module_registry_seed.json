@@ -55,19 +55,9 @@
     "label": "Defect Fatigue & Crack Growth",
     "scope": "Research",
     "description": "Murakami √area fatigue limit, Kitagawa–Takahashi / El-Haddad diagram and Paris-law crack growth from an entered defect size; screening estimates from a steel-derived formula; surface roughness is not modelled; R enters only through an empirical power-law factor on the fatigue limit and the peak stress of the critical crack size, not the Paris growth rate; the per-alloy constants are internal table values without a literature source.",
-    "next": "adaptive-mitigation",
+    "next": "keyhole-raytracing",
     "viewComponent": "src/components/MurakamiFatigueLab.tsx",
     "viewExport": "MurakamiFatigueLab"
-  },
-  {
-    "id": "adaptive-mitigation",
-    "workspace": "lpbf",
-    "label": "Corner Power Compensation",
-    "scope": "Research",
-    "description": "Open-loop feed-forward: laser power scaled per vector when the vector cannot reach its commanded speed, 67° layer rotation and G-code export; no sensor feedback, no defect prediction.",
-    "next": "keyhole-raytracing",
-    "viewComponent": "src/components/LpbfAdaptiveMitigationLab.tsx",
-    "viewExport": "LpbfAdaptiveMitigationLab"
   },
   {
     "id": "keyhole-raytracing",

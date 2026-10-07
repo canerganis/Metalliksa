@@ -473,8 +473,9 @@ _PENDING_CAP = ("Ceiling: the pending-oracle cap (screening-only); no oracle exi
                 "unvalidated.")
 
 
-def _wave2(row, operation: Operation, evidence_note: str, notes, sources, resources=("fetch",)) -> ModuleContract:
-    return _pilot(row, operation=operation, reviewed={},
+def _wave2(row, operation: Operation, evidence_note: str, notes, sources, resources=("fetch",),
+           extra_operations=(), version=None) -> ModuleContract:
+    return _pilot(row, operation=operation, reviewed={}, extra_operations=extra_operations, version=version,
                   evidence=Evidence(emits=(), ceiling=PENDING_ORACLE_CEILING, forbidden_claims=_PILOT_FORBIDDEN,
                                     note=evidence_note),
                   oracle=Oracle(status="pending"),
@@ -747,7 +748,7 @@ def _fatigue_contract(row: Dict[str, str]) -> ModuleContract:
         ))
 
 
-# toolpath-studio and adaptive-mitigation share the G-code/CLI parser (lpbf_toolpath_kinematics).
+# The two toolpath-studio operations (kinematics and adaptive feed-forward) share the G-code/CLI parser (lpbf_toolpath_kinematics).
 _TOOLPATH_FORMAT = _choice("format", "Toolpath format", "toolpath-format", ("gcode", "cli"), "gcode",
                            note="The authority lower-cases the value and parses anything other than 'cli' as G-code.")
 _CONTENT_NOTE = ("content is the raw G-code or CLI text (default empty: zero segments). The Field schema cannot "
@@ -771,37 +772,6 @@ _TOOLPATH_FIELDS = (
 )
 
 
-def _toolpath_contract(row: Dict[str, str]) -> ModuleContract:
-    operation = _worker_contract_op(
-        "toolpath-kinematics", _TOOLPATH_FIELDS,
-        OutputSchema(fields=("total_segments", "total_build_time_s", "total_laser_on_time_s", "duty_cycle_pct",
-                             "total_energy_input_J", "total_mark_distance_mm", "total_jump_distance_mm",
-                             "hotspot_count", "hotspots", "skywriting_mitigation_active", "no_cruise_segment_count",
-                             "marking_segment_count", "laser_never_fires", "warnings"), status_key=None),
-        undeclared=("content",))
-    return _wave2(
-        row, operation,
-        evidence_note=(
-            "Emits no evidence status: the output has no status key. Trapezoidal or triangular galvanometer "
-            "velocity profiles plus the configured scanner delays; a hotspot is a segment whose average linear energy density exceeds 1.25 times the "
-            "nominal P/v. No thermal field is solved and no in-situ measurement is compared. " + _PENDING_CAP),
-        notes=(
-            _CONTENT_NOTE,
-            "No validity domain is declared: no source-backed applicability range is established for the scanner "
-            "parameters.",
-        ),
-        sources=_WORKER_SOURCES + (
-            "python/lpbf_worker_rpc.py::_rpc_toolpath_kinematics",
-            "python/lpbf_toolpath_kinematics.py::ScannerProfile",
-            "python/lpbf_toolpath_kinematics.py::GalvanometerKinematicsEngine.simulate_vector",
-            "python/lpbf_toolpath_kinematics.py::GalvanometerKinematicsEngine.simulate_toolpath",
-            "routes/lpbfSimulation.ts:30#/api/python/lpbf-toolpath-kinematics",
-            "src/components/LpbfToolpathStudioLab.tsx::LpbfToolpathStudioLab",
-            "src/services/pythonComputationService.ts::simulateToolpathKinematics",
-            "docs/MODULE_EVIDENCE_INVENTORY.md:30#`toolpath-studio` /",
-        ))
-
-
 _ADAPTIVE_FIELDS = (
     _TOOLPATH_FORMAT,
     _num("defaultPower_W", "Default laser power", "W", "power", 280.0,
@@ -819,8 +789,16 @@ _ADAPTIVE_FIELDS = (
 )
 
 
-def _adaptive_contract(row: Dict[str, str]) -> ModuleContract:
+def _toolpath_contract(row: Dict[str, str]) -> ModuleContract:
     operation = _worker_contract_op(
+        "toolpath-kinematics", _TOOLPATH_FIELDS,
+        OutputSchema(fields=("total_segments", "total_build_time_s", "total_laser_on_time_s", "duty_cycle_pct",
+                             "total_energy_input_J", "total_mark_distance_mm", "total_jump_distance_mm",
+                             "hotspot_count", "hotspots", "skywriting_mitigation_active", "no_cruise_segment_count",
+                             "marking_segment_count", "laser_never_fires", "warnings"), status_key=None),
+        undeclared=("content",))
+    # Merged in from the former adaptive-mitigation module (Feed-forward power tab of the same view).
+    feedforward = _worker_contract_op(
         "adaptive-feedforward", _ADAPTIVE_FIELDS,
         OutputSchema(fields=("total_segments", "mitigated_hotspots_count", "overall_energy_reduction_pct",
                              "rotation_angle_deg", "total_mitigated_energy_J", "mitigated_gcode", "sample_segments"),
@@ -828,13 +806,23 @@ def _adaptive_contract(row: Dict[str, str]) -> ModuleContract:
         undeclared=("content",))
     return _wave2(
         row, operation,
+        extra_operations=(feedforward,),
+        version="0.2.0",
         evidence_note=(
-            "Emits no evidence status: the output has no status key. Feed-forward power scaling P_nom * min(1, "
+            "Emits no evidence status: the output has no status key. Trapezoidal or triangular galvanometer "
+            "velocity profiles plus the configured scanner delays; a hotspot is a segment whose average linear energy density exceeds 1.25 times the "
+            "nominal P/v. No thermal field is solved and no in-situ measurement is compared. "
+            "Operation adaptive-feedforward (Feed-forward power tab) emits no evidence status either: the output has "
+            "no status key. Feed-forward power scaling P_nom * min(1, "
             "v_peak / v_nom) from the kinematic peak speed of each vector, plus an optional rotation by 67° x "
             "layerIndex about the origin; no sensor signal is read, so nothing is closed-loop, and no defect "
             "reduction is measured. " + _PENDING_CAP),
         notes=(
             _CONTENT_NOTE,
+            "No validity domain is declared: no source-backed applicability range is established for the scanner "
+            "parameters.",
+            "Contract 0.2.0: the adaptive-feedforward operation was merged in from the former adaptive-mitigation "
+            "module (now the Feed-forward power tab of this view); the worker route and RPC are unchanged.",
             "mitigated_hotspots_count counts laser vectors whose kinematic peak speed is below 0.99 x the nominal "
             "speed; it is not the toolpath-studio hotspot definition (average linear energy density above 1.25 x "
             "nominal P/v). overall_energy_reduction_pct uses the nominal-speed time of each vector.",
@@ -843,13 +831,21 @@ def _adaptive_contract(row: Dict[str, str]) -> ModuleContract:
             "No validity domain is declared: no source-backed applicability range is established.",
         ),
         sources=_WORKER_SOURCES + (
+            "python/lpbf_worker_rpc.py::_rpc_toolpath_kinematics",
+            "python/lpbf_toolpath_kinematics.py::ScannerProfile",
+            "python/lpbf_toolpath_kinematics.py::GalvanometerKinematicsEngine.simulate_vector",
+            "python/lpbf_toolpath_kinematics.py::GalvanometerKinematicsEngine.simulate_toolpath",
+            "routes/lpbfSimulation.ts:30#/api/python/lpbf-toolpath-kinematics",
+            "src/components/LpbfToolpathStudioLab.tsx::LpbfToolpathStudioLab",
+            "src/services/pythonComputationService.ts::simulateToolpathKinematics",
+            "docs/MODULE_EVIDENCE_INVENTORY.md:30#`toolpath-studio` /",
             "python/lpbf_worker_rpc.py::_rpc_adaptive_feedforward",
             "python/lpbf_adaptive_feedforward.py::AdaptiveFeedforwardMitigator.compensate_vector",
             "python/lpbf_adaptive_feedforward.py::AdaptiveFeedforwardMitigator.process_toolpath",
             "routes/lpbfSimulation.ts:32#/api/python/lpbf-adaptive-feedforward",
-            "src/components/LpbfAdaptiveMitigationLab.tsx::LpbfAdaptiveMitigationLab",
+            "src/components/LpbfToolpathStudioLab.tsx::ToolpathFeedforwardPanel",
             "src/services/pythonComputationService.ts::processAdaptiveFeedforward",
-            "docs/MODULE_EVIDENCE_INVENTORY.md:34#`adaptive-mitigation` /",
+            "docs/MODULE_EVIDENCE_INVENTORY.md:34#Merged 2026-10-07 | `adaptive-mitigation`",
         ))
 
 
@@ -964,9 +960,11 @@ def _micrograph_contract(row: Dict[str, str]) -> ModuleContract:
     )
 
 
-def _pilot(row, *, reviewed, operation, evidence, oracle, lifecycle, notes, sources) -> ModuleContract:
-    """Contract around one operation. ``reviewed`` replaces seed identity text (SEED_TEXT_FIELDS);
-    every field not replaced is recorded as seed-derived (unreviewed)."""
+def _pilot(row, *, reviewed, operation, evidence, oracle, lifecycle, notes, sources,
+           extra_operations=(), version=None) -> ModuleContract:
+    """Contract around one operation (plus ``extra_operations`` when a view serves more than one).
+    ``reviewed`` replaces seed identity text (SEED_TEXT_FIELDS); every field not replaced is recorded
+    as seed-derived (unreviewed). ``version`` overrides CONTRACT_VERSION for a bumped contract."""
     slug = row["id"].replace("-", "_")
     seed = {"label": row["label"], "description": row["description"], "next": row["next"], "maturity": row["scope"]}
     unknown = set(reviewed) - set(SEED_TEXT_FIELDS)
@@ -974,13 +972,13 @@ def _pilot(row, *, reviewed, operation, evidence, oracle, lifecycle, notes, sour
         raise ValueError(f"{row['id']}: reviewed names non-seed fields {sorted(unknown)}")
     text = {**seed, **reviewed}
     return ModuleContract(
-        id=row["id"], version=CONTRACT_VERSION, owner=OWNER_UNASSIGNED, workspace=row["workspace"],
+        id=row["id"], version=version or CONTRACT_VERSION, owner=OWNER_UNASSIGNED, workspace=row["workspace"],
         label=text["label"], description=text["description"], next=text["next"], maturity=text["maturity"],
         navigation="listed", seed_derived=tuple(f for f in SEED_TEXT_FIELDS if f not in reviewed),
         view=View(component=row["viewComponent"], export=row["viewExport"]),
         evidence=evidence,
         tests=TestRefs(oracle=oracle, schema=f"python/test_contract_{slug}.py", docs=module_doc_path(row["id"])),
-        migration_state="contracted", operations=(operation,), lifecycle=lifecycle,
+        migration_state="contracted", operations=(operation, *extra_operations), lifecycle=lifecycle,
         legacy_notes=notes, source_refs=sources,
     )
 
@@ -1006,7 +1004,6 @@ CONTRACTED_BUILDERS = {
     "icme-motor": _icme_contract,
     "murakami-fatigue": _fatigue_contract,
     "toolpath-studio": _toolpath_contract,
-    "adaptive-mitigation": _adaptive_contract,
     # Micrograph rework (python/micrograph_measure.py authority)
     "micrograph": _micrograph_contract,
 }
