@@ -8,6 +8,7 @@ import {
   type ScorecardHeadlineRow,
   type ScorecardN01,
 } from "../data/lpbfCalibrationScorecard";
+import { summarizeScorecard, SUMMARY_LEGEND, SUMMARY_METRIC_DEFINITION } from "../data/lpbfCalibrationScorecardSummary";
 import { COMMITTED_CALIBRATION_SCORECARD } from "../data/lpbfCalibrationScorecardRecord";
 
 // Read-only view of the Python-generated record docs/LPBF_CALIBRATION_SCORECARD_<date>.view.json.
@@ -18,7 +19,7 @@ type SlotProps = { children: React.ReactNode; className?: string };
 const Card = ({ children, className = "" }: SlotProps) => <section className={`rounded-xl border border-slate-200 bg-white shadow-sm ${className}`}>{children}</section>;
 const CardHeader = ({ children, className = "" }: SlotProps) => <header className={`border-b border-slate-100 bg-slate-50 p-4 ${className}`}>{children}</header>;
 const CardContent = ({ children, className = "" }: SlotProps) => <div className={`p-4 ${className}`}>{children}</div>;
-const CardTitle = ({ children, className = "" }: SlotProps) => <h2 className={`font-semibold text-slate-800 ${className}`}>{children}</h2>;
+const CardTitle = ({ children, className = "" }: SlotProps) => <h3 className={`font-semibold text-slate-800 ${className}`}>{children}</h3>;
 
 export const KERNEL_LABELS: Readonly<Record<string, string>> = {
   rosenthal: "Rosenthal",
@@ -274,6 +275,42 @@ function ParamsTable({ rows }: { rows: readonly ScorecardHeadlineRow[] }) {
   );
 }
 
+// The app routes on the URL hash (an unknown hash opens LPBF), so the jump scrolls and focuses instead of navigating.
+function jumpToDetails() {
+  const target = document.getElementById("detailed-tables");
+  if (!target) return;
+  target.scrollIntoView({ block: "start" });
+  target.focus();
+}
+
+function PlainLanguageCard({ doc }: { doc: LpbfCalibrationScorecardDocument }) {
+  const summary = summarizeScorecard(doc);
+  return (
+    <section data-testid="plain-summary" aria-labelledby="plain-summary-title" className="rounded-xl border border-slate-200 bg-white shadow-sm">
+      <header className="border-b border-slate-100 bg-slate-50 p-4">
+        <h2 id="plain-summary-title" className="font-semibold text-slate-800">In plain language</h2>
+        {doc.quick ? <p className="mt-1 text-xs font-semibold text-amber-900">SMOKE RUN: not a record.</p> : null}
+      </header>
+      <div className="p-4 text-sm text-slate-800">
+        <ul className="list-disc space-y-1 pl-5">
+          {summary.items.map((it) => (
+            <li key={it.id} data-summary-item={it.id}>
+              {it.parts.map((p, i) => (p.number ? <strong key={i} data-source={p.number.source} title={`record field: ${p.number.source}`}>{p.t}</strong> : <React.Fragment key={i}>{p.t}</React.Fragment>))}.
+            </li>
+          ))}
+        </ul>
+        <p data-testid="summary-legend" className="mt-3 text-xs text-slate-700">Error words: {SUMMARY_LEGEND}.</p>
+        <p className="mt-1 text-xs text-slate-600">Metric: {SUMMARY_METRIC_DEFINITION} Screening only, not validation.</p>
+        <details className="mt-2 text-xs text-slate-700">
+          <summary className="cursor-pointer font-medium">What this does not show</summary>
+          <ul className="mt-1 list-disc space-y-1 pl-5">{summary.notes.map((n, i) => <li key={`note-${i}`}>{n}</li>)}</ul>
+        </details>
+        <p className="mt-3 text-xs"><button type="button" className="underline text-sky-800" onClick={jumpToDetails}>Jump to details</button></p>
+      </div>
+    </section>
+  );
+}
+
 export function LpbfCalibrationScorecardLab({ document: doc = COMMITTED_CALIBRATION_SCORECARD }: { document?: LpbfCalibrationScorecardDocument | null } = {}) {
   if (!doc) {
     return (
@@ -293,6 +330,12 @@ export function LpbfCalibrationScorecardLab({ document: doc = COMMITTED_CALIBRAT
         <p className="mt-1 text-xs text-slate-400">Label promotion proposed: <strong>{doc.evidence.labelPromotionProposed}</strong>. Generated {doc.generatedAt}; implementation fingerprint <code>{doc.implementationHash}</code>; config sha256 <code>{doc.configSha256}</code>.{doc.quick ? " SMOKE RUN: not a record." : ""}</p>
       </header>
 
+      <PlainLanguageCard doc={doc} />
+
+      <N01Card n01={doc.n01} note={doc.catalogSentinels.note} />
+
+      <h2 id="detailed-tables" tabIndex={-1} className="px-4 pt-2 text-base font-semibold text-slate-100">Detailed tables</h2>
+
       <Card>
         <CardHeader><CardTitle>Gate outcome</CardTitle></CardHeader>
         <CardContent>
@@ -305,8 +348,6 @@ export function LpbfCalibrationScorecardLab({ document: doc = COMMITTED_CALIBRAT
           <HeadlineTable rows={doc.headline} />
         </CardContent>
       </Card>
-
-      <N01Card n01={doc.n01} note={doc.catalogSentinels.note} />
 
       <Card>
         <CardHeader><CardTitle>Held-out errors (leave-one-source-out)</CardTitle></CardHeader>
