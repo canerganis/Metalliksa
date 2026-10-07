@@ -76,6 +76,14 @@ TOTIS_SOURCE = {
 
 HOFMANN_PROVENANCE = {
     "id": "hofmann-316l-2026",
+    "depthDatum": "substrate-surface (paper Fig. 2)",
+    "beamDefinition": "not stated; 1/e2 assumed",
+    "depthDatumNote": ("penetration_depth_um is measured from the original substrate surface (powder/substrate "
+                       "interface) to the melt-pool bottom and weld_width_um at that surface (Hofmann et al. 2026, "
+                       "Fig. 2 'Schematic melt pool parametrisation' and Sec. 2.2). For t_powder > 0 the consolidated "
+                       "layer above the datum is NOT part of the depth. Spot: Gaussian single-mode, focus 50 um, "
+                       "defocused to 80/110/140 um (Sec. 2.1); the diameter definition is not stated (1/e2 assumed). "
+                       "PSD D10/D50/D90 = 17.5/30.4/46.6 um (Table 1); packing not stated."),
     "doi": "10.5281/zenodo.16979848",
     "url": "https://zenodo.org/records/16979848",
     "license": "CC BY 4.0",
@@ -86,7 +94,12 @@ HOFMANN_PROVENANCE = {
     "caveats": [
         "Measured cross-sections from micrographs; the uncertainty budget is not stated in the files read.",
         "The d_laser column is the laser spot DIAMETER in mm; the diameter definition (1/e^2 or other) is not "
-        "stated on the Zenodo record and was not confirmed from the paper: treated as 1/e^2 by assumption.",
+        "stated on the Zenodo record or in the paper (Sec. 2.1 gives a single-mode Gaussian beam, 50 um focus "
+        "diameter, defocused to 80-140 um): treated as 1/e^2 by assumption.",
+        "Depth datum (settled from the paper, Fig. 2 and Sec. 2.2): penetration depth is measured from the original "
+        "substrate surface, not from the powder surface; for t_powder > 0 a model that computes depth from the free "
+        "(powder) surface is offset by the layer height above the datum (geometric assumption h_surface = phi*t, "
+        "phi = 0.60 packing from Trapp 2017; powder denudation not modelled).",
         "Absorptivity is not measured; the comparison uses the repo's estimated 316L absorptivity.",
         "Build-plate temperature is not given: 20 C is an assumption.",
         "t_powder = 0 rows are bare plate; t_powder 30/60 um are powder layers (the packing is not stated).",
@@ -99,6 +112,12 @@ HOFMANN_PROVENANCE = {
 }
 TOTIS_PROVENANCE = {
     "id": "totis-ti64-2021",
+    "depthDatum": "printed-base top surface (paper Fig. 1/2b)",
+    "beamDefinition": "1/e2 (stated)",
+    "depthDatumNote": ("depth_um is measured from the top surface of the printed Ti-6Al-4V base (below the 25 um "
+                       "powder layer) to the track bottom; height_um is above that surface (Vaglio et al. 2020, "
+                       "Fig. 1 and Fig. 2(b), Sec. 1.3). Spot 50 um at 1/e2 (M2 1.08, 1070 nm; Sec. 2). The base was "
+                       "printed in the same job (Table 3), not a wrought plate."),
     "doi": "10.17632/s9438vb5xd.1",
     "url": "https://data.mendeley.com/datasets/s9438vb5xd/1",
     "license": "CC BY 4.0",
@@ -109,8 +128,10 @@ TOTIS_PROVENANCE = {
     "caveats": [
         "Tracks were made on a 25 um powder layer over a printed Ti-6Al-4V base (not a bare plate, not a "
         "semi-infinite wrought substrate); the 50 um spot is taken as 1/e^2 from the research note.",
-        "The workbook does not state the depth reference line (original substrate surface vs powder surface): "
-        "depth is used 'as found'; the Mendeley page and the workbook do not say.",
+        "The workbook does not state the depth reference line, but the associated paper does (Vaglio et al. 2020, "
+        "Fig. 1 and Fig. 2(b), Sec. 1.3): depth is measured from the top of the printed base under the 25 um powder "
+        "layer, height above it. A model that computes depth from the powder surface is offset by the layer height "
+        "above the datum (geometric assumption h_surface = phi*t, phi = 0.60; powder denudation not modelled).",
         "One track per (power, speed) cell: no replicates, no scatter estimate.",
         "Absorptivity is not measured; the comparison uses the repo's estimated Ti-6Al-4V absorptivity.",
         "Build-plate temperature is not given: 20 C is an assumption.",
@@ -350,7 +371,7 @@ def load_totis_ti64(path_or_zip: Optional[Union[str, Path]] = None, verify: bool
     prov = dict(TOTIS_PROVENANCE)
     prov.update(file=src.name, fileSha256=digest, rows=len(rows), source=dict(TOTIS_SOURCE),
                 columns={"power_W": "W", "speed_mm_s": "mm/s", "width_um": "um (SEM cross-section)",
-                         "depth_um": "um (reference line not stated)", "height_um": "um",
+                         "depth_um": "um (from the printed-base top surface, paper Fig. 1/2b)", "height_um": "um",
                          "contactAngle_deg": "deg"})
     return {"rows": rows, "provenance": prov}
 
