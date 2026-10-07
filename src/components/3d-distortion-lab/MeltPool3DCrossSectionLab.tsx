@@ -763,7 +763,7 @@ export const MeltPool3DCrossSectionLab: React.FC<MeltPool3DCrossSectionProps> = 
             onClick={() => applyPreset("keyhole-danger")}
             className="px-2 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] transition"
           >
-            High keyhole screening indicator
+            Keyhole-mode preset (porosity screen: High)
           </button>
           <button
             type="button"

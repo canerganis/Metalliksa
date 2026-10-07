@@ -460,7 +460,7 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
               <Metric
                 label="ΔH/hₛ"
                 value={String(thermal.processParameters.normalizedEnthalpy)}
-                ok={keyholeGateStatus === undefined ? undefined : keyholeGateStatus === "pass" || keyholeGateStatus === "advisory"}
+                ok={keyholeGateOk(keyholeGateStatus)}
                 hint="porosity unresolved: legacy screen ≥ 30 · regime keyhole ≥ 20 (provisional)"
               />
               <Metric
@@ -777,6 +777,12 @@ export const VerdictBanner: React.FC<{
     </ul>
   </div>
 );
+
+/** Missing verdict -> null (rendered as unavailable), never the Metric default ok=true. */
+export function keyholeGateOk(status: string | undefined): boolean | null {
+  if (status === undefined) return null;
+  return status === "pass" || status === "advisory";
+}
 
 /** ok = null: no pass/fail is possible (dashed, neutral), distinct from a passed check. */
 const Metric: React.FC<{ label: string; value: string; ok?: boolean | null; hint?: string }> = ({ label, value, ok = true, hint }) => (
