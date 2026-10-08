@@ -1009,7 +1009,7 @@ def run(raw, report=lambda *args: None, artifact_dir=None, capabilities=None,
                                 if bare else "Transient layer activation uses whole cells selected by their centers; source surface clipping does not implement cut-cell mass or conduction. Inspect numerical resolution diagnostics when available."),
                                "Geometry is the molten-domain extent at the earliest maximum volume over accepted timesteps; playback is sparse and multi-track pools may be disconnected. Sampling loss does not bound timestep or mesh error.",
                                ("Bare-plate W/D is the ever-liquidus cell extent on the YZ plane nearest the +X track midpoint; it is a thermal proxy for the optical cross section."
-                                if bare else "Cross section is the maximum YZ grid section; it is not scan-normal for rotated scans."),
+                                if bare else "Cross section is the largest scan-normal slab of liquidus cells at the peak-volume step (slab one projected cell wide, cell volume over slab thickness); within about 6 % of pi/4*W*D on a fine grid, coarse-grid voxel scatter remains."),
                                "R = -dT/dt / |grad T| at linearly reconstructed cooling liquidus crossings; gradient vectors are interpolated in time. G, R, G×R are separately event-averaged; G <= 1e-6 K/m is excluded.",
                                "Ma and laser-travel Pe are screening numbers, not resolved velocities.",
                                "Thermal history is input for subsequent mechanics; no residual stress, distortion or cracking prediction."],

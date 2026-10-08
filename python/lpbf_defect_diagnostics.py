@@ -11,7 +11,8 @@ import math
 from numbers import Real
 
 
-MODEL_ID = "elliptic-overlap-screening-v1"
+MODEL_ID = "elliptic-overlap-screening-v2"
+# v2: balling block semantics changed at d92d1a3a (band only from balling_screen(); risk null otherwise); geometry rule unchanged.
 
 # ---------------------------------------------------------------------------------------------
 # Balling / track-instability screen: ONE rule for every LPBF path. It replaces the frozen
@@ -19,19 +20,28 @@ MODEL_ID = "elliptic-overlap-screening-v1"
 #
 # Input: the liquidus L/W of the Eagar-Tsai kernel (eagar-tsai-v2, beam-size aware; Eagar & Tsai
 # 1983). The point-source Rosenthal L/W depends on P*v only (no beam radius).
-# Moderate: L/W > pi*sqrt(3/2) = 3.847, the critical wavelength / diameter of a segmented liquid
-#   cylinder on a substrate (Gusarov & Smurov 2010, Phys. Procedia 5:381; Yadroitsev et al. 2010,
-#   J. Mater. Process. Technol. 210:1624; written pi*W/L < sqrt(2/3) in Sheikh et al. 2023,
-#   arXiv 2304.04113, Eq. 7; tabulated in Katagiri et al. 2023, Materials 16:1729, Table 2).
-#   A literature bound for a measured track applied to a model L/W: advisory only.
+# Moderate: L/W > pi*sqrt(3/2) = 3.847. Yadroitsev et al. 2010 (J. Mater. Process. Technol. 210:1624, sec. 3.3)
+#   derive the capillary stability of a segmental liquid cylinder on a substrate, Eq. (12); for the full
+#   cylinder (contact angle pi) Eq. (13) gives pi*D/L > sqrt(2/3), i.e. L/D < pi*sqrt(3/2), with D the
+#   CYLINDER diameter and L the disturbance wavelength. Gusarov, Yadroitsev, Bertrand & Smurov 2007
+#   (Appl. Surf. Sci. 254:975, sec. 3-4) give the mechanism: the remelted track behaves as a liquid
+#   cylinder and breaks up when its length exceeds its circumference (Plateau-Rayleigh, free cylinder,
+#   L/D_cyl > pi); substrate contact stabilises it. In their 316L example at the onset (v ~ 20-24 cm/s)
+#   the pool is L ~ 300 / W ~ 150 / h 50 um -> D_cyl ~ 100 um: L/circumference ~ 1 while pool L/W ~ 2.
+#   The bound is written pi*W/L < sqrt(2/3) in Sheikh et al. 2023 (arXiv 2304.04113, Eq. 7) and tabulated
+#   in Katagiri et al. 2023 (Materials 16:1729, Table 2), both of which also cite Gusarov & Smurov 2010
+#   (Phys. Procedia 5:381) -- that paper is not in the repo and was not checked against its text.
+#   Applied here to the MODEL pool L/W as a proxy for wavelength / cylinder diameter: advisory only.
 # High: L/W > 5.5, EMPIRICAL: chosen on the Hofmann et al. 316L single tracks (Zenodo
 #   10.5281/zenodo.16979848, 677 tracks, 216 balling-flagged) with the Wave B (f3ba9896) Eagar-Tsai
 #   geometry, as the lowest 0.5-step L/W edge above which >= 90 % of the tracks balled (69/71 above
 #   5.5; 2 of 461 non-balled tracks flagged). In-sample, one alloy, one machine; the model L/W has
 #   about +-10 % uncertainty (absorptivity is estimated). A 'risky' screen, not a demonstrated
 #   balling prediction, never a do-not-print gate.
-# No depth (D/W) exemption: an earlier D/W < 1.2 clause was fitted to two Hofmann rows. Deep
-# keyhole tracks above 5.5 (KU Leuven, regime-labelled) are already do-not-print by the keyhole gate.
+# No depth (D/W) exemption: an earlier D/W < 1.2 clause was fitted to two Hofmann rows. KU Leuven tracks
+# above 5.5 (regime-labelled, no balling label) are already do-not-print by the keyhole gate
+# (dH/h_s >= 53 > 35); not all of them are deep keyholes (Ti-6Al-4V 200 W / 2000 mm/s / 37.5 um:
+# measured D/W 62/90 = 0.69).
 # ---------------------------------------------------------------------------------------------
 BALLING_SCREEN_MODEL_ID = "eagar-tsai-aspect-balling-screen-v1"
 BALLING_SCREEN_KERNEL = "eagar-tsai-v2"
@@ -39,9 +49,12 @@ BALLING_LW_MODERATE = math.pi * math.sqrt(1.5)
 BALLING_LW_HIGH = 5.5
 BALLING_LW_RELATIVE_UNCERTAINTY = 0.10
 BALLING_SCREEN_SOURCES = (
-    "Gusarov & Smurov 2010, Phys. Procedia 5:381 (doi 10.1016/j.phpro.2010.08.065) and Yadroitsev et al. 2010, "
-    "J. Mater. Process. Technol. 210:1624 (doi 10.1016/j.jmatprotec.2010.05.010): segmented-cylinder bound "
-    "L/W > pi*sqrt(3/2) = 3.85 (Moderate, advisory)",
+    "Yadroitsev, Gusarov, Yadroitsava & Smurov 2010, J. Mater. Process. Technol. 210:1624 (doi "
+    "10.1016/j.jmatprotec.2010.05.010), sec. 3.3 Eq. (12)-(13): segmental-cylinder capillary stability, full-cylinder "
+    "limit pi*D/L > sqrt(2/3), i.e. L/D < pi*sqrt(3/2) = 3.85 with D the cylinder diameter (Moderate, advisory)",
+    "Gusarov, Yadroitsev, Bertrand & Smurov 2007, Appl. Surf. Sci. 254:975 (doi 10.1016/j.apsusc.2007.08.074), "
+    "sec. 3-4: balling above ~20 cm/s (316L, 50 um layer) explained by the Plateau-Rayleigh break-up of the remelted "
+    "cylinder when its length exceeds its circumference; substrate contact stabilises (mechanism, no threshold on pool L/W)",
     "Hofmann et al. 316L single tracks, Zenodo 10.5281/zenodo.16979848 (Mater. Des. 262 (2026) 115459): "
     "empirical High threshold L/W > 5.5 on Eagar-Tsai geometry (in-sample, 316L only)",
     "Eagar & Tsai 1983, Welding J. 62:346s: beam-size-aware kernel that supplies L and W",
@@ -109,7 +122,8 @@ def balling_screen(length_um, width_um, depth_um, extent_status):
         "hofmannBalledFractionInBand": None,
         "verdictEffect": "none",
         "basis": ("Eagar-Tsai liquidus L/W: High > 5.5 (empirical, Hofmann 316L, in-sample) -> risky; Moderate > "
-                  "pi*sqrt(3/2) = 3.85 (Gusarov & Smurov 2010 / Yadroitsev et al. 2010) -> advisory only"),
+                  "pi*sqrt(3/2) = 3.85 (Yadroitsev et al. 2010 Eq. 13 cylinder bound, mechanism Gusarov et al. 2007; "
+                  "a wavelength/cylinder-diameter bound applied to the model pool L/W) -> advisory only"),
         "sources": list(BALLING_SCREEN_SOURCES),
         "evidence": BALLING_SCREEN_EVIDENCE,
         "experimentalValidation": False,
@@ -128,8 +142,8 @@ def balling_screen(length_um, width_um, depth_um, extent_status):
     elif lw > BALLING_LW_MODERATE:
         out["band"] = "moderate"
         out["verdictEffect"] = "advisory"
-        out["reason"] = (f"Eagar-Tsai L/W {lw:.2f} > pi*sqrt(3/2) = {BALLING_LW_MODERATE:.2f} (Gusarov & Smurov / "
-                         f"Yadroitsev segmented-cylinder bound); {out['hofmannBalledFractionInBand']} Hofmann 316L "
+        out["reason"] = (f"Eagar-Tsai L/W {lw:.2f} > pi*sqrt(3/2) = {BALLING_LW_MODERATE:.2f} (Yadroitsev 2010 "
+                         f"segmental-cylinder bound; Gusarov 2007 Plateau-Rayleigh mechanism); {out['hofmannBalledFractionInBand']} Hofmann 316L "
                          "tracks in this band balled. Advisory only.")
     else:
         out["band"] = "stable"
