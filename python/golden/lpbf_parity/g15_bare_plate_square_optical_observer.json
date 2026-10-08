@@ -4,9 +4,9 @@
  "group": "G15",
  "description": "Square bare plate with opticalObserver='nist-six-section', all artifacts",
  "slow": false,
- "recordedImplementationHash": "cda80143d28baf8dd39512065a8ce3683f4c97f46b20d53052b63b4cd34a41d2",
+ "recordedImplementationHash": "5f9d651e6e0edafbbc8ae7f27cf638aca3e8ae40ed60c644274a57a49cb90df3",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "dd77476713b324e87bdc941eb400a6774117cd5d",
+ "recordedGitHead": "4aeba763662d7b9fbb7425eb72ce44a491017462",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,8 +68,8 @@
   }
  },
  "recordedRuns_s": [
-  0.4,
-  0.3
+  0.9,
+  0.5
  ],
  "recordedTwice": true,
  "observations": {

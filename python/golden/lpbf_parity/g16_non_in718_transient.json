@@ -4,9 +4,9 @@
  "group": "G16",
  "description": "Standard transient for Ti-6Al-4V, 316L and AlSi10Mg",
  "slow": false,
- "recordedImplementationHash": "cda80143d28baf8dd39512065a8ce3683f4c97f46b20d53052b63b4cd34a41d2",
+ "recordedImplementationHash": "5f9d651e6e0edafbbc8ae7f27cf638aca3e8ae40ed60c644274a57a49cb90df3",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "dd77476713b324e87bdc941eb400a6774117cd5d",
+ "recordedGitHead": "4aeba763662d7b9fbb7425eb72ce44a491017462",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  3.6,
-  3.7
+  4.7,
+  4.8
  ],
  "recordedTwice": true,
  "observations": {
-  "ti6al4v.canonicalSha256": "80445ad9de58c60cf4910e5e04055bbc95226974ef062c12bb62020073cd1b2f",
-  "ti6al4v.orderedTypedSha256": "1a66e658fd994f8bd9110fdf3989c9325f4f1485c680382700650730b2f2af95",
+  "ti6al4v.canonicalSha256": "d3031d869ac79254ca389bf0886f8f0bf4acf3a48b2cea9cc28ac588e9948281",
+  "ti6al4v.orderedTypedSha256": "0291287e442a1a4920d3d244700ce0c1f30d44483a4b650738c313beaea27704",
   "ti6al4v.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -128,7 +128,7 @@
   "ti6al4v.key.label": "d43a69c11a67ead8bace06f3a1f6bbb75cc7abdeb2cabb5667c11525cadc7ea5",
   "ti6al4v.key.provenance": "5e133c8cff3775da7b4f2c36157b493fb5214c7f4766bbed1ad9b5828d50aeb4",
   "ti6al4v.key.analyticalComparison": "472a7d62de6b96ef003f7766bbdd405d17d873b2b76e692dc012af7bf803fe34",
-  "ti6al4v.key.assumptions": "d101249a14bc0c95dd6e3fe9fde8cac276ae237ddee197259537c46c796b69eb",
+  "ti6al4v.key.assumptions": "5f79bae5f08d4c592445b07af436541a91841e2f8a9212688f95cef3d3e1a104",
   "ti6al4v.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "ti6al4v.key.metrics": "f44e9fb1f7efe4386e208d8c603eaebbdb1e656c64a7c4fdec1122bbf1d4e8f0",
   "ti6al4v.key.thermalHistory": "82bdb6a0b597c7375080bc989a1259fef327fc16d1d35cca6275350faf7e4cef",
@@ -144,7 +144,7 @@
   "ti6al4v.key.scanPath": "dc3e33ed474765b3e39a505f1c66a57f2edc24dbbce56e8bf39fb3727e217e9c",
   "ti6al4v.key.massBalance": "76a18c37ca1159ef0fcb6d6f0483efa7736fc770b403d21b9e86686171436628",
   "ti6al4v.key.phaseAudit": "3bf522be3ae00071f6ccc0ffebe92d0c9691d52533302a37e023106d9e1c640a",
-  "ti6al4v.key.geometricDefectScreen": "0a2e63a5dc730f3ccfe878d655ff0359032f234b3a65b7e4b37ba1ef20084c57",
+  "ti6al4v.key.geometricDefectScreen": "04b2b4b50f901d05d259186282ef7ebdab10b39dedf4299886f8278762b1c7a9",
   "ti6al4v.key.regime": "8402f9dee3219d19f615e013b48c1880ccf31bc2e1badfb4e04de65d76e2547e",
   "ti6al4v.key.mainRisk": "3e47a880ef2d2d03259ff6adc09f4e6ae9ec408f168c8327752846fb584d73fd",
   "ti6al4v.key.recommendation": "f8d6898175c7acb736377dc94259b1a1e55e937d669cfe302362297e1ad64bde",
@@ -164,8 +164,8 @@
   "ti6al4v.label": "Unvalidated transient thermal",
   "ti6al4v.confidence": "low",
   "ti6al4v.implementationHashOccurrencesAfterStrip": 0,
-  "ss316l.canonicalSha256": "1ec3512be66322420751e8a74946909de20167f177d2f17a772073b1b6c07d3c",
-  "ss316l.orderedTypedSha256": "fc4e9af029db46a7592bcda92bcdfb8588c3be7736490ad962b3f64a65f8be65",
+  "ss316l.canonicalSha256": "b8a295270925e9a8a98348f2c4dc7f5b2b4d4bb70f70e657a530ddc571821148",
+  "ss316l.orderedTypedSha256": "f64c54a089c7d178155170de66510313c97f0f3dcc98ad9c9e176a02fe24e513",
   "ss316l.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -219,7 +219,7 @@
   "ss316l.key.label": "d43a69c11a67ead8bace06f3a1f6bbb75cc7abdeb2cabb5667c11525cadc7ea5",
   "ss316l.key.provenance": "6fff73f5ed1b01cbe8d25fc5cecefede3d8cf9fe99f0202bc247823a76725670",
   "ss316l.key.analyticalComparison": "1f43708bfa31fb81443464ce9e7749fbf432fb9280a32106a5392e47bbb189fe",
-  "ss316l.key.assumptions": "d101249a14bc0c95dd6e3fe9fde8cac276ae237ddee197259537c46c796b69eb",
+  "ss316l.key.assumptions": "5f79bae5f08d4c592445b07af436541a91841e2f8a9212688f95cef3d3e1a104",
   "ss316l.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "ss316l.key.metrics": "d2388104be1f34f2f82beceb7663ae23a03006fcebd7df70d9aaf557404d7f2a",
   "ss316l.key.thermalHistory": "0918c6f13311150a6486758bd787f76c326c18d9c55c8927d72948b4b9e3f362",
@@ -235,7 +235,7 @@
   "ss316l.key.scanPath": "dc3e33ed474765b3e39a505f1c66a57f2edc24dbbce56e8bf39fb3727e217e9c",
   "ss316l.key.massBalance": "48b2429657aeea969474d5f154a72cc6153e2ca5747816eadc93ac731d8ccd13",
   "ss316l.key.phaseAudit": "12e9bca04f7810290d71ed931cd75d53226a8dc48bf917b13679d5c22d8ddb3d",
-  "ss316l.key.geometricDefectScreen": "4e362a5de7ceb94d7d4819592a85991363867cf804bcb42ba5a087a48de69463",
+  "ss316l.key.geometricDefectScreen": "3c067b5aed33419e60f9205aca799cf15e14245b02380ae36bca2af012293b66",
   "ss316l.key.regime": "8402f9dee3219d19f615e013b48c1880ccf31bc2e1badfb4e04de65d76e2547e",
   "ss316l.key.mainRisk": "3e47a880ef2d2d03259ff6adc09f4e6ae9ec408f168c8327752846fb584d73fd",
   "ss316l.key.recommendation": "f8d6898175c7acb736377dc94259b1a1e55e937d669cfe302362297e1ad64bde",
@@ -255,8 +255,8 @@
   "ss316l.label": "Unvalidated transient thermal",
   "ss316l.confidence": "low",
   "ss316l.implementationHashOccurrencesAfterStrip": 0,
-  "alsi10mg.canonicalSha256": "a6591cbf4a384a440609ac3fdf803ca8f5bd8764e3906338586e64229a2b0efd",
-  "alsi10mg.orderedTypedSha256": "63dd7e96234ec5ca3a9d64641656f1b2ff03f86b4e1b6cca825dc742beba9ac4",
+  "alsi10mg.canonicalSha256": "1517aefaf07f3ecdbf6ccda9ecff5f1ec23927a2c82107b068ea393e33239dfe",
+  "alsi10mg.orderedTypedSha256": "614056b2ee26bd0b17cf86fabcd4ba893922f80563b1990759c9b3347e976b1f",
   "alsi10mg.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -310,7 +310,7 @@
   "alsi10mg.key.label": "d43a69c11a67ead8bace06f3a1f6bbb75cc7abdeb2cabb5667c11525cadc7ea5",
   "alsi10mg.key.provenance": "52b4a5f0e9a016aa6bf192849c49771b5fa6a7ab97c6e81319102e021a001a9c",
   "alsi10mg.key.analyticalComparison": "a2f8d58570fdac4a48464cf2a26e505ed6a19aae75f03bf75bec6653b4e83eea",
-  "alsi10mg.key.assumptions": "d101249a14bc0c95dd6e3fe9fde8cac276ae237ddee197259537c46c796b69eb",
+  "alsi10mg.key.assumptions": "5f79bae5f08d4c592445b07af436541a91841e2f8a9212688f95cef3d3e1a104",
   "alsi10mg.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "alsi10mg.key.metrics": "a755f04f110c932a876ea32fc81a40c107af365ff3140377bd4eff2f1238524d",
   "alsi10mg.key.thermalHistory": "17e40bc86155939126f94806edde080073b9d76d846c31f746dcac0d99fe7220",
@@ -326,7 +326,7 @@
   "alsi10mg.key.scanPath": "dc3e33ed474765b3e39a505f1c66a57f2edc24dbbce56e8bf39fb3727e217e9c",
   "alsi10mg.key.massBalance": "703f979690e4dc9e68bbf717347866acf2dd6240bf8b056d35c388898e30b6fd",
   "alsi10mg.key.phaseAudit": "ae091d27f961edd95e45d3d32234c9e6e5f952e9d70db43293159240fefca025",
-  "alsi10mg.key.geometricDefectScreen": "5575c45e51ae4ca74d1450b006d840df261fa0d9073d82ad41be1089cce18c1c",
+  "alsi10mg.key.geometricDefectScreen": "c6ca123ff3b283cd968d75f2049fea080acf6348aa2c5abcb730cf1dfa47e3f0",
   "alsi10mg.key.regime": "8402f9dee3219d19f615e013b48c1880ccf31bc2e1badfb4e04de65d76e2547e",
   "alsi10mg.key.mainRisk": "3e47a880ef2d2d03259ff6adc09f4e6ae9ec408f168c8327752846fb584d73fd",
   "alsi10mg.key.recommendation": "f8d6898175c7acb736377dc94259b1a1e55e937d669cfe302362297e1ad64bde",
@@ -380,7 +380,7 @@
    "Gaussian penetration equals layer thickness, independent of mesh. Cell-integrated source uses two time quadrature nodes; thermal evolution remains first-order Euler. Absorbed power normalized over represented domain.",
    "Transient layer activation uses whole cells selected by their centers; source surface clipping does not implement cut-cell mass or conduction. Inspect numerical resolution diagnostics when available.",
    "Geometry is the molten-domain extent at the earliest maximum volume over accepted timesteps; playback is sparse and multi-track pools may be disconnected. Sampling loss does not bound timestep or mesh error.",
-   "Cross section is the maximum YZ grid section; it is not scan-normal for rotated scans.",
+   "Cross section is the largest scan-normal slab of liquidus cells at the peak-volume step (slab one projected cell wide, cell volume over slab thickness); within about 6 % of pi/4*W*D on a fine grid, coarse-grid voxel scatter remains.",
    "R = -dT/dt / |grad T| at linearly reconstructed cooling liquidus crossings; gradient vectors are interpolated in time. G, R, G\u00d7R are separately event-averaged; G <= 1e-6 K/m is excluded.",
    "Ma and laser-travel Pe are screening numbers, not resolved velocities.",
    "Thermal history is input for subsequent mechanics; no residual stress, distortion or cracking prediction."
@@ -453,7 +453,7 @@
   },
   "alsi10mg.key.fieldSeries": null,
   "alsi10mg.key.geometricDefectScreen": {
-   "modelId": "elliptic-overlap-screening-v1",
+   "modelId": "elliptic-overlap-screening-v2",
    "scope": "single-track-cross-section",
    "status": "geometry-screened",
    "limitations": [
@@ -793,7 +793,7 @@
    "Gaussian penetration equals layer thickness, independent of mesh. Cell-integrated source uses two time quadrature nodes; thermal evolution remains first-order Euler. Absorbed power normalized over represented domain.",
    "Transient layer activation uses whole cells selected by their centers; source surface clipping does not implement cut-cell mass or conduction. Inspect numerical resolution diagnostics when available.",
    "Geometry is the molten-domain extent at the earliest maximum volume over accepted timesteps; playback is sparse and multi-track pools may be disconnected. Sampling loss does not bound timestep or mesh error.",
-   "Cross section is the maximum YZ grid section; it is not scan-normal for rotated scans.",
+   "Cross section is the largest scan-normal slab of liquidus cells at the peak-volume step (slab one projected cell wide, cell volume over slab thickness); within about 6 % of pi/4*W*D on a fine grid, coarse-grid voxel scatter remains.",
    "R = -dT/dt / |grad T| at linearly reconstructed cooling liquidus crossings; gradient vectors are interpolated in time. G, R, G\u00d7R are separately event-averaged; G <= 1e-6 K/m is excluded.",
    "Ma and laser-travel Pe are screening numbers, not resolved velocities.",
    "Thermal history is input for subsequent mechanics; no residual stress, distortion or cracking prediction."
@@ -866,7 +866,7 @@
   },
   "ss316l.key.fieldSeries": null,
   "ss316l.key.geometricDefectScreen": {
-   "modelId": "elliptic-overlap-screening-v1",
+   "modelId": "elliptic-overlap-screening-v2",
    "scope": "single-track-cross-section",
    "status": "geometry-screened",
    "limitations": [
@@ -1199,7 +1199,7 @@
    "Gaussian penetration equals layer thickness, independent of mesh. Cell-integrated source uses two time quadrature nodes; thermal evolution remains first-order Euler. Absorbed power normalized over represented domain.",
    "Transient layer activation uses whole cells selected by their centers; source surface clipping does not implement cut-cell mass or conduction. Inspect numerical resolution diagnostics when available.",
    "Geometry is the molten-domain extent at the earliest maximum volume over accepted timesteps; playback is sparse and multi-track pools may be disconnected. Sampling loss does not bound timestep or mesh error.",
-   "Cross section is the maximum YZ grid section; it is not scan-normal for rotated scans.",
+   "Cross section is the largest scan-normal slab of liquidus cells at the peak-volume step (slab one projected cell wide, cell volume over slab thickness); within about 6 % of pi/4*W*D on a fine grid, coarse-grid voxel scatter remains.",
    "R = -dT/dt / |grad T| at linearly reconstructed cooling liquidus crossings; gradient vectors are interpolated in time. G, R, G\u00d7R are separately event-averaged; G <= 1e-6 K/m is excluded.",
    "Ma and laser-travel Pe are screening numbers, not resolved velocities.",
    "Thermal history is input for subsequent mechanics; no residual stress, distortion or cracking prediction."
@@ -1272,7 +1272,7 @@
   },
   "ti6al4v.key.fieldSeries": null,
   "ti6al4v.key.geometricDefectScreen": {
-   "modelId": "elliptic-overlap-screening-v1",
+   "modelId": "elliptic-overlap-screening-v2",
    "scope": "single-track-cross-section",
    "status": "geometry-screened",
    "limitations": [
