@@ -4,7 +4,6 @@ import type { ModuleId } from './workspaces';
 export const SUBVIEW_KEYWORDS: Partial<Record<ModuleId, string>> = {
   'electrochem-suite': 'pourbaix e-ph eh-ph tafel polarization pren pitting galvanic eis impedance coating delamination',
   'micrograph': 'metallography grain size astm e112 segmentation porosity image',
-  'eds-lab': 'sem eds spectrum x-ray peaks quantification',
   'phase-diagram': 'calphad gibbs tdb equilibrium liquidus solidus',
   'ttt-cct-kinetics': 'ttt cct jmak transformation cooling kinetics',
 };

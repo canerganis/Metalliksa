@@ -399,7 +399,7 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "materials",
       "label": "Micrograph Analysis",
       "description": "Grey-level threshold segmentation (porosity, phase fraction, grain intercepts) of scale-calibrated images; language-model descriptions are advisory.",
-      "next": "eds-lab",
+      "next": "electrochem-suite",
       "maturity": "Preview",
       "navigation": "listed",
       "hiddenReason": null,
@@ -416,32 +416,6 @@ export const MODULE_REGISTRY_CORE = {
           "status": "present",
           "ciNote": null,
           "scope": "Synthetic known-answer images only (O1-O9); no real micrograph is compared."
-        }
-      }
-    },
-    {
-      "id": "eds-lab",
-      "version": "1.0.0",
-      "workspace": "materials",
-      "label": "EDS Spectrum Viewer",
-      "description": "Imports and plots EDS spectra with reference line markers; uploaded spectra are not quantified; built-in spots are training examples.",
-      "next": "electrochem-suite",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/EDSSpectrumLab.tsx",
-        "export": "EDSSpectrumLab"
-      },
-      "migrationState": "contracted",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
         }
       }
     },

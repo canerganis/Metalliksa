@@ -59,7 +59,6 @@ const LpbfCalibrationScorecardLab = lazy(() => import("./components/LpbfCalibrat
 
 const AdvancedResearchHub = lazy(() => import("./components/AdvancedResearchHub").then(m => ({ default: m.AdvancedResearchHub })));
 const PhaseDiagramViewer = lazy(() => import("./components/PhaseDiagramViewer").then(m => ({ default: m.PhaseDiagramViewer })));
-const EDSSpectrumLab = lazy(() => import("./components/EDSSpectrumLab").then(m => ({ default: m.EDSSpectrumLab })));
 const DigitalTwinHub = lazy(() => import("./components/DigitalTwinHub").then(m => ({ default: m.DigitalTwinHub })));
 const PhaseKineticsTTTCCTStudio = lazy(() => import("./components/PhaseKineticsTTTCCTStudio").then(m => ({ default: m.PhaseKineticsTTTCCTStudio })));
 const UQLab = lazy(() => import("./components/UQLab").then(m => ({ default: m.UQLab })));
@@ -199,7 +198,6 @@ export default function App() {
       case 'ttt-cct-kinetics': return <PhaseKineticsTTTCCTStudio onSendToModule={navigate} />;
       case 'icme-motor': return <ICMEMultiScalePipelineStudio />;
       case 'materials-project': return <MaterialsProjectExplorer />;
-      case 'eds-lab': return <EDSSpectrumLab />;
       case 'micrograph': return <MicrographLab />;
       case 'alloy-builder': return <AlloyBuilder onNavigate={navigate} />;
       case 'database': return <MaterialsDatabaseView onNavigate={navigate} />;

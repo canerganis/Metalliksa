@@ -31,7 +31,6 @@ const PINNED_GUARDED = [
   "src/components/CorrosionEISKineticsStudio.tsx",
   "src/components/DigitalTwinHub.tsx",
   "src/components/DynamicPourbaixStudio.tsx",
-  "src/components/EDSSpectrumLab.tsx",
   "src/components/ICMEMultiScalePipelineStudio.tsx",
   "src/components/MaterialsDatabaseView.tsx",
   "src/components/MaterialsProjectExplorer.tsx",

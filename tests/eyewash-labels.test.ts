@@ -44,7 +44,6 @@ test("EDS canvas: no frame-rate claim; the SNIP background overlay prop is not n
   assert.doesNotMatch(canvas, /60 FPS|deconvolutionPeaks/);
   assert.match(canvas, /backgroundOverlays/);
   assert.doesNotMatch(src("src/render/webglShaderEngine.ts"), /60 FPS/);
-  assert.doesNotMatch(src("src/components/EDSSpectrumLab.tsx"), /deconvolutionPeaks/);
 });
 
 test("shell: status chip does not claim engine connection; boot row says the registry is bundled, not probed", () => {

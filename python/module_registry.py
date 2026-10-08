@@ -39,7 +39,6 @@ from module_contract import (
 )
 from module_contracts_dataset_view import build_dataset_view_contract
 from module_contracts_calibration_scorecard import build_calibration_scorecard_contract
-from module_contracts_eds import build_eds_contract
 from module_contracts_composition import build_composition_contract
 from module_contracts_elasticity import build_elasticity_contract
 from module_contracts_database import build_database_contract
@@ -990,7 +989,6 @@ CONTRACTED_BUILDERS = {
     "traceability": build_traceability_contract,
     "alloy-builder": build_composition_contract,
     "materials-project": build_elasticity_contract,
-    "eds-lab": build_eds_contract,
     "lpbf-dataset-comparison": build_dataset_view_contract,
     "lpbf-calibration-scorecard": build_calibration_scorecard_contract,
     "keyhole-raytracing": _keyhole_contract,

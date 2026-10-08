@@ -109,14 +109,6 @@
     "label": "Micrograph Analysis",
     "scope": "Preview",
     "description": "Grey-level threshold segmentation (porosity, phase fraction, grain intercepts) of scale-calibrated images; language-model descriptions are advisory.",
-    "next": "eds-lab"
-  },
-  {
-    "id": "eds-lab",
-    "workspace": "materials",
-    "label": "EDS Spectrum Viewer",
-    "scope": "Research",
-    "description": "Imports and plots EDS spectra with reference line markers; uploaded spectra are not quantified; built-in spots are training examples.",
     "next": "electrochem-suite"
   },
   {

@@ -31,7 +31,7 @@ function densityContextLine(specimen: ActiveSpecimenState): string {
 // freezing range) that are unrelated to that module, so the panel is hidden there (see ScientificContextPanel).
 const MODULES_WITH_CONTEXT: ReadonlySet<string> = new Set([
   'materials-project', 'alloy-builder', '3d-distortion-lab', 'phase-diagram', 'ttt-cct-kinetics',
-  'eds-lab', 'micrograph', 'research-hub', 'experimental-data', 'digital-twin', 'uq-lab', 'traceability',
+  'micrograph', 'research-hub', 'experimental-data', 'digital-twin', 'uq-lab', 'traceability',
 ]);
 
 export function hasScientificContext(moduleId: ModuleId): boolean {
@@ -81,7 +81,7 @@ export function buildScientificContext(moduleId: ModuleId, specimen: ActiveSpeci
     limitation: 'Results depend on database quality, initial microstructure assumptions, and cooling-rate accuracy. This is not a substitute for experiment.',
   };
 
-  if (moduleId === 'eds-lab' || moduleId === 'micrograph') return {
+  if (moduleId === 'micrograph') return {
     title: 'From signal to microstructural claim',
     observation: `${shared} This module infers phases, orientation, composition, or grain information from measured signal or imaging proxies.`,
     mechanism: 'A measured signature is an indirect projection of microstructure: diffraction peaks, characteristic X-rays, EBSD orientation maps, or image contrast each map physics through calibration and sampling assumptions.',

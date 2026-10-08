@@ -23,7 +23,6 @@ test('approved functional names retain module identities and conservative condit
     'experimental-validation': 'Melt Pool vs Measurements',
     'alloy-builder': 'Composition Editor',
     'digital-twin': 'Specimen Records',
-    'eds-lab': 'EDS Spectrum Viewer',
     'uq-lab': 'Coupon Statistics & UQ Sampling',
     'materials-project': 'Elastic-constants calculator (user-supplied constants)',
   } as const;

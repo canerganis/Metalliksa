@@ -18,7 +18,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 LEGACY_CEILING = 9  # Materials Database now has a source-bound local-view contract.
 # Registry (seed) order. Wave 1 pilots: keyhole-raytracing, uq-lab; the rest are Phase 7 wave 2.
 CONTRACTED = ("toolpath-studio", "murakami-fatigue",
-              "keyhole-raytracing", "lpbf-dataset-comparison", "lpbf-calibration-scorecard", "database", "alloy-builder", "phase-diagram", "ttt-cct-kinetics", "micrograph", "eds-lab", "icme-motor", "materials-project", "experimental-data", "uq-lab", "traceability")
+              "keyhole-raytracing", "lpbf-dataset-comparison", "lpbf-calibration-scorecard", "database", "alloy-builder", "phase-diagram", "ttt-cct-kinetics", "micrograph", "icme-motor", "materials-project", "experimental-data", "uq-lab", "traceability")
 
 
 def _view():
