@@ -7,6 +7,11 @@ authors:
   - given-names: Muhammet Can
     family-names: Erganis
     alias: canerganis
+doi: 10.5281/zenodo.23233081
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.23233082
+    description: Version 0.1.0
 repository-code: "https://github.com/canerganis/metalliksa"
 license: AGPL-3.0-only
 version: "0.1.0"

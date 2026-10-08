@@ -14,6 +14,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-typed-1f2937?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Python solvers](https://img.shields.io/badge/Python-LPBF%20solvers-1f2937?logo=python&logoColor=white)](https://www.python.org)
 [![License: AGPL-3.0-only or commercial](https://img.shields.io/badge/license-AGPL--3.0--only%20%7C%20commercial-1f2937)](LICENSING.md)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23233081.svg)](https://doi.org/10.5281/zenodo.23233081)
 [![Evidence first](https://img.shields.io/badge/evidence-first-1f2937)](#evidence-and-limits)
 
 </div>
@@ -173,6 +174,10 @@ Contributions that improve source traceability, tests, model-scope reporting, be
 Use the documented benchmark manifests and scripts to verify archived bytes and reproduce derived comparisons. Do not silently adjust a threshold after seeing results, fill missing properties from another alloy, or describe solver output as an independent experiment. Record failed, skipped and unavailable checks alongside successful ones. See [PROOF.md](PROOF.md), [the data benchmark guide](data/benchmark/README.md), and [the LPBF engineering scope](docs/LPBF_ENGINEERING.md) before changing model claims.
 
 When adding a comparison, retain the source file identity and hash, the measurement locator, units, reading uncertainty and any digitization method. Keep training, calibration and held-out evaluation roles explicit. If a required source or measurement is absent, record it as unresolved rather than inferring it from a related alloy or process. A reproducible script and a pinned input make a result easier to inspect; they do not change its evidence class.
+
+## Citation
+
+If you use Metalliksa in research, please cite it: [doi.org/10.5281/zenodo.23233081](https://doi.org/10.5281/zenodo.23233081) (all versions; v0.1.0 is [10.5281/zenodo.23233082](https://doi.org/10.5281/zenodo.23233082)). GitHub's "Cite this repository" button uses [CITATION.cff](CITATION.cff).
 
 ## License
 
