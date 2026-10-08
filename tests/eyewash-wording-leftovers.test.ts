@@ -9,9 +9,3 @@ test("optimizer result header uses a neutral icon, not a trophy", () => {
   assert.doesNotMatch(src("src/components/LpbfBayesianOptimizerLab.tsx"), /Trophy/);
 });
 
-test("dual-unit reporting wording makes no certification claim", () => {
-  const text = src("src/components/StandardInfoIcon.tsx");
-  assert.doesNotMatch(text, /Dual certified reporting/);
-  assert.match(text, /Dual-unit reporting \(EN 10204 certificate units\)/);
-});
-

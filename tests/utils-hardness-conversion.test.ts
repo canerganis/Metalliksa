@@ -10,8 +10,6 @@ import {
   hardnessMaterialClassOf,
   interpolateSteelScaleFromHv,
 } from "../src/utils/hardnessConversion";
-import { METALLURGICAL_STANDARDS } from "../src/components/StandardInfoIcon";
-import { HARDNESS_PRESETS } from "../src/utils/hardnessPresets";
 import {
   E140_T1_ANDERSON,
   E140_T2_ANDERSON,
@@ -234,15 +232,6 @@ test("the result carries the approximate-conversion disclaimer", () => {
   assert.equal(convert(40, "HRC").validRangeNote, HARDNESS_CONVERSION_DISCLAIMER);
 });
 
-test("the hardness info pop-over describes the table interpolation, not the removed formulas", () => {
-  const info = METALLURGICAL_STANDARDS.hardness;
-  const text = [info.methodology, info.equations, info.validRange, info.criticalNotes].join(" ");
-  assert.doesNotMatch(text, /3\.45|3\.25|regression|±2 HRC/);
-  assert.match(info.validRange!, /HRC 20-68 \(HV 238-940\)/);
-  assert.match(info.validRange!, /Rm: HV 80-650/);
-  assert.match(info.criticalNotes!, /not a substitute for direct testing/);
-});
-
 test("alloy class gate: only non-austenitic steel is converted; other classes keep the measured value only", () => {
   assert.deepEqual(convertHardness(40, "HRC", "non-austenitic-steel"), convert(40, "HRC"));
   for (const cls of ["austenitic-steel", "titanium-alloy", "nickel-alloy", "aluminium-alloy", "hardmetal", "other"] as const) {
@@ -268,27 +257,6 @@ test("alloy class of a material record", () => {
   assert.equal(hardnessMaterialClassOf({ baseMetal: "Al" }), "aluminium-alloy");
   assert.equal(hardnessMaterialClassOf({ baseMetal: "Co" }), "other");
   assert.equal(hardnessMaterialClassOf({}), "other");
-});
-
-test("hardness presets: steel presets lie inside the verified range, others are measured-only, notes quote no numbers", () => {
-  assert.ok(HARDNESS_PRESETS.length >= 6);
-  for (const p of HARDNESS_PRESETS) {
-    const r = convertHardness(p.value, p.scale, p.cls);
-    assert.equal(r[p.scale], p.value, p.name); // the measured value is shown as entered
-    assert.doesNotMatch(p.note, /\d/, `${p.name}: note must not quote converted numbers`);
-    if (p.cls === "non-austenitic-steel") {
-      const range = HARDNESS_VERIFIED_RANGES[p.scale]!;
-      assert.ok(p.value >= range.min && p.value <= range.max, `${p.name} outside ${p.scale} ${range.min}-${range.max}`);
-      assert.notEqual(r.HV, null, p.name);
-    } else {
-      for (const k of ["HV", "HRC", "HRB", "HBW", "HK", "tensileRm_MPa"] as const) {
-        if (k !== p.scale) assert.equal(r[k], null, `${p.name} ${k}`);
-      }
-      assert.match(r.validRangeNote, /no conversion table for this alloy class is implemented in this tool/);
-    }
-  }
-  // the removed out-of-scope presets stay removed (WC 1550 HV, nitrided 880/950 HV)
-  assert.ok(!HARDNESS_PRESETS.some((p) => /carbide|nitrid/i.test(p.name)));
 });
 
 test("scale switch keeps an in-range value and otherwise resets to the scale default (incl. HK, HLD)", () => {

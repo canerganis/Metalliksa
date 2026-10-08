@@ -65,7 +65,7 @@ test("Escape handling for overlays goes through the shared stack, not ad-hoc win
   assert.match(hook, /escapeStack/);
   const offenders = files
     .filter(({ rel }) => rel.startsWith("src/components/") && rel !== "src/components/AccessibleModal.tsx")
-    .filter(({ text }) => text.includes("fixed inset-0")) // popovers such as StandardInfoIcon are not overlays
+    .filter(({ text }) => text.includes("fixed inset-0")) // popovers are not overlays
     .filter(({ text }) => /addEventListener\(\s*["']keydown["']/.test(text) && /Escape/.test(text))
     .map(({ rel }) => rel);
   assert.deepEqual(offenders, [], `Use useEscapeToClose instead: ${offenders.join(", ")}`);

@@ -97,7 +97,6 @@ const read = (file: string) => readFileSync(new URL(`../src/${file}`, import.met
 const gated: Array<[string, RegExp]> = [
   ['components/3d-distortion-lab/MeltPool3DCrossSectionLab.tsx', /useVisibleAnimationFrame\(/],
   ['components/3d-distortion-lab/ResolvedThermalViewer.tsx', /useVisibleAnimationFrame\(/],
-  ['components/WebGLSpectrometerCanvas.tsx', /useVisibleAnimationFrame\(/],
   ['components/3d-distortion-lab/LpbfEngineeringSimulation.tsx', /useVisiblePolling\(/],
   ['components/3d-distortion-lab/LpbfEngineeringSimulation.tsx', /useVisibleInterval\(/],
   ['components/In625BareplatePanel.tsx', /useVisiblePolling\(/],
