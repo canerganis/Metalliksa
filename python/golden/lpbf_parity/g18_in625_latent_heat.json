@@ -4,9 +4,9 @@
  "group": "G18",
  "description": "IN625 fusion latent heat per path: Rosenthal melt pool (260 kJ/kg), screening (290), transient spec (227)",
  "slow": false,
- "recordedImplementationHash": "5f9d651e6e0edafbbc8ae7f27cf638aca3e8ae40ed60c644274a57a49cb90df3",
+ "recordedImplementationHash": "ec7e1f7a6606e937e448fefe97549b49a7ddfe7b95376b93867ae007b0c12555",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "4aeba763662d7b9fbb7425eb72ce44a491017462",
+ "recordedGitHead": "26db2aceb68ace5e1fc537bfe14782a2eb83a35f",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -73,7 +73,7 @@
  ],
  "recordedTwice": true,
  "observations": {
-  "meltpool.in625": "b362de8617924caef07ba013f973feebdfab52544b905be4b468b0bb47faccca",
+  "meltpool.in625": "259ab3080086c6b1100ddd7cba0d956d285ef3bd876202efd9391fbc26ff28f7",
   "meltpool.in625.materialEvidence": {
    "propertySource": "lpbf_thermal_solver.SECONDARY_THERMOPHYSICAL_DB.Inconel 625",
    "provenanceClass": "legacy-estimated-secondary",
