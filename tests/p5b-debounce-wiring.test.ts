@@ -27,10 +27,3 @@ test('corrosion EIS signature only contains request inputs (coatingType is not s
   assert.doesNotMatch(text.slice(text.indexOf('const runPythonSimulation'), text.indexOf('// Debounced, visibility-gated')), /coatingType/);
 });
 
-test('micrograph diagnosis shows an honest indeterminate state, not simulated stage progress', () => {
-  // The advisory description moved out of MicrographLab into its own component (micrograph rework).
-  const text = src('src/components/MicrographAdvisoryDescription.tsx');
-  assert.doesNotMatch(src('src/components/MicrographLab.tsx'), /setInterval|analysisStep|LOADING_STEPS|stepInterval/);
-  assert.doesNotMatch(text, /setInterval|analysisStep|LOADING_STEPS|stepInterval/);
-  assert.match(text, /Progress is not reported/);
-});

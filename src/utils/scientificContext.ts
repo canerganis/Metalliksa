@@ -31,7 +31,7 @@ function densityContextLine(specimen: ActiveSpecimenState): string {
 // freezing range) that are unrelated to that module, so the panel is hidden there (see ScientificContextPanel).
 const MODULES_WITH_CONTEXT: ReadonlySet<string> = new Set([
   'alloy-builder', '3d-distortion-lab', 'phase-diagram',
-  'micrograph', 'research-hub', 'experimental-data', 'digital-twin', 'traceability',
+  'research-hub', 'experimental-data', 'digital-twin', 'traceability',
 ]);
 
 export function hasScientificContext(moduleId: ModuleId): boolean {
@@ -70,15 +70,6 @@ export function buildScientificContext(moduleId: ModuleId, specimen: ActiveSpeci
     variables: [`Liquidus / solidus / solvus: ${COMPOSITION_PROPERTY_UNAVAILABLE_SHORT}`, `Nominal phase labels (rule-based, not computed): ${specimen.stablePhases.join(', ')}`, `Thermal conductivity: ${format(lpbf.thermalConductivity_k_WmK)} W/m·K`],
     interpretation: 'Equilibrium diagrams provide a near-equilibrium reference, while TTT/CCT maps kinetics for a specific composition and cooling trajectory. Neither replaces direct microstructural measurement.',
     limitation: 'Results depend on database quality, initial microstructure assumptions, and cooling-rate accuracy. This is not a substitute for experiment.',
-  };
-
-  if (moduleId === 'micrograph') return {
-    title: 'From signal to microstructural claim',
-    observation: `${shared} This module infers phases, orientation, composition, or grain information from measured signal or imaging proxies.`,
-    mechanism: 'A measured signature is an indirect projection of microstructure: diffraction peaks, characteristic X-rays, EBSD orientation maps, or image contrast each map physics through calibration and sampling assumptions.',
-    variables: [`Crystal model assumption: ${specimen.xrd.crystalSystem}`, `Space group: ${specimen.xrd.spaceGroup}`, `Nominal phases: ${specimen.stablePhases.join(', ')}`, `Composition unit: ${specimen.unit}`],
-    interpretation: 'A peak, segment, or spectrum is meaningful only with preparation quality, instrument settings, and calibration context. Resolution limits and representativeness are critical uncertainty sources.',
-    limitation: 'Imported or synthetic records are not automatically equivalent to measured sample evidence.',
   };
 
   if (moduleId === 'research-hub' || moduleId === 'experimental-data' || moduleId === 'digital-twin' || moduleId === 'traceability') return {

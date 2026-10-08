@@ -295,7 +295,7 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "materials",
       "label": "Phase Diagrams & CALPHAD",
       "description": "Reference binary diagrams and pycalphad equilibrium; CALPHAD needs pycalphad and an installed database covering every selected element, else unavailable.",
-      "next": "micrograph",
+      "next": "electrochem-suite",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -312,32 +312,6 @@ export const MODULE_REGISTRY_CORE = {
           "status": "pending",
           "ciNote": null,
           "scope": null
-        }
-      }
-    },
-    {
-      "id": "micrograph",
-      "version": "0.1.0",
-      "workspace": "materials",
-      "label": "Micrograph Analysis",
-      "description": "Grey-level threshold segmentation (porosity, phase fraction, grain intercepts) of scale-calibrated images; language-model descriptions are advisory.",
-      "next": "electrochem-suite",
-      "maturity": "Preview",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/MicrographLab.tsx",
-        "export": "MicrographLab"
-      },
-      "migrationState": "contracted",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "present",
-          "ciNote": null,
-          "scope": "Synthetic known-answer images only (O1-O9); no real micrograph is compared."
         }
       }
     },

@@ -117,7 +117,6 @@ ALLOWED_SCRIPT_NAMES = frozenset({
     "lpbf_calibrated_meltpool",
     "lpbf_process_window",
     "lpbf_thermal_solver",
-    "micrograph_measure",
     "pourbaix_solver",
     "stl_slicer_build_time_solver",
     "tafel_corrosion_rate_solver",

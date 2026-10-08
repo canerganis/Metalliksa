@@ -32,7 +32,7 @@ python python/test_<name>.py # one python test
 ```
 
 - CI (`.github/workflows/ci.yml`, draft, never run on GitHub) runs the unit tests minus `scripts/ci-unit-tests.txt`. Keep that file LF; with CRLF the exclusion silently matches nothing.
-- Optional AI features (copilot, micrograph vision, dataset planner) need `OPENAI_API_KEY` on the server.
+- No AI route is served any more; `OPENAI_API_KEY` is only reported by the runtime config.
 
 ## Architecture
 
@@ -40,7 +40,7 @@ Three tiers: React 18 + Zustand (`src/`) -> Express (`server.ts`, `routes/`, `se
 
 - The server spawns Python via `server/pythonRuntime.ts`, `pythonRoot.ts` and `processOrchestrator.ts`. Long LPBF jobs run in a persistent worker (`python/lpbf_worker.py`, bridged by `server/lpbfWorkerBridge.ts`).
 - Runtime data, not source: `.lpbf-jobs`, `.lpbf-runs`, `.lpbf-run-bundles`, `.lpbf-sources`, `.runtime`.
-- Routers mounted in `server.ts`: `researchRegistry`, `lpbfSources`, `lpbfRuns` (before the 50 MB `express.json`), then `physics`, `lpbfSimulation`, `characterization`, `copilot`, `research`.
+- Routers mounted in `server.ts`: `researchRegistry`, `lpbfSources`, `lpbfRuns` (before the 50 MB `express.json`), then `physics`, `lpbfSimulation`, `characterization`, `research`.
 - `routes/AUTHORITY_ALLOWLIST.json` is a ratchet baseline (with `.ceiling.json`); do not grow it to make a check pass.
 - `server/airgap.ts` blocks outbound calls (Crossref search, OpenAI) in air-gap mode.
 - Frontend state of record: `useMaterialSpecimenStore` (live LPBF vector), `useLpbfWorkflowStore` (stage and build context), `useLpbfEngineeringStore` (advanced inputs, job polling), `useLpbfBuildJobStore` (Python screening results), and the research registry (`src/types/research.ts`, persisted as `metalliksa-research-registry-v1`). Details: `docs/RESEARCH_WORKSTATION.md`.

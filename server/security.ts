@@ -601,18 +601,14 @@ export function installLogin(app: Express, auth: LoginAuth) {
 // ---------------------------------------------------------------------------
 // Fixed-window in-memory rate limit
 // ---------------------------------------------------------------------------
-const AI_ROUTE_PATTERN = /^\/api\/metallurgy\/diagnose-micrograph\/?$/;
-
 export interface RateLimitOptions {
   windowMs?: number;
-  aiLimit?: number;
   generalLimit?: number;
   now?: () => number;
 }
 
 export function rateLimit(opts: RateLimitOptions = {}) {
   const windowMs = opts.windowMs ?? 60_000;
-  const aiLimit = opts.aiLimit ?? 10;
   const generalLimit = opts.generalLimit ?? 300;
   const now = opts.now ?? Date.now;
   const buckets = new Map<string, { count: number; resetAt: number }>();
@@ -620,10 +616,7 @@ export function rateLimit(opts: RateLimitOptions = {}) {
   return (req: Request, res: Response, next: NextFunction) => {
     const target = req.originalUrl || req.url || "";
     if (!isProtectedApiTarget(target) && rawRequestPath(target) !== "/api/health") return next();
-    const raw = rawRequestPath(target) ?? "";
-    const ai = AI_ROUTE_PATTERN.test(raw) || AI_ROUTE_PATTERN.test(canonicalRequestPath(target) ?? "");
-    const limit = ai ? aiLimit : generalLimit;
-    const key = `${ai ? "ai" : "gen"}:${req.ip || req.socket?.remoteAddress || "unknown"}`;
+    const key = req.ip || req.socket?.remoteAddress || "unknown";
     const t = now();
 
     if (buckets.size > 10_000) {
@@ -636,7 +629,7 @@ export function rateLimit(opts: RateLimitOptions = {}) {
       buckets.set(key, bucket);
     }
     bucket.count += 1;
-    if (bucket.count > limit) {
+    if (bucket.count > generalLimit) {
       res.setHeader("Retry-After", String(Math.max(1, Math.ceil((bucket.resetAt - t) / 1000))));
       return res.status(429).json({ error: "Too many requests.", code: "RATE_LIMITED", requestId: getRequestId(req) });
     }

@@ -5,7 +5,7 @@
  * 1. Chemistry & Raw Alloy Data (AlloyBuilder, PocketCalculators, Schaeffler, CE)
  * 2. Thermodynamics & Phase Constitution (CALPHAD Gibbs Solver, Fe-C, SGTE)
  * 3. Manufacturing & Thermal History (ThermalCycleScheduler, Additive3DDistortion, Heat Treatment)
- * 4. Microstructure & Characterization (MicrographLab, XRD, EBSD, EDS)
+ * 4. Microstructure & Characterization (XRD, EBSD, EDS)
  * 5. Mechanical & Performance Properties (HardnessToTensile, MMPDS, Tensile/Yield/Toughness)
  * 6. Electrochemical, Battery & Corrosion (EIS, Tafel, Pitting, OCV)
  * 7. Environmental, Extreme Service & Hypersonic (Ablation, High-T Oxidation)

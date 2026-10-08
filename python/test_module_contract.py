@@ -17,7 +17,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 # one legacy contract per listed module. Migration may only lower this number.
 LEGACY_CEILING = 9  # Materials Database now has a source-bound local-view contract.
 # Registry (seed) order. Wave 1 pilot: keyhole-raytracing; the rest are Phase 7 wave 2.
-CONTRACTED = ("keyhole-raytracing", "lpbf-dataset-comparison", "lpbf-calibration-scorecard", "database", "alloy-builder", "phase-diagram", "micrograph", "experimental-data", "traceability")
+CONTRACTED = ("keyhole-raytracing", "lpbf-dataset-comparison", "lpbf-calibration-scorecard", "database", "alloy-builder", "phase-diagram", "experimental-data", "traceability")
 
 
 def _view():

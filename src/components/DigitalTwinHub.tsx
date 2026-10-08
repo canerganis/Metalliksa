@@ -510,13 +510,6 @@ Provide an evidence-gap review:
                     <Atom className="w-3.5 h-3.5" />
                     <span>CALPHAD Lab</span>
                   </button>
-                  <button
-                    onClick={() => onNavigateToModule?.("micrograph")}
-                    className="p-2 rounded-lg bg-slate-950/70 hover:bg-sky-950/30 border border-slate-800 hover:border-sky-500/40 text-left transition-all cursor-pointer flex items-center gap-1.5 text-xs text-sky-300"
-                  >
-                    <Microscope className="w-3.5 h-3.5" />
-                    <span>Micrograph Analysis</span>
-                  </button>
                 </div>
               </div>
             </div>

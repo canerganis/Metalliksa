@@ -77,14 +77,6 @@
     "label": "Phase Diagrams & CALPHAD",
     "scope": "Research",
     "description": "Reference binary diagrams and pycalphad equilibrium; CALPHAD needs pycalphad and an installed database covering every selected element, else unavailable.",
-    "next": "micrograph"
-  },
-  {
-    "id": "micrograph",
-    "workspace": "materials",
-    "label": "Micrograph Analysis",
-    "scope": "Preview",
-    "description": "Grey-level threshold segmentation (porosity, phase fraction, grain intercepts) of scale-calibrated images; language-model descriptions are advisory.",
     "next": "electrochem-suite"
   },
   {

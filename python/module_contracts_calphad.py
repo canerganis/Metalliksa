@@ -286,7 +286,7 @@ def build_calphad_contract(seed) -> ModuleContract:
         ),
         source_refs=(
             "python/module_registry.py::build_registry",
-            "src/App.tsx:192-192#case 'phase-diagram': return <PhaseDiagramViewer />;",
+            "src/App.tsx:190-190#case 'phase-diagram': return <PhaseDiagramViewer />;",
             "src/modules/views.ts:21-21#'phase-diagram': lazy(",
             "src/components/PhaseDiagramViewer.tsx::PhaseDiagramViewer",
             "src/components/PhaseDiagramViewer.tsx::FEC_ALLOY_PRESETS",
@@ -300,7 +300,6 @@ def build_calphad_contract(seed) -> ModuleContract:
             "src/utils/calphadResultDisplay.ts::calphadTemperatureWindow",
             "routes/physics.ts:53-58#physicsRouter.post([\"/api/python/calphad-minimize\"",
             "routes/physics.ts:57-58#physicsRouter.get([\"/api/python/calphad-databases\"",
-            "server/openaiService.ts::generateGpt6Response",
             "python/calphad_solver.py::list_available_databases",
             "python/calphad_solver.py::normalize_composition",
             "python/calphad_solver.py::unavailable_result",

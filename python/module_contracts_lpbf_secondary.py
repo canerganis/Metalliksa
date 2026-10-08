@@ -151,7 +151,7 @@ def build_lpbf_optimizer_contract(seed: Mapping[str, str]) -> ModuleContract:
             "python/lpbf_bayesian_optimizer.py:307-334#nIterations",
             "src/components/LpbfProcessWindowMap.tsx::LpbfProcessWindowMap",
             "src/services/pythonComputationService.ts:1128-1132#lpbf-process-window",
-            "routes/physics.ts:108-110#60000",
+            "routes/physics.ts:97-99#60000",
             "python/lpbf_process_window.py::run_process_window",
             "python/lpbf_process_window.py:35-35#MAX_CELLS = 225",
         ),

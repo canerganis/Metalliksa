@@ -91,21 +91,17 @@ test("tokenAuth enforces Bearer on /api except health, and passes when unset", (
   assert.equal(tokenMatches("a", undefined), false);
 });
 
-test("rateLimit applies stricter limit to AI routes and resets per window", () => {
+test("rateLimit caps API requests per window and resets", () => {
   let now = 0;
-  const mw = rateLimit({ now: () => now, aiLimit: 3, generalLimit: 5, windowMs: 1000 });
-  const ai = () => { const r = mockRes(); const ok = run(mw, mockReq({ originalUrl: "/api/consult" }), r); return { ok, r }; };
-  assert.ok(ai().ok && ai().ok && ai().ok);
-  const blocked = ai();
+  const mw = rateLimit({ now: () => now, generalLimit: 3, windowMs: 1000 });
+  const call = () => { const r = mockRes(); const ok = run(mw, mockReq({ originalUrl: "/api/consult" }), r); return { ok, r }; };
+  assert.ok(call().ok && call().ok && call().ok);
+  const blocked = call();
   assert.equal(blocked.ok, false);
   assert.equal(blocked.r.statusCode, 429);
   assert.ok(blocked.r.headers["retry-after"]);
-  // General bucket is independent.
-  for (let i = 0; i < 5; i++) assert.ok(run(mw, mockReq(), mockRes()));
-  assert.equal(run(mw, mockReq(), mockRes()), false);
   now = 1500;
-  assert.ok(ai().ok);
-  assert.ok(run(mw, mockReq(), mockRes()));
+  assert.ok(call().ok);
 });
 
 test("errorHandler hides 5xx details and includes request id", () => {
@@ -130,7 +126,7 @@ test("tokenAuth and rateLimit treat /api paths case-insensitively (Express route
   }
   assert.equal(run(mw, mockReq({ originalUrl: "/API/health" }), mockRes()), true);
 
-  const rl = rateLimit({ now: () => 0, aiLimit: 2, generalLimit: 100, windowMs: 1000 });
+  const rl = rateLimit({ now: () => 0, generalLimit: 2, windowMs: 1000 });
   const hit = (url: string) => run(rl, mockReq({ originalUrl: url }), mockRes());
   assert.ok(hit("/api/consult") && hit("/API/Consult"));
   assert.equal(hit("/Api/CONSULT"), false);

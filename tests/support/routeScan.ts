@@ -51,7 +51,6 @@ const AUTHORITY_IMPORTS: Readonly<Record<string, RegExp>> = {
   runPythonScript: /\/server\/processOrchestrator(\.ts)?$/,
   pythonIPCSupervisor: /\/server\/processOrchestrator(\.ts)?$/,
   lpbfWorker: /\/server\/lpbfWorkerBridge(\.ts)?$/,
-  generateGpt6Response: /\/server\/openaiService(\.ts)?$/,
 };
 // Injected archive/registry services: recognised only when the receiver is a parameter or
 // constant initialised with `new <Class>()` and the class is imported from server/.

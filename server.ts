@@ -10,7 +10,6 @@ import { LoginAuth, applySecurity, buildLoginBannerLines, buildTrustProxyWarning
 import { physicsRouter } from "./routes/physics.ts";
 import { lpbfSimulationRouter } from "./routes/lpbfSimulation.ts";
 import { characterizationRouter } from "./routes/characterization.ts";
-import { copilotRouter } from "./routes/copilot.ts";
 import { researchRouter } from "./routes/research.ts";
 import { createResearchRegistryRouter } from "./routes/researchRegistry.ts";
 import { createLpbfSourcesRouter } from "./routes/lpbfSources.ts";
@@ -30,7 +29,7 @@ delete process.env.METALLIX_IPC_TOKEN;
 const AIRGAPPED = isAirgappedFromEnv(process.env);
 
 // Process-level crash guards: isolate unhandled rejections and errors
-// Ensures an unhandled prompt error or JSON failure in AI copilot cannot terminate the process or affect CALPHAD/EIS
+// Ensures an unhandled error in an AI route cannot terminate the process or affect CALPHAD/EIS
 process.on("unhandledRejection", (reason: any) => {
   console.error("[ProcessGuard] Unhandled Promise Rejection intercepted:", reason?.stack || reason);
 });
@@ -114,8 +113,7 @@ app.use(lpbfSimulationRouter);
 // 2. Experimental Characterization & Spectroscopy (EIS, XRD, Battery Degradation, SEM Vision)
 app.use(characterizationRouter);
 
-// 3. AI Copilot, Metallurgy Consultation, Alloy Formulation & Materials Project
-app.use(copilotRouter);
+// 3. Metallurgy Consultation, Alloy Formulation & Materials Project
 app.use(researchRouter);
 
 // Explicit JSON 404 for unmatched /api routes (prevents SPA index.html fallback for API calls)

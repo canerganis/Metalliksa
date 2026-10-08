@@ -9,9 +9,8 @@ import {
   segmentLengthPx,
 } from "../src/utils/semAnalysis";
 
-// The in-browser analyzeSemImage pins and its two todo tests were removed together with the analyzer (micrograph
-// rework): the measurement authority is python/micrograph_measure.py, covered by python/test_micrograph_measure.py
-// oracles O1-O9. The helpers kept in src/utils/semAnalysis.ts are pinned here.
+// The in-browser analyzeSemImage pins and its two todo tests were removed together with the analyzer (the
+// micrograph module was removed later). The helpers kept in src/utils/semAnalysis.ts are pinned here.
 
 test("ASTM E112 grain size relation reproduces the published intercept-length table", () => {
   // E112: G = -6.643856 log10(l_bar[mm]) - 3.288. Table: mean intercept l_bar = 320 um / sqrt(2)^G.

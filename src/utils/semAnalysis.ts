@@ -1,5 +1,5 @@
-// Small helpers kept from the former SEM analyzer (the in-browser image analysis was removed: the
-// measurement authority is python/micrograph_measure.py). BT.601 luma, the ASTM E112 G(l_bar) relation
+// Small helpers kept from the former SEM analyzer (the in-browser image analysis was removed with the
+// micrograph module). BT.601 luma, the ASTM E112 G(l_bar) relation
 // and the caliper/ruler length helpers used for display.
 
 /** ITU-R BT.601 luma used for the greyscale matrix and the pipette tool (rounded to an integer 0-255). */

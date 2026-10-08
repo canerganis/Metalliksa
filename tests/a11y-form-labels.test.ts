@@ -32,8 +32,6 @@ const PINNED_GUARDED = [
   "src/components/DynamicPourbaixStudio.tsx",
   "src/components/MaterialsDatabaseView.tsx",
   "src/components/MaterialsPropertyHeatmapD3.tsx",
-  "src/components/MicrographAdvisoryDescription.tsx", // micrograph rework: controls moved out of MicrographLab
-  "src/components/MicrographMeasureStudio.tsx", // micrograph rework: controls moved out of MicrographLab
   "src/components/PhaseDiagramViewer.tsx",
   "src/components/PythonAnnualCorrosionRateModule.tsx",
   "src/components/TafelPolarizationLab.tsx",

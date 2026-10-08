@@ -4,7 +4,7 @@
  */
 
 export type AirgapBlockedService =
-  | "GPT-6 AI (copilot / micrograph vision)"
+  | "GPT-6 AI (reserved, not implemented)"
   | "NVIDIA cloud NIM / DeepSeek endpoints"
   | "Materials Project live DFT API (reserved, not implemented)"
   | "External powder / pricing APIs (reserved, not implemented)"
@@ -13,7 +13,7 @@ export type AirgapBlockedService =
 // Entries marked "(reserved, not implemented)" are policy slots with no code behind them yet;
 // they stay listed so a future integration is blocked by default when AIRGAPPED=1.
 export const AIRGAP_BLOCKED_SERVICES: AirgapBlockedService[] = [
-  "GPT-6 AI (copilot / micrograph vision)",
+  "GPT-6 AI (reserved, not implemented)",
   "NVIDIA cloud NIM / DeepSeek endpoints",
   "Materials Project live DFT API (reserved, not implemented)",
   "External powder / pricing APIs (reserved, not implemented)",
