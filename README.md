@@ -144,7 +144,7 @@ pip install -r python/requirements-lpbf.in   # default runtime: CPU LPBF baselin
 npm run dev
 ```
 
-CALPHAD works in that default runtime (pycalphad 0.11.2 is pinned in `python/requirements-lpbf.in` and the platform locks). Only micrograph machine learning and CUDA need the full set in `python/requirements.txt` (it pulls PyTorch; install it only if you want those features).
+CALPHAD works in that default runtime (pycalphad 0.11.2 is pinned in `python/requirements-lpbf.in` and the platform locks). Only CUDA and the optional ML training tools need the full set in `python/requirements.txt` (it pulls PyTorch; install it only if you want those features).
 
 ## Workstation layout
 
