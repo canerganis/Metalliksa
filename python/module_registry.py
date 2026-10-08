@@ -291,63 +291,6 @@ _KEYHOLE_EVIDENCE_NOTE = (
     + _KEYHOLE_ORACLE_CI_NOTE
 )
 
-_UQ_FIELDS = (
-    _choice("baseMetal", "Base metal", "element", ("Ni", "Fe", "Ti", "Al"), "Ni",
-            note="The authority maps any value other than Ni/Fe/Ti to the Al constants without an error; "
-                 "the contract accepts only the four tabulated keys."),
-    _num("coolingRate_nominal", "Nominal cooling rate", "K/s", "cooling-rate", 150000.0,
-         note="No bound is enforced; a value <= 0 fails in math.log (not expressible as an inclusive bound)."),
-    _num("coolingRate_cov", "Cooling-rate coefficient of variation", "1", "coefficient-of-variation", 0.25,
-         note="Fraction (0.25 = 25 %); no bound is enforced."),
-    _num("agingTemp_nominal", "Nominal aging temperature", "degC", "temperature", 720.0,
-         note="No bound is enforced; each draw is floored at 200 degC."),
-    _num("agingTemp_stdDev", "Aging temperature standard deviation", "K", "temperature-difference", 7.5,
-         note="Temperature difference (no offset); no bound is enforced."),
-    _num("agingTime_nominal", "Nominal aging time", "h", "time", 8.0,
-         note="No bound is enforced; each draw is floored at 0.2 h."),
-    _num("agingTime_stdDev", "Aging time standard deviation", "h", "time", 0.25),
-    _num("serviceStress_nominal", "Nominal service stress", "MPa", "stress", 720.0,
-         note="No bound is enforced; each draw is floored at 50 MPa."),
-    _num("serviceStress_cov", "Service-stress coefficient of variation", "1", "coefficient-of-variation", 0.08),
-    _num("specMinYield_MPa", "Specification minimum yield strength", "MPa", "stress", 1100.0),
-    _num("specMinUTS_MPa", "Specification minimum UTS", "MPa", "stress", 1350.0,
-         note="Echoed in alloyMetadata only; no UTS is computed (the UTS output is unavailable)."),
-    _num("specMinElongation_pct", "Specification minimum elongation", "%", "strain", 12.0),
-    _num("mcSamples", "Sample count", "1", "count", 2500, 500, 10000, integer=True,
-         note="The authority clamps values outside [500, 10000] instead of rejecting them; the contract "
-              "declares [500, 10000] as its hard range."),
-    _choice("samplingMethod", "Sampling method", "sampling-method", ("sobol_qmc",), "sobol_qmc",
-            note="The authority rejects 'pseudo_mc' with a ValueError; the view still offers it."),
-    InputField(key="scramble", label="Random digital shift", unit=None, quantity_kind="flag", min=None, max=None,
-               default=True, required=False, value_type="boolean",
-               note="The authority coerces with bool(); the contract accepts only booleans."),
-    _num("seed", "Random seed", "1", "rng-seed", 42, integer=True,
-         note="No bound is enforced (int() conversion)."),
-)
-
-_UQ_OUTPUT = OutputSchema(
-    fields=("success", "engine", "computeTimeMs", "sampleSizeN", "samplingMetadata", "alloyMetadata",
-            "inputUncertainties", "stochasticProperties", "sobolSensitivityAnalysis", "sensitivityMetadata",
-            "aerospaceReliability", "provenance"),
-    status_key=None,
-)
-
-_UQ_EVIDENCE_NOTE = (
-    "Emits no evidence status: the output has no status key. stochasticProperties UTS, K_Ic and critical "
-    "flaw size (and aerospaceReliability.criticalFlawMedian_mm / criticalFlaw_P10_mm) are null with an "
-    "'unavailable: ...' *_status string because their former laws were invented; they are not evidence. "
-    "aerospaceReliability.qualificationStatus is "
-    "the fixed text 'Screening only; qualification not assessed' and sensitivityMetadata.status is "
-    "'estimated' or 'unavailable_zero_variance'; neither is an evidence status. Ceiling: the pending-oracle "
-    "cap (screening-only). Simulated populations from a heuristic strengthening model are not coupon "
-    "evidence or allowables."
-)
-
-_UQ_WARM_NOTE = ("warm: true is the best case: python/persistent_ipc_service.py pre-imports the solver "
-                 "(WARM_MODULE_NAMES). When the IPC daemon is unreachable, server/processOrchestrator.ts "
-                 "falls back to a cold ad-hoc spawn; each attempt (socket, HTTP, spawn) gets the 25000 ms "
-                 "timeout separately, so the total wait can exceed it.")
-
 _PILOT_FORBIDDEN = FORBIDDEN_CLAIM_KEYS  # every claim key stays forbidden
 
 
@@ -391,58 +334,6 @@ def _keyhole_contract(row: Dict[str, str]) -> ModuleContract:
                       "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
                       "src/components/KeyholeRaytracingLab.tsx::KeyholeRaytracingLab",
                       "docs/MODULE_EVIDENCE_INVENTORY.md:40#`keyhole-raytracing` /",
-                  ))
-
-
-def _uq_contract(row: Dict[str, str]) -> ModuleContract:
-    operation = Operation(
-        id="stochastic-uq-mmpds", method="POST", route="/api/python/stochastic-uq-mmpds",
-        authority=_py("stochastic_uq_mmpds_solver", _PHYSICS_TIMEOUT_MS, warm=True),
-        input=_UQ_FIELDS, output=_UQ_OUTPUT,
-        undeclared_input=("alloyName", "standardSpec", "composition_wt", "composition_tolerances"),
-    )
-    return _pilot(row, operation=operation, reviewed={},
-                  evidence=Evidence(emits=(), ceiling=PENDING_ORACLE_CEILING, forbidden_claims=_PILOT_FORBIDDEN,
-                                    note=_UQ_EVIDENCE_NOTE),
-                  oracle=Oracle(status="pending"),
-                  lifecycle=Lifecycle(background_work="none", resources=("fetch",)),
-                  notes=(
-                      "alloyName and standardSpec are free-text labels echoed in alloyMetadata; composition_wt and "
-                      "composition_tolerances are element -> wt% maps (a missing tolerance defaults to 10 % of the "
-                      "nominal). The Field schema cannot describe them, so they are recorded as undeclaredInput.",
-                      "More than 13 composition elements exceed the 32-dimension Sobol table in the sensitivity "
-                      "pass (2 x (elements + 3) dimensions) and the authority raises a ValueError.",
-                      "The view fixes the engine to Sobol QMC (the authority rejects 'pseudo_mc'). The solver run is "
-                      "on-demand and illustrative: the strength model is an uncalibrated toy superposition, so only "
-                      "relative Sobol indices are shown in the view.",
-                      "Coupon statistics over uploaded coupon CSV rows only (computeMMPDSEmpiricalStats in "
-                      "src/components/uqLabData.ts; no coupons are bundled and none are generated) run in the "
-                      "browser: recorded single-authority debt, not bound as an operation because the code "
-                      "declares no route or deadline for it.",
-                      "Known removal: UTS, K_Ic and critical flaw size were removed from the response (null + "
-                      "unavailable status); the initialFlawSize_um_* inputs no longer exist.",
-                      "No validity domain is declared: no source-backed applicability range exists for the "
-                      "strengthening model or the input distributions.",
-                      _UQ_WARM_NOTE,
-                  ),
-                  # Content-anchored: symbols, or line ranges that must still contain the quoted text.
-                  # pythonComputationService.ts is anchored by symbol because other lanes delete lines there.
-                  sources=(
-                      "python/stochastic_uq_mmpds_solver.py::solve_stochastic_uq",
-                      "python/stochastic_uq_mmpds_solver.py::SobolSequenceGenerator",
-                      "python/stochastic_uq_mmpds_solver.py::provenance",
-                      "python/alloy_data_kinetics_uq_fatigue.py::UQ_BASE_METAL_LATTICE",
-                      "python/alloy_data_kinetics_uq_fatigue.py::uq_lattice_constants",
-                      "python/alloy_data_kinetics_uq_fatigue.py::UQ_DEFAULT_BASE_METAL",
-                      "routes/physics.ts::handlePythonDispatch",
-                      "python/persistent_ipc_service.py::WARM_MODULE_NAMES",
-                      "server/processOrchestrator.ts::PersistentPythonIPCSupervisor.execute",
-                      "routes/physics.ts:89-90#python/stochastic_uq_mmpds_solver.py",
-                      "src/components/UQLab.tsx::UQLab",
-                      "src/components/UQLab.tsx::runQMCSolver",
-                      "src/components/uqLabData.ts::computeMMPDSEmpiricalStats",
-                      "src/services/pythonComputationService.ts::calculateStochasticUQMMPDS",
-                      "docs/MODULE_EVIDENCE_INVENTORY.md:77#`uq-lab` /",
                   ))
 
 
@@ -899,7 +790,6 @@ CONTRACTED_BUILDERS = {
     "lpbf-dataset-comparison": build_dataset_view_contract,
     "lpbf-calibration-scorecard": build_calibration_scorecard_contract,
     "keyhole-raytracing": _keyhole_contract,
-    "uq-lab": _uq_contract,
     # Phase 7 wave 2
     "ttt-cct-kinetics": _kinetics_contract,
     "murakami-fatigue": _fatigue_contract,

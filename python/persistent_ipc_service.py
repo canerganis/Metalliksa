@@ -100,7 +100,6 @@ WARM_MODULE_NAMES = [
     "pourbaix_solver",
     "battery_corrosion_eis_solver",
     "kinetics_ttt_cct_solver",
-    "stochastic_uq_mmpds_solver",
     "stl_slicer_build_time_solver",
     "lpbf_build_job_solver",
     "tafel_corrosion_rate_solver",
@@ -121,7 +120,6 @@ ALLOWED_SCRIPT_NAMES = frozenset({
     "micrograph_measure",
     "pourbaix_solver",
     "stl_slicer_build_time_solver",
-    "stochastic_uq_mmpds_solver",
     "tafel_corrosion_rate_solver",
     "xrd_peak_deconvolution",
 })

@@ -194,7 +194,6 @@ export const DISPATCHABLE_SCRIPTS: ReadonlySet<string> = new Set([
   "micrograph_measure",
   "pourbaix_solver",
   "stl_slicer_build_time_solver",
-  "stochastic_uq_mmpds_solver",
   "tafel_corrosion_rate_solver",
   "xrd_peak_deconvolution",
 ]);

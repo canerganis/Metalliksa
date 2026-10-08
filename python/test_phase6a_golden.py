@@ -84,8 +84,7 @@ class GoldenRegressionTest(unittest.TestCase):
         # d33b6f5 golden for the comparison; StepBGoldenTest checks its recorded drift.
         expected = golden.load_expected(solver, case)
         # Run the CASES payload, not doc["input"]: golden files store the input with
-        # sorted keys, and key order is significant for some solvers (stochastic UQ maps
-        # composition elements to Sobol dimensions in insertion order).
+        # sorted keys, and key order can be significant for some solvers.
         # GoldenFilesTest asserts both are canonically equal.
         fresh = golden.run_solver(solver, golden.CASES[solver][case])
         expected_code = EXPECTED_BEHAVIOUR_CHANGES.get((solver, case))
@@ -334,7 +333,6 @@ class StepBGoldenTest(unittest.TestCase):
         self.assertTrue(golden.step_b_violations(
             solver, [{"key": skey, "kind": "changed", "old": "x", "new": conv}], steel(42.0, conv)))
         # the exception is per solver and per key: same key elsewhere, or a null HRC, stays structural
-        self.assertTrue(golden.step_b_violations("stochastic_uq_mmpds_solver", [hv_row(229.0, None)], steel(18.0, rng)))
         self.assertTrue(golden.step_b_violations(solver, [{"key": "cctContinuousCoolingMap[0].predictedHardness_HRC",
                                                            "kind": "changed", "old": 18.0, "new": None}],
                                                  steel(18.0, rng)))
@@ -365,7 +363,7 @@ class StepBGoldenTest(unittest.TestCase):
     def test_pourbaix_documented_patterns_are_listed_exactly(self):
         import pourbaix_golden_check as check
         table = golden.EXPECTED_DOCUMENTED_VALUE_CHANGES
-        self.assertEqual(set(table), {"kinetics_ttt_cct_solver", "pourbaix_solver", "stochastic_uq_mmpds_solver",
+        self.assertEqual(set(table), {"kinetics_ttt_cct_solver", "pourbaix_solver",
                                         # physics audit KS-2 / KS-3 (tools/fatigue_documented_changes oracle)
                                         "lpbf_fatigue_fracture"})
         self.assertEqual(set(table["pourbaix_solver"]), set(check.DOCUMENTED_VALUE_CHANGES))
@@ -851,90 +849,6 @@ class StepBGoldenTest(unittest.TestCase):
         # a handler that cannot verify (bad index) is a violation, never "accepted"
         bad_index = {"key": "tttIsothermalCurves[999].tStart_s", "kind": "added", "old": None, "new": 1.0}
         self.assertTrue(golden.step_b_violations(solver, [bad_index], steel_doc))
-
-    def test_documented_uq_sampler_change_is_checked_against_the_scipy_oracle(self):
-        # EXPECTED_DOCUMENTED_VALUE_CHANGES: stochastic UQ norm_ppf sign fix. The drift rows are
-        # not bounded; the whole new document must equal the solver run with scipy's ndtri.
-        import copy
-        solver, case = "stochastic_uq_mmpds_solver", "seed42_n500_defaults_ni"
-        payload = golden.CASES[solver][case]
-        # the oracle run with the three invented-law outputs (UTS, K_Ic, critical flaw) replaced by null + status
-        raw_oracle = golden._uq_scipy_oracle_stdout(payload)
-        oracle = golden._uq_without_unsupported_outputs(raw_oracle)
-        base = golden.load_golden(solver, case)["stdout"]
-        rows = drift_report.diff(base, oracle)
-        self.assertTrue(rows)
-        self.assertEqual(golden.step_b_violations(solver, rows, oracle, payload), [])
-        # a document that still carries numeric UTS / K_Ic / critical-flaw values is refused
-        self.assertTrue(golden.step_b_violations(solver, drift_report.diff(base, raw_oracle), raw_oracle, payload))
-        revived = copy.deepcopy(oracle)
-        revived["stochasticProperties"]["ultimateTensileStrength_UTS"] = raw_oracle["stochasticProperties"]["ultimateTensileStrength_UTS"]
-        self.assertTrue(golden.step_b_violations(solver, drift_report.diff(base, revived), revived, payload))
-        # not the oracle: a perturbed document, the pre-fix (sigma 0.776) document itself
-        perturbed = copy.deepcopy(oracle)
-        perturbed["stochasticProperties"]["yieldStrength_Rp02"]["stdDev"] += 0.01
-        self.assertTrue(golden.step_b_violations(solver, rows, perturbed, payload))
-        self.assertTrue(golden.step_b_violations(solver, rows, base, payload))
-        # no document or no payload cannot be verified
-        self.assertTrue(golden.step_b_violations(solver, rows, oracle))
-        self.assertTrue(golden.step_b_violations(solver, rows, None, payload))
-        # rows outside the listed patterns keep the numeric bound, and structural rows are refused
-        other = {"key": "samplingMetadata.centeredL2Discrepancy", "kind": "numeric", "old": 1.0, "new": 1.5,
-                 "abs": 0.5, "rel": 0.5}
-        self.assertTrue(golden.step_b_violations(solver, [other], oracle, payload))
-        added = {"key": "stochasticProperties.yieldStrength_Rp02.newKey", "kind": "added", "old": None, "new": 1.0}
-        self.assertTrue(golden.step_b_violations(solver, [added], oracle, payload))
-        # the exception does not leak to another solver
-        self.assertTrue(golden.step_b_violations("kinetics_ttt_cct_solver", rows[:1], oracle, payload))
-
-    def test_uq_oracle_is_the_pinned_prefix_blob_not_the_working_tree_solver(self):
-        # Review fxa B1: the oracle must not be able to match a later solver edit.
-        import stochastic_uq_mmpds_solver as current
-        pinned = golden._uq_pinned_solver_module()
-        self.assertIsNot(pinned, current)
-        self.assertAlmostEqual(pinned.norm_ppf(0.10), -0.0675829, places=6)   # the sign error is still in the oracle blob
-        self.assertAlmostEqual(current.norm_ppf(0.10), -1.2815515655, places=9)
-        self.assertEqual(golden.normalised_sha256(golden.solver_bytes(
-            "stochastic_uq_mmpds_solver", golden.UQ_ORACLE_REVISION)), golden.UQ_ORACLE_SHA256)
-        # the oracle run must not leave the substitute behind
-        golden._uq_scipy_oracle_stdout(golden.CASES["stochastic_uq_mmpds_solver"]["seed42_n500_defaults_ni"])
-        self.assertAlmostEqual(pinned.norm_ppf(0.10), -0.0675829, places=6)
-
-    def test_uq_guard_rejects_other_solver_changes_hidden_in_the_listed_rows(self):
-        # Review fxa B1 mutants: documents that differ from the pinned-solver oracle by anything
-        # other than the inverse normal must be refused, in-pattern rows included.
-        import copy
-        solver, case = "stochastic_uq_mmpds_solver", "preset_steel4340_ams6414"   # baseMetal Fe
-        payload = golden.CASES[solver][case]
-        oracle = golden._uq_without_unsupported_outputs(golden._uq_scipy_oracle_stdout(payload))
-        base = golden.load_golden(solver, case)["stdout"]
-        self.assertEqual(golden.step_b_violations(solver, drift_report.diff(base, oracle), oracle, payload), [])
-
-        def scale_yield(doc):  # a 5 % yield change only for baseMetal Fe
-            stats = doc["stochasticProperties"]["yieldStrength_Rp02"]
-            for key, value in stats.items():
-                if isinstance(value, float):
-                    stats[key] = value * 1.05
-
-        def cpk(doc):  # Cpk 3.0 -> 3.3 sigma
-            stats = doc["stochasticProperties"]["yieldStrength_Rp02"]
-            stats["cpk"] = round(stats["cpk"] / 1.1, 2)
-
-        def sobol_label(doc):
-            doc["sobolSensitivityAnalysis"][0]["parameter"] = "renamed (Chemistry)"
-
-        def extra_key(doc):
-            doc["stochasticProperties"]["yieldStrength_Rp02"]["extraKey"] = 1.0
-
-        def out_of_pattern(doc):  # 2 % on a row outside the three patterns
-            doc["samplingMetadata"]["centeredL2Discrepancy"] *= 1.02
-
-        for name, mutate in (("fe-only yield x1.05", scale_yield), ("cpk", cpk), ("sobol label", sobol_label),
-                             ("extra key", extra_key), ("out-of-pattern x1.02", out_of_pattern)):
-            mutant = copy.deepcopy(oracle)
-            mutate(mutant)
-            rows = drift_report.diff(base, mutant)
-            self.assertTrue(golden.step_b_violations(solver, rows, mutant, payload), name)
 
     def test_recorded_solver_sha256_is_the_current_solver(self):
         # A solver edit after a re-bless must come with a new re-bless (and drift table).

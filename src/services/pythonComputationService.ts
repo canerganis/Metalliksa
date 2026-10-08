@@ -69,7 +69,6 @@ export interface PythonEngineStatus {
     lpbf_thermal_solver?: { available: boolean; description?: string };
     pourbaix_solver?: { available: boolean; description?: string };
     kinetics_ttt_cct_solver?: { available: boolean; description?: string };
-    stochastic_uq_mmpds_solver?: { available: boolean; description?: string };
   };
 }
 
@@ -962,44 +961,6 @@ class PythonComputationService {
   }
 
   /**
-   * Dispatch Stochastic Uncertainty Quantification (UQ) solver to Python: illustrative tolerance estimate (uncalibrated response law), not an MMPDS allowable
-   */
-  async calculateStochasticUQMMPDS(payload: {
-    alloyName?: string;
-    baseMetal?: "Ni" | "Fe" | "Ti" | "Al";
-    standardSpec?: string;
-    composition_wt?: { [key: string]: number };
-    composition_tolerances?: { [key: string]: number };
-    coolingRate_nominal?: number;
-    coolingRate_cov?: number;
-    agingTemp_nominal?: number;
-    agingTemp_stdDev?: number;
-    agingTime_nominal?: number;
-    agingTime_stdDev?: number;
-    serviceStress_nominal?: number;
-    serviceStress_cov?: number;
-    specMinYield_MPa?: number;
-    specMinUTS_MPa?: number;
-    specMinElongation_pct?: number;
-    mcSamples?: number;
-    samplingMethod?: "sobol_qmc";
-    scramble?: boolean;
-    seed?: number;
-  }): Promise<PythonStochasticUQResult> {
-    const res = await fetch("/api/python/stochastic-uq-mmpds", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      throw new Error(`Stochastic UQ & MMPDS proxy error: HTTP ${res.status}`);
-    }
-
-    return await res.json();
-  }
-
-  /**
    * High-Fidelity 3D LPBF Laser Melt Pool, Geometry & Multi-Defect Physics Solver
    */
   async solveLPBFThermalPhysics(payload: {
@@ -1758,105 +1719,6 @@ export interface StochasticPropertyStats {
     fittedNormalPdf: number;
     cumulativePct: number;
   }[];
-}
-
-export interface PythonStochasticUQResult {
-  success: boolean;
-  engine: string;
-  computeTimeMs: number;
-  proxyRoundtripMs?: number;
-  sampleSizeN: number;
-  samplingMetadata?: {
-    samplingMethod: "sobol_qmc";
-    scrambled: boolean;
-    sobolDimensions: number;
-    qmcAccelerationFactor: number | null;
-    effectiveSampleSize: number | null;
-    centeredL2Discrepancy: number;
-    pseudoDiscrepancyBenchmark: number;
-    discrepancyReductionPct: number | null;
-    varianceReductionRatio: number | null;
-    theoreticalConvergenceRate: string;
-    samplingDescription: string;
-    discrepancySampleSize?: number;
-    diagnosticsLimitations?: string;
-  };
-  alloyMetadata: {
-    alloyName: string;
-    baseMetal: string;
-    standardSpec: string;
-    specMinYield_MPa: number;
-    specMinUTS_MPa: number;
-    specMinElongation_pct: number;
-  };
-  inputUncertainties: {
-    compositionTolerances: { [key: string]: number };
-    coolingRate_nominal: number;
-    coolingRate_cov: number;
-    agingTemp_nominal: number;
-    agingTemp_stdDev: number;
-    agingTime_nominal: number;
-    agingTime_stdDev: number;
-    serviceStress_nominal: number;
-    serviceStress_cov: number;
-  };
-  stochasticProperties: {
-    yieldStrength_Rp02: StochasticPropertyStats;
-    /** null = unavailable (see ultimateTensileStrength_UTS_status); the former UTS law was invented. */
-    ultimateTensileStrength_UTS: StochasticPropertyStats | null;
-    ultimateTensileStrength_UTS_status: string;
-    elongationPct: StochasticPropertyStats;
-    /** null = unavailable (see fractureToughness_K1c_status); the former K_Ic law was invented. */
-    fractureToughness_K1c: StochasticPropertyStats | null;
-    fractureToughness_K1c_status: string;
-    /** null = unavailable (see criticalFlawSize_ac_status); it needed the invented K_Ic. */
-    criticalFlawSize_ac: StochasticPropertyStats | null;
-    criticalFlawSize_ac_status: string;
-  };
-  sensitivityMetadata?: {
-    method: string;
-    output: string;
-    baseSampleSize: number;
-    evaluationCount: number;
-    independentInputs: boolean;
-    indicesNormalized: boolean;
-    status: string;
-    limitations: string;
-  };
-  /** Added by the solver script (python/stochastic_uq_mmpds_solver.py provenance()); only modelStatus is read. */
-  provenance?: { modelStatus?: string };
-  sobolSensitivityAnalysis: {
-    parameter: string;
-    description: string;
-    sobolFirstOrderIndex: number | null;
-    sobolTotalOrderIndex?: number | null;
-    interactionIndex?: number | null;
-    varianceContributionPct: number | null;
-  }[];
-  aerospaceReliability: {
-    qualificationStatus: string;
-    /** g = Rp0.2 - 1.5 * max(50 MPa, service stress); Pf = P(g < 0) (EUQ-11: an exceedance at design factor 1.5). */
-    limitState: string;
-    designFactor: number;
-    failureCount: number;
-    probabilityYieldBelowDesignStress_Pf: number;
-    /** Generalized reliability index Phi^-1(1 - Pf) (Ditlevsen), not Hasofer-Lind; null when censored. */
-    generalizedReliabilityIndex: number | null;
-    generalizedReliabilityIndexStatus: "estimated" | "censored_no_failures" | "censored_all_failures";
-    generalizedReliabilityIndexBound:
-      | { type: "lower"; beta: number | null; pfUpper: number }
-      | { type: "upper"; beta: number | null; pfLower: number }
-      | null;
-    generalizedReliabilityIndexBoundMethod: string | null;
-    reliabilityIndexMethod: string;
-    aBasisConforming: boolean;
-    bBasisConforming: boolean;
-    cpkConforming: boolean;
-    /** null = unavailable (see criticalFlaw_status). */
-    criticalFlawMedian_mm: number | null;
-    criticalFlaw_P10_mm: number | null;
-    criticalFlaw_status: string;
-  };
 }
 
 export const pythonComputationService = new PythonComputationService();

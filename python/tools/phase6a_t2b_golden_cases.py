@@ -1,15 +1,12 @@
 """
-Phase 6a tranche 2b golden cases: kinetics_ttt_cct_solver, stochastic_uq_mmpds_solver
-and lpbf_fatigue_fracture. Merged into capture_phase6a_golden.CASES by one delimited
+Phase 6a tranche 2b golden cases: kinetics_ttt_cct_solver and lpbf_fatigue_fracture. Merged into capture_phase6a_golden.CASES by one delimited
 block there, so the tranche-2a cases (calphad, battery-eis) merge trivially.
 
 Base: the three solver files are byte-identical between d33b6f5 (the harness label,
 capture_phase6a_golden.BASE_REVISION) and 7f3f803 (tranche 2 base), so the existing
 blob binding holds unchanged (`git diff --stat d33b6f5 7f3f803 -- <files>` is empty).
 
-Stochastic cases use the solver's fixed seed (42) and N=500 (PROOF.md:1044 baseline).
-Key order matters there: composition elements map to Sobol dimensions in insertion
-order. Golden files store "input" with sorted keys, so the regression test runs the
+Golden files store "input" with sorted keys, so the regression test runs the
 CASES payload below (original order), never the stored "input".
 lpbf_fatigue_fracture has no __main__; it runs through MODULE_DRIVERS.
 """
@@ -18,8 +15,6 @@ from typing import Any, Dict
 
 import fatigue_documented_changes as _fatigue_fx  # tools/ module
 import kinetics_documented_changes as _kinetics_fx  # tools/ module
-
-_UQ_COMMON = {"mcSamples": 500, "seed": 42, "samplingMethod": "sobol_qmc", "scramble": True}
 
 CASES: Dict[str, Dict[str, Dict[str, Any]]] = {
     "kinetics_ttt_cct_solver": {
@@ -42,37 +37,6 @@ CASES: Dict[str, Dict[str, Dict[str, Any]]] = {
         },
         # Silent default today: an unknown alloy is solved with the AISI 4140 data.
         "edge_unknown_alloy": {"alloy": "Unobtainium XYZ", "coolingRate_C_s": 10.0},
-    },
-    "stochastic_uq_mmpds_solver": {
-        # Solver defaults (IN718-like chemistry, baseMetal Ni), Seed42/N500 (PROOF.md:1044).
-        "seed42_n500_defaults_ni": dict(_UQ_COMMON),
-        # StochasticUQMMPDSStudio presets ti64_ams4928, steel4340_ams6414, alsi10mg_ams4215.
-        "preset_ti64_ams4928": dict(
-            _UQ_COMMON, alloyName="Ti-6Al-4V Grade 5 (AMS 4928)", baseMetal="Ti",
-            standardSpec="AMS 4928 / MIL-T-9047", coolingRate_nominal=250000, coolingRate_cov=0.30,
-            agingTemp_nominal=550, agingTemp_stdDev=8.0, agingTime_nominal=4, serviceStress_nominal=620,
-            specMinYield_MPa=830, specMinUTS_MPa=900, specMinElongation_pct=10,
-            composition_wt={"Al": 6.0, "V": 4.0, "Fe": 0.25, "C": 0.04, "Si": 0.05},
-            composition_tolerances={"Al": 0.35, "V": 0.30, "Fe": 0.08, "C": 0.015, "Si": 0.02}),
-        "preset_steel4340_ams6414": dict(
-            _UQ_COMMON, alloyName="AISI 4340 Ultra-High Strength (AMS 6414)", baseMetal="Fe",
-            standardSpec="AMS 6414 / MMPDS Ch. 2", coolingRate_nominal=250, coolingRate_cov=0.15,
-            agingTemp_nominal=480, agingTemp_stdDev=5.0, agingTime_nominal=2, serviceStress_nominal=950,
-            specMinYield_MPa=1380, specMinUTS_MPa=1520, specMinElongation_pct=9,
-            composition_wt={"C": 0.40, "Cr": 0.80, "Ni": 1.80, "Mo": 0.25, "Mn": 0.70, "Si": 0.25},
-            composition_tolerances={"C": 0.03, "Cr": 0.10, "Ni": 0.15, "Mo": 0.05, "Mn": 0.08, "Si": 0.05}),
-        "preset_alsi10mg_ams4215": dict(
-            _UQ_COMMON, alloyName="AlSi10Mg Additive (AMS 4215)", baseMetal="Al",
-            standardSpec="AMS 4215 / ASTM F3318", coolingRate_nominal=600000, coolingRate_cov=0.35,
-            agingTemp_nominal=160, agingTemp_stdDev=4.0, agingTime_nominal=6, serviceStress_nominal=180,
-            specMinYield_MPa=220, specMinUTS_MPa=330, specMinElongation_pct=6,
-            composition_wt={"Si": 10.0, "Mg": 0.45, "Fe": 0.15, "Ti": 0.05},
-            composition_tolerances={"Si": 0.5, "Mg": 0.08, "Fe": 0.04, "Ti": 0.02}),
-        # Silent default kept in step (a): an unknown baseMetal uses the Al lattice branch,
-        # and an unlisted solute ("Zr") uses the 5.0 default potency.
-        "edge_unknown_base_metal_zz": dict(
-            _UQ_COMMON, alloyName="Unobtainium", baseMetal="Zz",
-            composition_wt={"Zr": 1.0, "Cu": 2.0}, composition_tolerances={"Zr": 0.1, "Cu": 0.2}),
     },
     "lpbf_fatigue_fracture": {
         # MurakamiFatigueLab defaults (Ti-6Al-4V, 45 um, internal, R=-1, 240 MPa).
@@ -127,23 +91,6 @@ EXPECTED_DOCUMENTED_VALUE_CHANGES = {
         # placeholders null, TTT floor flags, floor/step-limited CCT starts null, LSW unit fix.
         # Each pattern is verified exactly by tools/kinetics_documented_changes.row_violation.
         **_kinetics_fx.DESCRIPTIONS,
-    },
-    # norm_ppf sign fix (audit D1): every normal input of the UQ run was drawn with sigma 0.776
-    # instead of 1, so the sampled statistics, the Sobol-Saltelli indices and the two
-    # reliability numbers that depend on them move. The rows are not bounded numerically; the
-    # whole re-blessed document must equal a fresh run of the PINNED pre-fix solver blob
-    # (f41e316, bound by sha256) with scipy.special.ndtri as the inverse normal, so a later
-    # solver edit cannot match its own oracle (capture_phase6a_golden.documented_change_violation).
-    "stochastic_uq_mmpds_solver": {
-        r"stochasticProperties\..+":
-            "statistics of the sampled model outputs (normal inputs drawn with the corrected norm_ppf); the "
-            "UTS, K_Ic and critical-flaw entries are null + status (invented laws removed)",
-        r"sobolSensitivityAnalysis\[\d+\]\..+":
-            "Sobol-Saltelli rows (values, and the parameter order that follows from the sort)",
-        r"aerospaceReliability\.(yieldFailureProbability_Pf|hasoferLindBetaIndex|aBasisConforming|"
-        r"bBasisConforming|cpkConforming|criticalFlawMedian_mm|criticalFlaw_P10_mm|criticalFlaw_status)":
-            "reliability numbers derived from the sampled outputs; the critical-flaw rows are null + status "
-            "(invented K_Ic law removed)",
     },
     # Physics audit KS-2 / KS-3 (El-Haddad a0 with Murakami Y; Paris growth of sqrt(area) from the defect
     # size, Y by location, dK = Kmax for R <= 0, closed-form life). Every row is accepted only if the whole

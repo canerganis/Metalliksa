@@ -59,7 +59,6 @@ const AdvancedResearchHub = lazy(() => import("./components/AdvancedResearchHub"
 const PhaseDiagramViewer = lazy(() => import("./components/PhaseDiagramViewer").then(m => ({ default: m.PhaseDiagramViewer })));
 const DigitalTwinHub = lazy(() => import("./components/DigitalTwinHub").then(m => ({ default: m.DigitalTwinHub })));
 const PhaseKineticsTTTCCTStudio = lazy(() => import("./components/PhaseKineticsTTTCCTStudio").then(m => ({ default: m.PhaseKineticsTTTCCTStudio })));
-const UQLab = lazy(() => import("./components/UQLab").then(m => ({ default: m.UQLab })));
 
 export type NavSubTab = ModuleId;
 export type DisciplineHubId = typeof WORKSPACES[number]['id'];
@@ -190,7 +189,6 @@ export default function App() {
       case 'research-hub': return <AdvancedResearchHub />;
       case 'experimental-data': return <EvidenceWorkspace mode="experimental" />;
       case 'traceability': return <EvidenceWorkspace mode="traceability" />;
-      case 'uq-lab': return <UQLab />;
       case 'digital-twin': return <DigitalTwinHub onNavigateToModule={navigate} />;
       case 'electrochem-suite': return <CorrosionEngineeringLab />;
       case 'ttt-cct-kinetics': return <PhaseKineticsTTTCCTStudio onSendToModule={navigate} />;

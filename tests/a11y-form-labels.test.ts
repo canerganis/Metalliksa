@@ -40,7 +40,6 @@ const PINNED_GUARDED = [
   "src/components/PhaseKineticsTTTCCTStudio.tsx",
   "src/components/PythonAnnualCorrosionRateModule.tsx",
   "src/components/TafelPolarizationLab.tsx",
-  "src/components/UQLab.tsx",
 ];
 
 // The exact exclusion set, written out independently of EXCLUSIONS so it cannot change unnoticed.

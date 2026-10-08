@@ -1,4 +1,4 @@
-"""Phase 6a tranche 2b golden regression: kinetics, stochastic UQ and fatigue.
+"""Phase 6a tranche 2b golden regression: kinetics and fatigue.
 
 The cases live in tools/phase6a_t2b_golden_cases.py and were captured at the
 pre-migration code (the solver blobs equal d33b6f5 and 7f3f803). The comparison
@@ -17,7 +17,7 @@ sys.path.insert(0, str(HERE / "tools"))
 import capture_phase6a_golden as golden  # noqa: E402
 import test_phase6a_golden as shared  # noqa: E402
 
-SOLVERS = ("kinetics_ttt_cct_solver", "stochastic_uq_mmpds_solver", "lpbf_fatigue_fracture")
+SOLVERS = ("kinetics_ttt_cct_solver", "lpbf_fatigue_fracture")
 
 
 class T2bGoldenRegressionTest(unittest.TestCase):
@@ -31,9 +31,6 @@ class T2bGoldenRegressionTest(unittest.TestCase):
 
     def test_kinetics_ttt_cct_solver(self):
         self._solver("kinetics_ttt_cct_solver")
-
-    def test_stochastic_uq_mmpds_solver(self):
-        self._solver("stochastic_uq_mmpds_solver")
 
     def test_lpbf_fatigue_fracture(self):
         self._solver("lpbf_fatigue_fracture")
@@ -69,25 +66,6 @@ class FatigueKs2Ks3OracleTest(unittest.TestCase):
         # dK0 = 0.5 * 240 * sqrt(pi * 45e-6) = 1.427 < 3.2 (E647 Kmax at R = -1).
         self.assertEqual(out["paris_crack_growth"]["status"], "non_propagating")
         self.assertEqual(out["paris_crack_growth"]["delta_K_initial_MPa_m"], 1.427)
-
-
-class ProofBaselineTest(unittest.TestCase):
-    """PROOF.md:1044 Seed42/N500 QMC baseline as recorded at d33b6f5 (with the norm_ppf sign
-    error: normal draws had sigma 0.776), and the current expectation after the fix (same
-    numbers as test_stochastic_uq_evidence)."""
-
-    def test_seed42_n500_yield_baseline(self):
-        doc = golden.load_golden("stochastic_uq_mmpds_solver", "seed42_n500_defaults_ni")
-        stats = doc["stdout"]["stochasticProperties"]["yieldStrength_Rp02"]
-        self.assertEqual(tuple(stats[k] for k in ("mean", "stdDev", "aBasisAllowable", "bBasisAllowable")),
-                         (3467.7, 32.54, 3387.2, 3422.6))
-        self.assertEqual(doc["stdout"]["sampleSizeN"], 500)
-
-    def test_seed42_n500_yield_expectation_after_the_norm_ppf_fix(self):
-        doc = golden.load_expected("stochastic_uq_mmpds_solver", "seed42_n500_defaults_ni")
-        stats = doc["stdout"]["stochasticProperties"]["yieldStrength_Rp02"]
-        self.assertEqual(tuple(stats[k] for k in ("mean", "stdDev", "aBasisAllowable", "bBasisAllowable")),
-                         (3467.8, 41.37, 3365.4, 3410.5))
 
 
 if __name__ == "__main__":

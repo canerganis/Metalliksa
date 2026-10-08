@@ -84,11 +84,6 @@ physicsRouter.post("/api/python/kinetics-ttt-cct", (req: Request, res: Response)
   return handlePythonDispatch("python/kinetics_ttt_cct_solver.py", req.body, res);
 });
 
-// Stochastic UQ MMPDS
-physicsRouter.post("/api/python/stochastic-uq-mmpds", (req: Request, res: Response) => {
-  return handlePythonDispatch("python/stochastic_uq_mmpds_solver.py", req.body, res);
-});
-
 // Micrograph measurement (python/micrograph_measure.py). Runs in the Python IPC process pool (or an ad-hoc
 // process), not in the serial LPBF worker, so a large image neither hits the worker's 1 MB RPC line limit nor
 // holds up LPBF job calls. A 4096 x 4096 8-bit image is 22.4 MB as base64 JSON; the authority enforces 4096 px.

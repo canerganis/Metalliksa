@@ -503,7 +503,7 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "evidence",
       "label": "Specimen Records",
       "description": "Per-specimen composition, process, test results and attachments with sources; record completeness is not qualification.",
-      "next": "uq-lab",
+      "next": "traceability",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -512,32 +512,6 @@ export const MODULE_REGISTRY_CORE = {
         "export": "DigitalTwinHub"
       },
       "migrationState": "legacy",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "uq-lab",
-      "version": "0.1.0",
-      "workspace": "evidence",
-      "label": "Coupon Statistics & UQ Sampling",
-      "description": "Coupon summary statistics and one-sided tolerance bounds, plus illustrative solver sampling and sensitivity analysis; simulated scatter is not test evidence; solver tolerance output is an illustrative tolerance estimate (uncalibrated response law), not an MMPDS allowable.",
-      "next": "traceability",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/UQLab.tsx",
-        "export": "UQLab"
-      },
-      "migrationState": "contracted",
       "evidence": {
         "ceiling": "screening-only"
       },

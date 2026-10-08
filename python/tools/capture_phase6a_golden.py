@@ -8,8 +8,7 @@ with the JSON payload on stdin, cwd = python/. The stdout JSON is parsed, volati
 keys are stripped (wall-clock durations, timestamps and the interpreter version)
 and the result is written to ``python/golden/phase6a/<solver>/<case>.json``.
 
-Only stochastic_uq_mmpds_solver uses an RNG; its cases pass a fixed seed (42), so
-every case is deterministic once the volatile keys are removed. Library modules
+Library modules
 without a __main__ (lpbf_fatigue_fracture) run through a driver (MODULE_DRIVERS).
 
 Golden files are only (re)written with ``--force``. Re-blessing after a value
@@ -313,7 +312,7 @@ def load_expected(solver: str, case: str) -> Dict[str, Any]:
 # changes values: every drift row against the d33b6f5 golden must be numeric, except
 # changed strings under the keys below (generated code snippets that print a value).
 # Exception, listed per row pattern: EXPECTED_DOCUMENTED_VALUE_CHANGES below (kinetics
-# predictedHardness_HV -> ASTM E140 and the UQ norm_ppf sign fix from phase6a_t2b_golden_cases; pourbaix
+# predictedHardness_HV -> ASTM E140 from phase6a_t2b_golden_cases; pourbaix
 # WP-E equilibrium engine from pourbaix_golden_check), each row verified exactly by
 # documented_change_violation; it does not widen the bound for any other row.
 STEP_B_ALLOWED_STRING_KEYS = frozenset({"pythonCode"})
@@ -358,14 +357,6 @@ def _load_documented_value_changes() -> None:
         {k: dict(v) for k, v in getattr(cases, "EXPECTED_DOCUMENTED_VALUE_CHANGES", {}).items()})
     import pourbaix_golden_check  # noqa: E402 (python/tools module)
     EXPECTED_DOCUMENTED_VALUE_CHANGES["pourbaix_solver"] = dict(pourbaix_golden_check.DOCUMENTED_VALUE_CHANGES)
-    # Physics audit lane tafel-uq (tools/physics_audit_changes.py): EUQ-4 Joe-Kuo Sobol table and EUQ-11
-    # generalized reliability index; verified by the same whole-document oracle as the norm_ppf fix.
-    import physics_audit_changes as audit  # noqa: E402 (python/tools module)
-    uq = EXPECTED_DOCUMENTED_VALUE_CHANGES.setdefault("stochastic_uq_mmpds_solver", {})
-    for pattern in audit.UQ_AUDIT_ROW_PATTERNS:
-        uq[pattern] = "EUQ-4 Joe-Kuo direction numbers / EUQ-11 generalized reliability index (physics audit)"
-
-
 def _documented_change_patterns(solver: str) -> Dict[str, str]:
     if not EXPECTED_DOCUMENTED_VALUE_CHANGES:
         _load_documented_value_changes()
@@ -410,140 +401,6 @@ def pourbaix_documented_change_violation(row: Dict[str, Any], old_stdout: Option
     return check.row_problem(row, context)
 
 
-_UQ_ORACLE_CACHE: Dict[str, Any] = {}
-# The oracle solver is the PINNED pre-fix blob (the last solver with the norm_ppf sign error),
-# never the working-tree solver: a later edit of stochastic_uq_mmpds_solver.py must not be able to
-# match its own "oracle". The blob is bound by git revision AND content digest.
-UQ_ORACLE_REVISION = "f41e316"
-UQ_ORACLE_SHA256 = "2b28829be3f974f81f547b62f4c0abd59bb32c42fcf0cfbf838e64d0f99061ce"
-
-
-def _uq_pinned_solver_module() -> types.ModuleType:
-    """The pre-fix solver blob executed as a throwaway module (imports resolve against python/)."""
-    if "module" not in _UQ_ORACLE_CACHE:
-        solver = "stochastic_uq_mmpds_solver"
-        try:
-            source = solver_bytes(solver, UQ_ORACLE_REVISION)
-        except (OSError, subprocess.CalledProcessError) as exc:
-            raise RuntimeError(f"cannot read python/{solver}.py at {UQ_ORACLE_REVISION} from git ({exc})")
-        if normalised_sha256(source) != UQ_ORACLE_SHA256:
-            raise RuntimeError(f"python/{solver}.py at {UQ_ORACLE_REVISION} does not match the pinned sha256")
-        if str(PYTHON_DIR) not in sys.path:
-            sys.path.insert(0, str(PYTHON_DIR))
-        module = types.ModuleType(f"_uq_oracle_{solver}")
-        sys.modules[module.__name__] = module
-        try:
-            exec(compile(source, f"{solver}.py@{UQ_ORACLE_REVISION}", "exec"), module.__dict__)
-        finally:
-            sys.modules.pop(module.__name__, None)
-        _UQ_ORACLE_CACHE["module"] = module
-    return _UQ_ORACLE_CACHE["module"]
-
-
-def _uq_scipy_oracle_stdout(payload: Dict[str, Any]) -> Dict[str, Any]:
-    """Stdout (volatile keys stripped) of the PINNED pre-fix UQ solver with scipy.special.ndtri
-    substituted for its broken norm_ppf.
-
-    The payload keeps its key order: composition elements map to Sobol dimensions in insertion
-    order. ndtri is the independent oracle; everything else is the f41e316 code, so any change of
-    the solver other than the inverse normal is not covered by the documented change.
-    """
-    cache_key = json.dumps(payload)
-    if cache_key not in _UQ_ORACLE_CACHE:
-        import copy
-        from scipy.special import ndtri
-        module = _uq_pinned_solver_module()
-
-        def oracle(p: float) -> float:
-            if p <= 0.0:
-                return -8.0
-            if p >= 1.0:
-                return 8.0
-            return float(ndtri(p))
-
-        import physics_audit_changes as audit  # noqa: E402 (python/tools module)
-        original = module.norm_ppf
-        original_poly = module.SobolSequenceGenerator.POLY
-        module.norm_ppf = oracle
-        # EUQ-4: Joe & Kuo new-joe-kuo-6.21201 direction numbers from scipy's copy of the table.
-        module.SobolSequenceGenerator.POLY = audit.joe_kuo_poly()
-        try:
-            result = module.solve_stochastic_uq(copy.deepcopy(payload))
-        finally:
-            module.norm_ppf = original
-            module.SobolSequenceGenerator.POLY = original_poly
-        _UQ_ORACLE_CACHE[cache_key] = strip_volatile(json.loads(json.dumps(result)))
-    return _UQ_ORACLE_CACHE[cache_key]
-
-
-# Unsupported-output removal (lane uqlab): the pinned pre-fix solver computed UTS = YS*(1+2.15n), a clamped
-# K_Ic and a critical flaw size from invented laws. The current solver reports them as null with a status
-# string. The strings are pinned here literally (not imported from the solver) so a later solver edit cannot
-# match its own oracle.
-_UQ_UTS_STATUS = ("unavailable: no sourced UTS / work-hardening law (the former UTS = YS*(1+2.15n) was invented); "
-                  "see the ICME solver")
-_UQ_K1C_STATUS = ("unavailable: no sourced fracture-toughness law (the former K_Ic clamp of 18-160 MPa*sqrt(m) "
-                  "was invented); see the ICME solver")
-_UQ_FLAW_STATUS = ("unavailable: critical flaw size needs a sourced K_Ic; the former estimate was dimensionally "
-                   "unsupported")
-_UQ_REMOVED_ROW = re.compile(r"stochasticProperties\.(ultimateTensileStrength_UTS|fractureToughness_K1c|"
-                             r"criticalFlawSize_ac)(_status|\..+)?|"
-                             r"aerospaceReliability\.criticalFlaw(Median_mm|_P10_mm|_status)")
-
-
-def _uq_without_unsupported_outputs(doc: Dict[str, Any]) -> Dict[str, Any]:
-    """The oracle document with the three invented-law outputs replaced by null + status, and the
-    physics-audit EUQ-11 reliability block / EUQ-4 description strings (tools/physics_audit_changes.py)."""
-    import copy
-    import physics_audit_changes as audit  # noqa: E402 (python/tools module)
-    out = audit.uq_reliability_and_text_changes(copy.deepcopy(doc))
-    props = out["stochasticProperties"]
-    props["ultimateTensileStrength_UTS"] = None
-    props["ultimateTensileStrength_UTS_status"] = _UQ_UTS_STATUS
-    props["fractureToughness_K1c"] = None
-    props["fractureToughness_K1c_status"] = _UQ_K1C_STATUS
-    props["criticalFlawSize_ac"] = None
-    props["criticalFlawSize_ac_status"] = _UQ_FLAW_STATUS
-    rel = out["aerospaceReliability"]
-    rel["criticalFlawMedian_mm"] = None
-    rel["criticalFlaw_P10_mm"] = None
-    rel["criticalFlaw_status"] = _UQ_FLAW_STATUS
-    return out
-
-
-def _uq_sampler_violation(row: Dict[str, Any], new_stdout: Optional[Dict[str, Any]],
-                          payload: Optional[Dict[str, Any]]) -> Optional[str]:
-    """None when the row belongs to the norm_ppf sign fix (or the removal of the invented-law outputs)
-    and the whole new document is the oracle run with those outputs replaced by null + status."""
-    key = row["key"]
-    if new_stdout is None or payload is None:
-        return f"{key}: documented change needs the re-blessed document and the case payload to be verified"
-    import physics_audit_changes as audit  # noqa: E402 (python/tools module)
-    removal_row = bool(_UQ_REMOVED_ROW.fullmatch(key))
-    audit_row = any(re.fullmatch(p, key) for p in audit.UQ_AUDIT_ROW_PATTERNS)
-    if row["kind"] not in ("numeric", "changed") and not ((removal_row or audit_row)
-                                                          and row["kind"] in ("added", "removed")):
-        return f"{key}: {row['kind']} row is not a value change of the sampler fix"
-    try:
-        expected = _uq_without_unsupported_outputs(_uq_scipy_oracle_stdout(payload))
-    except (ImportError, RuntimeError) as exc:
-        return f"{key}: UQ oracle unavailable ({exc})"
-    if canonical(new_stdout) != canonical(expected):
-        return (f"{key}: re-blessed document differs from the pinned {UQ_ORACLE_REVISION} solver run with "
-                "scipy.special.ndtri as inverse normal, the Joe-Kuo direction numbers, the invented-law outputs "
-                "replaced by null + status and the EUQ-11 reliability block")
-    # The row itself must be the document's leaf (a forged row next to a valid document is refused).
-    try:
-        value = audit.leaf(new_stdout, key)
-    except KeyError:
-        return None if row["kind"] == "removed" else f"{key}: row is not in the re-blessed document"
-    if row["kind"] == "removed":
-        return f"{key}: removed row still present in the re-blessed document"
-    if value != row["new"] or type(value) is not type(row["new"]):
-        return f"{key}: row new value {row['new']!r} is not the document's {value!r}"
-    return None
-
-
 def documented_change_violation(solver: str, row: Dict[str, Any],
                                 new_stdout: Optional[Dict[str, Any]],
                                 payload: Optional[Dict[str, Any]] = None,
@@ -561,11 +418,6 @@ def documented_change_violation(solver: str, row: Dict[str, Any],
     null with the matching status otherwise. The status key may only be added, with the
     status that belongs to that HV. Nothing is accepted by tolerance.
 
-    stochastic_uq_mmpds_solver (norm_ppf sign fix): a row matching the listed patterns is
-    accepted only if the complete re-blessed stdout equals a fresh run, for the
-    case ``payload``, of the PINNED pre-fix solver blob (UQ_ORACLE_REVISION) with
-    scipy.special.ndtri as the inverse normal (_uq_sampler_violation); the working-tree solver
-    is never used as its own oracle.
     """
     key = row["key"]
     if solver == "pourbaix_solver":
@@ -579,8 +431,6 @@ def documented_change_violation(solver: str, row: Dict[str, Any],
             return f"{key}: documented change needs the re-blessed document to be verified"
         import kinetics_documented_changes as kdc  # noqa: E402 (tools/ module)
         return kdc.row_violation(row, new_stdout)
-    if solver == "stochastic_uq_mmpds_solver":
-        return _uq_sampler_violation(row, new_stdout, payload)
     if solver == "lpbf_fatigue_fracture":
         # Physics audit KS-2 / KS-3: independent oracle in tools/fatigue_documented_changes.py.
         import fatigue_documented_changes as fdc  # noqa: E402 (tools/ module)
@@ -778,7 +628,7 @@ _TABLE_TARGETS = {
 # Solvers without a __main__: solver -> driver script relative to python/ (see run_solver).
 MODULE_DRIVERS: Dict[str, str] = {}
 
-# ---- BEGIN phase6a-t2b block: kinetics / stochastic UQ / fatigue cases ----
+# ---- BEGIN phase6a-t2b block: kinetics / fatigue cases ----
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import phase6a_t2b_golden_cases as _t2b_cases  # noqa: E402
 

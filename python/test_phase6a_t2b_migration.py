@@ -1,10 +1,10 @@
-"""Phase 6a tranche 2b structural migration: kinetics, stochastic UQ, fatigue, phase9.
+"""Phase 6a tranche 2b structural migration: kinetics, fatigue, phase9.
 
 - outputs equal the pre-migration code, compared in-process against the base blob
   (git show 7f3f803:...) with key ORDER included (json.dumps without sort_keys),
   for every alloy / base metal, not only the five golden cases per solver;
 - an unknown kinetics/fatigue alloy is a ValidationError exactly where the old code
-  silently substituted AISI 4140 / Ti-6Al-4V; the stochastic fallbacks are kept;
+  silently substituted AISI 4140 / Ti-6Al-4V;
 - kinetics stdout envelope + exit 2, also through persistent_ipc_service;
 - source guard against re-introduced constant literals / silent table fallbacks.
 """
@@ -24,14 +24,13 @@ import input_validation as iv
 import kinetics_ttt_cct_solver as kin
 import lpbf_fatigue_fracture as ff
 import physical_constants as pc
-import stochastic_uq_mmpds_solver as uq
 from phase6a_test_support import require_git_revision
 
 sys.path.insert(0, str(Path(__file__).parent / "tools"))  # drift_report
 
 HERE = Path(__file__).parent
 BASE = "7f3f803"
-MIGRATED = ("kinetics_ttt_cct_solver.py", "stochastic_uq_mmpds_solver.py", "lpbf_fatigue_fracture.py")
+MIGRATED = ("kinetics_ttt_cct_solver.py", "lpbf_fatigue_fracture.py")
 
 
 def _base_module(name):
@@ -66,7 +65,6 @@ def _run(script, payload):
 
 
 OLD_KIN = _base_module("kinetics_ttt_cct_solver")
-OLD_UQ = _base_module("stochastic_uq_mmpds_solver")
 OLD_FF = _base_module("lpbf_fatigue_fracture")
 
 
@@ -244,81 +242,6 @@ class FatigueTest(unittest.TestCase):
         self.assertEqual(ff.MurakamiFatigueEngine("IN718").alloy.name, "Inconel 718")
 
 
-@require_git_revision(OLD_UQ is not None, f"git revision {BASE} unavailable")
-class StochasticTest(unittest.TestCase):
-    def test_single_realization_equals_the_base_blob_for_every_branch(self):
-        comp = {"Nb": 5.0, "Ti": 0.9, "Al": 0.5, "Zr": 0.3, "Mg": 0.1}
-        for base in ("Ni", "Fe", "Ti", "Al", "Zz", None, ["Ni"]):
-            args = (base, comp, 1.5e5, 720.0, 8.0, 700.0, 40.0)
-            # The invented-law outputs (UTS, K_Ic, critical flaw, flaw margin) and the flaw-size argument
-            # were removed; every value still returned equals the base blob.
-            new = uq.solve_single_realization(*args[:-1])
-            old = {k: v for k, v in OLD_UQ.solve_single_realization(*args).items() if k in new}
-            self.assertEqual(repr(new), repr(old), repr(base))
-            self.assertEqual(set(new), {"yield_MPa", "elongation_pct", "margin_yield_MPa", "delta_sigma_ss",
-                                        "delta_sigma_hp", "delta_sigma_ppt", "grain_size_um", "applied_stress"})
-
-    def test_request_defaults_equal_the_base_blob_with_the_legacy_norm_ppf(self):
-        # The norm_ppf sign fix (audit D1) is the only change to the sampled output: with the
-        # base blob's quantile function put back, the migrated solver reproduces d33b6f5 bit for bit.
-        def legacy_ppf_array(p):
-            # the solver draws through the vectorised quantile; the legacy one is scalar-only
-            p = uq.np.asarray(p, dtype=float)
-            return uq.np.array([OLD_UQ.norm_ppf(x) for x in p.ravel()]).reshape(p.shape)
-
-        # Physics audit EUQ-4: the base blob's (non-Joe-Kuo) Sobol table is put back as well; EUQ-11's
-        # reliability block and the two description strings are applied to the old document.
-        import physics_audit_changes as audit
-        with mock.patch.object(uq, "norm_ppf", OLD_UQ.norm_ppf),                 mock.patch.object(uq, "norm_ppf_array", legacy_ppf_array),                 mock.patch.object(uq.SobolSequenceGenerator, "POLY", OLD_UQ.SobolSequenceGenerator.POLY):
-            new = _strip(uq.solve_stochastic_uq({"mcSamples": 500}))
-        old = audit.uq_reliability_and_text_changes(_strip(OLD_UQ.solve_stochastic_uq({"mcSamples": 500})))
-        # The censored-bound beta goes through the (patched) legacy quantile as well: no failures in 500 draws.
-        bound = old["aerospaceReliability"]["generalizedReliabilityIndexBound"]
-        self.assertEqual((bound["type"], bound["pfUpper"]), ("lower", 3.0 / 500))
-        bound["beta"] = round(OLD_UQ.norm_ppf(1.0 - 3.0 / 500), 2)
-        # Documented difference: UTS, K_Ic and critical flaw size are null + status (invented laws removed).
-        props = old["stochasticProperties"]
-        for key, status in (("ultimateTensileStrength_UTS", uq.UTS_UNAVAILABLE_STATUS),
-                            ("fractureToughness_K1c", uq.K1C_UNAVAILABLE_STATUS),
-                            ("criticalFlawSize_ac", uq.CRITICAL_FLAW_UNAVAILABLE_STATUS)):
-            props[key] = None
-            props[key + "_status"] = status
-        rel = old["aerospaceReliability"]
-        rel["criticalFlawMedian_mm"] = rel["criticalFlaw_P10_mm"] = None
-        rel["criticalFlaw_status"] = uq.CRITICAL_FLAW_UNAVAILABLE_STATUS
-        self.assertEqual(json.dumps(new, sort_keys=True), json.dumps(old, sort_keys=True))
-
-    def test_norm_ppf_fix_changes_only_sampled_statistics(self):
-        new = _strip(uq.solve_stochastic_uq({"mcSamples": 500}))
-        old = _strip(OLD_UQ.solve_stochastic_uq({"mcSamples": 500}))
-        self.assertNotEqual(json.dumps(new), json.dumps(old))
-        for key in ("success", "engine", "sampleSizeN", "alloyMetadata", "inputUncertainties"):
-            self.assertEqual(json.dumps(new[key]), json.dumps(old[key]), key)
-        # Physics audit EUQ-4 (Joe-Kuo Sobol table): the point-set discrepancy and its description changed.
-        audit_keys = {"centeredL2Discrepancy", "samplingDescription"}
-        self.assertEqual({k: v for k, v in new["samplingMetadata"].items() if k not in audit_keys},
-                         {k: v for k, v in old["samplingMetadata"].items() if k not in audit_keys})
-        # the corrected normal inputs have sigma 1: the yield spread grows by about 1 / 0.776
-        ratio = (new["stochasticProperties"]["yieldStrength_Rp02"]["stdDev"]
-                 / old["stochasticProperties"]["yieldStrength_Rp02"]["stdDev"])
-        self.assertAlmostEqual(ratio, 1.0 / 0.776, delta=0.05)
-
-    def test_main_adds_provenance_only(self):
-        code, out = _run("stochastic_uq_mmpds_solver.py", {"mcSamples": 500})
-        self.assertEqual(code, 0)
-        prov = out.pop("provenance")
-        # Design step (b): exact R; the outputs below still equal the 8.314 base blob
-        # (the LSW radius sits on its 0.8 nm floor for these inputs).
-        self.assertEqual(prov["gasConstantR_J_molK"], pc.GAS_CONSTANT_R.value)
-        self.assertEqual(uq.R_GAS, pc.GAS_CONSTANT_R.value)
-        self.assertEqual(prov["registryVersion"], reg.REGISTRY_VERSION)
-        self.assertNotIn("registryAlloyId", prov)  # alloyName is a label, never resolved
-        self.assertIn("Illustrative, not calibrated", prov["modelStatus"])
-        # Design step (b) R and the norm_ppf fix: the script output equals the in-process solver.
-        new = _strip(uq.solve_stochastic_uq({"mcSamples": 500}))
-        self.assertEqual(json.dumps(_strip(out), sort_keys=True), json.dumps(new, sort_keys=True))
-
-
 class PersistentIpcRelayTest(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
@@ -361,11 +284,6 @@ class SourceGuardTest(unittest.TestCase):
                         and node.func.attr == "get" and len(node.args) == 2
                         and isinstance(node.args[1], ast.Subscript)):
                     self.fail(f"{name}:{node.lineno} uses .get(key, TABLE[...])")
-
-    def test_lattice_and_potency_tables_moved(self):
-        src = (HERE / "stochastic_uq_mmpds_solver.py").read_text(encoding="utf-8")
-        for literal in ("3.585", "0.2535", "247.0", '"Nb": 14.5', '"Inconel 718 (Aero LPBF)"'):
-            self.assertNotIn(literal, src)
 
     # test_phase9_mapping_moved left with python/phase9_surrogate.py (deleted 2026-10-04 with
     # industrial-certification); the mapping itself stays covered by test_alloy_data_kinetics_uq_fatigue.

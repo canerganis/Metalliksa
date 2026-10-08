@@ -14,7 +14,7 @@ const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.ur
 
 test('the badge shows exactly the contract ceiling and no stronger evidence class', () => {
   const contracted = MODULE_CONTRACTS.filter(contract => contract.migrationState === 'contracted');
-  assert.deepEqual(contracted.map(contract => contract.id), ['toolpath-studio', 'murakami-fatigue', 'keyhole-raytracing', 'lpbf-dataset-comparison', 'lpbf-calibration-scorecard', 'database', 'alloy-builder', 'phase-diagram', 'ttt-cct-kinetics', 'micrograph', 'eds-lab', 'experimental-data', 'uq-lab', 'traceability']);
+  assert.deepEqual(contracted.map(contract => contract.id), ['toolpath-studio', 'murakami-fatigue', 'keyhole-raytracing', 'lpbf-dataset-comparison', 'lpbf-calibration-scorecard', 'database', 'alloy-builder', 'phase-diagram', 'ttt-cct-kinetics', 'micrograph', 'eds-lab', 'experimental-data', 'traceability']);
   for (const contract of contracted) {
     const html = renderToStaticMarkup(<EvidenceBadge moduleId={contract.id} />);
     const ceiling = contract.evidence.ceiling;
@@ -28,7 +28,7 @@ test('the badge shows exactly the contract ceiling and no stronger evidence clas
 
 test('callers cannot raise the ceiling: the badge has no evidence input', () => {
   // @ts-expect-error EvidenceBadge accepts only a module id; a ceiling prop is a type error.
-  const html = renderToStaticMarkup(<EvidenceBadge moduleId="uq-lab" ceiling="measured" status="validated-simulation" />);
+  const html = renderToStaticMarkup(<EvidenceBadge moduleId="keyhole-raytracing" ceiling="measured" status="validated-simulation" />);
   assert.match(html, /data-evidence-ceiling="screening-only"/);
   assert.ok(!html.includes('Measured') && !html.includes('Validated simulation'));
   // Legacy and unknown modules render nothing rather than a placeholder claim.

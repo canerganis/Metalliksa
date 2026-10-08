@@ -286,7 +286,7 @@ def build_calphad_contract(seed) -> ModuleContract:
         ),
         source_refs=(
             "python/module_registry.py::build_registry",
-            "src/App.tsx:200-200#case 'phase-diagram': return <PhaseDiagramViewer />;",
+            "src/App.tsx:198-198#case 'phase-diagram': return <PhaseDiagramViewer />;",
             "src/modules/views.ts:23-23#'phase-diagram': lazy(",
             "src/components/PhaseDiagramViewer.tsx::PhaseDiagramViewer",
             "src/components/PhaseDiagramViewer.tsx::FEC_ALLOY_PRESETS",

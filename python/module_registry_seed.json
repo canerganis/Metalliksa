@@ -175,19 +175,9 @@
     "label": "Specimen Records",
     "scope": "Research",
     "description": "Per-specimen composition, process, test results and attachments with sources; record completeness is not qualification.",
-    "next": "uq-lab",
+    "next": "traceability",
     "viewComponent": "src/components/DigitalTwinHub.tsx",
     "viewExport": "DigitalTwinHub"
-  },
-  {
-    "id": "uq-lab",
-    "workspace": "evidence",
-    "label": "Coupon Statistics & UQ Sampling",
-    "scope": "Research",
-    "description": "Coupon summary statistics and one-sided tolerance bounds, plus illustrative solver sampling and sensitivity analysis; simulated scatter is not test evidence; solver tolerance output is an illustrative tolerance estimate (uncalibrated response law), not an MMPDS allowable.",
-    "next": "traceability",
-    "viewComponent": "src/components/UQLab.tsx",
-    "viewExport": "UQLab"
   },
   {
     "id": "traceability",

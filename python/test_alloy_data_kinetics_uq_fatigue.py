@@ -133,69 +133,6 @@ class KineticsAndFatigueValueTest(unittest.TestCase):
                                  repr(old[key]), f"{aid}.{key}")
 
 
-@require_git_revision(bool(_base_blob("python/stochastic_uq_mmpds_solver.py")), f"git revision {BASE} unavailable")
-class StochasticValueTest(unittest.TestCase):
-    """The UQ constants equal the literals of the base blob (AST extraction)."""
-
-    @classmethod
-    def setUpClass(cls):
-        tree = ast.parse(_base_blob("python/stochastic_uq_mmpds_solver.py"))
-        cls.funcs = {n.name: n for n in tree.body if isinstance(n, ast.FunctionDef)}
-
-    def _assigns(self, stmts):
-        out = {}
-        for st in stmts:
-            if isinstance(st, ast.Assign):
-                target = st.targets[0]
-                try:
-                    value = ast.literal_eval(st.value)
-                except ValueError:
-                    continue  # computed expression, not a literal
-                if isinstance(target, ast.Tuple):
-                    out.update(zip((e.id for e in target.elts), value))
-                else:
-                    out[target.id] = value
-        return out
-
-    def test_lattice_chain(self):
-        fn = self.funcs["solve_single_realization"]
-        node = next(n for n in fn.body if isinstance(n, ast.If))
-        branches = {}
-        while isinstance(node, ast.If):
-            branches[node.test.comparators[0].value] = self._assigns(node.body)
-            node = node.orelse[0] if len(node.orelse) == 1 and isinstance(node.orelse[0], ast.If) else node.orelse
-        branches["<else>"] = self._assigns(node)
-        self.assertEqual(set(branches), {"Ni", "Fe", "Ti", "<else>"})
-        for key, old in branches.items():
-            new = data.UQ_BASE_METAL_LATTICE[data.UQ_LEGACY_FALLBACK_BASE_METAL if key == "<else>" else key]
-            self.assertEqual(repr(dict(new)), repr(old), key)
-            self.assertEqual(set(old), set(data.UQ_LATTICE_UNITS))
-
-    def test_potency_q_and_request_defaults(self):
-        body = self._assigns(self.funcs["solve_single_realization"].body)
-        self.assertEqual(repr(dict(data.UQ_SOLUTE_POTENCY)), repr(body["misfit_weights"]))
-        self.assertEqual(data.UQ_PRECIPITATION_Q_J_MOL, body["Q_diff"])
-        self.assertEqual(body["R_gas"], 8.314)  # the base blob's literal (now exact R, design step (b))
-        src = _base_blob("python/stochastic_uq_mmpds_solver.py")
-        self.assertIn("misfit_weights.get(el, 5.0)", src)
-        self.assertEqual(data.UQ_DEFAULT_SOLUTE_POTENCY, 5.0)
-        fn = self.funcs["solve_stochastic_uq"]
-        defaults = {}
-        for st in fn.body:
-            if (isinstance(st, ast.Assign) and isinstance(st.value, ast.Call)
-                    and isinstance(st.value.func, ast.Attribute) and st.value.func.attr == "get"
-                    and len(st.value.args) == 2 and isinstance(st.targets[0], ast.Name)):
-                try:
-                    defaults[st.targets[0].id] = ast.literal_eval(st.value.args[1])
-                except ValueError:
-                    continue
-        self.assertEqual(defaults["alloy_name"], data.UQ_DEFAULT_ALLOY_NAME)
-        self.assertEqual(defaults["base_metal"], data.UQ_DEFAULT_BASE_METAL)
-        self.assertEqual(defaults["standard_spec"], data.UQ_DEFAULT_STANDARD_SPEC)
-        self.assertEqual(repr(defaults["nominal_comp"]), repr(data.uq_default_composition_wt()))
-        self.assertEqual(repr(defaults["comp_tolerances"]), repr(data.uq_default_composition_tolerances()))
-
-
 class StochasticFallbackTest(unittest.TestCase):
     def test_kept_al_fallback_mirrors_the_old_equality_chain(self):
         for base in ("Ni", "Fe", "Ti", "Al"):
