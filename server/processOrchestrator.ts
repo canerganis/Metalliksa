@@ -185,7 +185,6 @@ export function buildIpcSpawnSpec(
  */
 export const DISPATCHABLE_SCRIPTS: ReadonlySet<string> = new Set([
   "calphad_solver",
-  "kinetics_ttt_cct_solver",
   "lpbf_bayesian_optimizer",
   "lpbf_calibrated_meltpool",
   "lpbf_process_window",

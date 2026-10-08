@@ -179,7 +179,7 @@ test("DISPATCHABLE_SCRIPTS mirrors ALLOWED_SCRIPT_NAMES in the daemon; the ad-ho
   const block = /ALLOWED_SCRIPT_NAMES = frozenset\(\{([\s\S]*?)\}\)/.exec(src);
   assert.ok(block, "ALLOWED_SCRIPT_NAMES block not found");
   const pyNames = [...block![1].matchAll(/"([A-Za-z0-9_]+)"/g)].map((m) => m[1]).sort();
-  assert.ok(pyNames.length >= 12); // 12 dispatchable scripts since the 2026-10-04 deletions
+  assert.ok(pyNames.length >= 7); // 7 dispatchable scripts since the 2026-10-09 slim-modules removal
   assert.deepEqual([...DISPATCHABLE_SCRIPTS].sort(), pyNames);
 
   assertDispatchableScript("python/xrd_peak_deconvolution.py");

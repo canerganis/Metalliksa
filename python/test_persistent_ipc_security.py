@@ -146,9 +146,9 @@ class AllowlistTest(unittest.TestCase):
 
     def test_allowlist_equals_route_dispatched_scripts(self):
         found = self._route_scripts()
-        # The scan must see the real route table (11 scripts since the micrograph removal), so an
+        # The scan must see the real route table (7 scripts since the 2026-10-09 slim-modules removal), so an
         # empty or partial match can never make the equality below pass vacuously.
-        self.assertGreaterEqual(len(found), 11, found)
+        self.assertGreaterEqual(len(found), 7, found)
         self.assertEqual(found - ipc.ALLOWED_SCRIPT_NAMES, set(), "route script missing from allowlist")
         self.assertEqual(ipc.ALLOWED_SCRIPT_NAMES - found, set(), "stale allowlist entry (no route uses it)")
         for name in ipc.ALLOWED_SCRIPT_NAMES:

@@ -96,7 +96,6 @@ WARM_MODULE_NAMES = [
     "calphad_solver",
     "xrd_peak_deconvolution",
     "lpbf_thermal_solver",
-    "kinetics_ttt_cct_solver",
     "stl_slicer_build_time_solver",
     "lpbf_build_job_solver",
 ]
@@ -107,7 +106,6 @@ WARM_MODULE_NAMES = [
 # literal script paths in routes/*.ts in both directions, so a stale entry fails the test.
 ALLOWED_SCRIPT_NAMES = frozenset({
     "calphad_solver",
-    "kinetics_ttt_cct_solver",
     "lpbf_bayesian_optimizer",
     "lpbf_calibrated_meltpool",
     "lpbf_process_window",
