@@ -2,7 +2,7 @@
 
 This repository serves as the authoritative, peer-reviewed knowledge base for laser powder bed fusion (LPBF), physical metallurgy, thermophysical material properties, standard testing protocols (ASTM/ISO), and governing analytical models.
 
-> **Compliance Note**: In accordance with Rule 1 in [`RULES.md`](./RULES.md), all content in this file is strictly in English. All numerical values and equations have undergone dual academic and functional verification as recorded in [`PROOF.md`](./PROOF.md).
+> **Compliance Note**: In accordance with Rule 1 in [`RULES.md`](../../RULES.md), all content in this file is strictly in English. All numerical values and equations have undergone dual academic and functional verification as recorded in [`PROOF.md`](../../PROOF.md).
 
 ---
 
@@ -67,7 +67,7 @@ Every experimental record, material qualification run, and simulation parameter 
 
 ## 2. Material & Thermophysical Reference Data
 
-The values below are reference inputs with explicit evidence labels. A populated table or literature citation does not by itself make a value measured, validated, or production-qualified; see [`docs/LPBF_ENGINEERING.md`](./docs/LPBF_ENGINEERING.md) for the current estimated and missing-data boundaries.
+The values below are reference inputs with explicit evidence labels. A populated table or literature citation does not by itself make a value measured, validated, or production-qualified; see [`docs/LPBF_ENGINEERING.md`](../LPBF_ENGINEERING.md) for the current estimated and missing-data boundaries.
 
 Below are the thermophysical constants and baseline properties for LPBF alloys implemented in the platform:
 

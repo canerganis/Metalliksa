@@ -38,7 +38,7 @@
 - Ölçüm tanımlarını eşleştir; kalibrasyon ve değerlendirme verilerini ayır.
 - Başarısız benchmark'ı raporla; toleransı sonuca göre sessizce değiştirme.
 - Sentetik veya solver çıktısını bağımsız deney kanıtı sayma.
-- Qualification zinciri ve alan ayrıntıları [SCHEMA.md](SCHEMA.md) içindedir.
+- Qualification zinciri ve alan ayrıntıları [SCHEMA.md](docs/archive/SCHEMA.md) içindedir.
 
 ## Mimari sınırlar
 
@@ -55,7 +55,7 @@
 ## Göreve göre okunacak belgeler
 
 - RULES.md: dil, kanıt, kayıt, commit ve ortak çalışma.
-- SCHEMA.md: veri ve izlenebilirlik sözleşmesi.
+- docs/archive/SCHEMA.md: veri ve izlenebilirlik sözleşmesi.
 - docs/LPBF_ENGINEERING.md: model tanımları ve bilimsel sınırlar.
 - docs/RESEARCH_WORKSTATION.md: ürün akışları.
 - docs/archive/MODULE_EVIDENCE_INVENTORY_2026-09-20.md: dated module inventory snapshot; do not use it as the live registry.

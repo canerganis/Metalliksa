@@ -2,7 +2,7 @@
 
 This glossary provides authoritative, mathematically formulated, and physically grounded definitions of fundamental terms, governing dimensionless numbers, microstructural metrics, and defect mechanisms in Laser Powder Bed Fusion (PBF-LB/M) and physical metallurgy.
 
-> **Compliance Notice**: In accordance with Rule 1 in [`RULES.md`](./RULES.md), all definitions, physical formulations, and scientific terms are documented in English.
+> **Compliance Notice**: In accordance with Rule 1 in [`RULES.md`](../../RULES.md), all definitions, physical formulations, and scientific terms are documented in English.
 
 ---
 

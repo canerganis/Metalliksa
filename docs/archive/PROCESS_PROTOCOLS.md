@@ -2,7 +2,7 @@
 
 This document defines the binding Standard Operating Procedures (SOPs) for powder characterization, machine setup, chamber inerting, recoater leveling, and post-build thermal post-processing for metal additive manufacturing (PBF-LB/M).
 
-> **Compliance Notice**: In accordance with Rule 1 in [`RULES.md`](./RULES.md), all procedural steps, safety thresholds, and quality checkpoints are codified in English. Every procedure references binding ASTM and ISO testing standards.
+> **Compliance Notice**: In accordance with Rule 1 in [`RULES.md`](../../RULES.md), all procedural steps, safety thresholds, and quality checkpoints are codified in English. Every procedure references binding ASTM and ISO testing standards.
 
 ---
 

@@ -2,7 +2,7 @@
 
 This document defines the architectural data schemas, TypeScript interfaces, JSON Schema validation structures, REST/IPC API endpoints, and data serialization formats governing the **Metalliksa Additive Manufacturing & Metallurgy Intelligence Platform**.
 
-> **Compliance Notice**: In accordance with Rule 4 in [`RULES.md`](./RULES.md), qualification records enforce strict 5-tier referential integrity (`Build` $\rightarrow$ `ProcessParams` $\rightarrow$ `Sample` $\rightarrow$ `Properties` $\rightarrow$ `Source`). Research imports, synthetic UI fixtures, and user-supplied drafts may exist in separate evidence or demonstration paths, but they must remain explicitly labelled as unverified and must not be promoted to certified or measured records by schema validation alone.
+> **Compliance Notice**: In accordance with Rule 4 in [`RULES.md`](../../RULES.md), qualification records enforce strict 5-tier referential integrity (`Build` $\rightarrow$ `ProcessParams` $\rightarrow$ `Sample` $\rightarrow$ `Properties` $\rightarrow$ `Source`). Research imports, synthetic UI fixtures, and user-supplied drafts may exist in separate evidence or demonstration paths, but they must remain explicitly labelled as unverified and must not be promoted to certified or measured records by schema validation alone.
 
 ---
 

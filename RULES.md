@@ -16,7 +16,7 @@
 - Çalıştırılmayan, atlanan ve başarısız kontrolleri belirt. Tarihsel başarı güncel kanıt değildir.
 - Doğrulanmış bilimsel iddiaları PROOF.md içinde kapsam, girdiler, kaynak/benchmark, sonuç ve kabul ölçütüyle kaydet.
 - Mock, sentetik, tahmini veya kaynağı doğrulanmamış kullanıcı verisini ölçülmüş gerçeklik olarak sunma.
-- Qualification kayıtlarında Build → ProcessParams → Sample → Properties → Source zincirini koru; alan ayrıntıları SCHEMA.md içindedir.
+- Qualification kayıtlarında Build → ProcessParams → Sample → Properties → Source zincirini koru; alan ayrıntıları docs/archive/SCHEMA.md içindedir.
 - Bir standart uyumu iddiasında ilgili ASTM/ISO standardını ve kapsamını belirt; atıf tek başına doğrulama değildir.
 
 ## 3. Süreklilik ve teslim

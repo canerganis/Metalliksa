@@ -19,11 +19,11 @@ These files live at the repository root because they apply across the whole appl
 - [AGENTS.md](../AGENTS.md) — instructions for agents and contributors.
 - [RULES.md](../RULES.md) — project governance and validation gates.
 - [ROADMAP.md](../ROADMAP.md) — current implementation position and remaining product gaps.
-- [SCHEMA.md](../SCHEMA.md) — data and API contracts.
-- [STANDARDS.md](../STANDARDS.md) — standards and qualification reference.
-- [PROCESS_PROTOCOLS.md](../PROCESS_PROTOCOLS.md) — laboratory and production procedures.
-- [GLOSSARY.md](../GLOSSARY.md) — terminology.
-- [KNOWLEDGE.md](../KNOWLEDGE.md) — domain knowledge and reference formulations.
+- [SCHEMA.md](archive/SCHEMA.md) — data and API contracts.
+- [STANDARDS.md](archive/STANDARDS.md) — standards and qualification reference.
+- [PROCESS_PROTOCOLS.md](archive/PROCESS_PROTOCOLS.md) — laboratory and production procedures.
+- [GLOSSARY.md](archive/GLOSSARY.md) — terminology.
+- [KNOWLEDGE.md](archive/KNOWLEDGE.md) — domain knowledge and reference formulations.
 
 ## Evidence and history
 
