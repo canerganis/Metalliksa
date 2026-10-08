@@ -3018,7 +3018,7 @@ export const MODULE_REGISTRY = {
         "src/components/MaterialsPropertyHeatmapD3.tsx:277-277#useEffect(() => {",
         "src/components/MaterialsPropertyHeatmapD3.tsx:645-656#URL.revokeObjectURL(url)",
         "src/components/MaterialsPropertyHeatmapD3.tsx:820-840#hoveredCell",
-        "src/types.ts:31-62#MaterialSpec",
+        "src/types.ts:30-61#MaterialSpec",
         "src/data/materialsDatabase.ts:1-28#MATERIALS_DATABASE",
         "src/utils/materialDataPipeline.ts:666-715#createPipelinePayloadFromMaterialSpec",
         "src/utils/materialDataPipeline.ts:718-729#setActivePipelineMaterial",
@@ -4199,7 +4199,7 @@ export const MODULE_REGISTRY = {
       ],
       "sourceRefs": [
         "python/module_registry.py::build_registry",
-        "src/App.tsx:208-208#case 'phase-diagram': return <PhaseDiagramViewer />;",
+        "src/App.tsx:206-206#case 'phase-diagram': return <PhaseDiagramViewer />;",
         "src/modules/views.ts:23-23#'phase-diagram': lazy(",
         "src/components/PhaseDiagramViewer.tsx::PhaseDiagramViewer",
         "src/components/PhaseDiagramViewer.tsx::FEC_ALLOY_PRESETS",
@@ -5546,7 +5546,7 @@ export const MODULE_REGISTRY = {
       "workspace": "materials",
       "label": "Elastic-constants calculator (user-supplied constants)",
       "description": "User-supplied elastic constants or isotropic moduli; continuum calculations via Python.",
-      "next": "calculators",
+      "next": "research-hub",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -5727,75 +5727,6 @@ export const MODULE_REGISTRY = {
         "tests/elasticity-input.test.ts",
         "tests/elasticity-request-gate.test.ts"
       ],
-      "seedDerived": [
-        "label",
-        "description",
-        "next",
-        "maturity"
-      ]
-    },
-    {
-      "id": "calculators",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
-      "workspace": "materials",
-      "label": "Metallurgy Calculators",
-      "description": "Hardness conversion (ASTM E140), carbon equivalent, Fick diffusion, Schaeffler, Bragg, Hall–Petch and Ms/Bs/Ac3 correlations within stated ranges.",
-      "next": "research-hub",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/PocketCalculators.tsx",
-        "export": "PocketCalculators"
-      },
-      "operations": [
-        {
-          "id": "engineering-correlations",
-          "method": null,
-          "route": null,
-          "authority": {
-            "kind": "browser-local",
-            "script": null,
-            "workerMethod": null,
-            "timeoutMs": null,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": "Recorded debt (single-authority rule): unit-aware engineering correlations are evaluated in the browser."
-          },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
-        }
-      ],
-      "validityDomain": null,
-      "evidence": {
-        "emits": [],
-        "ceiling": "screening-only",
-        "forbiddenClaims": [
-          "qualified",
-          "certified",
-          "validated",
-          "measured",
-          "productionReady",
-          "airworthy"
-        ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
-      },
-      "lifecycle": null,
-      "tests": {
-        "schema": null,
-        "oracle": {
-          "status": "pending",
-          "ref": null,
-          "ciNote": null,
-          "scope": null
-        },
-        "docs": null
-      },
-      "migrationState": "legacy",
-      "legacyNotes": [],
-      "sourceRefs": [],
       "seedDerived": [
         "label",
         "description",

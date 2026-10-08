@@ -24,8 +24,6 @@ const PINNED_GUARDED = [
   "src/components/3d-distortion-lab/MeltPool3DCrossSectionLab.tsx",
   "src/components/LpbfBayesianOptimizerLab.tsx",
   "src/components/LpbfToolpathStudioLab.tsx",
-  "src/components/MetallurgicalUnitConverter.tsx",
-  "src/components/PocketCalculators.tsx",
   "src/components/CorrosionEngineeringLab.tsx",
   "src/components/AlloyBuilder.tsx",
   "src/components/CALPHADMultiComponentStudio.tsx",
@@ -38,7 +36,6 @@ const PINNED_GUARDED = [
   "src/components/MaterialsDatabaseView.tsx",
   "src/components/MaterialsProjectExplorer.tsx",
   "src/components/MaterialsPropertyHeatmapD3.tsx",
-  "src/components/MetallurgicalQuickConversionsGrid.tsx",
   "src/components/MicrographAdvisoryDescription.tsx", // micrograph rework: controls moved out of MicrographLab
   "src/components/MicrographMeasureStudio.tsx", // micrograph rework: controls moved out of MicrographLab
   "src/components/MurakamiFatigueLab.tsx",

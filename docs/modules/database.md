@@ -491,7 +491,7 @@ Background work: none; resources: none.
 - `src/components/MaterialsPropertyHeatmapD3.tsx:277-277#useEffect(() => {`
 - `src/components/MaterialsPropertyHeatmapD3.tsx:645-656#URL.revokeObjectURL(url)`
 - `src/components/MaterialsPropertyHeatmapD3.tsx:820-840#hoveredCell`
-- `src/types.ts:31-62#MaterialSpec`
+- `src/types.ts:30-61#MaterialSpec`
 - `src/data/materialsDatabase.ts:1-28#MATERIALS_DATABASE`
 - `src/utils/materialDataPipeline.ts:666-715#createPipelinePayloadFromMaterialSpec`
 - `src/utils/materialDataPipeline.ts:718-729#setActivePipelineMaterial`

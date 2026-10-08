@@ -196,9 +196,6 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
         _op("battery-corrosion-eis", "POST", "/api/python/battery-corrosion-eis",
             _py("battery_corrosion_eis_solver", _CHARACTERIZATION_TIMEOUT_MS, warm=True)),
     ),
-    "calculators": (
-        _local("engineering-correlations", "unit-aware engineering correlations are evaluated in the browser."),
-    ),
     "research-hub": (
         _op("research-registry", "GET", "/api/research/registry", _NODE),
         _op("research-registry-save", "PUT", "/api/research/registry", _NODE),

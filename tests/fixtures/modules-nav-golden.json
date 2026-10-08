@@ -141,14 +141,6 @@
     "label": "Elastic-constants calculator (user-supplied constants)",
     "scope": "Research",
     "description": "User-supplied elastic constants or isotropic moduli; continuum calculations via Python.",
-    "next": "calculators"
-  },
-  {
-    "id": "calculators",
-    "workspace": "materials",
-    "label": "Metallurgy Calculators",
-    "scope": "Research",
-    "description": "Hardness conversion (ASTM E140), carbon equivalent, Fick diffusion, Schaeffler, Bragg, Hall–Petch and Ms/Bs/Ac3 correlations within stated ranges.",
     "next": "research-hub"
   },
   {

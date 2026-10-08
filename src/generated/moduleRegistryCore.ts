@@ -503,7 +503,7 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "materials",
       "label": "Elastic-constants calculator (user-supplied constants)",
       "description": "User-supplied elastic constants or isotropic moduli; continuum calculations via Python.",
-      "next": "calculators",
+      "next": "research-hub",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -512,32 +512,6 @@ export const MODULE_REGISTRY_CORE = {
         "export": "MaterialsProjectExplorer"
       },
       "migrationState": "contracted",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "calculators",
-      "version": "0.0.0",
-      "workspace": "materials",
-      "label": "Metallurgy Calculators",
-      "description": "Hardness conversion (ASTM E140), carbon equivalent, Fick diffusion, Schaeffler, Bragg, Hall–Petch and Ms/Bs/Ac3 correlations within stated ranges.",
-      "next": "research-hub",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/PocketCalculators.tsx",
-        "export": "PocketCalculators"
-      },
-      "migrationState": "legacy",
       "evidence": {
         "ceiling": "screening-only"
       },

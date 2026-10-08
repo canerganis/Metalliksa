@@ -1,5 +1,4 @@
 export type TabType = 
-  | "calculators"
   | "micrograph"
   | "phase-diagrams"
   | "crystal-3d"

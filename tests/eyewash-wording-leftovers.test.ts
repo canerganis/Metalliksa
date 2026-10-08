@@ -15,8 +15,3 @@ test("dual-unit reporting wording makes no certification claim", () => {
   assert.match(text, /Dual-unit reporting \(EN 10204 certificate units\)/);
 });
 
-test("quick conversions grid does not claim live outputs", () => {
-  const text = src("src/components/MetallurgicalQuickConversionsGrid.tsx");
-  assert.doesNotMatch(text, /live outputs/);
-  assert.match(text, /outputs that update as you type/);
-});

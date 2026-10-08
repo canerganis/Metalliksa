@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { CALPHADMultiComponentStudio } from "../src/components/CALPHADMultiComponentStudio";
-import { MetallurgicalQuickConversionsGrid } from "../src/components/MetallurgicalQuickConversionsGrid";
 import { SendToModuleModal, celsiusOrUnavailable, mpaOrUnavailable } from "../src/components/SendToModuleModal";
 import { deriveSpecimenProperties, SPECIMEN_PRESETS, useMaterialSpecimenStore } from "../src/store/useMaterialSpecimenStore";
 import { deriveProperties, MATERIAL_PRESETS, useMaterialStore, type MaterialSpecimen } from "../src/store/useMaterialStore";
@@ -28,14 +27,6 @@ test("CALPHAD studio header shows no specimen MPa / °C numbers", () => {
   assert.match(banner, /data-testid="calphad-specimen-properties-unavailable"/);
   assert.doesNotMatch(textOf(banner), /\d+(\.\d+)?\s*(MPa|°C)/);
   assert.match(textOf(banner), /unavailable \(not computed from composition\)/);
-});
-
-test("Quick conversions: 'Use Specimen Values' is disabled when the specimen has no yield strength", () => {
-  assert.equal(useMaterialStore.getInitialState().activeMaterialSpecimen.yieldStrength_25C_MPa, null);
-  const markup = renderToStaticMarkup(<MetallurgicalQuickConversionsGrid />);
-  const button = markup.match(/<button[^>]*id="btn-sync-specimen-units-grid"[^>]*>/)?.[0] ?? "";
-  assert.match(button, /\sdisabled=""/);
-  assert.match(button, /yield strength unavailable/);
 });
 
 test("unit converters load no stress from a composition-only specimen", () => {

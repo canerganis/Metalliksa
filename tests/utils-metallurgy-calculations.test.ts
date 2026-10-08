@@ -367,10 +367,3 @@ test("Schaeffler: N = 0 is honoured (no invented 0.03 wt% default) and N enters 
   assert.equal(some.niEq, 11.6); // + 30(0.1)
 });
 
-test("weldability preheat is a heuristic, not labelled as an AWS D1.1 value in the UI", async () => {
-  const { readFileSync } = await import("node:fs");
-  const ui = readFileSync("src/components/PocketCalculators.tsx", "utf8");
-  assert.doesNotMatch(ui, /Recommended Minimum Preheat Temperature \(AWS D1\.1\)/);
-  assert.match(ui, /Heuristic preheat estimate \(unsourced/);
-  assert.doesNotMatch(ui, /<polygon /, "no hand-drawn Schaeffler phase polygons");
-});

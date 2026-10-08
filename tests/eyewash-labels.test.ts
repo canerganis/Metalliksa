@@ -68,12 +68,6 @@ test("calculator info text makes no AWS D1.1 preheat prescription or WRC-1992 cl
   assert.doesNotMatch(info, /secondaryCodes: \[[^\]]*(ISO 17660|BS 5135|ASME Sec IX|ASTM A240)/);
   assert.doesNotMatch(info, /to prescribe minimum preheat|Preheat recommended when CE|mandatory hydrogen-controlled/);
   assert.match(info, /unsourced in-house heuristic/);
-  assert.doesNotMatch(src("src/components/PocketCalculators.tsx"), /label: "Schaeffler Diagram"/);
-});
-
-test("quick-conversions inputs: no NaN-to-0 fallback on temperature entry", () => {
-  const grid = src("src/components/MetallurgicalQuickConversionsGrid.tsx");
-  assert.doesNotMatch(grid, /handleTemp[CKRF]Change\(parseFloat\(e\.target\.value\) \|\| 0\)/);
 });
 
 test("database contract text no longer describes the removed correlation mode", () => {

@@ -41,7 +41,6 @@ const SHORTCUT_KEYS = paletteShortcutKeys(APPLE);
 const Atrium = lazy(() => import('./components/Atrium').then(m => ({ default: m.Atrium })));
 const EvidenceWorkspace = lazy(() => import('./components/EvidenceWorkspace').then(m => ({ default: m.EvidenceWorkspace })));
 const ResearchIntegrationPanel = lazy(() => import('./components/ResearchIntegrationPanel').then(m => ({ default: m.ResearchIntegrationPanel })));
-const PocketCalculators = lazy(() => import("./components/PocketCalculators").then(m => ({ default: m.PocketCalculators })));
 const MicrographLab = lazy(() => import("./components/MicrographLab").then(m => ({ default: m.MicrographLab })));
 const AlloyBuilder = lazy(() => import("./components/AlloyBuilder").then(m => ({ default: m.AlloyBuilder })));
 const MaterialsDatabaseView = lazy(() => import("./components/MaterialsDatabaseView").then(m => ({ default: m.MaterialsDatabaseView })));
@@ -200,7 +199,6 @@ export default function App() {
       case 'ttt-cct-kinetics': return <PhaseKineticsTTTCCTStudio onSendToModule={navigate} />;
       case 'icme-motor': return <ICMEMultiScalePipelineStudio />;
       case 'materials-project': return <MaterialsProjectExplorer />;
-      case 'calculators': return <PocketCalculators />;
       case 'eds-lab': return <EDSSpectrumLab />;
       case 'micrograph': return <MicrographLab />;
       case 'alloy-builder': return <AlloyBuilder onNavigate={navigate} />;
