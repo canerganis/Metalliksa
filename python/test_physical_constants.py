@@ -77,7 +77,6 @@ class ExactConstantsTest(unittest.TestCase):
     def test_migrated_solvers_use_the_exact_values(self):
         import battery_corrosion_eis_solver as battery
         import calphad_solver
-        import icme_multiscale_pipeline_solver as icme
         import kinetics_ttt_cct_solver as kinetics
         import pourbaix_solver
         import stochastic_uq_mmpds_solver as uq
@@ -87,7 +86,6 @@ class ExactConstantsTest(unittest.TestCase):
                                        (pourbaix_solver, "R_GAS", "F_FARADAY"),
                                        (calphad_solver, "GAS_CONSTANT_R", None),
                                        (battery, "R_GAS", "F_FARADAY"),
-                                       (icme, "R_GAS", None),
                                        (kinetics, "R_GAS", None),
                                        (uq, "R_GAS", None)):
             with self.subTest(module=module.__name__):

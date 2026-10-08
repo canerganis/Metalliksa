@@ -31,7 +31,6 @@ const PINNED_GUARDED = [
   "src/components/CorrosionEISKineticsStudio.tsx",
   "src/components/DigitalTwinHub.tsx",
   "src/components/DynamicPourbaixStudio.tsx",
-  "src/components/ICMEMultiScalePipelineStudio.tsx",
   "src/components/MaterialsDatabaseView.tsx",
   "src/components/MaterialsPropertyHeatmapD3.tsx",
   "src/components/MicrographAdvisoryDescription.tsx", // micrograph rework: controls moved out of MicrographLab

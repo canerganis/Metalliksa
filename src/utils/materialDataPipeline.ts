@@ -5,7 +5,6 @@ import { estimateSteelHvFromYield, HV_FROM_YIELD_ESTIMATE_NOTE } from "./hardnes
 
 export type ModuleTargetId =
   | "alloy-builder"
-  | "icme-motor"
   | "phase-diagram"
   | "database"
   | "3d-distortion-lab";

@@ -145,19 +145,9 @@
     "label": "Corrosion & Electrochemistry",
     "scope": "Research",
     "description": "PREN, Tafel/Stern–Geary corrosion rate, OCP (ASTM G59), Pourbaix diagrams and Stern–Geary/Faraday corrosion kinetics; no EIS or equivalent-circuit fitting.",
-    "next": "icme-motor",
+    "next": "research-hub",
     "viewComponent": "src/components/CorrosionEngineeringLab.tsx",
     "viewExport": "CorrosionEngineeringLab"
-  },
-  {
-    "id": "icme-motor",
-    "workspace": "materials",
-    "label": "Yield Strength Breakdown (Illustrative)",
-    "scope": "Research",
-    "description": "Illustrative sum of friction, solid-solution, Hall–Petch, dislocation and precipitate terms on tabulated constants; no DFT, CALPHAD or FEA; UTS and K_Ic unavailable; not a calibrated strength prediction for any alloy.",
-    "next": "research-hub",
-    "viewComponent": "src/components/ICMEMultiScalePipelineStudio.tsx",
-    "viewExport": "ICMEMultiScalePipelineStudio"
   },
   {
     "id": "research-hub",

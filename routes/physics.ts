@@ -84,11 +84,6 @@ physicsRouter.post("/api/python/kinetics-ttt-cct", (req: Request, res: Response)
   return handlePythonDispatch("python/kinetics_ttt_cct_solver.py", req.body, res);
 });
 
-// ICME Multiscale
-physicsRouter.post("/api/python/icme-multiscale-pipeline", (req: Request, res: Response) => {
-  return handlePythonDispatch("python/icme_multiscale_pipeline_solver.py", req.body, res);
-});
-
 // Stochastic UQ MMPDS
 physicsRouter.post("/api/python/stochastic-uq-mmpds", (req: Request, res: Response) => {
   return handlePythonDispatch("python/stochastic_uq_mmpds_solver.py", req.body, res);

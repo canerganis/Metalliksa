@@ -100,7 +100,6 @@ WARM_MODULE_NAMES = [
     "pourbaix_solver",
     "battery_corrosion_eis_solver",
     "kinetics_ttt_cct_solver",
-    "icme_multiscale_pipeline_solver",
     "stochastic_uq_mmpds_solver",
     "stl_slicer_build_time_solver",
     "lpbf_build_job_solver",
@@ -114,7 +113,6 @@ WARM_MODULE_NAMES = [
 ALLOWED_SCRIPT_NAMES = frozenset({
     "battery_corrosion_eis_solver",
     "calphad_solver",
-    "icme_multiscale_pipeline_solver",
     "kinetics_ttt_cct_solver",
     "lpbf_bayesian_optimizer",
     "lpbf_calibrated_meltpool",

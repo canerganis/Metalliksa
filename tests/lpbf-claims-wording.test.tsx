@@ -152,38 +152,6 @@ test("specimen records: synthetic stats scrubbed, derived chemistry cleared, dow
   assert.match(src, /Unavailable: synthetic record has no coupon population/);
 });
 
-test("ICME: no scale theatre, verdict, CAE cards or pulsing latency; 422 messages surface", () => {
-  const src = read("src/components/ICMEMultiScalePipelineStudio.tsx");
-  for (const claim of ["5-SCALE THREAD", "10⁻¹⁰ m", "Standard Benchmark Preset", "Solver latency", "structuralVerdict", "caeExportCards", "animate-pulse"]) {
-    assert.ok(!src.includes(claim), claim);
-  }
-  assert.match(src, /No pass\/warning verdict is shown/);
-  const service = read("src/services/pythonComputationService.ts");
-  const icme = service.slice(service.indexOf("async calculateICMEMultiScalePipeline"), service.indexOf("async calculateStochasticUQMMPDS"));
-  assert.match(icme, /validationErrorFromResponse\(res, "ICME input rejected"\)/);
-  // The stored error is rendered, and a failed run clears the previous result.
-  assert.match(src, /role="alert" data-testid="icme-error"[\s\S]{0,300}\{errorMsg\}/);
-  const catchBlock = src.slice(src.indexOf("} catch (err: any) {"), src.indexOf("} finally {"));
-  assert.match(catchBlock, /setPipelineResult\(null\)/);
-});
-
-test("ICME: a 422 validation envelope reaches the caller as its message", async () => {
-  const { pythonComputationService } = await import("../src/services/pythonComputationService");
-  const original = globalThis.fetch;
-  globalThis.fetch = (async () => new Response(
-    JSON.stringify({ success: false, errorKind: "validation", error: { code: "OUT_OF_RANGE", field: "agingTemp_C", message: "agingTemp_C must be <= 1200" } }),
-    { status: 422, headers: { "Content-Type": "application/json" } },
-  )) as typeof fetch;
-  try {
-    await assert.rejects(
-      pythonComputationService.calculateICMEMultiScalePipeline({ agingTemp_C: 5000 }),
-      (err: Error) => err.message === "ICME input rejected: agingTemp_C must be <= 1200",
-    );
-  } finally {
-    globalThis.fetch = original;
-  }
-});
-
 test("solidification status dot pulses only while loading", () => {
   const src = read("src/components/SolidificationMicrostructureLab.tsx");
   assert.match(src, /\$\{isLoading \? 'animate-pulse' : ''\}/);

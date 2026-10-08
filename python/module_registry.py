@@ -437,7 +437,7 @@ def _uq_contract(row: Dict[str, str]) -> ModuleContract:
                       "routes/physics.ts::handlePythonDispatch",
                       "python/persistent_ipc_service.py::WARM_MODULE_NAMES",
                       "server/processOrchestrator.ts::PersistentPythonIPCSupervisor.execute",
-                      "routes/physics.ts:94-95#python/stochastic_uq_mmpds_solver.py",
+                      "routes/physics.ts:89-90#python/stochastic_uq_mmpds_solver.py",
                       "src/components/UQLab.tsx::UQLab",
                       "src/components/UQLab.tsx::runQMCSolver",
                       "src/components/uqLabData.ts::computeMMPDSEmpiricalStats",
@@ -594,91 +594,6 @@ def _kinetics_contract(row: Dict[str, str]) -> ModuleContract:
             "src/components/PhaseKineticsTTTCCTStudio.tsx::PhaseKineticsTTTCCTStudio",
             "src/services/pythonComputationService.ts::calculatePhaseKineticsTTTCCT",
             "docs/MODULE_EVIDENCE_INVENTORY.md:62#`ttt-cct-kinetics` /",
-        ))
-
-
-# icme-motor: keys and defaults of the params.get(...) calls in solve_multiscale_pipeline.
-_ICME_COMPONENTS = ("turbine_blade_root", "pressure_bulkhead", "lpbf_bracket")
-_ICME_FIELDS = (
-    _choice("baseMetal", "Base metal", "element", ("Ni", "Fe", "Ti", "Al"), "Ni",
-            note="Any other value is rejected with input_validation UNKNOWN_ELEMENT (exit 2, HTTP 422)."),
-    _num("coolingRate_C_s", "Cooling rate", "K/s", "cooling-rate", 150000.0,
-         note="Converted with float(); no bound is enforced; values below 1 K/s are floored at 1 in the SDAS power law."),
-    _num("agingTemp_C", "Aging temperature", "degC", "temperature", 720.0,
-         note="Converted with float(); no bound is enforced."),
-    _num("agingTime_h", "Aging time", "h", "time", 8.0, note="Converted with float(); no bound is enforced."),
-    _num("strainRate_s_inv", "Reference strain rate", "1/s", "strain-rate", 0.001,
-         note="Converted with float(); written into the exported material cards only. No bound is enforced."),
-    _num("serviceTemp_C", "Service temperature", "degC", "temperature", 25.0,
-         note="Converted with float() by the authority but not used in any computed value (the structuralVerdict "
-              "text is the same at 1000 degC)."),
-    _choice("componentType", "Component", "component-catalog", _ICME_COMPONENTS, "turbine_blade_root",
-            note="The authority silently uses turbine_blade_root for any other value; the contract accepts only "
-                 "the three catalog keys."),
-)
-_ICME_OUTPUT = OutputSchema(
-    fields=("success", "modelStatus", "modelStatusNote", "modelParts", "engine", "computeTimeMs",
-            "inputParameters", "scale0_dftAtomistic",
-            "scale1_calphadSoluteMisfit", "scale2_microstructureKinetics", "scale3_continuumPlasticity",
-            "scale4_macroComponentFEA", "caeExportCards", "provenance"),
-    status_key=None,
-    transport_values=(("modelStatus", ("illustrative",)),),
-)
-
-
-def _icme_contract(row: Dict[str, str]) -> ModuleContract:
-    operation = Operation(
-        id="icme-multiscale-pipeline", method="POST", route="/api/python/icme-multiscale-pipeline",
-        authority=_py("icme_multiscale_pipeline_solver", _PHYSICS_TIMEOUT_MS, warm=True),
-        input=_ICME_FIELDS, output=_ICME_OUTPUT,
-        undeclared_input=("alloyName", "crystalSystem", "composition_wt", "grainSize_um"),
-    )
-    return _wave2(
-        row, operation,
-        evidence_note=(
-            "Emits no evidence status: modelStatus is a model label (always 'illustrative'), not an evidence "
-            "status, and the output has no evidence status key. scale4_macroComponentFEA.structuralVerdict is "
-            "fixed text chosen by comparing the estimated yield strength with a catalog safety factor (a "
-            "yield-only check: no creep, fatigue or fracture check); it is not an "
-            "evidence status and not a structural assessment. The scale names (DFT, CALPHAD, FEA) label tabulated "
-            "constants and closed-form estimates in the solver; no DFT, CALPHAD or FEA computation runs. "
-            "ultimateTensileStrength_UTS_MPa, fractureToughness_K1c_MPa_sqrt_m, criticalFlawSize_ac_mm and "
-            "plasticZoneRadius_rp_mm are null (unavailable, with a status text) because the model has no valid way "
-            "to compute them. "
-            + _PENDING_CAP),
-        notes=(
-            "alloyName is a free-text label written into the output and the material cards; crystalSystem is "
-            "echoed only and its default depends on baseMetal; composition_wt is an element -> wt% map (an element "
-            "without ICME atomic-weight data is rejected with UNKNOWN_ELEMENT); grainSize_um is an optional override "
-            "with no default (absent, null or <= 0 uses the SDAS estimate). The Field schema cannot describe these, "
-            "so they are recorded as undeclaredInput.",
-            "Wording gap fixed in fx-icme: the verdict used to read 'STRUCTURALLY SAFE (Passed Yield & Creep "
-            "Criteria)' although no creep check exists. It is now a yield-only text ('YIELD CHECK PASSED ... no "
-            "creep, fatigue or fracture check'); serviceTemp_C is still not used and the verdict is the same at "
-            "1000 degC (no creep check exists).",
-            "Wording gap fixed in fx-icme: the exported CAE material cards were headed 'MetalliX Multi-Scale ICME "
-            "Calibrated Card'; they are now headed 'ILLUSTRATIVE Card (uncalibrated, not validated)' because no "
-            "calibration against data is performed.",
-            "Unavailable by design (fx-icme): the former UTS (equal to the yield strength by the Hollomon K choice) "
-            "and the former K_Ic (a formula with the unit MPa, not MPa*sqrt(m)) are null with status texts; the "
-            "critical flaw size and plastic zone radius that need K_Ic are null too.",
-            "No validity domain is declared: no source-backed applicability range is established for the "
-            "coupled estimates.",
-            "warm: true is the best case: python/persistent_ipc_service.py pre-imports the solver; without the "
-            "IPC daemon server/processOrchestrator.ts falls back to a cold spawn with the 25000 ms timeout per "
-            "attempt.",
-        ),
-        sources=(
-            "python/icme_multiscale_pipeline_solver.py::solve_multiscale_pipeline",
-            "python/icme_multiscale_pipeline_solver.py::main",
-            "python/icme_multiscale_pipeline_solver.py::_unknown_element",
-            "python/alloy_data_calphad_battery_icme.py::icme_base_metal",
-            "routes/physics.ts::handlePythonDispatch",
-            "routes/physics.ts:89#python/icme_multiscale_pipeline_solver.py",
-            "python/persistent_ipc_service.py::WARM_MODULE_NAMES",
-            "src/components/ICMEMultiScalePipelineStudio.tsx::ICMEMultiScalePipelineStudio",
-            "src/services/pythonComputationService.ts::calculateICMEMultiScalePipeline",
-            "docs/MODULE_EVIDENCE_INVENTORY.md:66#`icme-motor` /",
         ))
 
 
@@ -987,7 +902,6 @@ CONTRACTED_BUILDERS = {
     "uq-lab": _uq_contract,
     # Phase 7 wave 2
     "ttt-cct-kinetics": _kinetics_contract,
-    "icme-motor": _icme_contract,
     "murakami-fatigue": _fatigue_contract,
     "toolpath-studio": _toolpath_contract,
     # Micrograph rework (python/micrograph_measure.py authority)

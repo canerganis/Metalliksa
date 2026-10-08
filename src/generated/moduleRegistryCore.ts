@@ -425,7 +425,7 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "materials",
       "label": "Corrosion & Electrochemistry",
       "description": "PREN, Tafel/Stern–Geary corrosion rate, OCP (ASTM G59), Pourbaix diagrams and Stern–Geary/Faraday corrosion kinetics; no EIS or equivalent-circuit fitting.",
-      "next": "icme-motor",
+      "next": "research-hub",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -434,32 +434,6 @@ export const MODULE_REGISTRY_CORE = {
         "export": "CorrosionEngineeringLab"
       },
       "migrationState": "legacy",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "icme-motor",
-      "version": "0.1.0",
-      "workspace": "materials",
-      "label": "Yield Strength Breakdown (Illustrative)",
-      "description": "Illustrative sum of friction, solid-solution, Hall–Petch, dislocation and precipitate terms on tabulated constants; no DFT, CALPHAD or FEA; UTS and K_Ic unavailable; not a calibrated strength prediction for any alloy.",
-      "next": "research-hub",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/ICMEMultiScalePipelineStudio.tsx",
-        "export": "ICMEMultiScalePipelineStudio"
-      },
-      "migrationState": "contracted",
       "evidence": {
         "ceiling": "screening-only"
       },

@@ -69,7 +69,6 @@ export interface PythonEngineStatus {
     lpbf_thermal_solver?: { available: boolean; description?: string };
     pourbaix_solver?: { available: boolean; description?: string };
     kinetics_ttt_cct_solver?: { available: boolean; description?: string };
-    icme_multiscale_pipeline_solver?: { available: boolean; description?: string };
     stochastic_uq_mmpds_solver?: { available: boolean; description?: string };
   };
 }
@@ -957,38 +956,6 @@ class PythonComputationService {
 
     if (!res.ok) {
       throw new Error(`Phase Kinetics proxy error: HTTP ${res.status}`);
-    }
-
-    return await res.json();
-  }
-
-  /**
-   * Dispatch the ICME multi-scale closed-form estimator (illustrative: tabulated constants, no DFT/CALPHAD/FEA run) to Python
-   */
-  async calculateICMEMultiScalePipeline(payload: {
-    alloyName?: string;
-    baseMetal?: "Ni" | "Fe" | "Ti" | "Al";
-    crystalSystem?: "FCC" | "BCC" | "HCP";
-    composition_wt?: { [key: string]: number };
-    coolingRate_C_s?: number;
-    grainSize_um?: number | null;
-    agingTemp_C?: number;
-    agingTime_h?: number;
-    strainRate_s_inv?: number;
-    serviceTemp_C?: number;
-    componentType?: string;
-  }): Promise<PythonICMEMultiScaleResult> {
-    const res = await fetch("/api/python/icme-multiscale-pipeline", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    // 422 carries the solver's validation message; surface it instead of a bare status code.
-    const validation = await validationErrorFromResponse(res, "ICME input rejected");
-    if (validation) throw validation;
-    if (!res.ok) {
-      throw new Error(`ICME MultiScale Pipeline proxy error: HTTP ${res.status}`);
     }
 
     return await res.json();
@@ -1889,142 +1856,6 @@ export interface PythonStochasticUQResult {
     criticalFlawMedian_mm: number | null;
     criticalFlaw_P10_mm: number | null;
     criticalFlaw_status: string;
-  };
-}
-
-export interface PythonICMEMultiScaleResult {
-  /** "illustrative": closed-form estimates on tabulated constants (no DFT, CALPHAD or FEA run). */
-  modelStatus?: string;
-  modelStatusNote?: string;
-  modelParts?: string[];
-  success: boolean;
-  engine: string;
-  computeTimeMs: number;
-  proxyRoundtripMs?: number;
-  inputParameters: {
-    alloyName: string;
-    baseMetal: string;
-    crystalSystem: string;
-    coolingRate_C_s: number;
-    grainSize_um: number;
-    agingTemp_C: number;
-    agingTime_h: number;
-    componentType: string;
-  };
-  scale0_dftAtomistic: {
-    latticeParameter_a0_Angstrom: number;
-    burgersVector_b_nm: number;
-    slipPlane_dhkl_nm: number;
-    elasticTensor_Cij_GPa: {
-      C11: number;
-      C12: number;
-      C44: number;
-    };
-    homogenizedModuli: {
-      youngsModulus_E_GPa: number;
-      shearModulus_G_GPa: number;
-      bulkModulus_B_GPa: number;
-      poissonsRatio: number;
-      pughRatio_B_over_G: number;
-      cauchyPressure_GPa: number;
-      ductilityVerdict: string;
-    };
-    peierlsNabarroLatticeFriction: {
-      tau_PN_MPa: number;
-      taylorFactor_M: number;
-      sigma_0_friction_stress_MPa: number;
-    };
-  };
-  scale1_calphadSoluteMisfit: {
-    atomicFractions: { [key: string]: number };
-    soluteBreakdown: {
-      [key: string]: {
-        wt_pct?: number;
-        at_frac: number;
-        sizeMisfit: number;
-        modulusMisfit: number;
-        strengthContribution_MPa: number;
-      };
-    };
-    totalSolidSolutionStrengthening_MPa: number;
-  };
-  scale2_microstructureKinetics: {
-    coolingRate_C_s: number;
-    computedSDAS_um: number;
-    grainSize_d_um: number;
-    hallPetchStrengthening_MPa: number;
-    dislocationDensity_rho_m2: string;
-    taylorDislocationStrengthening_MPa: number;
-    precipitationKinetics: {
-      agingTemp_C: number;
-      agingTime_h: number;
-      meanPrecipitateRadius_nm: number;
-      volumeFractionPct: number;
-      interparticleSpacing_nm: number;
-      /** null when the weak pair-coupling expression is <= 0 (see cuttingContributionStatus). */
-      shearingStrength_MPa: number | null;
-      cuttingContributionStatus?: string | null;
-      orowanStrength_MPa: number;
-      activeMechanism: string;
-      effectivePrecipitationStrengthening_MPa: number;
-    };
-  };
-  scale3_continuumPlasticity: {
-    strengtheningContributions_MPa: {
-      sigma_0_LatticeFriction: number;
-      deltaSigma_SS_SolidSolution: number;
-      deltaSigma_HP_GrainBoundary: number;
-      deltaSigma_Disloc_Forest: number;
-      deltaSigma_Precip_OrowanCutting: number;
-    };
-    mechanicalProperties: {
-      yieldStrength_Rp02_MPa: number;
-      /** null = unavailable (see ultimateTensileStrength_UTS_status); never the yield strength. */
-      ultimateTensileStrength_UTS_MPa: number | null;
-      ultimateTensileStrength_UTS_status?: string;
-      uniformElongationPct: number;
-      totalElongationPct: number;
-      /** null = unavailable (see fractureToughness_K1c_status). */
-      fractureToughness_K1c_MPa_sqrt_m: number | null;
-      fractureToughness_K1c_status?: string;
-      hollomon_n: number;
-      hollomon_K_MPa: number;
-    };
-    johnsonCookParameters: {
-      A_MPa: number;
-      B_MPa: number;
-      n: number;
-      C: number;
-      m: number;
-      T_melt_C: number;
-    };
-    stressStrainCurve: {
-      engineeringStrainPct: number;
-      engineeringStressMPa: number;
-      trueStrain: number;
-      trueStressMPa: number;
-    }[];
-  };
-  scale4_macroComponentFEA: {
-    componentName: string;
-    criticalSectionArea_mm2: number;
-    appliedStress_MPa: number;
-    requiredSafetyFactor: number;
-    actualSafetyFactor: number;
-    structuralVerdict: string;
-    structuralVerdictBasis?: string;
-    lefmDamageTolerance: {
-      /** null = unavailable: needs a fracture toughness K_Ic the model does not provide. */
-      criticalFlawSize_ac_mm: number | null;
-      plasticZoneRadius_rp_mm: number | null;
-      inspectionNDICapability: string;
-      status?: string;
-    };
-  };
-  caeExportCards: {
-    abaqus: string;
-    lsDyna: string;
-    ansys: string;
   };
 }
 

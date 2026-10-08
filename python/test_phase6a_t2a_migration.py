@@ -1,9 +1,8 @@
-"""Phase 6a tranche 2a: structural migration of calphad, battery EIS and icme solvers.
+"""Phase 6a tranche 2a: structural migration of calphad and battery EIS solvers.
 
 Covers: bit-exact golden regression for the three solvers, parity with the
 pre-migration blob on extra payloads, the calphad legacy 50.0 g/mol element
-fallback kept in step (a) (fix round B1), the icme validation errors that replace the
-silent element/base-metal defaults (and only those), the stdout envelope + exit
+fallback kept in step (a) (fix round B1), the stdout envelope + exit
 code 2 (also through the persistent IPC runner), provenance, the pinned
 battery error returns now reporting success:false (formerly masked as true), and a source guard.
 """
@@ -27,12 +26,11 @@ import phase6a_cases_t2a as cases  # noqa: E402
 
 import alloy_data_calphad_battery_icme as data  # noqa: E402
 import calphad_solver  # noqa: E402
-import icme_multiscale_pipeline_solver as icme  # noqa: E402
 import input_validation as iv  # noqa: E402
 import physical_constants as pc  # noqa: E402
 from phase6a_test_support import require_git_revision  # noqa: E402
 
-SOLVERS = ("calphad_solver", "battery_corrosion_eis_solver", "icme_multiscale_pipeline_solver")
+SOLVERS = ("calphad_solver", "battery_corrosion_eis_solver")
 # battery_corrosion_eis_solver kept one case when its battery actions were deleted (2026-10-04).
 MIN_CASES = {"battery_corrosion_eis_solver": 1}
 TRANCHE2_BASE = "7f3f803"
@@ -142,11 +140,6 @@ class GoldenRegressionTest(unittest.TestCase):
             with self.subTest(case=case):
                 self._check("battery_corrosion_eis_solver", case)
 
-    def test_icme_multiscale_pipeline_solver(self):
-        for case in cases.CASES["icme_multiscale_pipeline_solver"]:
-            with self.subTest(case=case):
-                self._check("icme_multiscale_pipeline_solver", case)
-
     def test_volatile_duration_key_is_stripped(self):
         doc = golden.load_golden("battery_corrosion_eis_solver", "edge_unknown_action_success_masking")
         self.assertNotIn("pythonDurationMs", json.dumps(doc["stdout"]))
@@ -166,22 +159,13 @@ class BaseBlobTest(unittest.TestCase):
     # longer exists on the locked interpreter. What is still comparable (the wt%/at%
     # composition, the element refusal) is checked against the same base blob in
     # test_calphad_composition_still_matches_the_base_blob_apart_from_the_weights.
-    # Design step (b) value change: these payloads drift on purpose against the base blob
-    # (icme: exact R and CIAAW weights). The check keeps the output structure and exit
-    # code identical and bounds the numeric drift; the full rows are in the commit body.
+    # The check keeps the output structure and exit code identical and bounds the numeric drift.
     VALUE_STEP_DRIFT = {
         # Fix round item 6 drifted the corrosion_kinetics K1 (0.00327 -> 0.0032707148, +2.19e-4).
         # That payload is no longer a bounded drift: the engine-fix lane (defect 6b) replaced the
         # substring EW/density with the registry values on purpose; it is checked exactly in
         # CorrosionKineticsEquivalentWeightChangeTest below instead of widening this bound.
         "battery_corrosion_eis_solver": [],
-        "icme_multiscale_pipeline_solver": [
-            {"baseMetal": "Fe", "composition_wt": {"C": 0.2, "Cr": 12.0, "Mo": 1.0, "V": 0.3, "W": 0.5},
-             "grainSize_um": 12.0, "coolingRate_C_s": 50.0, "componentType": "pressure_bulkhead"},
-            {"baseMetal": "Al", "composition_wt": {"Zn": 5.6, "Mg": 2.5, "Cu": 1.6, "Co": 0.0}},
-            {"baseMetal": "Ni", "composition_wt": {"Cr": 16.0, "Co": 8.5, "W": 2.6, "Al": 3.4, "Ti": 3.4},
-             "agingTemp_C": 850, "agingTime_h": 24, "serviceTemp_C": 650},
-        ],
     }
     # Largest |relative| drift seen on the payloads above is 2.7e-3 (last printed digit).
     VALUE_STEP_MAX_REL = 1e-2
@@ -218,16 +202,9 @@ class BaseBlobTest(unittest.TestCase):
                     self.assertEqual(new["exitCode"], old["exitCode"], new["stderr"])
                     rows = drift_report.diff(old["stdout"], new["stdout"])
                     self.assertTrue(rows)  # the value change is visible here
-                    # fx-icme: the documented ICME rows (EXPECTED_DOCUMENTED_VALUE_CHANGES) are
-                    # verified exactly; every other row must still be a bounded numeric drift.
-                    # Physics audit EUQ-9/EUQ-10: rows changed by the documented ICME patch are verified
-                    # against the patched pinned-blob oracle (needs the payload) and leave the bound check.
                     self.assertEqual(golden.step_b_violations(solver, rows, new["stdout"], payload), [],
                                      drift_report.render(solver, rows, 10))
-                    audit_keys = golden.physics_audit_row_keys(solver, payload)
-                    rows = [r for r in rows if not golden._is_documented_change_row(solver, r["key"])
-                            and r["key"] not in audit_keys]
-                    # (every R-drift row of a payload may also be an audit row: then none is left)
+                    rows = [r for r in rows if not golden._is_documented_change_row(solver, r["key"])]
                     self.assertLessEqual({r["kind"] for r in rows}, {"numeric"},
                                          drift_report.render(solver, rows, 10))
                     worst = max([abs(r["rel"]) for r in rows if r["rel"] is not None], default=0.0)
@@ -302,8 +279,6 @@ class BaseBlobTest(unittest.TestCase):
 
     def test_changed_inputs_succeeded_with_a_default_before(self):
         changed = [
-            ("icme_multiscale_pipeline_solver", {"baseMetal": "Co", "composition_wt": {"Cr": 20.0}}),
-            ("icme_multiscale_pipeline_solver", {"baseMetal": "Ni", "composition_wt": {"cr": 19.0}}),
             # Design step (b): calphad refuses symbols without a standard atomic weight
             # (before: 50.0 g/mol stand-in), also with a custom TDB.
             ("calphad_solver", {"elements": {"Ni": 70.0, "Xx": 30.0},
@@ -504,40 +479,6 @@ class CalphadElementTest(unittest.TestCase):
         self.assertFalse(hasattr(calphad_solver, "legacy_fallback_elements"))
 
 
-class IcmeElementTest(unittest.TestCase):
-    def test_unknown_solute_raises_only_when_it_is_weighted(self):
-        for comp in ({"Cr": 19.0, "Zr": 0.5}, {"cr": 19.0}, {"Hf": 0.0005}):
-            with self.subTest(comp=comp):
-                with self.assertRaises(iv.ValidationError) as ctx:
-                    icme.solve_multiscale_pipeline({"baseMetal": "Ni", "composition_wt": comp})
-                self.assertEqual(ctx.exception.code, iv.UNKNOWN_ELEMENT)
-                self.assertTrue(ctx.exception.field.startswith("composition_wt."))
-                self.assertEqual(ctx.exception.detail["reason"], "no-icme-atomic-weight")
-        # A zero amount never consulted the 55.0 fallback, so it is still accepted.
-        out = icme.solve_multiscale_pipeline({"baseMetal": "Ni", "composition_wt": {"Cr": 19.0, "Zr": 0.0}})
-        self.assertTrue(out["success"])
-
-    def test_unknown_base_metal_raises(self):
-        for base in ("Co", "Cu", "Mg", "ni", "Xx", None):
-            with self.subTest(base=base):
-                with self.assertRaises(iv.ValidationError) as ctx:
-                    icme.solve_multiscale_pipeline({"baseMetal": base, "composition_wt": {"Cr": 10.0}})
-                self.assertEqual(ctx.exception.field, "baseMetal")
-                self.assertEqual(ctx.exception.detail["reason"], "no-icme-base-data")
-                self.assertEqual(ctx.exception.detail["supported"], ["Ni", "Fe", "Ti", "Al"])
-
-    def test_supported_bases_and_t_melt(self):
-        for base, t_melt in (("Ni", 1350.0), ("Fe", 1450.0), ("Ti", 1650.0), ("Al", 660.0)):
-            out = icme.solve_multiscale_pipeline({"baseMetal": base, "composition_wt": {"Cr": 1.0}})
-            self.assertEqual(out["scale3_continuumPlasticity"]["johnsonCookParameters"]["T_melt_C"], t_melt)
-
-    def test_default_composition_comes_from_the_registry(self):
-        comp = icme._default_composition_wt()
-        self.assertEqual(list(comp), ["Cr", "Fe", "Nb", "Mo", "Ti", "Al", "C", "Si", "Mn"])
-        comp["Cr"] = 0.0  # a fresh copy each call; the registry value is untouched
-        self.assertEqual(icme._default_composition_wt()["Cr"], 19.0)
-
-
 # The one remaining successful action of battery_corrosion_eis_solver (al-7075 registry record).
 CORROSION_PAYLOAD = {"action": "corrosion_kinetics", "metalId": "al-7075", "betaA": 0.12, "betaC": 0.11,
                      "i0Corr_uA": 1.85, "ePit": -0.68, "eCorr": -0.75, "ePitReference": "SCE",
@@ -550,14 +491,6 @@ class EnvelopeAndProvenanceTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertEqual(out["errorKind"], "internal")
         self.assertIs(out["success"], False)
-
-    def test_icme_envelope_and_internal_error(self):
-        code, out = _run("icme_multiscale_pipeline_solver.py", {"baseMetal": "Co"})
-        self.assertEqual(code, 2)
-        self.assertEqual(out["error"]["field"], "baseMetal")
-        code, out = _run("icme_multiscale_pipeline_solver.py", {"coolingRate_C_s": "fast"})
-        self.assertEqual(code, 1)
-        self.assertEqual(out["errorKind"], "internal")
 
     def test_battery_internal_error_and_error_returns_report_success_false(self):
         # exposureDays no longer feeds any output (the coating timeline was removed), so a non-object payload is the
@@ -598,13 +531,6 @@ class EnvelopeAndProvenanceTest(unittest.TestCase):
         self.assertEqual(prov["gasConstantR_J_molK"], pc.GAS_CONSTANT_R.value)
         self.assertEqual(prov["constantsVersion"], pc.CONSTANTS_VERSION)
         self.assertEqual(prov["domainDataVersion"], data.DATA_VERSION)
-        fresh = golden.run_solver("icme_multiscale_pipeline_solver", {})
-        prov = fresh["provenance"]["provenance"]
-        # Design step (b): exact R and CIAAW weights.
-        self.assertEqual(prov["gasConstantR_J_molK"], pc.GAS_CONSTANT_R.value)
-        self.assertEqual(prov["atomicWeightsSource"], pc.CIAAW_SOURCE)
-        self.assertEqual(icme.R_GAS, pc.GAS_CONSTANT_R.value)
-        self.assertEqual(prov["domainDataVersion"], data.DATA_VERSION)
         fresh = golden.run_solver("battery_corrosion_eis_solver", CORROSION_PAYLOAD)
         prov = fresh["provenance"]["provenance"]
         self.assertEqual(prov["constantsVersion"], pc.CONSTANTS_VERSION)
@@ -619,49 +545,6 @@ class EnvelopeAndProvenanceTest(unittest.TestCase):
         src = (HERE / "battery_corrosion_eis_solver.py").read_text(encoding="utf-8")
         for name in ("LEGACY_R_", "LEGACY_F_", "TRUNCATED_"):
             self.assertNotIn(name, src)
-
-
-class PersistentIpcRelayTest(unittest.TestCase):
-    @classmethod
-    def tearDownClass(cls):
-        ipc = sys.modules.get("persistent_ipc_service")
-        if ipc is not None:
-            ipc.registry.shutdown()
-
-    def _assert_envelope(self, res):
-        self.assertEqual(res["exitCode"], 2, res.get("stderr"))
-        out = json.loads(res["stdout"])
-        self.assertEqual(out["errorKind"], "validation")
-        self.assertEqual(out["error"]["code"], "UNKNOWN_ELEMENT")
-
-    def test_pool_worker_and_process_pool_paths(self):
-        import persistent_ipc_service as ipc
-        self._assert_envelope(ipc._worker_run_script(
-            str(HERE / "icme_multiscale_pipeline_solver.py"), json.dumps({"baseMetal": "Co"}), []))
-        # Own registry: another test module may already have shut the global pool down.
-        own = ipc.ConcurrentModuleRegistry(ipc.SCRIPT_DIR, num_workers=1)
-        try:
-            res = own.execute_script("python/icme_multiscale_pipeline_solver.py",
-                                     {"composition_wt": {"Zr": 1.0}}, [], 60000)
-        finally:
-            own.shutdown()
-        self.assertEqual(res["concurrency"], "process_pool")
-        self._assert_envelope(res)
-
-    def test_in_process_fallback_path(self):
-        import persistent_ipc_service as ipc
-        registry = object.__new__(ipc.ConcurrentModuleRegistry)
-        registry.script_dir = str(HERE)
-        registry.compiled_code = {}
-        registry.stats_lock = threading.Lock()
-        registry.fallback_lock = threading.Lock()
-        registry.request_count = 0
-        registry.active_jobs = 0
-        registry.total_duration_ms = 0.0
-        registry.pool = None
-        res = registry.execute_script("python/icme_multiscale_pipeline_solver.py", {"baseMetal": "Co"})
-        self.assertEqual(res["concurrency"], "in_process_fallback")
-        self._assert_envelope(res)
 
 
 class SourceGuardTest(unittest.TestCase):
@@ -679,21 +562,17 @@ class SourceGuardTest(unittest.TestCase):
                     self.assertNotIn(node.value, self.FORBIDDEN_FLOATS, f"{name}:{node.lineno}")
 
     def test_no_numeric_atomic_weight_fallbacks(self):
-        src = (HERE / "icme_multiscale_pipeline_solver.py").read_text(encoding="utf-8")
-        for pattern in ("atomic_weights.get(", "atomic_weights = {"):
-            self.assertNotIn(pattern, src)
         # Design step (b): calphad has no atomic-weight fallback at all.
         src = (HERE / "calphad_solver.py").read_text(encoding="utf-8")
         self.assertNotIn("ATOMIC_WEIGHTS", src)
         self.assertNotIn("CALPHAD_LEGACY", src)
         self.assertIn("physical_constants.atomic_weight(el)", src)
 
-    def test_no_table_fallback_pattern_in_calphad_and_icme(self):
-        # icme keeps component_catalog.get(componentType, ...), not an alloy/element name; it is
-        # listed for step (b). (battery_corrosion_eis_solver's ELECTROLYTE_FORMULATIONS and specs
+    def test_no_table_fallback_pattern_in_calphad(self):
+        # (battery_corrosion_eis_solver's ELECTROLYTE_FORMULATIONS and specs
         # tables were deleted with their actions on 2026-10-04.)
-        allowed = {("icme_multiscale_pipeline_solver.py", "component_catalog")}
-        for name in ("calphad_solver.py", "icme_multiscale_pipeline_solver.py"):
+        allowed = set()
+        for name in ("calphad_solver.py",):
             for node in ast.walk(self._tree(name)):
                 if (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
                         and node.func.attr == "get" and len(node.args) == 2

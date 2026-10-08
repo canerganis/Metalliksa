@@ -63,7 +63,7 @@ class DatabaseContractTests(unittest.TestCase):
                          ("clipboardWriteAttempt", "optimisticCopyFeedback"))
         self.assertEqual(operations["export-catalog-json"].output.fields, ("fullCatalogJsonDownload",))
         self.assertEqual(operations["dispatch-material-to-module"].input[0].enum,
-                         ("alloy-builder", "icme-motor", "3d-distortion-lab", "phase-diagram"))
+                         ("alloy-builder", "3d-distortion-lab", "phase-diagram"))
 
     def test_filters_use_real_controls_without_claiming_hard_material_bounds(self):
         operations = {operation.id: operation for operation in DATABASE_OPERATIONS}

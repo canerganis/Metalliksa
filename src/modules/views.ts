@@ -24,7 +24,6 @@ export const MODULE_VIEWS: Record<ListedModuleId, ModuleView> = {
   'ttt-cct-kinetics': lazy(() => import('../components/PhaseKineticsTTTCCTStudio').then(m => ({ default: m.PhaseKineticsTTTCCTStudio }))),
   'micrograph': lazy(() => import('../components/MicrographLab').then(m => ({ default: m.MicrographLab }))),
   'electrochem-suite': lazy(() => import('../components/CorrosionEngineeringLab').then(m => ({ default: m.CorrosionEngineeringLab }))),
-  'icme-motor': lazy(() => import('../components/ICMEMultiScalePipelineStudio').then(m => ({ default: m.ICMEMultiScalePipelineStudio }))),
   'research-hub': lazy(() => import('../components/AdvancedResearchHub').then(m => ({ default: m.AdvancedResearchHub }))),
   'experimental-data': lazy(() => import('../components/EvidenceWorkspace').then(m => ({ default: m.EvidenceWorkspace }))),
   'digital-twin': lazy(() => import('../components/DigitalTwinHub').then(m => ({ default: m.DigitalTwinHub }))),

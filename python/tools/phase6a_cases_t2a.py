@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-Phase 6a tranche 2a golden cases: calphad_solver, battery_corrosion_eis_solver and
-icme_multiscale_pipeline_solver.
+Phase 6a tranche 2a golden cases: calphad_solver and battery_corrosion_eis_solver.
 
 Kept out of capture_phase6a_golden.py so that the other tranche-2 branch can add
 its own case module next to this one; the harness merges both through one small
@@ -30,9 +29,8 @@ EXTRA_VOLATILE_KEYS = frozenset({"pythonDurationMs"})
 def _key_sorted(value: Any) -> Any:
     """Return ``value`` with every dict in key order.
 
-    calphad_solver and icme_multiscale_pipeline_solver depend on the order of the
-    composition keys (calphad: matrix/partitioning order and majorElements; icme:
-    floating-point summation order). Golden files store the input with sorted keys
+    calphad_solver depends on the order of the composition keys (matrix/partitioning
+    order and majorElements). Golden files store the input with sorted keys
     and the regression re-runs that stored input, so each payload is defined in
     sorted order here: the captured run and the re-run send identical JSON.
     """
@@ -84,31 +82,11 @@ _RAW_CASES: Dict[str, Dict[str, Dict[str, Any]]] = {
         # solver reports success:false for it (see EXPECTED_SUCCESS_FLAG_CHANGES).
         "edge_unknown_action_success_masking": {"action": "no_such_action"},
     },
-    "icme_multiscale_pipeline_solver": {
-        # Empty payload: every documented default (Inconel 718, Ni base, LPBF cooling).
-        "default_payload_in718": {},
-        "ti64_preset": {"alloyName": "Ti-6Al-4V Grade 5 (Aero AM)", "baseMetal": "Ti",
-                        "composition_wt": {"Al": 6.0, "V": 4.0, "Fe": 0.25, "C": 0.05, "Si": 0.05},
-                        "coolingRate_C_s": 250000, "agingTemp_C": 550, "agingTime_h": 4,
-                        "componentType": "lpbf_bracket"},
-        "aisi4340_preset": {"alloyName": "AISI 4340 Ultra-High Strength Steel", "baseMetal": "Fe",
-                            "composition_wt": {"C": 0.40, "Cr": 0.80, "Ni": 1.80, "Mo": 0.25, "Mn": 0.70, "Si": 0.25},
-                            "coolingRate_C_s": 250, "agingTemp_C": 480, "agingTime_h": 2,
-                            "componentType": "pressure_bulkhead"},
-        "alsi10mg_preset": {"alloyName": "AlSi10Mg Additive Alloy", "baseMetal": "Al",
-                            "composition_wt": {"Si": 10.0, "Mg": 0.45, "Fe": 0.15, "Ti": 0.05, "Mn": 0.05},
-                            "coolingRate_C_s": 600000, "agingTemp_C": 160, "agingTime_h": 6,
-                            "componentType": "lpbf_bracket"},
-        # Silent default before the migration: unknown solute "Zr" used atomic weight 55.0.
-        "edge_unknown_solute_zr": {"alloyName": "Ni + Zr", "baseMetal": "Ni",
-                                   "composition_wt": {"Cr": 19.0, "Zr": 0.5}},
-    },
 }
 CASES: Dict[str, Dict[str, Dict[str, Any]]] = _key_sorted(_RAW_CASES)
 
 # (solver, case) -> expected validation code after the structural migration.
 EXPECTED_BEHAVIOUR_CHANGES = {
-    ("icme_multiscale_pipeline_solver", "edge_unknown_solute_zr"): "UNKNOWN_ELEMENT",
     # Design step (b): "Xx" has no standard atomic weight (was the 50.0 g/mol stand-in).
     ("calphad_solver", "edge_unknown_element_xx"): "UNKNOWN_ELEMENT",
 }
@@ -211,7 +189,6 @@ def _literal_assignment(source: bytes, function: Optional[str], name: str) -> An
 # solver -> list of (function or None, variable name)
 SOURCE_TABLES = {
     "calphad_solver": [(None, "ATOMIC_WEIGHTS")],
-    "icme_multiscale_pipeline_solver": [("solve_multiscale_pipeline", "atomic_weights")],
 }
 
 
