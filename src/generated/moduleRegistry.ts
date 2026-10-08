@@ -1155,8 +1155,8 @@ export const MODULE_REGISTRY = {
       "owner": "unassigned (needs maintainer)",
       "workspace": "materials",
       "label": "Materials Database",
-      "description": "Handbook values and reviewed research references; source applicability requires review.",
-      "next": "alloy-builder",
+      "description": "Handbook values, reviewed research references and the active specimen composition editor (wt%); source applicability requires review.",
+      "next": "phase-diagram",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -1742,10 +1742,9 @@ export const MODULE_REGISTRY = {
               "min": null,
               "max": null,
               "step": null,
-              "default": "alloy-builder",
+              "default": "3d-distortion-lab",
               "required": true,
               "enum": [
-                "alloy-builder",
                 "3d-distortion-lab",
                 "phase-diagram"
               ],
@@ -2355,13 +2354,13 @@ export const MODULE_REGISTRY = {
         "src/components/MaterialsDatabaseView.tsx:230-245#setShowFilters(!showFilters)",
         "src/components/MaterialsDatabaseView.tsx:250-264#Sort:",
         "src/components/MaterialsDatabaseView.tsx:336-346#Maximum Density (ρ)",
-        "src/components/MaterialsDatabaseView.tsx:150-150#Chemical compositions, tensile",
-        "src/components/MaterialsDatabaseView.tsx:56-56#compareList",
+        "src/components/MaterialsDatabaseView.tsx:151-151#Chemical compositions, tensile",
+        "src/components/MaterialsDatabaseView.tsx:57-57#compareList",
         "src/components/MaterialsDatabaseView.tsx:113-118#compareList.length < 4",
         "src/components/MaterialsDatabaseView.tsx:373-377#MaterialsPropertyHeatmapD3",
-        "src/components/MaterialsDatabaseView.tsx:402-402#setSelectedMaterial(mat)",
-        "src/components/MaterialsDatabaseView.tsx:483-483#createPipelinePayloadFromMaterialSpec",
-        "src/components/MaterialsDatabaseView.tsx:199-199#setIsCompareOpen(true)",
+        "src/components/MaterialsDatabaseView.tsx:403-403#setSelectedMaterial(mat)",
+        "src/components/MaterialsDatabaseView.tsx:484-484#createPipelinePayloadFromMaterialSpec",
+        "src/components/MaterialsDatabaseView.tsx:200-200#setIsCompareOpen(true)",
         "src/components/MaterialsDatabaseView.tsx:674-695#setIsCompareOpen(false)",
         "src/components/MaterialsPropertyHeatmapD3.tsx::MaterialsPropertyHeatmapD3",
         "src/components/MaterialsPropertyHeatmapD3.tsx::HEATMAP_PROPERTIES",
@@ -2370,7 +2369,7 @@ export const MODULE_REGISTRY = {
         "src/components/MaterialsPropertyHeatmapD3.tsx:277-277#useEffect(() => {",
         "src/components/MaterialsPropertyHeatmapD3.tsx:645-656#URL.revokeObjectURL(url)",
         "src/components/MaterialsPropertyHeatmapD3.tsx:820-840#hoveredCell",
-        "src/types.ts:29-60#MaterialSpec",
+        "src/types.ts:28-59#MaterialSpec",
         "src/data/materialsDatabase.ts:1-28#MATERIALS_DATABASE",
         "src/utils/materialDataPipeline.ts:666-715#createPipelinePayloadFromMaterialSpec",
         "src/utils/materialDataPipeline.ts:718-729#setActivePipelineMaterial",
@@ -2380,360 +2379,6 @@ export const MODULE_REGISTRY = {
         "src/utils/materialDataPipeline.ts:6-11#ModuleTargetId",
         "src/services/materialContextBridge.ts:47-70#applyIdentity",
         "src/services/materialContextBridge.ts:91-91#subscribeToPipelineMaterial"
-      ],
-      "seedDerived": [
-        "label",
-        "description",
-        "next",
-        "maturity"
-      ]
-    },
-    {
-      "id": "alloy-builder",
-      "version": "0.1.0",
-      "owner": "unassigned (needs maintainer)",
-      "workspace": "materials",
-      "label": "Composition Editor",
-      "description": "Edit and normalise the active specimen's composition (wt%); computes a rule-of-mixtures density only (no property estimates, no inverse design).",
-      "next": "phase-diagram",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/AlloyBuilder.tsx",
-        "export": "AlloyBuilder"
-      },
-      "operations": [
-        {
-          "id": "update-specimen-name",
-          "method": null,
-          "route": null,
-          "authority": {
-            "kind": "browser-local",
-            "script": null,
-            "workerMethod": null,
-            "timeoutMs": null,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": "AlloyBuilder calls browser Zustand actions directly; this operation has no server route or execution deadline."
-          },
-          "input": [],
-          "undeclaredInput": [
-            "name"
-          ],
-          "output": {
-            "fields": [
-              "activeMaterialSpecimen"
-            ],
-            "statusKey": null,
-            "transportValues": {},
-            "transportObjects": {}
-          }
-        },
-        {
-          "id": "update-category",
-          "method": null,
-          "route": null,
-          "authority": {
-            "kind": "browser-local",
-            "script": null,
-            "workerMethod": null,
-            "timeoutMs": null,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": "AlloyBuilder calls browser Zustand actions directly; this operation has no server route or execution deadline."
-          },
-          "input": [],
-          "undeclaredInput": [
-            "category"
-          ],
-          "output": {
-            "fields": [
-              "activeMaterialSpecimen"
-            ],
-            "statusKey": null,
-            "transportValues": {},
-            "transportObjects": {}
-          }
-        },
-        {
-          "id": "update-standard-designation",
-          "method": null,
-          "route": null,
-          "authority": {
-            "kind": "browser-local",
-            "script": null,
-            "workerMethod": null,
-            "timeoutMs": null,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": "AlloyBuilder calls browser Zustand actions directly; this operation has no server route or execution deadline."
-          },
-          "input": [],
-          "undeclaredInput": [
-            "standardDesignation"
-          ],
-          "output": {
-            "fields": [
-              "activeMaterialSpecimen"
-            ],
-            "statusKey": null,
-            "transportValues": {},
-            "transportObjects": {}
-          }
-        },
-        {
-          "id": "update-manufacturing-route",
-          "method": null,
-          "route": null,
-          "authority": {
-            "kind": "browser-local",
-            "script": null,
-            "workerMethod": null,
-            "timeoutMs": null,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": "AlloyBuilder calls browser Zustand actions directly; this operation has no server route or execution deadline."
-          },
-          "input": [],
-          "undeclaredInput": [
-            "manufacturingRoute"
-          ],
-          "output": {
-            "fields": [
-              "activeMaterialSpecimen"
-            ],
-            "statusKey": null,
-            "transportValues": {},
-            "transportObjects": {}
-          }
-        },
-        {
-          "id": "add-element",
-          "method": null,
-          "route": null,
-          "authority": {
-            "kind": "browser-local",
-            "script": null,
-            "workerMethod": null,
-            "timeoutMs": null,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": "AlloyBuilder calls browser Zustand actions directly; this operation has no server route or execution deadline."
-          },
-          "input": [],
-          "undeclaredInput": [
-            "element"
-          ],
-          "output": {
-            "fields": [
-              "activeMaterialSpecimen"
-            ],
-            "statusKey": null,
-            "transportValues": {},
-            "transportObjects": {}
-          }
-        },
-        {
-          "id": "set-element-content",
-          "method": null,
-          "route": null,
-          "authority": {
-            "kind": "browser-local",
-            "script": null,
-            "workerMethod": null,
-            "timeoutMs": null,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": "AlloyBuilder calls browser Zustand actions directly; this operation has no server route or execution deadline."
-          },
-          "input": [
-            {
-              "key": "percentage",
-              "label": "Element content",
-              "valueType": "number",
-              "unit": "%",
-              "displayUnits": [],
-              "quantityKind": "element-composition-percentage",
-              "min": 0.0,
-              "max": 100.0,
-              "step": 0.1,
-              "default": 0.0,
-              "required": true,
-              "enum": [],
-              "note": "The active input displays the current stored value; schema default 0.0 records the clear-input action, not an initial field value. Clearing the HTML number field maps to 0; setElement removes exactly zero. Finite values in 0..100 are store-enforced input bounds, not a physical applicability domain; percentages retain the active specimen's wt.% or at.% unit. The 0.1 step is a UI hint.",
-              "unitSelector": null,
-              "unitOptions": {}
-            }
-          ],
-          "undeclaredInput": [
-            "element"
-          ],
-          "output": {
-            "fields": [
-              "activeMaterialSpecimen"
-            ],
-            "statusKey": null,
-            "transportValues": {},
-            "transportObjects": {}
-          }
-        },
-        {
-          "id": "remove-element",
-          "method": null,
-          "route": null,
-          "authority": {
-            "kind": "browser-local",
-            "script": null,
-            "workerMethod": null,
-            "timeoutMs": null,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": "AlloyBuilder calls browser Zustand actions directly; this operation has no server route or execution deadline."
-          },
-          "input": [],
-          "undeclaredInput": [
-            "element"
-          ],
-          "output": {
-            "fields": [
-              "activeMaterialSpecimen"
-            ],
-            "statusKey": null,
-            "transportValues": {},
-            "transportObjects": {}
-          }
-        },
-        {
-          "id": "normalize-composition",
-          "method": null,
-          "route": null,
-          "authority": {
-            "kind": "browser-local",
-            "script": null,
-            "workerMethod": null,
-            "timeoutMs": null,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": "AlloyBuilder calls browser Zustand actions directly; this operation has no server route or execution deadline."
-          },
-          "input": [],
-          "undeclaredInput": [],
-          "output": {
-            "fields": [
-              "activeMaterialSpecimen"
-            ],
-            "statusKey": null,
-            "transportValues": {},
-            "transportObjects": {}
-          }
-        },
-        {
-          "id": "load-preset",
-          "method": null,
-          "route": null,
-          "authority": {
-            "kind": "browser-local",
-            "script": null,
-            "workerMethod": null,
-            "timeoutMs": null,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": "AlloyBuilder calls browser Zustand actions directly; this operation has no server route or execution deadline."
-          },
-          "input": [],
-          "undeclaredInput": [
-            "presetId"
-          ],
-          "output": {
-            "fields": [
-              "activeMaterialSpecimen"
-            ],
-            "statusKey": null,
-            "transportValues": {},
-            "transportObjects": {}
-          }
-        },
-        {
-          "id": "reset-to-default",
-          "method": null,
-          "route": null,
-          "authority": {
-            "kind": "browser-local",
-            "script": null,
-            "workerMethod": null,
-            "timeoutMs": null,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": "AlloyBuilder calls browser Zustand actions directly; this operation has no server route or execution deadline."
-          },
-          "input": [],
-          "undeclaredInput": [],
-          "output": {
-            "fields": [
-              "activeMaterialSpecimen"
-            ],
-            "statusKey": null,
-            "transportValues": {},
-            "transportObjects": {}
-          }
-        }
-      ],
-      "validityDomain": null,
-      "evidence": {
-        "emits": [],
-        "ceiling": "screening-only",
-        "forbiddenClaims": [
-          "qualified",
-          "certified",
-          "validated",
-          "measured",
-          "productionReady",
-          "airworthy"
-        ],
-        "note": "No oracle is present. The editor computes only a rule-of-mixtures density from the shown composition; liquidus/solidus and strength are displayed as unavailable. Software contract checks do not establish physical validation."
-      },
-      "lifecycle": {
-        "backgroundWork": "none",
-        "resources": []
-      },
-      "tests": {
-        "schema": "python/test_module_contract_composition.py",
-        "oracle": {
-          "status": "pending",
-          "ref": null,
-          "ciNote": null,
-          "scope": null
-        },
-        "docs": "docs/modules/alloy-builder.md"
-      },
-      "migrationState": "contracted",
-      "legacyNotes": [
-        "Composition remains browser-local state: MaterialSpecimen.composition is an element-symbol-to-number map, not a request object. Each operation scopes one visible store action; the map is not encoded as a fabricated flat or nested InputField schema. UI controls preserve dynamic state between actions.",
-        "String-valued arguments are recorded by their actual key in undeclaredInput because the SDK value types do not include strings. Category and route choices can include the active value at runtime, so no closed enum is inferred.",
-        "Add Element calls setElement with the selected symbol and a fixed 1.0; the editable number and slider call setElement with the current symbol and value. The numeric control has min=0/max=100/step=0.1; the slider max is 100 for the active base metal and 35 otherwise. The store rejects non-finite, negative and over-100 content before modifying state or deriving estimates.",
-        "normalizeComposition is a separate click action; invalid entries or a non-finite/non-positive total are rejected before scaling by 100/total. JSON import validates composition before derivation and rejects exponent overflow; invalid maps leave both active specimen aliases unchanged.",
-        "Preset buttons call loadPreset(key), which sets the preset's catalogue designation; editing the composition away from that preset clears it. Reset calls resetToDefault. The editor has no snapshot button: savedSpecimens had no view, so the Save action was removed from the UI.",
-        "The component destructures updateComposition but does not call it directly; edits currently use setElement/removeElement and the separate metadata setters. Weight-percent updates also publish an active pipeline payload; atomic-percent updates return before that pipeline sync.",
-        "Name/category/designation/route, composition edits, preset, reset and normalize are separate browser-local actions; the component does not submit one combined specimen-editor request.",
-        "The KPI panel shows the inverse rule-of-mixtures density (unavailable for at.% or an element without a tabulated density), states liquidus/solidus/yield/UTS as unavailable (no validated composition-to-property model), and shows the user's shared LPBF process settings. No physical oracle is present."
-      ],
-      "sourceRefs": [
-        "src/components/AlloyBuilder.tsx:31-61#activeMaterialSpecimen",
-        "src/components/AlloyBuilder.tsx:110-115#resetToDefault",
-        "src/components/AlloyBuilder.tsx:136-185#Specimen Name",
-        "src/components/AlloyBuilder.tsx:46-47#categoryOptions",
-        "src/components/AlloyBuilder.tsx:195-210#loadPreset(key)",
-        "src/components/AlloyBuilder.tsx:215-245#Auto-Normalize to 100%",
-        "src/components/AlloyBuilder.tsx:55-62#ruleOfMixturesDensity",
-        "src/components/AlloyBuilder.tsx:340-346#COMPOSITION_PROPERTY_UNAVAILABLE_NOTE",
-        "src/utils/compositionPropertyAvailability.ts::ruleOfMixturesDensity",
-        "src/store/useMaterialStore.ts:27-89#composition: Record<string, number>",
-        "src/store/useMaterialStore.ts:94-119#Core Actions",
-        "src/store/useMaterialStore.ts::isValidCompositionInput",
-        "src/store/useMaterialStore.ts",
-        "tests/material-composition-validation.test.ts",
-        "src/utils/materialDataPipeline.ts:718-729#setActivePipelineMaterial"
       ],
       "seedDerived": [
         "label",
@@ -3212,8 +2857,8 @@ export const MODULE_REGISTRY = {
       ],
       "sourceRefs": [
         "python/module_registry.py::build_registry",
-        "src/App.tsx:186-186#case 'phase-diagram': return <PhaseDiagramViewer />;",
-        "src/modules/views.ts:21-21#'phase-diagram': lazy(",
+        "src/App.tsx:184-184#case 'phase-diagram': return <PhaseDiagramViewer />;",
+        "src/modules/views.ts:20-20#'phase-diagram': lazy(",
         "src/components/PhaseDiagramViewer.tsx::PhaseDiagramViewer",
         "src/components/CALPHADMultiComponentStudio.tsx::CALPHADMultiComponentStudio",
         "src/services/pythonComputationService.ts::PythonComputationService.getCalphadDatabases",

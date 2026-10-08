@@ -5,7 +5,6 @@ import {
   Zap,
   Flame,
   Gauge,
-  FlaskConical,
   Compass,
   ArrowRight,
   CheckCircle2,
@@ -65,22 +64,6 @@ export const SendToModuleModal: React.FC<SendToModuleModalProps> = ({
   const hardnessText = pipelineHardnessText(payload.hardnessHV, payload.hardnessHVSource, payload.hardness);
 
   const targets = [
-    {
-      id: "alloy-builder" as ModuleTargetId,
-      name: contractById("alloy-builder").label,
-      category: "Composition & Specimen",
-      icon: FlaskConical,
-      color: "text-purple-400",
-      borderColor: "border-purple-500/30 hover:border-purple-400/70",
-      bgColor: "bg-purple-500/10",
-      badge: "Active specimen",
-      description: `Loads this composition into the Alloy Builder as the shared active specimen for editing.`,
-      highlights: [
-        `Base: ${payload.baseMetal}-Matrix`,
-        `σy: ${mpaOrUnavailable(payload.yieldStrength)}`,
-        `${Object.keys(payload.composition).length} Elements`,
-      ],
-    },
     {
       id: "3d-distortion-lab" as ModuleTargetId,
       name: contractById("3d-distortion-lab").label,

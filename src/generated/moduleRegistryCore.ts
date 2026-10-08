@@ -242,40 +242,14 @@ export const MODULE_REGISTRY_CORE = {
       "version": "0.1.0",
       "workspace": "materials",
       "label": "Materials Database",
-      "description": "Handbook values and reviewed research references; source applicability requires review.",
-      "next": "alloy-builder",
+      "description": "Handbook values, reviewed research references and the active specimen composition editor (wt%); source applicability requires review.",
+      "next": "phase-diagram",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
       "view": {
         "component": "src/components/MaterialsDatabaseView.tsx",
         "export": "MaterialsDatabaseView"
-      },
-      "migrationState": "contracted",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "alloy-builder",
-      "version": "0.1.0",
-      "workspace": "materials",
-      "label": "Composition Editor",
-      "description": "Edit and normalise the active specimen's composition (wt%); computes a rule-of-mixtures density only (no property estimates, no inverse design).",
-      "next": "phase-diagram",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/AlloyBuilder.tsx",
-        "export": "AlloyBuilder"
       },
       "migrationState": "contracted",
       "evidence": {

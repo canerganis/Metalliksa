@@ -4,7 +4,6 @@ import { convertSteelHardness, hardnessMaterialClassOf } from "./hardnessConvers
 import { estimateSteelHvFromYield, HV_FROM_YIELD_ESTIMATE_NOTE } from "./hardnessStrengthEstimate";
 
 export type ModuleTargetId =
-  | "alloy-builder"
   | "phase-diagram"
   | "database"
   | "3d-distortion-lab";

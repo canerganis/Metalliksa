@@ -91,7 +91,7 @@ jobs:
           test_module_contract test_module_warm_parity test_allowlist_ceilings
           test_module_contract_structured_transport
           test_module_contract_selected_units
-          test_module_contract_dataset_view test_module_contract_composition
+          test_module_contract_dataset_view
           test_module_contract_database test_module_contract_calphad test_module_contract_evidence
           test_module_contract_lpbf_secondary
           test_module_contract_research

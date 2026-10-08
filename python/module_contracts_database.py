@@ -37,7 +37,7 @@ _CATEGORIES = (
 )
 _SORT_FIELDS = ("yield", "tensile", "specific_strength", "modulus", "density", "name")
 _SORT_ORDERS = ("desc", "asc")
-_TRANSFER_TARGETS = ("alloy-builder", "3d-distortion-lab", "phase-diagram")
+_TRANSFER_TARGETS = ("3d-distortion-lab", "phase-diagram")
 _HEATMAP_MODES = ("alloy-elements", "element-property-binned")
 _HEATMAP_PROPERTIES = (
     "yieldStrength", "tensileStrength", "youngsModulus", "density", "specificStrength",
@@ -205,7 +205,7 @@ DATABASE_OPERATIONS: Tuple[Operation, ...] = (
         fields=(
             InputField(
                 key="targetId", label="Transfer destination", unit=None, quantity_kind="module-navigation-target",
-                min=None, max=None, default="alloy-builder", enum=_TRANSFER_TARGETS, value_type="enum",
+                min=None, max=None, default="3d-distortion-lab", enum=_TRANSFER_TARGETS, value_type="enum",
                 note="Exact destination IDs rendered by SendToModuleModal for this transfer flow.",
             ),
         ),
@@ -383,13 +383,13 @@ def build_database_contract(seed: Mapping[str, str]) -> ModuleContract:
             "src/components/MaterialsDatabaseView.tsx:230-245#setShowFilters(!showFilters)",
             "src/components/MaterialsDatabaseView.tsx:250-264#Sort:",
             "src/components/MaterialsDatabaseView.tsx:336-346#Maximum Density (ρ)",
-            "src/components/MaterialsDatabaseView.tsx:150-150#Chemical compositions, tensile",
-            "src/components/MaterialsDatabaseView.tsx:56-56#compareList",
+            "src/components/MaterialsDatabaseView.tsx:151-151#Chemical compositions, tensile",
+            "src/components/MaterialsDatabaseView.tsx:57-57#compareList",
             "src/components/MaterialsDatabaseView.tsx:113-118#compareList.length < 4",
             "src/components/MaterialsDatabaseView.tsx:373-377#MaterialsPropertyHeatmapD3",
-            "src/components/MaterialsDatabaseView.tsx:402-402#setSelectedMaterial(mat)",
-            "src/components/MaterialsDatabaseView.tsx:483-483#createPipelinePayloadFromMaterialSpec",
-            "src/components/MaterialsDatabaseView.tsx:199-199#setIsCompareOpen(true)",
+            "src/components/MaterialsDatabaseView.tsx:403-403#setSelectedMaterial(mat)",
+            "src/components/MaterialsDatabaseView.tsx:484-484#createPipelinePayloadFromMaterialSpec",
+            "src/components/MaterialsDatabaseView.tsx:200-200#setIsCompareOpen(true)",
             "src/components/MaterialsDatabaseView.tsx:674-695#setIsCompareOpen(false)",
             "src/components/MaterialsPropertyHeatmapD3.tsx::MaterialsPropertyHeatmapD3",
             "src/components/MaterialsPropertyHeatmapD3.tsx::HEATMAP_PROPERTIES",
@@ -398,7 +398,7 @@ def build_database_contract(seed: Mapping[str, str]) -> ModuleContract:
             "src/components/MaterialsPropertyHeatmapD3.tsx:277-277#useEffect(() => {",
             "src/components/MaterialsPropertyHeatmapD3.tsx:645-656#URL.revokeObjectURL(url)",
             "src/components/MaterialsPropertyHeatmapD3.tsx:820-840#hoveredCell",
-            "src/types.ts:29-60#MaterialSpec",
+            "src/types.ts:28-59#MaterialSpec",
             "src/data/materialsDatabase.ts:1-28#MATERIALS_DATABASE",
             "src/utils/materialDataPipeline.ts:666-715#createPipelinePayloadFromMaterialSpec",
             "src/utils/materialDataPipeline.ts:718-729#setActivePipelineMaterial",

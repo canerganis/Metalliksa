@@ -74,20 +74,10 @@
     "workspace": "materials",
     "label": "Materials Database",
     "scope": "Research",
-    "description": "Handbook values and reviewed research references; source applicability requires review.",
-    "next": "alloy-builder",
+    "description": "Handbook values, reviewed research references and the active specimen composition editor (wt%); source applicability requires review.",
+    "next": "phase-diagram",
     "viewComponent": "src/components/MaterialsDatabaseView.tsx",
     "viewExport": "MaterialsDatabaseView"
-  },
-  {
-    "id": "alloy-builder",
-    "workspace": "materials",
-    "label": "Composition Editor",
-    "scope": "Research",
-    "description": "Edit and normalise the active specimen's composition (wt%); computes a rule-of-mixtures density only (no property estimates, no inverse design).",
-    "next": "phase-diagram",
-    "viewComponent": "src/components/AlloyBuilder.tsx",
-    "viewExport": "AlloyBuilder"
   },
   {
     "id": "phase-diagram",

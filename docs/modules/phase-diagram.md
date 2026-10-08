@@ -109,8 +109,8 @@ Background work: none; resources: fetch, interval.
 ## Source references
 
 - `python/module_registry.py::build_registry`
-- `src/App.tsx:186-186#case 'phase-diagram': return <PhaseDiagramViewer />;`
-- `src/modules/views.ts:21-21#'phase-diagram': lazy(`
+- `src/App.tsx:184-184#case 'phase-diagram': return <PhaseDiagramViewer />;`
+- `src/modules/views.ts:20-20#'phase-diagram': lazy(`
 - `src/components/PhaseDiagramViewer.tsx::PhaseDiagramViewer`
 - `src/components/CALPHADMultiComponentStudio.tsx::CALPHADMultiComponentStudio`
 - `src/services/pythonComputationService.ts::PythonComputationService.getCalphadDatabases`

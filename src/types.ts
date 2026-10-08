@@ -1,7 +1,6 @@
 export type TabType = 
   | "phase-diagrams"
   | "crystal-3d"
-  | "alloy-builder"
   | "elements"
   | "database"
   | "qualification"

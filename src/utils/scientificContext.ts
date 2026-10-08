@@ -30,7 +30,7 @@ function densityContextLine(specimen: ActiveSpecimenState): string {
 // default at the end of buildScientificContext, which prints the shared LPBF specimen numbers (composition, density,
 // freezing range) that are unrelated to that module, so the panel is hidden there (see ScientificContextPanel).
 const MODULES_WITH_CONTEXT: ReadonlySet<string> = new Set([
-  'alloy-builder', '3d-distortion-lab', 'phase-diagram',
+  '3d-distortion-lab', 'phase-diagram',
   'research-hub', 'experimental-data', 'traceability',
 ]);
 
@@ -39,15 +39,6 @@ export function hasScientificContext(moduleId: ModuleId): boolean {
 }
 
 export function buildScientificContext(moduleId: ModuleId, specimen: ActiveSpecimenState): ScientificContext {
-  if (moduleId === 'alloy-builder') return {
-    title: 'Composition editor context',
-    observation: 'This editor uses element percentages in the displayed wt.% or at.% unit. Normalize Composition is an explicit action; edits do not automatically make the total 100%.',
-    mechanism: 'For weight-percent compositions, density is computed by the inverse rule of mixtures from tabulated elemental densities. No CALPHAD, DFT or LPBF simulation runs here, and no temperature, strength or process window is derived from composition.',
-    variables: ['Element content: 0–100%, finite values', 'Computed: density g/cm³ (wt.% only; unavailable when an element has no tabulated density)', 'Unavailable here: liquidus/solidus °C, yield strength and UTS MPa'],
-    interpretation: 'The current shared process settings are user settings and are retained across composition edits. Atomic-percent edits preserve their unit and do not recompute weight-percent values such as density.',
-    limitation: 'The density assumes ideal mixing (no excess volume, phases or porosity). Displayed values are not measurements, phase-equilibrium results or qualified process settings. Retained values are not newly computed properties of an atomic-percent composition. Hardness can remain unavailable.',
-  };
-
   const { lpbf } = specimen;
   const ved = lpbf.laserPower_W / ((lpbf.scanSpeed_mms || 1) * (lpbf.hatch_um / 1000) * (lpbf.layer_um / 1000));
   const shared = `Active specimen ${specimen.name}; ${format(lpbf.laserPower_W)} W, ${format(lpbf.scanSpeed_mms)} mm/s, ${format(lpbf.hatch_um)} µm hatch, ${format(lpbf.layer_um)} µm layer.`;

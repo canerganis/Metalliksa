@@ -21,7 +21,6 @@ test('approved functional names retain module identities and conservative condit
     '3d-distortion-lab': 'LPBF Workflow',
     'lpbf-optimizer': 'Process Parameter Search',
     'experimental-validation': 'Melt Pool vs Measurements',
-    'alloy-builder': 'Composition Editor',
   } as const;
   for (const [id, label] of Object.entries(expected)) {
     assert.equal(labels.get(id as typeof MODULES[number]['id']), label, id);

@@ -91,7 +91,7 @@ All modules need the browser application and Node-served assets described by `pa
 
 ### Browser calculations and local records
 
-Modules: `database`, `alloy-builder`, `calculators`, `experimental-data`, `traceability`, `lpbf-dataset-comparison`, `lpbf-calibration-scorecard`.
+Modules: `database`, `calculators`, `experimental-data`, `traceability`, `lpbf-dataset-comparison`, `lpbf-calibration-scorecard`.
 
 Principal paths run in the browser using the components/parsers/stores above. File import/export needs browser file APIs; persistent records depend on browser storage. Shared server registry synchronization needs `routes/researchRegistry.ts` and a writable `.research-registry/` directory. EDS consultation and other optional assistant controls additionally use the provider group below. Formula/demo AI labels do not establish an installed trained model. Registry/parser tests establish selected software contracts only.
 

@@ -26,6 +26,7 @@ import { MATERIALS_DATABASE } from "../data/materialsDatabase";
 import { MaterialSpec } from "../types";
 import { MaterialsPropertyHeatmapD3 } from "./MaterialsPropertyHeatmapD3";
 import { SendToModuleButton } from "./SendToModuleButton";
+import { AlloyBuilder } from "./AlloyBuilder";
 import { createPipelinePayloadFromMaterialSpec, setActivePipelineMaterial } from "../utils/materialDataPipeline";
 import { Zap, Atom, Gauge } from "lucide-react";
 
@@ -799,6 +800,11 @@ export const MaterialsDatabaseView: React.FC<MaterialsDatabaseViewProps> = ({ on
             </div>
         </AccessibleModal>
       )}
+
+      {/* Composition editor for the shared active specimen (folded in from the former Composition Editor module) */}
+      <section id="database-composition-editor" aria-label="Composition editor">
+        <AlloyBuilder onNavigate={onNavigate} />
+      </section>
     </div>
   );
 };

@@ -79,9 +79,9 @@ export const AlloyBuilder: React.FC<AlloyBuilderProps> = ({ onNavigate }) => {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-black tracking-tight text-white">
+                  <h2 className="text-xl font-black tracking-tight text-white">
                     Composition Editor
-                  </h1>
+                  </h2>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
                     Shared store
                   </span>

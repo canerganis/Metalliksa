@@ -27,8 +27,8 @@ class DatabaseContractTests(unittest.TestCase):
         self.assertEqual(
             (contract.id, contract.workspace, contract.label, contract.description, contract.next, contract.maturity),
             ("database", "materials", "Materials Database",
-             "Handbook values and reviewed research references; source applicability requires review.",
-             "alloy-builder", "Research"),
+             "Handbook values, reviewed research references and the active specimen composition editor (wt%); source applicability requires review.",
+             "phase-diagram", "Research"),
         )
         self.assertEqual(contract.seed_derived, ("label", "description", "next", "maturity"))
         self.assertEqual((contract.view.component, contract.view.export),
@@ -63,7 +63,7 @@ class DatabaseContractTests(unittest.TestCase):
                          ("clipboardWriteAttempt", "optimisticCopyFeedback"))
         self.assertEqual(operations["export-catalog-json"].output.fields, ("fullCatalogJsonDownload",))
         self.assertEqual(operations["dispatch-material-to-module"].input[0].enum,
-                         ("alloy-builder", "3d-distortion-lab", "phase-diagram"))
+                         ("3d-distortion-lab", "phase-diagram"))
 
     def test_filters_use_real_controls_without_claiming_hard_material_bounds(self):
         operations = {operation.id: operation for operation in DATABASE_OPERATIONS}

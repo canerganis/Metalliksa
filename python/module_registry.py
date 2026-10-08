@@ -39,7 +39,6 @@ from module_contract import (
 )
 from module_contracts_dataset_view import build_dataset_view_contract
 from module_contracts_calibration_scorecard import build_calibration_scorecard_contract
-from module_contracts_composition import build_composition_contract
 from module_contracts_database import build_database_contract
 from module_contracts_calphad import build_calphad_contract
 from module_contracts_evidence import build_experimental_data_contract, build_traceability_contract
@@ -402,7 +401,6 @@ CONTRACTED_BUILDERS = {
     "phase-diagram": build_calphad_contract,
     "experimental-data": build_experimental_data_contract,
     "traceability": build_traceability_contract,
-    "alloy-builder": build_composition_contract,
     "lpbf-dataset-comparison": build_dataset_view_contract,
     "lpbf-calibration-scorecard": build_calibration_scorecard_contract,
     "keyhole-raytracing": _keyhole_contract,

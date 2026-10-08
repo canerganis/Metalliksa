@@ -223,7 +223,7 @@ Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
 
 | Key | Label | Type | Unit | Min | Max | Step | Default | Note |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `targetId` | Transfer destination | enum ['alloy-builder', '3d-distortion-lab', 'phase-diagram'] | — | — | — | — | alloy-builder | Exact destination IDs rendered by SendToModuleModal for this transfer flow. |
+| `targetId` | Transfer destination | enum ['3d-distortion-lab', 'phase-diagram'] | — | — | — | — | 3d-distortion-lab | Exact destination IDs rendered by SendToModuleModal for this transfer flow. |
 
 — = not established from the authority code or a source; the contract states no bound.
 Required keys are marked in the contract JSON.
@@ -476,13 +476,13 @@ Background work: none; resources: none.
 - `src/components/MaterialsDatabaseView.tsx:230-245#setShowFilters(!showFilters)`
 - `src/components/MaterialsDatabaseView.tsx:250-264#Sort:`
 - `src/components/MaterialsDatabaseView.tsx:336-346#Maximum Density (ρ)`
-- `src/components/MaterialsDatabaseView.tsx:150-150#Chemical compositions, tensile`
-- `src/components/MaterialsDatabaseView.tsx:56-56#compareList`
+- `src/components/MaterialsDatabaseView.tsx:151-151#Chemical compositions, tensile`
+- `src/components/MaterialsDatabaseView.tsx:57-57#compareList`
 - `src/components/MaterialsDatabaseView.tsx:113-118#compareList.length < 4`
 - `src/components/MaterialsDatabaseView.tsx:373-377#MaterialsPropertyHeatmapD3`
-- `src/components/MaterialsDatabaseView.tsx:402-402#setSelectedMaterial(mat)`
-- `src/components/MaterialsDatabaseView.tsx:483-483#createPipelinePayloadFromMaterialSpec`
-- `src/components/MaterialsDatabaseView.tsx:199-199#setIsCompareOpen(true)`
+- `src/components/MaterialsDatabaseView.tsx:403-403#setSelectedMaterial(mat)`
+- `src/components/MaterialsDatabaseView.tsx:484-484#createPipelinePayloadFromMaterialSpec`
+- `src/components/MaterialsDatabaseView.tsx:200-200#setIsCompareOpen(true)`
 - `src/components/MaterialsDatabaseView.tsx:674-695#setIsCompareOpen(false)`
 - `src/components/MaterialsPropertyHeatmapD3.tsx::MaterialsPropertyHeatmapD3`
 - `src/components/MaterialsPropertyHeatmapD3.tsx::HEATMAP_PROPERTIES`
@@ -491,7 +491,7 @@ Background work: none; resources: none.
 - `src/components/MaterialsPropertyHeatmapD3.tsx:277-277#useEffect(() => {`
 - `src/components/MaterialsPropertyHeatmapD3.tsx:645-656#URL.revokeObjectURL(url)`
 - `src/components/MaterialsPropertyHeatmapD3.tsx:820-840#hoveredCell`
-- `src/types.ts:29-60#MaterialSpec`
+- `src/types.ts:28-59#MaterialSpec`
 - `src/data/materialsDatabase.ts:1-28#MATERIALS_DATABASE`
 - `src/utils/materialDataPipeline.ts:666-715#createPipelinePayloadFromMaterialSpec`
 - `src/utils/materialDataPipeline.ts:718-729#setActivePipelineMaterial`

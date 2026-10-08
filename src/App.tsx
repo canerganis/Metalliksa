@@ -41,7 +41,6 @@ const SHORTCUT_KEYS = paletteShortcutKeys(APPLE);
 const Atrium = lazy(() => import('./components/Atrium').then(m => ({ default: m.Atrium })));
 const EvidenceWorkspace = lazy(() => import('./components/EvidenceWorkspace').then(m => ({ default: m.EvidenceWorkspace })));
 const ResearchIntegrationPanel = lazy(() => import('./components/ResearchIntegrationPanel').then(m => ({ default: m.ResearchIntegrationPanel })));
-const AlloyBuilder = lazy(() => import("./components/AlloyBuilder").then(m => ({ default: m.AlloyBuilder })));
 const MaterialsDatabaseView = lazy(() => import("./components/MaterialsDatabaseView").then(m => ({ default: m.MaterialsDatabaseView })));
 const LpbfEngineeringWorkspace = lazy(() => import("./components/LpbfEngineeringWorkspace").then(m => ({ default: m.LpbfEngineeringWorkspace })));
 const LpbfBayesianOptimizerLab = lazy(() => import("./components/LpbfBayesianOptimizerLab").then(m => ({ default: m.LpbfBayesianOptimizerLab })));
@@ -181,7 +180,6 @@ export default function App() {
       case 'research-hub': return <AdvancedResearchHub />;
       case 'experimental-data': return <EvidenceWorkspace mode="experimental" />;
       case 'traceability': return <EvidenceWorkspace mode="traceability" />;
-      case 'alloy-builder': return <AlloyBuilder onNavigate={navigate} />;
       case 'database': return <MaterialsDatabaseView onNavigate={navigate} />;
       case 'phase-diagram': return <PhaseDiagramViewer />;
     }
