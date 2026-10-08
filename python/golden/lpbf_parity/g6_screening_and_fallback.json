@@ -4,9 +4,9 @@
  "group": "G6",
  "description": "Screening (Goldak/Rosenthal) and the honest high-fidelity fallback",
  "slow": false,
- "recordedImplementationHash": "cda80143d28baf8dd39512065a8ce3683f4c97f46b20d53052b63b4cd34a41d2",
+ "recordedImplementationHash": "ec7e1f7a6606e937e448fefe97549b49a7ddfe7b95376b93867ae007b0c12555",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "dd77476713b324e87bdc941eb400a6774117cd5d",
+ "recordedGitHead": "26db2aceb68ace5e1fc537bfe14782a2eb83a35f",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  4.5,
-  4.5
+  5.4,
+  5.3
  ],
  "recordedTwice": true,
  "observations": {
-  "screening.canonicalSha256": "7ba2cd5656903ae1dc837924ca21fb1892dcc47789dfcc38324d9f239e4eae7e",
-  "screening.orderedTypedSha256": "7417bc54f4f60816c45aa4233458fac6e53fe7ba6cfe49bc717f1fc24f1b3375",
+  "screening.canonicalSha256": "db4e0e2fce2d7df3007a97627f0d5102fb9c4f6ee5a4580664d65c6914d16634",
+  "screening.orderedTypedSha256": "7df29a1f4782559a9312f0aee3e3fc1961faf7935251ebd896129825b7334cb8",
   "screening.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -115,10 +115,10 @@
   "screening.key.label": "00da6632fd832ed8e508be4547d3e8da75a922225239b4fbe23f2e787e357044",
   "screening.key.provenance": "74df40bbeab0763288ab49f4ad197c28b809f9c24b95413e2689e52225d88247",
   "screening.key.analyticalComparison": "f8a0d50a8b991651f1b32595443902ebff583898c8625ab2b4706fc853df779d",
-  "screening.key.assumptions": "b92c3612941ad13942f8e847409052ec2ae2018681536c5d4c0f834e921ca7ef",
+  "screening.key.assumptions": "770cfebc851def952aebf9526bf42c30d25d991e7eed5d62fad739ce9ec48789",
   "screening.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "screening.key.metrics": "5662934c0f81df7b2d1b43891643f2ec1db6d3554284e6a0c67d16ee387a3538",
-  "screening.key.geometricDefectScreen": "acf5ab60cd5e7594e73a29207b4b736687021d48189b7302b32a8d8c3e9333c8",
+  "screening.key.geometricDefectScreen": "01ccdb3f9ff8feeaa3299cd72924376a890829591c5f80a5c79d3ff3a8688462",
   "screening.key.regime": "40fd22838049669095e60b9df57f0c4721939348b454b4c8d571bbdc8aedd490",
   "screening.key.mainRisk": "99524db4cbe5bfd2aa2a3b185c78355359043617d0c2f802a8fc0ab6e8ef1ef8",
   "screening.key.recommendation": "9f8af9e48aaf7e009bbf332a3176f5692a8c3f2778c53d195be0496ceb440575",
@@ -138,8 +138,8 @@
   "screening.label": "Screening only",
   "screening.confidence": "low",
   "screening.implementationHashOccurrencesAfterStrip": 0,
-  "highFidelityFallback.canonicalSha256": "4ae4f64519e8fbe529f74aea00a4a17346c18c4c82a328797281423df1a2721b",
-  "highFidelityFallback.orderedTypedSha256": "f2ae7592e2cbd21c0dffb470a6e9cf81940b7b4e612c93dfe6210de41e06fb13",
+  "highFidelityFallback.canonicalSha256": "e9620185eed6ac8e04bc64cfc96f6aaea52f257515a9b6112165b269167f69fd",
+  "highFidelityFallback.orderedTypedSha256": "33efd7a44f4a015ca8ffbdbac3d023a950eb7cf54e675419d12601b2add7a97a",
   "highFidelityFallback.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -180,10 +180,10 @@
   "highFidelityFallback.key.label": "00da6632fd832ed8e508be4547d3e8da75a922225239b4fbe23f2e787e357044",
   "highFidelityFallback.key.provenance": "3c1b5c1e8e02cde96d39d2c99606abc6f6b502b55bea85309e5daaef648fc877",
   "highFidelityFallback.key.analyticalComparison": "f8a0d50a8b991651f1b32595443902ebff583898c8625ab2b4706fc853df779d",
-  "highFidelityFallback.key.assumptions": "b92c3612941ad13942f8e847409052ec2ae2018681536c5d4c0f834e921ca7ef",
+  "highFidelityFallback.key.assumptions": "770cfebc851def952aebf9526bf42c30d25d991e7eed5d62fad739ce9ec48789",
   "highFidelityFallback.key.fallbackReason": "6e4dd5716eb9a19c332be02caf7d68e7dcf8b128c09279475225cfc2ff3ddaec",
   "highFidelityFallback.key.metrics": "5662934c0f81df7b2d1b43891643f2ec1db6d3554284e6a0c67d16ee387a3538",
-  "highFidelityFallback.key.geometricDefectScreen": "acf5ab60cd5e7594e73a29207b4b736687021d48189b7302b32a8d8c3e9333c8",
+  "highFidelityFallback.key.geometricDefectScreen": "01ccdb3f9ff8feeaa3299cd72924376a890829591c5f80a5c79d3ff3a8688462",
   "highFidelityFallback.key.regime": "40fd22838049669095e60b9df57f0c4721939348b454b4c8d571bbdc8aedd490",
   "highFidelityFallback.key.mainRisk": "99524db4cbe5bfd2aa2a3b185c78355359043617d0c2f802a8fc0ab6e8ef1ef8",
   "highFidelityFallback.key.recommendation": "9f8af9e48aaf7e009bbf332a3176f5692a8c3f2778c53d195be0496ceb440575",
@@ -203,8 +203,8 @@
   "highFidelityFallback.label": "Screening only",
   "highFidelityFallback.confidence": "low",
   "highFidelityFallback.implementationHashOccurrencesAfterStrip": 0,
-  "screeningTi64.canonicalSha256": "1eceed8e3d06817e68bb5d1cdb87b81412e54a4a67e2f7ad7e6f16c47788b85f",
-  "screeningTi64.orderedTypedSha256": "7ddd567774a23206e195fe41e7eb90144f621774fe8a0dcc238d624a33fb89e0",
+  "screeningTi64.canonicalSha256": "b02e9834fe612a92496c2c850cddfee32f525d370fb4fc8c36664bf209427d89",
+  "screeningTi64.orderedTypedSha256": "e4b7d4e9ac9b9402799a3b3bb377f72fe963c2eb2a89157229efa8a0c13685f6",
   "screeningTi64.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -245,10 +245,10 @@
   "screeningTi64.key.label": "00da6632fd832ed8e508be4547d3e8da75a922225239b4fbe23f2e787e357044",
   "screeningTi64.key.provenance": "9283ed73b70280b63981ad9c620273d0303be78fb5c648892e992c3f5dbe5e37",
   "screeningTi64.key.analyticalComparison": "5265d234709a875f25cf8f1ea536b392d05828ebf08c07d13d4d7d4010df90fa",
-  "screeningTi64.key.assumptions": "b92c3612941ad13942f8e847409052ec2ae2018681536c5d4c0f834e921ca7ef",
+  "screeningTi64.key.assumptions": "770cfebc851def952aebf9526bf42c30d25d991e7eed5d62fad739ce9ec48789",
   "screeningTi64.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "screeningTi64.key.metrics": "1a09a5e4d7b10c770cf0c737122a86c44c4b38cb543a95cd839bcc6ada46440d",
-  "screeningTi64.key.geometricDefectScreen": "429e409b8eaba0f6ecf432b646958fd58d3fc4c1dbf3115b7683326a561265fa",
+  "screeningTi64.key.geometricDefectScreen": "478a2d77498015ab63710941cda8d6951eae9e7c05d314407afb5a7acea22132",
   "screeningTi64.key.regime": "40fd22838049669095e60b9df57f0c4721939348b454b4c8d571bbdc8aedd490",
   "screeningTi64.key.mainRisk": "99524db4cbe5bfd2aa2a3b185c78355359043617d0c2f802a8fc0ab6e8ef1ef8",
   "screeningTi64.key.recommendation": "9f8af9e48aaf7e009bbf332a3176f5692a8c3f2778c53d195be0496ceb440575",
@@ -268,8 +268,8 @@
   "screeningTi64.label": "Screening only",
   "screeningTi64.confidence": "low",
   "screeningTi64.implementationHashOccurrencesAfterStrip": 0,
-  "highFidelityFallbackWithOpenfoam.canonicalSha256": "8d3024d6269b2d65f343cfce04a404f6330b9ca8fa247923fbe9846a9f9253d5",
-  "highFidelityFallbackWithOpenfoam.orderedTypedSha256": "349134595214cc54b4d3baf98675be6f0c33792612b54cc3f3a9324958c066c2",
+  "highFidelityFallbackWithOpenfoam.canonicalSha256": "740f96c24c1bb12f6d3dcfc33dc94c8232591747127703b58232401719e2e10b",
+  "highFidelityFallbackWithOpenfoam.orderedTypedSha256": "b01b2a13156de68b3cbadb5e04b3d5a9906287f82d055bd9d50f10880b0cb560",
   "highFidelityFallbackWithOpenfoam.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -310,10 +310,10 @@
   "highFidelityFallbackWithOpenfoam.key.label": "00da6632fd832ed8e508be4547d3e8da75a922225239b4fbe23f2e787e357044",
   "highFidelityFallbackWithOpenfoam.key.provenance": "3c1b5c1e8e02cde96d39d2c99606abc6f6b502b55bea85309e5daaef648fc877",
   "highFidelityFallbackWithOpenfoam.key.analyticalComparison": "f8a0d50a8b991651f1b32595443902ebff583898c8625ab2b4706fc853df779d",
-  "highFidelityFallbackWithOpenfoam.key.assumptions": "b92c3612941ad13942f8e847409052ec2ae2018681536c5d4c0f834e921ca7ef",
+  "highFidelityFallbackWithOpenfoam.key.assumptions": "770cfebc851def952aebf9526bf42c30d25d991e7eed5d62fad739ce9ec48789",
   "highFidelityFallbackWithOpenfoam.key.fallbackReason": "6f422ebac6e741612c1f4552bcd6df77dfdaf0e405954690205b62f3ca79cea6",
   "highFidelityFallbackWithOpenfoam.key.metrics": "5662934c0f81df7b2d1b43891643f2ec1db6d3554284e6a0c67d16ee387a3538",
-  "highFidelityFallbackWithOpenfoam.key.geometricDefectScreen": "acf5ab60cd5e7594e73a29207b4b736687021d48189b7302b32a8d8c3e9333c8",
+  "highFidelityFallbackWithOpenfoam.key.geometricDefectScreen": "01ccdb3f9ff8feeaa3299cd72924376a890829591c5f80a5c79d3ff3a8688462",
   "highFidelityFallbackWithOpenfoam.key.regime": "40fd22838049669095e60b9df57f0c4721939348b454b4c8d571bbdc8aedd490",
   "highFidelityFallbackWithOpenfoam.key.mainRisk": "99524db4cbe5bfd2aa2a3b185c78355359043617d0c2f802a8fc0ab6e8ef1ef8",
   "highFidelityFallbackWithOpenfoam.key.recommendation": "9f8af9e48aaf7e009bbf332a3176f5692a8c3f2778c53d195be0496ceb440575",
@@ -367,7 +367,7 @@
    "Analytical screening has no resolved transient heat source or time integration.",
    "Transient layer activation uses whole cells selected by their centers; source surface clipping does not implement cut-cell mass or conduction. Inspect numerical resolution diagnostics when available.",
    "Geometry is the molten-domain extent at the earliest maximum volume over accepted timesteps; playback is sparse and multi-track pools may be disconnected. Sampling loss does not bound timestep or mesh error.",
-   "Cross section is the maximum YZ grid section; it is not scan-normal for rotated scans.",
+   "Cross section is the largest scan-normal slab of liquidus cells at the peak-volume step (slab one projected cell wide, cell volume over slab thickness); within about 6 % of pi/4*W*D on a fine grid, coarse-grid voxel scatter remains.",
    "R = -dT/dt / |grad T| at linearly reconstructed cooling liquidus crossings; gradient vectors are interpolated in time. G, R, G\u00d7R are separately event-averaged; G <= 1e-6 K/m is excluded.",
    "Ma and laser-travel Pe are screening numbers, not resolved velocities.",
    "Thermal history is input for subsequent mechanics; no residual stress, distortion or cracking prediction."
@@ -407,7 +407,7 @@
   "highFidelityFallback.key.effectiveMode": "screening",
   "highFidelityFallback.key.fallbackReason": "OpenFOAM / a qualified free-surface LPBF solver is unavailable in this worker.",
   "highFidelityFallback.key.geometricDefectScreen": {
-   "modelId": "elliptic-overlap-screening-v1",
+   "modelId": "elliptic-overlap-screening-v2",
    "scope": "single-track-cross-section",
    "status": "geometry-screened",
    "limitations": [
@@ -636,7 +636,7 @@
    "Analytical screening has no resolved transient heat source or time integration.",
    "Transient layer activation uses whole cells selected by their centers; source surface clipping does not implement cut-cell mass or conduction. Inspect numerical resolution diagnostics when available.",
    "Geometry is the molten-domain extent at the earliest maximum volume over accepted timesteps; playback is sparse and multi-track pools may be disconnected. Sampling loss does not bound timestep or mesh error.",
-   "Cross section is the maximum YZ grid section; it is not scan-normal for rotated scans.",
+   "Cross section is the largest scan-normal slab of liquidus cells at the peak-volume step (slab one projected cell wide, cell volume over slab thickness); within about 6 % of pi/4*W*D on a fine grid, coarse-grid voxel scatter remains.",
    "R = -dT/dt / |grad T| at linearly reconstructed cooling liquidus crossings; gradient vectors are interpolated in time. G, R, G\u00d7R are separately event-averaged; G <= 1e-6 K/m is excluded.",
    "Ma and laser-travel Pe are screening numbers, not resolved velocities.",
    "Thermal history is input for subsequent mechanics; no residual stress, distortion or cracking prediction."
@@ -676,7 +676,7 @@
   "highFidelityFallbackWithOpenfoam.key.effectiveMode": "screening",
   "highFidelityFallbackWithOpenfoam.key.fallbackReason": "OpenFOAM is installed but a qualified free-surface LPBF solver is not registered.",
   "highFidelityFallbackWithOpenfoam.key.geometricDefectScreen": {
-   "modelId": "elliptic-overlap-screening-v1",
+   "modelId": "elliptic-overlap-screening-v2",
    "scope": "single-track-cross-section",
    "status": "geometry-screened",
    "limitations": [
@@ -905,7 +905,7 @@
    "Analytical screening has no resolved transient heat source or time integration.",
    "Transient layer activation uses whole cells selected by their centers; source surface clipping does not implement cut-cell mass or conduction. Inspect numerical resolution diagnostics when available.",
    "Geometry is the molten-domain extent at the earliest maximum volume over accepted timesteps; playback is sparse and multi-track pools may be disconnected. Sampling loss does not bound timestep or mesh error.",
-   "Cross section is the maximum YZ grid section; it is not scan-normal for rotated scans.",
+   "Cross section is the largest scan-normal slab of liquidus cells at the peak-volume step (slab one projected cell wide, cell volume over slab thickness); within about 6 % of pi/4*W*D on a fine grid, coarse-grid voxel scatter remains.",
    "R = -dT/dt / |grad T| at linearly reconstructed cooling liquidus crossings; gradient vectors are interpolated in time. G, R, G\u00d7R are separately event-averaged; G <= 1e-6 K/m is excluded.",
    "Ma and laser-travel Pe are screening numbers, not resolved velocities.",
    "Thermal history is input for subsequent mechanics; no residual stress, distortion or cracking prediction."
@@ -945,7 +945,7 @@
   "screening.key.effectiveMode": "screening",
   "screening.key.fallbackReason": null,
   "screening.key.geometricDefectScreen": {
-   "modelId": "elliptic-overlap-screening-v1",
+   "modelId": "elliptic-overlap-screening-v2",
    "scope": "single-track-cross-section",
    "status": "geometry-screened",
    "limitations": [
@@ -1174,7 +1174,7 @@
    "Analytical screening has no resolved transient heat source or time integration.",
    "Transient layer activation uses whole cells selected by their centers; source surface clipping does not implement cut-cell mass or conduction. Inspect numerical resolution diagnostics when available.",
    "Geometry is the molten-domain extent at the earliest maximum volume over accepted timesteps; playback is sparse and multi-track pools may be disconnected. Sampling loss does not bound timestep or mesh error.",
-   "Cross section is the maximum YZ grid section; it is not scan-normal for rotated scans.",
+   "Cross section is the largest scan-normal slab of liquidus cells at the peak-volume step (slab one projected cell wide, cell volume over slab thickness); within about 6 % of pi/4*W*D on a fine grid, coarse-grid voxel scatter remains.",
    "R = -dT/dt / |grad T| at linearly reconstructed cooling liquidus crossings; gradient vectors are interpolated in time. G, R, G\u00d7R are separately event-averaged; G <= 1e-6 K/m is excluded.",
    "Ma and laser-travel Pe are screening numbers, not resolved velocities.",
    "Thermal history is input for subsequent mechanics; no residual stress, distortion or cracking prediction."
@@ -1214,7 +1214,7 @@
   "screeningTi64.key.effectiveMode": "screening",
   "screeningTi64.key.fallbackReason": null,
   "screeningTi64.key.geometricDefectScreen": {
-   "modelId": "elliptic-overlap-screening-v1",
+   "modelId": "elliptic-overlap-screening-v2",
    "scope": "single-track-cross-section",
    "status": "geometry-screened",
    "limitations": [

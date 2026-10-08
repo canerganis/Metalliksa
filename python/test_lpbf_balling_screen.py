@@ -1,7 +1,7 @@
 """Balling / track-instability screen (lpbf_defect_diagnostics.balling_screen).
 
 The screen replaced the frozen steady-Rosenthal L/W > 3.8 flag on top of Wave B (f3ba9896): Eagar-Tsai
-liquidus L/W, Moderate > pi*sqrt(3/2) (Gusarov & Smurov 2010 / Yadroitsev et al. 2010, advisory),
+liquidus L/W, Moderate > pi*sqrt(3/2) (Yadroitsev et al. 2010 Eq. 13 bound, Gusarov et al. 2007 mechanism, advisory),
 High > 5.5 (empirical, Hofmann 316L, in-sample, risky). These tests are self-contained: the calibration
 counts are recomputed from the committed Wave B dataset comparison record.
 """
@@ -30,8 +30,21 @@ def _run(material, P, v, d, preheat=80.0, heat_source=None):
 
 
 class ScreenFunction(unittest.TestCase):
+    def test_exported_provenance_drops_unverified_2010_citation(self):
+        # The Gusarov & Smurov 2010 paper was never read; no exported provenance title may credit it.
+        screen = balling_screen(500.0, 100.0, 40.0, "computed")
+        result = defect_diagnostics(100.0, 150.0, 1000.0, 50.0, 20.0, balling=screen)
+        titles = [entry["title"] for entry in result["provenance"]]
+        self.assertTrue(any("Yadroitsev et al. (2010) Eq. 13" in t and "Gusarov et al. (2007)" in t for t in titles), titles)
+        self.assertFalse(any("Gusarov & Smurov" in t for t in titles), titles)
+
     def test_thresholds(self):
         self.assertAlmostEqual(BALLING_LW_MODERATE, 3.8476, places=4)  # pi*sqrt(3/2)
+        s = balling_screen(500.0, 100.0, 40.0, "computed")
+        self.assertEqual(s["moderateThreshold"], 3.848)
+        self.assertEqual(s["highThreshold"], 5.5)
+        self.assertIn("Yadroitsev et al. 2010", s["basis"])
+        self.assertIn("Gusarov et al. 2007", s["basis"])
         self.assertEqual(BALLING_LW_HIGH, 5.5)
 
     def test_bands_and_boundaries(self):

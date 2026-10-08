@@ -291,9 +291,10 @@ BALLING_SCREEN_NOTE = (
     "not a demonstrated balling prediction for other alloys; reported as risky, never do-not-print"
 )
 BALLING_LITERATURE_NOTE = (
-    "pi*sqrt(3/2) segmented-cylinder bound, derived in Gusarov, Yadroitsev, Bertrand & Smurov 2007 "
-    "(Appl. Surf. Sci. 254:975, doi 10.1016/j.apsusc.2007.08.074) and cited via Gusarov & Smurov 2010 (doi 10.1016/j.phpro.2010.08.065) and "
-    "Yadroitsev et al. 2010 (doi 10.1016/j.jmatprotec.2010.05.010)"
+    "pi*sqrt(3/2) segmental-cylinder bound of Yadroitsev et al. 2010 (J. Mater. Process. Technol. 210:1624, "
+    "doi 10.1016/j.jmatprotec.2010.05.010, Eq. 13; D is the cylinder diameter, applied here to the model pool L/W); "
+    "mechanism Gusarov, Yadroitsev, Bertrand & Smurov 2007 (Appl. Surf. Sci. 254:975, "
+    "doi 10.1016/j.apsusc.2007.08.074: Plateau-Rayleigh break-up when the track length exceeds its circumference)"
 )
 # The High/Moderate thresholds were calibrated on flat-plate-absorptivity Eagar-Tsai geometry; the
 # Eagar-Tsai L/W scales roughly as sqrt(A), so another absorption model is disclosed, never re-banded.
@@ -535,8 +536,8 @@ def compose_verdict(thermal, alloy_id, extras=None):
             5.5,
             "1",
             "Eagar–Tsai liquidus L/W (beam-size aware, whatever kernel the job uses for W/D): High (> 5.5, "
-            "empirical, Hofmann 316L, in-sample) → warn (risky); Moderate (> 3.85 = π√(3/2), Gusarov & Smurov "
-            "2010 / Yadroitsev et al. 2010) → advisory, no verdict effect; Eagar–Tsai extent not computed → "
+            "empirical, Hofmann 316L, in-sample) → warn (risky); Moderate (> 3.85 = π√(3/2), Yadroitsev et al. "
+            "2010 Eq. 13 / Gusarov et al. 2007 mechanism) → advisory, no verdict effect; Eagar–Tsai extent not computed → "
             "unavailable. Aspect-ratio screen, not a demonstrated balling prediction.",
         ),
         _gate(

@@ -94,7 +94,8 @@ class ComposeVerdictTier1(unittest.TestCase):
         self.assertEqual(out["riskGates"], [])
         (adv,) = out["advisories"]
         self.assertTrue(adv.startswith("Advisory: balling screen Moderate"), adv)
-        self.assertIn("Gusarov & Smurov 2010", adv)
+        self.assertIn("Gusarov, Yadroitsev, Bertrand & Smurov 2007", adv)
+        self.assertNotIn("Gusarov & Smurov 2010", adv)
         self.assertIn("10.1016/j.apsusc.2007.08.074", adv)
         self.assertIn("Yadroitsev et al. 2010", adv)
         self.assertIn("42/130", adv)

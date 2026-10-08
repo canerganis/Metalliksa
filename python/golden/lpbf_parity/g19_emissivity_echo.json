@@ -4,9 +4,9 @@
  "group": "G19",
  "description": "Registry emissivity literal 0.35 echoed into p/m per alloy; overrides; 0.36 override rejected",
  "slow": false,
- "recordedImplementationHash": "cda80143d28baf8dd39512065a8ce3683f4c97f46b20d53052b63b4cd34a41d2",
+ "recordedImplementationHash": "ec7e1f7a6606e937e448fefe97549b49a7ddfe7b95376b93867ae007b0c12555",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "dd77476713b324e87bdc941eb400a6774117cd5d",
+ "recordedGitHead": "26db2aceb68ace5e1fc537bfe14782a2eb83a35f",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,8 +68,8 @@
   }
  },
  "recordedRuns_s": [
-  4.0,
-  4.1
+  5.1,
+  5.0
  ],
  "recordedTwice": true,
  "observations": {
@@ -261,8 +261,8 @@
   "validate.override.True.emissivity": {
    "error": "ValueError: emissivity must be in [0,1]"
   },
-  "implicit.canonicalSha256": "24b338eefa739356734072609a2ebf8fe02319df1e2fd643e8814b07888c8418",
-  "implicit.orderedTypedSha256": "26cac510da4b3075a91c7f182a5316271c4547fcbbd1c4c21e747175b62b4a7e",
+  "implicit.canonicalSha256": "4987028a4502358cb6352cf52da18cf21c5363a727b546dad1c8b949ac0e2572",
+  "implicit.orderedTypedSha256": "d28d863d729d66e548a374077acbaeff7e684bf59df284bbb100a9eb2ba3e43c",
   "implicit.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -316,7 +316,7 @@
   "implicit.key.label": "d43a69c11a67ead8bace06f3a1f6bbb75cc7abdeb2cabb5667c11525cadc7ea5",
   "implicit.key.provenance": "0a8c7b838e9937a93e1609afa11e31e5d9e536310738e70d5b562fb3cb0599c7",
   "implicit.key.analyticalComparison": "35c805ae430aea78de9bba5a2d0b59f2710f5342c8b27fc9266014e1dd7953ed",
-  "implicit.key.assumptions": "d101249a14bc0c95dd6e3fe9fde8cac276ae237ddee197259537c46c796b69eb",
+  "implicit.key.assumptions": "5f79bae5f08d4c592445b07af436541a91841e2f8a9212688f95cef3d3e1a104",
   "implicit.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "implicit.key.metrics": "1110333dbb63b5bacc73cb8069a0232df03c4f645bb75533cd62f9db2ee458ca",
   "implicit.key.thermalHistory": "72c8adf371a23c9b38b8aff50b95b6c8cec3957034f1ea78611837623233f4bf",
@@ -332,7 +332,7 @@
   "implicit.key.scanPath": "dc3e33ed474765b3e39a505f1c66a57f2edc24dbbce56e8bf39fb3727e217e9c",
   "implicit.key.massBalance": "df3c166301bce35854b1ccfba15685bf5cbc80d6d86aacf68637b79fae432c0f",
   "implicit.key.phaseAudit": "64868d555225409644e807f2d1d94a70b9db7703e09371c0950605efbf151d7d",
-  "implicit.key.geometricDefectScreen": "4e362a5de7ceb94d7d4819592a85991363867cf804bcb42ba5a087a48de69463",
+  "implicit.key.geometricDefectScreen": "3c067b5aed33419e60f9205aca799cf15e14245b02380ae36bca2af012293b66",
   "implicit.key.regime": "8402f9dee3219d19f615e013b48c1880ccf31bc2e1badfb4e04de65d76e2547e",
   "implicit.key.mainRisk": "3e47a880ef2d2d03259ff6adc09f4e6ae9ec408f168c8327752846fb584d73fd",
   "implicit.key.recommendation": "f8d6898175c7acb736377dc94259b1a1e55e937d669cfe302362297e1ad64bde",
@@ -390,7 +390,7 @@
    "Gaussian penetration equals layer thickness, independent of mesh. Cell-integrated source uses two time quadrature nodes; thermal evolution remains first-order Euler. Absorbed power normalized over represented domain.",
    "Transient layer activation uses whole cells selected by their centers; source surface clipping does not implement cut-cell mass or conduction. Inspect numerical resolution diagnostics when available.",
    "Geometry is the molten-domain extent at the earliest maximum volume over accepted timesteps; playback is sparse and multi-track pools may be disconnected. Sampling loss does not bound timestep or mesh error.",
-   "Cross section is the maximum YZ grid section; it is not scan-normal for rotated scans.",
+   "Cross section is the largest scan-normal slab of liquidus cells at the peak-volume step (slab one projected cell wide, cell volume over slab thickness); within about 6 % of pi/4*W*D on a fine grid, coarse-grid voxel scatter remains.",
    "R = -dT/dt / |grad T| at linearly reconstructed cooling liquidus crossings; gradient vectors are interpolated in time. G, R, G\u00d7R are separately event-averaged; G <= 1e-6 K/m is excluded.",
    "Ma and laser-travel Pe are screening numbers, not resolved velocities.",
    "Thermal history is input for subsequent mechanics; no residual stress, distortion or cracking prediction."
@@ -463,7 +463,7 @@
   },
   "implicit.key.fieldSeries": null,
   "implicit.key.geometricDefectScreen": {
-   "modelId": "elliptic-overlap-screening-v1",
+   "modelId": "elliptic-overlap-screening-v2",
    "scope": "single-track-cross-section",
    "status": "geometry-screened",
    "limitations": [

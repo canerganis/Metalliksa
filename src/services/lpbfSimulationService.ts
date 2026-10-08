@@ -345,7 +345,7 @@ export function parseSimulationJob(value: unknown): SimulationJob {
     if (r.geometricDefectScreen !== undefined && !barePlateNull(r, r.geometricDefectScreen)) {
       const d = r.geometricDefectScreen;
       const loss = object(d) ? d.lackOfFusion : undefined;
-      if (!object(d) || d.modelId !== "elliptic-overlap-screening-v1" || typeof d.scope !== "string" || typeof d.status !== "string"
+      if (!object(d) || !["elliptic-overlap-screening-v1", "elliptic-overlap-screening-v2"].includes(d.modelId as string) || typeof d.scope !== "string" || typeof d.status !== "string"
         || !Array.isArray(d.limitations) || !d.limitations.every(v => typeof v === "string") || !object(loss)
         || typeof loss.status !== "string" || !(loss.reason === null || typeof loss.reason === "string")
         || !(loss.riskScreened === null || typeof loss.riskScreened === "boolean")

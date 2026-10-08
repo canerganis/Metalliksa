@@ -4,9 +4,9 @@
  "group": "G3",
  "description": "Two-track meander and unidirectional powder runs",
  "slow": false,
- "recordedImplementationHash": "cda80143d28baf8dd39512065a8ce3683f4c97f46b20d53052b63b4cd34a41d2",
+ "recordedImplementationHash": "ec7e1f7a6606e937e448fefe97549b49a7ddfe7b95376b93867ae007b0c12555",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "dd77476713b324e87bdc941eb400a6774117cd5d",
+ "recordedGitHead": "26db2aceb68ace5e1fc537bfe14782a2eb83a35f",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  3.2,
-  3.2
+  4.2,
+  4.2
  ],
  "recordedTwice": true,
  "observations": {
-  "meander.canonicalSha256": "34e51da80c62cc3af65e2ab6ad2f68c5bda870ecb350bc50229e2bf17534570e",
-  "meander.orderedTypedSha256": "2e336567f9d8c1faa7f620e2816ab1db6605562a0a5443bf038e43be92c9e412",
+  "meander.canonicalSha256": "d87ad198d824f3e227af1f9140b45ca4d20d9cfd4287b3a4a135b8ab5c666df0",
+  "meander.orderedTypedSha256": "9376ad2e7b88d650287fdd408b0c090c4ebb275cfe9741a12fdbcc8b4923157f",
   "meander.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -128,7 +128,7 @@
   "meander.key.label": "d43a69c11a67ead8bace06f3a1f6bbb75cc7abdeb2cabb5667c11525cadc7ea5",
   "meander.key.provenance": "5a90b4427c93423311a18d749c2a6e711c1e4d653677659fa3df11311b18f2e4",
   "meander.key.analyticalComparison": "35c805ae430aea78de9bba5a2d0b59f2710f5342c8b27fc9266014e1dd7953ed",
-  "meander.key.assumptions": "d101249a14bc0c95dd6e3fe9fde8cac276ae237ddee197259537c46c796b69eb",
+  "meander.key.assumptions": "5f79bae5f08d4c592445b07af436541a91841e2f8a9212688f95cef3d3e1a104",
   "meander.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "meander.key.metrics": "c2fe6c15c08c6ecae4189ba4224ab2ccb6220b332cfda27e241b4e30ae0a6fba",
   "meander.key.thermalHistory": "8445b5fbed1d5f1889200c0999a6912e7d85ec5659c98112b41cd5912ec20c7e",
@@ -144,7 +144,7 @@
   "meander.key.scanPath": "b99047db5feea8b5829dd7429c85c6af246b69ba5e3bfa8473ee4cca95af99b5",
   "meander.key.massBalance": "877146d10eae646043cad817a11fc948269375431594355f0cfdb5d2ecea18f0",
   "meander.key.phaseAudit": "42008fe45abc3af5313dd766733e2adcc458ec6af8fc1662d27e1653ec3faf8e",
-  "meander.key.geometricDefectScreen": "9a513b4f8abcd5c5ea3f45e4427109d294524f6aa1628f5eca1c0e891537700a",
+  "meander.key.geometricDefectScreen": "05b975d98e509e5280774b3e7884f6cfe86cad4199a879240e596e8092908dd3",
   "meander.key.regime": "95fd0c8a1259227d532f335c7a2397c54eefbc3fff887e5b389729a74dbbbb89",
   "meander.key.mainRisk": "779fe3f4c9028ac87f56ff337b6205b3d7475f9d7db1e3878dd57dcb03aa4f24",
   "meander.key.recommendation": "6e15ced91807ac3813bff511a08abc595b88e7563cbe8a01dd6b98852a2ba46a",
@@ -164,8 +164,8 @@
   "meander.label": "Unvalidated transient thermal",
   "meander.confidence": "low",
   "meander.implementationHashOccurrencesAfterStrip": 0,
-  "unidirectional.canonicalSha256": "294c047cfb81de1fe160febcf03c1bdecfd0becf745d5ad09c32ea12d53e6e18",
-  "unidirectional.orderedTypedSha256": "c407ab835f0e4c53d0afbe9c7068759742d5a6beb7fc4b6ee63a6a317cbcf5a1",
+  "unidirectional.canonicalSha256": "6377565f7965143c83b861fd7f158483a2482ca20974613901d823de663a1a6d",
+  "unidirectional.orderedTypedSha256": "e62db7960a6eb43571d7329a3650d0f4028e2162ba800770479008e327335231",
   "unidirectional.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -219,7 +219,7 @@
   "unidirectional.key.label": "d43a69c11a67ead8bace06f3a1f6bbb75cc7abdeb2cabb5667c11525cadc7ea5",
   "unidirectional.key.provenance": "275537bd365979b3cdd3f4f1801f42a7aa340f6377bf3a99de30435face9e087",
   "unidirectional.key.analyticalComparison": "35c805ae430aea78de9bba5a2d0b59f2710f5342c8b27fc9266014e1dd7953ed",
-  "unidirectional.key.assumptions": "d101249a14bc0c95dd6e3fe9fde8cac276ae237ddee197259537c46c796b69eb",
+  "unidirectional.key.assumptions": "5f79bae5f08d4c592445b07af436541a91841e2f8a9212688f95cef3d3e1a104",
   "unidirectional.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "unidirectional.key.metrics": "2c05af8a920d45665af64bdf5e7fb29f2d5a8c7fa865d0ca035e3c2c0b7f6fb4",
   "unidirectional.key.thermalHistory": "d326438e9597240cbd22bf6094ec04d38257e28de7b6ae312a5855f3522eaf84",
@@ -235,7 +235,7 @@
   "unidirectional.key.scanPath": "e6dc4c6ff5fd67a363b39180eb031b1ff7c4444db7573f52613fd06226be0d3c",
   "unidirectional.key.massBalance": "877146d10eae646043cad817a11fc948269375431594355f0cfdb5d2ecea18f0",
   "unidirectional.key.phaseAudit": "600c849f209fbbf22c97e686ba4be179eb0f4bd4687276fdbdcad718a5f6a28e",
-  "unidirectional.key.geometricDefectScreen": "9a513b4f8abcd5c5ea3f45e4427109d294524f6aa1628f5eca1c0e891537700a",
+  "unidirectional.key.geometricDefectScreen": "05b975d98e509e5280774b3e7884f6cfe86cad4199a879240e596e8092908dd3",
   "unidirectional.key.regime": "95fd0c8a1259227d532f335c7a2397c54eefbc3fff887e5b389729a74dbbbb89",
   "unidirectional.key.mainRisk": "779fe3f4c9028ac87f56ff337b6205b3d7475f9d7db1e3878dd57dcb03aa4f24",
   "unidirectional.key.recommendation": "6e15ced91807ac3813bff511a08abc595b88e7563cbe8a01dd6b98852a2ba46a",
@@ -289,7 +289,7 @@
    "Gaussian penetration equals layer thickness, independent of mesh. Cell-integrated source uses two time quadrature nodes; thermal evolution remains first-order Euler. Absorbed power normalized over represented domain.",
    "Transient layer activation uses whole cells selected by their centers; source surface clipping does not implement cut-cell mass or conduction. Inspect numerical resolution diagnostics when available.",
    "Geometry is the molten-domain extent at the earliest maximum volume over accepted timesteps; playback is sparse and multi-track pools may be disconnected. Sampling loss does not bound timestep or mesh error.",
-   "Cross section is the maximum YZ grid section; it is not scan-normal for rotated scans.",
+   "Cross section is the largest scan-normal slab of liquidus cells at the peak-volume step (slab one projected cell wide, cell volume over slab thickness); within about 6 % of pi/4*W*D on a fine grid, coarse-grid voxel scatter remains.",
    "R = -dT/dt / |grad T| at linearly reconstructed cooling liquidus crossings; gradient vectors are interpolated in time. G, R, G\u00d7R are separately event-averaged; G <= 1e-6 K/m is excluded.",
    "Ma and laser-travel Pe are screening numbers, not resolved velocities.",
    "Thermal history is input for subsequent mechanics; no residual stress, distortion or cracking prediction."
@@ -366,7 +366,7 @@
   },
   "meander.key.fieldSeries": null,
   "meander.key.geometricDefectScreen": {
-   "modelId": "elliptic-overlap-screening-v1",
+   "modelId": "elliptic-overlap-screening-v2",
    "scope": "aggregate-multi-track",
    "status": "unresolved",
    "limitations": [
@@ -709,7 +709,7 @@
    "Gaussian penetration equals layer thickness, independent of mesh. Cell-integrated source uses two time quadrature nodes; thermal evolution remains first-order Euler. Absorbed power normalized over represented domain.",
    "Transient layer activation uses whole cells selected by their centers; source surface clipping does not implement cut-cell mass or conduction. Inspect numerical resolution diagnostics when available.",
    "Geometry is the molten-domain extent at the earliest maximum volume over accepted timesteps; playback is sparse and multi-track pools may be disconnected. Sampling loss does not bound timestep or mesh error.",
-   "Cross section is the maximum YZ grid section; it is not scan-normal for rotated scans.",
+   "Cross section is the largest scan-normal slab of liquidus cells at the peak-volume step (slab one projected cell wide, cell volume over slab thickness); within about 6 % of pi/4*W*D on a fine grid, coarse-grid voxel scatter remains.",
    "R = -dT/dt / |grad T| at linearly reconstructed cooling liquidus crossings; gradient vectors are interpolated in time. G, R, G\u00d7R are separately event-averaged; G <= 1e-6 K/m is excluded.",
    "Ma and laser-travel Pe are screening numbers, not resolved velocities.",
    "Thermal history is input for subsequent mechanics; no residual stress, distortion or cracking prediction."
@@ -786,7 +786,7 @@
   },
   "unidirectional.key.fieldSeries": null,
   "unidirectional.key.geometricDefectScreen": {
-   "modelId": "elliptic-overlap-screening-v1",
+   "modelId": "elliptic-overlap-screening-v2",
    "scope": "aggregate-multi-track",
    "status": "unresolved",
    "limitations": [

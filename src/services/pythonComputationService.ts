@@ -1958,7 +1958,7 @@ export interface PythonLPBFResult {
 }
 
 /** python/lpbf_defect_diagnostics.balling_screen: Eagar–Tsai liquidus L/W; High > 5.5 (empirical, Hofmann 316L,
- *  risky), Moderate > 3.85 (Gusarov & Smurov / Yadroitsev bound, advisory), null band = extent not computed. */
+ *  risky), Moderate > 3.85 (Yadroitsev 2010 Eq. 13 / Gusarov 2007 mechanism, advisory), null band = extent not computed. */
 export interface PythonLpbfBallingScreen {
   modelId: string;
   kernel: string;

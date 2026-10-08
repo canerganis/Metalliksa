@@ -4,9 +4,9 @@
  "group": "G3",
  "description": "Two-track two-layer stripe powder run with dwell, scan angle and layer rotation",
  "slow": false,
- "recordedImplementationHash": "cda80143d28baf8dd39512065a8ce3683f4c97f46b20d53052b63b4cd34a41d2",
+ "recordedImplementationHash": "ec7e1f7a6606e937e448fefe97549b49a7ddfe7b95376b93867ae007b0c12555",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "dd77476713b324e87bdc941eb400a6774117cd5d",
+ "recordedGitHead": "26db2aceb68ace5e1fc537bfe14782a2eb83a35f",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  2.2,
-  2.2
+  3.0,
+  2.6
  ],
  "recordedTwice": true,
  "observations": {
-  "result.canonicalSha256": "69a39d79ec4644ce2aa03931634f69042306c5e6de9de26b8ffae8cf9b767d7b",
-  "result.orderedTypedSha256": "ae18c3a9aa97d909ae4c86b61f0fcde19fd637db20b3855b8e12ed89a482324c",
+  "result.canonicalSha256": "4dc8eaedfae455fb4feb185d0506c7f654d5b8085e9ba095453e646ce0e586ce",
+  "result.orderedTypedSha256": "c82cb3d669674e3acedf7440f0579b4b6dc42540837ba9fa7622b247a803662f",
   "result.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -131,9 +131,9 @@
   "result.key.label": "d43a69c11a67ead8bace06f3a1f6bbb75cc7abdeb2cabb5667c11525cadc7ea5",
   "result.key.provenance": "d266e1d4a0782f15d40b8109705c31fa320f167b6997b805be5cb903f9c3b5bc",
   "result.key.analyticalComparison": "35c805ae430aea78de9bba5a2d0b59f2710f5342c8b27fc9266014e1dd7953ed",
-  "result.key.assumptions": "d101249a14bc0c95dd6e3fe9fde8cac276ae237ddee197259537c46c796b69eb",
+  "result.key.assumptions": "5f79bae5f08d4c592445b07af436541a91841e2f8a9212688f95cef3d3e1a104",
   "result.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
-  "result.key.metrics": "7a35119b83bb22d639afe25e90acac35353eea90da6056d2d3d76d110ea4c638",
+  "result.key.metrics": "6b92cebf735e0bfda7aa14cc0c8fcdc5af7d30683b21a53a0f245f03a3e0d44c",
   "result.key.thermalHistory": "808d6fe41f40fc86352ac928737fe3b69027b0f6029c7a7faad6f468482c2bcd",
   "result.key.fieldSeries": "7e5d844a6929e466a78a570e89bba38f7aca29004a88e1b5afc69fa25fa7c8e3",
   "result.key.peakInterpolatedMeltPool": "6ab7590317701a3eb5c3509bdf327a4e7b8f85aff0ce36b93324dd04918a51c5",
@@ -147,7 +147,7 @@
   "result.key.scanPath": "98271a8f17b45298d9550816309c3be3d80e666373d60beea4d6b34b159c1fae",
   "result.key.massBalance": "9dd164c10bbe077391a35fa8bd941a88ecee35b4f4e80b716378cc197fd7bab1",
   "result.key.phaseAudit": "39a2bf7318ad0828e59c2087d66fce7f834ba90de0b981fe91ec2fb832af76ce",
-  "result.key.geometricDefectScreen": "9a513b4f8abcd5c5ea3f45e4427109d294524f6aa1628f5eca1c0e891537700a",
+  "result.key.geometricDefectScreen": "05b975d98e509e5280774b3e7884f6cfe86cad4199a879240e596e8092908dd3",
   "result.key.regime": "95fd0c8a1259227d532f335c7a2397c54eefbc3fff887e5b389729a74dbbbb89",
   "result.key.mainRisk": "779fe3f4c9028ac87f56ff337b6205b3d7475f9d7db1e3878dd57dcb03aa4f24",
   "result.key.recommendation": "6e15ced91807ac3813bff511a08abc595b88e7563cbe8a01dd6b98852a2ba46a",
@@ -621,7 +621,7 @@
    "Gaussian penetration equals layer thickness, independent of mesh. Cell-integrated source uses two time quadrature nodes; thermal evolution remains first-order Euler. Absorbed power normalized over represented domain.",
    "Transient layer activation uses whole cells selected by their centers; source surface clipping does not implement cut-cell mass or conduction. Inspect numerical resolution diagnostics when available.",
    "Geometry is the molten-domain extent at the earliest maximum volume over accepted timesteps; playback is sparse and multi-track pools may be disconnected. Sampling loss does not bound timestep or mesh error.",
-   "Cross section is the maximum YZ grid section; it is not scan-normal for rotated scans.",
+   "Cross section is the largest scan-normal slab of liquidus cells at the peak-volume step (slab one projected cell wide, cell volume over slab thickness); within about 6 % of pi/4*W*D on a fine grid, coarse-grid voxel scatter remains.",
    "R = -dT/dt / |grad T| at linearly reconstructed cooling liquidus crossings; gradient vectors are interpolated in time. G, R, G\u00d7R are separately event-averaged; G <= 1e-6 K/m is excluded.",
    "Ma and laser-travel Pe are screening numbers, not resolved velocities.",
    "Thermal history is input for subsequent mechanics; no residual stress, distortion or cracking prediction."
@@ -703,7 +703,7 @@
   ],
   "result.key.fieldSeries": "field-series.json",
   "result.key.geometricDefectScreen": {
-   "modelId": "elliptic-overlap-screening-v1",
+   "modelId": "elliptic-overlap-screening-v2",
    "scope": "aggregate-multi-track",
    "status": "unresolved",
    "limitations": [
@@ -810,7 +810,7 @@
    "width_um": 86.56827569141483,
    "depth_um": 40.0,
    "volume_um3": 383999.9999999999,
-   "crossSectionArea_um2": 6399.999999999998,
+   "crossSectionArea_um2": 2698.0101440071016,
    "peakTemperature_K": 2344.81115327468,
    "thermalGradient_K_m": 17831618.018218637,
    "solidificationRate_m_s": 0.10011500144783825,
