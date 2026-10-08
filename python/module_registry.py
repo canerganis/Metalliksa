@@ -379,60 +379,6 @@ _WORKER_SOURCES = (
 )
 
 
-# murakami-fatigue: keys and defaults of _rpc_fatigue_fracture in python/lpbf_worker_rpc.py.
-_FATIGUE_FIELDS = (
-    _choice("alloyName", "Alloy", "alloy", ("Ti-6Al-4V", "316L SS", "Inconel 718", "AlSi10Mg"), "Ti-6Al-4V",
-            note="The authority resolves the name through alloy_registry (fatigue_fracture domain) and rejects an "
-                 "unknown name with input_validation UNKNOWN_ALLOY (HTTP 422); the contract lists the four table "
-                 "names the view offers."),
-    _num("sqrtArea_um", "Defect size (sqrt area)", _MICRO, "length", 45.0,
-         note="Converted with float(); the authority requires a finite value > 0 and rejects anything else with "
-              "input_validation NON_POSITIVE (HTTP 422)."),
-    _choice("location", "Defect location", "defect-location", ("surface", "sub-surface", "internal"), "internal",
-            note="The authority (murakami_constants.classify_location) accepts surface, sub-surface/subsurface and "
-                 "internal/interior, case-insensitive, and rejects any other text with OUT_OF_RANGE (HTTP 422); the "
-                 "contract accepts the view's three values."),
-    _num("stressRatio_R", "Stress ratio R", "1", "stress-ratio", -1.0,
-         note="Converted with float(); the authority requires a finite R < 1 and rejects R >= 1 with OUT_OF_RANGE "
-              "(HTTP 422). The fatigue-limit correction still caps 0.99 < R < 1 at 0.99."),
-    _num("stressAmplitude_MPa", "Cyclic stress amplitude", "MPa", "stress", 220.0,
-         note="Converted with float(); the authority requires a finite value > 0 (NON_POSITIVE, HTTP 422)."),
-)
-
-
-def _fatigue_contract(row: Dict[str, str]) -> ModuleContract:
-    operation = _worker_contract_op(
-        "fatigue-fracture", _FATIGUE_FIELDS,
-        OutputSchema(fields=("fatigue_limit", "kitagawa_takahashi_curve", "paris_crack_growth"), status_key=None),
-        undeclared=("type",))
-    return _wave2(
-        row, operation,
-        evidence_note=(
-            "Emits no evidence status: the output has no status key (paris_crack_growth.status is the integration "
-            "outcome 'non_propagating', 'fractured' or 'runout', not an evidence status). Murakami, El-Haddad and "
-            "Paris expressions with per-alloy constants from alloy_registry (fatigue_fracture domain); no oracle "
-            "compares the result with an independent reference. " + _PENDING_CAP),
-        notes=(
-            "The handler reads 'type' (default 'full') and never uses it; it is recorded as undeclaredInput.",
-            "No validity domain is declared: no source-backed applicability range is established for the "
-            "defect sizes or stress ratios.",
-            "UNKNOWN_ALLOY and the input rejections noted on the fields reach the route as HTTP 422 through "
-            "LpbfWorkerValidationError (routes/lpbfSimulation.ts workerError).",
-        ),
-        sources=_WORKER_SOURCES + (
-            "python/lpbf_worker_rpc.py::_rpc_fatigue_fracture",
-            "python/lpbf_fatigue_fracture.py::fatigue_constants",
-            "python/lpbf_fatigue_fracture.py::MurakamiFatigueEngine.calculate_fatigue_limit",
-            "python/lpbf_fatigue_fracture.py::MurakamiFatigueEngine.simulate_paris_crack_growth",
-            "python/alloy_data_kinetics_uq_fatigue.py::FATIGUE_LEGACY_NAMES",
-            "routes/lpbfSimulation.ts:30#/api/python/lpbf-fatigue-fracture",
-            "routes/lpbfSimulation.ts::workerError",
-            "src/components/MurakamiFatigueLab.tsx::MurakamiFatigueLab",
-            "src/services/pythonComputationService.ts::computeMurakamiFatigue",
-            "docs/MODULE_EVIDENCE_INVENTORY.md:32#`murakami-fatigue` /",
-        ))
-
-
 # micrograph (micrograph rework): keys, defaults and bounds are those of python/micrograph_measure.py
 # read_request (literal defaults) and the _int/_finite checks in measure(); the authority rejects
 # values outside the declared ranges with MeasureInputError (HTTP 400 through the worker route).
@@ -580,8 +526,6 @@ CONTRACTED_BUILDERS = {
     "lpbf-dataset-comparison": build_dataset_view_contract,
     "lpbf-calibration-scorecard": build_calibration_scorecard_contract,
     "keyhole-raytracing": _keyhole_contract,
-    # Phase 7 wave 2
-    "murakami-fatigue": _fatigue_contract,
     # Micrograph rework (python/micrograph_measure.py authority)
     "micrograph": _micrograph_contract,
 }

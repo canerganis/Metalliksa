@@ -97,7 +97,6 @@ jobs:
           test_module_contract_research
           test_module_contract_experimental_validation
           test_contract_keyhole_raytracing
-          test_contract_murakami_fatigue
           test_contract_micrograph test_micrograph_measure test_lpbf_worker_dispatch
           test_phase6b_vector_parity
           test_tafel_physics_audit

@@ -29,14 +29,6 @@
     "label": "Melt Pool vs Measurements",
     "scope": "Research",
     "description": "Plots measured multi-track, powder-entrained melt-pool width and depth (CMU Ti-6Al-4V, 370 W) against the current workflow result; a comparison, not validation.",
-    "next": "murakami-fatigue"
-  },
-  {
-    "id": "murakami-fatigue",
-    "workspace": "lpbf",
-    "label": "Defect Fatigue & Crack Growth",
-    "scope": "Research",
-    "description": "Murakami √area fatigue limit, Kitagawa–Takahashi / El-Haddad diagram and Paris-law crack growth from an entered defect size; screening estimates from a steel-derived formula; surface roughness is not modelled; R enters only through an empirical power-law factor on the fatigue limit and the peak stress of the critical crack size, not the Paris growth rate; the per-alloy constants are internal table values without a literature source.",
     "next": "keyhole-raytracing"
   },
   {

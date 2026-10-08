@@ -20,13 +20,11 @@ test("build-job printable / risky / do-not-print verdict is labelled a screening
 });
 
 test("weakest LPBF engines are at most Research maturity and state in one plain sentence what they are not", () => {
-  for (const id of ["keyhole-raytracing", "murakami-fatigue"]) {
+  for (const id of ["keyhole-raytracing"]) {
     assert.ok(["Research", "Preview"].includes(mod(id).scope), `${id} must not exceed Research`);
   }
   assert.match(mod("keyhole-raytracing").description, /prescribed cavity, not a solved free surface; empirical absorption law is not calibrated/);
-  assert.match(mod("murakami-fatigue").description, /steel-derived formula; surface roughness is not modelled; R enters only through an empirical power-law factor/);
   assert.match(read("src/components/KeyholeRaytracingLab.tsx"), /Prescribed cavity, not a solved free surface; the absorption law is empirical and not calibrated\./);
-  assert.match(read("src/components/MurakamiFatigueLab.tsx"), /Steel-derived formula; surface roughness not modelled\./);
 });
 
 test("airgap banner does not claim an external DFT source", () => {

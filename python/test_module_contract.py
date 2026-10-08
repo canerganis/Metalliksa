@@ -17,8 +17,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 # one legacy contract per listed module. Migration may only lower this number.
 LEGACY_CEILING = 9  # Materials Database now has a source-bound local-view contract.
 # Registry (seed) order. Wave 1 pilot: keyhole-raytracing; the rest are Phase 7 wave 2.
-CONTRACTED = ("murakami-fatigue",
-              "keyhole-raytracing", "lpbf-dataset-comparison", "lpbf-calibration-scorecard", "database", "alloy-builder", "phase-diagram", "micrograph", "experimental-data", "traceability")
+CONTRACTED = ("keyhole-raytracing", "lpbf-dataset-comparison", "lpbf-calibration-scorecard", "database", "alloy-builder", "phase-diagram", "micrograph", "experimental-data", "traceability")
 
 
 def _view():
@@ -661,29 +660,6 @@ class ContractedRegistryTests(unittest.TestCase):
         keyhole = self.contracted["keyhole-raytracing"].operations[0]
         self.assertEqual((keyhole.method, keyhole.route, keyhole.authority.worker_method, keyhole.authority.timeout_ms),
                          ("POST", "/api/python/lpbf-keyhole-raytracing", "keyhole-raytracing", 20000))
-
-    def test_wave2_authorities_match_the_legacy_binding(self):
-        # Same operation id, route, authority and deadline the legacy contracts recorded (slice 1).
-        worker = ("lpbf-worker", 20000, False)
-        expected = {
-            "murakami-fatigue": ("fatigue-fracture", "/api/python/lpbf-fatigue-fracture", "fatigue-fracture") + worker,
-        }
-        for module_id, values in expected.items():
-            operation = self.contracted[module_id].operations[0]
-            a = operation.authority
-            with self.subTest(module=module_id):
-                self.assertEqual((operation.id, operation.route, a.script or a.worker_method, a.kind, a.timeout_ms,
-                                  a.warm), values)
-                self.assertEqual((operation.method, a.gpu), ("POST", "none"))
-                self.assertEqual(self.contracted[module_id].tests.oracle.status, "pending")
-                self.assertEqual(self.contracted[module_id].seed_derived, mc.SEED_TEXT_FIELDS,
-                                 "wave 2 does not rewrite identity text")
-                # The cited inventory row names the route that is actually served.
-                row_ref = [r for r in self.contracted[module_id].source_refs
-                           if r.startswith("docs/MODULE_EVIDENCE_INVENTORY.md:")][0]
-                line = int(row_ref.split(":")[1].split("#")[0])
-                inventory = (REPO_ROOT / "docs" / "MODULE_EVIDENCE_INVENTORY.md").read_text(encoding="utf-8")
-                self.assertIn(f"`{operation.route}`", inventory.splitlines()[line - 1])
 
     def test_eager_core_slice_carries_only_navigation_and_badge_data(self):
         core = mr.core_document(mr.registry_document(self.registry))

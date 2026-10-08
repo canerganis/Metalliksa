@@ -13,7 +13,6 @@ export const MODULE_VIEWS: Record<ListedModuleId, ModuleView> = {
   'lpbf-optimizer': lazy(() => import('../components/LpbfBayesianOptimizerLab').then(m => ({ default: m.LpbfBayesianOptimizerLab }))),
   'solidification-microstructure': lazy(() => import('../components/SolidificationMicrostructureLab').then(m => ({ default: m.SolidificationMicrostructureLab }))),
   'experimental-validation': lazy(() => import('../components/ExperimentalValidationLab').then(m => ({ default: m.ExperimentalValidationLab }))),
-  'murakami-fatigue': lazy(() => import('../components/MurakamiFatigueLab').then(m => ({ default: m.MurakamiFatigueLab }))),
   'keyhole-raytracing': lazy(() => import('../components/KeyholeRaytracingLab').then(m => ({ default: m.KeyholeRaytracingLab }))),
   'lpbf-dataset-comparison': lazy(() => import('../components/LpbfDatasetComparisonLab').then(m => ({ default: m.LpbfDatasetComparisonLab }))),
   'lpbf-calibration-scorecard': lazy(() => import('../components/LpbfCalibrationScorecardLab').then(m => ({ default: m.LpbfCalibrationScorecardLab }))),

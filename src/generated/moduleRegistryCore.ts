@@ -139,7 +139,7 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "lpbf",
       "label": "Melt Pool vs Measurements",
       "description": "Plots measured multi-track, powder-entrained melt-pool width and depth (CMU Ti-6Al-4V, 370 W) against the current workflow result; a comparison, not validation.",
-      "next": "murakami-fatigue",
+      "next": "keyhole-raytracing",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -148,32 +148,6 @@ export const MODULE_REGISTRY_CORE = {
         "export": "ExperimentalValidationLab"
       },
       "migrationState": "legacy",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "murakami-fatigue",
-      "version": "0.1.0",
-      "workspace": "lpbf",
-      "label": "Defect Fatigue & Crack Growth",
-      "description": "Murakami √area fatigue limit, Kitagawa–Takahashi / El-Haddad diagram and Paris-law crack growth from an entered defect size; screening estimates from a steel-derived formula; surface roughness is not modelled; R enters only through an empirical power-law factor on the fatigue limit and the peak stress of the critical crack size, not the Paris growth rate; the per-alloy constants are internal table values without a literature source.",
-      "next": "keyhole-raytracing",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/MurakamiFatigueLab.tsx",
-        "export": "MurakamiFatigueLab"
-      },
-      "migrationState": "contracted",
       "evidence": {
         "ceiling": "screening-only"
       },

@@ -2,7 +2,6 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { fatigueCriteriaDisagreement, parisLifeLabel, withRequestInputs } from "../src/components/MurakamiFatigueLab";
 import {
   attachmentDownloadHref,
   createUnresolvedDigitalTwin,
@@ -13,38 +12,6 @@ import { keyholeMeshForBeam, missedPowerWarning } from "../src/components/Keyhol
 import { DISTORTION_HEURISTIC_CONSTANTS, DISTORTION_HEURISTIC_NOTE } from "../src/utils/distortionHeuristic";
 
 const read = (path: string) => readFileSync(resolve(import.meta.dirname, "..", path), "utf8");
-
-test("murakami fatigue: no safety verdict, R handling stated, criteria disagreement flagged", () => {
-  assert.equal(parisLifeLabel({ status: "non_propagating", cycles_to_failure: 10_000_000 }), "ΔK < ΔK_th (no growth computed)");
-  assert.doesNotMatch(parisLifeLabel({ status: "non_propagating", cycles_to_failure: 10_000_000 }), /Safe/);
-  const runout = parisLifeLabel({ status: "runout", cycles_to_failure: 4_200_000 });
-  assert.match(runout, /No fracture when integration stopped at N = 4,200,000 cycles/);
-  assert.match(runout, /\(cycle limit reached\)/);
-  assert.doesNotMatch(runout, /negligible growth rate/);
-  assert.match(
-    parisLifeLabel({ status: "runout", cycles_to_failure: 4_200_000, final_crack_size_um: 812.5 }),
-    /cycle limit reached; crack size 812\.5 µm/,
-  );
-  assert.doesNotMatch(runout, /^>/);
-  assert.equal(parisLifeLabel({ status: "fractured", cycles_to_failure: 12345 }), "12,345 cycles");
-
-  const result = (limit: number, status: string, sa = 240) => withRequestInputs({
-    fatigue_limit: { fatigue_limit_corrected_MPa: limit },
-    paris_crack_growth: { status },
-  }, { stressAmplitude_MPa: sa });
-  assert.match(fatigueCriteriaDisagreement(result(200, "non_propagating")) ?? "", /Paris model predicts no growth/);
-  assert.match(fatigueCriteriaDisagreement(result(300, "fractured")) ?? "", /Paris model predicts crack growth/);
-  assert.equal(fatigueCriteriaDisagreement(result(200, "fractured")), null);
-  assert.equal(fatigueCriteriaDisagreement(result(300, "non_propagating")), null);
-  // Only the σ_a the result was computed with is used; a bare result has no comparison.
-  assert.equal(fatigueCriteriaDisagreement({ fatigue_limit: { fatigue_limit_corrected_MPa: 200 }, paris_crack_growth: { status: "non_propagating" } }), null);
-  assert.equal(fatigueCriteriaDisagreement(result(200, "non_propagating", 150)), null);
-
-  const src = read("src/components/MurakamiFatigueLab.tsx");
-  assert.doesNotMatch(src, /\(Safe\)/);
-  assert.doesNotMatch(src, /R-ratio not modelled/);
-  assert.match(src, /Unsourced constants/);
-});
 
 test("specimen records: synthetic stats scrubbed, derived chemistry cleared, downloads complete", () => {
   const base = createUnresolvedDigitalTwin();

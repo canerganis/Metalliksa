@@ -49,7 +49,6 @@ const LpbfEngineeringWorkspace = lazy(() => import("./components/LpbfEngineering
 const LpbfBayesianOptimizerLab = lazy(() => import("./components/LpbfBayesianOptimizerLab").then(m => ({ default: m.LpbfBayesianOptimizerLab })));
 const SolidificationMicrostructureLab = lazy(() => import("./components/SolidificationMicrostructureLab").then(m => ({ default: m.SolidificationMicrostructureLab })));  // Phase 8
 const ExperimentalValidationLab = lazy(() => import("./components/ExperimentalValidationLab").then(m => ({ default: m.ExperimentalValidationLab }))); // Phase 10
-const MurakamiFatigueLab = lazy(() => import("./components/MurakamiFatigueLab").then(m => ({ default: m.MurakamiFatigueLab }))); // Phase 13
 const KeyholeRaytracingLab = lazy(() => import("./components/KeyholeRaytracingLab").then(m => ({ default: m.KeyholeRaytracingLab }))); // Phase 26
 const LpbfDatasetComparisonLab = lazy(() => import("./components/LpbfDatasetComparisonLab").then(m => ({ default: m.LpbfDatasetComparisonLab })));
 const LpbfCalibrationScorecardLab = lazy(() => import("./components/LpbfCalibrationScorecardLab").then(m => ({ default: m.LpbfCalibrationScorecardLab })));
@@ -179,7 +178,6 @@ export default function App() {
       case 'lpbf-optimizer': return <LpbfBayesianOptimizerLab />;
       case 'solidification-microstructure': return <SolidificationMicrostructureLab />;  // Phase 8
       case 'experimental-validation': return <ExperimentalValidationLab />; // Phase 10
-      case 'murakami-fatigue': return <MurakamiFatigueLab />; // Phase 13
       case 'keyhole-raytracing': return <KeyholeRaytracingLab />; // Phase 26
       case 'lpbf-dataset-comparison': return <LpbfDatasetComparisonLab />;
       case 'lpbf-calibration-scorecard': return <LpbfCalibrationScorecardLab />;

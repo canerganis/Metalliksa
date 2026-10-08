@@ -547,7 +547,7 @@ export const MODULE_REGISTRY = {
       "workspace": "lpbf",
       "label": "Melt Pool vs Measurements",
       "description": "Plots measured multi-track, powder-entrained melt-pool width and depth (CMU Ti-6Al-4V, 370 W) against the current workflow result; a comparison, not validation.",
-      "next": "murakami-fatigue",
+      "next": "keyhole-raytracing",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -602,203 +602,6 @@ export const MODULE_REGISTRY = {
       "migrationState": "legacy",
       "legacyNotes": [],
       "sourceRefs": [],
-      "seedDerived": [
-        "label",
-        "description",
-        "next",
-        "maturity"
-      ]
-    },
-    {
-      "id": "murakami-fatigue",
-      "version": "0.1.0",
-      "owner": "unassigned (needs maintainer)",
-      "workspace": "lpbf",
-      "label": "Defect Fatigue & Crack Growth",
-      "description": "Murakami √area fatigue limit, Kitagawa–Takahashi / El-Haddad diagram and Paris-law crack growth from an entered defect size; screening estimates from a steel-derived formula; surface roughness is not modelled; R enters only through an empirical power-law factor on the fatigue limit and the peak stress of the critical crack size, not the Paris growth rate; the per-alloy constants are internal table values without a literature source.",
-      "next": "keyhole-raytracing",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/MurakamiFatigueLab.tsx",
-        "export": "MurakamiFatigueLab"
-      },
-      "operations": [
-        {
-          "id": "fatigue-fracture",
-          "method": "POST",
-          "route": "/api/python/lpbf-fatigue-fracture",
-          "authority": {
-            "kind": "lpbf-worker",
-            "script": null,
-            "workerMethod": "fatigue-fracture",
-            "timeoutMs": 20000,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": null
-          },
-          "input": [
-            {
-              "key": "alloyName",
-              "label": "Alloy",
-              "valueType": "enum",
-              "unit": null,
-              "displayUnits": [],
-              "quantityKind": "alloy",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": "Ti-6Al-4V",
-              "required": false,
-              "enum": [
-                "Ti-6Al-4V",
-                "316L SS",
-                "Inconel 718",
-                "AlSi10Mg"
-              ],
-              "note": "The authority resolves the name through alloy_registry (fatigue_fracture domain) and rejects an unknown name with input_validation UNKNOWN_ALLOY (HTTP 422); the contract lists the four table names the view offers.",
-              "unitSelector": null,
-              "unitOptions": {}
-            },
-            {
-              "key": "sqrtArea_um",
-              "label": "Defect size (sqrt area)",
-              "valueType": "number",
-              "unit": "µm",
-              "displayUnits": [],
-              "quantityKind": "length",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": 45.0,
-              "required": false,
-              "enum": [],
-              "note": "Converted with float(); the authority requires a finite value > 0 and rejects anything else with input_validation NON_POSITIVE (HTTP 422).",
-              "unitSelector": null,
-              "unitOptions": {}
-            },
-            {
-              "key": "location",
-              "label": "Defect location",
-              "valueType": "enum",
-              "unit": null,
-              "displayUnits": [],
-              "quantityKind": "defect-location",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": "internal",
-              "required": false,
-              "enum": [
-                "surface",
-                "sub-surface",
-                "internal"
-              ],
-              "note": "The authority (murakami_constants.classify_location) accepts surface, sub-surface/subsurface and internal/interior, case-insensitive, and rejects any other text with OUT_OF_RANGE (HTTP 422); the contract accepts the view's three values.",
-              "unitSelector": null,
-              "unitOptions": {}
-            },
-            {
-              "key": "stressRatio_R",
-              "label": "Stress ratio R",
-              "valueType": "number",
-              "unit": "1",
-              "displayUnits": [],
-              "quantityKind": "stress-ratio",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": -1.0,
-              "required": false,
-              "enum": [],
-              "note": "Converted with float(); the authority requires a finite R < 1 and rejects R >= 1 with OUT_OF_RANGE (HTTP 422). The fatigue-limit correction still caps 0.99 < R < 1 at 0.99.",
-              "unitSelector": null,
-              "unitOptions": {}
-            },
-            {
-              "key": "stressAmplitude_MPa",
-              "label": "Cyclic stress amplitude",
-              "valueType": "number",
-              "unit": "MPa",
-              "displayUnits": [],
-              "quantityKind": "stress",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": 220.0,
-              "required": false,
-              "enum": [],
-              "note": "Converted with float(); the authority requires a finite value > 0 (NON_POSITIVE, HTTP 422).",
-              "unitSelector": null,
-              "unitOptions": {}
-            }
-          ],
-          "undeclaredInput": [
-            "type"
-          ],
-          "output": {
-            "fields": [
-              "fatigue_limit",
-              "kitagawa_takahashi_curve",
-              "paris_crack_growth"
-            ],
-            "statusKey": null,
-            "transportValues": {},
-            "transportObjects": {}
-          }
-        }
-      ],
-      "validityDomain": null,
-      "evidence": {
-        "emits": [],
-        "ceiling": "screening-only",
-        "forbiddenClaims": [
-          "qualified",
-          "certified",
-          "validated",
-          "measured",
-          "productionReady",
-          "airworthy"
-        ],
-        "note": "Emits no evidence status: the output has no status key (paris_crack_growth.status is the integration outcome 'non_propagating', 'fractured' or 'runout', not an evidence status). Murakami, El-Haddad and Paris expressions with per-alloy constants from alloy_registry (fatigue_fracture domain); no oracle compares the result with an independent reference. Ceiling: the pending-oracle cap (screening-only); no oracle exists, so results are unvalidated."
-      },
-      "lifecycle": {
-        "backgroundWork": "none",
-        "resources": [
-          "fetch"
-        ]
-      },
-      "tests": {
-        "schema": "python/test_contract_murakami_fatigue.py",
-        "oracle": {
-          "status": "pending",
-          "ref": null,
-          "ciNote": null,
-          "scope": null
-        },
-        "docs": "docs/modules/murakami-fatigue.md"
-      },
-      "migrationState": "contracted",
-      "legacyNotes": [
-        "The handler reads 'type' (default 'full') and never uses it; it is recorded as undeclaredInput.",
-        "No validity domain is declared: no source-backed applicability range is established for the defect sizes or stress ratios.",
-        "UNKNOWN_ALLOY and the input rejections noted on the fields reach the route as HTTP 422 through LpbfWorkerValidationError (routes/lpbfSimulation.ts workerError)."
-      ],
-      "sourceRefs": [
-        "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
-        "python/lpbf_worker_rpc.py::dispatch",
-        "python/lpbf_worker_rpc.py::_rpc_fatigue_fracture",
-        "python/lpbf_fatigue_fracture.py::fatigue_constants",
-        "python/lpbf_fatigue_fracture.py::MurakamiFatigueEngine.calculate_fatigue_limit",
-        "python/lpbf_fatigue_fracture.py::MurakamiFatigueEngine.simulate_paris_crack_growth",
-        "python/alloy_data_kinetics_uq_fatigue.py::FATIGUE_LEGACY_NAMES",
-        "routes/lpbfSimulation.ts:30#/api/python/lpbf-fatigue-fracture",
-        "routes/lpbfSimulation.ts::workerError",
-        "src/components/MurakamiFatigueLab.tsx::MurakamiFatigueLab",
-        "src/services/pythonComputationService.ts::computeMurakamiFatigue",
-        "docs/MODULE_EVIDENCE_INVENTORY.md:32#`murakami-fatigue` /"
-      ],
       "seedDerived": [
         "label",
         "description",
@@ -3748,8 +3551,8 @@ export const MODULE_REGISTRY = {
       ],
       "sourceRefs": [
         "python/module_registry.py::build_registry",
-        "src/App.tsx:194-194#case 'phase-diagram': return <PhaseDiagramViewer />;",
-        "src/modules/views.ts:22-22#'phase-diagram': lazy(",
+        "src/App.tsx:192-192#case 'phase-diagram': return <PhaseDiagramViewer />;",
+        "src/modules/views.ts:21-21#'phase-diagram': lazy(",
         "src/components/PhaseDiagramViewer.tsx::PhaseDiagramViewer",
         "src/components/PhaseDiagramViewer.tsx::FEC_ALLOY_PRESETS",
         "src/components/PhaseDiagramViewer.tsx::handleSelectPreset",
