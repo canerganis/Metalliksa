@@ -65,7 +65,12 @@ class DefectDiagnosticsTests(unittest.TestCase):
             self.assertIsNone(result[name]["risk"])
             self.assertTrue(result[name]["reason"])
         self.assertIsNone(result["porosity"]["value"])
-        self.assertEqual(result["modelId"], "elliptic-overlap-screening-v1")
+        self.assertEqual(result["modelId"], "elliptic-overlap-screening-v2")
+        from lpbf_defect_diagnostics import BALLING_SCREEN_SOURCES
+        self.assertIn("Yadroitsev", BALLING_SCREEN_SOURCES[0])
+        self.assertIn("Eq. (12)-(13)", BALLING_SCREEN_SOURCES[0])
+        self.assertIn("10.1016/j.apsusc.2007.08.074", BALLING_SCREEN_SOURCES[1])
+        self.assertFalse(any("Phys. Procedia" in source for source in BALLING_SCREEN_SOURCES))
         json.dumps(result, allow_nan=False)
 
     def test_invalid_dimensions(self):

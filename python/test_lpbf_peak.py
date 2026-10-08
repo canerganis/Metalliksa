@@ -60,7 +60,9 @@ class PeakContract(unittest.TestCase):
             self.assertAlmostEqual(metrics['length_um'], 3*np.sqrt(2))
             self.assertAlmostEqual(metrics['width_um'], 4*np.sqrt(2))
             self.assertAlmostEqual(metrics['depth_um'], 2.)
-            self.assertAlmostEqual(metrics['crossSectionArea_um2'], 8.)
+            # LA-6: at 45 deg the three cells project to 0, sqrt2, sqrt2 um; extent = 2*sqrt2 um, so
+            # rint(0.5) = 0 puts all three in one slab: 3*dx^2*dx/extent = 3*4*2/(2*sqrt2) = 8.485...
+            self.assertAlmostEqual(metrics['crossSectionArea_um2'], 8.485281374238568, places=12)
             self.assertEqual(d['peakMeltStep'], 2)
             self.assertEqual(d['peakMeltTime_s'], .2)
             self.assertEqual(d['peakMeltCellCount'], 3)
@@ -107,6 +109,38 @@ class PeakContract(unittest.TestCase):
         self.assertAlmostEqual(metrics['length_um'], 2.)
         self.assertAlmostEqual(metrics['width_um'], 4.)
         self.assertAlmostEqual(metrics['depth_um'], 2.)
+
+    def test_cross_section_is_scan_normal(self):
+        dx = 10e-6
+        axis = (np.arange(200)+.5)*dx-1e-3
+        z_axis = -(np.arange(40)+.5)*dx
+        xyz = np.array(np.meshgrid(axis, axis, z_axis, indexing='ij')).reshape(3, -1).T
+        reference = np.pi/4*100*50  # 3926.99 um2, W 100 / D 50 um
+        for angle in (0., 67., 90., 102.):
+            c, s = np.cos(np.radians(angle)), np.sin(np.radians(angle))
+            u, v, z = xyz[:, 0]*c+xyz[:, 1]*s, -xyz[:, 0]*s+xyz[:, 1]*c, xyz[:, 2]
+            inside = (u/200e-6)**2+(v/50e-6)**2+(z/50e-6)**2 <= 1
+            tracker = PeakMeltTracker(xyz, dx, dict(solidus_K=900., liquidus_K=1000.))
+            tracker.observe(np.where(inside, 1000., 300.), 0., angle, .1, 1)
+            metrics, _ = tracker.finish(None, 1)
+            ratio = metrics['crossSectionArea_um2']/reference
+            self.assertTrue(.97 <= ratio <= 1.07, (angle, ratio))
+            if angle in (0., 90.):
+                planes = np.rint((xyz[inside, 0]-xyz[:, 0].min())/dx).astype(int)  # former global-x rule
+                former = float(np.bincount(planes).max())*dx**2*1e12
+                self.assertAlmostEqual(metrics['crossSectionArea_um2'], 4000.0, places=9)
+                if angle == 0.:
+                    self.assertEqual(metrics['crossSectionArea_um2'], former)
+
+    def test_cross_section_g3_stripe_cells(self):
+        # Six peak cells of the G3 stripe case (dx 40 um, peak on layer 2 at 102 deg).
+        xyz = np.array([[20, 60, 60], [20, 100, 60], [60, -60, 60], [60, -20, 60],
+                        [60, 20, 60], [60, 60, 60]])*1e-6
+        for angle, expected in ((102., 2698.010144007103), (0., 6400.0)):
+            tracker = PeakMeltTracker(xyz, 40e-6, dict(solidus_K=900., liquidus_K=1000.))
+            tracker.observe(np.full(6, 1000.), 80e-6, angle, .1, 1)
+            metrics, _ = tracker.finish(None, 1)
+            self.assertAlmostEqual(metrics['crossSectionArea_um2'], expected, delta=1e-6, msg=str(angle))
 
 
 if __name__ == '__main__':

@@ -4,9 +4,9 @@
  "group": "G17",
  "description": "evaporationModel=True Ti-6Al-4V 80 W: L_v passed to the inversion (today IN718's 6.4e6)",
  "slow": false,
- "recordedImplementationHash": "cda80143d28baf8dd39512065a8ce3683f4c97f46b20d53052b63b4cd34a41d2",
+ "recordedImplementationHash": "ec7e1f7a6606e937e448fefe97549b49a7ddfe7b95376b93867ae007b0c12555",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "dd77476713b324e87bdc941eb400a6774117cd5d",
+ "recordedGitHead": "26db2aceb68ace5e1fc537bfe14782a2eb83a35f",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  4.0,
-  3.9
+  5.6,
+  5.3
  ],
  "recordedTwice": true,
  "observations": {
-  "result.canonicalSha256": "f61678cbe2ea08e34dbdbde87d36ab309c5d6d7ac727eb29e27b2b77bbcf5cda",
-  "result.orderedTypedSha256": "fe20384c7712aadf15ae970ea699c744d969ac3dd8da6caed4a82360967f4adb",
+  "result.canonicalSha256": "74c6691133dd64dce502bd0c3a98138a9a58ad2cf0259cff2e19f5a9a99b65ed",
+  "result.orderedTypedSha256": "c0d9b868ea29fc8b88ba814d50d1f8f6c87f9bedd9948e4fbbd486533d632e64",
   "result.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -132,7 +132,7 @@
   "result.key.label": "1655bd5656c7ba0ca2026f3eace5cf7aac5e58d4c316c7b0c839f1045880eec4",
   "result.key.provenance": "3d8282aac6c56c1ffb2f505cd086820702e4a9f1f7cda449679a979ee7bdeaa0",
   "result.key.analyticalComparison": "39fbdfd89fa449e86b704850de271923c860074e84be386cbe26044e6de62d8c",
-  "result.key.assumptions": "93c5d334bdeaaf2304cb0bc59e91248928643a26483648bcddd4c5c4e4fb0410",
+  "result.key.assumptions": "9f4013d95f9d3c4ebb2a4b006a3b0682da2ec96dc578dba7b85acb0bdbcaa303",
   "result.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "result.key.metrics": "e10e4bc06f2947b6c34a13c85b70e04f100ac7dcbb96c95ba8f42c52a162ff8c",
   "result.key.thermalHistory": "cf82373a59bb45693fb2adb5dbdf749d953dd449c03819c812ebe4700078acc2",
@@ -149,7 +149,7 @@
   "result.key.scanPath": "dc3e33ed474765b3e39a505f1c66a57f2edc24dbbce56e8bf39fb3727e217e9c",
   "result.key.massBalance": "76a18c37ca1159ef0fcb6d6f0483efa7736fc770b403d21b9e86686171436628",
   "result.key.phaseAudit": "022d24590ea9bd359e5f8f4ac7a6da059876cfb69be9712a92677630a4014709",
-  "result.key.geometricDefectScreen": "a6e0777eef605e27712b7f77314fbee7961c68d215354eb82d479637ca745702",
+  "result.key.geometricDefectScreen": "c051eb133194d516f64359335a57a293c425551e29316fd9f21ec57ff049d104",
   "result.key.regime": "40fd22838049669095e60b9df57f0c4721939348b454b4c8d571bbdc8aedd490",
   "result.key.mainRisk": "3e47a880ef2d2d03259ff6adc09f4e6ae9ec408f168c8327752846fb584d73fd",
   "result.key.recommendation": "f8d6898175c7acb736377dc94259b1a1e55e937d669cfe302362297e1ad64bde",
@@ -646,7 +646,7 @@
    "Gaussian penetration equals layer thickness, independent of mesh. Cell-integrated source uses two time quadrature nodes; thermal evolution remains first-order Euler. Absorbed power normalized over represented domain.",
    "Transient layer activation uses whole cells selected by their centers; source surface clipping does not implement cut-cell mass or conduction. Inspect numerical resolution diagnostics when available.",
    "Geometry is the molten-domain extent at the earliest maximum volume over accepted timesteps; playback is sparse and multi-track pools may be disconnected. Sampling loss does not bound timestep or mesh error.",
-   "Cross section is the maximum YZ grid section; it is not scan-normal for rotated scans.",
+   "Cross section is the largest scan-normal slab of liquidus cells at the peak-volume step (slab one projected cell wide, cell volume over slab thickness); within about 6 % of pi/4*W*D on a fine grid, coarse-grid voxel scatter remains.",
    "R = -dT/dt / |grad T| at linearly reconstructed cooling liquidus crossings; gradient vectors are interpolated in time. G, R, G\u00d7R are separately event-averaged; G <= 1e-6 K/m is excluded.",
    "Ma and laser-travel Pe are screening numbers, not resolved velocities.",
    "Thermal history is input for subsequent mechanics; no residual stress, distortion or cracking prediction."
@@ -735,7 +735,7 @@
   ],
   "result.key.fieldSeries": "field-series.json",
   "result.key.geometricDefectScreen": {
-   "modelId": "elliptic-overlap-screening-v1",
+   "modelId": "elliptic-overlap-screening-v2",
    "scope": "single-track-cross-section",
    "status": "geometry-screened",
    "limitations": [

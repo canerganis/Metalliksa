@@ -4,9 +4,9 @@
  "group": "G7",
  "description": "Smallest layer-aligned three-grid mesh study",
  "slow": false,
- "recordedImplementationHash": "cda80143d28baf8dd39512065a8ce3683f4c97f46b20d53052b63b4cd34a41d2",
+ "recordedImplementationHash": "ec7e1f7a6606e937e448fefe97549b49a7ddfe7b95376b93867ae007b0c12555",
  "recordedVersion": "enthalpy-fv-6",
- "recordedGitHead": "dd77476713b324e87bdc941eb400a6774117cd5d",
+ "recordedGitHead": "26db2aceb68ace5e1fc537bfe14782a2eb83a35f",
  "recordedEnvironment": {
   "python": "3.12.10",
   "numpy": "2.2.6",
@@ -68,13 +68,13 @@
   }
  },
  "recordedRuns_s": [
-  2.6,
-  2.5
+  4.0,
+  3.5
  ],
  "recordedTwice": true,
  "observations": {
-  "result.canonicalSha256": "392739f0ecd8318ec22fd7cbd7a8dafb9dcc83a0550d17f7e35f165d74a864b4",
-  "result.orderedTypedSha256": "1742f38bbb74fae118a56e29843f7e5dc3f1cd121bef033ecd1d6430315fb73a",
+  "result.canonicalSha256": "1442dde4d423d9fc1baa6cb1519bbbb9395a2626fa17441a9a8d0e6912d38aa8",
+  "result.orderedTypedSha256": "f497819aa1f241fb92e9269ee697f08048b83a0a050f2c2a569a20cc678c2fdc",
   "result.topLevelKeys": [
    "schemaVersion",
    "requestedMode",
@@ -131,7 +131,7 @@
   "result.key.label": "d43a69c11a67ead8bace06f3a1f6bbb75cc7abdeb2cabb5667c11525cadc7ea5",
   "result.key.provenance": "5dd59f374a92bdc66ed6853a1d2c04b83e7743b33f23d1202c896855a2178afd",
   "result.key.analyticalComparison": "47e7122ce97a5be56324b68d14e8d10db5009e8b7f1ea43835efced705aca3dc",
-  "result.key.assumptions": "d101249a14bc0c95dd6e3fe9fde8cac276ae237ddee197259537c46c796b69eb",
+  "result.key.assumptions": "5f79bae5f08d4c592445b07af436541a91841e2f8a9212688f95cef3d3e1a104",
   "result.key.fallbackReason": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "result.key.metrics": "6e0be9f9346ea980376442637af6f814dca966a3000885244f346391f1f13221",
   "result.key.thermalHistory": "0e3a17b743ecace540e0d966eb62d55087d073bda181aaef5e5c38cff9b69d7e",
@@ -148,7 +148,7 @@
   "result.key.massBalance": "df3c166301bce35854b1ccfba15685bf5cbc80d6d86aacf68637b79fae432c0f",
   "result.key.phaseAudit": "ae091d27f961edd95e45d3d32234c9e6e5f952e9d70db43293159240fefca025",
   "result.key.convergenceStudy": "c29e9ee56fefbb1dff687b8e57c4c371164949fb7f21e73cd921ff1bb064be57",
-  "result.key.geometricDefectScreen": "2080d9acc958cbcd33f70ff3b97a7481ae62163194cce6b85f093faf6cd803b0",
+  "result.key.geometricDefectScreen": "bc43af4a8ff94776d1bf922ce4d76bf7eb7182c5bbc8605c9e1705fc0d4ec437",
   "result.key.regime": "40fd22838049669095e60b9df57f0c4721939348b454b4c8d571bbdc8aedd490",
   "result.key.mainRisk": "3e47a880ef2d2d03259ff6adc09f4e6ae9ec408f168c8327752846fb584d73fd",
   "result.key.recommendation": "f8d6898175c7acb736377dc94259b1a1e55e937d669cfe302362297e1ad64bde",
@@ -523,7 +523,7 @@
    "Gaussian penetration equals layer thickness, independent of mesh. Cell-integrated source uses two time quadrature nodes; thermal evolution remains first-order Euler. Absorbed power normalized over represented domain.",
    "Transient layer activation uses whole cells selected by their centers; source surface clipping does not implement cut-cell mass or conduction. Inspect numerical resolution diagnostics when available.",
    "Geometry is the molten-domain extent at the earliest maximum volume over accepted timesteps; playback is sparse and multi-track pools may be disconnected. Sampling loss does not bound timestep or mesh error.",
-   "Cross section is the maximum YZ grid section; it is not scan-normal for rotated scans.",
+   "Cross section is the largest scan-normal slab of liquidus cells at the peak-volume step (slab one projected cell wide, cell volume over slab thickness); within about 6 % of pi/4*W*D on a fine grid, coarse-grid voxel scatter remains.",
    "R = -dT/dt / |grad T| at linearly reconstructed cooling liquidus crossings; gradient vectors are interpolated in time. G, R, G\u00d7R are separately event-averaged; G <= 1e-6 K/m is excluded.",
    "Ma and laser-travel Pe are screening numbers, not resolved velocities.",
    "Thermal history is input for subsequent mechanics; no residual stress, distortion or cracking prediction."
@@ -699,7 +699,7 @@
   },
   "result.key.fieldSeries": "field-series.json",
   "result.key.geometricDefectScreen": {
-   "modelId": "elliptic-overlap-screening-v1",
+   "modelId": "elliptic-overlap-screening-v2",
    "scope": "single-track-cross-section",
    "status": "geometry-screened",
    "limitations": [

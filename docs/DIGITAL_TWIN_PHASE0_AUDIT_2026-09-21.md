@@ -9,7 +9,7 @@ Gemini ownership is unknown. See ACTIVE_WORK.md for this task's scope.
 
 ## Current bounded core baseline — owner01a0c36f
 
-See `LPBF_CORE_BASELINE_2026-09-21.md` for current16entry UI/API/worker map,
+See `archive/LPBF_CORE_BASELINE_2026-09-21.md` for current16entry UI/API/worker map,
 shared thermal seams, source-backed specialist gaps and fresh melting CPU profile.
 40W/40um and20um produce actual saved molten fields, wall2.317/4.893s and~245MB
 peak process working set. W/D changes40/40→80/20um; convergence remains OPEN.

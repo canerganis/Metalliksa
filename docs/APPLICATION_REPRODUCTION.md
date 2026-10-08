@@ -54,7 +54,7 @@ try {
 
 `npm ci` uses the committed `package-lock.json`; do not replace it with `npm install` when claiming this reproduction. The archive includes tracked files only. Offline raw benchmarks, local tool installations and uncommitted UI changes are excluded. npm may report install-script policy warnings; preserve these with the run evidence and confirm the actual build works under the recorded policy.
 
-The file inventory excludes Git submodule pointers. `git archive` does not include the `spparks` submodule's checkout; this procedure does not reproduce that optional solver or verify its source bytes.
+The file inventory excludes Git submodule pointers. `git archive` does not include the `spparks` submodule's checkout (the `spparks` gitlink was removed on 2026-10-08); this procedure does not reproduce that optional solver or verify its source bytes.
 
 Keep `METALLIX_PYTHON` and `PYTHONDONTWRITEBYTECODE` set for the entire sequence, including child workers. Record the resolved interpreter and compare the tracked-source SHA-256 inventory before and after the checks. A source mismatch is a failed integrity check; restoring a changed file later does not make that attempt pass. Preserve the failed attempt separately and start a fresh guarded sequence when retrying. Python dependency checks alone do not establish source integrity or solver validity.
 

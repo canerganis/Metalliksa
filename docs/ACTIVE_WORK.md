@@ -1394,7 +1394,7 @@ selection UI (`0daa456`). Root owns `STATUS.md`, this coordination file, the
 execution plan and integration. Bundle API (`258032f`) and bare-plate CPU pilot
 (`f4e5ba0`) are committed. `property_snapshot` now owns
 `python/lpbf_material_registry.py`, `python/in625_thermal_material.py`,
-`docs/LPBF_ALLOY_CAPABILITY_MATRIX_2026-09-23.md`, and a new focused Python
+`docs/LPBF_ALLOY_CAPABILITY_MATRIX_2026-09-24.md`, and a new focused Python
 test for bounded IN625 thermal data. `cpu_convergence` owns
 `python/lpbf_gpu_thermal.py`, `python/lpbf_simulation.py`,
 `python/lpbf_worker.py`, optionally `server/lpbfWorkerBridge.ts` and
@@ -2231,8 +2231,8 @@ The frozen 5 µm CPU temporal diagnostic for P4 is running against protocol
 The 100 ns level completed with 3,923 accepted steps, mean 89.217 ns, minimum
 3.094 ns, and 1,682 source-limited/retried steps. The 50 ns level completed
 with 7,000 steps, mean 50 ns, 99.986% cap hits, and no source-limited steps or
-retries. The 25 ns level is currently running. Partial results are in
-`docs/LPBF_P4_CURRENT_40W_ACCEPTED_DT_DIAGNOSTIC_2026-09-25.partial.json`.
+retries. The 25 ns level is currently running. Partial results were in
+`docs/LPBF_P4_CURRENT_40W_ACCEPTED_DT_DIAGNOSTIC_2026-09-25.json` (the partial snapshot was removed).
 Continue the existing process; do not restart it. Once all three levels finish,
 verify the final report against the frozen protocol and retain failed or
 inconclusive status when required. This diagnostic does not change the frozen

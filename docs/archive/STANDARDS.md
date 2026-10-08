@@ -2,7 +2,7 @@
 
 This handbook provides the authoritative, exhaustive specification breakdown of governing **ASTM**, **ISO**, and **ISO/ASTM** standards for Laser Powder Bed Fusion (PBF-LB/M) of metallic materials, including feedstock quality, process qualification, density determination, mechanical testing, metallographic image analysis, and design constraints.
 
-> **Compliance Notice**: In accordance with Rule 1 in [`RULES.md`](./RULES.md), all specifications, property thresholds, and test protocols are codified in English. Numerical criteria have been cross-verified against peer-reviewed aerospace qualification documentation in [`PROOF.md`](./PROOF.md).
+> **Compliance Notice**: In accordance with Rule 1 in [`RULES.md`](../../RULES.md), all specifications, property thresholds, and test protocols are codified in English. Numerical criteria have been cross-verified against peer-reviewed aerospace qualification documentation in [`PROOF.md`](../../PROOF.md).
 
 ---
 

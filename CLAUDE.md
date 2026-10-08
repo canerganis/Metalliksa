@@ -48,7 +48,7 @@ Three tiers: React 18 + Zustand (`src/`) -> Express (`server.ts`, `routes/`, `se
 ## Evidence rules (from RULES.md)
 
 - Never present mock, synthetic, estimated or unverified data as measured. Evidence kinds (Measured, Validated simulation, Calibrated simulation, Literature estimate, Screening only, Unresolved) are separate from module maturity (Production, Research, Preview, Unresolved).
-- Qualification outputs cannot grant a release or certificate. Keep the Build -> ProcessParams -> Sample -> Properties -> Source chain (`SCHEMA.md`). A standards-compliance claim must name the ASTM/ISO standard and its scope.
+- Qualification outputs cannot grant a release or certificate. Keep the Build -> ProcessParams -> Sample -> Properties -> Source chain (`docs/archive/SCHEMA.md`). A standards-compliance claim must name the ASTM/ISO standard and its scope.
 - Report skipped and failed checks explicitly; an earlier pass is not current evidence.
 - UI text is English; code identifiers and comments are English. Reply to the maintainer in Turkish.
 
@@ -64,4 +64,4 @@ Use your judgement on tools, subagents and how much to verify for the size of th
 
 ## Further reading
 
-`docs/LPBF_ENGINEERING.md` (model scope and limits), `ROADMAP.md`, `SCHEMA.md`, `PROOF.md`, `RULES.md`.
+`docs/LPBF_ENGINEERING.md` (model scope and limits), `ROADMAP.md`, `docs/archive/SCHEMA.md`, `PROOF.md`, `RULES.md`.
