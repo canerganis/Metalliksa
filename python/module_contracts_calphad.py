@@ -12,20 +12,6 @@ from module_contract import (
 
 CONTRACT_VERSION = "0.1.0"
 
-# UI option names, not an alloy applicability/qualification list.
-FE_C_PRESET_NAMES = (
-    "AISI 1008 Low Carbon / IF Steel", "AISI 1018 Mild Structural Steel",
-    "AISI 1045 Medium Carbon Machinery Steel", "AISI 1080 Eutectoid Rail & Wire Steel",
-    "AISI 1095 High Carbon Spring & Tool Steel", "AISI 52100 High-Carbon Bearing Steel",
-    "Class 30 Gray Cast Iron (Hypoeutectic)", "Eutectic White Cast Iron (Ledeburite)",
-    "Hypereutectic White Cast Iron",
-)
-FE_C_PROBE_OUTPUTS = (
-    "compositionC", "temperatureC", "regionName", "stateCategory", "phasesPresent",
-    "equilibriumDescription", "liquidus", "solidus",
-)
-
-
 def _selector(key, label, values, default, note):
     return InputField(key=key, label=label, unit=None, quantity_kind="selection",
                       min=None, max=None, default=default, value_type="enum",
@@ -45,47 +31,6 @@ def _boolean(key, label, default, note):
 def _python_authority(timeout_ms):
     return Authority(kind="python-ipc", script="python/calphad_solver.py",
                      timeout_ms=timeout_ms, warm=True)
-
-
-def _fe_c_operations():
-    local = Authority(kind="browser-local", timeout_ms=None, exception_reason=(
-        "The root Fe-C explorer uses React state and hard-coded piecewise boundary/lever-rule "
-        "expressions; no backend route, assessed TDB, or execution deadline exists for this branch."
-    ))
-    def operation(operation_id, fields=(), outputs=(), undeclared=()):
-        return Operation(id=operation_id, route=None, method=None, authority=local,
-                         input=fields, undeclared_input=undeclared,
-                         output=OutputSchema(fields=outputs, status_key=None))
-
-    return (
-        operation("switch-phase-view", fields=(
-            _selector("activeView", "Phase explorer view", ("calphad_solver", "fe_c_diagram"),
-                      "calphad_solver", "Actual root buttons. Switching to Fe-C unmounts the CALPHAD lab; "
-                      "switching back remounts its mount-time requests. Fe-C is not a Python error fallback."),
-        ), outputs=("activeView",)),
-        operation("fe-c-probe", fields=(
-            InputField(key="compositionC", label="Carbon content (wt% C)", unit="%",
-                       quantity_kind="carbon-mass-percentage", min=None, max=None, default=0.45,
-                       step=0.01, note="Carbon slider spans 0–6.67 wt_pct with 0.01 step. Pointer mapping "
-                       "clamps to that chart extent and rounds to two decimals. These are UI bounds, "
-                       "not a validated physical domain; this state is separate from the shared specimen."),
-            InputField(key="temperatureC", label="Probe temperature", unit="degC",
-                       quantity_kind="temperature", min=None, max=None, default=850, step=5,
-                       note="Slider spans 400–1600 degC in steps of 5. Pointer mapping clamps to that "
-                       "chart extent and rounds to whole degC, so pointer values need not follow the "
-                       "slider step. No assessed thermodynamic applicability is declared."),
-        ), outputs=FE_C_PROBE_OUTPUTS),
-        operation("select-fe-c-preset", fields=(
-            _selector("presetName", "Fe-C preset", FE_C_PRESET_NAMES,
-                      "AISI 1045 Medium Carbon Machinery Steel", "The handler sets selectedPreset and "
-                      "copies only carbon composition from the matching table row; temperature is unchanged. "
-                      "The dropdown exposes all rows and quick buttons expose the first four."),
-        ), outputs=("selectedPreset", "compositionC")),
-        operation("drag-fe-c-probe", outputs=("isDragging", "compositionC", "temperatureC"),
-                  undeclared=("e",)),
-        operation("end-fe-c-drag", outputs=("isDragging",)),
-        operation("hover-fe-c-region", outputs=("hoveredRegion",), undeclared=("hoveredRegion",)),
-    )
 
 
 def build_calphad_contract(seed) -> ModuleContract:
@@ -189,48 +134,25 @@ def build_calphad_contract(seed) -> ModuleContract:
                                     "temperatureStepC", "alloyName", "nominalComposition", "computeTimeMs",
                                     "thermodynamicStabilityIndex", "tcpEmbrittlementRisk"), status_key=None),
     )
-    binary_browser = Operation(
-        id="binary-browser-analysis", route=None,
-        authority=Authority(kind="browser-local", timeout_ms=None,
-                            exception_reason="The rendered CALPHAD lab still evaluates its bundled binary "
-                                            "Gibbs models in the browser; this is legacy single-authority debt."),
-        input=(
-            _number("temperatureC", "Probe temperature", "degC", "temperature", 850.0,
-                    "Initial probe is 850 degC for Fe-C; changing system selects other UI presets. No physical "
-                    "applicability bound is established by the UI."),
-            _number("compositionB", "Component B content", "%", "composition-percentage", 0.45,
-                    "Initial Fe-C probe is 0.45 wt%; other systems use at.% or wt.% as declared by the "
-                    "selected browser model. System-specific values are selected in the UI."),
-        ),
-        undeclared_input=("selectedSystemId",),
-        output=OutputSchema(fields=("gxChartData", "equilibriumState", "scheilResult", "tdbText"), status_key=None),
-    )
-    consultation = Operation(
-        id="ai-consult", method="POST", route="/api/consult",
-        authority=Authority(kind="node-provider", timeout_ms=60000),
-        undeclared_input=("prompt",),
-        output=OutputSchema(fields=("response", "reply", "text", "answer", "error"), status_key=None),
-    )
-
     return ModuleContract(
         id=seed["id"], version=CONTRACT_VERSION, owner=OWNER_UNASSIGNED,
         workspace=seed["workspace"], label=seed["label"], description=seed["description"],
         next=seed["next"], maturity=seed["scope"], navigation="listed",
         view=View(component=seed["viewComponent"], export=seed["viewExport"]),
         migration_state="contracted",
-        operations=(database_operation, minimize, client_screening, binary_browser, consultation) + _fe_c_operations(),
+        operations=(database_operation, minimize, client_screening),
         lifecycle=Lifecycle(background_work="none", resources=("fetch", "interval")),
         evidence=Evidence(
             emits=(), ceiling=PENDING_ORACLE_CEILING, forbidden_claims=FORBIDDEN_CLAIM_KEYS,
             note="No evidence status is emitted and no numerical oracle is declared. A successful pycalphad "
                  "calculation is solver output, not independent numerical or experimental validation; browser "
-                 "screening and bundled binary calculations have no demonstrated applicability domain.",
+                 "screening calculations have no demonstrated applicability domain.",
         ),
         tests=TestRefs(oracle=Oracle(status="pending"), schema="python/test_module_contract_calphad.py",
                        docs="docs/modules/phase-diagram.md"),
         legacy_notes=(
-            "The registered phase-diagram view is src/components/PhaseDiagramViewer.tsx; its default view "
-            "renders CALPHADThermodynamicsLab, which mounts CALPHADMultiComponentStudio. On mount the studio "
+            "The registered phase-diagram view is src/components/PhaseDiagramViewer.tsx, which renders "
+            "CALPHADMultiComponentStudio directly. On mount the studio "
             "requests /api/python/status as an infrastructure health check and /api/python/calphad-databases, "
             "then schedules a minimization after "
             "an 80 ms debounce; edits/supersession abort stale client requests, clear the timeout and guard "
@@ -247,12 +169,6 @@ def build_calphad_contract(seed) -> ModuleContract:
             "Mg 350–700/10 degC, Ti 600–1750/25 degC, otherwise 500–1550/25 degC. Direct Python defaults are "
             "500/1450/20 degC. The UI sends adaptiveGrid=false, boundaryRefinement=true by default and a selectable "
             "0.2/0.5/1/2 degC tolerance; no blanket hard temperature applicability limits are asserted.",
-            "The legacy binary lab also computes G-x curves, a browser phase-equilibrium estimate, Scheil-style "
-            "solidification and TDB export from bundled TypeScript tables/functions. The 'AI CALPHAD Diagnosis' "
-            "button submits binary-system prompt text to /api/consult; service failure or empty/malformed "
-            "response leaves the consultation unavailable instead of fabricating a scientific report. Input "
-            "changes and unmount abort/invalidate the request. A provider response is not an independently "
-            "validated CALPHAD result. Neither browser path is promoted as Python output.",
             "The SDK output fields are conditional inventories. Database coverage entries can say covered or "
             "unavailable, but coverage is an element/base-assessment check, not experimental agreement. Solver "
             "'status=unavailable' is transport state only; no evidence status is emitted. databaseStatus is "
@@ -263,21 +179,6 @@ def build_calphad_contract(seed) -> ModuleContract:
             "text and numerical bracket/refinement metadata are not fully typed by this status inventory. "
             "Output numbers depend "
             "on the selected assessed database and conditions; no numerical oracle or physical domain is claimed.",
-            "The root Fe-C branch evaluates probeState on compositionC/temperatureC changes using hard-coded "
-            "piecewise boundaries, approximate tie lines and lever-rule fractions, not an assessed TDB or a "
-            "pycalphad call. probeState holds the declared Fe-C output fields; phasesPresent contains name, "
-            "formula, fractionPct, compositionC and crystal. UI labels including 'CALPHAD Standard' and the "
-            "unconditional 'Solver: Online' text are not authority or physical validation. The declared "
-            "diagramMode Fe-C/Al-Cu/Ti-Al state has no reachable setter/control; no extra system operation is invented.",
-            "Fe-C pointer events e carry browser coordinates; the SVG bounding rectangle maps them to a "
-            "900x600 viewBox. Dragging begins on pointer down, updates only within the chart, and ends on "
-            "pointer up on that SVG; no pointer capture, leave or cancel handler is registered. Hover sets "
-            "a region label on mouse enter and null on mouse leave; the "
-            "nullable hoveredRegion input is undeclared because InputField has no nullable string type. "
-            "Hover is display-only. React owns these handlers/ref; this branch has no "
-            "effect, fetch, interval or external listener to dispose. Root probe/preset state survives child "
-            "view switches. Slider/pointer changes do not update selectedPreset, so the preset morphology "
-            "card remains table text independent of the current probe, not recomputed microstructure evidence.",
             "The studio computes a local clientSolveResult synchronously from parsed editable TDB and a fixed "
             "500/1450/20 degC grid even when Python is on; showNumbers gates its display. With Python off, the "
             "debounced service path uses PRELOADED_MULTI_COMPONENT_TDB[0], not the editor selection, with "
@@ -289,11 +190,6 @@ def build_calphad_contract(seed) -> ModuleContract:
             "src/App.tsx:186-186#case 'phase-diagram': return <PhaseDiagramViewer />;",
             "src/modules/views.ts:21-21#'phase-diagram': lazy(",
             "src/components/PhaseDiagramViewer.tsx::PhaseDiagramViewer",
-            "src/components/PhaseDiagramViewer.tsx::FEC_ALLOY_PRESETS",
-            "src/components/PhaseDiagramViewer.tsx::handleSelectPreset",
-            "src/components/PhaseDiagramViewer.tsx::updateProbeFromEvent",
-            "src/components/CALPHADThermodynamicsLab.tsx::CALPHADThermodynamicsLab",
-            "src/utils/calphadConsultation.ts::parseConsultationResponse",
             "src/components/CALPHADMultiComponentStudio.tsx::CALPHADMultiComponentStudio",
             "src/services/pythonComputationService.ts::PythonComputationService.getCalphadDatabases",
             "src/services/pythonComputationService.ts::PythonComputationService.solveCalphadEquilibrium",
@@ -310,8 +206,6 @@ def build_calphad_contract(seed) -> ModuleContract:
             "python/calphad_solver.py::compute_multi_component_equilibrium",
             "python/calphad_solver.py::main",
             "src/physics/calphadMultiComponentSolver.ts::solveMultiComponentEquilibrium",
-            "src/physics/calphadGibbsEngine.ts::calculatePhaseEquilibrium",
-            "src/physics/calphadGibbsEngine.ts::simulateScheilSolidification",
             "python/test_module_contract_calphad.py",
         ),
         seed_derived=("label", "description", "next", "maturity"),

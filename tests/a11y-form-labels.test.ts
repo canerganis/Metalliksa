@@ -25,10 +25,8 @@ const PINNED_GUARDED = [
   "src/components/LpbfBayesianOptimizerLab.tsx",
   "src/components/AlloyBuilder.tsx",
   "src/components/CALPHADMultiComponentStudio.tsx",
-  "src/components/CALPHADThermodynamicsLab.tsx",
   "src/components/MaterialsDatabaseView.tsx",
   "src/components/MaterialsPropertyHeatmapD3.tsx",
-  "src/components/PhaseDiagramViewer.tsx",
 ];
 
 // The exact exclusion set, written out independently of EXCLUSIONS so it cannot change unnoticed.

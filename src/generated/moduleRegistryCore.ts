@@ -294,7 +294,7 @@ export const MODULE_REGISTRY_CORE = {
       "version": "0.1.0",
       "workspace": "materials",
       "label": "Phase Diagrams & CALPHAD",
-      "description": "Reference binary diagrams and pycalphad equilibrium; CALPHAD needs pycalphad and an installed database covering every selected element, else unavailable.",
+      "description": "Multi-component pycalphad equilibrium, MatCalc open TDB databases and Scheil solidification; CALPHAD needs pycalphad and an installed database covering every selected element, else unavailable.",
       "next": "research-hub",
       "maturity": "Research",
       "navigation": "listed",

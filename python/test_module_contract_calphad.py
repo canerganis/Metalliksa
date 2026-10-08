@@ -55,9 +55,6 @@ class CalphadContractTests(unittest.TestCase):
     def test_actual_independent_operations_and_deadlines(self):
         self.assertEqual(set(self.operations), {
             "calphad-databases", "calphad-minimize", "client-screening",
-            "binary-browser-analysis", "ai-consult",
-            "switch-phase-view", "fe-c-probe", "select-fe-c-preset",
-            "drag-fe-c-probe", "end-fe-c-drag", "hover-fe-c-region",
         })
         database = self.operations["calphad-databases"]
         self.assertEqual((database.method, database.route, database.authority.script,
@@ -66,7 +63,6 @@ class CalphadContractTests(unittest.TestCase):
         minimize = self.operations["calphad-minimize"]
         self.assertEqual((minimize.method, minimize.route, minimize.authority.timeout_ms),
                          ("POST", "/api/python/calphad-minimize", 240000))
-        self.assertEqual(self.operations["ai-consult"].authority.timeout_ms, 60000)
         self.assertEqual(self.contract.lifecycle.background_work, "none")
         self.assertEqual(set(self.contract.lifecycle.resources), {"fetch", "interval"})
 
@@ -208,58 +204,6 @@ class CalphadContractTests(unittest.TestCase):
                          "thermodynamicStabilityIndex", "tcpEmbrittlementRisk"} <= keys)
         self.assertFalse(keys - set(self.operations["client-screening"].output.fields))
 
-    def test_fe_c_controls_match_source_without_invented_domain_or_other_systems(self):
-        source = product_source("src/components/PhaseDiagramViewer.tsx")
-        switch = self.operations["switch-phase-view"]
-        self.assertEqual(switch.input[0].enum, ("calphad_solver", "fe_c_diagram"))
-        self.assertEqual(switch.input[0].default, "calphad_solver")
-        probe = self.operations["fe-c-probe"]
-        fields = {field.key: field for field in probe.input}
-        for key, label, default, unit, step in (
-            ("compositionC", "Carbon Composition (wt % C)", 0.45, "%", 0.01),
-            ("temperatureC", "Isothermal Probe Temperature (°C)", 850, "degC", 5),
-        ):
-            slider = re.search(r'<input aria-label="' + re.escape(label) + r'"(.*?)\s*/>', source, re.S)
-            self.assertIsNotNone(slider)
-            self.assertIn(f"value={{{key}}}", slider.group(1))
-            self.assertEqual(float(re.search(r'step="([\d.]+)"', slider.group(1))[1]), step)
-            self.assertEqual((fields[key].default, fields[key].unit, fields[key].step), (default, unit, step))
-            self.assertIsNone(fields[key].min)
-            self.assertIsNone(fields[key].max)
-        self.assertEqual(probe.input_problems({"compositionC": 0.76, "temperatureC": 727}), [])
-        self.assertTrue(probe.input_problems({"compositionC": float("nan")}))
-        self.assertTrue(probe.input_problems({"diagramMode": "Al-Cu"}))
-        self.assertEqual(source.count("setDiagramMode"), 1)  # unused declaration, no selector
-        for op_id in ("switch-phase-view", "fe-c-probe", "select-fe-c-preset",
-                      "drag-fe-c-probe", "end-fe-c-drag", "hover-fe-c-region"):
-            operation = self.operations[op_id]
-            self.assertEqual((operation.route, operation.method, operation.authority.timeout_ms),
-                             (None, None, None))
-            self.assertEqual(operation.authority.kind, "browser-local")
-            self.assertIsNone(operation.output.status_key)
-        self.assertIsNone(self.contract.validity_domain)
-
-    def test_fe_c_preset_and_probe_output_coverage_tracks_actual_source(self):
-        source = product_source("src/components/PhaseDiagramViewer.tsx")
-        table = source.split("export const FEC_ALLOY_PRESETS", 1)[1].split("];", 1)[0]
-        names = tuple(re.findall(r'name: "([^"]+)"', table))
-        preset = self.operations["select-fe-c-preset"]
-        self.assertEqual(preset.input[0].key, "presetName")
-        self.assertEqual(preset.input[0].enum, names)
-        handler = source.split("const handleSelectPreset", 1)[1].split("return (", 1)[0]
-        self.assertIn("setSelectedPreset(presetName)", handler)
-        self.assertIn("setCompositionC(pr.composition_wt_pct_C)", handler)
-        self.assertNotIn("setTemperatureC", handler)
-        probe_block = source.split("const probeState = useMemo", 1)[1].split(
-            "const handleSelectPreset", 1)[0]
-        self.assertEqual(ts_return_keys(probe_block), set(self.operations["fe-c-probe"].output.fields))
-        self.assertIn("}, [compositionC, temperatureC])", probe_block)
-        self.assertEqual(self.operations["drag-fe-c-probe"].undeclared_input, ("e",))
-        svg = source.split("<svg", 1)[1].split(">", 1)[0]
-        self.assertIn("onPointerUp={handleSvgPointerUp}", svg)
-        self.assertNotIn("onPointerLeave", svg)
-        self.assertNotIn("onPointerCancel", svg)
-
     def test_lifecycle_records_actual_cleanup_and_client_model_selection_limits(self):
         notes = " ".join(self.contract.legacy_notes)
         studio = product_source("src/components/CALPHADMultiComponentStudio.tsx")
@@ -271,9 +215,6 @@ class CalphadContractTests(unittest.TestCase):
         self.assertIn("no cleanup guard", notes)
         self.assertIn("PRELOADED_MULTI_COMPONENT_TDB[0]", notes)
         self.assertIn("500/1450/20", notes)
-        self.assertIn("selectedPreset", notes)
-        self.assertIn("piecewise", notes)
-        self.assertIn("not an assessed TDB", notes)
 
 
 if __name__ == "__main__":

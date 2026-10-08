@@ -80,116 +80,6 @@ Undeclared input keys (read by the authority, not describable by the Field schem
 
 Output fields (no status key, so the output carries no evidence status): `engine`, `isPythonEngine`, `isEmpirical`, `thermodynamicModel`, `databaseUsed`, `iterations`, `equilibriumProfile`, `criticalTemperatures`, `solutePartitioning`, `multiElementScheil`, `temperatureRangeC`, `temperatureStepC`, `alloyName`, `nominalComposition`, `computeTimeMs`, `thermodynamicStabilityIndex`, `tcpEmbrittlementRisk`.
 
-### `binary-browser-analysis`: `None None`
-
-Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
-
-| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `temperatureC` | Probe temperature | number | degC | — | — | — | 850.0 | Initial probe is 850 degC for Fe-C; changing system selects other UI presets. No physical applicability bound is established by the UI. |
-| `compositionB` | Component B content | number | % | — | — | — | 0.45 | Initial Fe-C probe is 0.45 wt%; other systems use at.% or wt.% as declared by the selected browser model. System-specific values are selected in the UI. |
-
-— = not established from the authority code or a source; the contract states no bound.
-Required keys are marked in the contract JSON.
-
-Undeclared input keys (read by the authority, not describable by the Field schema): `selectedSystemId`.
-
-Output fields (no status key, so the output carries no evidence status): `gxChartData`, `equilibriumState`, `scheilResult`, `tdbText`.
-
-### `ai-consult`: `POST /api/consult`
-
-Authority: node-provider `node-provider`; timeout 60000 ms; GPU none; warm false.
-
-| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-
-— = not established from the authority code or a source; the contract states no bound.
-All keys are optional at the authority, which applies the listed default when a key is absent.
-
-Undeclared input keys (read by the authority, not describable by the Field schema): `prompt`.
-
-Output fields (no status key, so the output carries no evidence status): `response`, `reply`, `text`, `answer`, `error`.
-
-### `switch-phase-view`: `None None`
-
-Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
-
-| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `activeView` | Phase explorer view | enum ['calphad_solver', 'fe_c_diagram'] | — | — | — | — | calphad_solver | Actual root buttons. Switching to Fe-C unmounts the CALPHAD lab; switching back remounts its mount-time requests. Fe-C is not a Python error fallback. |
-
-— = not established from the authority code or a source; the contract states no bound.
-Required keys are marked in the contract JSON.
-
-Output fields (no status key, so the output carries no evidence status): `activeView`.
-
-### `fe-c-probe`: `None None`
-
-Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
-
-| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `compositionC` | Carbon content (wt% C) | number | % | — | — | 0.01 | 0.45 | Carbon slider spans 0–6.67 wt_pct with 0.01 step. Pointer mapping clamps to that chart extent and rounds to two decimals. These are UI bounds, not a validated physical domain; this state is separate from the shared specimen. |
-| `temperatureC` | Probe temperature | number | degC | — | — | 5 | 850 | Slider spans 400–1600 degC in steps of 5. Pointer mapping clamps to that chart extent and rounds to whole degC, so pointer values need not follow the slider step. No assessed thermodynamic applicability is declared. |
-
-— = not established from the authority code or a source; the contract states no bound.
-Required keys are marked in the contract JSON.
-
-Output fields (no status key, so the output carries no evidence status): `compositionC`, `temperatureC`, `regionName`, `stateCategory`, `phasesPresent`, `equilibriumDescription`, `liquidus`, `solidus`.
-
-### `select-fe-c-preset`: `None None`
-
-Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
-
-| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `presetName` | Fe-C preset | enum ['AISI 1008 Low Carbon / IF Steel', 'AISI 1018 Mild Structural Steel', 'AISI 1045 Medium Carbon Machinery Steel', 'AISI 1080 Eutectoid Rail & Wire Steel', 'AISI 1095 High Carbon Spring & Tool Steel', 'AISI 52100 High-Carbon Bearing Steel', 'Class 30 Gray Cast Iron (Hypoeutectic)', 'Eutectic White Cast Iron (Ledeburite)', 'Hypereutectic White Cast Iron'] | — | — | — | — | AISI 1045 Medium Carbon Machinery Steel | The handler sets selectedPreset and copies only carbon composition from the matching table row; temperature is unchanged. The dropdown exposes all rows and quick buttons expose the first four. |
-
-— = not established from the authority code or a source; the contract states no bound.
-Required keys are marked in the contract JSON.
-
-Output fields (no status key, so the output carries no evidence status): `selectedPreset`, `compositionC`.
-
-### `drag-fe-c-probe`: `None None`
-
-Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
-
-| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-
-— = not established from the authority code or a source; the contract states no bound.
-All keys are optional at the authority, which applies the listed default when a key is absent.
-
-Undeclared input keys (read by the authority, not describable by the Field schema): `e`.
-
-Output fields (no status key, so the output carries no evidence status): `isDragging`, `compositionC`, `temperatureC`.
-
-### `end-fe-c-drag`: `None None`
-
-Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
-
-| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-
-— = not established from the authority code or a source; the contract states no bound.
-All keys are optional at the authority, which applies the listed default when a key is absent.
-
-Output fields (no status key, so the output carries no evidence status): `isDragging`.
-
-### `hover-fe-c-region`: `None None`
-
-Authority: browser-local `browser-local`; timeout None ms; GPU none; warm false.
-
-| Key | Label | Type | Unit | Min | Max | Step | Default | Note |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-
-— = not established from the authority code or a source; the contract states no bound.
-All keys are optional at the authority, which applies the listed default when a key is absent.
-
-Undeclared input keys (read by the authority, not describable by the Field schema): `hoveredRegion`.
-
-Output fields (no status key, so the output carries no evidence status): `hoveredRegion`.
-
 ## Evidence
 
 - Ceiling: screening-only (the strongest class this module may claim; not a result status)
@@ -198,7 +88,7 @@ Output fields (no status key, so the output carries no evidence status): `hovere
 - Oracle: pending (ceiling capped at screening-only)
 - Oracle scope: none
 - Oracle in CI: none (oracle pending)
-- Note: No evidence status is emitted and no numerical oracle is declared. A successful pycalphad calculation is solver output, not independent numerical or experimental validation; browser screening and bundled binary calculations have no demonstrated applicability domain.
+- Note: No evidence status is emitted and no numerical oracle is declared. A successful pycalphad calculation is solver output, not independent numerical or experimental validation; browser screening calculations have no demonstrated applicability domain.
 
 ## Validity domain
 
@@ -210,13 +100,10 @@ Background work: none; resources: fetch, interval.
 
 ## Recorded notes
 
-- The registered phase-diagram view is src/components/PhaseDiagramViewer.tsx; its default view renders CALPHADThermodynamicsLab, which mounts CALPHADMultiComponentStudio. On mount the studio requests /api/python/status as an infrastructure health check and /api/python/calphad-databases, then schedules a minimization after an 80 ms debounce; edits/supersession abort stale client requests, clear the timeout and guard result/error writes with isMounted. The initial status/inventory requests have no cleanup guard. The 250 ms interval has clearInterval cleanup and only updates elapsed-time display while solving. No scientific deadline/progress estimate is exposed by that timer.
+- The registered phase-diagram view is src/components/PhaseDiagramViewer.tsx, which renders CALPHADMultiComponentStudio directly. On mount the studio requests /api/python/status as an infrastructure health check and /api/python/calphad-databases, then schedules a minimization after an 80 ms debounce; edits/supersession abort stale client requests, clear the timeout and guard result/error writes with isMounted. The initial status/inventory requests have no cleanup guard. The 250 ms interval has clearInterval cleanup and only updates elapsed-time display while solving. No scientific deadline/progress estimate is exposed by that timer.
 - The Python minimizer has no fallback calculation: missing pycalphad, missing/unassessed database coverage, missing elements, refused test-fixture TDBs, or equilibrium failure yields an unavailable envelope without equilibrium/critical-temperature numbers. HTTP 422 validation refusal is displayed without a client substitute. The visible client solver is reached only after the user explicitly turns the Python engine off; it is marked empirical/screening and is not the fallback for failure.
 - The minimization request's elements map, custom TDB text, and alloy name are dynamic values and are undeclared inputs. UI temperature window/step is derived from the largest element: Al 400–750/10 degC, Mg 350–700/10 degC, Ti 600–1750/25 degC, otherwise 500–1550/25 degC. Direct Python defaults are 500/1450/20 degC. The UI sends adaptiveGrid=false, boundaryRefinement=true by default and a selectable 0.2/0.5/1/2 degC tolerance; no blanket hard temperature applicability limits are asserted.
-- The legacy binary lab also computes G-x curves, a browser phase-equilibrium estimate, Scheil-style solidification and TDB export from bundled TypeScript tables/functions. The 'AI CALPHAD Diagnosis' button submits binary-system prompt text to /api/consult; service failure or empty/malformed response leaves the consultation unavailable instead of fabricating a scientific report. Input changes and unmount abort/invalidate the request. A provider response is not an independently validated CALPHAD result. Neither browser path is promoted as Python output.
 - The SDK output fields are conditional inventories. Database coverage entries can say covered or unavailable, but coverage is an element/base-assessment check, not experimental agreement. Solver 'status=unavailable' is transport state only; no evidence status is emitted. databaseStatus is database provenance classification (assessment/test-fixture/user-supplied), not validation; multiElementScheilStatus is computed-path/incomplete/unavailable transport state. criticalTemperatureStatus is a top-level per-temperature object map; transportObjects declares each member's nested status leaf and its closed computed-path/availability vocabulary. Reason text and numerical bracket/refinement metadata are not fully typed by this status inventory. Output numbers depend on the selected assessed database and conditions; no numerical oracle or physical domain is claimed.
-- The root Fe-C branch evaluates probeState on compositionC/temperatureC changes using hard-coded piecewise boundaries, approximate tie lines and lever-rule fractions, not an assessed TDB or a pycalphad call. probeState holds the declared Fe-C output fields; phasesPresent contains name, formula, fractionPct, compositionC and crystal. UI labels including 'CALPHAD Standard' and the unconditional 'Solver: Online' text are not authority or physical validation. The declared diagramMode Fe-C/Al-Cu/Ti-Al state has no reachable setter/control; no extra system operation is invented.
-- Fe-C pointer events e carry browser coordinates; the SVG bounding rectangle maps them to a 900x600 viewBox. Dragging begins on pointer down, updates only within the chart, and ends on pointer up on that SVG; no pointer capture, leave or cancel handler is registered. Hover sets a region label on mouse enter and null on mouse leave; the nullable hoveredRegion input is undeclared because InputField has no nullable string type. Hover is display-only. React owns these handlers/ref; this branch has no effect, fetch, interval or external listener to dispose. Root probe/preset state survives child view switches. Slider/pointer changes do not update selectedPreset, so the preset morphology card remains table text independent of the current probe, not recomputed microstructure evidence.
 - The studio computes a local clientSolveResult synchronously from parsed editable TDB and a fixed 500/1450/20 degC grid even when Python is on; showNumbers gates its display. With Python off, the debounced service path uses PRELOADED_MULTI_COMPONENT_TDB[0], not the editor selection, with the element-selected window, and replaces the initial local result. These two screening paths are not identical database/window authorities. Output inventory includes the service wrapper fields.
 
 ## Source references
@@ -225,11 +112,6 @@ Background work: none; resources: fetch, interval.
 - `src/App.tsx:186-186#case 'phase-diagram': return <PhaseDiagramViewer />;`
 - `src/modules/views.ts:21-21#'phase-diagram': lazy(`
 - `src/components/PhaseDiagramViewer.tsx::PhaseDiagramViewer`
-- `src/components/PhaseDiagramViewer.tsx::FEC_ALLOY_PRESETS`
-- `src/components/PhaseDiagramViewer.tsx::handleSelectPreset`
-- `src/components/PhaseDiagramViewer.tsx::updateProbeFromEvent`
-- `src/components/CALPHADThermodynamicsLab.tsx::CALPHADThermodynamicsLab`
-- `src/utils/calphadConsultation.ts::parseConsultationResponse`
 - `src/components/CALPHADMultiComponentStudio.tsx::CALPHADMultiComponentStudio`
 - `src/services/pythonComputationService.ts::PythonComputationService.getCalphadDatabases`
 - `src/services/pythonComputationService.ts::PythonComputationService.solveCalphadEquilibrium`
@@ -246,8 +128,6 @@ Background work: none; resources: fetch, interval.
 - `python/calphad_solver.py::compute_multi_component_equilibrium`
 - `python/calphad_solver.py::main`
 - `src/physics/calphadMultiComponentSolver.ts::solveMultiComponentEquilibrium`
-- `src/physics/calphadGibbsEngine.ts::calculatePhaseEquilibrium`
-- `src/physics/calphadGibbsEngine.ts::simulateScheilSolidification`
 - `python/test_module_contract_calphad.py`
 
 ## Tests
