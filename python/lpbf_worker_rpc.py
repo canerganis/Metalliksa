@@ -2,13 +2,11 @@
 
 from lpbf_evidence import resource_estimate
 from lpbf_simulation import validate
-from lpbf_adaptive_feedforward import AdaptiveFeedforwardMitigator
 from lpbf_fatigue_fracture import MurakamiFatigueEngine
 from lpbf_solidification_microstructure import (
     compute_screening_field_microstructure,
     compute_solidification_microstructure,
 )
-from lpbf_toolpath_kinematics import LPBFToolpathParser, GalvanometerKinematicsEngine, ScannerProfile
 
 
 def _rpc_solidification_microstructure(request):
@@ -24,34 +22,6 @@ def _rpc_solidification_microstructure(request):
     # material k/liquidus/absorptivity are looked up there, never taken from the payload.
     # Unusable inputs return status "unavailable" with a reason instead of raising.
     return compute_screening_field_microstructure(p)
-
-
-def _rpc_toolpath_kinematics(request):
-    # Phase 12
-    payload = request["payload"]
-    raw_text = payload.get("content", "")
-    fmt = payload.get("format", "gcode").lower()
-    power = payload.get("defaultPower_W", 250.0)
-    speed = payload.get("defaultSpeed_mms", 1000.0)
-    skywriting = payload.get("skywritingEnabled", False)
-
-    if fmt == "cli":
-        vectors = LPBFToolpathParser.parse_cli(raw_text, default_power_W=power, default_speed_mms=speed)
-    else:
-        vectors = LPBFToolpathParser.parse_gcode(raw_text, default_power_W=power, default_speed_mms=speed)
-
-    prof = ScannerProfile(
-        accel_max_mms2=payload.get("accelMax_mms2", 40000.0),
-        jump_speed_mms=payload.get("jumpSpeed_mms", 3000.0),
-        laser_on_delay_us=payload.get("laserOnDelay_us", 100.0),
-        laser_off_delay_us=payload.get("laserOffDelay_us", 120.0),
-        mark_delay_us=payload.get("markDelay_us", 200.0),
-        jump_delay_us=payload.get("jumpDelay_us", 350.0),
-        skywriting_enabled=skywriting
-    )
-    engine = GalvanometerKinematicsEngine(prof)
-    data = engine.simulate_toolpath(vectors)
-    return data
 
 
 def _rpc_fatigue_fracture(request):
@@ -80,30 +50,6 @@ def _rpc_fatigue_fracture(request):
     return data
 
 
-def _rpc_adaptive_feedforward(request):
-    # Phase 15
-    payload = request["payload"]
-    raw_text = payload.get("content", "")
-    fmt = payload.get("format", "gcode").lower()
-    power = float(payload.get("defaultPower_W", 280.0))
-    speed = float(payload.get("defaultSpeed_mms", 1000.0))
-    apply_rot = bool(payload.get("apply67DegRotation", False))
-    layer_idx = int(payload.get("layerIndex", 1))
-
-    if fmt == "cli":
-        vectors = LPBFToolpathParser.parse_cli(raw_text, default_power_W=power, default_speed_mms=speed)
-    else:
-        vectors = LPBFToolpathParser.parse_gcode(raw_text, default_power_W=power, default_speed_mms=speed)
-
-    prof = ScannerProfile(
-        accel_max_mms2=float(payload.get("accelMax_mms2", 40000.0)),
-        jump_speed_mms=float(payload.get("jumpSpeed_mms", 3000.0))
-    )
-    mitigator = AdaptiveFeedforwardMitigator(prof)
-    data = mitigator.process_toolpath(vectors, apply_67_deg_rotation=apply_rot, layer_index=layer_idx)
-    return data
-
-
 def _rpc_keyhole_raytracing(request):
     # Phase 26
     from lpbf_keyhole_raytracing import compute_keyhole_raytracing
@@ -114,9 +60,7 @@ def _rpc_keyhole_raytracing(request):
 # Pure research endpoints: handler(request) -> data.
 RESEARCH_HANDLERS = {
     "solidification-microstructure": _rpc_solidification_microstructure,
-    "toolpath-kinematics": _rpc_toolpath_kinematics,
     "fatigue-fracture": _rpc_fatigue_fracture,
-    "adaptive-feedforward": _rpc_adaptive_feedforward,
     "keyhole-raytracing": _rpc_keyhole_raytracing,
 }
 

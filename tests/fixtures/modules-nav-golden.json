@@ -29,14 +29,6 @@
     "label": "Melt Pool vs Measurements",
     "scope": "Research",
     "description": "Plots measured multi-track, powder-entrained melt-pool width and depth (CMU Ti-6Al-4V, 370 W) against the current workflow result; a comparison, not validation.",
-    "next": "toolpath-studio"
-  },
-  {
-    "id": "toolpath-studio",
-    "workspace": "lpbf",
-    "label": "Scan Path Kinematics",
-    "scope": "Research",
-    "description": "Parses G-code/CLI scan vectors; galvanometer acceleration, mark/jump delays and local line energy; delays are not machine-calibrated.",
     "next": "murakami-fatigue"
   },
   {

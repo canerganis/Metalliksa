@@ -17,7 +17,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 # one legacy contract per listed module. Migration may only lower this number.
 LEGACY_CEILING = 9  # Materials Database now has a source-bound local-view contract.
 # Registry (seed) order. Wave 1 pilot: keyhole-raytracing; the rest are Phase 7 wave 2.
-CONTRACTED = ("toolpath-studio", "murakami-fatigue",
+CONTRACTED = ("murakami-fatigue",
               "keyhole-raytracing", "lpbf-dataset-comparison", "lpbf-calibration-scorecard", "database", "alloy-builder", "phase-diagram", "ttt-cct-kinetics", "micrograph", "experimental-data", "traceability")
 
 
@@ -666,7 +666,6 @@ class ContractedRegistryTests(unittest.TestCase):
         # Same operation id, route, authority and deadline the legacy contracts recorded (slice 1).
         worker = ("lpbf-worker", 20000, False)
         expected = {
-            "toolpath-studio": ("toolpath-kinematics", "/api/python/lpbf-toolpath-kinematics", "toolpath-kinematics") + worker,
             "murakami-fatigue": ("fatigue-fracture", "/api/python/lpbf-fatigue-fracture", "fatigue-fracture") + worker,
             "ttt-cct-kinetics": ("kinetics-ttt-cct", "/api/python/kinetics-ttt-cct",
                                  "python/kinetics_ttt_cct_solver.py", "python-ipc", 25000, True),
@@ -687,23 +686,6 @@ class ContractedRegistryTests(unittest.TestCase):
                 line = int(row_ref.split(":")[1].split("#")[0])
                 inventory = (REPO_ROOT / "docs" / "MODULE_EVIDENCE_INVENTORY.md").read_text(encoding="utf-8")
                 self.assertIn(f"`{operation.route}`", inventory.splitlines()[line - 1])
-
-    def test_toolpath_studio_carries_the_merged_feedforward_operation(self):
-        # W4-4: adaptive-mitigation was merged into toolpath-studio as a second operation (minor version bump).
-        contract = self.contracted["toolpath-studio"]
-        self.assertEqual(contract.version, "0.2.0")
-        kinematics, feedforward = contract.operations
-        self.assertEqual(kinematics.id, "toolpath-kinematics")
-        self.assertEqual((feedforward.id, feedforward.route, feedforward.method),
-                         ("adaptive-feedforward", "/api/python/lpbf-adaptive-feedforward", "POST"))
-        self.assertEqual((feedforward.authority.kind, feedforward.authority.worker_method,
-                          feedforward.authority.timeout_ms, feedforward.authority.warm),
-                         ("lpbf-worker", "adaptive-feedforward", 20000, False))
-        self.assertIn("src/components/LpbfToolpathStudioLab.tsx::ToolpathFeedforwardPanel", contract.source_refs)
-        inventory = (REPO_ROOT / "docs" / "MODULE_EVIDENCE_INVENTORY.md").read_text(encoding="utf-8").splitlines()
-        merged = [r for r in contract.source_refs if r.startswith("docs/MODULE_EVIDENCE_INVENTORY.md:34#")]
-        self.assertEqual(len(merged), 1)
-        self.assertIn(f"`{feedforward.route}`", inventory[33])
 
     def test_eager_core_slice_carries_only_navigation_and_badge_data(self):
         core = mr.core_document(mr.registry_document(self.registry))

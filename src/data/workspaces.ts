@@ -46,9 +46,7 @@ export function isModuleId(value: unknown): value is ModuleId {
  * working: the id resolves to the target module and, when set, a tab of it. The old id is never a registry id,
  * so the navigation and the command palette (both derived from the registry) never list it.
  */
-export const LEGACY_MODULE_REDIRECTS: Readonly<Record<string, { readonly id: ModuleId; readonly tab?: string }>> = {
-  'adaptive-mitigation': { id: 'toolpath-studio', tab: 'feedforward' },
-};
+export const LEGACY_MODULE_REDIRECTS: Readonly<Record<string, { readonly id: ModuleId; readonly tab?: string }>> = {};
 function legacyRedirect(value: string): { readonly id: ModuleId; readonly tab?: string } | null {
   return Object.prototype.hasOwnProperty.call(LEGACY_MODULE_REDIRECTS, value) ? LEGACY_MODULE_REDIRECTS[value] : null;
 }

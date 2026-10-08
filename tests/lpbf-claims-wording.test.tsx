@@ -2,7 +2,6 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { energyChangeLabel, rotationPreviewDeg, rotationPreviewText, toolpathDefaultsError, toolpathWarnings, zeroFlagCaveat } from "../src/components/LpbfToolpathStudioLab";
 import { fatigueCriteriaDisagreement, parisLifeLabel, withRequestInputs } from "../src/components/MurakamiFatigueLab";
 import {
   attachmentDownloadHref,
@@ -14,71 +13,6 @@ import { keyholeMeshForBeam, missedPowerWarning } from "../src/components/Keyhol
 import { DISTORTION_HEURISTIC_CONSTANTS, DISTORTION_HEURISTIC_NOTE } from "../src/utils/distortionHeuristic";
 
 const read = (path: string) => readFileSync(resolve(import.meta.dirname, "..", path), "utf8");
-
-test("toolpath studio: zero-cruise skywriting is a warning, never 'sufficient'", () => {
-  assert.deepEqual(toolpathWarnings(null), []);
-  assert.deepEqual(toolpathWarnings({ warnings: [], laser_never_fires: false }), []);
-  const engine = ["1 of 1 marking vectors ... the laser never fires on them (0 J deposited)."];
-  assert.deepEqual(toolpathWarnings({ warnings: engine, laser_never_fires: true }), engine);
-  // A result that only carries the flag still yields an explicit warning.
-  assert.match(toolpathWarnings({ laser_never_fires: true }).join(" "), /never fires/);
-  const src = read("src/components/LpbfToolpathStudioLab.tsx");
-  assert.doesNotMatch(src, /Skywriting or vector length is sufficient/);
-  assert.doesNotMatch(src, /triggering local keyhole porosity/);
-  assert.doesNotMatch(src, /hotspots\) are mitigated/);
-  // Recharts came back with the merged feed-forward tab: exactly one chart (its power bars), none in the kinematics tab.
-  assert.equal((src.match(/<BarChart /g) ?? []).length, 1, "no unused chart imports; one chart, in the feed-forward panel");
-  assert.ok(src.indexOf("<BarChart ") > src.indexOf("export const ToolpathFeedforwardPanel"), "the chart belongs to the feed-forward panel");
-  assert.match(src, /aria-label="Default Laser Power"/);
-  assert.match(src, /aria-label="Default Scan Speed"/);
-  assert.doesNotMatch(src, /Overheating Hotspots/);
-  assert.doesNotMatch(src, /Thermal Overheating/);
-});
-
-test("toolpath studio: skywriting no-energy caveat only when skywriting is on", () => {
-  const skyOn = { hotspot_count: 0, skywriting_mitigation_active: true, no_cruise_segment_count: 3, laser_never_fires: true, warnings: ["w"] };
-  assert.match(zeroFlagCaveat(skyOn) ?? "", /skywriting on/);
-  const skyOff = { hotspot_count: 0, skywriting_mitigation_active: false, no_cruise_segment_count: 3, laser_never_fires: false, warnings: ["triangular velocity profile"] };
-  const off = zeroFlagCaveat(skyOff) ?? "";
-  assert.match(off, /never reach their commanded speed/);
-  assert.doesNotMatch(off, /skywriting/i);
-  assert.equal(zeroFlagCaveat({ hotspot_count: 0, warnings: [] }), null);
-  assert.equal(zeroFlagCaveat({ hotspot_count: 2, warnings: ["x"] }), null);
-});
-
-test("toolpath studio: non-positive default power/speed is rejected before the engine", () => {
-  assert.equal(toolpathDefaultsError(280, 1000), null);
-  assert.match(toolpathDefaultsError(0, 1000) ?? "", /power/);
-  assert.match(toolpathDefaultsError(280, 0) ?? "", /speed/);
-  assert.match(toolpathDefaultsError(Number(""), 1000) ?? "", /power/);
-  assert.match(toolpathDefaultsError(280, Number.NaN) ?? "", /speed/);
-});
-
-test("adaptive mitigation: open-loop wording, no machine-readiness or texture claims", () => {
-  assert.equal(rotationPreviewDeg(true, 1), 67);
-  assert.equal(rotationPreviewDeg(true, 2), 134);
-  assert.equal(rotationPreviewDeg(false, 5), 0);
-  assert.equal(rotationPreviewText(false, 5), "Rotation disabled (0°)");
-  assert.equal(rotationPreviewText(true, 2), "Rotation applied = 67° × 2 = 134°");
-  assert.equal(energyChangeLabel(0), "0 % (no vector scaled)");
-  assert.equal(energyChangeLabel(12.5), "−12.5 %");
-  assert.equal(energyChangeLabel(undefined), "unavailable");
-  const src = read("src/components/LpbfToolpathStudioLab.tsx");
-  assert.doesNotMatch(src, /Ready for Machine/);
-  assert.doesNotMatch(src, /Suppresses grain texture/);
-  assert.doesNotMatch(src, /Energy Peak Reduction/);
-  assert.match(src, /Not machine-validated/);
-  assert.match(src, /power is not ramped along the acceleration and deceleration phases/);
-  assert.match(src, /aria-label="Layer Index"/);
-  for (const stale of ["Unmitigated Power", "Adaptive Power", "Mitigation computation failed", "Overheating Test Pattern"]) {
-    assert.ok(!src.includes(stale), stale);
-  }
-  const py = read("python/lpbf_adaptive_feedforward.py");
-  assert.doesNotMatch(py, /Mitigated Toolpath/);
-  assert.doesNotMatch(py, /End of layer mitigation/);
-  assert.doesNotMatch(read("python/lpbf_adaptive_feedforward.py"), /Closed-Loop/);
-  assert.doesNotMatch(read("src/services/pythonComputationService.ts"), /Closed-Loop Feed-Forward/);
-});
 
 test("murakami fatigue: no safety verdict, R handling stated, criteria disagreement flagged", () => {
   assert.equal(parisLifeLabel({ status: "non_propagating", cycles_to_failure: 10_000_000 }), "ΔK < ΔK_th (no growth computed)");

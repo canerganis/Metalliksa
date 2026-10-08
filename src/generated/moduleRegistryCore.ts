@@ -139,7 +139,7 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "lpbf",
       "label": "Melt Pool vs Measurements",
       "description": "Plots measured multi-track, powder-entrained melt-pool width and depth (CMU Ti-6Al-4V, 370 W) against the current workflow result; a comparison, not validation.",
-      "next": "toolpath-studio",
+      "next": "murakami-fatigue",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -148,32 +148,6 @@ export const MODULE_REGISTRY_CORE = {
         "export": "ExperimentalValidationLab"
       },
       "migrationState": "legacy",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "toolpath-studio",
-      "version": "0.2.0",
-      "workspace": "lpbf",
-      "label": "Scan Path Kinematics",
-      "description": "Parses G-code/CLI scan vectors; galvanometer acceleration, mark/jump delays and local line energy; delays are not machine-calibrated.",
-      "next": "murakami-fatigue",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/LpbfToolpathStudioLab.tsx",
-        "export": "LpbfToolpathStudioLab"
-      },
-      "migrationState": "contracted",
       "evidence": {
         "ceiling": "screening-only"
       },

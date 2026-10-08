@@ -49,7 +49,6 @@ const LpbfEngineeringWorkspace = lazy(() => import("./components/LpbfEngineering
 const LpbfBayesianOptimizerLab = lazy(() => import("./components/LpbfBayesianOptimizerLab").then(m => ({ default: m.LpbfBayesianOptimizerLab })));
 const SolidificationMicrostructureLab = lazy(() => import("./components/SolidificationMicrostructureLab").then(m => ({ default: m.SolidificationMicrostructureLab })));  // Phase 8
 const ExperimentalValidationLab = lazy(() => import("./components/ExperimentalValidationLab").then(m => ({ default: m.ExperimentalValidationLab }))); // Phase 10
-const LpbfToolpathStudioLab = lazy(() => import("./components/LpbfToolpathStudioLab").then(m => ({ default: m.LpbfToolpathStudioLab }))); // Phase 12
 const MurakamiFatigueLab = lazy(() => import("./components/MurakamiFatigueLab").then(m => ({ default: m.MurakamiFatigueLab }))); // Phase 13
 const KeyholeRaytracingLab = lazy(() => import("./components/KeyholeRaytracingLab").then(m => ({ default: m.KeyholeRaytracingLab }))); // Phase 26
 const LpbfDatasetComparisonLab = lazy(() => import("./components/LpbfDatasetComparisonLab").then(m => ({ default: m.LpbfDatasetComparisonLab })));
@@ -69,7 +68,7 @@ export const MODULES_WITHOUT_SHARED_SPECIMEN: ReadonlySet<string> = new Set(['lp
 const isHome = (hash: string) => /^(#\/?(home)?)?$/.test(hash);
 const startsHome = () => isHome(window.location.hash) && !/[?&]lpbf(Stage|SubTab)=/.test(window.location.search);
 
-// A merged module's old link (#/adaptive-mitigation) is rewritten in place to the module and tab that replaced it.
+// A merged module's old link is rewritten in place to the module and tab that replaced it.
 function rewriteLegacyHash(): void {
   const target = legacyRedirectHash(window.location.hash);
   if (!target) return;
@@ -181,7 +180,6 @@ export default function App() {
       case 'lpbf-optimizer': return <LpbfBayesianOptimizerLab />;
       case 'solidification-microstructure': return <SolidificationMicrostructureLab />;  // Phase 8
       case 'experimental-validation': return <ExperimentalValidationLab />; // Phase 10
-      case 'toolpath-studio': return <LpbfToolpathStudioLab />; // Phase 12
       case 'murakami-fatigue': return <MurakamiFatigueLab />; // Phase 13
       case 'keyhole-raytracing': return <KeyholeRaytracingLab />; // Phase 26
       case 'lpbf-dataset-comparison': return <LpbfDatasetComparisonLab />;

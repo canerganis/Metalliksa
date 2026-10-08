@@ -9,7 +9,7 @@ import lpbf_worker_rpc
 # transient-enthalpy-fdm, modulus-fno, powder-dem-compaction, transient-3d-gpu, stl-voxelize,
 # optical-tomography, toolpath-thermal-map, thermal-accumulation, thermomechanical-distortion,
 # industrial-fatigue and multilaser-plume were deleted
-# with their routes/views).
+# with their routes/views; toolpath-kinematics and adaptive-feedforward were deleted with scan path kinematics).
 ORIGINAL_METHOD_NAMES = (
     "capabilities",
     "estimate",
@@ -21,9 +21,7 @@ ORIGINAL_METHOD_NAMES = (
     "get",
     "cancel",
     "solidification-microstructure",
-    "toolpath-kinematics",
     "fatigue-fracture",
-    "adaptive-feedforward",
     "keyhole-raytracing",
     "purge-unverified-artifacts",
 )
@@ -36,7 +34,7 @@ def original_method_names():
 class WorkerDispatchTest(unittest.TestCase):
     def test_original_method_list_is_complete(self):
         names = original_method_names()
-        self.assertEqual(len(names), 15)
+        self.assertEqual(len(names), 13)
         self.assertEqual(len(names), len(set(names)))
 
     def test_every_original_method_has_a_handler(self):
