@@ -20,7 +20,7 @@ const result = {
       minimum_s: .5e-7, p50_s: 1e-7, p90_s: 1e-7, p99_s: 1e-7, maximum_s: 1e-7,
       eulerFirstOrderWeightedDt_s: .9e-7, requestedMaxDt_s: 1e-7, requestedMaxDtHitFraction: 2/3,
       sourceLimitedStepCount: 1, sourceTimestepRetries: 2 } },
-  geometricDefectScreen: { modelId: "elliptic-overlap-screening-v1", scope: "single-track-cross-section", status: "geometry-screened",
+  geometricDefectScreen: { modelId: "elliptic-overlap-screening-v2", scope: "single-track-cross-section", status: "geometry-screened",
     limitations: ["Synthetic fixture, not experimental evidence"], lackOfFusion: {
       status: "lack-of-fusion-screened", ellipseIndex: 1.14, signedMargin: -.14, overlapDepth_um: 33,
       maximumHatch_um: 89, riskScreened: true, reason: "Idealized geometry only" } },
