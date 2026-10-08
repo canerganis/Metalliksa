@@ -321,39 +321,13 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "materials",
       "label": "Phase Diagrams & CALPHAD",
       "description": "Reference binary diagrams and pycalphad equilibrium; CALPHAD needs pycalphad and an installed database covering every selected element, else unavailable.",
-      "next": "ttt-cct-kinetics",
+      "next": "micrograph",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
       "view": {
         "component": "src/components/PhaseDiagramViewer.tsx",
         "export": "PhaseDiagramViewer"
-      },
-      "migrationState": "contracted",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "ttt-cct-kinetics",
-      "version": "0.1.0",
-      "workspace": "materials",
-      "label": "Steel-only TTT / CCT (not for LPBF alloys)",
-      "description": "Illustrative steel heat-treatment kinetics (AISI 4140, 4340, D2); not applicable to LPBF cooling rates or the LPBF alloys; other alloy classes are unavailable.",
-      "next": "micrograph",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/PhaseKineticsTTTCCTStudio.tsx",
-        "export": "PhaseKineticsTTTCCTStudio"
       },
       "migrationState": "contracted",
       "evidence": {

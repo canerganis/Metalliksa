@@ -85,14 +85,6 @@
     "label": "Phase Diagrams & CALPHAD",
     "scope": "Research",
     "description": "Reference binary diagrams and pycalphad equilibrium; CALPHAD needs pycalphad and an installed database covering every selected element, else unavailable.",
-    "next": "ttt-cct-kinetics"
-  },
-  {
-    "id": "ttt-cct-kinetics",
-    "workspace": "materials",
-    "label": "Steel-only TTT / CCT (not for LPBF alloys)",
-    "scope": "Research",
-    "description": "Illustrative steel heat-treatment kinetics (AISI 4140, 4340, D2); not applicable to LPBF cooling rates or the LPBF alloys; other alloy classes are unavailable.",
     "next": "micrograph"
   },
   {

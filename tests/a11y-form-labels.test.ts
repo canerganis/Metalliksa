@@ -36,7 +36,6 @@ const PINNED_GUARDED = [
   "src/components/MicrographMeasureStudio.tsx", // micrograph rework: controls moved out of MicrographLab
   "src/components/MurakamiFatigueLab.tsx",
   "src/components/PhaseDiagramViewer.tsx",
-  "src/components/PhaseKineticsTTTCCTStudio.tsx",
   "src/components/PythonAnnualCorrosionRateModule.tsx",
   "src/components/TafelPolarizationLab.tsx",
 ];

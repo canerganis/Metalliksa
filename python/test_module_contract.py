@@ -18,7 +18,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 LEGACY_CEILING = 9  # Materials Database now has a source-bound local-view contract.
 # Registry (seed) order. Wave 1 pilot: keyhole-raytracing; the rest are Phase 7 wave 2.
 CONTRACTED = ("murakami-fatigue",
-              "keyhole-raytracing", "lpbf-dataset-comparison", "lpbf-calibration-scorecard", "database", "alloy-builder", "phase-diagram", "ttt-cct-kinetics", "micrograph", "experimental-data", "traceability")
+              "keyhole-raytracing", "lpbf-dataset-comparison", "lpbf-calibration-scorecard", "database", "alloy-builder", "phase-diagram", "micrograph", "experimental-data", "traceability")
 
 
 def _view():
@@ -667,8 +667,6 @@ class ContractedRegistryTests(unittest.TestCase):
         worker = ("lpbf-worker", 20000, False)
         expected = {
             "murakami-fatigue": ("fatigue-fracture", "/api/python/lpbf-fatigue-fracture", "fatigue-fracture") + worker,
-            "ttt-cct-kinetics": ("kinetics-ttt-cct", "/api/python/kinetics-ttt-cct",
-                                 "python/kinetics_ttt_cct_solver.py", "python-ipc", 25000, True),
         }
         for module_id, values in expected.items():
             operation = self.contracted[module_id].operations[0]

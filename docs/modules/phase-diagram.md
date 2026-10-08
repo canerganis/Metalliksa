@@ -222,7 +222,7 @@ Background work: none; resources: fetch, interval.
 ## Source references
 
 - `python/module_registry.py::build_registry`
-- `src/App.tsx:196-196#case 'phase-diagram': return <PhaseDiagramViewer />;`
+- `src/App.tsx:194-194#case 'phase-diagram': return <PhaseDiagramViewer />;`
 - `src/modules/views.ts:22-22#'phase-diagram': lazy(`
 - `src/components/PhaseDiagramViewer.tsx::PhaseDiagramViewer`
 - `src/components/PhaseDiagramViewer.tsx::FEC_ALLOY_PRESETS`

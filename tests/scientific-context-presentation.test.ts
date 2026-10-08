@@ -100,7 +100,6 @@ test('each module family gets its own context; unrelated modules never fall into
   const title = (id: Parameters<typeof buildScientificContext>[0]) => buildScientificContext(id, specimen).title;
   const microstructure = 'How thermal history changes microstructure';
   assert.equal(title('phase-diagram'), microstructure);
-  assert.equal(title('ttt-cct-kinetics'), microstructure);
   assert.equal(title('research-hub'), 'Evidence chain for any claim');
   for (const id of ['electrochem-suite', 'database'] as const) {
     assert.notEqual(title(id), microstructure, `${id} must not show the LPBF microstructure context`);

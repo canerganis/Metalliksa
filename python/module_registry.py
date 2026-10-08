@@ -378,115 +378,6 @@ _WORKER_SOURCES = (
     "python/lpbf_worker_rpc.py::dispatch",
 )
 
-# ttt-cct-kinetics: keys and defaults of the data.get(...) calls in the script entry point.
-_KINETICS_ALLOYS = ("AISI 4140", "AISI 4340", "AISI D2", "Inconel 718", "Ti-6Al-4V", "Al 7075")
-_KINETICS_FIELDS = (
-    _choice("alloy", "Alloy", "alloy", _KINETICS_ALLOYS, "AISI 4140",
-            note="The authority resolves the name through alloy_registry (kinetics domain) and rejects an unknown "
-                 "or ambiguous name with input_validation UNKNOWN_ALLOY (exit 2, HTTP 422); the contract lists the "
-                 "six kinetics table names the view offers."),
-    _num("coolingRate_C_s", "Selected cooling rate", "K/s", "cooling-rate", 10.0,
-         note="Passed unconverted by the entry point. Sets only calphadVsKineticsGap.kineticRealityAtSelectedCooling; "
-              "the CCT map uses a fixed list of rates. For AISI 4140 and AISI 4340 (Li model available) a value "
-              "<= 0 is rejected with input_validation NON_POSITIVE (exit 2); for the other alloys a non-number is "
-              "rejected with NON_FINITE (exit 2) and no bound is enforced."),
-    _num("grainSize_um", "Prior austenite grain size", _MICRO, "length", 25.0,
-         note="Passed unconverted by the entry point. Only the Li (1998) model uses it (AISI 4140, AISI 4340), as "
-              "the mean planar grain diameter converted to the ASTM E112 grain size number; there a value <= 0 is "
-              "rejected with input_validation NON_POSITIVE (exit 2) and a value outside 1-1000 µm (an input sanity "
-              "bound of the implementation, not a source range) with OUT_OF_RANGE (exit 2). For AISI D2 (outside "
-              "the model range), "
-              "Inconel 718, Ti-6Al-4V and Al 7075 it is ignored and only echoed in inputParameters, so a negative "
-              "value returns exit 0."),
-    _num("austTemp_C", "Austenitisation temperature", "degC", "temperature", 860.0,
-         note="Passed unconverted by the entry point. For AISI 4140 and AISI 4340 a value outside 0-1600 degC "
-              "(input sanity bound) is rejected with OUT_OF_RANGE (exit 2); otherwise no bound is enforced. At or "
-              "below the Grange Ae3 the Li model's CCT starts and critical cooling rate are unavailable (fully "
-              "austenitic start assumed)."),
-    _num("agingTemp_C", "Aging temperature", "degC", "temperature", 720.0,
-         note="Passed unconverted by the entry point; no bound is enforced."),
-    _num("agingTime_h", "Aging time", "h", "time", 8.0,
-         note="Passed unconverted by the entry point. Echoed in inputParameters only; the LSW coarsening profile uses a fixed 0.1-100 h time grid."),
-)
-_KINETICS_OUTPUT = OutputSchema(
-    fields=("success", "engine", "computeTimeMs", "alloy", "alloyMetadata", "inputParameters",
-            "criticalTransformationTemperatures", "tttIsothermalCurves", "cctContinuousCoolingMap",
-            "lswPrecipitateCoarsening", "calphadVsKineticsGap", "kineticsModel", "tttIncubationFloor",
-            "provenance"),
-    status_key=None,
-)
-
-
-def _kinetics_contract(row: Dict[str, str]) -> ModuleContract:
-    operation = Operation(
-        id="kinetics-ttt-cct", method="POST", route="/api/python/kinetics-ttt-cct",
-        authority=_py("kinetics_ttt_cct_solver", _PHYSICS_TIMEOUT_MS, warm=True),
-        input=_KINETICS_FIELDS, output=_KINETICS_OUTPUT,
-    )
-    return _wave2(
-        row, operation,
-        evidence_note=(
-            "Emits no evidence status: kineticsModel.status (available for AISI 4140 and AISI 4340, unavailable "
-            "for AISI D2 outside the Li model composition range and with the reason 'kinetics model is "
-            "steel-only' for Inconel 718, Ti-6Al-4V and Al 7075), kineticsModel.validationStatus 'unvalidated' / "
-            "evidenceLevel 'screening' and the per-row *_status keys record applicability and availability, not "
-            "evidence. Transformation start times come from the Li et al. (1998) equations (python "
-            "test_kinetics_li1998 reproduces the model author's AISI 4140 example and the Li-model CCT panels of "
-            "Collins et al. 2023 within stated tolerances); no matched experimental TTT/CCT fixture is registered "
-            "as the contract oracle. " + _PENDING_CAP),
-        notes=(
-            "calphadVsKineticsGap.equilibriumPrediction is fixed steel text in the solver ('Ferrite + Cementite / "
-            "Equilibrium intermetallics') for AISI 4140 and AISI 4340, status static-text-not-a-calphad-calculation; "
-            "for AISI D2 it is null with status unavailable-composition-outside-li-model-range and for Inconel 718, "
-            "Ti-6Al-4V and Al 7075 null with status unavailable-kinetics-model-steel-only; no CALPHAD calculation "
-            "runs in this operation.",
-            "TTT/CCT model: Li, Niebuhr, Meekisho & Atteridge (1998) ferrite/pearlite/bainite start curves from "
-            "composition and ASTM grain size (kineticsModel.sourceLabel, modelVersion li1998-additivity-v1), Grange "
-            "Ae3/Ae1, Li Bs, Kung-Rayment Ms, CCT starts by the additivity rule per phase (no phase interaction). "
-            "Reported only for a steel inside the composition range stated by M. Li (1996 thesis p. 86): AISI 4140 "
-            "and AISI 4340; AISI D2 is outside it and Inconel 718, Ti-6Al-4V and Al 7075 are not steels, so their "
-            "TTT curves, CCT starts, critical cooling rate and verdict are null with the reason (for the "
-            "non-steels: 'kinetics model is steel-only'). Registry "
-            "placeholders (alloy_registry.KINETICS_PLACEHOLDERS: Inconel 718 and Al 7075 Ms/Mf) are null.",
-            "cctContinuousCoolingMap[].phaseFractions, predictedHardness_HRC and predictedHardness_HV are null for "
-            "every alloy (status unavailable-fractions-not-computed for the modelled steels): the Li model needs "
-            "the equilibrium ferrite/pearlite amounts of a thermodynamic Fe-C-M model that is not implemented. "
-            "calphadVsKineticsGap.kineticRealityAtSelectedCooling.predictedMartensite_pct is given only when no "
-            "diffusional start is reached above Ms (Koistinen-Marburger at 25 C).",
-            "The LSW coarsening profile (K = 8 gamma D C_e Vm^2 / (9 R T), C_e in mol/m^3) uses the same nucleus "
-            "radius, coarsening constants and Orowan/cutting strengthening law (280 MPa peak at a 9 nm critical "
-            "radius) for every alloy; only the diffusion activation energy differs. It is null at or above the "
-            "registry Ae3 (steels: Ae1).",
-            "Validity domain (kineticsModel.validityDomain): 0.1<C<0.5, Si<1.0, Mn<2, Ni<4, Cr<3, Mo<1, V<0.2, "
-            "Cu<0.5, Mn+Ni+Cr+Mo<5 (printed as Mo+Ni+Cr+Mo; both sums are checked), 0.01<Al<0.05 wt% (M. Li 1996 "
-            "thesis p. 86, stated as untested by the author); a negative content is outside. Al is not in the "
-            "registry compositions, so the Al bound is unchecked and the status is 'inside-partially-checked' "
-            "(AISI 4140, AISI 4340). This solver-side check is not declared as the contract validity domain "
-            "(pilot contracts carry none).",
-            "tttIsothermalCurves: for ferrite only tStart_s (1 %) is reported; t50_s and tFinish_s are null because "
-            "the ferrite fraction is a volume fraction of the austenite that ends at the equilibrium ferrite amount "
-            "(not modelled). Pearlite uses the phantom fraction (goes to completion) and bainite the volume "
-            "fraction (kineticsModel.li1998.reactionFractionBasis).",
-            "warm: true is the best case: python/persistent_ipc_service.py pre-imports the solver; without the "
-            "IPC daemon server/processOrchestrator.ts falls back to a cold spawn with the 25000 ms timeout per "
-            "attempt.",
-        ),
-        sources=(
-            "python/kinetics_ttt_cct_solver.py::solve_phase_transformation_kinetics",
-            "python/kinetics_ttt_cct_solver.py::LiModel",
-            "python/kinetics_ttt_cct_solver.py::li_composition_check",
-            "python/kinetics_ttt_cct_solver.py::resolve_kinetics_alloy",
-            "python/kinetics_ttt_cct_solver.py::provenance",
-            "python/alloy_data_kinetics_uq_fatigue.py::KINETICS_LEGACY_NAMES",
-            "python/input_validation.py::require_known_alloy",
-            "routes/physics.ts::handlePythonDispatch",
-            "routes/physics.ts:84#python/kinetics_ttt_cct_solver.py",
-            "python/persistent_ipc_service.py::WARM_MODULE_NAMES",
-            "src/components/PhaseKineticsTTTCCTStudio.tsx::PhaseKineticsTTTCCTStudio",
-            "src/services/pythonComputationService.ts::calculatePhaseKineticsTTTCCT",
-            "docs/MODULE_EVIDENCE_INVENTORY.md:62#`ttt-cct-kinetics` /",
-        ))
-
 
 # murakami-fatigue: keys and defaults of _rpc_fatigue_fracture in python/lpbf_worker_rpc.py.
 _FATIGUE_FIELDS = (
@@ -690,7 +581,6 @@ CONTRACTED_BUILDERS = {
     "lpbf-calibration-scorecard": build_calibration_scorecard_contract,
     "keyhole-raytracing": _keyhole_contract,
     # Phase 7 wave 2
-    "ttt-cct-kinetics": _kinetics_contract,
     "murakami-fatigue": _fatigue_contract,
     # Micrograph rework (python/micrograph_measure.py authority)
     "micrograph": _micrograph_contract,

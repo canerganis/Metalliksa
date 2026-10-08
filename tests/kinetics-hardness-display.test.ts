@@ -129,14 +129,7 @@ test("Studio table text for the AISI 4140 UI-default golden (old -> new)", () =>
   assert.equal(kineticsHardnessText(rows[0]).note, KINETICS_STATUS_NOTES["unavailable-fractions-not-computed"]);
 });
 
-test("consumers: no invented hardness fallbacks, null HV goes through the display helper", () => {
-  const studio = readFileSync(join(ROOT, "src", "components", "PhaseKineticsTTTCCTStudio.tsx"), "utf8");
-  assert.ok(!/predictedHardness_HRC\s*\|\|/.test(studio));
-  assert.ok(!/predictedHardness_HV\s*\|\|/.test(studio));
-  assert.ok(!/\|\|\s*(52|550)\b/.test(studio));
-  assert.ok(!/\{row\.predictedHardness_HV\}/.test(studio));
-  assert.match(studio, /kineticsHardnessText\(row\)/);
-  assert.match(studio, /kineticsHardnessText\(currentCCTMatch\)/);
+test("consumers: the Decision Lab delegates the build-job kinetics block to the panel", () => {
   // The Decision Lab delegates the build-job kinetics block to the panel (render-tested in
   // tests/build-job-kinetics-panel.test.tsx); it reads no kinetics field itself.
   const lab = readFileSync(join(ROOT, "src", "components", "3d-distortion-lab", "IndustrialLPBFDecisionLab.tsx"), "utf8");
@@ -341,20 +334,4 @@ test("fx-kinetics: floor line only when at least one point is on the floor; LSW 
   assert.equal(kineticsVerdictSentence(null, 10, true), "");
   // registry-screening-value has a note (the Ti-6Al-4V Ms/Mf tooltips were empty)
   assert.notEqual(kineticsStatusNote("registry-screening-value"), "");
-});
-
-test("fx-kinetics: the Studio renders only through the null-safe helpers", () => {
-  const studio = readFileSync(join(ROOT, "src", "components", "PhaseKineticsTTTCCTStudio.tsx"), "utf8");
-  assert.ok(!/\{row\.transformedStartTemp_C\}/.test(studio));
-  assert.ok(!/\{row\.transformedStartTime_s\}/.test(studio));
-  assert.ok(!/\{row\.primaryMicrostructure\}/.test(studio));
-  assert.ok(!/primaryMicrostructure\.includes/.test(studio));
-  assert.ok(!/\{row\.phaseFractions\.Martensite_pct\}/.test(studio));
-  assert.ok(!/\.Ms_C\} °C|\.Mf_C\} °C|critical_cooling_rate_C_s\} °C/.test(studio));
-  assert.ok(!/predictedMartensite_pct\}%/.test(studio));
-  assert.ok(!/Ferrite \+ Cementite|Complete Partitioning|Thermodynamically Forbidden/.test(studio));
-  assert.match(studio, /typeof kineticsData\.criticalTransformationTemperatures\.Ms_C === "number"/);
-  assert.match(studio, /kineticsCctRowText\(row\)/);
-  assert.match(studio, /kineticsPhaseSlices\(currentCCTMatch\)/);
-  assert.match(studio, /kineticsModelBanner\(kineticsData\?\.kineticsModel, kineticsData\?\.tttIncubationFloor\)/);
 });

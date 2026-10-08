@@ -4,13 +4,6 @@ import test from "node:test";
 
 const src = (path: string) => readFileSync(path, "utf8");
 
-test("TTT/CCT: LSW tab is labelled illustrative and the Gibbs-minimization badge is gone", () => {
-  const text = src("src/components/PhaseKineticsTTTCCTStudio.tsx");
-  assert.match(text, /LSW Aging & Orowan \(illustrative\)/);
-  assert.match(text, /generic LSW \/ Orowan constants/);
-  assert.doesNotMatch(text, />\s*Gibbs Minimization\s*</);
-});
-
 test("Tafel: no preloaded-benchmark claim, truthful zero-current note and solver method", () => {
   const text = src("src/components/TafelPolarizationLab.tsx");
   assert.doesNotMatch(text, /Preloaded Benchmark Standards|NIST \/ ASTM G5 calibrated|Zero-noise filtering|handleSelectBenchmark/);

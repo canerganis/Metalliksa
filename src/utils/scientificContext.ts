@@ -30,7 +30,7 @@ function densityContextLine(specimen: ActiveSpecimenState): string {
 // default at the end of buildScientificContext, which prints the shared LPBF specimen numbers (composition, density,
 // freezing range) that are unrelated to that module, so the panel is hidden there (see ScientificContextPanel).
 const MODULES_WITH_CONTEXT: ReadonlySet<string> = new Set([
-  'alloy-builder', '3d-distortion-lab', 'phase-diagram', 'ttt-cct-kinetics',
+  'alloy-builder', '3d-distortion-lab', 'phase-diagram',
   'micrograph', 'research-hub', 'experimental-data', 'digital-twin', 'traceability',
 ]);
 
@@ -63,7 +63,7 @@ export function buildScientificContext(moduleId: ModuleId, specimen: ActiveSpeci
 
   // Only the phase-equilibrium and transformation-kinetics views get the microstructure text; a trailing
   // `|| moduleId` used to route every other module (corrosion, EIS, databases...) here as well.
-  if (moduleId === 'phase-diagram' || moduleId === 'ttt-cct-kinetics') return {
+  if (moduleId === 'phase-diagram') return {
     title: 'How thermal history changes microstructure',
     observation: `${shared} This module checks temperature-time path, phase equilibrium, or kinetic transformation behavior.`,
     mechanism: 'Phase stability follows Gibbs free-energy balance; transformation rates follow diffusion and nucleation kinetics. Fast cooling can shift behavior away from equilibrium; soak steps increase diffusion-controlled growth.',

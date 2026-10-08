@@ -20,7 +20,6 @@ export const MODULE_VIEWS: Record<ListedModuleId, ModuleView> = {
   'database': lazy(() => import('../components/MaterialsDatabaseView').then(m => ({ default: m.MaterialsDatabaseView }))),
   'alloy-builder': lazy(() => import('../components/AlloyBuilder').then(m => ({ default: m.AlloyBuilder }))),
   'phase-diagram': lazy(() => import('../components/PhaseDiagramViewer').then(m => ({ default: m.PhaseDiagramViewer }))),
-  'ttt-cct-kinetics': lazy(() => import('../components/PhaseKineticsTTTCCTStudio').then(m => ({ default: m.PhaseKineticsTTTCCTStudio }))),
   'micrograph': lazy(() => import('../components/MicrographLab').then(m => ({ default: m.MicrographLab }))),
   'electrochem-suite': lazy(() => import('../components/CorrosionEngineeringLab').then(m => ({ default: m.CorrosionEngineeringLab }))),
   'research-hub': lazy(() => import('../components/AdvancedResearchHub').then(m => ({ default: m.AdvancedResearchHub }))),

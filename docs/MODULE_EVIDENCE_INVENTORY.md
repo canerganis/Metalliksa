@@ -97,7 +97,7 @@ Principal paths run in the browser using the components/parsers/stores above. Fi
 
 ### Host Python scientific requests
 
-Modules: `phase-diagram`, `ttt-cct-kinetics`, `electrochem-suite`, `icme-motor`, `uq-lab`, `lpbf-optimizer`, `solidification-microstructure`, `experimental-validation`, `toolpath-studio`, `murakami-fatigue`.
+Modules: `phase-diagram`, `electrochem-suite`, `icme-motor`, `uq-lab`, `lpbf-optimizer`, `solidification-microstructure`, `experimental-validation`, `toolpath-studio`, `murakami-fatigue`.
 
 The listed Node routes dispatch through `server/processOrchestrator.ts` and `server/pythonRuntime.ts` to the scripts identified in each row. Browser-only subviews can coexist with these requests. Interpreter choice and IPC ports are documented in `docs/ENVIRONMENT_READINESS.md`; broad numerical/CALPHAD/ML requirements are in `python/requirements.txt`. Actual optional library, thermodynamic database and model availability must be checked for the selected operation. A successful import or a warm module is not successful scientific execution. CALPHAD coverage and the full domain dependency environment remain open A02 work.
 

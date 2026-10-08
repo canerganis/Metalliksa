@@ -57,7 +57,6 @@ const LpbfCalibrationScorecardLab = lazy(() => import("./components/LpbfCalibrat
 const AdvancedResearchHub = lazy(() => import("./components/AdvancedResearchHub").then(m => ({ default: m.AdvancedResearchHub })));
 const PhaseDiagramViewer = lazy(() => import("./components/PhaseDiagramViewer").then(m => ({ default: m.PhaseDiagramViewer })));
 const DigitalTwinHub = lazy(() => import("./components/DigitalTwinHub").then(m => ({ default: m.DigitalTwinHub })));
-const PhaseKineticsTTTCCTStudio = lazy(() => import("./components/PhaseKineticsTTTCCTStudio").then(m => ({ default: m.PhaseKineticsTTTCCTStudio })));
 
 export type NavSubTab = ModuleId;
 export type DisciplineHubId = typeof WORKSPACES[number]['id'];
@@ -189,7 +188,6 @@ export default function App() {
       case 'traceability': return <EvidenceWorkspace mode="traceability" />;
       case 'digital-twin': return <DigitalTwinHub onNavigateToModule={navigate} />;
       case 'electrochem-suite': return <CorrosionEngineeringLab />;
-      case 'ttt-cct-kinetics': return <PhaseKineticsTTTCCTStudio onSendToModule={navigate} />;
       case 'micrograph': return <MicrographLab />;
       case 'alloy-builder': return <AlloyBuilder onNavigate={navigate} />;
       case 'database': return <MaterialsDatabaseView onNavigate={navigate} />;
