@@ -103,7 +103,7 @@ test("workerError maps the validation error to 422 with the envelope; other erro
   assert.deepEqual(r.out.body, { error: "boom" });
 });
 
-test("POST /api/python/lpbf-fatigue-fracture answers 422 with the envelope", async () => {
+test("POST /api/python/lpbf-solidification-microstructure answers 422 with the envelope", async () => {
   const original = lpbfWorker.request;
   const calls: unknown[] = [];
   (lpbfWorker as unknown as { request: unknown }).request = async (method: string, payload: unknown) => {
@@ -118,13 +118,13 @@ test("POST /api/python/lpbf-fatigue-fracture answers 422 with the envelope", asy
   });
   try {
     const port = (server.address() as AddressInfo).port;
-    const res = await fetch(`http://127.0.0.1:${port}/api/python/lpbf-fatigue-fracture`, {
+    const res = await fetch(`http://127.0.0.1:${port}/api/python/lpbf-solidification-microstructure`, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ alloyName: "Unobtainium" }),
     });
     assert.equal(res.status, 422);
     assert.deepEqual(await res.json(), ENVELOPE);
-    assert.deepEqual(calls, [["fatigue-fracture", { alloyName: "Unobtainium" }]]);
+    assert.deepEqual(calls, [["solidification-microstructure", { alloyName: "Unobtainium" }]]);
   } finally {
     (lpbfWorker as unknown as { request: unknown }).request = original;
     await new Promise<void>((resolve) => server.close(() => resolve()));

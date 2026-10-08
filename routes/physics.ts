@@ -74,11 +74,6 @@ physicsRouter.post("/api/python/lpbf-bayesian-optimize", (req: Request, res: Res
   return handlePythonDispatch("python/lpbf_bayesian_optimizer.py", req.body, res, 120000);
 });
 
-// Kinetics TTT / CCT
-physicsRouter.post("/api/python/kinetics-ttt-cct", (req: Request, res: Response) => {
-  return handlePythonDispatch("python/kinetics_ttt_cct_solver.py", req.body, res);
-});
-
 // Opt-in calibrated melt-pool mode (screening only, not validation): the frozen solver run with a fitted
 // effective absorptivity for gate-enabled cells only. A NEW route; /api/python/lpbf-thermal-solver is untouched.
 physicsRouter.post("/api/python/lpbf-calibrated-meltpool", (req: Request, res: Response) => {
