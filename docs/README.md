@@ -29,7 +29,7 @@ These files live at the repository root because they apply across the whole appl
 
 - [PROOF.md](../PROOF.md) — dated verification and proof entries. It records what was tested; it is not a release certificate.
 - [Session log](../sonkayıtlar/LOG.md) — operational work history, newest entry first.
-- [Architecture audit](LPBF_ARCHITECTURE_AUDIT.md) — bounded architecture review.
+- [Architecture audit](archive/LPBF_ARCHITECTURE_AUDIT_2026-09-21.md) — bounded architecture review.
 - [Archived planning documents](archive/README.md) — superseded roadmaps and dated handoffs retained for provenance.
 
 ## Authority and maintenance rules

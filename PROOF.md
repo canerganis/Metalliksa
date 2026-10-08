@@ -1390,7 +1390,7 @@ Acceptance here: explicit CPU identity, nonzero molten volume and saved thermal
 fields, measured resources, existing balance bounds. PASS for that bounded scope.
 Mesh-dependent W/D40/40→80/20um is NOT convergence or experiment validation.
 VRAM/GPU not exercised. Full setup/log/fingerprint references and limitations:
-`docs/LPBF_CORE_BASELINE_2026-09-21.md`. Prior profile actually used10W, not40W.
+`docs/archive/LPBF_CORE_BASELINE_2026-09-21.md`. Prior profile actually used10W, not40W.
 Current CPU regression44PASS/5Linux-OpenFOAMskip across engineering/source/peak/
 overlap/material RPC groups. Phase0 OPEN; no later phase acceptance.
 
@@ -1589,7 +1589,7 @@ Screening regime and defect indicators remain analytical; free surface, recoil, 
 
 ## 2026-09-12 — Thermal foundation hardening and scan-history increment (numerical only)
 
-- Architecture audit was written before implementation: `docs/LPBF_ARCHITECTURE_AUDIT.md`. Existing analytic paths are preserved. WSL2 Ubuntu-22.04 reports OpenFOAM-14; actual `wmake`, blockMesh/checkMesh and compiled cases passed.
+- Architecture audit was written before implementation: `docs/archive/LPBF_ARCHITECTURE_AUDIT_2026-09-21.md`. Existing analytic paths are preserved. WSL2 Ubuntu-22.04 reports OpenFOAM-14; actual `wmake`, blockMesh/checkMesh and compiled cases passed.
 - Fixed mesh-dependent Gaussian penetration, source timing before timestep restriction, OpenFOAM top-plane heat-loss selection, projected voxel support for rotated extents, and unrepresented powder-layer activation. Reference source timestep now uses the same local 25 K sensible-equivalent bound as OpenFOAM. The previous global-min/global-max reference limit produced materially different G/R crossing statistics despite close geometry/peak temperatures; the new comparison explicitly checks G, R and cooling within 1%.
 - Inputs: estimated IN718, P=40 W, v=800 mm/s, beam=80 µm, hatch=100 µm, layer=40 µm, preheat=80 °C, track=200 µm, mesh=40 µm, max dt=1 µs, dwell=0, cooling=0.1 ms. Absorptivity is inherited estimated material data. No measured result is introduced.
 - Final observed OpenFOAM L/W/D = 160/40/40 µm, volume=256000 µm³; peak=2496.5463925 K. Reference peak=2496.5463925 K. Relative energy closure error=7.9889e-16; backend peak difference=0%. R and cooling are verified independently, not inferred from width/depth. This coarse voxel fixture does not establish spatial accuracy.
