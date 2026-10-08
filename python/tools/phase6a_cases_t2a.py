@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Phase 6a tranche 2a golden cases: calphad_solver and battery_corrosion_eis_solver.
+Phase 6a tranche 2a golden cases: calphad_solver.
 
 Kept out of capture_phase6a_golden.py so that the other tranche-2 branch can add
 its own case module next to this one; the harness merges both through one small
@@ -23,7 +23,7 @@ from __future__ import annotations
 import ast
 from typing import Any, Dict, List, Optional
 
-# battery_corrosion_eis_solver adds a wall-clock duration under this name.
+# A wall-clock duration some solver outputs carry under this name.
 EXTRA_VOLATILE_KEYS = frozenset({"pythonDurationMs"})
 
 def _key_sorted(value: Any) -> Any:
@@ -74,14 +74,6 @@ _RAW_CASES: Dict[str, Dict[str, Dict[str, Any]]] = {
             "tMin": 800.0, "tMax": 1500.0, "tStep": 50.0,
         },
     },
-    "battery_corrosion_eis_solver": {
-        # The p2d_continuum_nmc811, battery_degradation_lfp, nernst_planck_poisson and
-        # uploaded_eis_synthetic_randles cases (and their step_b goldens) were deleted on
-        # 2026-10-04 with their solver actions (no UI consumer; only corrosion_kinetics stays).
-        # Recorded as the pre-migration success:true masking; since the V1 follow-up the
-        # solver reports success:false for it (see EXPECTED_SUCCESS_FLAG_CHANGES).
-        "edge_unknown_action_success_masking": {"action": "no_such_action"},
-    },
 }
 CASES: Dict[str, Dict[str, Dict[str, Any]]] = _key_sorted(_RAW_CASES)
 
@@ -95,9 +87,7 @@ EXPECTED_BEHAVIOUR_CHANGES = {
 # (solver, case) -> the old golden stays on disk as the record of the old behaviour
 # (exit code 0, stdout carried "success": true next to "error"). The solver now returns
 # the same stdout with "success": false; exit code and error message are unchanged.
-EXPECTED_SUCCESS_FLAG_CHANGES = {
-    ("battery_corrosion_eis_solver", "edge_unknown_action_success_masking"),
-}
+EXPECTED_SUCCESS_FLAG_CHANGES: set = set()
 
 
 # (solver, case) -> exact fields of the "unavailable" envelope that replaces the removed

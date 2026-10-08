@@ -94,15 +94,11 @@ NUM_WORKERS = int(os.environ.get("METALLIX_IPC_WORKERS", DEFAULT_WORKERS))
 # List of scientific modules to keep warm in memory
 WARM_MODULE_NAMES = [
     "calphad_solver",
-    "cnls_fitting_solver",
     "xrd_peak_deconvolution",
     "lpbf_thermal_solver",
-    "pourbaix_solver",
-    "battery_corrosion_eis_solver",
     "kinetics_ttt_cct_solver",
     "stl_slicer_build_time_solver",
     "lpbf_build_job_solver",
-    "tafel_corrosion_rate_solver",
 ]
 
 # Scripts the service may execute: exactly the scripts routes/*.ts dispatch through
@@ -110,16 +106,13 @@ WARM_MODULE_NAMES = [
 # this service itself are refused. test_persistent_ipc_security requires this set to equal the
 # literal script paths in routes/*.ts in both directions, so a stale entry fails the test.
 ALLOWED_SCRIPT_NAMES = frozenset({
-    "battery_corrosion_eis_solver",
     "calphad_solver",
     "kinetics_ttt_cct_solver",
     "lpbf_bayesian_optimizer",
     "lpbf_calibrated_meltpool",
     "lpbf_process_window",
     "lpbf_thermal_solver",
-    "pourbaix_solver",
     "stl_slicer_build_time_solver",
-    "tafel_corrosion_rate_solver",
     "xrd_peak_deconvolution",
 })
 

@@ -1,6 +1,6 @@
 """
-Phase 6b (vectorisation lane) golden cases: cnls_fitting_solver and
-xrd_peak_deconvolution.
+Phase 6b (vectorisation lane) golden cases: xrd_peak_deconvolution.
+(The cnls_fitting_solver cases were removed with the electrochemistry modules.)
 
 Merged into capture_phase6a_golden by one delimited block there. These goldens are
 bound to BASE_REVISION below (faa6684, the code before the NumPy/SciPy rewrite), not
@@ -20,7 +20,7 @@ from typing import Any, Dict, List
 
 BASE_REVISION = "faa6684"
 GOLDEN_SUBDIR = "phase6b"
-SOLVERS = ("cnls_fitting_solver", "xrd_peak_deconvolution")
+SOLVERS = ("xrd_peak_deconvolution",)
 
 
 def _sig(value: float, digits: int = 10) -> float:
@@ -85,45 +85,6 @@ _CUSTOM_TWO_RC = {"branches": [
         {"id": "c2", "name": "C2", "type": "C", "value": 1e-4}]},
 ]}
 
-_CNLS = {
-    "randles_modulus_fit": {
-        "action": "fit", "topology": "standard_randles", "weighting": "modulus", "maxIterations": 80,
-        "points": _RANDLES_POINTS,
-        "parameters": [_param("Rs", "el-rs", 5.0, 1e-3, 1e6), _param("Rct", "el-rct", 300.0, 1e-3, 1e7),
-                       _param("Cdl", "el-cdl", 1e-4, 1e-14, 1.0, unit="F", ptype="Capacitor")],
-    },
-    "randles_cpe_proportional_fit": {
-        "action": "fit", "topology": "randles_cpe", "weighting": "proportional", "maxIterations": 80,
-        "points": _eis_points(_randles_cpe, 1e5, 0.1, 8, 0.002),
-        "parameters": [_param("Rs", "el-rs", 5.0, 1e-3, 1e6), _param("Rct", "el-rct", 400.0, 1e-3, 1e7),
-                       _param("Qdl", "el-q", 5e-5, 1e-14, 1.0, unit="S s^n", ptype="ConstantPhaseElement"),
-                       _param("ndl", "el-q", 0.75, 0.2, 1.0, field="exponent", unit="", ptype="Exponent")],
-    },
-    "linkk_validate_dataset": {
-        "action": "validate_dataset", "topology": "standard_randles", "electrodeAreaCm2": 1.0,
-        "points": _RANDLES_POINTS,
-    },
-    "tlm_open_unit_fit": {
-        "action": "fit", "topology": "bisquert_open", "weighting": "unit", "maxIterations": 100,
-        "points": _eis_points(_tlm_open, 1e5, 0.01, 8, 0.001),
-        "parameters": [_param("Rs", "el-rs", 3.0, 1e-3, 1e5), _param("Rion", "el-tlm", 45.0, 1e-3, 1e6),
-                       _param("Rct", "el-tlm", 330.0, 1e-3, 1e7, field="rct"),
-                       _param("Qdl", "el-tlm", 1e-4, 1e-14, 1.0, field="qd", unit="S s^n",
-                              ptype="ConstantPhaseElement"),
-                       _param("alpha", "el-tlm", 0.8, 0.2, 1.0, field="exponent", unit="", ptype="Exponent")],
-    },
-    "custom_two_rc_modulus_fit": {
-        "action": "fit", "topology": _CUSTOM_TWO_RC, "weighting": "modulus", "maxIterations": 120,
-        "points": _eis_points(_two_rc, 1e5, 0.01, 7, 0.0015),
-        "parameters": [_param("Rs", "rs", 15.0, 1e-3, 1e5), _param("R1", "r1", 60.0, 1e-3, 1e6),
-                       _param("Q1", "q1", 5e-6, 1e-12, 1.0, unit="S s^n", ptype="ConstantPhaseElement"),
-                       _param("n_Q1", "q1", 0.8, 0.3, 1.0, field="exponent", unit="", ptype="Exponent"),
-                       _param("R2", "r2", 300.0, 1e-3, 1e6),
-                       _param("C2", "c2", 1e-4, 1e-12, 1.0, unit="F", ptype="Capacitor")],
-    },
-}
-
-
 def _ka2(two_theta: float) -> float:
     d = 1.540598 / (2.0 * math.sin(math.radians(two_theta / 2.0)))
     return 2.0 * math.degrees(math.asin(min(1.0, 1.544426 / (2.0 * d))))
@@ -180,6 +141,5 @@ _XRD = {
 }
 
 CASES: Dict[str, Dict[str, Dict[str, Any]]] = {
-    "cnls_fitting_solver": _CNLS,
     "xrd_peak_deconvolution": _XRD,
 }

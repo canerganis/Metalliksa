@@ -7,8 +7,6 @@ import { SendToModuleModal, celsiusOrUnavailable, mpaOrUnavailable } from "../sr
 import { deriveSpecimenProperties, SPECIMEN_PRESETS, useMaterialSpecimenStore } from "../src/store/useMaterialSpecimenStore";
 import { deriveProperties, MATERIAL_PRESETS, useMaterialStore, type MaterialSpecimen } from "../src/store/useMaterialStore";
 import { specimenStrengthsToLoad } from "../src/utils/compositionPropertyAvailability";
-import { designationPatchFromTwin, twinFromMaterialSpecimen } from "../src/utils/digitalTwinMaterialSync";
-import { DEFAULT_DIGITAL_TWINS } from "../src/data/digitalTwinStore";
 import { MATERIALS_DATABASE } from "../src/data/materialsDatabase";
 import {
   createPipelinePayloadFromMaterialSpec,
@@ -34,48 +32,6 @@ test("unit converters load no stress from a composition-only specimen", () => {
   assert.deepEqual(specimenStrengthsToLoad({ yieldStrength_25C_MPa: null, uts_25C_MPa: undefined }), { yieldMpa: null, utsMpa: null });
   assert.deepEqual(specimenStrengthsToLoad({ yieldStrength_25C_MPa: 0, uts_25C_MPa: Number.NaN }), { yieldMpa: null, utsMpa: null });
   assert.deepEqual(specimenStrengthsToLoad({ yieldStrength_25C_MPa: 1034, uts_25C_MPa: 1241 }), { yieldMpa: 1034, utsMpa: 1241 });
-});
-
-test("Digital Twin Hub pull: null mechanicals and no stale designation; push: twin designation is user-sourced", () => {
-  const prev = DEFAULT_DIGITAL_TWINS.find((t) => /N07718/.test(t.standardDesignation))!;
-  assert.ok(prev);
-  const specimen: MaterialSpecimen = {
-    ...useMaterialStore.getInitialState().activeMaterialSpecimen,
-    metadata: { ...useMaterialStore.getInitialState().activeMaterialSpecimen.metadata, standardDesignation: "" },
-  };
-  const pulled = twinFromMaterialSpecimen(prev, specimen);
-  assert.equal(pulled.mechanical.yieldStrengthMpa, null);
-  assert.equal(pulled.mechanical.ultimateTensileStrengthMpa, null);
-  assert.equal(pulled.mechanical.elongationPct, null);
-  assert.equal(pulled.standardDesignation, "Unresolved", "store '' must not keep the twin's old designation");
-  assert.deepEqual(pulled.chemistry.nominalComposition, specimen.composition);
-
-  const withDesignation = twinFromMaterialSpecimen(prev, {
-    ...specimen,
-    metadata: { ...specimen.metadata, standardDesignation: "Lab ref 12" },
-  });
-  assert.equal(withDesignation.standardDesignation, "Lab ref 12");
-
-  assert.deepEqual(designationPatchFromTwin({ standardDesignation: "UNS N07718 / AMS 5662" }), {
-    standardDesignation: "UNS N07718 / AMS 5662",
-    standardDesignationSource: "user",
-  });
-  assert.deepEqual(designationPatchFromTwin({ standardDesignation: "Unresolved" }), {
-    standardDesignation: "",
-    standardDesignationSource: undefined,
-  });
-
-  // Store round trip: a catalogue preset followed by a twin push is no longer labelled catalogue.
-  useMaterialStore.getState().loadPreset("in718");
-  useMaterialStore.getState().updateComposition(
-    { ...MATERIAL_PRESETS.in718.composition, Nb: 4 },
-    "Twin sample",
-    designationPatchFromTwin({ standardDesignation: "Twin designation" }),
-    "Digital Twin Hub"
-  );
-  const m = useMaterialStore.getState().activeMaterialSpecimen.metadata;
-  assert.equal(m.standardDesignation, "Twin designation");
-  assert.equal(m.standardDesignationSource, "user");
 });
 
 test("Send-to-module modal shows 'unavailable' for null yield / Ac3 / temperatures (no 910 °C fallback)", () => {

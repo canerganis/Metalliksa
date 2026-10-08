@@ -23,18 +23,12 @@ const PINNED_GUARDED = [
   "src/components/3d-distortion-lab/IndustrialLPBFDecisionLab.tsx",
   "src/components/3d-distortion-lab/MeltPool3DCrossSectionLab.tsx",
   "src/components/LpbfBayesianOptimizerLab.tsx",
-  "src/components/CorrosionEngineeringLab.tsx",
   "src/components/AlloyBuilder.tsx",
   "src/components/CALPHADMultiComponentStudio.tsx",
   "src/components/CALPHADThermodynamicsLab.tsx",
-  "src/components/CorrosionEISKineticsStudio.tsx",
-  "src/components/DigitalTwinHub.tsx",
-  "src/components/DynamicPourbaixStudio.tsx",
   "src/components/MaterialsDatabaseView.tsx",
   "src/components/MaterialsPropertyHeatmapD3.tsx",
   "src/components/PhaseDiagramViewer.tsx",
-  "src/components/PythonAnnualCorrosionRateModule.tsx",
-  "src/components/TafelPolarizationLab.tsx",
 ];
 
 // The exact exclusion set, written out independently of EXCLUSIONS so it cannot change unnoticed.

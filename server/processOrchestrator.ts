@@ -184,16 +184,13 @@ export function buildIpcSpawnSpec(
  * the same list as the daemon.
  */
 export const DISPATCHABLE_SCRIPTS: ReadonlySet<string> = new Set([
-  "battery_corrosion_eis_solver",
   "calphad_solver",
   "kinetics_ttt_cct_solver",
   "lpbf_bayesian_optimizer",
   "lpbf_calibrated_meltpool",
   "lpbf_process_window",
   "lpbf_thermal_solver",
-  "pourbaix_solver",
   "stl_slicer_build_time_solver",
-  "tafel_corrosion_rate_solver",
   "xrd_peak_deconvolution",
 ]);
 const SCRIPT_REF = /^python\/([A-Za-z_][A-Za-z0-9_]*)\.py$/;

@@ -2,56 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import {
-  attachmentDownloadHref,
-  createUnresolvedDigitalTwin,
-  labelTwinEvidence,
-  withEditedComposition,
-} from "../src/utils/digitalTwinEvidence";
 import { keyholeMeshForBeam, missedPowerWarning } from "../src/components/KeyholeRaytracingLab";
 import { DISTORTION_HEURISTIC_CONSTANTS, DISTORTION_HEURISTIC_NOTE } from "../src/utils/distortionHeuristic";
 
 const read = (path: string) => readFileSync(resolve(import.meta.dirname, "..", path), "utf8");
-
-test("specimen records: synthetic stats scrubbed, derived chemistry cleared, downloads complete", () => {
-  const base = createUnresolvedDigitalTwin();
-  const demo = labelTwinEvidence(
-    { ...base, mechanical: { ...base.mechanical, mmpdsStatisticalBasis: { basisLevel: "Not assessed", sampleCountN: 128, cpkReliability: 1.62 } } },
-    [base.id],
-  );
-  assert.equal(demo.evidence?.kind, "demo");
-  assert.equal(demo.mechanical.mmpdsStatisticalBasis.cpkReliability, null);
-  assert.equal(demo.mechanical.mmpdsStatisticalBasis.sampleCountN, null);
-
-  const withDerived = {
-    ...base,
-    chemistry: {
-      ...base.chemistry,
-      nominalComposition: { Fe: 70, Cr: 18, Ni: 12 },
-      schaefflerCoordinates: { crEq: 18, niEq: 12, estimatedFerriteNumber: 5, matrixPrediction: "Austenite" },
-      carbonEquivalent: { ceIIW: 0.5 },
-    },
-    thermodynamics: { ...base.thermodynamics, liquidusTemperatureC: 1450, solidusTemperatureC: 1400, freezingRangeC: 50 },
-  };
-  const edited = withEditedComposition(withDerived, { Fe: 60, Cr: 25, Ni: 15 });
-  assert.deepEqual(edited.chemistry.nominalComposition, { Fe: 60, Cr: 25, Ni: 15 });
-  assert.equal(edited.chemistry.schaefflerCoordinates, undefined);
-  assert.equal(edited.chemistry.carbonEquivalent, undefined);
-  assert.equal(edited.thermodynamics.liquidusTemperatureC, null);
-  assert.equal(edited.thermodynamics.solidusTemperatureC, null);
-  assert.equal(edited.thermodynamics.freezingRangeC, null);
-
-  const big = "x".repeat(5000) + "é";
-  const href = attachmentDownloadHref(big);
-  assert.equal(decodeURIComponent(href.slice(href.indexOf(",") + 1)), big, "no truncation");
-  assert.equal(attachmentDownloadHref("data:text/plain;base64,QUJD"), "data:text/plain;base64,QUJD");
-
-  const src = read("src/components/DigitalTwinHub.tsx");
-  for (const claim of ["IndexedDB Engine", "10⁶-point", '"0.5 MB"', "generate synthetic benchmarks", "btoa(", "New Twin", "No 5MB Limit", "Uncapped"]) {
-    assert.ok(!src.includes(claim), claim);
-  }
-  assert.match(src, /Unavailable: synthetic record has no coupon population/);
-});
 
 test("solidification status dot pulses only while loading", () => {
   const src = read("src/components/SolidificationMicrostructureLab.tsx");

@@ -82,80 +82,7 @@ _SYNTHETIC_BV_POINTS: List[Tuple[float, float]] = [
     (-0.05, 2667.027356),
 ]
 
-# Payloads. The first four of each solver are the pre-refactor baselines in
-# .orchestra/golden/{tafel,pourbaix} (same inputs); the fifth adds coverage.
-CASES: Dict[str, Dict[str, Dict[str, Any]]] = {
-    "tafel_corrosion_rate_solver": {
-        "solve_316l_default_fields": {
-            "iCorr_uA_cm2": 1.25, "eCorr_V": -0.35, "betaA": 0.12, "betaC": 0.1,
-            "specimenAreaCm2": 1.0, "initialThicknessMm": 5.0, "allowableLossMm": 1.5,
-            "temperatureC": 25.0, "alloyId": "steel-316l",
-        },
-        "solve_1018_custom_composition": {
-            "iCorr_uA_cm2": 15.0, "eCorr_V": -0.62, "betaA": 0.09, "betaC": 0.15,
-            "specimenAreaCm2": 2.5, "initialThicknessMm": 8.0, "allowableLossMm": 3.0,
-            "temperatureC": 40.0, "alloyId": "steel-1018",
-            "customComposition": {"Fe": 0.985, "Mn": 0.008, "C": 0.002, "Si": 0.005},
-        },
-        "fit_curve_synthetic_bv": {
-            "action": "fit_curve",
-            "points": [{"potential": e, "currentDensity_uA_cm2": i} for e, i in _SYNTHETIC_BV_POINTS],
-            "electrodeAreaCm2": 1.0, "alloyId": "al-6061",
-        },
-        # Silent defaults today: unknown alloyId -> steel-316l, zero -> default, abs().
-        "edge_unknown_alloy_zero_icorr": {
-            "alloyId": "unobtainium-x", "iCorr_uA_cm2": 0, "betaA": -0.12, "betaC": 0,
-            "specimenAreaCm2": -3, "temperatureC": 0,
-        },
-        # Unknown alloyId, but every preset-derived value is supplied by the caller,
-        # so no preset value is consumed (this is what TafelPolarizationLab sends
-        # for its "duplex2205" option when the dataset metadata is filled).
-        "solve_unknown_alloy_full_overrides": {
-            "alloyId": "duplex2205", "alloyName": "2205 Duplex Stainless Steel",
-            "density_g_cm3": 7.80, "equivalentWeight": 25.40, "activationEnergyJ_mol": 33000.0,
-            "iCorr_uA_cm2": 3.0, "eCorr_V": -0.28, "betaA": 0.11, "betaC": 0.13,
-            "specimenAreaCm2": 1.5, "initialThicknessMm": 6.0, "allowableLossMm": 2.0,
-            "temperatureC": 35.0,
-        },
-    },
-    "pourbaix_solver": {
-        "fe_chloride_points": {
-            "element": "Fe", "temperature_C": 25, "ionActivity_log10": -6, "chloride_ppm": 1000,
-            "experimentalPoints": [
-                {"id": "p1", "name": "Acid", "ph": 2, "potential_V": -0.2, "refElectrode": "SCE"},
-                {"id": "p2", "name": "Neutral", "ph": 7, "potential_V": 0.1, "refElectrode": "Ag/AgCl (3M KCl)"},
-                {"id": "p3", "name": "Alkaline", "ph": 12, "potential_V": 0.3, "refElectrode": "SHE"},
-                {"id": "p4", "name": "Cathodic", "ph": 7, "potential_V": -0.9, "refElectrode": "CSE"},
-            ],
-        },
-        "al_hot_chloride": {
-            "element": "Al", "temperature_C": 60, "ionActivity_log10": -4, "chloride_ppm": 200,
-            "experimentalPoints": [
-                {"ph": 3, "potential_V": -1.0},
-                {"ph": 9, "potential_V": -0.5, "refElectrode": "MMS"},
-            ],
-        },
-        "cu_nochloride": {
-            "element": "Cu", "temperature_C": 25, "ionActivity_log10": -6, "chloride_ppm": 0,
-            "experimentalPoints": [{"ph": 5, "potential_V": 0.4, "refElectrode": "SHE"}],
-        },
-        # Silent defaults today: unknown element -> Fe systems + Ni point branch.
-        "edge_unknown_element_badvals": {
-            "element": "Unobtainium", "temperature_C": -300, "ionActivity_log10": 3, "chloride_ppm": -50,
-            "experimentalPoints": [
-                {"ph": 20, "potential_V": 0, "refElectrode": "NotARef"},
-                {"name": "missing fields"},
-            ],
-        },
-        "ni_acid_points": {
-            "element": "Ni", "temperature_C": 80, "ionActivity_log10": -5, "chloride_ppm": 600,
-            "experimentalPoints": [
-                {"id": "n1", "name": "Acid", "ph": 1.5, "potential_V": 0.1, "refElectrode": "Ag/AgCl (Sat KCl)"},
-                {"id": "n2", "name": "Caustic", "ph": 13, "potential_V": 0.5, "refElectrode": "SHE"},
-            ],
-        },
-    },
-}
+CASES: Dict[str, Dict[str, Dict[str, Any]]] = {}
 
 
 def strip_volatile(value: Any) -> Any:
@@ -312,41 +239,18 @@ def load_expected(solver: str, case: str) -> Dict[str, Any]:
 # changes values: every drift row against the d33b6f5 golden must be numeric, except
 # changed strings under the keys below (generated code snippets that print a value).
 # Exception, listed per row pattern: EXPECTED_DOCUMENTED_VALUE_CHANGES below (kinetics
-# predictedHardness_HV -> ASTM E140 from phase6a_t2b_golden_cases; pourbaix
-# WP-E equilibrium engine from pourbaix_golden_check), each row verified exactly by
+# predictedHardness_HV -> ASTM E140 from phase6a_t2b_golden_cases), each row verified exactly by
 # documented_change_violation; it does not widen the bound for any other row.
 STEP_B_ALLOWED_STRING_KEYS = frozenset({"pythonCode"})
-# The tafel solverMethod string was made truthful (linear regression, not "Evans Optimization"); scoped to that solver.
-STEP_B_ALLOWED_STRING_KEYS_BY_SOLVER = {"tafel_corrosion_rate_solver": frozenset({"solverMethod"})}
-# Eyewash removal (fix/eyewash-labels-dead-ui): the tafel annual-rate output no longer carries the template
-# "pythonCode" script (it was not the code that ran) nor the unsourced x3.5 pitting heuristic. Only these leaf keys
-# of the tafel solver may be absent from a re-blessed stdout; any other removed row is still a violation.
-STEP_B_ALLOWED_REMOVED_KEYS = {"tafel_corrosion_rate_solver": frozenset(
-    {"pythonCode", "rulPittingYears", "lossPittingMm", "remainingPittingMm"})}
 STEP_B_DEFAULT_MAX_REL = 1e-2
-# tafel: the drift follows the equivalent-weight change (EW rel r): rates and losses
-# move by r, and remaining wall/pitting thickness (thickness - loss) amplifies it by
-# loss/remaining, which stays below 3 in the golden cases; plus 1e-2 for last-digit
-# rounding of small printed values. Without an EW row the default bound applies.
-STEP_B_TAFEL_EW_AMPLIFICATION = 3.0
-
-
+# Per-solver allowances: none remain after the electrochem solvers were removed.
+STEP_B_ALLOWED_STRING_KEYS_BY_SOLVER: Dict[str, frozenset] = {}
+STEP_B_ALLOWED_REMOVED_KEYS: Dict[str, frozenset] = {}
 def step_b_max_rel(solver: str, rows: List[Dict[str, Any]]) -> float:
-    if solver == "pourbaix_solver":
-        # Every numeric Pourbaix drift row is a documented change verified exactly (pourbaix_golden_check);
-        # there is no generic percentage bound that an undocumented number (Nernst slope, water line, a
-        # measured input potential) could hide under.
-        return 0.0
-    if solver == "tafel_corrosion_rate_solver":
-        ew = [r for r in rows if r["key"] == "equivalentWeight" and r.get("rel") is not None]
-        if ew:
-            return STEP_B_TAFEL_EW_AMPLIFICATION * abs(ew[0]["rel"]) + STEP_B_DEFAULT_MAX_REL
     return STEP_B_DEFAULT_MAX_REL
 
 
-# Documented value changes of every solver: the tranche-2b table (kinetics HV) plus the pourbaix
-# entry (WP-G). Pourbaix rows are verified by documented_change_violation against
-# tools/pourbaix_oracle.py (pourbaix_golden_check), never by a bound.
+# Documented value changes of every solver: the tranche-2b table (kinetics HV).
 EXPECTED_DOCUMENTED_VALUE_CHANGES: Dict[str, Dict[str, str]] = {}
 
 
@@ -355,8 +259,6 @@ def _load_documented_value_changes() -> None:
     EXPECTED_DOCUMENTED_VALUE_CHANGES.clear()
     EXPECTED_DOCUMENTED_VALUE_CHANGES.update(
         {k: dict(v) for k, v in getattr(cases, "EXPECTED_DOCUMENTED_VALUE_CHANGES", {}).items()})
-    import pourbaix_golden_check  # noqa: E402 (python/tools module)
-    EXPECTED_DOCUMENTED_VALUE_CHANGES["pourbaix_solver"] = dict(pourbaix_golden_check.DOCUMENTED_VALUE_CHANGES)
 def _documented_change_patterns(solver: str) -> Dict[str, str]:
     if not EXPECTED_DOCUMENTED_VALUE_CHANGES:
         _load_documented_value_changes()
@@ -364,9 +266,6 @@ def _documented_change_patterns(solver: str) -> Dict[str, str]:
 
 
 def _is_documented_change_row(solver: str, key: str, kind: Optional[str] = None) -> bool:
-    if solver == "tafel_corrosion_rate_solver":
-        import physics_audit_changes as audit  # noqa: E402 (python/tools module)
-        return audit.is_tafel_audit_row(key)
     if not any(re.fullmatch(p, key) for p in _documented_change_patterns(solver)):
         return False
     if solver == "kinetics_ttt_cct_solver" and not _KINETICS_HV_ROW.fullmatch(key):
@@ -382,35 +281,12 @@ _OLD_KINETICS_HRC_BANDS = (18.0, 28.0, 42.0, 54.0, 58.0, 64.0)
 _KINETICS_HV_ROW = re.compile(r"cctContinuousCoolingMap\[(\d+)\]\.predictedHardness_HV(_status)?")
 
 
-def pourbaix_documented_change_violation(row: Dict[str, Any], old_stdout: Optional[Dict[str, Any]],
-                                         new_stdout: Optional[Dict[str, Any]],
-                                         context: Any = None) -> Optional[str]:
-    """Pourbaix hook (WP-G): None when ``row`` is exactly the documented WP-E change.
-
-    The row's old value must be the d33b6f5 golden's leaf (``old_stdout``), its new value the
-    re-blessed document's leaf, and the section of the re-blessed document it lives in must equal
-    the independent oracle (tools/pourbaix_golden_check.document_problems: categories, species
-    and texts equal, boundary/polygon coordinates <= 1e-4 V). Nothing is accepted by tolerance.
-    """
-    key = row["key"]
-    if old_stdout is None or new_stdout is None:
-        return f"{key}: documented change needs the d33b6f5 golden and the re-blessed document"
-    import pourbaix_golden_check as check  # noqa: E402 (python/tools module)
-    if context is None:
-        context = check.Context(old_stdout, new_stdout)
-    return check.row_problem(row, context)
-
-
 def documented_change_violation(solver: str, row: Dict[str, Any],
                                 new_stdout: Optional[Dict[str, Any]],
                                 payload: Optional[Dict[str, Any]] = None,
                                 rows: Optional[List[Dict[str, Any]]] = None,
-                                old_stdout: Optional[Dict[str, Any]] = None,
-                                pourbaix_context: Any = None) -> Optional[str]:
+                                old_stdout: Optional[Dict[str, Any]] = None) -> Optional[str]:
     """None when ``row`` is exactly the documented change (EXPECTED_DOCUMENTED_VALUE_CHANGES).
-
-    pourbaix_solver: see pourbaix_documented_change_violation (needs ``old_stdout``, the
-    d33b6f5 golden's stdout; ``pourbaix_context`` caches the oracle recomputation).
 
     kinetics_ttt_cct_solver predictedHardness_HV: the old value must be the old formula
     round(10.5 * HRC + 40) of the row's (unchanged) HRC, and the new value must be the
@@ -420,11 +296,6 @@ def documented_change_violation(solver: str, row: Dict[str, Any],
 
     """
     key = row["key"]
-    if solver == "pourbaix_solver":
-        return pourbaix_documented_change_violation(row, old_stdout, new_stdout, pourbaix_context)
-    if solver == "tafel_corrosion_rate_solver":
-        import physics_audit_changes as audit  # noqa: E402 (python/tools module)
-        return audit.tafel_row_problem(row, new_stdout)
     if solver == "kinetics_ttt_cct_solver" and not _KINETICS_HV_ROW.fullmatch(key):
         # Engine-fix lane fx-kinetics changes (steel-only model, placeholders, TTT floor, LSW units).
         if new_stdout is None:
@@ -495,21 +366,15 @@ def step_b_violations(solver: str, rows: List[Dict[str, Any]],
 
     ``new_stdout`` is the re-blessed stdout (and ``payload`` the CASES payload, key order
     included) and ``old_stdout`` the d33b6f5 golden's stdout; they are needed only to verify
-    rows listed in EXPECTED_DOCUMENTED_VALUE_CHANGES (pourbaix needs both stdouts; without
+    rows listed in EXPECTED_DOCUMENTED_VALUE_CHANGES (kinetics needs the re-blessed stdout; without
     them those rows are violations).
     """
     bound = step_b_max_rel(solver, rows)
     out = []
-    pourbaix_context = None
     for r in rows:
         leaf = r["key"].rsplit(".", 1)[-1].split("[", 1)[0]
         if _is_documented_change_row(solver, r["key"], r["kind"]):
-            if (solver == "pourbaix_solver" and pourbaix_context is None
-                    and old_stdout is not None and new_stdout is not None):
-                import pourbaix_golden_check  # noqa: E402 (python/tools module)
-                pourbaix_context = pourbaix_golden_check.Context(old_stdout, new_stdout)
-            problem = documented_change_violation(solver, r, new_stdout, payload, rows, old_stdout,
-                                                  pourbaix_context)
+            problem = documented_change_violation(solver, r, new_stdout, payload, rows, old_stdout)
             if problem:
                 out.append(problem)
         elif r["kind"] == "numeric":
@@ -541,12 +406,6 @@ def step_b_excluded_cases() -> set:
             excluded |= set(getattr(cases, "EXPECTED_BEHAVIOUR_CHANGES", {}))
             excluded |= set(getattr(cases, "EXPECTED_SUCCESS_FLAG_CHANGES", ()))
             excluded |= set(getattr(cases, "EXPECTED_UNAVAILABLE_CHANGES", {}))
-    # pourbaix al_hot_chloride / ni_acid_points: 80 C and 60 C requests now give the
-    # TEMPERATURE_UNSUPPORTED envelope (WP-E, 25 C engine); old goldens stay as the record.
-    excluded |= {("tafel_corrosion_rate_solver", "edge_unknown_alloy_zero_icorr"),
-                 ("pourbaix_solver", "edge_unknown_element_badvals"),
-                 ("pourbaix_solver", "al_hot_chloride"),
-                 ("pourbaix_solver", "ni_acid_points")}
     return excluded
 
 
@@ -619,12 +478,7 @@ def capture(solver: str, case: str, force: bool, label: str = BASE_REVISION,
 
 
 SOURCE_TABLES_FILE = "_source_tables.json"
-_TABLE_TARGETS = {
-    "tafel_corrosion_rate_solver": ("ALLOY_LIBRARY", lambda t: t),
-    "pourbaix_solver": ("POURBAIX_ELEMENT_SYSTEMS", lambda t: {
-        el: {"atomicMass": d["atomicMass"], "standardE0_V": d["standardE0_V"], "name": d["name"]}
-        for el, d in t.items()}),
-}
+_TABLE_TARGETS: Dict[str, Any] = {}
 # Solvers without a __main__: solver -> driver script relative to python/ (see run_solver).
 MODULE_DRIVERS: Dict[str, str] = {}
 
@@ -636,7 +490,7 @@ CASES.update(_t2b_cases.CASES)
 _TABLE_TARGETS.update(_t2b_cases.TABLE_TARGETS)
 MODULE_DRIVERS.update(_t2b_cases.MODULE_DRIVERS)
 # ---- END phase6a-t2b block ----
-_load_documented_value_changes()  # tranche-2b kinetics entry + pourbaix (WP-G)
+_load_documented_value_changes()  # tranche-2b kinetics entry
 
 
 def capture_source_tables(force: bool, label: str = BASE_REVISION,
@@ -694,8 +548,8 @@ def capture_source_tables(force: bool, label: str = BASE_REVISION,  # noqa: F811
 # ---- END Phase 6a tranche 2a ----
 
 
-# ---- BEGIN phase6b-vector block: cnls / xrd cases (base faa6684) ----
-# The Phase 6b NumPy/SciPy rewrite of these three solvers is compared against goldens
+# ---- BEGIN phase6b-vector block: xrd case (base faa6684) ----
+# The Phase 6b NumPy/SciPy rewrite of the xrd solver is compared against goldens
 # captured from the faa6684 blobs (not the d33b6f5 label above). They live in
 # golden/phase6b/ and in their own case table, so the Phase 6a bit-exact tests never
 # iterate them; test_phase6b_vector_parity.py applies the stated tolerances.

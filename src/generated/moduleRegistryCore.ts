@@ -295,7 +295,7 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "materials",
       "label": "Phase Diagrams & CALPHAD",
       "description": "Reference binary diagrams and pycalphad equilibrium; CALPHAD needs pycalphad and an installed database covering every selected element, else unavailable.",
-      "next": "electrochem-suite",
+      "next": "research-hub",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -304,32 +304,6 @@ export const MODULE_REGISTRY_CORE = {
         "export": "PhaseDiagramViewer"
       },
       "migrationState": "contracted",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "electrochem-suite",
-      "version": "0.0.0",
-      "workspace": "materials",
-      "label": "Corrosion & Electrochemistry",
-      "description": "PREN, Tafel/Stern–Geary corrosion rate, OCP (ASTM G59), Pourbaix diagrams and Stern–Geary/Faraday corrosion kinetics; no EIS or equivalent-circuit fitting.",
-      "next": "research-hub",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/CorrosionEngineeringLab.tsx",
-        "export": "CorrosionEngineeringLab"
-      },
-      "migrationState": "legacy",
       "evidence": {
         "ceiling": "screening-only"
       },
@@ -373,7 +347,7 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "evidence",
       "label": "Measured Findings",
       "description": "Registry findings labelled as measured, with method, source and uncertainty gaps; the label is user-declared, not verified.",
-      "next": "digital-twin",
+      "next": "traceability",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -382,32 +356,6 @@ export const MODULE_REGISTRY_CORE = {
         "export": "EvidenceWorkspace"
       },
       "migrationState": "contracted",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "digital-twin",
-      "version": "0.0.0",
-      "workspace": "evidence",
-      "label": "Specimen Records",
-      "description": "Per-specimen composition, process, test results and attachments with sources; record completeness is not qualification.",
-      "next": "traceability",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/DigitalTwinHub.tsx",
-        "export": "DigitalTwinHub"
-      },
-      "migrationState": "legacy",
       "evidence": {
         "ceiling": "screening-only"
       },

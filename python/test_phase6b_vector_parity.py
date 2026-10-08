@@ -1,4 +1,6 @@
-"""Phase 6b vectorisation lane: cnls / xrd goldens and parity.
+"""Phase 6b vectorisation lane: xrd goldens and parity.
+
+(The cnls_fitting_solver lane was removed with the electrochemistry modules.)
 
 The goldens in python/golden/phase6b/<solver>/<case>.json were captured from the
 faa6684 solver blobs (tools/capture_phase6a_golden.py --phase6b-vector), i.e. the
@@ -44,7 +46,6 @@ from phase6a_test_support import require_git_revision  # noqa: E402
 BASE = cases.BASE_REVISION
 REL_TOL = 1e-9
 PARITY_MODE = {
-    "cnls_fitting_solver": "tolerance",
     "xrd_peak_deconvolution": "minimiser",
 }
 # xrd: cases with no observations never reach the minimiser and must stay bit-exact.
@@ -86,89 +87,6 @@ def _display_unit(value):
     return 10.0 ** -digits if digits <= 6 else None
 
 
-# Documented change (cnls_fitting_solver, fx-xrd lane): the faa6684 "Hirschorn" capacitance
-# was algebraically identical to the Hsu-Mansfeld one, so cHirschorn_F / cHirschorn_uF are
-# removed. A removal is tolerated ONLY for these two leaves, ONLY for the cnls_fitting_solver
-# (the caller passes solver=), ONLY at the cnls row path [physicalValidation.]cpeCapacitances[i].<leaf>,
-# and only when the old golden value equals its sibling Hsu-Mansfeld value to 1e-12 relative
-# (the duplicate claim holds on the data).
-HIRSCHORN_SOLVER = "cnls_fitting_solver"
-HIRSCHORN_PATH = re.compile(r"^(?:physicalValidation\.)?cpeCapacitances\[\d+\]\.(cHirschorn_F|cHirschorn_uF)$")
-HIRSCHORN_REMOVED_LEAVES = {"cHirschorn_F": "cHsuMansfeld_F", "cHirschorn_uF": "cHsuMansfeld_uF"}
-
-
-def _is_documented_hirschorn_removal(row, old_flat, solver=None):
-    if solver != HIRSCHORN_SOLVER or not HIRSCHORN_PATH.match(row["key"]):
-        return False
-    leaf = row["key"].rsplit(".", 1)[-1]
-    sibling = HIRSCHORN_REMOVED_LEAVES.get(leaf)
-    if sibling is None:
-        return False
-    sibling_key = row["key"][: -len(leaf)] + sibling
-    # the two formulas are algebraically equal but not bit-identical in floating point
-    return (sibling_key in old_flat and isinstance(row["old"], float)
-            and abs(old_flat[sibling_key] - row["old"]) <= 1e-12 * abs(row["old"]))
-
-
-# Documented change EUQ-2 (physics audit, cnls_fitting_solver): the CPE effective capacitances (Brug 1984,
-# Hsu-Mansfeld 2001) now use the FITTED Rs / Rct instead of the topology's initial-guess resistances, presets
-# get rows too, and the per-cm2 value / physics note are null without electrodeAreaCm2. The faa6684 goldens
-# hold the old numbers, so ONLY the cpeCapacitances subtree of the cnls solver is taken out of the tolerance
-# comparison, and the new subtree must equal an independent recomputation from the run's own fitted
-# parameters (euq2_expected_capacitances). Every other leaf still follows the tolerance rule.
-EUQ2_PRESET_ROLES = {"randles_cpe": (("Qdl", "ndl", "Rct", "Rs"),)}
-
-
-def split_cpe_capacitances(stdout):
-    """(copy of stdout without the cpeCapacitances list, that list or None)."""
-    out = json.loads(json.dumps(stdout))
-    holder = out.get("physicalValidation") if isinstance(out.get("physicalValidation"), dict) else out
-    return out, holder.pop("cpeCapacitances", None)
-
-
-def euq2_expected_capacitances(payload, stdout):
-    """Independent Brug / Hsu-Mansfeld values from the fitted parameters (fit) or the payload parameters."""
-    rows = stdout.get("parameters") or payload.get("parameters") or []
-    value = {(p["elementId"], p.get("field", "value")): p.get("fittedValue", p.get("value")) for p in rows}
-    by_name = {p["paramName"]: p.get("fittedValue", p.get("value")) for p in rows}
-    topology = payload["topology"]
-    triples = []  # (q, n, rs, rp)
-    if isinstance(topology, dict):
-        rs = sum(value.get((el["id"], "value"), el["value"]) for b in topology["branches"]
-                 if b["connection"] == "series" for el in b["elements"] if el["type"] == "R")
-        for b in topology["branches"]:
-            if b["connection"] != "parallel":
-                continue
-            rp = [value.get((el["id"], "value"), el["value"]) for el in b["elements"] if el["type"] == "R"]
-            for el in b["elements"]:
-                if el["type"] == "CPE":
-                    triples.append((value.get((el["id"], "value"), el["value"]),
-                                    value.get((el["id"], "exponent"), el["exponent"]),
-                                    rs, 1.0 / sum(1.0 / r for r in rp)))
-    else:
-        for q, n, rp, rs in EUQ2_PRESET_ROLES.get(topology, ()):
-            if q in by_name:
-                triples.append((by_name[q], by_name[n], by_name[rs], by_name[rp]))
-    expected = []
-    for q, n, rs, rp in triples:
-        expected.append({"cBrug_F": q ** (1 / n) * (rs * rp / (rs + rp)) ** ((1 - n) / n),
-                         "cHsuMansfeld_F": q ** (1 / n) * rp ** ((1 - n) / n),
-                         "associatedRs": round(rs, 3), "associatedRct": round(rp, 3)})
-    return expected
-
-
-def assert_euq2_capacitances(test, payload, stdout, label):
-    _, actual = split_cpe_capacitances(stdout)
-    expected = euq2_expected_capacitances(payload, stdout)
-    test.assertEqual(len(actual or []), len(expected), label)
-    for row, exp in zip(actual or [], expected):
-        for key in ("cBrug_F", "cHsuMansfeld_F"):
-            test.assertLessEqual(abs(row[key] / exp[key] - 1.0), 1e-9, f"{label}: {key}")
-        test.assertEqual((row["associatedRs"], row["associatedRct"]), (exp["associatedRs"], exp["associatedRct"]), label)
-        if payload.get("electrodeAreaCm2") is None:
-            test.assertIsNone(row["cEffectiveArea_uFcm2"], label)
-
-
 def tolerance_violations(old, new, rel_tol=REL_TOL, display_unit=False, solver=None):
     """Rows of drift_report.diff that break the "tolerance" rule (empty == parity).
 
@@ -179,37 +97,20 @@ def tolerance_violations(old, new, rel_tol=REL_TOL, display_unit=False, solver=N
     in-process kernel comparisons (old blob vs new on the same machine) never
     use this allowance."""
     bad = []
-    old_flat = dict(drift_report.flatten(old))
     for row in drift_report.diff(old, new):
-        if row["kind"] == "removed" and _is_documented_hirschorn_removal(row, old_flat, solver):
-            continue
         if row["kind"] == "numeric" and isinstance(row["old"], float) and isinstance(row["new"], float):
             if row["old"] != 0 and abs(row["rel"]) <= rel_tol:
                 continue
             unit = _display_unit(row["old"]) if display_unit else None
             if unit is not None and abs(row["abs"]) <= unit * (1 + 1e-9):
                 continue
-        if _is_cnls_iteration_count_slip(row, solver, display_unit):
-            continue
         bad.append(row)
     return bad
 
 
-def _is_cnls_iteration_count_slip(row, solver, display_unit):
-    """The Levenberg-Marquardt iteration count of an ill-conditioned fit may differ by one between
-    LAPACK builds (the accept/stop tests act on rounding-level quantities of J^T J; see
-    test_random_starts_reach_the_same_optimum). CI on Linux hit 7 vs 6 and 6 vs 7 on a Windows
-    capture. Only the integer count, only by one, only for the cnls fitting solver (or a cross-platform
-    golden comparison); every fitted value and the termination reason must still match."""
-    if row["key"] != "iterations" or not (solver == "cnls_fitting_solver" or display_unit):
-        return False
-    old, new = row["old"], row["new"]
-    return isinstance(old, int) and isinstance(new, int) and not isinstance(old, bool) and abs(old - new) <= 1
-
-
 def _git_available() -> bool:
     try:
-        golden.solver_bytes("cnls_fitting_solver", BASE)
+        golden.solver_bytes("xrd_peak_deconvolution", BASE)
         return True
     except Exception:
         return False
@@ -240,7 +141,7 @@ class GoldenFilesTest(unittest.TestCase):
     def test_case_counts(self):
         self.assertEqual(tuple(cases.CASES), cases.SOLVERS)
         self.assertEqual(set(PARITY_MODE), set(cases.SOLVERS))
-        expected = {"cnls_fitting_solver": 5, "xrd_peak_deconvolution": 5}
+        expected = {"xrd_peak_deconvolution": 5}
         self.assertEqual({s: len(cases.CASES[s]) for s in cases.SOLVERS}, expected)
 
     def test_golden_files_hold_no_volatile_keys(self):
@@ -284,7 +185,7 @@ class GoldenBindingTest(unittest.TestCase):
             fresh = json.loads((tmp / solver / f"{case}.json").read_text(encoding="utf-8"))
             old = committed[(solver, case)]
             self.assertEqual(fresh["exitCode"], old["exitCode"], f"{solver}/{case}")
-            # Tolerance, not bytes: the old cnls blob also uses NumPy complex arithmetic, so
+            # Tolerance, not bytes: the old blob may use NumPy arithmetic, so
             # a recapture on another platform/BLAS can differ at ulp level (CI: Linux,
             # Python 3.11/3.12). Same rule as GoldenParityTest.
             rows = tolerance_violations(old["stdout"], fresh["stdout"], display_unit=True)
@@ -303,10 +204,9 @@ class GoldenBindingTest(unittest.TestCase):
 
     def test_from_revision_other_than_base_is_refused(self):
         self._in_temp_dir()
-        # b5c83c3~1 holds an older cnls_fitting_solver blob (the LM sign fix came after it).
         with self.assertRaises(golden.CaptureRefused):
-            golden.capture_phase6b_vector("cnls_fitting_solver", "randles_modulus_fit", force=True,
-                                          from_revision="b5c83c3~1")
+            golden.capture_phase6b_vector("xrd_peak_deconvolution", next(iter(cases.CASES["xrd_peak_deconvolution"])),
+                                          force=True, from_revision="HEAD")
 
 
 class ToleranceRuleTest(unittest.TestCase):
@@ -348,15 +248,9 @@ class GoldenParityTest(unittest.TestCase):
                     XrdParityTest.assert_minimiser_parity(self, case, doc["stdout"], fresh["stdout"])
                     continue
                 old_out, new_out = doc["stdout"], fresh["stdout"]
-                if solver == HIRSCHORN_SOLVER:  # EUQ-2: cpeCapacitances checked against the oracle instead
-                    assert_euq2_capacitances(self, cases.CASES[solver][case], new_out, f"{solver}/{case}")
-                    old_out, new_out = split_cpe_capacitances(old_out)[0], split_cpe_capacitances(new_out)[0]
                 rows = (tolerance_violations(old_out, new_out, display_unit=True, solver=solver) if mode == "tolerance"
                         else drift_report.diff(old_out, new_out))
                 self.assertEqual(rows, [], drift_report.render(f"{solver}/{case}", rows, 20))
-
-    def test_cnls_fitting_solver(self):
-        self._run("cnls_fitting_solver")
 
     def test_xrd_peak_deconvolution(self):
         self._run("xrd_peak_deconvolution")
@@ -366,160 +260,6 @@ def _in_process(solver, case_or_payload, module=None):
     payload = cases.CASES[solver][case_or_payload] if isinstance(case_or_payload, str) else case_or_payload
     module = __import__(solver) if module is None else module
     return as_stdout(bench.dispatch(module, solver, payload))
-
-
-class HirschornRemovalGuardTest(unittest.TestCase):
-    """The documented cHirschorn_* removal is tolerated exactly, nothing more."""
-    CNLS = "cnls_fitting_solver"
-
-    @staticmethod
-    def rows(values, prefix="physicalValidation"):
-        return {prefix: {"cpeCapacitances": [values]}}
-
-    def test_documented_removal_is_tolerated_for_the_cnls_solver_at_its_path(self):
-        old = self.rows({"cHirschorn_F": 1.5e-6, "cHirschorn_uF": 1.5, "cHsuMansfeld_F": 1.5e-6 * (1 + 1e-15),
-                         "cHsuMansfeld_uF": 1.5})
-        new = self.rows({"cHsuMansfeld_F": 1.5e-6 * (1 + 1e-15), "cHsuMansfeld_uF": 1.5})
-        self.assertEqual(tolerance_violations(old, new, solver=self.CNLS), [])
-        # the validate_dataset action has no physicalValidation wrapper
-        self.assertEqual(tolerance_violations({"cpeCapacitances": old["physicalValidation"]["cpeCapacitances"]},
-                                              {"cpeCapacitances": new["physicalValidation"]["cpeCapacitances"]},
-                                              solver=self.CNLS), [])
-
-    def test_removal_is_refused_for_other_solvers_and_other_paths(self):
-        old = self.rows({"cHirschorn_F": 1.5e-6, "cHsuMansfeld_F": 1.5e-6})
-        new = self.rows({"cHsuMansfeld_F": 1.5e-6})
-        self.assertEqual(len(tolerance_violations(old, new)), 1)  # no solver
-        self.assertEqual(len(tolerance_violations(old, new, solver="xrd_peak_deconvolution")), 1)
-        elsewhere = {"c": [{"cHirschorn_F": 1.5e-6, "cHsuMansfeld_F": 1.5e-6}]}
-        self.assertEqual(len(tolerance_violations(elsewhere, {"c": [{"cHsuMansfeld_F": 1.5e-6}]}, solver=self.CNLS)), 1)
-        deeper = {"x": {"cpeCapacitances": [{"cHirschorn_F": 1.5e-6, "cHsuMansfeld_F": 1.5e-6}]}}
-        self.assertEqual(len(tolerance_violations(deeper, {"x": {"cpeCapacitances": [{"cHsuMansfeld_F": 1.5e-6}]}},
-                                                  solver=self.CNLS)), 1)
-
-    def test_removal_is_refused_when_the_values_are_not_duplicates(self):
-        old = self.rows({"cHirschorn_F": 1.5e-6, "cHsuMansfeld_F": 1.6e-6})
-        self.assertEqual(len(tolerance_violations(old, self.rows({"cHsuMansfeld_F": 1.6e-6}), solver=self.CNLS)), 1)
-
-    def test_other_removed_keys_and_changed_values_are_still_violations(self):
-        old = self.rows({"cHirschorn_F": 1.5e-6, "cHsuMansfeld_F": 1.5e-6, "cBrug_F": 2.0e-6})
-        self.assertEqual(len(tolerance_violations(old, self.rows({"cHsuMansfeld_F": 1.5e-6}), solver=self.CNLS)), 1)
-        changed = self.rows({"cHsuMansfeld_F": 1.5e-6, "cBrug_F": 2.1e-6})
-        self.assertEqual([r["key"] for r in tolerance_violations(old, changed, solver=self.CNLS)],
-                         ["physicalValidation.cpeCapacitances[0].cBrug_F"])
-
-
-class Euq2CapacitanceGuardTest(unittest.TestCase):
-    """The EUQ-2 exclusion of cpeCapacitances is backed by the oracle: a wrong row is detected."""
-
-    def test_initial_guess_resistances_are_detected(self):
-        case = "custom_two_rc_modulus_fit"
-        payload = cases.CASES["cnls_fitting_solver"][case]
-        out = _in_process("cnls_fitting_solver", payload)
-        assert_euq2_capacitances(self, payload, out, case)
-        golden_rows = split_cpe_capacitances(load("cnls_fitting_solver", case)["stdout"])[1]
-        self.assertEqual((golden_rows[0]["associatedRs"], golden_rows[0]["associatedRct"]), (15.0, 60.0))  # initial
-        bad = json.loads(json.dumps(out))
-        bad["physicalValidation"]["cpeCapacitances"] = golden_rows  # the old initial-guess values
-        with self.assertRaises(AssertionError):
-            assert_euq2_capacitances(self, payload, bad, case)
-
-    def test_preset_rows_are_required(self):
-        case = "randles_cpe_proportional_fit"
-        payload = cases.CASES["cnls_fitting_solver"][case]
-        out = _in_process("cnls_fitting_solver", payload)
-        self.assertEqual(len(split_cpe_capacitances(out)[1]), 1)
-        self.assertEqual(split_cpe_capacitances(load("cnls_fitting_solver", case)["stdout"])[1], [])
-        bad = json.loads(json.dumps(out))
-        bad["physicalValidation"]["cpeCapacitances"] = []
-        with self.assertRaises(AssertionError):
-            assert_euq2_capacitances(self, payload, bad, case)
-
-
-@require_git_revision(GIT, f"git or revision {BASE} unavailable")
-class CnlsKernelParityTest(unittest.TestCase):
-    """Vectorised LM (normal equations, forward-difference Jacobian, LAPACK solve) and
-    the Lin-KK Tikhonov solve against the faa6684 pure-Python loops, in-process."""
-    maxDiff = None
-
-    def _payloads(self):
-        large = bench._large_payloads()["cnls_fitting_solver"]
-        table = dict(cases.CASES["cnls_fitting_solver"])
-        table.update(large)
-        return table
-
-    def test_fits_and_lin_kk_match_old_loops(self):
-        old_module = blob_module("cnls_fitting_solver")
-        for case, payload in self._payloads().items():
-            with self.subTest(case=case):
-                old = _in_process("cnls_fitting_solver", payload, old_module)
-                new = _in_process("cnls_fitting_solver", payload)
-                assert_euq2_capacitances(self, payload, new, case)  # EUQ-2 documented change
-                rows = tolerance_violations(split_cpe_capacitances(old)[0], split_cpe_capacitances(new)[0],
-                                            solver="cnls_fitting_solver")
-                self.assertEqual(rows, [], drift_report.render(case, rows, 20))
-
-    @staticmethod
-    def _random_start_payloads(count=100, seed=11):
-        import random
-        rng = random.Random(seed)
-        fits = [k for k, v in cases.CASES["cnls_fitting_solver"].items() if v["action"] == "fit"]
-        out = []
-        for i in range(count):
-            base = cases.CASES["cnls_fitting_solver"][fits[i % len(fits)]]
-            params = []
-            for p in base["parameters"]:
-                q = dict(p)
-                if p["field"] == "exponent":
-                    q["value"] = min(p["max"], max(p["min"], p["value"] + rng.uniform(-0.1, 0.1)))
-                else:
-                    q["value"] = min(p["max"], max(p["min"], p["value"] * math.exp(rng.uniform(-1.2, 1.2))))
-                params.append(q)
-            out.append(dict(base, parameters=params))
-        return out
-
-    def test_random_starts_reach_the_same_optimum(self):
-        """Iteration counts are NOT guaranteed equal. Near the optimum the LM
-        accept/stop tests (relative step <= 1e-8 with reduction <= 1e-12, scaled
-        gradient <= 1e-10) act on rounding-level quantities of an ill-conditioned
-        J^T J, so LAPACK vs Gauss-Jordan rounding changes how many iterations run
-        (Windows capture machine, these 100 starts: 70 identical, 26 differ in
-        iteration count only, 4 differ in termination - in 2 the old run hit
-        maxIterations and the new converged, in 1 the reverse, in 1 both converged by
-        different stopping rules). The optimum agrees:
-        chi-square within 1e-9 relative, every fitted value within 1e-8 relative
-        (observed max 2.2e-9). Diagonal column scaling of the damped system was
-        tried and did not improve agreement (68 identical), so it was not added."""
-        old = blob_module("cnls_fitting_solver")
-        import cnls_fitting_solver as cnls
-        for i, payload in enumerate(self._random_start_payloads()):
-            with self.subTest(start=i):
-                args = (payload["topology"], payload["points"], payload["parameters"], payload["weighting"],
-                        int(payload["maxIterations"]))
-                with np.errstate(all="ignore"):
-                    a, b = old.run_cnls_fit(*args), cnls.run_cnls_fit(*args)
-                self.assertLessEqual(abs(b["chiSquare"] - a["chiSquare"]), REL_TOL * a["chiSquare"])
-                for pa, pb in zip(a["parameters"], b["parameters"]):
-                    self.assertLessEqual(abs(pb["fittedValue"] - pa["fittedValue"]), 1e-8 * abs(pa["fittedValue"]))
-
-    def test_mutation_half_lm_step_is_detected(self):
-        import cnls_fitting_solver as cnls
-        solve = np.linalg.solve
-        with patch.object(cnls.np.linalg, "solve", lambda a, b: 0.5 * solve(a, b)):
-            mutated = _in_process("cnls_fitting_solver", "randles_modulus_fit")
-        rows = tolerance_violations(load("cnls_fitting_solver", "randles_modulus_fit")["stdout"], mutated)
-        self.assertTrue(any(r["key"] == "iterations" for r in rows), rows[:3])
-        # and the unmutated in-process run is within tolerance of the golden
-        self.assertEqual(tolerance_violations(load("cnls_fitting_solver", "randles_modulus_fit")["stdout"],
-                                              _in_process("cnls_fitting_solver", "randles_modulus_fit")), [])
-
-    def test_mutation_lin_kk_regularisation_is_detected(self):
-        import cnls_fitting_solver as cnls
-        eye = np.eye
-        with patch.object(cnls.np, "eye", lambda n: 1e3 * eye(n)):
-            mutated = _in_process("cnls_fitting_solver", "linkk_validate_dataset")
-        rows = tolerance_violations(load("cnls_fitting_solver", "linkk_validate_dataset")["stdout"], mutated)
-        self.assertTrue(any(r["key"].startswith("linKK.") for r in rows))
 
 
 class XrdParityTest(unittest.TestCase):
@@ -747,12 +487,6 @@ class NewValidationTest(unittest.TestCase):
         no_ka2 = cases.CASES["xrd_peak_deconvolution"]["pv_single_no_ka2"]
         self.assertEqual(golden.run_solver("xrd_peak_deconvolution", dict(no_ka2, ka2Ratio=float("nan")))["exitCode"], 0)
 
-    def test_cnls_non_finite_lin_kk_is_unchanged_nan(self):
-        points = [dict(p) for p in cases._RANDLES_POINTS]
-        points[5]["zReal"] = float("nan")
-        fresh = golden.run_solver("cnls_fitting_solver", {"action": "validate_dataset", "points": points})
-        self.assertEqual((fresh["exitCode"], fresh["stderr"]), (0, ""))
-        self.assertTrue(math.isnan(fresh["stdout"]["linKK"]["kkChiSquare"]))
 
 
 if __name__ == "__main__":

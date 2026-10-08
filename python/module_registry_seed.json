@@ -95,19 +95,9 @@
     "label": "Phase Diagrams & CALPHAD",
     "scope": "Research",
     "description": "Reference binary diagrams and pycalphad equilibrium; CALPHAD needs pycalphad and an installed database covering every selected element, else unavailable.",
-    "next": "electrochem-suite",
+    "next": "research-hub",
     "viewComponent": "src/components/PhaseDiagramViewer.tsx",
     "viewExport": "PhaseDiagramViewer"
-  },
-  {
-    "id": "electrochem-suite",
-    "workspace": "materials",
-    "label": "Corrosion & Electrochemistry",
-    "scope": "Research",
-    "description": "PREN, Tafel/Stern–Geary corrosion rate, OCP (ASTM G59), Pourbaix diagrams and Stern–Geary/Faraday corrosion kinetics; no EIS or equivalent-circuit fitting.",
-    "next": "research-hub",
-    "viewComponent": "src/components/CorrosionEngineeringLab.tsx",
-    "viewExport": "CorrosionEngineeringLab"
   },
   {
     "id": "research-hub",
@@ -125,19 +115,9 @@
     "label": "Measured Findings",
     "scope": "Research",
     "description": "Registry findings labelled as measured, with method, source and uncertainty gaps; the label is user-declared, not verified.",
-    "next": "digital-twin",
+    "next": "traceability",
     "viewComponent": "src/components/EvidenceWorkspace.tsx",
     "viewExport": "EvidenceWorkspace"
-  },
-  {
-    "id": "digital-twin",
-    "workspace": "evidence",
-    "label": "Specimen Records",
-    "scope": "Research",
-    "description": "Per-specimen composition, process, test results and attachments with sources; record completeness is not qualification.",
-    "next": "traceability",
-    "viewComponent": "src/components/DigitalTwinHub.tsx",
-    "viewExport": "DigitalTwinHub"
   },
   {
     "id": "traceability",

@@ -21,7 +21,6 @@ PYTHON_DIR = Path(__file__).resolve().parent
 # through a python-ipc route. Ratchet: entries may only be removed; the keys must
 # stay a subset of the immutable python/module_warm_parity.ceiling.json.
 WARM_WITHOUT_REGISTRY_OPERATION = {
-    "cnls_fitting_solver": "no python-ipc route since /api/python/cnls-* were removed; battery_corrosion_eis_solver imports its Lin-KK test",
     "xrd_peak_deconvolution": "/api/python/xrd-deconvolve has no caller in src/",
     "lpbf_build_job_solver": "build jobs go through the LPBF worker (/api/lpbf/jobs), not a python-ipc route",
 }

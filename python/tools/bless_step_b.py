@@ -14,7 +14,7 @@ solver into ``python/golden/phase6a/<solver>/step_b/<case>.json``:
 - the drift against the d33b6f5 golden must pass capture_phase6a_golden.step_b_violations
   (numeric rows only, plus changed pythonCode strings; |rel| bounded per solver; rows
   listed in EXPECTED_DOCUMENTED_VALUE_CHANGES are instead checked exactly against the
-  fresh output and, for pourbaix, the d33b6f5 golden and tools/pourbaix_oracle.py), otherwise nothing is written;
+  fresh output and, for kinetics, the d33b6f5 golden and tools/kinetics_documented_changes.py), otherwise nothing is written;
 - a case whose stdout equals the d33b6f5 golden gets no step_b file (a stale one
   is removed);
 - otherwise the file records the stdout, the exit code, the provenance block, the
@@ -26,7 +26,7 @@ expectation (step_b file if one existed, else the d33b6f5 golden). It goes into 
 commit body (design section 3: golden files are re-blessed only with the report).
 
 Usage (from python/):
-    python -B tools/bless_step_b.py --solver tafel_corrosion_rate_solver [--dry-run]
+    python -B tools/bless_step_b.py --solver kinetics_ttt_cct_solver [--dry-run]
 """
 
 from __future__ import annotations

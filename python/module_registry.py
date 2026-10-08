@@ -154,7 +154,6 @@ def _worker_op(method: str) -> Operation:
 
 _THERMAL_SOLVER = _op("lpbf-thermal-solver", "POST", "/api/python/lpbf-thermal-solver",
                       _py("lpbf_thermal_solver", _PHYSICS_TIMEOUT_MS, warm=True))
-_AI_CONSULT = _op("ai-consult", "POST", "/api/consult", _NODE)
 _EVIDENCE_READS_ONLY = ("EvidenceWorkspace only reads useLpbfBuildJobStore (lastKey, job) and "
                         "useLpbfEngineeringStore; it dispatches no server request (build jobs are "
                         "submitted from 3d-distortion-lab), so no operation is bound.")
@@ -187,19 +186,11 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
         _op("lpbf-source-measurements", "GET", "/api/lpbf/sources/:datasetId/measurements", _NODE),
     ),
     # The thermal-solver call came from the InverseAlloyStudio subtree (LaserMeltPoolThermalMap), deleted 2026-10-04.
-    "electrochem-suite": (
-        _op("pourbaix-diagram", "POST", "/api/python/pourbaix-diagram", _py("pourbaix_solver", _PHYSICS_TIMEOUT_MS, warm=True)),
-        _op("tafel-corrosion-rate", "POST", "/api/python/tafel-corrosion-rate",
-            _py("tafel_corrosion_rate_solver", _CHARACTERIZATION_TIMEOUT_MS, warm=True)),
-        _op("battery-corrosion-eis", "POST", "/api/python/battery-corrosion-eis",
-            _py("battery_corrosion_eis_solver", _CHARACTERIZATION_TIMEOUT_MS, warm=True)),
-    ),
     "research-hub": (
         _op("research-registry", "GET", "/api/research/registry", _NODE),
         _op("research-registry-save", "PUT", "/api/research/registry", _NODE),
         _op("research-search", "GET", "/api/research/search", _NODE),
     ),
-    "digital-twin": (_AI_CONSULT,),
 }
 
 LEGACY_NOTES: Dict[str, Tuple[str, ...]] = {

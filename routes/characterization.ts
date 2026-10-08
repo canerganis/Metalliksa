@@ -24,16 +24,6 @@ async function handlePythonDispatch(scriptPath: string, payload: any, res: Respo
   }
 }
 
-// Corrosion EIS & kinetics (corrosion_kinetics action)
-characterizationRouter.post("/api/python/battery-corrosion-eis", (req: Request, res: Response) => {
-  return handlePythonDispatch("python/battery_corrosion_eis_solver.py", req.body, res);
-});
-
-// ASTM G102 / G59 Tafel Annual Corrosion Rate Solver (Python CPython 3.10 Engine)
-characterizationRouter.post("/api/python/tafel-corrosion-rate", (req: Request, res: Response) => {
-  return handlePythonDispatch("python/tafel_corrosion_rate_solver.py", req.body, res);
-});
-
 // XRD Peak Deconvolution & Rietveld
 characterizationRouter.post("/api/python/xrd-deconvolve", (req: Request, res: Response) => {
   return handlePythonDispatch("python/xrd_peak_deconvolution.py", req.body, res);

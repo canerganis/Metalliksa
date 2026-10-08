@@ -31,7 +31,7 @@ function densityContextLine(specimen: ActiveSpecimenState): string {
 // freezing range) that are unrelated to that module, so the panel is hidden there (see ScientificContextPanel).
 const MODULES_WITH_CONTEXT: ReadonlySet<string> = new Set([
   'alloy-builder', '3d-distortion-lab', 'phase-diagram',
-  'research-hub', 'experimental-data', 'digital-twin', 'traceability',
+  'research-hub', 'experimental-data', 'traceability',
 ]);
 
 export function hasScientificContext(moduleId: ModuleId): boolean {
@@ -72,7 +72,7 @@ export function buildScientificContext(moduleId: ModuleId, specimen: ActiveSpeci
     limitation: 'Results depend on database quality, initial microstructure assumptions, and cooling-rate accuracy. This is not a substitute for experiment.',
   };
 
-  if (moduleId === 'research-hub' || moduleId === 'experimental-data' || moduleId === 'digital-twin' || moduleId === 'traceability') return {
+  if (moduleId === 'research-hub' || moduleId === 'experimental-data' || moduleId === 'traceability') return {
     title: 'Evidence chain for any claim',
     observation: `${shared} Here the goal is traceability: which data supports a claim, under which conditions, with what uncertainty.`,
     mechanism: 'Scientific confidence is built through claim → method → data → condition match → uncertainty characterization → independent validation. Solver convergence supports numerical robustness; external comparison supports real-world confidence.',

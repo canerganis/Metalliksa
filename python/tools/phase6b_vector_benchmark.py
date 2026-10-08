@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-Phase 6b vectorisation lane: before/after timing of cnls_fitting_solver,
-and xrd_peak_deconvolution.
+Phase 6b vectorisation lane: before/after timing of xrd_peak_deconvolution.
 
 "before" is the faa6684 blob (git show, executed from a temp module), "after" is
 the working tree. Three measurements per case, each the median of --repeat runs:
@@ -54,16 +53,6 @@ def load_blob_module(solver: str, revision: str = cases.BASE_REVISION) -> types.
 
 def dispatch(module: types.ModuleType, solver: str, data: Dict[str, Any]) -> Any:
     """In-process equivalent of the solver's stdin dispatch for the benchmarked actions."""
-    if solver == "cnls_fitting_solver":
-        topology = data.get("topology", data.get("topologyId", "standard_randles"))
-        if data.get("action") == "validate_dataset":
-            points = data.get("points", [])
-            return {"linKK": module.perform_lin_kk_stationarity_test(points),
-                    "inductance": module.analyze_and_deembed_high_freq_inductance(points),
-                    "cpeCapacitances": module.calculate_cpe_effective_capacitances(
-                        data.get("parameters", []), topology, float(data.get("electrodeAreaCm2", 1.0)))}
-        return module.run_cnls_fit(topology, data.get("points", []), data.get("parameters", []),
-                                   data.get("weighting", "modulus"), int(data.get("maxIterations", 80)))
     if solver == "xrd_peak_deconvolution":
         return module.deconvolve_peak_roi(
             data.get("points", []), data.get("center", 43.68), data.get("intensity", 4000.0),
@@ -102,14 +91,7 @@ def spawn_seconds(solver: str, payload: Any, repeat: int, script: Path = None) -
 
 def _large_payloads() -> Dict[str, Dict[str, Dict[str, Any]]]:
     """Larger synthetic payloads (scaling only; not goldens)."""
-    two_rc = cases.CASES["cnls_fitting_solver"]["custom_two_rc_modulus_fit"]
-    points = cases._eis_points(cases._two_rc, 1e6, 1e-3, 40, 0.0015)  # 361 frequencies
     return {
-        "cnls_fitting_solver": {
-            "scale_custom_two_rc_F361_P6": dict(two_rc, points=points),
-            "scale_linkk_F361": {"action": "validate_dataset", "topology": "standard_randles",
-                                 "electrodeAreaCm2": 1.0, "points": points},
-        },
         "xrd_peak_deconvolution": {
             "scale_pv_ka2_N651": dict(cases.CASES["xrd_peak_deconvolution"]["pv_ka2_cu111"],
                                       points=cases._xrd_points(40.0, cases._pv, 43.30, 4000.0, 0.20, 0.4,

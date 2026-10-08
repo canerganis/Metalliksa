@@ -165,12 +165,6 @@ class UiAliasTest(unittest.TestCase):
             with self.assertRaises(reg.UnknownAlloyError):
                 reg.resolve_alloy_id(name)
 
-    def test_extra_aliases_do_not_unlock_the_tafel_grade5_preset(self):
-        import tafel_corrosion_rate_solver as tafel
-        with self.assertRaises(iv.ValidationError) as ctx:
-            tafel.corrosion_preset("Ti-6Al-4V Grade 5 Airframe Billets (AMS 4928)")
-        self.assertEqual(ctx.exception.code, iv.UNKNOWN_ALLOY)
-
 
 class ProcessMapNameTest(unittest.TestCase):
     def test_same_mapping_as_the_old_expression(self):

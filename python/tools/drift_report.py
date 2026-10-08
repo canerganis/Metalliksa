@@ -10,7 +10,7 @@ are reported with abs = new - old and rel = (new - old) / |old| (None when old i
 
 Usage (from python/):
     python -B tools/drift_report.py                       # every golden case vs current code
-    python -B tools/drift_report.py --solver pourbaix_solver
+    python -B tools/drift_report.py --solver kinetics_ttt_cct_solver
     python -B tools/drift_report.py --old a.json --new b.json
 Exit code 0 when nothing drifted, 1 otherwise.
 """

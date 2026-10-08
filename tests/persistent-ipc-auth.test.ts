@@ -116,7 +116,7 @@ test("one reply policy for both channels: unsigned or >= 400 means 'not executed
 
 test("UNIX frames: signed head + body; reply parser is incremental and bounded", () => {
   const token = generateIpcToken();
-  const { data, nonce } = buildUnixFrame(token, { action: "execute", script: "python/pourbaix_solver.py" });
+  const { data, nonce } = buildUnixFrame(token, { action: "execute", script: "python/xrd_peak_deconvolution.py" });
   const nl = data.indexOf(0x0a);
   const head = JSON.parse(data.subarray(0, nl).toString());
   const body = data.subarray(nl + 1);
@@ -182,8 +182,8 @@ test("DISPATCHABLE_SCRIPTS mirrors ALLOWED_SCRIPT_NAMES in the daemon; the ad-ho
   assert.ok(pyNames.length >= 12); // 12 dispatchable scripts since the 2026-10-04 deletions
   assert.deepEqual([...DISPATCHABLE_SCRIPTS].sort(), pyNames);
 
-  assertDispatchableScript("python/pourbaix_solver.py");
-  for (const bad of ["python/../../x.py", "pourbaix_solver.py", "/abs/python/x.py", "python\\x.py", "C:/python/x.py",
+  assertDispatchableScript("python/xrd_peak_deconvolution.py");
+  for (const bad of ["python/../../x.py", "xrd_peak_deconvolution.py", "/abs/python/x.py", "python\\x.py", "C:/python/x.py",
     "python/sub/x.py", "python/x.pyc", "", "python/persistent_ipc_service.py", "python/engine_dispatcher.py", "python/os.py"]) {
     assert.throws(() => assertDispatchableScript(bad), /Refusing to dispatch/, bad);
   }
@@ -219,16 +219,16 @@ test("a request that may have run is never retried on another channel or spawned
   // Sent on the UNIX socket, then timeout/reset: no HTTP attempt, no ad-hoc spawn.
   let h = harness({ unix: () => Promise.reject(new IpcChannelError("UNIX socket IPC got no reply", "unknown")),
     http: async () => ({ stdout: "http" }) });
-  await assert.rejects(h.sup.execute("python/pourbaix_solver.py", {}), /may already have run, so it was not retried/);
+  await assert.rejects(h.sup.execute("python/xrd_peak_deconvolution.py", {}), /may already have run, so it was not retried/);
   assert.deepEqual(h.calls, ["unix"]);
   // Certainly not executed (connect failure / pre-execution refusal): next channel, then ad hoc.
   h = harness({ unix: () => Promise.reject(new IpcChannelError("ECONNREFUSED", false)),
     http: () => Promise.reject(new IpcChannelError("refused before running it (status 401)", false)) });
-  assert.equal((await h.sup.execute("python/pourbaix_solver.py", {})).channel, "ad_hoc_fallback");
+  assert.equal((await h.sup.execute("python/xrd_peak_deconvolution.py", {})).channel, "ad_hoc_fallback");
   assert.deepEqual(h.calls, ["unix", "http", "adhoc"]);
   // Any non-IpcChannelError (unexpected) is also treated as possibly executed.
   h = harness({ socket: null, http: () => Promise.reject(new Error("boom")) });
-  await assert.rejects(h.sup.execute("python/pourbaix_solver.py", {}), /not retried/);
+  await assert.rejects(h.sup.execute("python/xrd_peak_deconvolution.py", {}), /not retried/);
   assert.deepEqual(h.calls, ["http"]);
 });
 
@@ -254,22 +254,22 @@ test("HTTP client: hang after send is 'unknown' (no retry); refused connection a
     const { sup, calls } = harness({ socket: null, port });
     sup.executeViaHttp = PersistentPythonIPCSupervisor.prototype["executeViaHttp" as keyof typeof PersistentPythonIPCSupervisor.prototype];
     // Daemon-side timeoutMs 200 -> client waits 200 ms + grace, then gives up without retrying.
-    await assert.rejects(sup.execute("python/pourbaix_solver.py", { element: "Fe" }, [], 200), /may already have run/);
+    await assert.rejects(sup.execute("python/xrd_peak_deconvolution.py", { element: "Fe" }, [], 200), /may already have run/);
     assert.equal(hits, 1);
     assert.deepEqual(calls, []); // executeViaHttp is the real method (not recorded); no ad-hoc spawn
     mode = "forge";
-    const r = await sup.execute("python/pourbaix_solver.py", { element: "Fe" }, [], 2000);
+    const r = await sup.execute("python/xrd_peak_deconvolution.py", { element: "Fe" }, [], 2000);
     assert.equal(r.channel, "ad_hoc_fallback"); // unsigned reply: not ours, not executed -> fall back
     assert.ok(!r.stdout.includes("FORGED"));
     mode = "huge";
-    await assert.rejects(sup.execute("python/pourbaix_solver.py", {}, [], 2000), /may already have run.*too large/);
+    await assert.rejects(sup.execute("python/xrd_peak_deconvolution.py", {}, [], 2000), /may already have run.*too large/);
   } finally {
     for (const s of sockets) s.destroy();
     await new Promise<void>((resolve) => fake.close(() => resolve()));
   }
   const { sup: closed, calls } = harness({ socket: null, port });
   closed.executeViaHttp = PersistentPythonIPCSupervisor.prototype["executeViaHttp" as keyof typeof PersistentPythonIPCSupervisor.prototype];
-  assert.equal((await closed.execute("python/pourbaix_solver.py", {}, [], 2000)).channel, "ad_hoc_fallback"); // ECONNREFUSED
+  assert.equal((await closed.execute("python/xrd_peak_deconvolution.py", {}, [], 2000)).channel, "ad_hoc_fallback"); // ECONNREFUSED
   assert.deepEqual(calls, ["adhoc"]);
 });
 
@@ -284,7 +284,7 @@ test("HTTP client signs the head, never sends the token, and sends the exact sig
   const port = (fake.address() as AddressInfo).port;
   const token: string = supervisor.ipcToken;
   try {
-    await assert.rejects(supervisor.executeViaHttp(port, "python/pourbaix_solver.py", { element: "Fe" }, [], 5000),
+    await assert.rejects(supervisor.executeViaHttp(port, "python/xrd_peak_deconvolution.py", { element: "Fe" }, [], 5000),
       (e: any) => e instanceof IpcChannelError && e.executed === false);
   } finally {
     await new Promise<void>((resolve) => fake.close(() => resolve()));
@@ -356,7 +356,7 @@ function rawRequest(port: number, method: string, reqPath: string, headers: Reco
 test("end to end: the real daemon on its announced channel accepts our signature and refuses everyone else", { timeout: 300000 }, async () => {
   assert.ok(await waitFor(() => pythonIPCSupervisor.getStatus().status === "online", 240000),
     `daemon did not come online: ${JSON.stringify(pythonIPCSupervisor.getStatus())}`);
-  const res = await runPythonScript("python/pourbaix_solver.py", { element: "Fe" }, [], 60000);
+  const res = await runPythonScript("python/xrd_peak_deconvolution.py", { element: "Fe" }, [], 60000);
   assert.equal(res.channel, process.platform === "win32" ? "http_microservice" : "unix_socket", res.stderr);
   assert.ok(res.stdout.trim().startsWith("{"), res.stderr);
 
@@ -369,7 +369,7 @@ test("end to end: the real daemon on its announced channel accepts our signature
   }
   assert.ok(port && port > 0);
   assert.equal(pythonIPCSupervisor.getStatus().channels.httpMicroservice.url, `http://127.0.0.1:${port}`);
-  const body = JSON.stringify({ script: "python/pourbaix_solver.py", payload: { element: "Fe" } });
+  const body = JSON.stringify({ script: "python/xrd_peak_deconvolution.py", payload: { element: "Fe" } });
   const json = { "Content-Type": "application/json" };
   const noAuth = await rawRequest(port, "POST", "/execute", json, body);
   const bearer = await rawRequest(port, "POST", "/execute", { ...json, Authorization: `Bearer ${supervisor.ipcToken}` }, body);
@@ -417,7 +417,7 @@ test("a squatter on a configured fixed port never receives a request or gets its
     assert.ok(await waitFor(() => sup.child === null || sup.isReady, 240000), "daemon neither exited nor became ready");
     assert.equal(sup.httpTarget(), null);
     if (sup.child === null) assert.equal(sup.getStatus().status, "fallback_mode");
-    const res = await sup.execute("python/pourbaix_solver.py", { element: "Fe" }, [], 60000);
+    const res = await sup.execute("python/xrd_peak_deconvolution.py", { element: "Fe" }, [], 60000);
     assert.notEqual(res.channel, "http_microservice");
     assert.ok(!res.stdout.includes("FORGED_BY_SQUATTER"));
     assert.equal(squatterHits, 0);

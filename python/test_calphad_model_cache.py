@@ -441,7 +441,7 @@ class TestIpcAffinityRouting(unittest.TestCase):
         reg = ipc.ConcurrentModuleRegistry.__new__(ipc.ConcurrentModuleRegistry)
         reg.script_dir = ipc.SCRIPT_DIR
         self.assertEqual(reg._affinity_name(os.path.join(ipc.SCRIPT_DIR, "calphad_solver.py")), "calphad_solver")
-        self.assertIsNone(reg._affinity_name(os.path.join(ipc.SCRIPT_DIR, "pourbaix_solver.py")))
+        self.assertIsNone(reg._affinity_name(os.path.join(ipc.SCRIPT_DIR, "xrd_peak_deconvolution.py")))
         self.assertEqual(ipc._payload_field('{"action": "list_databases"}', "action"), "list_databases")
         self.assertEqual(ipc._supersede_key({"supersedeKey": "k1"}), "k1")
         self.assertIsNone(ipc._supersede_key({"supersedeKey": "x" * 500}))

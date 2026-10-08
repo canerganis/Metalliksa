@@ -184,7 +184,6 @@ COUNT_CAPS = {
 CEILING_SNAPSHOT = {
     "python/module_warm_parity.ceiling.json": {
         "names": [
-            "cnls_fitting_solver",
             "lpbf_build_job_solver",
             "xrd_peak_deconvolution",
         ],

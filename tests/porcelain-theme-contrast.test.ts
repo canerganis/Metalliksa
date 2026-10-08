@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { test } from "node:test";
-import { rankPaletteEntries } from "../src/utils/commandPalette";
 
 // Review Sol S8: the token gate (design-tokens-contrast) only reads --mk-* tokens. Most of the UI colour
 // comes from src/styles/theme-porcelain.css, which re-points the Tailwind ramps the 24 module bodies use.
@@ -82,21 +81,4 @@ test("dark: variants never activate in the light-only app, so white-card islands
   assert.match(read("src/index.css"), /@custom-variant dark \(&:where\(\.dark, \.dark \*\)\);/);
   const sources = ["src/App.tsx", "index.html"].map(read).join("\n");
   assert.doesNotMatch(sources, /class(Name)?="[^"]*\bdark\b/, "nothing sets the .dark scope");
-});
-
-test("the porcelain module slabs and canvases: Pourbaix canvas draws text graphite on paper (review S3)", () => {
-  const canvas = read("src/utils/pourbaixCanvas.ts");
-  assert.match(canvas, /paper: "#f8f9fb"/);
-  assert.doesNotMatch(canvas, /#64748b/, "the old low-contrast tick colour is gone");
-  const theme2 = canvas.match(/axisText: "(#[0-9a-f]{6})"/)?.[1];
-  assert.ok(theme2 && contrast(hex(theme2), hex("#f8f9fb")) >= 7, "axis labels >= 7:1 on the plot paper");
-});
-
-test("palette search finds a module through its sub-view (review S5: 'pour' finds Corrosion / EIS)", () => {
-  const entries = [
-    { id: "electrochem-suite", label: "Corrosion / EIS", description: "Electrochemical measurements", scope: "Research", workspaceLabel: "Materials Intelligence", keywords: "pourbaix e-ph tafel" },
-    { id: "database", label: "Materials Database", description: "Handbook values", scope: "Research", workspaceLabel: "Materials Intelligence", keywords: "" },
-  ];
-  assert.deepEqual(rankPaletteEntries(entries, "pour").map((e) => e.id), ["electrochem-suite"]);
-  assert.match(read("src/data/paletteKeywords.ts"), /'electrochem-suite': '[^']*pourbaix/);
 });

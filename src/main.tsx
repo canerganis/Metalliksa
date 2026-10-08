@@ -27,14 +27,11 @@ import App from './App.tsx';
 import './index.css';
 import './styles/boot.css';
 import { installApiUnauthorizedWatcher } from './components/AirgapBanner.tsx';
-import { DigitalTwinProvider } from './context/DigitalTwinContext.tsx';
 
 installApiUnauthorizedWatcher();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <DigitalTwinProvider>
-      <App />
-    </DigitalTwinProvider>
+    <App />
   </StrictMode>,
 );

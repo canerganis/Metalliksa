@@ -75,27 +75,16 @@ class ExactConstantsTest(unittest.TestCase):
             self.assertFalse(hasattr(pc, name), name)
 
     def test_migrated_solvers_use_the_exact_values(self):
-        import battery_corrosion_eis_solver as battery
         import calphad_solver
         import kinetics_ttt_cct_solver as kinetics
-        import pourbaix_solver
-        import tafel_corrosion_rate_solver as tafel
         r, f = pc.GAS_CONSTANT_R.value, pc.FARADAY.value
-        for module, r_name, f_name in ((tafel, "R_GAS", "FARADAY_C_PER_MOL"),
-                                       (pourbaix_solver, "R_GAS", "F_FARADAY"),
-                                       (calphad_solver, "GAS_CONSTANT_R", None),
-                                       (battery, "R_GAS", "F_FARADAY"),
-                                       (kinetics, "R_GAS", None)):
+        for module, r_name in ((calphad_solver, "GAS_CONSTANT_R"), (kinetics, "R_GAS")):
             with self.subTest(module=module.__name__):
                 self.assertEqual(getattr(module, r_name), r)
-                if f_name:
-                    self.assertEqual(getattr(module, f_name), f)
-        self.assertEqual(pourbaix_solver.calculate_nernst_slope(25.0),
-                         (2.302585093 * r * 298.15) / f)
 
     def test_ts_constants_mirror_the_exact_values(self):
         # src/utils/physicalConstants.ts feeds the client duplicates of the migrated
-        # solvers (tafelParser, the Tafel fallback, pourbaixThermodynamics, CALPHAD engines).
+        # solvers (the CALPHAD engines).
         import re
         src = HERE.parent / "src"
         text = (src / "utils" / "physicalConstants.ts").read_text(encoding="utf-8")
@@ -104,14 +93,10 @@ class ExactConstantsTest(unittest.TestCase):
         self.assertEqual(r, pc.GAS_CONSTANT_R.value)
         self.assertEqual(f, pc.FARADAY.value)
         literal = re.compile(r"(?<![\d.])(8\.314\d*|96485(\.\d+)?)(?![\d.])")
-        for rel in ("utils/tafelParser.ts", "utils/pourbaixThermodynamics.ts",
-                    "physics/calphadGibbsEngine.ts", "physics/calphadMultiComponentSolver.ts"):
+        for rel in ("physics/calphadGibbsEngine.ts", "physics/calphadMultiComponentSolver.ts"):
             code = [ln for ln in (src / rel).read_text(encoding="utf-8").splitlines()
                     if not ln.lstrip().startswith("//")]
             self.assertEqual([ln for ln in code if literal.search(ln)], [], rel)
-        service = (src / "services" / "pythonComputationService.ts").read_text(encoding="utf-8")
-        self.assertIn("const rGas = GAS_CONSTANT_R;", service)
-        self.assertIn("const exactK1 = (1e-6 * 31557600.0 * 10.0) / FARADAY_CONSTANT;", service)
 
     def test_constant_metadata_fields(self):
         for c in (pc.AVOGADRO, pc.BOLTZMANN, pc.ELEMENTARY_CHARGE, pc.GAS_CONSTANT_R,
@@ -233,18 +218,6 @@ class AtomicWeightTest(unittest.TestCase):
         for alloy_id, preset in library.items():
             for el, value in preset["atomic_weights"].items():
                 self.assertEqual(pc.atomic_weight(el), value, f"{alloy_id}:{el}")
-
-    def test_pourbaix_atomic_masses_match_registry(self):
-        import pourbaix_solver
-        snapshot = HERE / "golden" / "phase6a" / "pourbaix_solver" / "_source_tables.json"
-        old = json.loads(snapshot.read_text(encoding="utf-8"))["values"]
-        # Ti, Cr and Mo were added after the snapshot; every snapshot element must still be served.
-        self.assertLessEqual(set(old), set(pourbaix_solver.POURBAIX_ELEMENT_SYSTEMS))
-        for el in set(pourbaix_solver.POURBAIX_ELEMENT_SYSTEMS) - set(old):
-            self.assertEqual(pourbaix_solver.POURBAIX_ELEMENT_SYSTEMS[el]["atomicMass"], pc.atomic_weight(el), el)
-        for el, entry in old.items():
-            self.assertEqual(pc.atomic_weight(el), entry["atomicMass"], el)
-            self.assertEqual(pourbaix_solver.POURBAIX_ELEMENT_SYSTEMS[el]["atomicMass"], entry["atomicMass"], el)
 
 
 if __name__ == "__main__":

@@ -57,26 +57,26 @@ def _status(fn, *args, **kwargs):
 
 class ResolveScriptPathTest(unittest.TestCase):
     def test_accepts_route_forms_for_allowlisted_scripts(self):
-        expected = os.path.realpath(HERE / "pourbaix_solver.py")
-        for ref in ("python/pourbaix_solver.py", "pourbaix_solver.py", "  python/pourbaix_solver.py "):
+        expected = os.path.realpath(HERE / "xrd_peak_deconvolution.py")
+        for ref in ("python/xrd_peak_deconvolution.py", "xrd_peak_deconvolution.py", "  python/xrd_peak_deconvolution.py "):
             self.assertTrue(ipc._same_dir(ipc.resolve_script_path(str(HERE), ref), expected), ref)
 
     def test_traversal_absolute_drive_unc_backslash_variants_are_400(self):
         bad = [
-            "python/../../outside/pwn.py", "python/../pourbaix_solver.py", "../pourbaix_solver.py",
-            "python/../python/pourbaix_solver.py", "./pourbaix_solver.py", "python/./pourbaix_solver.py",
-            "..", "python/..", "python/", "python/.py", "/etc/passwd", "/python/pourbaix_solver.py",
-            "C:/Windows/win.ini", "C:pourbaix_solver.py", "c:\\x.py", "//server/share/x.py",
-            "\\\\server\\share\\x.py", "python\\..\\..\\x.py", "python\\pourbaix_solver.py",
-            "python/sub/pourbaix_solver.py", "tools/pourbaix_solver.py", "pourbaix_solver.py.",
-            "pourbaix_solver.py::$DATA", "pourbaix_solver.py\x00.txt", "pourbaix_solver", "POURBA~1.PY",
-            "python/pourbaix_solver.pyc", "%2e%2e/pourbaix_solver.py", "a" * 300 + ".py",
+            "python/../../outside/pwn.py", "python/../xrd_peak_deconvolution.py", "../xrd_peak_deconvolution.py",
+            "python/../python/xrd_peak_deconvolution.py", "./xrd_peak_deconvolution.py", "python/./xrd_peak_deconvolution.py",
+            "..", "python/..", "python/", "python/.py", "/etc/passwd", "/python/xrd_peak_deconvolution.py",
+            "C:/Windows/win.ini", "C:xrd_peak_deconvolution.py", "c:\\x.py", "//server/share/x.py",
+            "\\\\server\\share\\x.py", "python\\..\\..\\x.py", "python\\xrd_peak_deconvolution.py",
+            "python/sub/xrd_peak_deconvolution.py", "tools/xrd_peak_deconvolution.py", "xrd_peak_deconvolution.py.",
+            "xrd_peak_deconvolution.py::$DATA", "xrd_peak_deconvolution.py\x00.txt", "xrd_peak_deconvolution", "POURBA~1.PY",
+            "python/xrd_peak_deconvolution.pyc", "%2e%2e/xrd_peak_deconvolution.py", "a" * 300 + ".py",
         ]
         for ref in bad:
             self.assertEqual(_status(ipc.resolve_script_path, str(HERE), ref)[0], 400, ref)
 
     def test_non_string_or_empty_is_400(self):
-        for ref in (None, "", "   ", 7, ["python/pourbaix_solver.py"], {"x": 1}):
+        for ref in (None, "", "   ", 7, ["python/xrd_peak_deconvolution.py"], {"x": 1}):
             self.assertEqual(_status(ipc.resolve_script_path, str(HERE), ref),
                              (400, "MISSING_SCRIPT"), ref)
 
@@ -114,13 +114,13 @@ class ResolveScriptPathTest(unittest.TestCase):
     def test_link_escape_branch_with_simulated_realpath(self):
         # Same branch as the symlink test, runnable without symlink privileges (Windows).
         real = os.path.realpath
-        outside = os.path.join(tempfile.gettempdir(), "elsewhere", "pourbaix_solver.py")
+        outside = os.path.join(tempfile.gettempdir(), "elsewhere", "xrd_peak_deconvolution.py")
 
         def fake_realpath(p, *a, **k):
-            return outside if os.path.basename(str(p)) == "pourbaix_solver.py" else real(p, *a, **k)
+            return outside if os.path.basename(str(p)) == "xrd_peak_deconvolution.py" else real(p, *a, **k)
 
         with mock.patch.object(ipc.os.path, "realpath", side_effect=fake_realpath):
-            self.assertEqual(_status(ipc.resolve_script_path, str(HERE), "python/pourbaix_solver.py"),
+            self.assertEqual(_status(ipc.resolve_script_path, str(HERE), "python/xrd_peak_deconvolution.py"),
                              (403, "SCRIPT_OUTSIDE_SCRIPT_DIR"))
 
     def test_execute_script_returns_rejection_without_running(self):
@@ -346,8 +346,8 @@ class HeaderCheckTest(unittest.TestCase):
 
 class ExecRequestValidationTest(unittest.TestCase):
     def test_shapes(self):
-        ok = ipc.validate_exec_request({"script": "python/pourbaix_solver.py", "payload": {"a": 1}})
-        self.assertEqual(ok, ("python/pourbaix_solver.py", {"a": 1}, [], 15000))
+        ok = ipc.validate_exec_request({"script": "python/xrd_peak_deconvolution.py", "payload": {"a": 1}})
+        self.assertEqual(ok, ("python/xrd_peak_deconvolution.py", {"a": 1}, [], 15000))
         self.assertEqual(ipc.validate_exec_request({"script": "x.py", "args": None, "timeoutMs": 2500.7})[2:],
                          ([], 2500))
         for req in ([], "x", {"args": "a b"}, {"args": [1]}, {"args": ["a"] * 65}, {"timeoutMs": "1"},
@@ -443,7 +443,7 @@ class PoolTimeoutTest(unittest.TestCase):
         reg.pool.submit.return_value = future
         reg._init_pool = mock.Mock()
         with mock.patch.object(ipc, "_worker_run_script") as in_process:
-            res = reg.execute_script("python/pourbaix_solver.py", {"element": "Fe"})
+            res = reg.execute_script("python/xrd_peak_deconvolution.py", {"element": "Fe"})
         self.assertEqual(res["exitCode"], 1)
         self.assertIn("not re-run", res["stderr"])
         self.assertEqual(reg.pool.submit.call_count, 1)
@@ -541,7 +541,7 @@ def _attack_matrix(port, traversal_script="python/../../outside/pwn.py"):
     """(name, method, path, headers, body, expected status) for attacker-shaped requests (signed fresh)."""
     host = f"127.0.0.1:{port}"
     traversal = json.dumps({"script": traversal_script, "payload": {}})
-    legit = json.dumps({"script": "python/pourbaix_solver.py", "payload": {"element": "Fe"}})
+    legit = json.dumps({"script": "python/xrd_peak_deconvolution.py", "payload": {"element": "Fe"}})
 
     def s(body, **kw):
         return _signed(port, "POST", "/execute", body, **kw)
@@ -572,8 +572,8 @@ def _attack_matrix(port, traversal_script="python/../../outside/pwn.py"):
         ("signed unlisted script", "POST", "/execute", s(json.dumps({"script": "python/persistent_ipc_service.py"})),
          json.dumps({"script": "python/persistent_ipc_service.py"}), 403),
         ("signed non-list args", "POST", "/execute",
-         s(json.dumps({"script": "python/pourbaix_solver.py", "args": "-c x"})),
-         json.dumps({"script": "python/pourbaix_solver.py", "args": "-c x"}), 400),
+         s(json.dumps({"script": "python/xrd_peak_deconvolution.py", "args": "-c x"})),
+         json.dumps({"script": "python/xrd_peak_deconvolution.py", "args": "-c x"}), 400),
         ("CORS preflight", "OPTIONS", "/execute",
          {"Host": host, "Origin": "https://evil.example", "Access-Control-Request-Method": "POST"}, None, 501),
     ]
@@ -606,13 +606,13 @@ class InThreadHttpTest(unittest.TestCase):
         self.assertEqual(self.reg.calls, [])
 
     def test_legit_request_reaches_registry_and_response_is_signed(self):
-        body = json.dumps({"script": "python/pourbaix_solver.py", "payload": {"element": "Fe"}, "id": 7})
+        body = json.dumps({"script": "python/xrd_peak_deconvolution.py", "payload": {"element": "Fe"}, "id": 7})
         headers = _signed(self.port, "POST", "/execute", body, host=f"localhost:{self.port}",
                           ctype="application/json; charset=utf-8")
         status, parsed, meta, raw = _raw_request(self.port, "POST", "/execute", headers, body)
         self.assertEqual((status, parsed["stdout"], parsed["id"], meta["acao"]), (200, "stub-ran", 7, None))
         _response_ok(self, headers, 200, meta, raw)
-        self.assertEqual(self.reg.calls, [("python/pourbaix_solver.py", {"element": "Fe"}, [], 15000)])
+        self.assertEqual(self.reg.calls, [("python/xrd_peak_deconvolution.py", {"element": "Fe"}, [], 15000)])
         status, parsed, _, _ = _raw_request(self.port, "POST", "/execute", headers, body)
         self.assertEqual((status, parsed["code"]), (401, "REPLAYED_REQUEST"))
         self.assertEqual(len(self.reg.calls), 1)
@@ -622,8 +622,8 @@ class InThreadHttpTest(unittest.TestCase):
         _response_ok(self, get_headers, 200, meta, raw)
 
     def test_signed_head_with_wrong_body_bytes_is_400_and_not_run(self):
-        body = json.dumps({"script": "python/pourbaix_solver.py"})
-        evil = body.replace("pourbaix", "calphadx")  # same length, different bytes
+        body = json.dumps({"script": "python/xrd_peak_deconvolution.py"})
+        evil = body.replace("xrd_peak_deconvolution", "xrd_peak_deconvolutioN")  # same length, different bytes
         self.assertEqual(len(body), len(evil))
         headers = _signed(self.port, "POST", "/execute", body)
         status, parsed, meta, raw = _raw_request(self.port, "POST", "/execute", headers, evil)
@@ -691,7 +691,7 @@ class InThreadHttpTest(unittest.TestCase):
                 for s in idle:
                     s.close()
             # Slots are released: a legit request goes through again.
-            body = json.dumps({"script": "python/pourbaix_solver.py"})
+            body = json.dumps({"script": "python/xrd_peak_deconvolution.py"})
             status, _, _, _ = _raw_request(self.port, "POST", "/execute",
                                            _signed(self.port, "POST", "/execute", body), body)
             self.assertEqual(status, 200)
@@ -704,7 +704,7 @@ class InThreadHttpTest(unittest.TestCase):
         port6 = httpd6.server_address[1]
         threading.Thread(target=httpd6.serve_forever, daemon=True).start()
         try:
-            body = json.dumps({"script": "python/pourbaix_solver.py"})
+            body = json.dumps({"script": "python/xrd_peak_deconvolution.py"})
             headers = _signed(port6, "POST", "/execute", body, host=f"[::1]:{port6}")
             status, parsed, meta, raw = _raw_request(port6, "POST", "/execute", headers, body, host="::1")
             self.assertEqual((status, parsed["stdout"]), (200, "stub-ran"))
@@ -760,7 +760,7 @@ class UnixSocketTest(unittest.TestCase):
         self.assertFalse(os.path.exists(self.private_dir))
 
     def test_authentication_required_and_responses_signed(self):
-        req = {"action": "execute", "script": "python/pourbaix_solver.py", "payload": {}}
+        req = {"action": "execute", "script": "python/xrd_peak_deconvolution.py", "payload": {}}
         bad = [dict(head_override={"mac": "0" * 64}), dict(token="0" * 64), dict(ts=str(_now_ms() - 10 ** 6)),
                dict(head_override={"v": 1}),
                dict(raw=(json.dumps({"token": TOKEN, **req}) + "\n").encode())]
@@ -778,9 +778,9 @@ class UnixSocketTest(unittest.TestCase):
         self.assertEqual(len(self.reg.calls), 1)
 
     def test_body_swapped_under_signed_head_is_refused(self):
-        req = {"action": "execute", "script": "python/pourbaix_solver.py"}
+        req = {"action": "execute", "script": "python/xrd_peak_deconvolution.py"}
         body = json.dumps(req).encode()
-        swapped = body.replace(b"pourbaix", b"calphadx")
+        swapped = body.replace(b"xrd_peak_deconvolution", b"xrd_peak_deconvolutioN")
         reply, rbody, nonce = _unix_send(self.path, req, body_override=swapped)
         self.assertEqual(reply["status"], 400)
         self.assertEqual(self._verified(reply, rbody, nonce)["code"], "BODY_HASH_MISMATCH")
@@ -920,7 +920,9 @@ class ServiceIntegrationTest(unittest.TestCase):
             self.assertEqual(status, expected, (name, parsed))
             self.assertIsNone(meta["acao"], name)
             self.assertFalse(self.marker.exists(), name)
-        body = json.dumps({"script": "python/pourbaix_solver.py", "payload": {"element": "Fe"}, "timeoutMs": 60000})
+        legit = json.loads((HERE / "golden" / "phase6b" / "xrd_peak_deconvolution" / "pv_single_no_ka2.json")
+                           .read_text(encoding="utf-8"))["input"]
+        body = json.dumps({"script": "python/xrd_peak_deconvolution.py", "payload": legit, "timeoutMs": 60000})
         headers = _signed(self.port, "POST", "/execute", body)
         status, parsed, meta, raw = _raw_request(self.port, "POST", "/execute", headers, body)
         self.assertEqual((status, meta["acao"]), (200, None), parsed)

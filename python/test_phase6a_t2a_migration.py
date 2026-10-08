@@ -1,10 +1,10 @@
-"""Phase 6a tranche 2a: structural migration of calphad and battery EIS solvers.
+"""Phase 6a tranche 2a: structural migration of calphad_solver.
 
 Covers: bit-exact golden regression for the three solvers, parity with the
 pre-migration blob on extra payloads, the calphad legacy 50.0 g/mol element
 fallback kept in step (a) (fix round B1), the stdout envelope + exit
 code 2 (also through the persistent IPC runner), provenance, the pinned
-battery error returns now reporting success:false (formerly masked as true), and a source guard.
+and a source guard.
 """
 
 import ast
@@ -30,9 +30,7 @@ import input_validation as iv  # noqa: E402
 import physical_constants as pc  # noqa: E402
 from phase6a_test_support import require_git_revision  # noqa: E402
 
-SOLVERS = ("calphad_solver", "battery_corrosion_eis_solver")
-# battery_corrosion_eis_solver kept one case when its battery actions were deleted (2026-10-04).
-MIN_CASES = {"battery_corrosion_eis_solver": 1}
+SOLVERS = ("calphad_solver",)
 TRANCHE2_BASE = "7f3f803"
 
 
@@ -126,7 +124,7 @@ class GoldenRegressionTest(unittest.TestCase):
 
     def test_case_counts(self):
         for solver in SOLVERS:
-            self.assertGreaterEqual(len(cases.CASES[solver]), MIN_CASES.get(solver, 3))
+            self.assertGreaterEqual(len(cases.CASES[solver]), 3)
             self.assertLessEqual(len(cases.CASES[solver]), 5)
             self.assertIn(solver, golden.CASES)
 
@@ -135,38 +133,17 @@ class GoldenRegressionTest(unittest.TestCase):
             with self.subTest(case=case):
                 self._check("calphad_solver", case)
 
-    def test_battery_corrosion_eis_solver(self):
-        for case in cases.CASES["battery_corrosion_eis_solver"]:
-            with self.subTest(case=case):
-                self._check("battery_corrosion_eis_solver", case)
-
-    def test_volatile_duration_key_is_stripped(self):
-        doc = golden.load_golden("battery_corrosion_eis_solver", "edge_unknown_action_success_masking")
-        self.assertNotIn("pythonDurationMs", json.dumps(doc["stdout"]))
-        self.assertIn("pythonDurationMs", golden.VOLATILE_KEYS)
-
-
 @require_git_revision(_git_available(), "git or base revisions d33b6f5/7f3f803 unavailable")
 class BaseBlobTest(unittest.TestCase):
     """The pre-migration blob vs the migrated solver on payloads outside the golden set."""
 
-    PARITY = {
-        # The bernardi_thermal, lli_lam_deconvolution, drt and p2d_continuum payloads left with
-        # their actions (deleted 2026-10-04); corrosion_kinetics is checked exactly below.
-        "battery_corrosion_eis_solver": [],
-    }
+    PARITY: dict = {}
     # calphad_solver left PARITY with the fallback removal (fx-calphad): its success output no
     # longer exists on the locked interpreter. What is still comparable (the wt%/at%
     # composition, the element refusal) is checked against the same base blob in
     # test_calphad_composition_still_matches_the_base_blob_apart_from_the_weights.
     # The check keeps the output structure and exit code identical and bounds the numeric drift.
-    VALUE_STEP_DRIFT = {
-        # Fix round item 6 drifted the corrosion_kinetics K1 (0.00327 -> 0.0032707148, +2.19e-4).
-        # That payload is no longer a bounded drift: the engine-fix lane (defect 6b) replaced the
-        # substring EW/density with the registry values on purpose; it is checked exactly in
-        # CorrosionKineticsEquivalentWeightChangeTest below instead of widening this bound.
-        "battery_corrosion_eis_solver": [],
-    }
+    VALUE_STEP_DRIFT: dict = {}
     # Largest |relative| drift seen on the payloads above is 2.7e-3 (last printed digit).
     VALUE_STEP_MAX_REL = 1e-2
 
@@ -209,73 +186,6 @@ class BaseBlobTest(unittest.TestCase):
                                          drift_report.render(solver, rows, 10))
                     worst = max([abs(r["rel"]) for r in rows if r["rel"] is not None], default=0.0)
                     self.assertLessEqual(worst, self.VALUE_STEP_MAX_REL)
-
-    def test_corrosion_kinetics_documented_equivalent_weight_change(self):
-        """Engine-fix lane (defects 6b + review S3/NIT): the one documented, exactly checked change.
-
-        Base blob: EW 9.0 g/eq and 2.81 g/cm3 for any id containing "al" (substring match), mpy factor
-        39.37, Stern-Geary 2.303 instead of ln(10). Now: the registry record "al7075" (computed ASTM G102
-        EW 9.5583, 2.81 g/cm3), 1000/25.4 mils per mm, ln(10); rates rounded to 6 significant digits. The
-        payload carries betaA/betaC explicitly (the old defaults 0.12 / 0.11 no longer exist). Every changed
-        value is pinned; nothing else may differ and the added keys are the four alloy keys.
-        """
-        import math
-        import re
-        ba, bc, i0 = 0.12, 0.11, 1.85
-        # EUQ-12: the margin is E_pit - E_corr on one reference electrode; e0 is still sent so the base blob
-        # computes its old E_pit - E0 value, which the new solver no longer reads (ignoredInputs).
-        payload = {"action": "corrosion_kinetics", "metalId": "al-7075", "betaA": ba, "betaC": bc, "i0Corr_uA": i0,
-                   "ePit": -0.68, "e0": -1.66, "eCorr": -0.75, "ePitReference": "SCE", "eCorrReference": "SCE"}
-        old = self._base("battery_corrosion_eis_solver", payload)
-        new = golden.run_solver("battery_corrosion_eis_solver", payload)
-        self.assertEqual((old["exitCode"], new["exitCode"]), (0, 0), new["stderr"])
-        rows = drift_report.diff(old["stdout"], new["stdout"])
-        by_key = {r["key"]: r for r in rows}
-        # eyewash removal: the fixed-constant coating timeline and Nyquist spectra are gone from the output
-        nyquist = re.compile(r"coating(Nyquist|Timeline).*")
-        fixed = {"corrosionRate_mm_yr", "corrosionRate_mpy", "polarizationResistance_Rp_Ohm_cm2", "alloyId",
-                 "equivalentWeight_g_eq", "density_g_cm3", "equivalentWeightNote",
-                 # eyewash removal: "Immune / Wide Passivity Margin" claimed immunity from an in-house threshold
-                 "pittingAssessment",
-                 # EUQ-12: dE_pit = E_pit - E_corr (was E_pit - E0), its definition/reference and the unread e0
-                 "deltaE_pit_V", "deltaE_pit_definition", "pittingReferenceElectrode", "ignoredInputs.e0"}
-        self.assertEqual({k for k in by_key if not nyquist.fullmatch(k)}, fixed,
-                         drift_report.render("battery_corrosion_eis_solver", rows, 20))
-        for key in ("alloyId", "equivalentWeight_g_eq", "density_g_cm3", "equivalentWeightNote",
-                    "deltaE_pit_definition", "pittingReferenceElectrode", "ignoredInputs.e0"):
-            self.assertEqual(by_key[key]["kind"], "added", key)
-        self.assertEqual(old["stdout"]["deltaE_pit_V"], 0.98)  # E_pit - E0(Al3+/Al vs SHE): "wide" for Al-7075
-        self.assertEqual(new["stdout"]["deltaE_pit_V"], 0.07)  # E_pit - E_corr, both vs SCE
-        self.assertEqual(new["stdout"]["pittingReferenceElectrode"], "SCE")
-        self.assertTrue(all(r["kind"] == "removed" for k, r in by_key.items() if nyquist.fullmatch(k)))
-        self.assertEqual(old["stdout"]["pittingAssessment"], "Immune / Wide Passivity Margin")
-        self.assertEqual(new["stdout"]["pittingAssessment"], "Severe Chloride Pitting Susceptibility")
-        k1 = (1e-6 * 31557600.0 * 10.0) / pc.FARADAY.value
-
-        def sig6(x):
-            return round(x, 5 - int(math.floor(math.log10(abs(x)))))
-
-        # base blob: K1 0.00327 (printed), 9.0 / 2.81, 39.37, B with 2.303 (+1e-12), Rp rounded to 1 decimal
-        cr_old = 0.00327 * i0 * 9.0 / 2.81
-        self.assertEqual(old["stdout"]["corrosionRate_mm_yr"], round(cr_old, 5))
-        self.assertEqual(old["stdout"]["corrosionRate_mpy"], round(cr_old * 39.37, 4))
-        b_old = ba * bc / (2.303 * (ba + bc) + 1e-12)
-        self.assertEqual(old["stdout"]["polarizationResistance_Rp_Ohm_cm2"], round(b_old / (i0 * 1e-6), 1))
-        # new: registry EW, exact mils per mm and ln(10); 6 significant digits
-        cr_new = k1 * i0 * 9.5583 / 2.81
-        self.assertEqual(new["stdout"]["corrosionRate_mm_yr"], sig6(cr_new))
-        self.assertEqual(new["stdout"]["corrosionRate_mpy"], sig6(cr_new * 1000.0 / 25.4))
-        b_new = ba * bc / (math.log(10.0) * (ba + bc))
-        self.assertEqual(new["stdout"]["sternGeary_B_V"], round(b_new, 4))
-        self.assertEqual(new["stdout"]["polarizationResistance_Rp_Ohm_cm2"], round(b_new / (i0 * 1e-6), 1))
-        self.assertEqual(new["stdout"]["alloyId"], "al7075")
-        self.assertEqual(new["stdout"]["equivalentWeight_g_eq"], 9.5583)
-        self.assertEqual(new["stdout"]["density_g_cm3"], 2.81)
-        self.assertEqual(
-            new["stdout"]["equivalentWeightNote"],
-            "ASTM G102 EW computed in alloy_registry (corrosion domain) from the alloy composition: "
-            "elements >= 1 wt % counted, mass fractions renormalised, in-house valences (no per-value citation).")
-        # the former Nyquist/timeline rows are only "removed" rows (asserted above), nothing numeric is left to bound
 
     def test_changed_inputs_succeeded_with_a_default_before(self):
         changed = [
@@ -479,47 +389,12 @@ class CalphadElementTest(unittest.TestCase):
         self.assertFalse(hasattr(calphad_solver, "legacy_fallback_elements"))
 
 
-# The one remaining successful action of battery_corrosion_eis_solver (al-7075 registry record).
-CORROSION_PAYLOAD = {"action": "corrosion_kinetics", "metalId": "al-7075", "betaA": 0.12, "betaC": 0.11,
-                     "i0Corr_uA": 1.85, "ePit": -0.68, "eCorr": -0.75, "ePitReference": "SCE",
-                     "eCorrReference": "SCE"}
-
-
 class EnvelopeAndProvenanceTest(unittest.TestCase):
     def test_calphad_internal_error(self):
         code, out = _run("calphad_solver.py", {"elements": {"Ni": 80}, "tMin": "cold"})
         self.assertEqual(code, 1)
         self.assertEqual(out["errorKind"], "internal")
         self.assertIs(out["success"], False)
-
-    def test_battery_internal_error_and_error_returns_report_success_false(self):
-        # exposureDays no longer feeds any output (the coating timeline was removed), so a non-object payload is the
-        # unexpected-input case that still raises inside the solver.
-        code, out = _run("battery_corrosion_eis_solver.py", ["not", "an", "object"])
-        self.assertEqual(code, 1)
-        self.assertEqual(out["errorKind"], "internal")
-        # V1 follow-up: the former success:true masking (pinned here until now) is gone.
-        # Error returns keep exit code 0 and the same message, but report success:false.
-        # The deleted actions (2026-10-04) are unknown actions now.
-        expected = [
-            ({"action": "no_such_action"}, "Unknown action 'no_such_action'"),
-            ({"action": "drt"}, "Unknown action 'drt'"),
-            ({"action": "analyze_uploaded_eis"}, "Unknown action 'analyze_uploaded_eis'"),
-            ({"action": "identify_bisquert_tlm"}, "Unknown action 'identify_bisquert_tlm'"),
-        ]
-        for payload, message in expected:
-            with self.subTest(action=payload["action"], message=message):
-                code, out = _run("battery_corrosion_eis_solver.py", payload)
-                self.assertEqual(code, 0)
-                self.assertIs(out["success"], False)
-                self.assertEqual(out["error"], message)
-                self.assertNotIn("provenance", out)
-        # Successful outputs still say success:true and carry provenance.
-        code, out = _run("battery_corrosion_eis_solver.py", CORROSION_PAYLOAD)
-        self.assertEqual(code, 0)
-        self.assertIs(out["success"], True)
-        self.assertNotIn("error", out)
-        self.assertIn("provenance", out)
 
     def test_provenance(self):
         # A one-point Fe-Cr request: no database assesses an Fe base, so the solver answers 'unavailable'
@@ -531,22 +406,6 @@ class EnvelopeAndProvenanceTest(unittest.TestCase):
         self.assertEqual(prov["gasConstantR_J_molK"], pc.GAS_CONSTANT_R.value)
         self.assertEqual(prov["constantsVersion"], pc.CONSTANTS_VERSION)
         self.assertEqual(prov["domainDataVersion"], data.DATA_VERSION)
-        fresh = golden.run_solver("battery_corrosion_eis_solver", CORROSION_PAYLOAD)
-        prov = fresh["provenance"]["provenance"]
-        self.assertEqual(prov["constantsVersion"], pc.CONSTANTS_VERSION)
-        # Design step (b): one exact R/F in the provenance block.
-        self.assertEqual(prov["gasConstantR_J_molK"], pc.GAS_CONSTANT_R.value)
-        self.assertEqual(prov["faraday_C_mol"], pc.FARADAY.value)
-
-    def test_battery_sites_use_the_exact_constants(self):
-        import battery_corrosion_eis_solver as battery
-        self.assertEqual(battery.R_GAS, pc.GAS_CONSTANT_R.value)
-        self.assertEqual(battery.F_FARADAY, pc.FARADAY.value)
-        src = (HERE / "battery_corrosion_eis_solver.py").read_text(encoding="utf-8")
-        for name in ("LEGACY_R_", "LEGACY_F_", "TRUNCATED_"):
-            self.assertNotIn(name, src)
-
-
 class SourceGuardTest(unittest.TestCase):
     FORBIDDEN_FLOATS = (8.314, 8.3145, 8.31446, 8.314462618, 96485.33212, 96485.33, 96485.332,
                         96485.0, 273.15)

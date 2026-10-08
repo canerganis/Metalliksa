@@ -258,7 +258,7 @@ class PersistentIpcRelayTest(unittest.TestCase):
         self.assertEqual(out["errorKind"], "validation")
         self.assertEqual(out["error"]["code"], "UNKNOWN_ALLOY")
         # The ProcessPoolExecutor path submits this same _worker_run_script; it is
-        # exercised by test_phase6a_migration (the module-global pool is shut down by
+        # exercised by the removed tafel migration test (the module-global pool is shut down by
         # that test's tearDownClass, so it is not re-used here).
 
 

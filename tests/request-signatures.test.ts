@@ -1,32 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildPourbaixRequest, pourbaixRequestSignature, type PourbaixRequestInputs } from '../src/utils/pourbaixRequest';
 import { buildSlicerPayload, slicerRequestSignature, type SlicerRequestInputs } from '../src/utils/slicerRequest';
 import { createDebouncedLatestTask } from '../src/utils/debouncedLatestTask';
-
-const pour: PourbaixRequestInputs = {
-  primaryElement: 'Fe', temperature_C: 25, ionActivity: 1e-6, chlorideActivity: 0.1,
-  experimentalPoints: [{ id: 'p1', name: 'P', pH: 7, potential_V: 0.1, refElectrode: 'SHE' as any }],
-};
-
-test('Pourbaix signature changes for every request body field and ignores solver enrichment', () => {
-  const base = pourbaixRequestSignature(pour);
-  const variants: Record<string, PourbaixRequestInputs> = {
-    element: { ...pour, primaryElement: 'Ni' },
-    temperature_C: { ...pour, temperature_C: 40 },
-    ionActivity_log10: { ...pour, ionActivity: 1e-4 },
-    chloride_ppm: { ...pour, chlorideActivity: 0.5 },
-    experimentalPoints: { ...pour, experimentalPoints: [{ ...pour.experimentalPoints[0], pH: 8 }] },
-  };
-  const bodyKeys = Object.keys(buildPourbaixRequest(pour)).sort();
-  assert.deepEqual(Object.keys(variants).sort(), bodyKeys, 'every request body field must have a variant');
-  for (const [field, inputs] of Object.entries(variants)) assert.notEqual(pourbaixRequestSignature(inputs), base, field);
-  // same count, different point content (the old length-only signature missed this)
-  assert.notEqual(pourbaixRequestSignature({ ...pour, experimentalPoints: [{ ...pour.experimentalPoints[0], potential_V: 0.2 }] }), base);
-  // solver-derived enrichment must not change the signature (no feedback loop)
-  const enriched = { ...pour, experimentalPoints: [{ ...pour.experimentalPoints[0], regime: 'Passive', riskLevel: 'Caution' as const, mechanismId: 'm', potential_V_SHE: 0.3 }] };
-  assert.equal(pourbaixRequestSignature(enriched), base);
-});
 
 const sl: Omit<SlicerRequestInputs, 'customTriangles'> = {
   preset: 'custom', material: 'Inconel 718', laserPower_W: 285, scanSpeed_mms: 960, layerThickness_um: 40,
@@ -55,11 +30,4 @@ test('debounce delay may be a getter read at schedule time', t => {
   delay = 300; task.schedule('a');
   t.mock.timers.tick(299); assert.equal(calls.length, 0);
   t.mock.timers.tick(1); assert.deepEqual(calls, ['a']);
-});
-
-test('Pourbaix request body never echoes solver-derived point fields back to the solver', () => {
-  const enriched = { ...pour, experimentalPoints: [{ ...pour.experimentalPoints[0], potential_V_SHE: 0.34, regime: 'x', riskLevel: 'Caution' as const, color: '#fff', stageName: 'S', notes: 'n' }] };
-  const body = buildPourbaixRequest(enriched);
-  assert.deepEqual(body.experimentalPoints, [{ id: 'p1', name: 'P', pH: 7, potential_V: 0.1, refElectrode: 'SHE', stageName: 'S', notes: 'n' }]);
-  assert.equal(JSON.stringify(buildPourbaixRequest(pour)), JSON.stringify(buildPourbaixRequest({ ...pour, experimentalPoints: [{ ...pour.experimentalPoints[0], potential_V_SHE: 0.34, regime: 'y' }] })));
 });

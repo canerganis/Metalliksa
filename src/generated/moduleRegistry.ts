@@ -2749,7 +2749,7 @@ export const MODULE_REGISTRY = {
       "workspace": "materials",
       "label": "Phase Diagrams & CALPHAD",
       "description": "Reference binary diagrams and pycalphad equilibrium; CALPHAD needs pycalphad and an installed database covering every selected element, else unavailable.",
-      "next": "electrochem-suite",
+      "next": "research-hub",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -3551,7 +3551,7 @@ export const MODULE_REGISTRY = {
       ],
       "sourceRefs": [
         "python/module_registry.py::build_registry",
-        "src/App.tsx:190-190#case 'phase-diagram': return <PhaseDiagramViewer />;",
+        "src/App.tsx:186-186#case 'phase-diagram': return <PhaseDiagramViewer />;",
         "src/modules/views.ts:21-21#'phase-diagram': lazy(",
         "src/components/PhaseDiagramViewer.tsx::PhaseDiagramViewer",
         "src/components/PhaseDiagramViewer.tsx::FEC_ALLOY_PRESETS",
@@ -3579,109 +3579,6 @@ export const MODULE_REGISTRY = {
         "src/physics/calphadGibbsEngine.ts::simulateScheilSolidification",
         "python/test_module_contract_calphad.py"
       ],
-      "seedDerived": [
-        "label",
-        "description",
-        "next",
-        "maturity"
-      ]
-    },
-    {
-      "id": "electrochem-suite",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
-      "workspace": "materials",
-      "label": "Corrosion & Electrochemistry",
-      "description": "PREN, Tafel/Stern–Geary corrosion rate, OCP (ASTM G59), Pourbaix diagrams and Stern–Geary/Faraday corrosion kinetics; no EIS or equivalent-circuit fitting.",
-      "next": "research-hub",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/CorrosionEngineeringLab.tsx",
-        "export": "CorrosionEngineeringLab"
-      },
-      "operations": [
-        {
-          "id": "pourbaix-diagram",
-          "method": "POST",
-          "route": "/api/python/pourbaix-diagram",
-          "authority": {
-            "kind": "python-ipc",
-            "script": "python/pourbaix_solver.py",
-            "workerMethod": null,
-            "timeoutMs": 25000,
-            "gpu": "none",
-            "warm": true,
-            "exceptionReason": null
-          },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
-        },
-        {
-          "id": "tafel-corrosion-rate",
-          "method": "POST",
-          "route": "/api/python/tafel-corrosion-rate",
-          "authority": {
-            "kind": "python-ipc",
-            "script": "python/tafel_corrosion_rate_solver.py",
-            "workerMethod": null,
-            "timeoutMs": 15000,
-            "gpu": "none",
-            "warm": true,
-            "exceptionReason": null
-          },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
-        },
-        {
-          "id": "battery-corrosion-eis",
-          "method": "POST",
-          "route": "/api/python/battery-corrosion-eis",
-          "authority": {
-            "kind": "python-ipc",
-            "script": "python/battery_corrosion_eis_solver.py",
-            "workerMethod": null,
-            "timeoutMs": 15000,
-            "gpu": "none",
-            "warm": true,
-            "exceptionReason": null
-          },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
-        }
-      ],
-      "validityDomain": null,
-      "evidence": {
-        "emits": [],
-        "ceiling": "screening-only",
-        "forbiddenClaims": [
-          "qualified",
-          "certified",
-          "validated",
-          "measured",
-          "productionReady",
-          "airworthy"
-        ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
-      },
-      "lifecycle": null,
-      "tests": {
-        "schema": null,
-        "oracle": {
-          "status": "pending",
-          "ref": null,
-          "ciNote": null,
-          "scope": null
-        },
-        "docs": null
-      },
-      "migrationState": "legacy",
-      "legacyNotes": [],
-      "sourceRefs": [],
       "seedDerived": [
         "label",
         "description",
@@ -3799,7 +3696,7 @@ export const MODULE_REGISTRY = {
       "workspace": "evidence",
       "label": "Measured Findings",
       "description": "Registry findings labelled as measured, with method, source and uncertainty gaps; the label is user-declared, not verified.",
-      "next": "digital-twin",
+      "next": "traceability",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -3991,75 +3888,6 @@ export const MODULE_REGISTRY = {
         "src/store/useLpbfBuildJobStore.ts::useLpbfBuildJobStore",
         "src/store/useLpbfBuildJobStore.ts::peekLpbfBuildJobKey"
       ],
-      "seedDerived": [
-        "label",
-        "description",
-        "next",
-        "maturity"
-      ]
-    },
-    {
-      "id": "digital-twin",
-      "version": "0.0.0",
-      "owner": "TODO(maintainer-review): unassigned",
-      "workspace": "evidence",
-      "label": "Specimen Records",
-      "description": "Per-specimen composition, process, test results and attachments with sources; record completeness is not qualification.",
-      "next": "traceability",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/DigitalTwinHub.tsx",
-        "export": "DigitalTwinHub"
-      },
-      "operations": [
-        {
-          "id": "ai-consult",
-          "method": "POST",
-          "route": "/api/consult",
-          "authority": {
-            "kind": "node-provider",
-            "script": null,
-            "workerMethod": null,
-            "timeoutMs": null,
-            "gpu": "none",
-            "warm": false,
-            "exceptionReason": null
-          },
-          "input": [],
-          "undeclaredInput": [],
-          "output": null
-        }
-      ],
-      "validityDomain": null,
-      "evidence": {
-        "emits": [],
-        "ceiling": "screening-only",
-        "forbiddenClaims": [
-          "qualified",
-          "certified",
-          "validated",
-          "measured",
-          "productionReady",
-          "airworthy"
-        ],
-        "note": "TODO(maintainer-review): legacy placeholder. Ceiling is the pending-oracle cap and emits is undeclared; neither is a reviewed per-module evidence statement."
-      },
-      "lifecycle": null,
-      "tests": {
-        "schema": null,
-        "oracle": {
-          "status": "pending",
-          "ref": null,
-          "ciNote": null,
-          "scope": null
-        },
-        "docs": null
-      },
-      "migrationState": "legacy",
-      "legacyNotes": [],
-      "sourceRefs": [],
       "seedDerived": [
         "label",
         "description",

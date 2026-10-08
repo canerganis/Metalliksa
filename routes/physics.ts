@@ -74,11 +74,6 @@ physicsRouter.post("/api/python/lpbf-bayesian-optimize", (req: Request, res: Res
   return handlePythonDispatch("python/lpbf_bayesian_optimizer.py", req.body, res, 120000);
 });
 
-// Pourbaix Diagram
-physicsRouter.post("/api/python/pourbaix-diagram", (req: Request, res: Response) => {
-  return handlePythonDispatch("python/pourbaix_solver.py", req.body, res);
-});
-
 // Kinetics TTT / CCT
 physicsRouter.post("/api/python/kinetics-ttt-cct", (req: Request, res: Response) => {
   return handlePythonDispatch("python/kinetics_ttt_cct_solver.py", req.body, res);
