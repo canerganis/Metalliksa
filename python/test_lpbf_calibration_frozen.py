@@ -19,14 +19,15 @@ sys.path.insert(0, str(PYTHON_DIR))
 import lpbf_simulation  # noqa: E402
 
 FORBIDDEN_IMPORT_PREFIXES = ("lpbf_calibration", "lpbf_calibrated_meltpool", "calibration_synth_support", "lpbf_error_bands")
-# Explicit base: the frozen files are compared against the merge-base with this ref, never against an implicit HEAD^.
-# Candidates are tried in order; CI only has refs/remotes/origin/*. origin/main is deliberately not a fallback: until
-# the physics work is merged it is an unrelated older base and would flag that work's own frozen-file changes.
+# Explicit base: the frozen files are compared against the merge-base of HEAD with this ref, never against an implicit
+# HEAD^. A calibration branch must not change frozen files relative to where it branched off main. Candidates are tried
+# in order: an explicit override, then the PR base on CI, then local main, then origin/main. No hardcoded feature branch:
+# a stale local integration branch would compare against an old commit and flag changes that are not the branch's own.
 BASE_REF_CANDIDATES = [r for r in (
     os.environ.get("LPBF_FROZEN_BASE_REF"),
-    "integration/physics-b",
     f"origin/{os.environ['GITHUB_BASE_REF']}" if os.environ.get("GITHUB_BASE_REF") else None,
-    "origin/integration/physics-b",
+    "main",
+    "origin/main",
 ) if r]
 BASE_REF = BASE_REF_CANDIDATES[0]
 # sha256 of the canonical thermal-solver JSON (computeTimeMs removed) for one fixed input per kernel, recorded on the
