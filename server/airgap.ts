@@ -1,6 +1,6 @@
 /**
  * Air-gap / offline mode: AIRGAPPED=1 disables outbound cloud services.
- * Local Python LPBF / CALPHAD / EIS remain available.
+ * Local Python LPBF / CALPHAD remain available.
  */
 
 export type AirgapBlockedService =
@@ -22,8 +22,7 @@ export const AIRGAP_BLOCKED_SERVICES: AirgapBlockedService[] = [
 
 export const AIRGAP_ALLOWED_LOCAL = [
   "Local LPBF build-job (Rosenthal screening + slicer)",
-  "Local Python physics (CALPHAD / EIS / kinetics when installed)",
-  "Bundled Materials Project reference catalog (offline copy)",
+  "Local Python physics (CALPHAD when installed)",
 ] as const;
 
 export function isAirgappedFromEnv(env: NodeJS.ProcessEnv | Record<string, string | undefined> = process.env): boolean {

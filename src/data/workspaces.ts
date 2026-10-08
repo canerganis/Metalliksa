@@ -7,8 +7,8 @@ export const MATURITY_BADGE_TITLE = 'Module maturity; this is not a validation c
 export type WorkspaceId = 'lpbf' | 'materials' | 'evidence';
 export const WORKSPACES = [
   { id: 'lpbf', label: 'LPBF Engineering', description: 'Process setup, thermal simulation, build screening and specialist process labs.', defaultModule: '3d-distortion-lab' },
-  { id: 'materials', label: 'Materials & Characterization', description: 'Material data, thermodynamics, property estimates, characterization and corrosion tools.', defaultModule: 'database' },
-  { id: 'evidence', label: 'Evidence & Records', description: 'Sources, measured findings, specimen records and export.', defaultModule: 'research-hub' },
+  { id: 'materials', label: 'Materials & Characterization', description: 'Material data and CALPHAD thermodynamics.', defaultModule: 'database' },
+  { id: 'evidence', label: 'Evidence & Records', description: 'Sources, measured findings and export.', defaultModule: 'research-hub' },
 ] as const;
 
 export type ModuleId = ListedModuleId;
