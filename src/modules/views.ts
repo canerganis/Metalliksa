@@ -33,5 +33,4 @@ export const MODULE_VIEWS: Record<ListedModuleId, ModuleView> = {
   'digital-twin': lazy(() => import('../components/DigitalTwinHub').then(m => ({ default: m.DigitalTwinHub }))),
   'uq-lab': lazy(() => import('../components/UQLab').then(m => ({ default: m.UQLab }))),
   'traceability': lazy(() => import('../components/EvidenceWorkspace').then(m => ({ default: m.EvidenceWorkspace }))),
-  'copilot': lazy(() => import('../components/MetallurgyCopilot').then(m => ({ default: m.MetallurgyCopilot }))),
 };

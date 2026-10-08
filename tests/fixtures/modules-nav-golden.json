@@ -189,14 +189,6 @@
     "label": "Export Review Package",
     "scope": "Research",
     "description": "Exports the active specimen, source provenance and linked evidence as a review package; meshes and worker artifacts are excluded.",
-    "next": "copilot"
-  },
-  {
-    "id": "copilot",
-    "workspace": "evidence",
-    "label": "AI Assistant",
-    "scope": "Preview",
-    "description": "Language-model answers to metallurgy questions; advisory only, verify every claim against sources.",
     "next": "3d-distortion-lab"
   }
 ]

@@ -45,7 +45,6 @@ const PocketCalculators = lazy(() => import("./components/PocketCalculators").th
 const MicrographLab = lazy(() => import("./components/MicrographLab").then(m => ({ default: m.MicrographLab })));
 const AlloyBuilder = lazy(() => import("./components/AlloyBuilder").then(m => ({ default: m.AlloyBuilder })));
 const MaterialsDatabaseView = lazy(() => import("./components/MaterialsDatabaseView").then(m => ({ default: m.MaterialsDatabaseView })));
-const MetallurgyCopilot = lazy(() => import("./components/MetallurgyCopilot").then(m => ({ default: m.MetallurgyCopilot })));
 const CorrosionEngineeringLab = lazy(() => import("./components/CorrosionEngineeringLab").then(m => ({ default: m.CorrosionEngineeringLab })));
 const MaterialsProjectExplorer = lazy(() => import("./components/MaterialsProjectExplorer").then(m => ({ default: m.MaterialsProjectExplorer })));
 const ICMEMultiScalePipelineStudio = lazy(() => import("./components/ICMEMultiScalePipelineStudio").then(m => ({ default: m.ICMEMultiScalePipelineStudio })));
@@ -207,7 +206,6 @@ export default function App() {
       case 'alloy-builder': return <AlloyBuilder onNavigate={navigate} />;
       case 'database': return <MaterialsDatabaseView onNavigate={navigate} />;
       case 'phase-diagram': return <PhaseDiagramViewer />;
-      case 'copilot': return <MetallurgyCopilot />;
     }
   }
 

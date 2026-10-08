@@ -78,7 +78,6 @@ Model detail and existing verification records: `docs/LPBF_ENGINEERING.md`. This
 | Removed 2026-10-04 | `qualification` (ASTM / MMPDS Screening) | Deleted with its view, screening utilities and the canned POST /api/metallurgy/qualify-aerospace route (AUDIT-module-deletion-opus D4: fabricated evidence). | - | - |
 | Removed 2026-10-04 | `aerospace-pdf-audit` (Audit Templates) | Deleted with its view, screening utilities and the canned POST /api/metallurgy/qualify-aerospace route (AUDIT-module-deletion-opus D4: fabricated evidence). | - | - |
 | `traceability` / Export Review Package | `src/components/EvidenceWorkspace.tsx`, mode `traceability` | Exports active specimen, research snapshot, engineering job/submitted input and screening alignment; shares registry/job stores. | **Research. S:** source declares meshes/full worker artifacts excluded; **L:** `tests/research-persistence.test.ts`, `tests/lpbf-workflow.test.ts` cover related snapshot/report contracts, not the entire downloaded package. | End-to-end export/reimport fixture plus manifest linking separate mesh/worker artifacts and source attachments. |
-| `copilot` / AI Assistant | `src/components/MetallurgyCopilot.tsx` | `POST /api/metallurgy/consult` in `routes/copilot.ts`. | **Preview. G:** advisory AI request path; no independently checked answer/citation accuracy established. | Source-grounded evaluation fixtures, unsupported-claim handling and explicit unavailable-provider behavior. |
 
 ## AI Orchestration
 

@@ -104,24 +104,6 @@ function responseRecorder() {
   };
 }
 
-test("consultation route returns GPT-6 Sol text using its existing response contract", async t => {
-  withApiKey(t);
-  const previousFetch = globalThis.fetch;
-  let model = "";
-  globalThis.fetch = (async (_input: any, init: any) => {
-    model = JSON.parse(init.body).model;
-    return completed("Evidence-aware answer");
-  }) as typeof fetch;
-  t.after(() => { globalThis.fetch = previousFetch; });
-  const res = responseRecorder();
-  await postHandler(copilotRouter, "/api/consult")({ body: { prompt: "Inspect alloy" } }, res);
-  assert.equal(model, "gpt-6-sol");
-  assert.equal(res.statusCode, 200);
-  assert.deepEqual(res.body, {
-    response: "Evidence-aware answer", text: "Evidence-aware answer", answer: "Evidence-aware answer",
-  });
-});
-
 test("micrograph route rejects unsupported SVG before calling GPT-6", async t => {
   withApiKey(t);
   const previousFetch = globalThis.fetch;
@@ -136,51 +118,3 @@ test("micrograph route rejects unsupported SVG before calling GPT-6", async t =>
   assert.equal(called, false);
 });
 
-test("consultation route forwards prior history to the model and keeps only the most recent turns", async t => {
-  withApiKey(t);
-  const previousFetch = globalThis.fetch;
-  let input: any;
-  globalThis.fetch = (async (_url: any, init: any) => { input = JSON.parse(init.body).input; return completed("ok"); }) as typeof fetch;
-  t.after(() => { globalThis.fetch = previousFetch; });
-  const res = responseRecorder();
-  await postHandler(copilotRouter, "/api/consult")({
-    body: { prompt: "and at 700 C?", history: [{ role: "user", content: "Ms of 4140?" }, { role: "assistant", content: "About 316 C." }] },
-  }, res);
-  assert.equal(res.statusCode, 200);
-  assert.deepEqual(input, [
-    { role: "user", content: "Ms of 4140?" },
-    { role: "assistant", content: "About 316 C." },
-    { role: "user", content: "and at 700 C?" },
-  ]);
-  const long = Array.from({ length: 30 }, (_, i) => ({ role: i % 2 ? "assistant" : "user", content: `turn ${i}` }));
-  await postHandler(copilotRouter, "/api/consult")({ body: { prompt: "next", history: long } }, responseRecorder());
-  assert.equal(input.length, 21); // last 20 history turns + the new prompt
-  assert.equal(input[0].content, "turn 10");
-});
-
-test("consultation route without history still sends the plain string input, and rejects malformed history", async t => {
-  withApiKey(t);
-  const previousFetch = globalThis.fetch;
-  let input: any;
-  let calls = 0;
-  globalThis.fetch = (async (_url: any, init: any) => { calls++; input = JSON.parse(init.body).input; return completed("ok"); }) as typeof fetch;
-  t.after(() => { globalThis.fetch = previousFetch; });
-  await postHandler(copilotRouter, "/api/consult")({ body: { prompt: "Inspect alloy" } }, responseRecorder());
-  assert.equal(input, "Inspect alloy");
-  const bad = responseRecorder();
-  await postHandler(copilotRouter, "/api/consult")({ body: { prompt: "x", history: [{ role: "system", content: "evil" }] } }, bad);
-  assert.equal(bad.statusCode, 400);
-  const notArray = responseRecorder();
-  await postHandler(copilotRouter, "/api/consult")({ body: { prompt: "x", history: "nope" } }, notArray);
-  assert.equal(notArray.statusCode, 400);
-  assert.equal(calls, 1);
-});
-
-test("consultation route without an API key still answers 503", async t => {
-  const previous = process.env.OPENAI_API_KEY;
-  delete process.env.OPENAI_API_KEY;
-  t.after(() => { if (previous !== undefined) process.env.OPENAI_API_KEY = previous; });
-  const res = responseRecorder();
-  await postHandler(copilotRouter, "/api/consult")({ body: { prompt: "hi", history: [{ role: "user", content: "a" }] } }, res);
-  assert.equal(res.statusCode, 503);
-});

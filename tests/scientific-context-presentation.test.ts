@@ -122,7 +122,7 @@ test('each module family gets its own context; unrelated modules never fall into
   assert.equal(title('ttt-cct-kinetics'), microstructure);
   assert.equal(title('eds-lab'), 'From signal to microstructural claim');
   assert.equal(title('research-hub'), 'Evidence chain for any claim');
-  for (const id of ['electrochem-suite', 'database', 'calculators', 'copilot'] as const) {
+  for (const id of ['electrochem-suite', 'database', 'calculators'] as const) {
     assert.notEqual(title(id), microstructure, `${id} must not show the LPBF microstructure context`);
     assert.equal(title(id), 'Scientific interpretation for this module', id);
     assert.equal(hasScientificContext(id), false, `${id} must not render the LPBF-number default panel`);

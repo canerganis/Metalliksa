@@ -659,7 +659,7 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "evidence",
       "label": "Export Review Package",
       "description": "Exports the active specimen, source provenance and linked evidence as a review package; meshes and worker artifacts are excluded.",
-      "next": "copilot",
+      "next": "3d-distortion-lab",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -668,32 +668,6 @@ export const MODULE_REGISTRY_CORE = {
         "export": "EvidenceWorkspace"
       },
       "migrationState": "contracted",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "copilot",
-      "version": "0.0.0",
-      "workspace": "evidence",
-      "label": "AI Assistant",
-      "description": "Language-model answers to metallurgy questions; advisory only, verify every claim against sources.",
-      "next": "3d-distortion-lab",
-      "maturity": "Preview",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/MetallurgyCopilot.tsx",
-        "export": "MetallurgyCopilot"
-      },
-      "migrationState": "legacy",
       "evidence": {
         "ceiling": "screening-only"
       },

@@ -75,7 +75,7 @@ const decision = allowlistDecision(handlers, serverHandlers, operationRoutes, al
 test('the static parser finds direct, aliased, prefixed and table-driven handlers', () => {
   const keys = new Set(handlers.map(handler => handler.key));
   for (const key of ['GET /api/python/status', 'POST /api/calphad/minimize', 'GET /api/lpbf/runs/:runId',
-    'POST /api/python/lpbf-keyhole-raytracing', 'GET /api/research/search', 'POST /api/consult']) {
+    'POST /api/python/lpbf-keyhole-raytracing', 'GET /api/research/search', 'POST /api/metallurgy/diagnose-micrograph']) {
     assert.ok(keys.has(key), `parser missed ${key}`);
   }
   assert.ok(handlers.length > 60, `expected the full route surface, found ${handlers.length}`);

@@ -100,7 +100,7 @@ class CalculatorsContractTests(unittest.TestCase):
 
     def test_other_valid_module_identity_is_rejected(self):
         with self.assertRaises(ValueError):
-            build_calculators_contract({**self.seed, "id": "copilot"})
+            build_calculators_contract({**self.seed, "id": "wrong-module"})
 
     def test_selected_unit_maps_and_report_outputs_match_source(self):
         temp = next(field for field in self.operations["convert-unit-suite-temperature"].input if field.key == "tempInput")

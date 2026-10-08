@@ -7,84 +7,14 @@ export const copilotRouter = Router();
 // Evaluated once at import time; the server/airgap.ts guards read process.env on every call, so changing AIRGAPPED at run time only affects the guards (restart to refresh this route flag).
 const AIRGAPPED = isAirgappedFromEnv(process.env);
 
-const MAX_PROMPT_CHARS = 8000;
-const MAX_SYSTEM_INSTRUCTION_CHARS = 2000;
-const MAX_CONTEXT_CHARS = 50000;
 const MAX_VISION_PROMPT_CHARS = 4000;
-const MAX_HISTORY_MESSAGES = 20;
-const MAX_HISTORY_CHARS = 50000;
 const MAX_IMAGE_CHARS = 14_000_000; // ~10 MB of decoded image data
-
-// Prior conversation turns sent by the client ({ role, content }[]). A malformed entry is a 400; a long conversation
-// keeps only its most recent turns (at most MAX_HISTORY_MESSAGES / MAX_HISTORY_CHARS), dropping the oldest first.
-function parseHistory(raw: unknown): { messages: { role: "user" | "assistant"; content: string }[] } | { error: string } {
-  if (raw === undefined || raw === null) return { messages: [] };
-  if (!Array.isArray(raw)) return { error: "history must be an array of { role, content } messages." };
-  const all: { role: "user" | "assistant"; content: string }[] = [];
-  for (const item of raw) {
-    const role = item?.role;
-    const content = item?.content;
-    if ((role !== "user" && role !== "assistant") || typeof content !== "string") {
-      return { error: "history entries must be { role: 'user' | 'assistant', content: string }." };
-    }
-    all.push({ role, content });
-  }
-  const messages = all.slice(-MAX_HISTORY_MESSAGES);
-  let chars = messages.reduce((n, m) => n + m.content.length, 0);
-  while (messages.length > 0 && chars > MAX_HISTORY_CHARS) chars -= messages.shift()!.content.length;
-  return { messages };
-}
 
 function denyIfAirgapped(res: Response, service: string): boolean {
   if (!AIRGAPPED) return false;
   res.status(503).json(airgapDenyPayload(service));
   return true;
 }
-
-// General Metallurgy Consultation & Copilot Guidance
-copilotRouter.post(["/api/metallurgy/consult", "/api/consult"], async (req: Request, res: Response) => {
-  if (denyIfAirgapped(res, "GPT-6 AI consultation")) return;
-  try {
-    const { prompt, message, context, systemInstruction, history } = req.body ?? {};
-    const rawPrompt = prompt || message;
-    if (rawPrompt !== undefined && (typeof rawPrompt !== "string" || rawPrompt.length > MAX_PROMPT_CHARS)) {
-      return res.status(400).json({ error: `prompt must be a string of at most ${MAX_PROMPT_CHARS} characters.` });
-    }
-    if (systemInstruction !== undefined && systemInstruction !== null && (typeof systemInstruction !== "string" || systemInstruction.length > MAX_SYSTEM_INSTRUCTION_CHARS)) {
-      return res.status(400).json({ error: `systemInstruction must be a string of at most ${MAX_SYSTEM_INSTRUCTION_CHARS} characters.` });
-    }
-    const parsedHistory = parseHistory(history);
-    if ("error" in parsedHistory) return res.status(400).json({ error: parsedHistory.error });
-    const userPrompt = rawPrompt || "Provide metallurgical analysis and ICME optimization advice.";
-
-    let contextText = "";
-    if (context) {
-      contextText = typeof context === "string" ? context : (JSON.stringify(context) ?? "");
-      if (contextText.length > MAX_CONTEXT_CHARS) {
-        return res.status(400).json({ error: `context must be at most ${MAX_CONTEXT_CHARS} characters when serialized.` });
-      }
-    }
-
-    const fullPrompt = contextText
-      ? `Material Context: ${contextText}\n\nQuery: ${userPrompt}`
-      : userPrompt;
-
-    const response = await generateGpt6Response({
-      model: "gpt-6-sol",
-      // Prior turns are forwarded so follow-up questions are answered in context; no history keeps the plain string input.
-      input: parsedHistory.messages.length
-        ? { messages: [...parsedHistory.messages, { role: "user" as const, content: fullPrompt }] }
-        : fullPrompt,
-      instructions: systemInstruction || "You are an expert physical metallurgist, CALPHAD thermodynamicist, and additive manufacturing specialist. Provide precise, quantitative, and scientifically rigorous insights. Distinguish calculations and evidence from hypotheses.",
-    });
-
-    const text = response.text;
-    return res.json({ response: text, text, answer: text });
-  } catch (err: any) {
-    console.error("[Copilot Error]", err);
-    return res.status(err?.message?.includes("OPENAI_API_KEY") ? 503 : 500).json({ error: err.message || "Consultation request failed" });
-  }
-});
 
 // SEM & Micrograph Vision Diagnostics
 copilotRouter.post("/api/metallurgy/diagnose-micrograph", async (req: Request, res: Response) => {

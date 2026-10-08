@@ -1,5 +1,4 @@
 export type TabType = 
-  | "copilot"
   | "calculators"
   | "micrograph"
   | "phase-diagrams"

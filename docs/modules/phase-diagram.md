@@ -222,7 +222,7 @@ Background work: none; resources: fetch, interval.
 ## Source references
 
 - `python/module_registry.py::build_registry`
-- `src/App.tsx:209-209#case 'phase-diagram': return <PhaseDiagramViewer />;`
+- `src/App.tsx:208-208#case 'phase-diagram': return <PhaseDiagramViewer />;`
 - `src/modules/views.ts:23-23#'phase-diagram': lazy(`
 - `src/components/PhaseDiagramViewer.tsx::PhaseDiagramViewer`
 - `src/components/PhaseDiagramViewer.tsx::FEC_ALLOY_PRESETS`
@@ -236,7 +236,6 @@ Background work: none; resources: fetch, interval.
 - `src/utils/calphadResultDisplay.ts::calphadTemperatureWindow`
 - `routes/physics.ts:53-58#physicsRouter.post(["/api/python/calphad-minimize"`
 - `routes/physics.ts:57-58#physicsRouter.get(["/api/python/calphad-databases"`
-- `routes/copilot.ts:45-82#copilotRouter.post(["/api/metallurgy/consult"`
 - `server/openaiService.ts::generateGpt6Response`
 - `python/calphad_solver.py::list_available_databases`
 - `python/calphad_solver.py::normalize_composition`

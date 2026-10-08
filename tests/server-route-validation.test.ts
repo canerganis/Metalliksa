@@ -73,14 +73,9 @@ test("removed battery/corrosion upload, exec-script and CNLS routes are not serv
   }
 });
 
-test("consult and diagnose-micrograph enforce input limits before calling the model", async () => {
+test("diagnose-micrograph enforces input limits before calling the model", async () => {
   const h = await start(null, { aiLimit: 1000 });
   try {
-    assert.equal((await post(h, "/api/consult", { prompt: "x".repeat(8001) })).status, 400);
-    assert.equal((await post(h, "/api/metallurgy/consult", { prompt: 42 })).status, 400);
-    assert.equal((await post(h, "/api/consult", { prompt: "ok", systemInstruction: "x".repeat(2001) })).status, 400);
-    assert.equal((await post(h, "/api/consult", { prompt: "ok", context: { blob: "x".repeat(50001) } })).status, 400);
-
     assert.equal((await post(h, "/api/metallurgy/diagnose-micrograph", { imageBase64: { evil: true } })).status, 400);
     assert.equal((await post(h, "/api/metallurgy/diagnose-micrograph", { imageBase64: "data:image/png;base64," + "A".repeat(14_000_001) })).status, 413);
     assert.equal((await post(h, "/api/metallurgy/diagnose-micrograph", { imageBase64: "data:image/png;base64,AAAA", prompt: "x".repeat(4001) })).status, 400);
@@ -99,10 +94,10 @@ test("end to end: token auth returns 401 and AI buckets return 429", async () =>
     assert.ok(health.headers.get("x-request-id"));
     assert.equal(health.headers.get("x-content-type-options"), "nosniff");
 
-    const denied = await post(h, "/api/consult", { prompt: "hi" });
+    const denied = await post(h, "/api/metallurgy/diagnose-micrograph", { prompt: "hi" });
     assert.equal(denied.status, 401);
     assert.ok(denied.json.requestId);
-    assert.equal((await post(h, "/api/consult", { prompt: "hi" }, { Authorization: "Bearer wrong" })).status, 401);
+    assert.equal((await post(h, "/api/metallurgy/diagnose-micrograph", { prompt: "hi" }, { Authorization: "Bearer wrong" })).status, 401);
   } finally {
     await h.close();
   }
@@ -111,11 +106,11 @@ test("end to end: token auth returns 401 and AI buckets return 429", async () =>
   const fresh = await start("s3cret", { aiLimit: 2, generalLimit: 1000 });
   try {
     const auth = { Authorization: "Bearer s3cret" };
-    const bad = { prompt: "x".repeat(8001) };
-    assert.equal((await post(fresh, "/api/consult", bad, auth)).status, 400);
+    const bad = { prompt: "x".repeat(4001) };
+    assert.equal((await post(fresh, "/api/metallurgy/diagnose-micrograph", bad, auth)).status, 400);
     // A second AI request fills the bucket (the deleted collect-source route used to be this call).
-    assert.equal((await post(fresh, "/api/metallurgy/consult", bad, auth)).status, 400);
-    const limited = await post(fresh, "/api/consult", bad, auth);
+    assert.equal((await post(fresh, "/api/metallurgy/diagnose-micrograph", bad, auth)).status, 400);
+    const limited = await post(fresh, "/api/metallurgy/diagnose-micrograph", bad, auth);
     assert.equal(limited.status, 429);
     assert.ok(limited.headers.get("retry-after"));
   } finally {
