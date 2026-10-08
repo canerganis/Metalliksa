@@ -16,6 +16,9 @@ HERE = Path(__file__).parent
 MODULE = "alloy_data_calphad_battery_icme"
 SNAPSHOT_DIR = HERE / "golden" / "phase6a"
 
+# Pre-migration ICME atomic_weights table, copied from python/golden/phase6a/icme_multiscale_pipeline_solver/_source_tables.json at main 802f72b0 (golden removed with the icme-motor module).
+LEGACY_ICME_ATOMIC_WEIGHTS = {"Al": 26.98, "C": 12.01, "Co": 58.93, "Cr": 52.0, "Cu": 63.55, "Fe": 55.85, "Mg": 24.31, "Mn": 54.94, "Mo": 95.95, "Nb": 92.91, "Ni": 58.69, "Si": 28.09, "Ti": 47.87, "V": 50.94, "W": 183.84, "Zn": 65.38}
+
 
 def _snapshot(solver):
     return json.loads((SNAPSHOT_DIR / solver / "_source_tables.json").read_text(encoding="utf-8"))["values"]
@@ -85,14 +88,14 @@ class CalphadElementsTest(unittest.TestCase):
 
 class IcmeDataTest(unittest.TestCase):
     def test_element_set_equals_the_pre_migration_table_keys(self):
-        old = _snapshot("icme_multiscale_pipeline_solver")["atomic_weights"]
+        old = LEGACY_ICME_ATOMIC_WEIGHTS
         self.assertEqual(sorted(data.ICME_ELEMENTS), sorted(old))
         self.assertEqual(len(set(data.ICME_ELEMENTS)), 16)
         self.assertFalse(hasattr(data, "ICME_ATOMIC_WEIGHTS"))
 
     def test_weights_are_ciaaw_and_within_0_005_of_the_legacy_copies(self):
         # Design step (b): CIAAW 2021 abridged values replace the rounded copies.
-        old = _snapshot("icme_multiscale_pipeline_solver")["atomic_weights"]
+        old = LEGACY_ICME_ATOMIC_WEIGHTS
         for el in data.ICME_ELEMENTS:
             self.assertEqual(data.icme_atomic_weight(el), pc.atomic_weight(el), el)
             self.assertLessEqual(abs(old[el] - pc.atomic_weight(el)), 0.0051, el)
