@@ -161,3 +161,14 @@ assert.doesNotThrow(() => parseSimulationJob(completed({ measurementComparison: 
 for (const patch of [{ count: 0 }, { count: -1 }, { count: 1.5 }, { count: 3 }, { rmse_um: -1 }, { calibrationFactor: 0 }, { calibrationFactor: -1 }]) {
   assert.throws(() => parseSimulationJob(completed({ measurementComparison: { width_um: { ...comparison, ...patch } } })), /measurement comparison/);
 }
+
+// Runs archived before the la6-gusarov bump carry geometricDefectScreen.modelId v1; they must stay readable.
+const screenFixture = (modelId: string) => ({ modelId, scope: "single-track-cross-section", status: "geometry-screened",
+  limitations: ["Synthetic fixture, not experimental evidence"], lackOfFusion: { status: "lack-of-fusion-screened", ellipseIndex: 1.14,
+    signedMargin: -.14, overlapDepth_um: 33, maximumHatch_um: 89, riskScreened: true, reason: "Idealized geometry only" } });
+for (const modelId of ["elliptic-overlap-screening-v1", "elliptic-overlap-screening-v2"]) {
+  assert.equal(parseSimulationJob({ ...base, status: "completed", result: { ...result, geometricDefectScreen: screenFixture(modelId) } })
+    .result?.geometricDefectScreen?.modelId, modelId);
+}
+assert.throws(() => parseSimulationJob({ ...base, status: "completed", result: { ...result, geometricDefectScreen: screenFixture("elliptic-overlap-screening-v3") } }),
+  /Invalid geometric defect screening/);

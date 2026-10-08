@@ -241,7 +241,7 @@ def defect_diagnostics(width_um, depth_um, length_um, hatch_um, layer_um, *, agg
         result["balling"]["risk"] = {"high": "high", "moderate": "moderate", "stable": "low"}.get(balling["band"])
         result["balling"]["reason"] = balling["reason"]
         result["provenance"].append({
-            "title": "Gusarov & Smurov (2010); Yadroitsev et al. (2010); Hofmann et al. 316L tracks (Zenodo 16979848)",
+            "title": "Yadroitsev et al. (2010) Eq. 13; Gusarov et al. (2007); Hofmann et al. 316L tracks (Zenodo 16979848)",
             "url": "https://doi.org/10.1016/j.jmatprotec.2010.05.010",
             "use": ("Eagar-Tsai L/W balling screen: Moderate > pi*sqrt(3/2) = 3.85 (literature bound, advisory), "
                     "High > 5.5 (empirical 316L threshold, in-sample)."),

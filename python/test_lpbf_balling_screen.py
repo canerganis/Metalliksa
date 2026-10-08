@@ -30,6 +30,14 @@ def _run(material, P, v, d, preheat=80.0, heat_source=None):
 
 
 class ScreenFunction(unittest.TestCase):
+    def test_exported_provenance_drops_unverified_2010_citation(self):
+        # The Gusarov & Smurov 2010 paper was never read; no exported provenance title may credit it.
+        screen = balling_screen(500.0, 100.0, 40.0, "computed")
+        result = defect_diagnostics(100.0, 150.0, 1000.0, 50.0, 20.0, balling=screen)
+        titles = [entry["title"] for entry in result["provenance"]]
+        self.assertTrue(any("Yadroitsev et al. (2010) Eq. 13" in t and "Gusarov et al. (2007)" in t for t in titles), titles)
+        self.assertFalse(any("Gusarov & Smurov" in t for t in titles), titles)
+
     def test_thresholds(self):
         self.assertAlmostEqual(BALLING_LW_MODERATE, 3.8476, places=4)  # pi*sqrt(3/2)
         s = balling_screen(500.0, 100.0, 40.0, "computed")
