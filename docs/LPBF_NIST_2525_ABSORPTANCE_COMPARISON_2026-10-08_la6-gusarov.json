@@ -267,7 +267,7 @@
  },
  "generatedAt": "2026-10-08",
  "honesty": "comparison, not validation; NIST values are measured for the NIST experiment only (polished bare Ti-6Al-4V, ~300 um coupon, argon); application outputs are screening and unvalidated; the ray-tracing sweep over prescribed cavity depth is a sensitivity bracket, not a calibration; nothing was tuned to the data; where the application cannot represent the experiment the record says unavailable and no number is forced",
- "implementationFingerprint": "5f9d651e6e0edafbbc8ae7f27cf638aca3e8ae40ed60c644274a57a49cb90df3",
+ "implementationFingerprint": "ec7e1f7a6606e937e448fefe97549b49a7ddfe7b95376b93867ae007b0c12555",
  "labels": {
   "appOutputs": "screening, unvalidated",
   "evidenceKindMeasuredFor": "NIST experiment only",

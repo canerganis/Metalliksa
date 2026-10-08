@@ -1635,7 +1635,7 @@
  ],
  "generatedAt": "2026-10-08",
  "honesty": "comparison, not validation; raw camera signal in digital levels (DL); no temperature conversion executed; application outputs are screening and unvalidated; measured and model quantities refer to different isotherms, so only normalised trends and ranks are shown (sensitivity-only); nothing tuned",
- "implementationFingerprint": "5f9d651e6e0edafbbc8ae7f27cf638aca3e8ae40ed60c644274a57a49cb90df3",
+ "implementationFingerprint": "ec7e1f7a6606e937e448fefe97549b49a7ddfe7b95376b93867ae007b0c12555",
  "kernels": [
   "rosenthal",
   "eagar-tsai",
