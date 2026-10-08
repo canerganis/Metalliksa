@@ -35,12 +35,12 @@ PRE_BUMP_FINGERPRINT = "7482697c458b6c1aa2a77829f2fbce0c4ce4ac9466e9a3583e97b9a7
 PRE_BUMP_REVISION = "520903802a5cb89e368af60f68e53f232c99046d"
 # The goldens are recorded at this implementation (re-recorded after the 2026-10-07 keyhole-regime
 # bump d92d1a3a -> cda80143, on top of the balling-screen bump), and GOLDEN_REVISION is a commit carrying it
-# (the re-pin commit of feat/lpbf-la6-gusarov-bump, taban 4f5faa3a): the "from" side of the next bump. la6-gusarov
-# (2026-10-08, cda80143 -> 5f9d651e) re-recorded all goldens: 97 text/digest observations (plus G3 stripe crossSectionArea 6400 -> 2698.01);
+# (the second re-pin commit of feat/lpbf-la6-gusarov-bump, taban 4f5faa3a): the "from" side of the next bump. la6-gusarov
+# (2026-10-08, cda80143 -> ec7e1f7a; first pinned 5f9d651e, then the exported provenance title was fixed) re-recorded all goldens: 97 text/digest observations (plus G3 stripe crossSectionArea 6400 -> 2698.01);
 # previously only G11 and G18
 # (label/basis text of the thermal dicts) changed.
-GOLDEN_FINGERPRINT = "5f9d651e6e0edafbbc8ae7f27cf638aca3e8ae40ed60c644274a57a49cb90df3"
-GOLDEN_REVISION = "21cdeab97123c4d21f57334cf25e282ba01b8735"
+GOLDEN_FINGERPRINT = "ec7e1f7a6606e937e448fefe97549b49a7ddfe7b95376b93867ae007b0c12555"
+GOLDEN_REVISION = "26db2aceb68ace5e1fc537bfe14782a2eb83a35f"
 SLOW = os.environ.get("LPBF_PARITY_SLOW") == "1"
 # Off the reference machine every case test is skipped (the goldens are bit-exact for one
 # environment). METALLIKSA_REQUIRE_PARITY=1 turns such a "NOT VERIFIED" skip into a failure,
@@ -109,7 +109,7 @@ class ParityHarnessTests(unittest.TestCase):
         # metrics, numericalDiagnostics, artifacts and identity digests are bit-equal.
         # Balling screen (2026-10-07, f3ba9896 -> d92d1a3a): geometricDefectScreen.balling carries no risk
         # without the Eagar-Tsai L/W ("low" -> null, new reason) and moves it ff428b93... -> f9b41280...
-        # la6-gusarov (2026-10-08, cda80143 -> 5f9d651e): assumptions sentence + geometricDefectScreen modelId v2 and
+        # la6-gusarov (2026-10-08, cda80143 -> ec7e1f7a): assumptions sentence + geometricDefectScreen modelId v2 and
         # balling sources/basis move it f9b41280... -> e37e76ab... (V1 scans at 0 deg: metrics bit-equal).
         self.assertEqual(observations["result.canonicalSha256"],
                          "e37e76ab061f62bb094f1092acc30cfa29bd2d3889653b6305fe9d083d4d7c53")
