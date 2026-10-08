@@ -355,7 +355,7 @@ def build_database_contract(seed: Mapping[str, str]) -> ModuleContract:
             "The downstream bridge states that source property values/confidence are not promoted and derived "
             "properties remain estimates. Missing Poisson ratio also receives a code fallback in the pipeline; "
             "that fallback is software behavior, not a database measurement.",
-            "The transfer picker presents Alloy Builder, LPBF wizard, and Phase Diagram as destinations. "
+            "The transfer picker presents the LPBF wizard and Phase Diagram as destinations. "
             "Dispatch stores the payload through the browser pipeline utility, then navigates after a 350 ms "
             "setTimeout. This is a local cross-module handoff, not provider/server execution or LPBF acceptance.",
             "The comparison list initially contains catalog entries at indexes 0 and 5; clicking toggles membership "

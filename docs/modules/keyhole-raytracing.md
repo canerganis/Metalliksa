@@ -70,7 +70,7 @@ Background work: none; resources: raf, three, fetch.
 - `python/lpbf_keyhole_raytracing.py::_number`
 - `python/lpbf_keyhole_raytracing.py::compute_keyhole_raytracing`
 - `python/lpbf_worker_rpc.py::_rpc_keyhole_raytracing`
-- `routes/lpbfSimulation.ts:31#/api/python/lpbf-keyhole-raytracing`
+- `routes/lpbfSimulation.ts:30#/api/python/lpbf-keyhole-raytracing`
 - `server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000`
 - `src/components/KeyholeRaytracingLab.tsx::KeyholeRaytracingLab`
 - `docs/MODULE_EVIDENCE_INVENTORY.md:40#`keyhole-raytracing` /`
