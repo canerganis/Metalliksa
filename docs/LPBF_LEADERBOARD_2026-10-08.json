@@ -238,10 +238,10 @@
    "provenance": {
     "baselineKernel": "rosenthal",
     "configSha256": "6926386ddf9ad2a0d9fc787b4dbca7324b20b466e7a806be38b949fbafa1271b",
-    "implementationHash": "5f9d651e6e0edafbbc8ae7f27cf638aca3e8ae40ed60c644274a57a49cb90df3",
+    "implementationHash": "ec7e1f7a6606e937e448fefe97549b49a7ddfe7b95376b93867ae007b0c12555",
     "kernel": "eagar-tsai",
     "manifestSha256": "060defe33793a4cf0ee69b8f8f77c0c28a5247dc616a293994d71ed97fba8026",
-    "predictionsSha256": "27c1c4baade0dec47d7de80e4161d2b59c22856dfd22bbf4c28786fd15ce5cc0"
+    "predictionsSha256": "b64af6de1352d424339532c41e9b01bd97a2508d02284dc4526a855e06b63cee"
    },
    "sentinels": [
     {
@@ -568,10 +568,10 @@
    "provenance": {
     "baselineKernel": "rosenthal",
     "configSha256": "6926386ddf9ad2a0d9fc787b4dbca7324b20b466e7a806be38b949fbafa1271b",
-    "implementationHash": "5f9d651e6e0edafbbc8ae7f27cf638aca3e8ae40ed60c644274a57a49cb90df3",
+    "implementationHash": "ec7e1f7a6606e937e448fefe97549b49a7ddfe7b95376b93867ae007b0c12555",
     "kernel": "goldak",
     "manifestSha256": "060defe33793a4cf0ee69b8f8f77c0c28a5247dc616a293994d71ed97fba8026",
-    "predictionsSha256": "ba6381319598bd3348d2e84e7ee6fab62131736e17180579eeb447e71cd82c3b"
+    "predictionsSha256": "9e2d775c349547354dcd2e280277e1fae4648cb47afa8152adf9131c00982164"
    },
    "sentinels": [
     {
@@ -898,10 +898,10 @@
    "provenance": {
     "baselineKernel": "rosenthal",
     "configSha256": "6926386ddf9ad2a0d9fc787b4dbca7324b20b466e7a806be38b949fbafa1271b",
-    "implementationHash": "5f9d651e6e0edafbbc8ae7f27cf638aca3e8ae40ed60c644274a57a49cb90df3",
+    "implementationHash": "ec7e1f7a6606e937e448fefe97549b49a7ddfe7b95376b93867ae007b0c12555",
     "kernel": "rosenthal",
     "manifestSha256": "060defe33793a4cf0ee69b8f8f77c0c28a5247dc616a293994d71ed97fba8026",
-    "predictionsSha256": "5a9ed5d7f2e8f7d5693ff0ab641881405fd3243f7f6c590699333612c4faf198"
+    "predictionsSha256": "27cc209c4903c79e303e3399705a0cde45d93eaac9e075975ae7114689a0b0a9"
    },
    "sentinels": [
     {
@@ -1006,7 +1006,7 @@
  },
  "generatedAt": "2026-10-08",
  "honesty": "Screening benchmark of melt-pool width and depth predictions against published single tracks; not experimental validation; no per-row measurement uncertainty exists in any source; the built-in entries are the frozen screening kernels at their default absorptivity; scores are per (material, source) block and are never combined into one cross-material rank; skill is measured against the Rosenthal kernel at default absorptivity for every entry, unlike the scorecard where each kernel is compared with its own default; experimentalValidation=false",
- "implementationHash": "5f9d651e6e0edafbbc8ae7f27cf638aca3e8ae40ed60c644274a57a49cb90df3",
+ "implementationHash": "ec7e1f7a6606e937e448fefe97549b49a7ddfe7b95376b93867ae007b0c12555",
  "manifestSha256": "060defe33793a4cf0ee69b8f8f77c0c28a5247dc616a293994d71ed97fba8026",
  "protocol": {
   "clusters": "parameter set via lpbf_calibration_stats.set_key = (source, material, power_W, speed_mm_s, beamDiameter_um)",
