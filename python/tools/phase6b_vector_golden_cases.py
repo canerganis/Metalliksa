@@ -1,6 +1,6 @@
 """
-Phase 6b (vectorisation lane) golden cases: cnls_fitting_solver,
-xrd_peak_deconvolution and dft_property_calculator.
+Phase 6b (vectorisation lane) golden cases: cnls_fitting_solver and
+xrd_peak_deconvolution.
 
 Merged into capture_phase6a_golden by one delimited block there. These goldens are
 bound to BASE_REVISION below (faa6684, the code before the NumPy/SciPy rewrite), not
@@ -20,7 +20,7 @@ from typing import Any, Dict, List
 
 BASE_REVISION = "faa6684"
 GOLDEN_SUBDIR = "phase6b"
-SOLVERS = ("cnls_fitting_solver", "xrd_peak_deconvolution", "dft_property_calculator")
+SOLVERS = ("cnls_fitting_solver", "xrd_peak_deconvolution")
 
 
 def _sig(value: float, digits: int = 10) -> float:
@@ -179,43 +179,7 @@ _XRD = {
     "edge_missing_points": {"mode": "deconvolve"},
 }
 
-_DFT = {
-    "ni3al_cubic_benchmark": {
-        "formula": "Ni3Al (gamma prime)", "material_id": "mp-1487", "crystal_system": "Cubic",
-        "space_group": "Pm-3m", "k_vrh": 173.0, "g_vrh": 75.0, "density": 7.42,
-        "formation_energy_per_atom": -0.425, "energy_above_hull": 0.0, "band_gap": 0.0,
-        "nsites": 4, "molar_mass": 203.07,
-    },
-    # {} payload: every field defaults (Fe3C orthorhombic benchmark).
-    "default_empty_fe3c": {},
-    "hexagonal_custom_cij": {
-        "formula": "Custom HCP", "crystal_system": "Hexagonal", "density": 4.5, "nsites": 2,
-        "molar_mass": 47.87, "custom_c_ij": {"c11": 162.0, "c12": 92.0, "c13": 69.0, "c33": 181.0, "c44": 46.7},
-    },
-    # c11 == c12: the cubic normal block is singular -> the inverse falls back to 1/C_ii.
-    "singular_custom_cij_fallback": {
-        "formula": "Custom Singular", "crystal_system": "Cubic", "density": 7.0, "nsites": 1,
-        "molar_mass": 50.0, "custom_c_ij": {"c11": 150.0, "c12": 150.0, "c44": 60.0},
-    },
-    # Marginal tensor (review fix): c11 == c12 gives an exactly zero eigenvalue. The
-    # faa6684 Jacobi loop returned 0.0 (unstable); LAPACK eigvalsh returns rounding
-    # noise (+1.5e-13 on the capture machine), which must still be "not positive".
-    # The tetragonal branch has no Born checks of its own, so the eigenvalue decides.
-    # c66 = 60 is the faa6684 default for a missing c66 (= c44): the elasticity honesty lane (v4.1) no
-    # longer fills missing constants, so the input now states it; the faa6684 output is unchanged.
-    "tetragonal_c11_eq_c12_marginal": {
-        "formula": "Custom Marginal", "crystal_system": "Tetragonal", "density": 6.0, "nsites": 2,
-        "molar_mass": 60.0, "custom_c_ij": {"c11": 210.0, "c12": 210.0, "c13": 80.0, "c33": 220.0, "c44": 60.0, "c66": 60.0},
-    },
-    # Silent defaults today: substring benchmark match, unknown crystal system, clamps.
-    "edge_unknown_negative": {
-        "formula": "Unobtainium-X", "crystal_system": "Klingon", "k_vrh": -50.0, "g_vrh": 0,
-        "density": -1.0, "nsites": 0, "molar_mass": 0, "band_gap": 0.0, "energy_above_hull": 0.0,
-    },
-}
-
 CASES: Dict[str, Dict[str, Dict[str, Any]]] = {
     "cnls_fitting_solver": _CNLS,
     "xrd_peak_deconvolution": _XRD,
-    "dft_property_calculator": _DFT,
 }

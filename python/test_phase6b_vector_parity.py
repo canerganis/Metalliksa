@@ -1,4 +1,4 @@
-"""Phase 6b vectorisation lane: cnls / xrd / dft-named goldens and parity.
+"""Phase 6b vectorisation lane: cnls / xrd goldens and parity.
 
 The goldens in python/golden/phase6b/<solver>/<case>.json were captured from the
 faa6684 solver blobs (tools/capture_phase6a_golden.py --phase6b-vector), i.e. the
@@ -46,7 +46,6 @@ REL_TOL = 1e-9
 PARITY_MODE = {
     "cnls_fitting_solver": "tolerance",
     "xrd_peak_deconvolution": "minimiser",
-    "dft_property_calculator": "tolerance",
 }
 # xrd: cases with no observations never reach the minimiser and must stay bit-exact.
 # Deliberate behaviour changes (review fix round): goldens whose faa6684 "success"
@@ -208,291 +207,9 @@ def _is_cnls_iteration_count_slip(row, solver, display_unit):
     return isinstance(old, int) and isinstance(new, int) and not isinstance(old, bool) and abs(old - new) <= 1
 
 
-# Elasticity honesty lane (dft_property_calculator v4.0 -> v4.1; AUDIT-engines-nonlpbf-opus.md D7).
-# The faa6684 goldens stay bound to the base blob; the changes below are the ONLY differences the
-# "tolerance" rule accepts for dft, each pinned to an exact old/new pair or a stated code:
-# * no library entry / no elastic constants / unsupported crystal system -> status "unavailable" (no numbers);
-# * label, status and provenance keys added, the "Authentic DFT Benchmark" source note renamed;
-# * silent default echoes (formation energy -0.45, hull 0.0, gap 0.0, space group "Pnma", is_stable /
-#   is_metal derived from them) -> null when the caller did not send them;
-# * Debye temperature / minimum conductivity -> null when the formula is not a composition and no
-#   atoms_per_formula_unit + molar_mass was sent (the cell count nsites is not that quantity);
-# * sound velocities, Debye temperature, E(n) -> null for a mechanically unstable tensor;
-# * Zener factor -> null for non-cubic systems (it is defined for cubic crystals only).
-DFT_UNAVAILABLE_CHANGES = {"default_empty_fe3c": "NO_ELASTIC_CONSTANTS",
-                           "edge_unknown_negative": "UNSUPPORTED_CRYSTAL_SYSTEM"}
-DFT_V40, DFT_V41 = "MetalliX-Continuum-Elasticity-Homogenizer-v4.0", "MetalliX-Continuum-Elasticity-Homogenizer-v4.1"
-DFT_LABEL = ("Continuum elasticity: Voigt-Reuss-Hill homogenisation and Born stability of supplied "
-             "single-crystal elastic constants C_ij (not a DFT calculation)")
-DFT_NO_BASIS_REASON = ("Debye temperature and minimum thermal conductivity unavailable: the formula is not a parsable "
-                       "composition and no atoms_per_formula_unit with molar_mass (g/mol, per formula unit) was "
-                       "supplied; there is no default molar mass")
-DFT_UNSTABLE_REASON = ("the stiffness tensor is not mechanically stable (Born criteria / positive definiteness): "
-                       "acoustic velocities and the Debye temperature are not defined")
-DFT_SCIENTIFIC_MODEL = "Crystal-Symmetry-Governed Voigt-Reuss-Hill Homogenization & Born Mechanical Stability"
-# the complete unavailable result (computeTimeMs, the only volatile key, is stripped by the golden runner)
-DFT_UNAVAILABLE_EXACT = {
-    "default_empty_fe3c": {
-        "success": False, "status": "unavailable", "unavailableCode": "NO_ELASTIC_CONSTANTS",
-        "reason": ("no exact library entry for this formula, no custom_c_ij, and no K_VRH/G_VRH: there are no elastic "
-                   "constants to work from (nothing is guessed from a similar formula or a default)"),
-        "engine": DFT_V41, "scientificModel": DFT_SCIENTIFIC_MODEL, "label": DFT_LABEL, "isDft": False,
-        "materialInfo": {"formula": None, "crystal_system": None}},
-    "edge_unknown_negative": {
-        "success": False, "status": "unavailable", "unavailableCode": "UNSUPPORTED_CRYSTAL_SYSTEM",
-        "reason": ("crystal system 'Klingon' is not supported (cubic, hexagonal, trigonal, tetragonal, orthorhombic, "
-                   "isotropic); no isotropic stand-in is substituted"),
-        "engine": DFT_V41, "scientificModel": DFT_SCIENTIFIC_MODEL, "label": DFT_LABEL, "isDft": False,
-        "materialInfo": {"formula": "Unobtainium-X", "crystal_system": "Klingon"}},
-}
-# exact texts of the added ni3al Debye-basis and source-note rows
-DFT_NI3AL_SOURCE_NOTES = (
-    "Built-in elastic-constants library entry (a lookup table, not a DFT calculation): Ni3Al (\u03b3' Precipitate) "
-    "(L1_2 ordered superalloy strengthener; high Zener anisotropy A_Z ~ 3.3.); reference status: "
-    "experimental-single-crystal; reference: Kayser & Stassis, Phys. Status Solidi A 64, 335 (1981), room temperature, "
-    "as quoted in Luan et al., Crystals 8, 307 (2018), Table 2")
-DFT_BASIS_SOURCE = "composition (formula parsed; CIAAW 2021 atomic weights, physical_constants)"
-DFT_BASIS_REFERENCE = ("Anderson, J. Phys. Chem. Solids 24 (1963) 909: theta_D = (h/k_B) [3 n N_A rho / (4 pi M)]^(1/3) v_m, "
-                       "n atoms per formula unit, M formula-unit molar mass")
-DFT_BASIS_IGNORED = {"molar_mass": "composition-derived formula-unit mass is used",
-                     "nsites": "cell site count is not the atoms per formula unit; not used"}
-# faa6684 acoustic values of the unstable cases (the rows that become null)
-DFT_UNSTABLE_OLD_ACOUSTIC = {
-    "singular_custom_cij_fallback": {"debyeTemperature_K": 391.3, "gruneisenParameter_gamma": 1.67,
-                                     "longitudinalSoundVelocity_m_s": 4891.4, "meanSoundVelocity_m_s": 2997.2,
-                                     "minimumThermalConductivity_W_mK": 0.995, "transverseSoundVelocity_m_s": 2688.8},
-    "tetragonal_c11_eq_c12_marginal": {"debyeTemperature_K": 531.2, "gruneisenParameter_gamma": 1.56,
-                                       "longitudinalSoundVelocity_m_s": 5725.4, "meanSoundVelocity_m_s": 3612.9,
-                                       "minimumThermalConductivity_W_mK": 1.513, "transverseSoundVelocity_m_s": 3249.6},
-}
-DFT_DEFAULT_ECHOES = {"materialInfo.band_gap": 0.0, "materialInfo.energy_above_hull": 0.0,
-                      "materialInfo.formation_energy_per_atom": -0.45, "materialInfo.is_metal": True,
-                      "materialInfo.is_stable": True, "materialInfo.space_group": "Pnma"}
-_DFT_UNSTABLE_CASES = ("singular_custom_cij_fallback", "tetragonal_c11_eq_c12_marginal")
-# Physics audit TK-3: polycrystalline averages of an unstable / singular C_ij (both unstable cases also took
-# the 1/C_ii diagonal compliance fallback). The faa6684 values below become null with a reason; the compliance
-# matrix (the fallback diagonal, not an inverse) becomes null. Hill (1952); Mouhat & Coudert, PRB 90 (2014).
-DFT_SINGULAR_REASON = ("the stiffness tensor is singular or nearly singular (a pivot below 1e-12): the compliance "
-                       "tensor S_ij does not exist, so the Reuss and Hill averages, E, nu, the Pugh ratio and the "
-                       "anisotropy indices are not defined")
-_DUCTILE = "Ductile (Metallic dislocation slip favored; high shear compliance)"
-DFT_UNSTABLE_OLD_AVERAGES = {
-    "singular_custom_cij_fallback": {
-        "voigtReussHillModuli": {"bulkModulus_K_Reuss_GPa": 50.0, "bulkModulus_K_VRH_GPa": 100.0,
-                                 "pWaveModulus_GPa": 167.48, "poissonsRatio_nu": 0.283,
-                                 "shearModulus_G_Reuss_GPa": 65.22, "shearModulus_G_VRH_GPa": 50.61,
-                                 "youngsModulus_E_VRH_GPa": 129.91},
-        "mechanicalIntegrityIndices": {"ductilityVerdict": _DUCTILE, "isIsotropic": True, "pughRatio_B_over_G": 1.976,
-                                       "universalAnisotropyIndex_AU": 0.0, "zenerAnisotropyFactor_AZ": 1200000.0}},
-    "tetragonal_c11_eq_c12_marginal": {
-        "voigtReussHillModuli": {"bulkModulus_K_Reuss_GPa": 71.08, "bulkModulus_K_VRH_GPa": 112.21,
-                                 "pWaveModulus_GPa": 196.68, "poissonsRatio_nu": 0.262,
-                                 "shearModulus_G_Reuss_GPa": 72.72, "shearModulus_G_VRH_GPa": 63.36,
-                                 "youngsModulus_E_VRH_GPa": 159.97},
-        # (its Zener 1200000.0 -> null is the non-cubic rule below)
-        "mechanicalIntegrityIndices": {"ductilityVerdict": _DUCTILE, "isIsotropic": True, "pughRatio_B_over_G": 1.771,
-                                       "universalAnisotropyIndex_AU": 0.0}},
-}
-
-
-# Fix round: the Ni3Al library constants became the sourced Kayser & Stassis (1981) values
-# (223/148/125 -> 224.3/148.6/125.8). The ni3al golden case uses that entry, so every constant-derived number moves
-# a little. They are explained ONLY if they equal this independent closed-form cubic computation (plain arithmetic,
-# no module code) within the display rounding of the key; nothing else may drift.
-NI3AL_C11, NI3AL_C12, NI3AL_C44 = 224.3, 148.6, 125.8
-NI3AL_RHO, NI3AL_MASS, NI3AL_N = 7.42, 3 * 58.693 + 26.982, 4.0  # payload density; Ni3Al: 4 atoms per formula unit
-
-
-def ni3al_expected():
-    """{flattened output key: (value, absolute tolerance)} of the ni3al case from the sourced constants."""
-    c11, c12, c44 = NI3AL_C11, NI3AL_C12, NI3AL_C44
-    k = (c11 + 2 * c12) / 3
-    g_v = (c11 - c12 + 3 * c44) / 5
-    g_r = 5 * (c11 - c12) * c44 / (4 * c44 + 3 * (c11 - c12))
-    g = (g_v + g_r) / 2
-    e = 9 * k * g / (3 * k + g)
-    nu = (3 * k - 2 * g) / (2 * (3 * k + g))
-    den = (c11 - c12) * (c11 + 2 * c12)
-    s11, s12, s44 = (c11 + c12) / den, -c12 / den, 1.0 / c44
-    out = {}
-    cm = [[c11, c12, c12, 0, 0, 0], [c12, c11, c12, 0, 0, 0], [c12, c12, c11, 0, 0, 0],
-          [0, 0, 0, c44, 0, 0], [0, 0, 0, 0, c44, 0], [0, 0, 0, 0, 0, c44]]
-    sm = [[s11, s12, s12, 0, 0, 0], [s12, s11, s12, 0, 0, 0], [s12, s12, s11, 0, 0, 0],
-          [0, 0, 0, s44, 0, 0], [0, 0, 0, 0, s44, 0], [0, 0, 0, 0, 0, s44]]
-    for i in range(6):
-        for j in range(6):
-            out[f"elasticStiffnessMatrix_Cij_GPa[{i}][{j}]"] = (cm[i][j], 0.0051)
-            out[f"elasticComplianceMatrix_Sij_1_over_GPa[{i}][{j}]"] = (sm[i][j], 6e-7)
-    for key, val in (("bulkModulus_K_Voigt_GPa", k), ("bulkModulus_K_Reuss_GPa", k), ("bulkModulus_K_VRH_GPa", k),
-                     ("shearModulus_G_Voigt_GPa", g_v), ("shearModulus_G_Reuss_GPa", g_r), ("shearModulus_G_VRH_GPa", g),
-                     ("youngsModulus_E_VRH_GPa", e), ("pWaveModulus_GPa", k + 4 * g / 3)):
-        out[f"voigtReussHillModuli.{key}"] = (val, 0.0051)
-    out["voigtReussHillModuli.poissonsRatio_nu"] = (nu, 0.00051)
-    out["mechanicalIntegrityIndices.pughRatio_B_over_G"] = (k / g, 0.00051)
-    out["mechanicalIntegrityIndices.cauchyPressure_C12_minus_C44_GPa"] = (c12 - c44, 0.0051)
-    out["mechanicalIntegrityIndices.universalAnisotropyIndex_AU"] = (5 * g_v / g_r - 5, 0.00006)
-    out["mechanicalIntegrityIndices.zenerAnisotropyFactor_AZ"] = (2 * c44 / (c11 - c12), 0.00051)
-    eig = sorted([c11 - c12, c11 - c12, c44, c44, c44, c11 + 2 * c12])
-    for i, v in enumerate(eig):
-        out[f"bornStability.allEigenvaluesGPa[{i}]"] = (v, 0.0051)
-    out["bornStability.minimumEigenvalueGPa"] = (eig[0], 0.00051)
-    for i, v in enumerate((c11 - c12, c11 + 2 * c12, c44)):
-        out[f"bornStability.criteriaChecks[{i}].value"] = (v, 0.0051)
-    rho = NI3AL_RHO * 1000.0
-    v_l = math.sqrt((k + 4 * g / 3) * 1e9 / rho)
-    v_t = math.sqrt(g * 1e9 / rho)
-    v_m = (((1 / v_l ** 3) + 2 / v_t ** 3) / 3) ** (-1 / 3)
-    n_dens = NI3AL_N * rho * 6.02214076e23 / (NI3AL_MASS * 1e-3)
-    out["acousticAndThermalProperties.longitudinalSoundVelocity_m_s"] = (v_l, 0.051)
-    out["acousticAndThermalProperties.transverseSoundVelocity_m_s"] = (v_t, 0.051)
-    out["acousticAndThermalProperties.meanSoundVelocity_m_s"] = (v_m, 0.051)
-    out["acousticAndThermalProperties.debyeTemperature_K"] = (
-        (6.62607015e-34 / 1.380649e-23) * (3 * n_dens / (4 * math.pi)) ** (1 / 3) * v_m, 0.051)
-    out["acousticAndThermalProperties.gruneisenParameter_gamma"] = (1.5 * (1 + nu) / (2 - 3 * nu), 0.0051)
-    out["acousticAndThermalProperties.minimumThermalConductivity_W_mK"] = (
-        0.87 * 1.380649e-23 * n_dens ** (2 / 3) * math.sqrt(e * 1e9 / rho), 0.00051)
-    for i, (h, kk, l) in enumerate(((1, 0, 0), (1, 1, 0), (1, 1, 1), (0, 0, 1), (2, 1, 0), (3, 1, 1))):
-        nn = h * h + kk * kk + l * l
-        cross = (h * h * kk * kk + kk * kk * l * l + h * h * l * l) / nn ** 2
-        e_dir = 1.0 / (s11 - 2 * (s11 - s12 - s44 / 2) * cross)
-        out[f"directionalYoungsModuli[{i}].youngsModulusGPa"] = (e_dir, 0.0051)
-        out[f"directionalYoungsModuli[{i}].ratioToAverage"] = (e_dir / e, 0.00051)
-    return out
-
-
-def _flatten(value, prefix=""):
-    if isinstance(value, dict):
-        for key, item in value.items():
-            yield from _flatten(item, f"{prefix}.{key}" if prefix else key)
-    elif isinstance(value, list):
-        for i, item in enumerate(value):
-            yield from _flatten(item, f"{prefix}[{i}]")
-    else:
-        yield prefix, value
-
-
-def _eq(value):
-    return lambda x: x == value
-
-
-def _is_none(x):
-    return x is None
-
-
-def _anything(x):
-    return True
-
-
-def _approx(value, rel=1e-3):
-    return lambda x: isinstance(x, float) and abs(x - value) <= rel * abs(value)
-
-
-def _dft_rules(case):
-    """[(name, kind, key regex, old predicate, new predicate)] documented for a surviving dft case."""
-    custom = case != "ni3al_cubic_benchmark"
-    unstable = case in _DFT_UNSTABLE_CASES
-    rules = [("engine", "changed", r"engine", _eq(DFT_V40), _eq(DFT_V41)),
-             ("isDft", "added", r"isDft", _is_none, _eq(False)),
-             ("label", "added", r"label", _is_none, _eq(DFT_LABEL)),
-             ("status", "added", r"status", _is_none, _eq("available")),
-             ("directional.reason", "added", r"directionalYoungsModuliReason", _is_none,
-              _eq(DFT_UNSTABLE_REASON) if unstable else _is_none),
-             ("directional.status", "added", r"directionalYoungsModuliStatus", _is_none,
-              _eq("unavailable" if unstable else "available")),
-             ("constantsOrigin", "added", r"constantsOrigin", _is_none,
-              _eq("custom-user-supplied" if custom else "builtin-library-exact-match")),
-             ("referenceStatus", "added", r"referenceStatus", _is_none,
-              _eq("supplied-by-caller" if custom else "experimental-single-crystal")),
-             ("acoustic.status", "added", r"acousticAndThermalProperties\.status", _is_none,
-              _eq("unavailable" if unstable else "available")),
-             ("acoustic.reason", "added", r"acousticAndThermalProperties\.reason", _is_none,
-              _eq(DFT_UNSTABLE_REASON) if unstable else
-              (_eq(DFT_NO_BASIS_REASON) if case == "hexagonal_custom_cij" else _is_none))]
-    if case != "ni3al_cubic_benchmark":  # (the library case carries a populated debyeBasis block instead)
-        rules.append(("acoustic.debyeBasis", "added", r"acousticAndThermalProperties\.debyeBasis", _is_none, _is_none))
-    if custom:
-        for key, old in DFT_DEFAULT_ECHOES.items():
-            rules.append((key, "changed", key.replace(".", r"\."), _eq(old), _is_none))
-    if case == "ni3al_cubic_benchmark":
-        basis = r"acousticAndThermalProperties\.debyeBasis\."
-        rules += [
-            ("sourceNotes", "changed", r"sourceNotes", lambda x: x.startswith("Authentic DFT Benchmark: Ni3Al"),
-             _eq(DFT_NI3AL_SOURCE_NOTES)),
-            ("basis.n", "added", basis + "atomsPerFormulaUnit", _is_none, _eq(4.0)),
-            ("basis.M", "added", basis + "formulaUnitMolarMass_g_mol", _is_none, _approx(203.061, 1e-6)),
-            ("basis.mean", "added", basis + "meanAtomicMass_g_mol", _is_none, _approx(50.7653, 1e-6)),
-            ("basis.density", "added", basis + "atomNumberDensity_per_m3", _is_none, _approx(8.802e28, 1e-3)),
-            ("basis.source", "added", basis + "source", _is_none, _eq(DFT_BASIS_SOURCE)),
-            ("basis.reference", "added", basis + "reference", _is_none, _eq(DFT_BASIS_REFERENCE)),
-            ("basis.ignored.molar_mass", "added", basis + r"ignoredInputs\.molar_mass", _is_none,
-             _eq(DFT_BASIS_IGNORED["molar_mass"])),
-            ("basis.ignored.nsites", "added", basis + r"ignoredInputs\.nsites", _is_none,
-             _eq(DFT_BASIS_IGNORED["nsites"])),
-        ]
-    labels = ("[100]", "[110]", "[111]", "[001]", "[210]", "[311]")
-    if case in ("ni3al_cubic_benchmark", "hexagonal_custom_cij"):
-        cubic = case == "ni3al_cubic_benchmark"
-        for i, lab in enumerate(labels):
-            lattice = cubic or i in (0, 3)
-            h, k, l = lab.strip("[]")
-            rules.append((f"dir{i}.frame", "added", rf"directionalYoungsModuli\[{i}\]\.frame", _is_none,
-                          _eq("lattice" if lattice else "cartesian")))
-            rules.append((f"dir{i}.label", "added", rf"directionalYoungsModuli\[{i}\]\.label", _is_none,
-                          _eq(lab if lattice else f"({h},{k},{l}) Cartesian")))
-    if case == "hexagonal_custom_cij":
-        rules += [("debye", "changed", r"acousticAndThermalProperties\.debyeTemperature_K", _eq(500.2), _is_none),
-                  ("kappa", "changed", r"acousticAndThermalProperties\.minimumThermalConductivity_W_mK", _eq(1.417),
-                   _is_none),
-                  ("zener", "changed", r"mechanicalIntegrityIndices\.zenerAnisotropyFactor_AZ", _eq(1.334), _is_none)]
-    for block in ("voigtReussHillModuli", "mechanicalIntegrityIndices"):
-        rules.append((f"{block}.status", "added", rf"{block}\.status", _is_none,
-                      _eq("unavailable" if unstable else "available")))
-        rules.append((f"{block}.reason", "added", rf"{block}\.reason", _is_none,
-                      _eq(DFT_SINGULAR_REASON) if unstable else _is_none))
-    if unstable:
-        for block, fields in DFT_UNSTABLE_OLD_AVERAGES[case].items():
-            for field, old in fields.items():
-                rules.append((f"{block}.{field}", "changed", rf"{block}\.{field}", _eq(old), _is_none))
-        rules.append(("compliance.removed", "removed", r"elasticComplianceMatrix_Sij_1_over_GPa\[\d\]\[\d\]",
-                      _anything, _is_none))
-        rules.append(("compliance.null", "added", r"elasticComplianceMatrix_Sij_1_over_GPa", _is_none, _is_none))
-        for field, old in DFT_UNSTABLE_OLD_ACOUSTIC[case].items():
-            rules.append((field, "changed", rf"acousticAndThermalProperties\.{field}", _eq(old), _is_none))
-        rules.append(("directional.removed", "removed",
-                      r"directionalYoungsModuli\[\d\]\.(direction|hkl\[\d\]|ratioToAverage|youngsModulusGPa)",
-                      _anything, _is_none))
-        rules.append(("directional.list", "added", r"directionalYoungsModuli", _is_none, _is_none))
-    if case == "tetragonal_c11_eq_c12_marginal":
-        rules.append(("zener", "changed", r"mechanicalIntegrityIndices\.zenerAnisotropyFactor_AZ",
-                      lambda x: x == 1200000.0, _is_none))
-    return rules
-
-
-def dft_unexplained(case, rows):
-    """(rows no documented rule explains, names of documented rules that never matched)."""
-    import re
-    rules = _dft_rules(case)
-    hit = set()
-    bad = []
-    for row in rows:
-        for name, kind, regex, old_ok, new_ok in rules:
-            if row["kind"] == kind and re.fullmatch(regex, row["key"]) and old_ok(row["old"]) and new_ok(row["new"]):
-                hit.add(name)
-                break
-        else:
-            expected = ni3al_expected().get(row["key"]) if case == "ni3al_cubic_benchmark" else None
-            if (expected is not None and row["kind"] == "numeric" and isinstance(row["new"], float)
-                    and abs(row["new"] - expected[0]) <= expected[1]):
-                hit.add("ni3al.sourced-constants")
-            else:
-                bad.append(row)
-    required = {r[0] for r in rules} | ({"ni3al.sourced-constants"} if case == "ni3al_cubic_benchmark" else set())
-    return bad, sorted(required - hit)
-
-
 def _git_available() -> bool:
     try:
-        golden.solver_bytes("dft_property_calculator", BASE)
+        golden.solver_bytes("cnls_fitting_solver", BASE)
         return True
     except Exception:
         return False
@@ -523,8 +240,7 @@ class GoldenFilesTest(unittest.TestCase):
     def test_case_counts(self):
         self.assertEqual(tuple(cases.CASES), cases.SOLVERS)
         self.assertEqual(set(PARITY_MODE), set(cases.SOLVERS))
-        # dft gained tetragonal_c11_eq_c12_marginal in the review fix round
-        expected = {"cnls_fitting_solver": 5, "xrd_peak_deconvolution": 5, "dft_property_calculator": 6}
+        expected = {"cnls_fitting_solver": 5, "xrd_peak_deconvolution": 5}
         self.assertEqual({s: len(cases.CASES[s]) for s in cases.SOLVERS}, expected)
 
     def test_golden_files_hold_no_volatile_keys(self):
@@ -627,16 +343,6 @@ class GoldenParityTest(unittest.TestCase):
                     continue
                 self.assertEqual(fresh["exitCode"], doc["exitCode"], fresh["stderr"])
                 self.assertEqual(fresh["stderr"], "")
-                if solver == "dft_property_calculator" and case in DFT_UNAVAILABLE_CHANGES:
-                    self.assertEqual(fresh["stdout"], DFT_UNAVAILABLE_EXACT[case])  # every key and text, exactly
-                    self.assertEqual(DFT_UNAVAILABLE_EXACT[case]["unavailableCode"], DFT_UNAVAILABLE_CHANGES[case])
-                    continue
-                if solver == "dft_property_calculator":
-                    rows = tolerance_violations(doc["stdout"], fresh["stdout"], display_unit=True)
-                    bad, missing = dft_unexplained(case, rows)
-                    self.assertEqual(bad, [], drift_report.render(f"{solver}/{case}", bad, 20))
-                    self.assertEqual(missing, [], f"documented dft changes that did not occur: {missing}")
-                    continue
                 mode = PARITY_MODE[solver]
                 if mode == "minimiser":
                     XrdParityTest.assert_minimiser_parity(self, case, doc["stdout"], fresh["stdout"])
@@ -654,9 +360,6 @@ class GoldenParityTest(unittest.TestCase):
 
     def test_xrd_peak_deconvolution(self):
         self._run("xrd_peak_deconvolution")
-
-    def test_dft_property_calculator(self):
-        self._run("dft_property_calculator")
 
 
 def _in_process(solver, case_or_payload, module=None):
@@ -688,7 +391,6 @@ class HirschornRemovalGuardTest(unittest.TestCase):
         new = self.rows({"cHsuMansfeld_F": 1.5e-6})
         self.assertEqual(len(tolerance_violations(old, new)), 1)  # no solver
         self.assertEqual(len(tolerance_violations(old, new, solver="xrd_peak_deconvolution")), 1)
-        self.assertEqual(len(tolerance_violations(old, new, solver="dft_property_calculator")), 1)
         elsewhere = {"c": [{"cHirschorn_F": 1.5e-6, "cHsuMansfeld_F": 1.5e-6}]}
         self.assertEqual(len(tolerance_violations(elsewhere, {"c": [{"cHsuMansfeld_F": 1.5e-6}]}, solver=self.CNLS)), 1)
         deeper = {"x": {"cpeCapacitances": [{"cHirschorn_F": 1.5e-6, "cHsuMansfeld_F": 1.5e-6}]}}
@@ -1045,225 +747,12 @@ class NewValidationTest(unittest.TestCase):
         no_ka2 = cases.CASES["xrd_peak_deconvolution"]["pv_single_no_ka2"]
         self.assertEqual(golden.run_solver("xrd_peak_deconvolution", dict(no_ka2, ka2Ratio=float("nan")))["exitCode"], 0)
 
-    def test_dft_non_finite_stiffness(self):
-        custom = {"formula": "X", "crystal_system": "Cubic", "custom_c_ij": {"c11": float("nan"), "c12": 100.0, "c44": 50.0}}
-        self._envelope("dft_property_calculator", custom, "custom_c_ij")
-        iso = {"formula": "Zz", "crystal_system": "Isotropic", "k_vrh": float("inf"), "g_vrh": 50.0}
-        self._envelope("dft_property_calculator", iso, "k_vrh")
-
     def test_cnls_non_finite_lin_kk_is_unchanged_nan(self):
         points = [dict(p) for p in cases._RANDLES_POINTS]
         points[5]["zReal"] = float("nan")
         fresh = golden.run_solver("cnls_fitting_solver", {"action": "validate_dataset", "points": points})
         self.assertEqual((fresh["exitCode"], fresh["stderr"]), (0, ""))
         self.assertTrue(math.isnan(fresh["stdout"]["linKK"]["kkChiSquare"]))
-
-
-@require_git_revision(GIT, f"git or revision {BASE} unavailable")
-class DftKernelParityTest(unittest.TestCase):
-    """numpy/scipy inverse and eigenvalues against the faa6684 Gauss-Jordan / Jacobi."""
-
-    def _matrices(self):
-        import dft_property_calculator as dft
-        out = []
-        # Each library entry in its own crystal system (v4.1: a library entry is never forced into another
-        # system), plus a complete synthetic constant set for every symmetry family.
-        for bench_key, data in dft.ELASTIC_CONSTANTS_LIBRARY.items():
-            out.append((f"{bench_key}/{data['crystal_system']}",
-                        dft.build_stiffness_matrix(data["crystal_system"], 100.0, 50.0, data["formula"])[0]))
-        full = {"c11": 250.0, "c12": 120.0, "c13": 90.0, "c14": 20.0, "c22": 240.0, "c23": 95.0, "c33": 260.0,
-                "c44": 70.0, "c55": 75.0, "c66": 65.0}
-        for system in ("Cubic", "Hexagonal", "Tetragonal", "Orthorhombic", "Trigonal", "Isotropic"):
-            out.append((f"synthetic/{system}", dft.build_stiffness_matrix(system, 0, 0, "", full)[0]))
-        rng = np.random.default_rng(6)
-        for i in range(20):
-            a = rng.normal(size=(6, 6))
-            out.append((f"random_spd_{i}", (a @ a.T + 6 * np.eye(6)).tolist()))
-        for system in ("Cubic", "Isotropic"):  # singular normal block (C11 == C12)
-            out.append((f"singular/{system}", dft.build_stiffness_matrix(
-                system, 0, 0, "", {"c11": 150.0, "c12": 150.0, "c44": 60.0})[0]))
-        # near-singular: smallest pivot ~5.6e-17 (> 0, < 1e-12) -> still the fallback
-        out.append(("singular/near_cubic", dft.build_stiffness_matrix(
-            "Cubic", 0, 0, "", {"c11": 0.1 + 0.2, "c12": 0.3, "c44": 60.0})[0]))
-        return out
-
-    @staticmethod
-    def _normwise(a, b):
-        a, b = np.asarray(a), np.asarray(b)
-        return float(np.max(np.abs(a - b)) / np.max(np.abs(a)))
-
-    def test_inverse_and_eigenvalues_match_old_loops(self):
-        import dft_property_calculator as dft
-        old = blob_module("dft_property_calculator")
-        fallbacks = 0
-        for name, c in self._matrices():
-            with self.subTest(matrix=name):
-                old_inv, new_inv = old.invert_6x6_matrix(c), dft.invert_6x6_matrix(c)
-                old_fb = all(old_inv[i][j] == 0.0 for i in range(6) for j in range(6) if i != j)
-                new_fb = all(new_inv[i][j] == 0.0 for i in range(6) for j in range(6) if i != j)
-                if name.startswith("singular"):
-                    fallbacks += 1
-                    self.assertTrue(old_fb and new_fb)
-                    self.assertEqual(old_inv, new_inv)  # same diagonal fallback, bit-identical
-                self.assertLessEqual(self._normwise(old_inv, new_inv), REL_TOL)
-                self.assertLessEqual(self._normwise(old.jacobi_eigenvalues_symmetric(c),
-                                                    dft.jacobi_eigenvalues_symmetric(c)), REL_TOL)
-                self.assertTrue(all(type(v) is float for row in new_inv for v in row))
-        self.assertEqual(fallbacks, 3)
-
-    @staticmethod
-    def _marginal_payloads(count=300, seed=7):
-        """Tensors on the stability boundary (c11 == c12, or c12 == -c11 for the
-        hexagonal family) plus ordinary ones, over every crystal-system branch."""
-        import random
-        rng = random.Random(seed)
-        out = []
-        while len(out) < count:
-            system = rng.choice(["Cubic", "Hexagonal", "Tetragonal", "Orthorhombic", "Trigonal", "Isotropic"])
-            c11 = round(rng.uniform(50, 400), 1)
-            kind = rng.choice(["equal", "negative", "random"])
-            if kind == "negative" and system not in ("Hexagonal", "Trigonal"):
-                continue
-            c12 = c11 if kind == "equal" else (-c11 if kind == "negative" else round(rng.uniform(10, c11), 1))
-            c13 = round(rng.uniform(10, 200), 1)
-            c44 = round(rng.uniform(10, 150), 1)
-            # c22 c23 c55 c66 are the faa6684 defaults (c11, c13, c44, c44) stated explicitly: v4.1 does not
-            # fill missing constants; c14 only enters the trigonal family (the faa6684 blob ignores it).
-            out.append({"formula": "Zq", "crystal_system": system, "custom_c_ij": {
-                "c11": c11, "c12": c12, "c13": c13, "c14": round(rng.uniform(1, 30), 1),
-                "c22": c11, "c23": c13, "c33": round(rng.uniform(50, 400), 1), "c44": c44, "c55": c44, "c66": c44}})
-        return out
-
-    @staticmethod
-    def _exactly_positive_definite(c):
-        """Sylvester's criterion in exact rational arithmetic on the float matrix."""
-        from fractions import Fraction
-        a = [[Fraction(v) for v in row] for row in c]
-        n = len(a)
-        for k in range(n):  # Gaussian elimination without pivoting = leading minors ratio
-            if a[k][k] <= 0:
-                return False
-            for i in range(k + 1, n):
-                f = a[i][k] / a[k][k]
-                for j in range(k, n):
-                    a[i][j] -= f * a[k][j]
-        return True
-
-    def _verdicts(self, module):
-        """(payload, module verdict, exact verdict) with the exact eigenvalue test and
-        the module's own float Born checks."""
-        out = []
-        for payload in self._marginal_payloads():
-            born = module.calculate_dft_properties(payload)["bornStability"]
-            c = module.build_stiffness_matrix(payload["crystal_system"], 0, 0, "Zq", payload["custom_c_ij"])[0]
-            exact = self._exactly_positive_definite(c) and all(chk["passed"] for chk in born["criteriaChecks"])
-            out.append((payload, born["isMechanicallyStable"], exact))
-        return out
-
-    def test_stability_verdict_is_exact_on_marginal_tensors(self):
-        # A zero eigenvalue is not positive definite: eigvalsh rounding noise must not
-        # report "stable". (The faa6684 Jacobi loop got this wrong on some tensors too,
-        # see test_old_jacobi_misjudged_marginal_tensors.)
-        import dft_property_calculator as dft
-        wrong = [p for p, verdict, exact in self._verdicts(dft) if verdict != exact]
-        self.assertEqual(wrong, [])
-
-    def test_old_jacobi_misjudged_marginal_tensors(self):
-        # Documentation of the old behaviour, not a requirement on the new code: the
-        # faa6684 loop can leave +O(1e-15) noise on an exactly singular tensor and call
-        # it stable (1 of these 300 on the Windows capture machine; the count depends
-        # on the platform libm, so only its character is asserted here).
-        wrong = [p for p, verdict, exact in self._verdicts(blob_module("dft_property_calculator")) if verdict != exact]
-        self.assertTrue(all(p["custom_c_ij"]["c11"] == p["custom_c_ij"]["c12"] for p in wrong), wrong)
-
-    def test_mutation_zero_eigenvalue_tolerance_is_detected(self):
-        import dft_property_calculator as dft
-        with patch.object(dft, "EIGENVALUE_POSITIVE_RTOL", 0.0):
-            wrong = [p for p, verdict, exact in self._verdicts(dft) if verdict != exact]
-        self.assertGreater(len(wrong), 0)
-
-    def test_common_path_does_not_import_scipy(self):
-        # scipy.linalg (exact LU pivots) loads only when the det certificate fails.
-        import subprocess
-        probe = ("import json, sys; import dft_property_calculator as d; "
-                 "d.calculate_dft_properties({}); d.calculate_dft_properties({'formula': 'Ni3Al', 'crystal_system': 'Cubic'}); "
-                 "a = sorted(m for m in ('scipy', 'input_validation') if m in sys.modules); "
-                 "d.invert_6x6_matrix(d.build_stiffness_matrix('Cubic', 0, 0, '', {'c11': 150.0, 'c12': 150.0, 'c44': 60.0})[0]); "
-                 "print(json.dumps([a, 'scipy' in sys.modules]))")
-        out = subprocess.run([sys.executable, "-B", "-c", probe], cwd=str(HERE), capture_output=True, check=True)
-        self.assertEqual(json.loads(out.stdout), [[], True])
-
-    def test_mutation_perturbed_inverse_is_detected(self):
-        import dft_property_calculator as dft
-        old = blob_module("dft_property_calculator")
-        c = dft.build_stiffness_matrix("Cubic", 0, 0, "Ni3Al")[0]
-        inv = np.linalg.inv
-        with patch.object(dft.np.linalg, "inv", lambda a: inv(a) * (1 + 1e-6)):
-            self.assertGreater(self._normwise(old.invert_6x6_matrix(c), dft.invert_6x6_matrix(c)), REL_TOL)
-
-    def test_mutation_perturbed_eigenvalues_is_detected(self):
-        import dft_property_calculator as dft
-        eigvalsh = np.linalg.eigvalsh
-        with patch.object(dft.np.linalg, "eigvalsh", lambda a: eigvalsh(a) + 0.01):
-            mutated = _in_process("dft_property_calculator", "ni3al_cubic_benchmark")
-        rows = tolerance_violations(load("dft_property_calculator", "ni3al_cubic_benchmark")["stdout"], mutated)
-        self.assertTrue(any(r["key"].startswith("bornStability.allEigenvaluesGPa") for r in rows))
-
-
-class DftDocumentedChangeGuardTest(unittest.TestCase):
-    """The documented elasticity changes are exact: any other drift in a dft case is reported."""
-
-    def _rows(self, case, mutate=None):
-        old = load("dft_property_calculator", case)["stdout"]
-        fresh = golden.run_solver("dft_property_calculator", cases.CASES["dft_property_calculator"][case])
-        new = json.loads(json.dumps(fresh["stdout"]))
-        if mutate:
-            mutate(new)
-        return tolerance_violations(old, new, display_unit=True)
-
-    def test_unmodified_output_is_fully_explained(self):
-        for case in cases.CASES["dft_property_calculator"]:
-            if case in DFT_UNAVAILABLE_CHANGES:
-                continue
-            with self.subTest(case=case):
-                self.assertEqual(dft_unexplained(case, self._rows(case)), ([], []))
-
-    def test_ni3al_output_equals_the_independent_sourced_constants_oracle(self):
-        fresh = golden.run_solver("dft_property_calculator", cases.CASES["dft_property_calculator"]["ni3al_cubic_benchmark"])
-        flat = dict(_flatten(fresh["stdout"]))
-        expected = ni3al_expected()
-        self.assertGreater(len(expected), 100)
-        for key, (value, tol) in expected.items():
-            self.assertIn(key, flat)
-            self.assertAlmostEqual(flat[key], value, delta=tol, msg=key)
-
-    def test_ni3al_old_constants_are_not_explained(self):
-        # a value that is neither the golden (223.0) nor the sourced 224.3 must not pass as "sourced"
-        def old_constants(out):
-            out["elasticStiffnessMatrix_Cij_GPa"][0][0] = 223.5
-        bad, _ = dft_unexplained("ni3al_cubic_benchmark", self._rows("ni3al_cubic_benchmark", old_constants))
-        self.assertEqual([r["key"] for r in bad], ["elasticStiffnessMatrix_Cij_GPa[0][0]"])
-
-    def test_mutated_values_are_not_explained(self):
-        def kelvin(out):
-            out["acousticAndThermalProperties"]["debyeTemperature_K"] = 700.0
-        bad, _ = dft_unexplained("ni3al_cubic_benchmark", self._rows("ni3al_cubic_benchmark", kelvin))
-        self.assertEqual([r["key"] for r in bad], ["acousticAndThermalProperties.debyeTemperature_K"])
-
-        def silent_default(out):
-            out["materialInfo"]["formation_energy_per_atom"] = -0.45
-        bad, missing = dft_unexplained("hexagonal_custom_cij", self._rows("hexagonal_custom_cij", silent_default))
-        self.assertEqual(missing, ["materialInfo.formation_energy_per_atom"])
-
-        def other_value(out):
-            out["materialInfo"]["band_gap"] = 0.5
-        bad, _ = dft_unexplained("hexagonal_custom_cij", self._rows("hexagonal_custom_cij", other_value))
-        self.assertEqual([r["key"] for r in bad], ["materialInfo.band_gap"])
-
-        def old_label(out):
-            out["sourceNotes"] = "Authentic DFT Benchmark: Ni3Al (gamma prime)"
-        bad, missing = dft_unexplained("ni3al_cubic_benchmark", self._rows("ni3al_cubic_benchmark", old_label))
-        self.assertIn("sourceNotes", missing)
 
 
 if __name__ == "__main__":

@@ -451,39 +451,13 @@ export const MODULE_REGISTRY_CORE = {
       "workspace": "materials",
       "label": "Yield Strength Breakdown (Illustrative)",
       "description": "Illustrative sum of friction, solid-solution, Hall–Petch, dislocation and precipitate terms on tabulated constants; no DFT, CALPHAD or FEA; UTS and K_Ic unavailable; not a calibrated strength prediction for any alloy.",
-      "next": "materials-project",
+      "next": "research-hub",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
       "view": {
         "component": "src/components/ICMEMultiScalePipelineStudio.tsx",
         "export": "ICMEMultiScalePipelineStudio"
-      },
-      "migrationState": "contracted",
-      "evidence": {
-        "ceiling": "screening-only"
-      },
-      "tests": {
-        "oracle": {
-          "status": "pending",
-          "ciNote": null,
-          "scope": null
-        }
-      }
-    },
-    {
-      "id": "materials-project",
-      "version": "0.1.0",
-      "workspace": "materials",
-      "label": "Elastic-constants calculator (user-supplied constants)",
-      "description": "User-supplied elastic constants or isotropic moduli; continuum calculations via Python.",
-      "next": "research-hub",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/MaterialsProjectExplorer.tsx",
-        "export": "MaterialsProjectExplorer"
       },
       "migrationState": "contracted",
       "evidence": {

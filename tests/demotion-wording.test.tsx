@@ -51,7 +51,6 @@ test("TTT/CCT module label and header say steel heat-treatment only, not for LPB
   assert.match(studio, /Steel heat-treatment kinetics only; not applicable to LPBF cooling rates or to the LPBF alloys\./);
 });
 
-test("elastic-constants module is labelled a calculator on user-supplied constants, not DFT", () => {
-  assert.equal(mod("materials-project").label, "Elastic-constants calculator (user-supplied constants)");
+test("airgap banner does not claim an external DFT source", () => {
   assert.doesNotMatch(read("src/components/AirgapBanner.tsx"), /external DFT/);
 });

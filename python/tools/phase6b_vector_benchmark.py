@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Phase 6b vectorisation lane: before/after timing of cnls_fitting_solver,
-xrd_peak_deconvolution and dft_property_calculator.
+and xrd_peak_deconvolution.
 
 "before" is the faa6684 blob (git show, executed from a temp module), "after" is
 the working tree. Three measurements per case, each the median of --repeat runs:
@@ -69,8 +69,6 @@ def dispatch(module: types.ModuleType, solver: str, data: Dict[str, Any]) -> Any
             data.get("points", []), data.get("center", 43.68), data.get("intensity", 4000.0),
             data.get("fwhm", 0.25), data.get("profileType", "pseudo-voigt"), data.get("eta", 0.5),
             data.get("pearsonM", 2.0), data.get("enableKa2", True), data.get("ka2Ratio", 0.5))
-    if solver == "dft_property_calculator":
-        return module.calculate_dft_properties(data)
     raise KeyError(solver)
 
 

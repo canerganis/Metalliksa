@@ -167,7 +167,7 @@ def build_electrochem_contract(seed: Mapping[str, str]) -> ModuleContract:
             "python/module_registry_seed.json:153-161#electrochem-suite identity",
             "python/module_registry.py:121-128#Python authority timeouts and warm status",
             "python/module_registry.py:192-197#electrochem-suite solver registry operations",
-            "routes/physics.ts:86-89#Pourbaix Python dispatch",
+            "routes/physics.ts:81-84#Pourbaix Python dispatch",
             "routes/characterization.ts:27-35#Tafel and corrosion EIS Python dispatch",
             "src/components/CorrosionEngineeringLab.tsx:15-27#suite state and browser-local calculations",
             "src/components/CorrosionEngineeringLab.tsx:296-327#conditional Pourbaix and EIS child mounting",

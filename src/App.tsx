@@ -45,7 +45,6 @@ const MicrographLab = lazy(() => import("./components/MicrographLab").then(m => 
 const AlloyBuilder = lazy(() => import("./components/AlloyBuilder").then(m => ({ default: m.AlloyBuilder })));
 const MaterialsDatabaseView = lazy(() => import("./components/MaterialsDatabaseView").then(m => ({ default: m.MaterialsDatabaseView })));
 const CorrosionEngineeringLab = lazy(() => import("./components/CorrosionEngineeringLab").then(m => ({ default: m.CorrosionEngineeringLab })));
-const MaterialsProjectExplorer = lazy(() => import("./components/MaterialsProjectExplorer").then(m => ({ default: m.MaterialsProjectExplorer })));
 const ICMEMultiScalePipelineStudio = lazy(() => import("./components/ICMEMultiScalePipelineStudio").then(m => ({ default: m.ICMEMultiScalePipelineStudio })));
 const LpbfEngineeringWorkspace = lazy(() => import("./components/LpbfEngineeringWorkspace").then(m => ({ default: m.LpbfEngineeringWorkspace })));
 const LpbfBayesianOptimizerLab = lazy(() => import("./components/LpbfBayesianOptimizerLab").then(m => ({ default: m.LpbfBayesianOptimizerLab })));
@@ -197,7 +196,6 @@ export default function App() {
       case 'electrochem-suite': return <CorrosionEngineeringLab />;
       case 'ttt-cct-kinetics': return <PhaseKineticsTTTCCTStudio onSendToModule={navigate} />;
       case 'icme-motor': return <ICMEMultiScalePipelineStudio />;
-      case 'materials-project': return <MaterialsProjectExplorer />;
       case 'micrograph': return <MicrographLab />;
       case 'alloy-builder': return <AlloyBuilder onNavigate={navigate} />;
       case 'database': return <MaterialsDatabaseView onNavigate={navigate} />;

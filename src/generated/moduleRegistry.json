@@ -4127,7 +4127,7 @@
       ],
       "sourceRefs": [
         "python/module_registry.py::build_registry",
-        "src/App.tsx:204-204#case 'phase-diagram': return <PhaseDiagramViewer />;",
+        "src/App.tsx:202-202#case 'phase-diagram': return <PhaseDiagramViewer />;",
         "src/modules/views.ts:23-23#'phase-diagram': lazy(",
         "src/components/PhaseDiagramViewer.tsx::PhaseDiagramViewer",
         "src/components/PhaseDiagramViewer.tsx::FEC_ALLOY_PRESETS",
@@ -4376,7 +4376,7 @@
         "python/alloy_data_kinetics_uq_fatigue.py::KINETICS_LEGACY_NAMES",
         "python/input_validation.py::require_known_alloy",
         "routes/physics.ts::handlePythonDispatch",
-        "routes/physics.ts:89#python/kinetics_ttt_cct_solver.py",
+        "routes/physics.ts:84#python/kinetics_ttt_cct_solver.py",
         "python/persistent_ipc_service.py::WARM_MODULE_NAMES",
         "src/components/PhaseKineticsTTTCCTStudio.tsx::PhaseKineticsTTTCCTStudio",
         "src/services/pythonComputationService.ts::calculatePhaseKineticsTTTCCT",
@@ -4924,7 +4924,7 @@
       "workspace": "materials",
       "label": "Yield Strength Breakdown (Illustrative)",
       "description": "Illustrative sum of friction, solid-solution, Hall–Petch, dislocation and precipitate terms on tabulated constants; no DFT, CALPHAD or FEA; UTS and K_Ic unavailable; not a calibrated strength prediction for any alloy.",
-      "next": "materials-project",
+      "next": "research-hub",
       "maturity": "Research",
       "navigation": "listed",
       "hiddenReason": null,
@@ -5154,206 +5154,11 @@
         "python/icme_multiscale_pipeline_solver.py::_unknown_element",
         "python/alloy_data_calphad_battery_icme.py::icme_base_metal",
         "routes/physics.ts::handlePythonDispatch",
-        "routes/physics.ts:94#python/icme_multiscale_pipeline_solver.py",
+        "routes/physics.ts:89#python/icme_multiscale_pipeline_solver.py",
         "python/persistent_ipc_service.py::WARM_MODULE_NAMES",
         "src/components/ICMEMultiScalePipelineStudio.tsx::ICMEMultiScalePipelineStudio",
         "src/services/pythonComputationService.ts::calculateICMEMultiScalePipeline",
         "docs/MODULE_EVIDENCE_INVENTORY.md:66#`icme-motor` /"
-      ],
-      "seedDerived": [
-        "label",
-        "description",
-        "next",
-        "maturity"
-      ]
-    },
-    {
-      "id": "materials-project",
-      "version": "0.1.0",
-      "owner": "unassigned (needs maintainer)",
-      "workspace": "materials",
-      "label": "Elastic-constants calculator (user-supplied constants)",
-      "description": "User-supplied elastic constants or isotropic moduli; continuum calculations via Python.",
-      "next": "research-hub",
-      "maturity": "Research",
-      "navigation": "listed",
-      "hiddenReason": null,
-      "view": {
-        "component": "src/components/MaterialsProjectExplorer.tsx",
-        "export": "MaterialsProjectExplorer"
-      },
-      "operations": [
-        {
-          "id": "calculate-elasticity",
-          "method": "POST",
-          "route": "/api/python/dft-properties",
-          "authority": {
-            "kind": "python-ipc",
-            "script": "python/dft_property_calculator.py",
-            "workerMethod": null,
-            "timeoutMs": 25000,
-            "gpu": "none",
-            "warm": true,
-            "exceptionReason": null
-          },
-          "input": [
-            {
-              "key": "input_mode",
-              "label": "Elastic constants source",
-              "valueType": "enum",
-              "unit": null,
-              "displayUnits": [],
-              "quantityKind": "selection",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": "custom",
-              "required": true,
-              "enum": [
-                "custom",
-                "isotropic"
-              ],
-              "note": "Initial UI selector only; always explicitly sent. Missing backend mode retains legacy library behavior, outside this P2 form contract.",
-              "unitSelector": null,
-              "unitOptions": {}
-            },
-            {
-              "key": "crystal_system",
-              "label": "Crystal symmetry",
-              "valueType": "enum",
-              "unit": null,
-              "displayUnits": [],
-              "quantityKind": "selection",
-              "min": null,
-              "max": null,
-              "step": null,
-              "default": "cubic",
-              "required": true,
-              "enum": [
-                "cubic",
-                "hexagonal",
-                "trigonal",
-                "tetragonal",
-                "orthorhombic",
-                "isotropic"
-              ],
-              "note": "Initial custom selector only; isotropic mode always sends isotropic. Both selectors are explicit request keys, not filled from the specimen.",
-              "unitSelector": null,
-              "unitOptions": {}
-            }
-          ],
-          "undeclaredInput": [
-            "custom_c_ij",
-            "formula",
-            "density",
-            "k_vrh",
-            "g_vrh",
-            "molar_mass",
-            "atoms_per_formula_unit"
-          ],
-          "output": {
-            "fields": [
-              "success",
-              "status",
-              "engine",
-              "scientificModel",
-              "label",
-              "isDft",
-              "constantsOrigin",
-              "referenceStatus",
-              "sourceNotes",
-              "computeTimeMs",
-              "materialInfo",
-              "elasticStiffnessMatrix_Cij_GPa",
-              "elasticComplianceMatrix_Sij_1_over_GPa",
-              "bornStability",
-              "voigtReussHillModuli",
-              "mechanicalIntegrityIndices",
-              "acousticAndThermalProperties",
-              "directionalYoungsModuli",
-              "directionalYoungsModuliStatus",
-              "directionalYoungsModuliReason",
-              "unavailableCode",
-              "reason",
-              "isPythonEngine"
-            ],
-            "statusKey": null,
-            "transportValues": {
-              "status": [
-                "available",
-                "unavailable"
-              ],
-              "directionalYoungsModuliStatus": [
-                "available",
-                "unavailable"
-              ],
-              "referenceStatus": [
-                "supplied-by-caller"
-              ]
-            },
-            "transportObjects": {}
-          }
-        }
-      ],
-      "validityDomain": null,
-      "evidence": {
-        "emits": [],
-        "ceiling": "screening-only",
-        "forbiddenClaims": [
-          "qualified",
-          "certified",
-          "validated",
-          "measured",
-          "productionReady",
-          "airworthy"
-        ],
-        "note": "No evidence status is emitted. status and directionalYoungsModuliStatus are availability (available/unavailable), not evidence; acousticAndThermalProperties.status, voigtReussHillModuli.status and mechanicalIntegrityIndices.status are also availability. Top-level availability keys are explicitly declared transport values with no evidence status key. referenceStatus=supplied-by-caller is provenance, not measurement. Contract oracle pending; existing algebraic/regression tests do not establish experimental validation or an applicability domain."
-      },
-      "lifecycle": {
-        "backgroundWork": "none",
-        "resources": [
-          "fetch"
-        ]
-      },
-      "tests": {
-        "schema": "python/test_module_contract_elasticity.py",
-        "oracle": {
-          "status": "pending",
-          "ref": null,
-          "ciNote": null,
-          "scope": null
-        },
-        "docs": "docs/modules/materials-project.md"
-      },
-      "migrationState": "contracted",
-      "legacyNotes": [
-        "Scope is the explicit Calculate P2 form: blank initial numerical fields; no autoCalculate or shared specimen/process auto-fill. Backend library mode and absent-mode legacy behavior remain outside this operation; explicit custom/isotropic never use library constants or density.",
-        "custom_c_ij is a dynamic nested map in GPa, recorded as undeclaredInput, not fake scalar fields. The form requires complete selected symmetry: cubic c11,c12,c44; hexagonal c11,c33,c12,c13,c44; trigonal also c14; tetragonal also c66; orthorhombic c11,c22,c33,c12,c13,c23,c44,c55,c66; custom isotropic c11,c12. Finite values are required; diagonals positive, off-diagonals may be negative.",
-        "isotropic requires finite positive k_vrh and g_vrh in GPa, with no custom_c_ij. The SDK cannot encode conditional required fields or blank numeric defaults; these are undeclaredInput, with actual validation in buildElasticityInput and the Python authority. input_problems does not validate undeclared keys, tensor completeness, positivity or mode/symmetry combinations.",
-        "formula is optional trimmed text. density is optional finite positive g/cm^3; blank is omitted, not replaced by 8.2 or library density. Optional molar_mass (g/mol) and atoms_per_formula_unit (formula-unit atom count) must be entered together and finite positive. No numerical defaults or unsupported min/max applicability limits are invented.",
-        "Successful output inventories Cij (GPa), Sij (1/GPa), VRH K/G/E (GPa), dimensionless Poisson ratio and anisotropy indices, Born mechanical stability and optional acoustic/directional results. Born is elastic mechanical stability, not phase stability; VRH is homogenization, not DFT. isDft is false; materialInfo phase/electronic metadata is not calculated by this P2 form.",
-        "status=available/unavailable and directionalYoungsModuliStatus=available/unavailable are explicit transport values, separate from evidence. The output fields are a conditional union, not mandatory non-null outputs. unavailableCode/reason accompanies solver unavailable results (HTTP 200), without fabricated tensor/moduli. Missing density leaves acoustic values null/unavailable while directional E may remain available. Missing composition or paired mass/atom inputs leaves Debye quantities null even when velocities are available.",
-        "Service failures return unavailable with PYTHON_NOT_REQUESTED, PYTHON_BAD_RESPONSE, PYTHON_HTTP_ERROR or PYTHON_UNREACHABLE; no browser surrogate calculation. isPythonEngine and computeTimeMs are execution metadata, not evidence. Raw route failures/CLI errors are normalized by calculateDFTProperties before reaching this view.",
-        "Request generation is held in useRef: begin on Calculate, invalidate on edits and unmount; old success/error including A-B-A is ignored. Fetch is not aborted by the generation gate; the Python IPC deadline is enforced separately. Pure gate tests do not prove mounted effects.",
-        "No physical applicability domain is declared. Source tests cover numerical formulas and software regressions; they do not qualify a material or validate supplied constants experimentally."
-      ],
-      "sourceRefs": [
-        "src/utils/elasticityInput.ts::buildElasticityInput",
-        "src/utils/elasticityRequestGate.ts::createElasticityRequestGate",
-        "src/components/MaterialsProjectExplorer.tsx::MaterialsProjectExplorer",
-        "src/components/MaterialsProjectElasticityPanel.tsx",
-        "src/services/pythonComputationService.ts",
-        "routes/physics.ts:62-64#/api/python/dft-properties",
-        "routes/physics.ts:11-17#25000",
-        "python/persistent_ipc_service.py:95-100#dft_property_calculator",
-        "python/dft_property_calculator.py::calculate_dft_properties",
-        "python/dft_property_calculator.py::_calculate_elasticity",
-        "python/dft_property_calculator.py::_unavailable_result",
-        "python/dft_property_calculator.py::_acoustic_and_directional",
-        "python/test_elasticity_input_mode.py",
-        "python/test_elasticity_oracle.py",
-        "tests/elasticity-input.test.ts",
-        "tests/elasticity-request-gate.test.ts"
       ],
       "seedDerived": [
         "label",
@@ -6127,7 +5932,7 @@
         "routes/physics.ts::handlePythonDispatch",
         "python/persistent_ipc_service.py::WARM_MODULE_NAMES",
         "server/processOrchestrator.ts::PersistentPythonIPCSupervisor.execute",
-        "routes/physics.ts:99-100#python/stochastic_uq_mmpds_solver.py",
+        "routes/physics.ts:94-95#python/stochastic_uq_mmpds_solver.py",
         "src/components/UQLab.tsx::UQLab",
         "src/components/UQLab.tsx::runQMCSolver",
         "src/components/uqLabData.ts::computeMMPDSEmpiricalStats",

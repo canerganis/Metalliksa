@@ -30,7 +30,7 @@ function densityContextLine(specimen: ActiveSpecimenState): string {
 // default at the end of buildScientificContext, which prints the shared LPBF specimen numbers (composition, density,
 // freezing range) that are unrelated to that module, so the panel is hidden there (see ScientificContextPanel).
 const MODULES_WITH_CONTEXT: ReadonlySet<string> = new Set([
-  'materials-project', 'alloy-builder', '3d-distortion-lab', 'phase-diagram', 'ttt-cct-kinetics',
+  'alloy-builder', '3d-distortion-lab', 'phase-diagram', 'ttt-cct-kinetics',
   'micrograph', 'research-hub', 'experimental-data', 'digital-twin', 'uq-lab', 'traceability',
 ]);
 
@@ -39,15 +39,6 @@ export function hasScientificContext(moduleId: ModuleId): boolean {
 }
 
 export function buildScientificContext(moduleId: ModuleId, specimen: ActiveSpecimenState): ScientificContext {
-  if (moduleId === 'materials-project') return {
-    title: 'Elastic Constants input context',
-    observation: 'This engine uses only the form inputs: user-supplied C_ij or isotropic K/G. Shared specimen values and process parameters are not automatically filled into the form or used by this engine.',
-    mechanism: 'Voigt-Reuss-Hill homogenisation derives aggregate elastic moduli from the supplied stiffness tensor. Born criteria describe mechanical stability against infinitesimal strain, not thermodynamic phase stability.',
-    variables: ['Form C_ij (GPa) with crystal symmetry, or isotropic K/G (GPa)', 'Optional user density (g/cm³) and composition or paired molar mass / atoms per formula unit for acoustic and Debye properties'],
-    interpretation: 'Before selecting Calculate Elasticity, no computed result is available. Missing density or composition can leave dependent properties unavailable even when an elastic tensor is available.',
-    limitation: 'User inputs and computed elasticity are not a measurement or a validation claim. Shared specimen composition, density, and LPBF settings do not establish the inputs or evidence for this calculation.',
-  };
-
   if (moduleId === 'alloy-builder') return {
     title: 'Composition editor context',
     observation: 'This editor uses element percentages in the displayed wt.% or at.% unit. Normalize Composition is an explicit action; edits do not automatically make the total 100%.',

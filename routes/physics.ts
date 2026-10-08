@@ -58,11 +58,6 @@ physicsRouter.get(["/api/python/calphad-databases", "/api/calphad/databases"], (
   return handlePythonDispatch("python/calphad_solver.py", { action: "list_databases" }, res, 15000);
 });
 
-// DFT Properties
-physicsRouter.post("/api/python/dft-properties", (req: Request, res: Response) => {
-  return handlePythonDispatch("python/dft_property_calculator.py", req.body, res);
-});
-
 // LPBF 3D Thermal Solver
 physicsRouter.post("/api/python/lpbf-thermal-solver", (req: Request, res: Response) => {
   return handlePythonDispatch("python/lpbf_thermal_solver.py", req.body, res);

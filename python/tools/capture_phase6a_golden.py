@@ -1064,7 +1064,7 @@ def capture_source_tables(force: bool, label: str = BASE_REVISION,  # noqa: F811
 # ---- END Phase 6a tranche 2a ----
 
 
-# ---- BEGIN phase6b-vector block: cnls / xrd / dft-named cases (base faa6684) ----
+# ---- BEGIN phase6b-vector block: cnls / xrd cases (base faa6684) ----
 # The Phase 6b NumPy/SciPy rewrite of these three solvers is compared against goldens
 # captured from the faa6684 blobs (not the d33b6f5 label above). They live in
 # golden/phase6b/ and in their own case table, so the Phase 6a bit-exact tests never

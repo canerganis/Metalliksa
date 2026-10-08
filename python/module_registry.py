@@ -40,7 +40,6 @@ from module_contract import (
 from module_contracts_dataset_view import build_dataset_view_contract
 from module_contracts_calibration_scorecard import build_calibration_scorecard_contract
 from module_contracts_composition import build_composition_contract
-from module_contracts_elasticity import build_elasticity_contract
 from module_contracts_database import build_database_contract
 from module_contracts_calphad import build_calphad_contract
 from module_contracts_evidence import build_experimental_data_contract, build_traceability_contract
@@ -204,12 +203,6 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
 }
 
 LEGACY_NOTES: Dict[str, Tuple[str, ...]] = {
-    "materials-project": (
-        "Elastic Constants retains the materials-project identity. The user explicitly submits custom "
-        "C_ij or isotropic K/G; optional density and composition are not taken from the shared specimen "
-        "or the legacy library. No catalog, consultation or Materials Project request is dispatched. "
-        "Missing derived properties remain unavailable; input edits invalidate pending responses.",
-    ),
     "experimental-data": (_EVIDENCE_READS_ONLY,),
     "traceability": (_EVIDENCE_READS_ONLY,),
 }
@@ -444,7 +437,7 @@ def _uq_contract(row: Dict[str, str]) -> ModuleContract:
                       "routes/physics.ts::handlePythonDispatch",
                       "python/persistent_ipc_service.py::WARM_MODULE_NAMES",
                       "server/processOrchestrator.ts::PersistentPythonIPCSupervisor.execute",
-                      "routes/physics.ts:99-100#python/stochastic_uq_mmpds_solver.py",
+                      "routes/physics.ts:94-95#python/stochastic_uq_mmpds_solver.py",
                       "src/components/UQLab.tsx::UQLab",
                       "src/components/UQLab.tsx::runQMCSolver",
                       "src/components/uqLabData.ts::computeMMPDSEmpiricalStats",
@@ -596,7 +589,7 @@ def _kinetics_contract(row: Dict[str, str]) -> ModuleContract:
             "python/alloy_data_kinetics_uq_fatigue.py::KINETICS_LEGACY_NAMES",
             "python/input_validation.py::require_known_alloy",
             "routes/physics.ts::handlePythonDispatch",
-            "routes/physics.ts:89#python/kinetics_ttt_cct_solver.py",
+            "routes/physics.ts:84#python/kinetics_ttt_cct_solver.py",
             "python/persistent_ipc_service.py::WARM_MODULE_NAMES",
             "src/components/PhaseKineticsTTTCCTStudio.tsx::PhaseKineticsTTTCCTStudio",
             "src/services/pythonComputationService.ts::calculatePhaseKineticsTTTCCT",
@@ -681,7 +674,7 @@ def _icme_contract(row: Dict[str, str]) -> ModuleContract:
             "python/icme_multiscale_pipeline_solver.py::_unknown_element",
             "python/alloy_data_calphad_battery_icme.py::icme_base_metal",
             "routes/physics.ts::handlePythonDispatch",
-            "routes/physics.ts:94#python/icme_multiscale_pipeline_solver.py",
+            "routes/physics.ts:89#python/icme_multiscale_pipeline_solver.py",
             "python/persistent_ipc_service.py::WARM_MODULE_NAMES",
             "src/components/ICMEMultiScalePipelineStudio.tsx::ICMEMultiScalePipelineStudio",
             "src/services/pythonComputationService.ts::calculateICMEMultiScalePipeline",
@@ -988,7 +981,6 @@ CONTRACTED_BUILDERS = {
     "experimental-data": build_experimental_data_contract,
     "traceability": build_traceability_contract,
     "alloy-builder": build_composition_contract,
-    "materials-project": build_elasticity_contract,
     "lpbf-dataset-comparison": build_dataset_view_contract,
     "lpbf-calibration-scorecard": build_calibration_scorecard_contract,
     "keyhole-raytracing": _keyhole_contract,

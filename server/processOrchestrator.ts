@@ -186,7 +186,6 @@ export function buildIpcSpawnSpec(
 export const DISPATCHABLE_SCRIPTS: ReadonlySet<string> = new Set([
   "battery_corrosion_eis_solver",
   "calphad_solver",
-  "dft_property_calculator",
   "icme_multiscale_pipeline_solver",
   "kinetics_ttt_cct_solver",
   "lpbf_bayesian_optimizer",

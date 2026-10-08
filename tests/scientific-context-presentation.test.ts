@@ -48,7 +48,7 @@ test('Alloy Builder context does not promote retained atomic-percent properties 
   assert.match(context.limitation, /hardness.*unavailable/i);
 });
 
-test('Elastic Constants context describes form inputs independently of the shared specimen', () => {
+test('modules without module-specific context fall back to the generic default', () => {
   const defaultSpecimen = useMaterialSpecimenStore.getInitialState().activeSpecimen;
   const specimen: ActiveSpecimenState = {
     ...defaultSpecimen,
@@ -56,27 +56,8 @@ test('Elastic Constants context describes form inputs independently of the share
     freezingRange_C: 80,
     lpbf: { ...defaultSpecimen.lpbf, laserPower_W: 280, scanSpeed_mms: 940, hatch_um: 100, layer_um: 40 },
   };
-  const otherSpecimen: ActiveSpecimenState = {
-    ...specimen, name: 'Different aluminium fixture', composition: { Al: 100 }, density_gcm3: 2.7,
-    lpbf: { ...specimen.lpbf, laserPower_W: 500, scanSpeed_mms: 1600 },
-  };
-  const context = buildScientificContext('materials-project', specimen);
-  assert.deepEqual(context, buildScientificContext('materials-project', otherSpecimen));
-  assert.equal(context.title, 'Elastic Constants input context');
-  const text = [context.observation, context.mechanism, ...context.variables,
-    context.interpretation, context.limitation].join(' ');
-  assert.match(text, /form.*C_ij.*K\/G/i);
-  assert.match(text, /optional.*density.*composition/i);
-  assert.match(text, /shared specimen.*process parameters.*not automatically/i);
-  assert.match(text, /Voigt-Reuss-Hill/);
-  assert.match(text, /Born.*mechanical.*not.*phase stability/i);
-  assert.match(text, /before.*Calculate Elasticity.*no.*result/i);
-  assert.match(text, /not.*validation claim/i);
-  assert.doesNotMatch(text, /Shared IN718 fixture|280 W|8\.2 g\/cm|predicted behavior/i);
-
   // Unrelated modules fall to the generic default text, but the panel is hidden there (hasScientificContext).
   assert.equal(hasScientificContext('database'), false);
-  assert.equal(hasScientificContext('materials-project'), true);
   const generic = buildScientificContext('database', specimen);
   assert.equal(generic.title, 'Scientific interpretation for this module');
   assert.match(generic.observation, /Shared IN718 fixture; 280 W/);

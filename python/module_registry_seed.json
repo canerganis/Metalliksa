@@ -155,19 +155,9 @@
     "label": "Yield Strength Breakdown (Illustrative)",
     "scope": "Research",
     "description": "Illustrative sum of friction, solid-solution, Hall–Petch, dislocation and precipitate terms on tabulated constants; no DFT, CALPHAD or FEA; UTS and K_Ic unavailable; not a calibrated strength prediction for any alloy.",
-    "next": "materials-project",
+    "next": "research-hub",
     "viewComponent": "src/components/ICMEMultiScalePipelineStudio.tsx",
     "viewExport": "ICMEMultiScalePipelineStudio"
-  },
-  {
-    "id": "materials-project",
-    "workspace": "materials",
-    "label": "Elastic-constants calculator (user-supplied constants)",
-    "scope": "Research",
-    "description": "User-supplied elastic constants or isotropic moduli; continuum calculations via Python.",
-    "next": "research-hub",
-    "viewComponent": "src/components/MaterialsProjectExplorer.tsx",
-    "viewExport": "MaterialsProjectExplorer"
   },
   {
     "id": "research-hub",

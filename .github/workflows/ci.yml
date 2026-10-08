@@ -92,7 +92,6 @@ jobs:
           test_module_contract_structured_transport
           test_module_contract_selected_units
           test_module_contract_dataset_view test_module_contract_composition
-          test_module_contract_elasticity
           test_module_contract_database test_module_contract_calphad test_module_contract_evidence
           test_module_contract_lpbf_secondary
           test_module_contract_research
@@ -105,7 +104,7 @@ jobs:
           test_tafel_physics_audit test_stochastic_uq_physics_audit test_icme_physics_audit
           test_persistent_ipc_security
           test_murakami_constants test_xrd_formulas test_cnls_validation
-          test_electrochem_fallbacks test_elasticity_oracle test_icme_illustrative
+          test_electrochem_fallbacks test_icme_illustrative
           test_kinetics_fx test_kinetics_li1998 test_calphad_honesty test_calphad_model_cache
           test_lpbf_validity_envelope test_phase8_microstructure_contract
           test_lpbf_solidification_microstructure_rpc

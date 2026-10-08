@@ -94,7 +94,6 @@ NUM_WORKERS = int(os.environ.get("METALLIX_IPC_WORKERS", DEFAULT_WORKERS))
 # List of scientific modules to keep warm in memory
 WARM_MODULE_NAMES = [
     "calphad_solver",
-    "dft_property_calculator",
     "cnls_fitting_solver",
     "xrd_peak_deconvolution",
     "lpbf_thermal_solver",
@@ -115,7 +114,6 @@ WARM_MODULE_NAMES = [
 ALLOWED_SCRIPT_NAMES = frozenset({
     "battery_corrosion_eis_solver",
     "calphad_solver",
-    "dft_property_calculator",
     "icme_multiscale_pipeline_solver",
     "kinetics_ttt_cct_solver",
     "lpbf_bayesian_optimizer",
