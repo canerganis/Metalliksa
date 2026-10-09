@@ -299,6 +299,40 @@ export const MODULE_REGISTRY = {
           "output": null
         },
         {
+          "id": "lpbf-machine-calibrated-meltpool",
+          "method": "POST",
+          "route": "/api/python/lpbf-machine-calibrated-meltpool",
+          "authority": {
+            "kind": "python-ipc",
+            "script": "python/lpbf_machine_calibrated_meltpool.py",
+            "workerMethod": null,
+            "timeoutMs": 25000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": null
+        },
+        {
+          "id": "lpbf-machine-calibration-status",
+          "method": "GET",
+          "route": "/api/python/lpbf-machine-calibration/status",
+          "authority": {
+            "kind": "python-ipc",
+            "script": "python/lpbf_machine_calibrated_meltpool.py",
+            "workerMethod": null,
+            "timeoutMs": 15000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": null
+        },
+        {
           "id": "stl-slicer-build-time",
           "method": "POST",
           "route": "/api/python/stl-slicer-build-time",

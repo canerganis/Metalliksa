@@ -5,6 +5,7 @@ import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
 import { applySecurity, errorHandler } from "../server/security.ts";
 import { characterizationRouter } from "../routes/characterization.ts";
+import { physicsDeps, physicsRouter } from "../routes/physics.ts";
 
 // Importing the characterization router starts the persistent Python supervisor (import side
 // effect in server/processOrchestrator.ts) which keeps the event loop alive; exit explicitly
@@ -34,6 +35,7 @@ async function start(token: string | null, rate?: { generalLimit?: number }): Pr
   app.use(express.json({ limit: "50mb" }));
   app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
   app.use(characterizationRouter);
+  app.use(physicsRouter);
   app.use(errorHandler(() => {}));
   const server: Server = await new Promise((resolve) => {
     const s = app.listen(0, "127.0.0.1", () => resolve(s));
@@ -98,5 +100,49 @@ test("end to end: token auth returns 401 and the request bucket returns 429", as
     assert.ok(limited.headers.get("retry-after"));
   } finally {
     await fresh.close();
+  }
+});
+
+// Machine-calibrated melt-pool (screening only, user data): the new routes dispatch to the one Python CLI, the status
+// route is a GET with a fixed {action: "status"} payload (no client input reaches the script), and the validation
+// envelope of the CLI (exit 2) is relayed as HTTP 422 with the body unchanged.
+test("machine calibration routes dispatch to the Python CLI and relay its validation envelope", async () => {
+  const h = await start(null);
+  const seen: Array<{ script: string; payload: any; timeoutMs: number }> = [];
+  let reply: { stdout: string; exitCode: number } = { stdout: "{}", exitCode: 0 };
+  const original = physicsDeps.runPythonScript;
+  physicsDeps.runPythonScript = (async (script: string, payload: any, _args: string[], timeoutMs: number) => {
+    seen.push({ script, payload, timeoutMs });
+    return { stdout: reply.stdout, stderr: "", exitCode: reply.exitCode, durationMs: 1 };
+  }) as any;
+  try {
+    const status = { success: true, status: "none", artefacts: [], experimentalValidation: false };
+    reply = { stdout: JSON.stringify(status), exitCode: 0 };
+    const got = await fetch(h.base + "/api/python/lpbf-machine-calibration/status?path=C:/secret.json");
+    assert.equal(got.status, 200);
+    assert.deepEqual(await got.json(), status);
+    assert.equal(seen.at(-1)!.script, "python/lpbf_machine_calibrated_meltpool.py");
+    assert.deepEqual(seen.at(-1)!.payload, { action: "status" });
+
+    const envelope = { success: false, errorKind: "validation", error: "machineCalibration must be a machine calibration id" };
+    reply = { stdout: JSON.stringify(envelope), exitCode: 2 };
+    const bad = await post(h, "/api/python/lpbf-machine-calibrated-meltpool", { machineCalibration: "../../x" });
+    assert.equal(bad.status, 422);
+    assert.deepEqual(bad.json, envelope);
+    assert.equal(seen.at(-1)!.script, "python/lpbf_machine_calibrated_meltpool.py");
+    assert.deepEqual(seen.at(-1)!.payload, { machineCalibration: "../../x" });
+
+    const ok = { success: true, machineCalibrated: { available: false }, experimentalValidation: false };
+    reply = { stdout: JSON.stringify(ok), exitCode: 0 };
+    const served = await post(h, "/api/python/lpbf-machine-calibrated-meltpool", { machineCalibration: "mc-0123456789ab", material: "316L Stainless Steel" });
+    assert.equal(served.status, 200);
+    assert.deepEqual(served.json, ok);
+
+    // GET on the compute route and POST on the status route are not served.
+    assert.equal((await fetch(h.base + "/api/python/lpbf-machine-calibrated-meltpool")).status, 404);
+    assert.equal((await post(h, "/api/python/lpbf-machine-calibration/status", {})).status, 404);
+  } finally {
+    physicsDeps.runPythonScript = original;
+    await h.close();
   }
 });

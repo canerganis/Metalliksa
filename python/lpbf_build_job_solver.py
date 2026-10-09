@@ -657,6 +657,38 @@ def _scan_strategy_assumptions(scan_strategy, stripe_width_mm, rotation_deg, dwe
 
 
 def solve_lpbf_build_job(data):
+    """Build Job solve. An optional ``machineCalibration`` (a machine calibration id) adds a ``machineCalibrated`` block
+    at the top level of the result, outside every golden-compared key. The block is reported next to the screening
+    value; the verdict, the cache key and every other key are exactly those of the request without it."""
+    machine_id = None
+    if isinstance(data, dict) and "machineCalibration" in data:
+        data = dict(data)
+        machine_id = data.pop("machineCalibration")
+    result = _solve_lpbf_build_job_core(data)
+    if machine_id is None or not isinstance(result, dict) or result.get("success") is not True:
+        return result
+    return {**result, "machineCalibrated": _machine_calibrated_block(machine_id, data, result)}
+
+
+def _machine_calibrated_block(machine_id, data, result):
+    from lpbf_machine_calibrated_meltpool import build_job_block
+    try:
+        req = LpbfBuildJobRequest.model_validate(data).to_solver_dict()
+        material = ALLOY_MATERIALS[result["alloyId"]]["thermal"]
+        screening = ((result.get("thermal") or {}).get("meltPoolGeometry") or {}).get("depth_um")
+        inputs = {
+            "laserPower_W": req["laserPower_W"], "scanSpeed_mm_s": req["scanSpeed_mm_s"],
+            "beamDiameter_um": req["beamDiameter_um"], "preheatTemp_C": req["preheatTemp_C"],
+            "layerThickness_um": req["layerThickness_um"], "hatchSpacing_um": req["hatchSpacing_um"],
+            "laserWavelength": req["laserWavelength"],
+        }
+    except Exception as exc:  # never fail the Build Job over the optional block
+        return {"available": False, "usedForBuildJobVerdict": False, "experimentalValidation": False,
+                "evidenceKind": "screening-only", "reasonText": [f"machine calibration not applied: {exc}"]}
+    return build_job_block(machine_id, material, inputs, screening_depth_um=screening)
+
+
+def _solve_lpbf_build_job_core(data):
     t0 = time.time()
     try:
         req = LpbfBuildJobRequest.model_validate(data if isinstance(data, dict) else {})
