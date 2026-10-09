@@ -93,6 +93,43 @@ private run carries the new config sha256, so the runtime loader refuses it: it 
 calibration by accident. Without the flag the tool's output is byte-identical (`--check` passes). The kernel table
 cache is extended by the user's inputs (about 90 frozen-solver calls per track).
 
+## 4. Machine calibration (user data)
+
+Optional, screening only, not validation. It fits one empirical machine depth factor to your own tracks and shows it
+next to the unchanged screening value. It is not an absorptivity and not a physical quantity; it absorbs model error
+and measurement bias on your machine.
+
+Plan for it with `plan --for-machine-calibration` (at least 6 tracks; the plan records `purpose = "machine-calibration"`).
+A plan with fewer than 2 regime classes of 3 tracks each still works and carries a warning, because the rule is soft.
+`measurement_template.csv` then has five extra method columns that you fill for every track: `depthDatum` (for example
+plate surface or powder top), `beamDiameterDefinition` (1/e2, D4sigma or FWHM), `measuredPowerW`, `crossSectionLocation`
+and `replicates`. After the import (section 2):
+
+```
+python -B python/tools/lpbf_machine_calibration.py fit --user-source .runtime/user-calibration/user-my-run/rows.json \
+  --out-dir .runtime/machine-calibration/user-my-run
+python -B python/tools/lpbf_machine_calibration.py check --artefact .runtime/machine-calibration/user-my-run/machine-calibration.json \
+  --user-source .runtime/user-calibration/user-my-run/rows.json
+```
+
+What is served: only Rosenthal depth for 316L Stainless Steel, and only when your tracks show a uniform offset
+(at least 80 % of the residuals with one sign and a mean of at least 0.15 in ln), the leave-one-track-out skill is
+positive and the factor is between 1/3 and 3. Every other cell (width, Ti-6Al-4V, Inconel 625, every Eagar-Tsai and
+Goldak cell) says why it is not offered. The server finds an artefact by its id (`mc-` plus 12 hex) under
+`.runtime/machine-calibration/`; a request can never name a path. Your measurements stay on this computer and do not
+change the published-track calibration or the scorecard.
+
+Label rule: a served value is labelled `Calibrated simulation` with the scope `this machine, user data` only if the gate
+passed and every one of your tracks has all five method fields. Otherwise it is `Screening only` and the UI lists the
+missing fields. A refused or not-eligible cell is always `Screening only`. Nothing is ever called validated and
+`experimentalValidation` stays false. The 80 % band is the leave-one-track-out band of your own tracks; it is not a
+tolerance. The Build Job verdict never uses the calibrated depth.
+
+In the app (Melt Pool lab, section "Machine calibration (user data)"): the selector is hidden until a ready artefact
+exists for the alloy, nothing is requested until you pick one, and the choice is not saved. The Build Job W x D tile
+gets a second line with the machine depth next to the screening value, and the run report gets a "Machine calibration
+(user data)" block with the artefact id and sha, the number of tracks, the factor, the band and the missing fields.
+
 ## UI
 
 Process Parameter Search lab, third tab "Plan experiments": load a `plan.json` from disk (validated by

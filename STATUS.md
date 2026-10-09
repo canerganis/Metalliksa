@@ -1,3 +1,8 @@
+## Güncel devam noktası — 2026-10-09 / LPBF makine kalibrasyonu (kullanıcı verisi, `feat/lpbf-machine-calibration`, taban `343da59e`, push yok, birleştirilmedi)
+
+- **Durum:** WP-M1 çekirdek, WP-M2 CLI ve planlayıcı, WP-M3 sunum (rota, durum, Build Job ek bloğu), WP-M4 arayüz ve belgeler yerelde işlendi. Yalnız Rosenthal derinliği 316L için sunulur; ampirik makine çarpanı, absorptivite değil. Etiket kuralı PROOF.md üstündeki kayıtta. Dondurulmuş fizik, altınlar, tavanlar ve izin listesi değişmedi.
+- **Açık:** gerçek çözücüyle uçtan uca koşu yapılmadı (testler sentetik); gerçek tarayıcıda klavye ve erişilebilirlik kontrolü yapılmadı; `ci.yml` listesine `test_lpbf_machine_calibration`, `test_lpbf_machine_calibrated_meltpool` ve `tests/lpbf-machine-calibration.test.tsx` bakımcı tarafından eklenmeli.
+
 ## Güncel devam noktası — 2026-10-08 / LA-6 tarama-normal kesit + Gusarov 2007 balling kaynakları (`feat/lpbf-la6-gusarov-bump`, taban `4f5faa3a`, birleştirilmedi)
 
 - **Sonuç:** planlı fizik güncellemesi, parmak izi `cda80143…` → `ec7e1f7a6606e937e448fefe97549b49a7ddfe7b95376b93867ae007b0c12555` (ilk pin `5f9d651e` incelemede geçersiz bulundu: dışa aktarılan provenance başlığı hâlâ Gusarov ve Smurov 2010'u anıyordu), `VERSION enthalpy-fv-6` aynı; `lpbf_peak.py`, `lpbf_simulation.py`, `lpbf_defect_diagnostics.py`. `crossSectionArea_um2` artık tarama-normal dilim (G3 stripe 102 derecede 6400 → 2698,01; 0/90/180 derecede bit-eşit); balling kaynakları düzeltildi (π√(3/2) = Yadroitsev 2010 Eq. 13, mekanizma Gusarov 2007; doğrulanmamış 2010 Phys. Procedia dışa aktarımdan çıktı); `geometricDefectScreen.modelId` v2 (TS doğrulayıcı v1 ve v2 kabul eder, eski arşivler okunur); build job v18. Sabitler (3,847 / 5,5) ve W/D/L değişmedi.

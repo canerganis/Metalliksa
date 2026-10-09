@@ -6,6 +6,7 @@
  */
 
 import type { MeltPoolExtentStatus } from "../utils/meltPoolExtentStatus";
+import { parseMachineCalibratedResult, parseMachineCalibrationStatus, type MachineCalibratedBlock, type MachineCalibratedResult, type MachineCalibrationStatus } from "../data/lpbfMachineCalibration";
 import {
   MultiComponentAlloyComposition,
   MultiComponentSolveResult,
@@ -700,6 +701,42 @@ class PythonComputationService {
   }
 
   /**
+   * Machine calibration (user data), screening only. GET status lists the ready artefacts found on this computer; the
+   * solve call applies one artefact (selected by its id, never by a path) to the frozen Rosenthal depth. Both are
+   * read-only on the server and are never used by the default solve paths.
+   */
+  async getLpbfMachineCalibrationStatus(signal?: AbortSignal): Promise<MachineCalibrationStatus> {
+    const res = await fetch("/api/python/lpbf-machine-calibration/status", { signal, method: "GET", headers: { Accept: "application/json" } });
+    if (!res.ok) throw new Error(`Machine calibration status HTTP ${res.status}`);
+    return parseMachineCalibrationStatus(await res.json());
+  }
+
+  async solveLPBFMachineCalibratedMeltpool(payload: {
+    machineCalibration: string;
+    material: string;
+    laserPower_W: number;
+    scanSpeed_mm_s: number;
+    beamDiameter_um: number;
+    preheatTemp_C?: number;
+    layerThickness_um?: number;
+    hatchSpacing_um?: number;
+    laserWavelength?: "IR_1064nm" | "Green_515nm" | "Blue_450nm";
+    heatSource?: "rosenthal" | "eagar-tsai" | "goldak";
+    sulfur_ppm?: number;
+  }, signal?: AbortSignal): Promise<MachineCalibratedResult> {
+    const res = await fetch("/api/python/lpbf-machine-calibrated-meltpool", {
+      signal,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(`Machine calibration proxy error: HTTP ${res.status}`);
+    const parsed = parseMachineCalibratedResult(await res.json());
+    if (!parsed) throw new Error("Machine calibration response had no machineCalibrated block.");
+    return parsed;
+  }
+
+  /**
    * Opt-in calibrated melt-pool mode (screening only, not validation). Same inputs as solveLPBFThermalPhysics plus
    * the explicit calibrationMode flag; the response carries the UNCHANGED screening result and a calibrated block
    * for gate-enabled cells only. The default path (solveLPBFThermalPhysics) is never routed through here.
@@ -1054,6 +1091,8 @@ export interface PythonLpbfBuildJobResult {
     thermal: Record<string, unknown>;
     slicer: Record<string, unknown>;
   };
+  /** Present only when the request named a machine calibration id; reported next to the screening depth, never used by the verdict. */
+  machineCalibrated?: MachineCalibratedBlock;
   buildJobIdentity?: {
     schemaVersion: number;
     alloyId: string;

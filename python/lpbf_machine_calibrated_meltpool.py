@@ -79,7 +79,7 @@ def _summary(art: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "machineCalibrationId": art["machineCalibrationId"], "userSourceId": art["userSourceId"],
         "material": art["material"], "generatedAt": art["generatedAt"], "nTracks": art["nTracks"],
-        "state": "ready", "reason": None, "experimentalValidation": False,
+        "contentSha256": art["contentSha256"], "state": "ready", "reason": None, "experimentalValidation": False,
         "cells": [{"kernel": c["kernel"], "quantity": c["quantity"], "status": c["status"],
                    "evidenceKind": c["evidenceKind"], "evidenceScope": c["evidenceScope"],
                    "evidenceLabel": c["evidenceLabel"], "missingMethodFields": c["missingMethodFields"],

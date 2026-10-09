@@ -33,6 +33,7 @@ import { LPBF_DEMO_VECTORS } from "../../utils/lpbfDemoVectors";
 import { MeltPoolExtentNotice } from "../MeltPoolExtentNotice";
 import { isComputedMeltPoolExtent, meltPoolExtentInfo } from "../../utils/meltPoolExtentStatus";
 import { BuildJobKineticsPanel } from "./BuildJobKineticsPanel";
+import { MachineTileLine } from "./MachineTileLine";
 import { BuildJobMicrostructurePanel } from "./BuildJobMicrostructurePanel";
 import { stressProxyYieldCheck } from "../../utils/residualStressYieldCheck";
 import { peakTemperatureBasisLabel } from "../../utils/peakTemperatureDisplay";
@@ -615,7 +616,9 @@ export const IndustrialLPBFDecisionLab: React.FC<Props> = ({ onOpenSlicer, onOpe
         <div className="rounded-2xl border border-[#1e2d46] bg-[#090e18] p-3.5 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
           <Tiny label="Engine" value={job?.modelId || "Python"} icon={<Cpu className="w-3 h-3" />} />
           <Tiny label="Regime" value={thermal.meltPoolGeometry.regime} icon={<Zap className="w-3 h-3" />} />
-          <Tiny label="W×D (µm)" value={`${thermal.meltPoolGeometry.width_um}×${thermal.meltPoolGeometry.depth_um}`} icon={<Layers className="w-3 h-3" />} />
+          <Tiny label="W×D (µm)" value={`${thermal.meltPoolGeometry.width_um}×${thermal.meltPoolGeometry.depth_um}`} icon={<Layers className="w-3 h-3" />}
+            sub={<MachineTileLine material={materials.pythonThermal} screeningDepth={thermal.meltPoolGeometry.depth_um}
+              request={{ laserPower_W: lpbf.laserPower_W, scanSpeed_mm_s: lpbf.scanSpeed_mms, beamDiameter_um: lpbf.beamDiameter_um, preheatTemp_C: lpbf.preheatTemp_C, layerThickness_um: lpbf.layer_um, hatchSpacing_um: lpbf.hatch_um, laserWavelength: "IR_1064nm" }} />} />
           <Tiny label="ΔH/hs" value={String(thermal.processParameters.normalizedEnthalpy)} icon={<Activity className="w-3 h-3" />} />
           <Tiny label="I0 MW/cm²" value={String(thermal.processParameters.peakIntensity_MW_cm2 ?? "-")} />
           <Tiny label="LED J/mm" value={(thermal.processParameters.linearEnergyDensity_J_m / 1000).toFixed(3)} />
@@ -804,13 +807,14 @@ export const StressProxyMetric: React.FC<{ stress_MPa: number; yieldStrength_MPa
   return <Metric label="Stress proxy (MPa); unresolved field" value={String(stress_MPa)} ok={check.ok} hint={check.hint} />;
 };
 
-const Tiny: React.FC<{ label: string; value: string; icon?: React.ReactNode }> = ({ label, value, icon }) => (
+const Tiny: React.FC<{ label: string; value: string; icon?: React.ReactNode; sub?: React.ReactNode }> = ({ label, value, icon, sub }) => (
   <div className="rounded-lg border border-[#162032] bg-[#060a12] px-2 py-1.5">
     <div className="flex items-center gap-1 text-[9px] text-slate-500 uppercase">
       {icon}
       {label}
     </div>
     <div className="text-[11px] text-slate-200 truncate">{value}</div>
+    {sub}
   </div>
 );
 
