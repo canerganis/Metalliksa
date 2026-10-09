@@ -1,0 +1,1250 @@
+[
+ {
+  "source": "hofmann-316l-2026",
+  "kernel": "eagar-tsai",
+  "m": 8,
+  "nSets": 377,
+  "classes": [
+   "transition",
+   "keyhole"
+  ],
+  "hdDefault": 35.35139659041485,
+  "hdCalAll": 38.485911844784674,
+  "worseAll": 0.7,
+  "dclassMedian": 0.22150551462374457,
+  "gates": {
+   "G1": {
+    "passRate": 0.355,
+    "falsePass": 0.8591549295774648,
+    "falsePassBy5": 0.5774647887323944,
+    "hdCal": 40.734594825061,
+    "hdDef": 35.43443487141371,
+    "cov80": 0.7785793350891255,
+    "halfPct": 59.90956049768925,
+    "etaMedian": 0.465
+   },
+   "G8": {
+    "passRate": 0.18,
+    "falsePass": 0.8611111111111112,
+    "falsePassBy5": 0.5555555555555556,
+    "hdCal": 40.69837160806932,
+    "hdDef": 35.515322143612025,
+    "cov80": 0.744429388738332,
+    "halfPct": 49.69420845642679,
+    "etaMedian": 0.4675
+   },
+   "G9": {
+    "passRate": 0.12,
+    "falsePass": 0.875,
+    "falsePassBy5": 0.5833333333333334,
+    "hdCal": 40.93099634182729,
+    "hdDef": 35.515322143612025,
+    "cov80": 0.7376919602529358,
+    "halfPct": 48.66073900034084,
+    "etaMedian": 0.47
+   }
+  }
+ },
+ {
+  "source": "hofmann-316l-2026",
+  "kernel": "eagar-tsai",
+  "m": 10,
+  "nSets": 377,
+  "classes": [
+   "transition",
+   "keyhole"
+  ],
+  "hdDefault": 35.34710072571035,
+  "hdCalAll": 38.73957897793623,
+  "worseAll": 0.75,
+  "dclassMedian": 0.230506941220197,
+  "gates": {
+   "G1": {
+    "passRate": 0.355,
+    "falsePass": 0.8450704225352113,
+    "falsePassBy5": 0.5774647887323944,
+    "hdCal": 40.729615128245754,
+    "hdDef": 35.40168324140982,
+    "cov80": 0.8097248340177303,
+    "halfPct": 60.93095736763448,
+    "etaMedian": 0.465
+   },
+   "G8": {
+    "passRate": 0.15,
+    "falsePass": 0.8666666666666667,
+    "falsePassBy5": 0.6,
+    "hdCal": 40.86159210511936,
+    "hdDef": 35.483185929537726,
+    "cov80": 0.7886466848319709,
+    "halfPct": 54.51830440396877,
+    "etaMedian": 0.465
+   },
+   "G9": {
+    "passRate": 0.11,
+    "falsePass": 0.8181818181818182,
+    "falsePassBy5": 0.5,
+    "hdCal": 40.4063954876949,
+    "hdDef": 35.462033178078286,
+    "cov80": 0.7960118900173395,
+    "halfPct": 57.781851724601765,
+    "etaMedian": 0.4625
+   }
+  }
+ },
+ {
+  "source": "hofmann-316l-2026",
+  "kernel": "eagar-tsai",
+  "m": 12,
+  "nSets": 377,
+  "classes": [
+   "transition",
+   "keyhole"
+  ],
+  "hdDefault": 35.343625386223366,
+  "hdCalAll": 37.6519164216568,
+  "worseAll": 0.72,
+  "dclassMedian": 0.21018489421218867,
+  "gates": {
+   "G1": {
+    "passRate": 0.395,
+    "falsePass": 0.8860759493670886,
+    "falsePassBy5": 0.5949367088607594,
+    "hdCal": 40.83587897310604,
+    "hdDef": 35.37090694132652,
+    "cov80": 0.813039708687359,
+    "halfPct": 65.95523770213845,
+    "etaMedian": 0.465
+   },
+   "G8": {
+    "passRate": 0.17,
+    "falsePass": 0.8529411764705882,
+    "falsePassBy5": 0.6176470588235294,
+    "hdCal": 41.287580389945006,
+    "hdDef": 35.52330055981697,
+    "cov80": 0.7713134568896052,
+    "halfPct": 61.622783298982576,
+    "etaMedian": 0.47
+   },
+   "G9": {
+    "passRate": 0.135,
+    "falsePass": 0.8148148148148148,
+    "falsePassBy5": 0.5185185185185185,
+    "hdCal": 40.223997494491144,
+    "hdDef": 35.61979782978963,
+    "cov80": 0.7669203450025369,
+    "halfPct": 62.08561306792602,
+    "etaMedian": 0.465
+   }
+  }
+ },
+ {
+  "source": "hofmann-316l-2026",
+  "kernel": "eagar-tsai",
+  "m": 16,
+  "nSets": 377,
+  "classes": [
+   "transition",
+   "keyhole"
+  ],
+  "hdDefault": 35.33763675912642,
+  "hdCalAll": 38.131558161660635,
+  "worseAll": 0.735,
+  "dclassMedian": 0.16538675318464657,
+  "gates": {
+   "G1": {
+    "passRate": 0.42,
+    "falsePass": 0.9404761904761905,
+    "falsePassBy5": 0.5952380952380952,
+    "hdCal": 40.710941682040286,
+    "hdDef": 35.29731664019759,
+    "cov80": 0.8392032713362354,
+    "halfPct": 71.06610237532016,
+    "etaMedian": 0.465
+   },
+   "G8": {
+    "passRate": 0.25,
+    "falsePass": 0.98,
+    "falsePassBy5": 0.64,
+    "hdCal": 40.85541494872006,
+    "hdDef": 35.55205454164476,
+    "cov80": 0.817285318559557,
+    "halfPct": 58.12553580932891,
+    "etaMedian": 0.4675
+   },
+   "G9": {
+    "passRate": 0.195,
+    "falsePass": 0.9743589743589743,
+    "falsePassBy5": 0.5641025641025641,
+    "hdCal": 40.45532458550545,
+    "hdDef": 35.615787316077906,
+    "cov80": 0.8085801548405427,
+    "halfPct": 55.50959989579407,
+    "etaMedian": 0.465
+   }
+  }
+ },
+ {
+  "source": "hofmann-316l-2026",
+  "kernel": "goldak",
+  "m": 8,
+  "nSets": 350,
+  "classes": [
+   "transition",
+   "keyhole"
+  ],
+  "hdDefault": 38.65365715038682,
+  "hdCalAll": 40.639829692284465,
+  "worseAll": 0.63,
+  "dclassMedian": 0.19327492263875024,
+  "gates": {
+   "G1": {
+    "passRate": 0.33,
+    "falsePass": 0.7727272727272727,
+    "falsePassBy5": 0.45454545454545453,
+    "hdCal": 43.277458203300384,
+    "hdDef": 38.74339895390389,
+    "cov80": 0.7429115718589403,
+    "halfPct": 53.883029882469536,
+    "etaMedian": 0.46
+   },
+   "G8": {
+    "passRate": 0.18,
+    "falsePass": 0.75,
+    "falsePassBy5": 0.4444444444444444,
+    "hdCal": 43.277458203300384,
+    "hdDef": 38.80954918006036,
+    "cov80": 0.70679012345679,
+    "halfPct": 47.754670447374345,
+    "etaMedian": 0.46
+   },
+   "G9": {
+    "passRate": 0.145,
+    "falsePass": 0.7241379310344828,
+    "falsePassBy5": 0.4827586206896552,
+    "hdCal": 43.30118992258619,
+    "hdDef": 38.80084763105358,
+    "cov80": 0.7082072998588426,
+    "halfPct": 48.57468981183632,
+    "etaMedian": 0.46
+   }
+  }
+ },
+ {
+  "source": "hofmann-316l-2026",
+  "kernel": "goldak",
+  "m": 10,
+  "nSets": 350,
+  "classes": [
+   "transition",
+   "keyhole"
+  ],
+  "hdDefault": 38.661232874280024,
+  "hdCalAll": 40.564448397838916,
+  "worseAll": 0.665,
+  "dclassMedian": 0.22124592384950548,
+  "gates": {
+   "G1": {
+    "passRate": 0.35,
+    "falsePass": 0.7857142857142857,
+    "falsePassBy5": 0.45714285714285713,
+    "hdCal": 43.32970815791865,
+    "hdDef": 38.682601335076924,
+    "cov80": 0.7929831932773109,
+    "halfPct": 63.57659480552624,
+    "etaMedian": 0.46
+   },
+   "G8": {
+    "passRate": 0.155,
+    "falsePass": 0.8709677419354839,
+    "falsePassBy5": 0.5161290322580645,
+    "hdCal": 44.06043652220647,
+    "hdDef": 38.81732862506969,
+    "cov80": 0.7575901328273246,
+    "halfPct": 52.70973565280681,
+    "etaMedian": 0.465
+   },
+   "G9": {
+    "passRate": 0.105,
+    "falsePass": 0.9047619047619048,
+    "falsePassBy5": 0.5714285714285714,
+    "hdCal": 44.09079089031486,
+    "hdDef": 38.90732523773484,
+    "cov80": 0.7445378151260502,
+    "halfPct": 49.027931006974846,
+    "etaMedian": 0.465
+   }
+  }
+ },
+ {
+  "source": "hofmann-316l-2026",
+  "kernel": "goldak",
+  "m": 12,
+  "nSets": 350,
+  "classes": [
+   "transition",
+   "keyhole"
+  ],
+  "hdDefault": 38.66257961991537,
+  "hdCalAll": 40.644367679584576,
+  "worseAll": 0.66,
+  "dclassMedian": 0.20674921542236668,
+  "gates": {
+   "G1": {
+    "passRate": 0.365,
+    "falsePass": 0.8082191780821918,
+    "falsePassBy5": 0.5205479452054794,
+    "hdCal": 43.464537171414925,
+    "hdDef": 38.681159566737534,
+    "cov80": 0.7984518116235714,
+    "halfPct": 65.26941626692744,
+    "etaMedian": 0.465
+   },
+   "G8": {
+    "passRate": 0.205,
+    "falsePass": 0.8292682926829268,
+    "falsePassBy5": 0.6097560975609756,
+    "hdCal": 44.11740626353104,
+    "hdDef": 38.81129996663379,
+    "cov80": 0.7660557078943572,
+    "halfPct": 59.47425899485075,
+    "etaMedian": 0.47
+   },
+   "G9": {
+    "passRate": 0.115,
+    "falsePass": 0.8695652173913043,
+    "falsePassBy5": 0.5217391304347826,
+    "hdCal": 43.17547900445866,
+    "hdDef": 38.81129996663379,
+    "cov80": 0.7588114226910213,
+    "halfPct": 59.223887128798935,
+    "etaMedian": 0.465
+   }
+  }
+ },
+ {
+  "source": "hofmann-316l-2026",
+  "kernel": "goldak",
+  "m": 16,
+  "nSets": 350,
+  "classes": [
+   "transition",
+   "keyhole"
+  ],
+  "hdDefault": 38.695207815712486,
+  "hdCalAll": 40.77673282530965,
+  "worseAll": 0.69,
+  "dclassMedian": 0.1399308141297293,
+  "gates": {
+   "G1": {
+    "passRate": 0.375,
+    "falsePass": 0.84,
+    "falsePassBy5": 0.4666666666666667,
+    "hdCal": 43.50755092370892,
+    "hdDef": 38.649947998957856,
+    "cov80": 0.8229540918163673,
+    "halfPct": 66.99544717748928,
+    "etaMedian": 0.46
+   },
+   "G8": {
+    "passRate": 0.245,
+    "falsePass": 0.8775510204081632,
+    "falsePassBy5": 0.4897959183673469,
+    "hdCal": 43.614110640368345,
+    "hdDef": 38.825803531948445,
+    "cov80": 0.8055114261273373,
+    "halfPct": 62.12901276063001,
+    "etaMedian": 0.465
+   },
+   "G9": {
+    "passRate": 0.16,
+    "falsePass": 0.875,
+    "falsePassBy5": 0.4375,
+    "hdCal": 43.48586922459772,
+    "hdDef": 38.84170262861191,
+    "cov80": 0.8075411676646707,
+    "halfPct": 59.71291546381188,
+    "etaMedian": 0.46
+   }
+  }
+ },
+ {
+  "source": "hofmann-316l-2026",
+  "kernel": "rosenthal",
+  "m": 8,
+  "nSets": 349,
+  "classes": [
+   "transition",
+   "keyhole"
+  ],
+  "hdDefault": 50.815322788858566,
+  "hdCalAll": 34.24405971599093,
+  "worseAll": 0.005,
+  "dclassMedian": 0.2182657269453364,
+  "gates": {
+   "G1": {
+    "passRate": 0.72,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 33.54109881205923,
+    "hdDef": 50.80187216187829,
+    "cov80": 0.8472018572825024,
+    "halfPct": 74.15927303629186,
+    "etaMedian": 0.335
+   },
+   "G8": {
+    "passRate": 0.28,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 34.09443105998487,
+    "hdDef": 51.00414536737692,
+    "cov80": 0.8075513196480939,
+    "halfPct": 61.054065413497,
+    "etaMedian": 0.335
+   },
+   "G9": {
+    "passRate": 0.19,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 33.83262378163107,
+    "hdDef": 50.99188330591224,
+    "cov80": 0.7984256829757677,
+    "halfPct": 58.7276619249867,
+    "etaMedian": 0.335
+   }
+  }
+ },
+ {
+  "source": "hofmann-316l-2026",
+  "kernel": "rosenthal",
+  "m": 10,
+  "nSets": 349,
+  "classes": [
+   "transition",
+   "keyhole"
+  ],
+  "hdDefault": 50.865173871706915,
+  "hdCalAll": 34.40484668725654,
+  "worseAll": 0.005,
+  "dclassMedian": 0.27121594160117946,
+  "gates": {
+   "G1": {
+    "passRate": 0.785,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 34.203905849144846,
+    "hdDef": 50.764791705781654,
+    "cov80": 0.8548184055765364,
+    "halfPct": 75.90917992831159,
+    "etaMedian": 0.34
+   },
+   "G8": {
+    "passRate": 0.29,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 34.67997068103383,
+    "hdDef": 51.04002554805374,
+    "cov80": 0.8098870918523041,
+    "halfPct": 64.49451334854697,
+    "etaMedian": 0.345
+   },
+   "G9": {
+    "passRate": 0.2,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 34.31184770062069,
+    "hdDef": 51.09823248001294,
+    "cov80": 0.7966076696165192,
+    "halfPct": 63.50446651919589,
+    "etaMedian": 0.34
+   }
+  }
+ },
+ {
+  "source": "hofmann-316l-2026",
+  "kernel": "rosenthal",
+  "m": 12,
+  "nSets": 349,
+  "classes": [
+   "transition",
+   "keyhole"
+  ],
+  "hdDefault": 50.74397036774006,
+  "hdCalAll": 34.27643656852755,
+  "worseAll": 0.005,
+  "dclassMedian": 0.19113252262602332,
+  "gates": {
+   "G1": {
+    "passRate": 0.86,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 33.99826769342185,
+    "hdDef": 50.64412693398532,
+    "cov80": 0.8652094403422815,
+    "halfPct": 76.41488389847368,
+    "etaMedian": 0.34
+   },
+   "G8": {
+    "passRate": 0.385,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 34.632299006851156,
+    "hdDef": 50.94113259766222,
+    "cov80": 0.834521561524529,
+    "halfPct": 66.95363169926472,
+    "etaMedian": 0.345
+   },
+   "G9": {
+    "passRate": 0.265,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 34.632299006851156,
+    "hdDef": 50.952068056494625,
+    "cov80": 0.8267174290353285,
+    "halfPct": 66.78410992103703,
+    "etaMedian": 0.345
+   }
+  }
+ },
+ {
+  "source": "hofmann-316l-2026",
+  "kernel": "rosenthal",
+  "m": 16,
+  "nSets": 349,
+  "classes": [
+   "transition",
+   "keyhole"
+  ],
+  "hdDefault": 50.685351274237156,
+  "hdCalAll": 34.45949166843954,
+  "worseAll": 0.005,
+  "dclassMedian": 0.17204222065552544,
+  "gates": {
+   "G1": {
+    "passRate": 0.885,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 34.415707760251195,
+    "hdDef": 50.674402276506484,
+    "cov80": 0.8638129655078808,
+    "halfPct": 71.90909512504062,
+    "etaMedian": 0.345
+   },
+   "G8": {
+    "passRate": 0.425,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 34.97788965943901,
+    "hdDef": 50.865911162179685,
+    "cov80": 0.8394629924041689,
+    "halfPct": 64.26511675377557,
+    "etaMedian": 0.345
+   },
+   "G9": {
+    "passRate": 0.32,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 35.08513761359923,
+    "hdDef": 50.97695172446206,
+    "cov80": 0.8344125375375375,
+    "halfPct": 64.20503102838867,
+    "etaMedian": 0.345
+   }
+  }
+ },
+ {
+  "source": "ku-leuven-316l-2021",
+  "kernel": "eagar-tsai",
+  "m": 8,
+  "skipped": "classes {'keyhole': 40, 'transition': 4}"
+ },
+ {
+  "source": "ku-leuven-316l-2021",
+  "kernel": "eagar-tsai",
+  "m": 10,
+  "skipped": "classes {'keyhole': 40, 'transition': 4}"
+ },
+ {
+  "source": "ku-leuven-316l-2021",
+  "kernel": "eagar-tsai",
+  "m": 12,
+  "skipped": "classes {'keyhole': 40, 'transition': 4}"
+ },
+ {
+  "source": "ku-leuven-316l-2021",
+  "kernel": "eagar-tsai",
+  "m": 16,
+  "skipped": "classes {'keyhole': 40, 'transition': 4}"
+ },
+ {
+  "source": "ku-leuven-316l-2021",
+  "kernel": "goldak",
+  "m": 8,
+  "skipped": "classes {'keyhole': 40, 'transition': 4}"
+ },
+ {
+  "source": "ku-leuven-316l-2021",
+  "kernel": "goldak",
+  "m": 10,
+  "skipped": "classes {'keyhole': 40, 'transition': 4}"
+ },
+ {
+  "source": "ku-leuven-316l-2021",
+  "kernel": "goldak",
+  "m": 12,
+  "skipped": "classes {'keyhole': 40, 'transition': 4}"
+ },
+ {
+  "source": "ku-leuven-316l-2021",
+  "kernel": "goldak",
+  "m": 16,
+  "skipped": "classes {'keyhole': 40, 'transition': 4}"
+ },
+ {
+  "source": "ku-leuven-316l-2021",
+  "kernel": "rosenthal",
+  "m": 8,
+  "skipped": "classes {'keyhole': 40, 'transition': 4}"
+ },
+ {
+  "source": "ku-leuven-316l-2021",
+  "kernel": "rosenthal",
+  "m": 10,
+  "skipped": "classes {'keyhole': 40, 'transition': 4}"
+ },
+ {
+  "source": "ku-leuven-316l-2021",
+  "kernel": "rosenthal",
+  "m": 12,
+  "skipped": "classes {'keyhole': 40, 'transition': 4}"
+ },
+ {
+  "source": "ku-leuven-316l-2021",
+  "kernel": "rosenthal",
+  "m": 16,
+  "skipped": "classes {'keyhole': 40, 'transition': 4}"
+ },
+ {
+  "source": "totis-ti64-2021",
+  "kernel": "eagar-tsai",
+  "m": 8,
+  "nSets": 80,
+  "classes": [
+   "keyhole",
+   "transition"
+  ],
+  "hdDefault": 37.22932208374951,
+  "hdCalAll": 37.80270934853151,
+  "worseAll": 0.535,
+  "dclassMedian": 0.16110091694708117,
+  "gates": {
+   "G1": {
+    "passRate": 0.94,
+    "falsePass": 0.5478723404255319,
+    "falsePassBy5": 0.0797872340425532,
+    "hdCal": 38.500027364270004,
+    "hdDef": 37.22932208374951,
+    "cov80": 0.7671394799054374,
+    "halfPct": 55.06583887008699,
+    "etaMedian": 0.44
+   },
+   "G8": {
+    "passRate": 0.45,
+    "falsePass": 0.5888888888888889,
+    "falsePassBy5": 0.12222222222222222,
+    "hdCal": 40.31853954645001,
+    "hdDef": 37.22932208374951,
+    "cov80": 0.7336419753086421,
+    "halfPct": 49.84314002468597,
+    "etaMedian": 0.465
+   },
+   "G9": {
+    "passRate": 0.31,
+    "falsePass": 0.5806451612903226,
+    "falsePassBy5": 0.08064516129032258,
+    "hdCal": 39.61479876945408,
+    "hdDef": 37.243061871511074,
+    "cov80": 0.7383512544802867,
+    "halfPct": 50.701836033264584,
+    "etaMedian": 0.4625
+   }
+  }
+ },
+ {
+  "source": "totis-ti64-2021",
+  "kernel": "eagar-tsai",
+  "m": 10,
+  "nSets": 80,
+  "classes": [
+   "keyhole",
+   "transition"
+  ],
+  "hdDefault": 37.38273668639253,
+  "hdCalAll": 38.27350039892701,
+  "worseAll": 0.585,
+  "dclassMedian": 0.18405567017781088,
+  "gates": {
+   "G1": {
+    "passRate": 0.965,
+    "falsePass": 0.5854922279792746,
+    "falsePassBy5": 0.14507772020725387,
+    "hdCal": 38.28010970046707,
+    "hdDef": 37.35261325508119,
+    "cov80": 0.7671354552183569,
+    "halfPct": 53.20088987508325,
+    "etaMedian": 0.425
+   },
+   "G8": {
+    "passRate": 0.42,
+    "falsePass": 0.6428571428571429,
+    "falsePassBy5": 0.25,
+    "hdCal": 40.98529213486138,
+    "hdDef": 37.310552523608045,
+    "cov80": 0.7435374149659865,
+    "halfPct": 49.52226689874494,
+    "etaMedian": 0.465
+   },
+   "G9": {
+    "passRate": 0.305,
+    "falsePass": 0.7049180327868853,
+    "falsePassBy5": 0.26229508196721313,
+    "hdCal": 41.29795598422009,
+    "hdDef": 37.29814861924077,
+    "cov80": 0.7433255269320843,
+    "halfPct": 51.155874892452346,
+    "etaMedian": 0.465
+   }
+  }
+ },
+ {
+  "source": "totis-ti64-2021",
+  "kernel": "eagar-tsai",
+  "m": 12,
+  "nSets": 80,
+  "classes": [
+   "keyhole",
+   "transition"
+  ],
+  "hdDefault": 37.64085039294835,
+  "hdCalAll": 39.92306844372969,
+  "worseAll": 0.59,
+  "dclassMedian": 0.14737039960292964,
+  "gates": {
+   "G1": {
+    "passRate": 0.985,
+    "falsePass": 0.5939086294416244,
+    "falsePassBy5": 0.18274111675126903,
+    "hdCal": 39.92781148772733,
+    "hdDef": 37.636178780568684,
+    "cov80": 0.7649298297999403,
+    "halfPct": 53.9331942478761,
+    "etaMedian": 0.46
+   },
+   "G8": {
+    "passRate": 0.515,
+    "falsePass": 0.6699029126213593,
+    "falsePassBy5": 0.24271844660194175,
+    "hdCal": 41.45926055322178,
+    "hdDef": 37.64375629211414,
+    "cov80": 0.747001713306682,
+    "halfPct": 51.16618371350437,
+    "etaMedian": 0.465
+   },
+   "G9": {
+    "passRate": 0.38,
+    "falsePass": 0.6578947368421053,
+    "falsePassBy5": 0.2236842105263158,
+    "hdCal": 41.35369343234192,
+    "hdDef": 37.639967536341416,
+    "cov80": 0.7503869969040248,
+    "halfPct": 51.77990007336485,
+    "etaMedian": 0.465
+   }
+  }
+ },
+ {
+  "source": "totis-ti64-2021",
+  "kernel": "eagar-tsai",
+  "m": 16,
+  "nSets": 80,
+  "classes": [
+   "keyhole",
+   "transition"
+  ],
+  "hdDefault": 38.112843168118,
+  "hdCalAll": 41.034524783911706,
+  "worseAll": 0.71,
+  "dclassMedian": 0.11674556999753427,
+  "gates": {
+   "G1": {
+    "passRate": 0.995,
+    "falsePass": 0.7135678391959799,
+    "falsePassBy5": 0.27638190954773867,
+    "hdCal": 41.063653722177165,
+    "hdDef": 38.11070596508542,
+    "cov80": 0.7615420854271356,
+    "halfPct": 52.97138070820131,
+    "etaMedian": 0.465
+   },
+   "G8": {
+    "passRate": 0.615,
+    "falsePass": 0.8292682926829268,
+    "falsePassBy5": 0.35772357723577236,
+    "hdCal": 42.12322246698162,
+    "hdDef": 37.985588020203274,
+    "cov80": 0.7440294715447154,
+    "halfPct": 50.18199603841389,
+    "etaMedian": 0.465
+   },
+   "G9": {
+    "passRate": 0.42,
+    "falsePass": 0.8809523809523809,
+    "falsePassBy5": 0.42857142857142855,
+    "hdCal": 42.46806890205179,
+    "hdDef": 37.96681721582556,
+    "cov80": 0.7362351190476191,
+    "halfPct": 48.89445157297922,
+    "etaMedian": 0.465
+   }
+  }
+ },
+ {
+  "source": "totis-ti64-2021",
+  "kernel": "goldak",
+  "m": 8,
+  "nSets": 78,
+  "classes": [
+   "keyhole",
+   "transition"
+  ],
+  "hdDefault": 33.70962755138227,
+  "hdCalAll": 32.62722868251252,
+  "worseAll": 0.425,
+  "dclassMedian": 0.15765613042619542,
+  "gates": {
+   "G1": {
+    "passRate": 0.95,
+    "falsePass": 0.4421052631578947,
+    "falsePassBy5": 0.02631578947368421,
+    "hdCal": 32.71637412145593,
+    "hdDef": 33.704885925056914,
+    "cov80": 0.7709022556390976,
+    "halfPct": 49.68459300391362,
+    "etaMedian": 0.425
+   },
+   "G8": {
+    "passRate": 0.47,
+    "falsePass": 0.46808510638297873,
+    "falsePassBy5": 0.02127659574468085,
+    "hdCal": 33.02115704151322,
+    "hdDef": 33.79249215077737,
+    "cov80": 0.7306990881458968,
+    "halfPct": 44.74643294550027,
+    "etaMedian": 0.425
+   },
+   "G9": {
+    "passRate": 0.31,
+    "falsePass": 0.4838709677419355,
+    "falsePassBy5": 0.0,
+    "hdCal": 33.4349311258308,
+    "hdDef": 33.78705233181614,
+    "cov80": 0.7347926267281106,
+    "halfPct": 47.15252526514282,
+    "etaMedian": 0.4325
+   }
+  }
+ },
+ {
+  "source": "totis-ti64-2021",
+  "kernel": "goldak",
+  "m": 10,
+  "nSets": 78,
+  "classes": [
+   "keyhole",
+   "transition"
+  ],
+  "hdDefault": 33.85944817564743,
+  "hdCalAll": 33.116549021897974,
+  "worseAll": 0.375,
+  "dclassMedian": 0.15426895929095852,
+  "gates": {
+   "G1": {
+    "passRate": 0.96,
+    "falsePass": 0.3802083333333333,
+    "falsePassBy5": 0.026041666666666668,
+    "hdCal": 33.116549021897974,
+    "hdDef": 33.831693470854034,
+    "cov80": 0.7679993872549019,
+    "halfPct": 49.24157442137192,
+    "etaMedian": 0.425
+   },
+   "G8": {
+    "passRate": 0.47,
+    "falsePass": 0.44680851063829785,
+    "falsePassBy5": 0.0425531914893617,
+    "hdCal": 33.47608500149161,
+    "hdDef": 33.894869870481116,
+    "cov80": 0.7418648310387986,
+    "halfPct": 44.434091622472536,
+    "etaMedian": 0.425
+   },
+   "G9": {
+    "passRate": 0.33,
+    "falsePass": 0.48484848484848486,
+    "falsePassBy5": 0.030303030303030304,
+    "hdCal": 33.703970741937695,
+    "hdDef": 33.831693470854034,
+    "cov80": 0.7533422459893048,
+    "halfPct": 46.65007842673621,
+    "etaMedian": 0.435
+   }
+  }
+ },
+ {
+  "source": "totis-ti64-2021",
+  "kernel": "goldak",
+  "m": 12,
+  "nSets": 78,
+  "classes": [
+   "keyhole",
+   "transition"
+  ],
+  "hdDefault": 34.08302325087568,
+  "hdCalAll": 33.53594365503897,
+  "worseAll": 0.42,
+  "dclassMedian": 0.1258180033624151,
+  "gates": {
+   "G1": {
+    "passRate": 0.975,
+    "falsePass": 0.4205128205128205,
+    "falsePassBy5": 0.03076923076923077,
+    "hdCal": 33.54036717905018,
+    "hdDef": 34.0881143129195,
+    "cov80": 0.7693084693084692,
+    "halfPct": 49.085732595265654,
+    "etaMedian": 0.425
+   },
+   "G8": {
+    "passRate": 0.58,
+    "falsePass": 0.4482758620689655,
+    "falsePassBy5": 0.04310344827586207,
+    "hdCal": 33.7660243059254,
+    "hdDef": 34.12116699582353,
+    "cov80": 0.7564002089864158,
+    "halfPct": 47.48023733935821,
+    "etaMedian": 0.4275
+   },
+   "G9": {
+    "passRate": 0.41,
+    "falsePass": 0.45121951219512196,
+    "falsePassBy5": 0.036585365853658534,
+    "hdCal": 33.86741210617595,
+    "hdDef": 34.165728981761625,
+    "cov80": 0.7524020694752402,
+    "halfPct": 46.74738479929128,
+    "etaMedian": 0.43
+   }
+  }
+ },
+ {
+  "source": "totis-ti64-2021",
+  "kernel": "goldak",
+  "m": 16,
+  "nSets": 78,
+  "classes": [
+   "keyhole",
+   "transition"
+  ],
+  "hdDefault": 34.42926221786439,
+  "hdCalAll": 34.572896203217525,
+  "worseAll": 0.48,
+  "dclassMedian": 0.1076915620339367,
+  "gates": {
+   "G1": {
+    "passRate": 0.995,
+    "falsePass": 0.4824120603015075,
+    "falsePassBy5": 0.020100502512562814,
+    "hdCal": 34.577942758124536,
+    "hdDef": 34.43360848725078,
+    "cov80": 0.7691684227589562,
+    "halfPct": 48.86284585981999,
+    "etaMedian": 0.425
+   },
+   "G8": {
+    "passRate": 0.71,
+    "falsePass": 0.5070422535211268,
+    "falsePassBy5": 0.028169014084507043,
+    "hdCal": 35.091333991835825,
+    "hdDef": 34.42192402038681,
+    "cov80": 0.7555656519763743,
+    "halfPct": 46.11701599540442,
+    "etaMedian": 0.425
+   },
+   "G9": {
+    "passRate": 0.47,
+    "falsePass": 0.5638297872340425,
+    "falsePassBy5": 0.02127659574468085,
+    "hdCal": 35.40561909070743,
+    "hdDef": 34.36679209745294,
+    "cov80": 0.751544269045985,
+    "halfPct": 44.91491477580823,
+    "etaMedian": 0.46
+   }
+  }
+ },
+ {
+  "source": "totis-ti64-2021",
+  "kernel": "rosenthal",
+  "m": 8,
+  "nSets": 78,
+  "classes": [
+   "keyhole",
+   "transition"
+  ],
+  "hdDefault": 42.796813737317265,
+  "hdCalAll": 40.92250642042787,
+  "worseAll": 0.115,
+  "dclassMedian": 0.22486209081896136,
+  "gates": {
+   "G1": {
+    "passRate": 0.35,
+    "falsePass": 0.014285714285714285,
+    "falsePassBy5": 0.0,
+    "hdCal": 39.021173429003255,
+    "hdDef": 42.59175518680546,
+    "cov80": 0.7236734693877551,
+    "halfPct": 62.8828640277472,
+    "etaMedian": 0.315
+   },
+   "G8": {
+    "passRate": 0.145,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 39.02758208000702,
+    "hdDef": 42.54821100060159,
+    "cov80": 0.7054187192118226,
+    "halfPct": 58.625889866301776,
+    "etaMedian": 0.315
+   },
+   "G9": {
+    "passRate": 0.095,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 38.99998205398577,
+    "hdDef": 42.57835007806227,
+    "cov80": 0.7082706766917294,
+    "halfPct": 56.32173181072058,
+    "etaMedian": 0.31
+   }
+  }
+ },
+ {
+  "source": "totis-ti64-2021",
+  "kernel": "rosenthal",
+  "m": 10,
+  "nSets": 78,
+  "classes": [
+   "keyhole",
+   "transition"
+  ],
+  "hdDefault": 43.23321416567482,
+  "hdCalAll": 40.77984700841121,
+  "worseAll": 0.075,
+  "dclassMedian": 0.27869698269154664,
+  "gates": {
+   "G1": {
+    "passRate": 0.33,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 39.82386501378365,
+    "hdDef": 43.24657108335201,
+    "cov80": 0.7110071301247771,
+    "halfPct": 62.613763556749014,
+    "etaMedian": 0.315
+   },
+   "G8": {
+    "passRate": 0.09,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 40.439572137958606,
+    "hdDef": 43.88789595474009,
+    "cov80": 0.6625816993464052,
+    "halfPct": 53.61626071319912,
+    "etaMedian": 0.315
+   },
+   "G9": {
+    "passRate": 0.055,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 40.38510326205524,
+    "hdDef": 44.16925884107783,
+    "cov80": 0.6270053475935828,
+    "halfPct": 44.816270680293236,
+    "etaMedian": 0.315
+   }
+  }
+ },
+ {
+  "source": "totis-ti64-2021",
+  "kernel": "rosenthal",
+  "m": 12,
+  "nSets": 78,
+  "classes": [
+   "keyhole",
+   "transition"
+  ],
+  "hdDefault": 43.57065603624323,
+  "hdCalAll": 41.12635312325432,
+  "worseAll": 0.06,
+  "dclassMedian": 0.18028392619710099,
+  "gates": {
+   "G1": {
+    "passRate": 0.42,
+    "falsePass": 0.023809523809523808,
+    "falsePassBy5": 0.0,
+    "hdCal": 40.736779205895466,
+    "hdDef": 43.659439305680166,
+    "cov80": 0.6908369408369409,
+    "halfPct": 60.986718689920615,
+    "etaMedian": 0.325
+   },
+   "G8": {
+    "passRate": 0.165,
+    "falsePass": 0.030303030303030304,
+    "falsePassBy5": 0.0,
+    "hdCal": 40.929765613763244,
+    "hdDef": 44.19967492651912,
+    "cov80": 0.6533516988062442,
+    "halfPct": 50.46044340885205,
+    "etaMedian": 0.32
+   },
+   "G9": {
+    "passRate": 0.13,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 41.494675454472265,
+    "hdDef": 44.289152364030514,
+    "cov80": 0.6462703962703963,
+    "halfPct": 49.84294962818936,
+    "etaMedian": 0.3325
+   }
+  }
+ },
+ {
+  "source": "totis-ti64-2021",
+  "kernel": "rosenthal",
+  "m": 16,
+  "nSets": 78,
+  "classes": [
+   "keyhole",
+   "transition"
+  ],
+  "hdDefault": 44.218227939038954,
+  "hdCalAll": 42.32312564209904,
+  "worseAll": 0.01,
+  "dclassMedian": 0.16195274990703012,
+  "gates": {
+   "G1": {
+    "passRate": 0.455,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 42.314570383735195,
+    "hdDef": 44.3889066794312,
+    "cov80": 0.7247429989365475,
+    "halfPct": 61.686211076604394,
+    "etaMedian": 0.34
+   },
+   "G8": {
+    "passRate": 0.185,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 42.67562029730366,
+    "hdDef": 45.09056929694249,
+    "cov80": 0.6904969485614647,
+    "halfPct": 56.75812949053611,
+    "etaMedian": 0.34
+   },
+   "G9": {
+    "passRate": 0.105,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 43.197513327170675,
+    "hdDef": 44.816316181585314,
+    "cov80": 0.6874039938556068,
+    "halfPct": 57.190737893658806,
+    "etaMedian": 0.34
+   }
+  }
+ },
+ {
+  "source": "ku-leuven-ti64-2021",
+  "kernel": "eagar-tsai",
+  "m": 8,
+  "skipped": "classes {'keyhole': 11, 'transition': 3}"
+ },
+ {
+  "source": "ku-leuven-ti64-2021",
+  "kernel": "eagar-tsai",
+  "m": 10,
+  "skipped": "classes {'keyhole': 11, 'transition': 3}"
+ },
+ {
+  "source": "ku-leuven-ti64-2021",
+  "kernel": "eagar-tsai",
+  "m": 12,
+  "skipped": "classes {'keyhole': 11, 'transition': 3}"
+ },
+ {
+  "source": "ku-leuven-ti64-2021",
+  "kernel": "eagar-tsai",
+  "m": 16,
+  "skipped": "classes {'keyhole': 11, 'transition': 3}"
+ },
+ {
+  "source": "ku-leuven-ti64-2021",
+  "kernel": "goldak",
+  "m": 8,
+  "skipped": "classes {'keyhole': 11, 'transition': 3}"
+ },
+ {
+  "source": "ku-leuven-ti64-2021",
+  "kernel": "goldak",
+  "m": 10,
+  "skipped": "classes {'keyhole': 11, 'transition': 3}"
+ },
+ {
+  "source": "ku-leuven-ti64-2021",
+  "kernel": "goldak",
+  "m": 12,
+  "skipped": "classes {'keyhole': 11, 'transition': 3}"
+ },
+ {
+  "source": "ku-leuven-ti64-2021",
+  "kernel": "goldak",
+  "m": 16,
+  "skipped": "classes {'keyhole': 11, 'transition': 3}"
+ },
+ {
+  "source": "ku-leuven-ti64-2021",
+  "kernel": "rosenthal",
+  "m": 8,
+  "skipped": "classes {'keyhole': 11, 'transition': 3}"
+ },
+ {
+  "source": "ku-leuven-ti64-2021",
+  "kernel": "rosenthal",
+  "m": 10,
+  "skipped": "classes {'keyhole': 11, 'transition': 3}"
+ },
+ {
+  "source": "ku-leuven-ti64-2021",
+  "kernel": "rosenthal",
+  "m": 12,
+  "skipped": "classes {'keyhole': 11, 'transition': 3}"
+ },
+ {
+  "source": "ku-leuven-ti64-2021",
+  "kernel": "rosenthal",
+  "m": 16,
+  "skipped": "classes {'keyhole': 11, 'transition': 3}"
+ }
+]
