@@ -62,6 +62,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--plate-y-mm", type=float, default=None, help="required: there is no default plate")
     p.add_argument("--grid", type=int, default=ne.NEXT_EXPERIMENT_CONFIG["gridDefaultPerAxis"])
     p.add_argument("--existing", default=None, help="CSV (power_W, speed_mm_s, spot_um) of points already measured")
+    p.add_argument("--for-machine-calibration", action="store_true",
+                   help="plan for the machine depth calibration: needs n >= 6, sets plan.purpose, adds the fit "
+                        "command and the five method columns to the measurement template")
     p.add_argument("--out-dir", required=True)
     i = sub.add_parser("import", help="import the filled measurement template as a user source")
     i.add_argument("--plan", required=True)
@@ -77,10 +80,13 @@ def main(argv: Optional[List[str]] = None) -> int:
             spec = {"material": a.material, "power_W": a.power, "speed_mm_s": a.speed,
                     "spots_um": [float(s) for s in a.spots.split(",") if s.strip()], "layer_um": a.layer_um,
                     "preheat_C": a.preheat_c, "n": a.n, "seed": a.seed, "plate": plate, "grid": a.grid,
-                    "existing": read_existing(a.existing) if a.existing else []}
+                    "existing": read_existing(a.existing) if a.existing else [],
+                    "purpose": ne.PURPOSE_MACHINE_CALIBRATION if a.for_machine_calibration else None}
             plan = ne.plan_experiment(spec)
             paths = ne.write_outputs(plan, out)
             print(f"wrote {', '.join(paths)} to {out}", file=sys.stderr)
+            for w in plan.get("warnings", []):
+                print(f"warning: {w}", file=sys.stderr)
             return 0
         doc = um.import_measurements(a.plan, a.measurements, a.source_id, out_root=a.out_root)
         print(f"imported {doc['nRows']} rows ({doc['nExcluded']} excluded) as {doc['sourceId']}", file=sys.stderr)

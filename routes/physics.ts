@@ -92,3 +92,15 @@ physicsRouter.post("/api/python/lpbf-process-window", (req: Request, res: Respon
 physicsRouter.post("/api/python/lpbf-gr-solidification", (req: Request, res: Response) => {
   return handlePythonDispatch("python/lpbf_gr_solidification.py", req.body, res, 60000);
 });
+
+// Machine-calibrated melt-pool depth (screening only, not validation): the user's own fitted empirical machine offset
+// applied to the frozen Rosenthal depth, served only for gate-passing cells. The artefact is selected by its
+// machineCalibrationId from .runtime/machine-calibration/ (never by a request path). A NEW route appended at the end;
+// the status route lists the artefacts and the eligible cells and runs no solver.
+physicsRouter.post("/api/python/lpbf-machine-calibrated-meltpool", (req: Request, res: Response) => {
+  return handlePythonDispatch("python/lpbf_machine_calibrated_meltpool.py", req.body, res);
+});
+
+physicsRouter.get("/api/python/lpbf-machine-calibration/status", (_req: Request, res: Response) => {
+  return handlePythonDispatch("python/lpbf_machine_calibrated_meltpool.py", { action: "status" }, res, 15000);
+});

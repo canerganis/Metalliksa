@@ -3,6 +3,7 @@ import { AlertTriangle, Download, FileUp } from "lucide-react";
 import {
   LPBF_EXPERIMENT_PLAN_LABEL,
   ExperimentPlanError,
+  machineFitCommand,
   measurementTemplateCsv,
   parseExperimentPlan,
   plateLayoutCsv,
@@ -53,6 +54,7 @@ export function downloadText(filename: string, text: string): void {
 
 export function ExperimentPlanView({ plan }: { plan: ExperimentPlanDocument }) {
   const rows = [...plan.points].sort((a, b) => a.rank - b.rank);
+  const fitCommand = machineFitCommand(plan);
   return (
     <div className="space-y-4" data-testid="plan-view">
       <p className="text-sm text-slate-300">
@@ -112,6 +114,18 @@ export function ExperimentPlanView({ plan }: { plan: ExperimentPlanDocument }) {
           Fill width_um and depth_um in measurement_template.csv (leave a cell blank to exclude a track; nothing is imputed), then run these commands. Imported rows are labelled Measured (user-supplied) and stay your own data; the scorecard run is private and writes only to the directory you give.
         </p>
         <pre className="overflow-x-auto rounded bg-slate-950 p-3 text-xs text-slate-200" tabIndex={0} aria-label="Command line steps for the import and the private scorecard run" data-testid="plan-commands">{plan.commands.join("\n")}</pre>
+        {fitCommand ? (
+          <div className="space-y-2" data-testid="plan-machine-calibration">
+            <h5 className="text-sm font-semibold text-slate-100">Machine calibration (user data)</h5>
+            <p className="text-xs text-slate-400">
+              After the import, this fits an empirical machine offset to your own tracks. It stays on this computer and is screening only, not validation. Fill the method columns in the template ({(plan.methodColumns ?? []).join(", ") || "none listed"}) on every track, otherwise a served value is shown as screening only.
+            </p>
+            {(plan.warnings ?? []).length > 0 ? (
+              <ul className="list-disc pl-5 text-xs text-amber-200" role="status" data-testid="plan-machine-warnings">{(plan.warnings ?? []).map(w => <li key={w}>{w}</li>)}</ul>
+            ) : null}
+            <pre className="overflow-x-auto rounded bg-slate-950 p-3 text-xs text-slate-200" tabIndex={0} aria-label="Command line step for the machine calibration fit" data-testid="plan-fit-command">{fitCommand}</pre>
+          </div>
+        ) : null}
       </section>
       <p className="text-xs text-slate-400">{plan.limits}.</p>
     </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Download, ExternalLink } from "lucide-react";
 import type { PythonLpbfBuildJobResult } from "../services/pythonComputationService";
+import { useMachineCalibrationStore } from "../store/useMachineCalibrationStore";
 import { buildLpbfRunReportHtml, runReportFileName, serializeLpbfRunReportDossier, sha256Hex, type LpbfQualificationReport } from "../utils/lpbfRunReport";
 
 const buttonStyle = "rounded-lg border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-sky-300 disabled:opacity-40";
@@ -11,6 +12,8 @@ type Action = "download" | "open";
 export function LpbfRunReportExport({report, buildJob}:{report:LpbfQualificationReport;buildJob:PythonLpbfBuildJobResult|null}) {
   const [busy,setBusy] = useState(false);
   const [message,setMessage] = useState("");
+  // Session-only machine calibration result (user data), printed as its own block when one is selected.
+  const machineCalibration = useMachineCalibrationStore(s=>s.report);
   // URLs awaiting revocation. On unmount they are revoked immediately rather than leaked.
   const pending = useRef<Map<string,ReturnType<typeof setTimeout>>>(new Map());
   const mounted = useRef(true);
@@ -31,7 +34,7 @@ export function LpbfRunReportExport({report, buildJob}:{report:LpbfQualification
     try {
       const createdAt = new Date().toISOString();
       const digest = await sha256Hex(serializeLpbfRunReportDossier(report,createdAt));
-      const html = buildLpbfRunReportHtml(report,{buildJob},{createdAt,dossierSha256:digest});
+      const html = buildLpbfRunReportHtml(report,{buildJob,machineCalibration},{createdAt,dossierSha256:digest});
       const url = URL.createObjectURL(new Blob([html],{type:"text/html;charset=utf-8"}));
       const link = document.createElement("a");
       link.href = url;

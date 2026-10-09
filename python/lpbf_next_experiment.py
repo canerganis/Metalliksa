@@ -44,7 +44,10 @@ import numpy as np
 import lpbf_calibration_stats as st
 from lpbf_calibration_config import CALIBRATION_CONFIG, KERNELS, canonical_json
 
+import lpbf_machine_calibration_config as mcfg  # noqa: E402  (config only; no frozen file imports it)
+
 PLAN_SCHEMA = "lpbf-next-experiment-plan-1"
+PURPOSE_MACHINE_CALIBRATION = "machine-calibration"
 LABEL = "Screening: experiment proposal; not a print recommendation"
 EVIDENCE_KIND = "screening-only"
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -58,6 +61,8 @@ NEXT_EXPERIMENT_CONFIG: Dict[str, Any] = {
     "gridDefaultPerAxis": 9,
     "maxSpots": 8,
     "nRange": [1, 48],
+    "machineCalibration": {"minN": 6, "softRegimeRule": {"classes": 2, "tracksPerClass": 3},
+                           "extraTemplateColumns": list(mcfg.MACHINE_CALIBRATION_CONFIG["methodFields"]["required"])},
     "weights": {"disagreement": 1.0, "interval": 0.5, "coverage": 1.0},
     "coverage": {"classGapValue": 0.5, "distanceValue": 0.5, "distanceCapStd": 3.0, "minStd": 0.05},
     "neighbourLengthScale": 0.25,
@@ -119,7 +124,14 @@ def validate_spec(spec: Dict[str, Any]) -> Dict[str, Any]:
     px, py = _finite(plate["x_mm"], "plate.x_mm"), _finite(plate["y_mm"], "plate.y_mm")
     if px <= 0 or py <= 0:
         raise PlanError("plate size must be positive")
-    out: Dict[str, Any] = {"material": material.strip(), "n": n, "seed": seed, "plate": {"x_mm": px, "y_mm": py}}
+    purpose = spec.get("purpose")
+    if purpose not in (None, PURPOSE_MACHINE_CALIBRATION):
+        raise PlanError(f"unknown purpose {purpose!r}")
+    mc_min = cfg["machineCalibration"]["minN"]
+    if purpose == PURPOSE_MACHINE_CALIBRATION and n < mc_min:
+        raise PlanError(f"a machine-calibration plan needs n >= {mc_min} tracks, got {n}")
+    out: Dict[str, Any] = {"material": material.strip(), "n": n, "seed": seed, "plate": {"x_mm": px, "y_mm": py},
+                           "purpose": purpose}
     for key, label, bkey in (("power_W", "power", "power_W"), ("speed_mm_s", "speed", "speed_mm_s")):
         rng = spec.get(key)
         if not isinstance(rng, (list, tuple)) or len(rng) != 2:
@@ -383,6 +395,7 @@ def plan_experiment(spec: Dict[str, Any], *, calibration: Any = "default", solve
                 "intervalWidth": {"lnHiOverLo": iv["value"], "term": int_term if iv["value"] is not None else None,
                                   "note": iv["note"]},
                 "coverage": r["cov"]}, 6)})
+    warnings = machine_calibration_warnings(points, material) if req["purpose"] else []
     layout = plate_layout(points, req["plate"], req["seed"])
     for p in points:
         p["layout"] = layout["slots"][p["trackId"]]
@@ -409,7 +422,33 @@ def plan_experiment(spec: Dict[str, Any], *, calibration: Any = "default", solve
         "limits": ("a proposal ranked by kernel disagreement, calibration interval width and training coverage; it is "
                    "not a print recommendation, does not check printability, and nothing here is validated"),
     }
+    if req["purpose"]:
+        plan["purpose"] = req["purpose"]
+        plan["warnings"] = warnings
+        plan["methodColumns"] = list(cfg["machineCalibration"]["extraTemplateColumns"])
+        plan["commands"].append(
+            "python -B python/tools/lpbf_machine_calibration.py fit --user-source "
+            ".runtime/user-calibration/user-<your-id>/rows.json --out-dir .runtime/machine-calibration/user-<your-id>")
     return plan
+
+
+def machine_calibration_warnings(points: Sequence[Dict[str, Any]], material: str) -> List[str]:
+    """Soft checks for a machine-calibration plan: warnings in the plan, never a constraint on the selection."""
+    rule = NEXT_EXPERIMENT_CONFIG["machineCalibration"]["softRegimeRule"]
+    counts: Dict[str, int] = {}
+    for p in points:
+        counts[p["regimeClass"]] = counts.get(p["regimeClass"], 0) + 1
+    ok_classes = [k for k, v in counts.items() if v >= rule["tracksPerClass"]]
+    out: List[str] = []
+    if len(ok_classes) < rule["classes"]:
+        shown = ", ".join(f"{k} {counts[k]}" for k in sorted(counts)) or "none"
+        out.append(f"regime coverage is below the soft target: fewer than {rule['classes']} regime classes have at "
+                   f"least {rule['tracksPerClass']} tracks (tracks per class: {shown}). The plan is still valid; widen "
+                   "the power and speed ranges or raise n for a more informative fit.")
+    if not mcfg.is_eligible("rosenthal", material, "depth"):
+        out.append(f"machine calibration is offered only for Rosenthal depth for 316L Stainless Steel; {material} "
+                   "will be reported as not eligible.")
+    return out
 
 
 # ---------------------------------------------------------------------------------------------
@@ -482,9 +521,10 @@ def plate_layout_csv(plan: Dict[str, Any]) -> str:
 
 def measurement_template_csv(plan: Dict[str, Any]) -> str:
     pts = sorted(plan["points"], key=lambda p: p["layout"]["printOrder"])
-    return _csv(["track_id", "power_W", "speed_mm_s", "spot_um", "width_um", "depth_um", "notes"],
+    extra = list(plan.get("methodColumns") or []) if plan.get("purpose") == PURPOSE_MACHINE_CALIBRATION else []
+    return _csv(["track_id", "power_W", "speed_mm_s", "spot_um", "width_um", "depth_um", "notes"] + extra,
                 [[p["trackId"], _fmt(p["power_W"]), _fmt(p["speed_mm_s"]), _fmt(p["beamDiameter_um"]), "", "", ""]
-                 for p in pts])
+                 + [""] * len(extra) for p in pts])
 
 
 def plate_layout_svg(plan: Dict[str, Any]) -> str:

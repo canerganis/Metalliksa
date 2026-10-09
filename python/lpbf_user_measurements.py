@@ -37,6 +37,9 @@ EVIDENCE_KIND = "screening-only"
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_ROOT = REPO_ROOT / ".runtime" / "user-calibration"
 TEMPLATE_COLUMNS = ("track_id", "power_W", "speed_mm_s", "spot_um", "width_um", "depth_um", "notes")
+# Optional measurement-method columns (machine calibration plans add them to the template). Blank means "not stated";
+# nothing is imputed. A filled row carries them in ``row["method"]``; a row with none filled has no ``method`` key.
+METHOD_COLUMNS = ("depthDatum", "beamDiameterDefinition", "measuredPowerW", "crossSectionLocation", "replicates")
 
 
 class UserMeasurementError(ValueError):
@@ -92,6 +95,29 @@ def parse_measurement_csv(text: str) -> List[Dict[str, str]]:
     return [dict(r) for r in reader]
 
 
+def _method_block(r: Dict[str, str], tid: str) -> Optional[Dict[str, Any]]:
+    """The filled optional method columns of one CSV row as a dict, or None when none is filled."""
+    block: Dict[str, Any] = {}
+    for col in METHOD_COLUMNS:
+        raw = (r.get(col) or "").strip()
+        if not raw:
+            continue
+        if col == "measuredPowerW":
+            v = _num(raw, col, tid)
+            if not (math.isfinite(v) and v > 0):
+                raise UserMeasurementError(f"{tid}: {col} must be finite and positive, got {raw!r} "
+                                           "(leave the cell blank if not measured)")
+            block[col] = v
+        elif col == "replicates":
+            v = _num(raw, col, tid)
+            if not (math.isfinite(v) and v >= 1 and v == int(v)):
+                raise UserMeasurementError(f"{tid}: {col} must be a whole number >= 1, got {raw!r}")
+            block[col] = int(v)
+        else:
+            block[col] = raw
+    return block or None
+
+
 def build_rows(plan: Dict[str, Any], csv_rows: Sequence[Dict[str, str]], source_id: str) -> Dict[str, Any]:
     """Join, validate, return {'rows': [...], 'excluded': [...]}; raises UserMeasurementError on any inconsistency."""
     pts = _plan_points(plan)
@@ -127,11 +153,15 @@ def build_rows(plan: Dict[str, Any], csv_rows: Sequence[Dict[str, str]], source_
             if not (math.isfinite(v) and v > 0):
                 raise UserMeasurementError(f"{tid}: {name} must be finite and positive, got {v!r} "
                                            "(leave the cell blank to exclude the track)")
-        rows.append({"rowId": f"{source_id}-{tid}", "trackId": tid, "source": source_id, "material": material,
-                     "power_W": float(p["power_W"]), "speed_mm_s": float(p["speed_mm_s"]),
-                     "beamDiameter_um": float(p["beamDiameter_um"]), "preheat_C": float(p["preheat_C"]),
-                     "layer_um": float(p["layer_um"]), "hatch_um": None, "width_um": w, "depth_um": d,
-                     "balling": None, "publishedLabel": None, "catalog": False, "label": ROW_LABEL})
+        row = {"rowId": f"{source_id}-{tid}", "trackId": tid, "source": source_id, "material": material,
+               "power_W": float(p["power_W"]), "speed_mm_s": float(p["speed_mm_s"]),
+               "beamDiameter_um": float(p["beamDiameter_um"]), "preheat_C": float(p["preheat_C"]),
+               "layer_um": float(p["layer_um"]), "hatch_um": None, "width_um": w, "depth_um": d,
+               "balling": None, "publishedLabel": None, "catalog": False, "label": ROW_LABEL}
+        method = _method_block(r, tid)
+        if method is not None:
+            row["method"] = method
+        rows.append(row)
     for tid in sorted(set(pts) - seen):
         excluded.append({"trackId": tid, "reason": "no row in the measurement file: excluded, never imputed"})
     if not rows:

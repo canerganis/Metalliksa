@@ -1,6 +1,7 @@
 import type { createLpbfQualificationReport } from "./lpbfQualificationReport";
 import type { PythonLpbfBuildJobResult } from "../services/pythonComputationService";
 import { canonicalLpbfMaterialName } from "./lpbfMaterialIdentity";
+import { MACHINE_BAND_SENTENCE, MACHINE_OFFSET_SENTENCE, MACHINE_PRIVACY_SENTENCE, MACHINE_SECTION_TITLE, MACHINE_VERDICT_SENTENCE, machineReportLines, type MachineCalibrationReportInput } from "../data/lpbfMachineCalibration";
 import type { SimulationResult } from "../services/lpbfSimulationService";
 
 /** The research qualification dossier this export is built on. */
@@ -13,6 +14,11 @@ export interface LpbfRunReportExtras {
    * (solver revision, build-job identity, material property revision) that the dossier summary does not carry.
    */
   buildJob: PythonLpbfBuildJobResult | null;
+  /**
+   * Optional machine calibration (user data) result shown next to the screening value. Display only: it is not part of the
+   * hashed dossier, never changes the verdict, and the block is omitted when null or undefined.
+   */
+  machineCalibration?: MachineCalibrationReportInput | null;
 }
 export interface LpbfRunReportOptions {
   /** ISO timestamp supplied by the caller; the builder never reads the clock. */
@@ -222,6 +228,13 @@ export function buildLpbfRunReportHtml(report: LpbfQualificationReport, extras: 
       + (entry.sources.length ? `<table><thead><tr><th scope="col">Source</th><th scope="col">Source id</th><th scope="col">DOI</th><th scope="col">Rows</th></tr></thead><tbody>${entry.sources.map(src => `<tr>${cell(src.name)}${cell(src.id)}${cell(text(src.doi))}${cell(src.rows)}</tr>`).join("")}</tbody></table>` : `<p class="muted">No sources: ${NOT_RECORDED}</p>`)).join("")
     + `<dl>${[row("Band artefact id", bands.bandsId), row("Band artefact SHA-256", bands.contentSha256), row("Band implementation hash", bands.implementationHash)].join("")}</dl>`);
 
+  const mc = extras.machineCalibration ?? null;
+  const machineSection = !mc ? "" : section("machine-calibration", MACHINE_SECTION_TITLE,
+    `<p class="muted">${escapeHtml(MACHINE_OFFSET_SENTENCE)} ${escapeHtml(MACHINE_VERDICT_SENTENCE)}</p>`
+    + `<dl>${machineReportLines(mc).map(([label, value]) => row(label, value)).join("")}</dl>`
+    + (mc.block.available ? `<p class="muted">${escapeHtml(MACHINE_BAND_SENTENCE)}</p>` : "")
+    + `<p class="muted">${escapeHtml(MACHINE_PRIVACY_SENTENCE)}</p>`);
+
   const limitations = section("limitations", "Limitations", list(report.limitations));
   const reproduce = section("reproduce", "Reproduce", `<ol><li>Open the Metalliksa LPBF Engineering workspace and enter the context fields exactly as printed above.</li>`
     + `<li>Set the process vector to the executed values, not the current values, and select the requested mode and the solver backend recorded above.</li>`
@@ -233,5 +246,5 @@ export function buildLpbfRunReportHtml(report: LpbfQualificationReport, extras: 
   const data = `<script type="application/json" id="dossier-data">${serializeLpbfRunReportDossier(report, options.createdAt)}</script>`;
   return `<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">`
     + `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:"><meta name="referrer" content="no-referrer">`
-    + `<title>${escapeHtml(`LPBF run report ${text(ctx.buildId)}`)}</title><style>${STYLE}</style></head><body><main>${header}${context}${inputs}${identity}${results}${verdictSection}${measurements}${bandsSection}${sources}${limitations}${reproduce}${data}</main></body></html>\n`;
+    + `<title>${escapeHtml(`LPBF run report ${text(ctx.buildId)}`)}</title><style>${STYLE}</style></head><body><main>${header}${context}${inputs}${identity}${results}${verdictSection}${measurements}${bandsSection}${machineSection}${sources}${limitations}${reproduce}${data}</main></body></html>\n`;
 }

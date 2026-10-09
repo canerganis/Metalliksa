@@ -52,7 +52,19 @@ export interface ExperimentPlanDocument {
   readonly points: readonly ExperimentPlanPoint[];
   readonly commands: readonly string[];
   readonly limits: string;
+  /** Set to "machine-calibration" by `plan --for-machine-calibration`; absent for an ordinary plan. */
+  readonly purpose?: typeof LPBF_MACHINE_CALIBRATION_PURPOSE | null;
+  /** Soft checks (for example regime coverage); never a constraint on the selection. */
+  readonly warnings?: readonly string[];
+  /** Extra measurement_template.csv columns (method fields) for a machine-calibration plan. */
+  readonly methodColumns?: readonly string[];
 }
+
+export const LPBF_MACHINE_CALIBRATION_PURPOSE = "machine-calibration";
+/** The fit command Python appends to plan.commands for a machine-calibration plan. */
+export const MACHINE_FIT_COMMAND_MARKER = "lpbf_machine_calibration.py fit";
+export const machineFitCommand = (plan: ExperimentPlanDocument): string | null =>
+  plan.purpose === LPBF_MACHINE_CALIBRATION_PURPOSE ? (plan.commands.find(c => c.includes(MACHINE_FIT_COMMAND_MARKER)) ?? null) : null;
 
 type Obj = Record<string, unknown>;
 
@@ -151,6 +163,11 @@ export function checkedExperimentPlan(raw: unknown): ExperimentPlanDocument {
   if (ids.size !== points.length) fail("track ids must be unique");
   if (!Array.isArray(raw.commands) || raw.commands.some(c => typeof c !== "string")) fail("commands must be an array of strings");
   str(raw, "limits", "plan");
+  if (raw.purpose !== undefined && raw.purpose !== null && raw.purpose !== LPBF_MACHINE_CALIBRATION_PURPOSE) fail(`purpose must be ${LPBF_MACHINE_CALIBRATION_PURPOSE} when present`);
+  for (const k of ["warnings", "methodColumns"]) {
+    const v = raw[k];
+    if (v !== undefined && (!Array.isArray(v) || v.some(x => typeof x !== "string"))) fail(`${k} must be an array of strings`);
+  }
   return raw as unknown as ExperimentPlanDocument;
 }
 
@@ -195,8 +212,10 @@ export function plateLayoutCsv(plan: ExperimentPlanDocument): string {
 
 /** Blank width/depth columns: the user fills them in; blank rows are excluded on import, never imputed. */
 export function measurementTemplateCsv(plan: ExperimentPlanDocument): string {
+  // A machine-calibration plan adds the method columns (same names and order as the Python template).
+  const extra = plan.purpose === LPBF_MACHINE_CALIBRATION_PURPOSE ? [...(plan.methodColumns ?? [])] : [];
   return toCsv(
-    ["track_id", "power_W", "speed_mm_s", "spot_um", "width_um", "depth_um", "notes"],
-    byPrintOrder(plan).map(p => [p.trackId, p.power_W, p.speed_mm_s, p.beamDiameter_um, "", "", ""]),
+    ["track_id", "power_W", "speed_mm_s", "spot_um", "width_um", "depth_um", "notes", ...extra],
+    byPrintOrder(plan).map(p => [p.trackId, p.power_W, p.speed_mm_s, p.beamDiameter_um, "", "", "", ...extra.map(() => "")]),
   );
 }
