@@ -88,7 +88,7 @@ test('served cell: value, factor, 80 % band "not a tolerance", calibrated badge,
   assert.match(out, /data-testid="machine-depth"[^>]*>96\.0 µm/);
   assert.match(out, /factor 0\.800/);
   assert.match(out, /80 % band: \[55, 165\] µm \(not a tolerance\)/);
-  assert.match(out, /Screening depth, unchanged: 120\.0 µm/);
+  assert.match(out, /Screening depth, unchanged \(flat-plate basis used by the machine fit\): 120\.0 µm/);
   assert.ok(out.includes(MACHINE_BADGE_CALIBRATED));
   assert.ok(out.includes(MACHINE_PRIVACY_SENTENCE.replace(/&/g, '&amp;')));
   assert.match(out, /not an absorptivity/);
@@ -115,6 +115,15 @@ test('label rule: calibrated badge only for a served, complete, scoped block; ne
   assert.equal(machineEvidenceBadge({ ...ok, evidenceKind: 'screening-only' }), MACHINE_BADGE_SCREENING);
   assert.equal(machineEvidenceBadge({ ...ok, experimentalValidation: true }), MACHINE_BADGE_SCREENING);
   assert.equal(machineEvidenceBadge({ ...ok, evidenceKind: 'validated' }), MACHINE_BADGE_SCREENING);
+});
+
+test('screening line states the flat-plate basis in both the served and the refused branch', () => {
+  const label = 'Screening depth, unchanged (flat-plate basis used by the machine fit): 120.0 µm';
+  const served = renderToStaticMarkup(<MachineResultView artefact={artefact()} kernel="rosenthal" block={servedBlock()} screeningDepth={120} />);
+  assert.ok(served.includes(label));
+  const refused = renderToStaticMarkup(<MachineResultView artefact={artefact()} kernel="goldak" block={servedBlock({ available: false, depth_um: null, status: 'refused' })} screeningDepth={120} />);
+  assert.match(refused, /data-testid="machine-refused"/);
+  assert.ok(refused.includes(label));
 });
 
 test('refused and not-eligible cells show their reasons and the screening badge', () => {

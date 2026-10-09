@@ -139,6 +139,10 @@ function PublishedCalibratedMeltpoolPanel({
 // every other cell shows why it is not (from the status document, no solver call). Screening only unless the backend
 // itself returned the calibrated kind with the scope text and no missing method field (see machineEvidenceBadge).
 
+// The machine factor was fitted on the flat-plate basis and the screening value on this line is computed flat-plate on the CPU,
+// whichever absorption model the lab shows. Other absorption models are deliberately not forwarded.
+export const MACHINE_SCREENING_DEPTH_LABEL = "Screening depth, unchanged (flat-plate basis used by the machine fit)";
+
 export function MachineEvidenceBadge({ block }: { block: Pick<MachineCalibratedBlock, "available" | "evidenceKind" | "evidenceScope" | "missingMethodFields" | "experimentalValidation"> }) {
   const text = machineEvidenceBadge(block);
   const calibrated = isMachineCalibratedBadge(text);
@@ -168,7 +172,7 @@ export function MachineResultView({ artefact, kernel, block, screeningDepth }: {
               {block.bandNotInformative ? <strong className="ml-1 text-amber-300">(not informative: wider than ×2.5)</strong> : null}
             </span>
           ) : null}
-          {screeningDepth !== null ? <span data-testid="machine-screening" className="block text-[10px] text-slate-400">Screening depth, unchanged: {screeningDepth.toFixed(1)} µm</span> : null}
+          {screeningDepth !== null ? <span data-testid="machine-screening" className="block text-[10px] text-slate-400">{MACHINE_SCREENING_DEPTH_LABEL}: {screeningDepth.toFixed(1)} µm</span> : null}
           <span className="block text-[10px] text-slate-500">{MACHINE_BAND_SENTENCE}</span>
         </div>
       ) : (
@@ -177,7 +181,7 @@ export function MachineResultView({ artefact, kernel, block, screeningDepth }: {
           <ul className="mt-1 list-disc pl-4">
             {(block.reasonText.length ? block.reasonText : ["no reason reported"]).map((r) => <li key={r}>{r}</li>)}
           </ul>
-          {screeningDepth !== null ? <span className="block text-[10px] text-slate-400">Screening depth, unchanged: {screeningDepth.toFixed(1)} µm</span> : null}
+          {screeningDepth !== null ? <span className="block text-[10px] text-slate-400">{MACHINE_SCREENING_DEPTH_LABEL}: {screeningDepth.toFixed(1)} µm</span> : null}
         </div>
       )}
       {block.missingMethodFields.length > 0 ? (
