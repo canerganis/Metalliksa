@@ -6,7 +6,12 @@
  */
 import React, { useEffect, useState } from 'react';
 import { ArrowRight, Pause, Play, Search } from 'lucide-react';
-import { CORE_FLOW, CORE_MODULE_IDS, LAB_MODULES, MATURITY_BADGE_TITLE, MODULES, WORKSPACES, type ModuleId, type ModuleScope } from '../data/workspaces';
+import { CORE_FLOW, CORE_MODULE_IDS, LAB_MODULES as ALL_LAB_MODULES, MATURITY_BADGE_TITLE, MODULES as ALL_MODULES, WORKSPACES, type ModuleId, type ModuleScope } from '../data/workspaces';
+import { IS_STATIC_DEMO } from '../demo/flag.ts';
+import { visibleModules } from '../demo/demoGate.ts';
+// Static demo: only the allowlisted modules are listed (compile-time constant, a normal build keeps the full registry).
+const MODULES = IS_STATIC_DEMO ? visibleModules(ALL_MODULES) : ALL_MODULES;
+const LAB_MODULES = IS_STATIC_DEMO ? visibleModules(ALL_LAB_MODULES) : ALL_LAB_MODULES;
 import type { PythonEngineStatus } from '../services/pythonComputationService';
 import { FoundryStage } from './FoundryStage';
 import '../styles/foundry.css';
@@ -51,7 +56,7 @@ export function Atrium({ continueId, engine, engineChecking, shortcutLabel, onNa
   const motion = motionAllowed && !paused;
   const resume = MODULES.find((m) => m.id === continueId) ?? MODULES[0];
   const maturity = SCOPES.map((scope) => [scope, MODULES.filter((m) => m.scope === scope).length] as const).filter(([, n]) => n > 0);
-  const engineText = engineChecking && !engine ? 'checking' : engine?.online ? 'online' : 'unavailable';
+  const engineText = IS_STATIC_DEMO ? 'static snapshot' : engineChecking && !engine ? 'checking' : engine?.online ? 'online' : 'unavailable';
   // Pointer tilt for the workspace plates (motion allowed only); a pure visual transform.
   const tilt = (event: React.PointerEvent<HTMLElement>) => {
     if (!motion || event.pointerType !== 'mouse') return;
@@ -107,7 +112,7 @@ export function Atrium({ continueId, engine, engineChecking, shortcutLabel, onNa
             </button>
           </div>
           <dl className="mk-at-readout">
-            <div><dt>Engine</dt><dd data-tone={engine?.online ? 'ok' : engineText === 'checking' ? 'neutral' : 'fail'}>{engineText}</dd></div>
+            <div><dt>Engine</dt><dd data-tone={IS_STATIC_DEMO ? 'neutral' : engine?.online ? 'ok' : engineText === 'checking' ? 'neutral' : 'fail'}>{engineText}</dd></div>
             <div><dt>Modules</dt><dd>{MODULES.length} registered</dd></div>
             <div title={MATURITY_BADGE_TITLE}><dt>Maturity</dt><dd>{maturity.map(([scope, n]) => `${n} ${scope.toLowerCase()}`).join(' · ')}</dd></div>
           </dl>

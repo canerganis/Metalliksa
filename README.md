@@ -134,6 +134,14 @@ Literature tables can mix printed values with readings taken from figures. The a
 
 For the segregation lane, the paper-derived constituent fraction and the local CALPHAD phase amount are different quantities. One includes eutectic gamma with Laves and is reported as a fraction of liquid; the other counts the LAVES phase alone in a local database calculation. The comparison note keeps them side by side for context but explicitly says they are not directly comparable. Do not read the cross-check as an independent measurement or use it to override the literature estimate silently.
 
+## Static demo
+
+`npm run build:demo` builds a read-only viewer into `dist-demo/`. It needs no Python, Node server or solver at run time. Every number shown is a snapshot recorded offline from this app's own engine at a fixed commit, and the banner on each screen names that version and commit.
+
+The demo shows the process window map, the guided NIST IN718 case (285 W, 960 mm/s), the calibration scorecard, the dataset comparison and the keyhole benchmark. Inside 3D distortion lab, the setup, material, thermal, melt pool and qualification stages render recorded output. Defects, build, comparison and the melt pool specialist panels show "Not available in the static demo." Inside the LPBF optimizer, only the process window panel is recorded. Other inputs are locked to the recorded values. The full scope and limits are in [docs/STATIC_DEMO.md](docs/STATIC_DEMO.md).
+
+The demo is a snapshot, a screening view and not a validation. It does not run the solver and does not add evidence.
+
 ## Quick start
 
 You need Node (>= 22.13) and Python 3.11 or 3.12 with the CPU LPBF baseline. For a reproducible Windows CPU setup, use the checked-in CPython 3.12 hash-pinned requirements lock. Other platforms should use the matching lock or the CI CPU-baseline input file as appropriate; GPU, CALPHAD and micrograph stacks are outside this CPU lock.

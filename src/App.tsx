@@ -71,7 +71,7 @@ function rewriteLegacyHash(): void {
 }
 
 function initialTab(): ModuleId {
-  rewriteLegacyHash();
+  rewriteLegacyHash(); demoRedirectHidden();
   const linked = moduleFromHash(window.location.hash);
   if (linked) return linked;
   const parameters = new URLSearchParams(window.location.search);
@@ -79,7 +79,7 @@ function initialTab(): ModuleId {
   // Explicit unknown routes go to LPBF instead of silently restoring another workspace. The start page
   // (#/home) is not unknown: it keeps the remembered module as its Continue target.
   if (window.location.hash && !isHome(window.location.hash)) return '3d-distortion-lab';
-  try { const saved = resolveModuleId(localStorage.getItem('metallixa.workspace.module')); if (saved) return saved; } catch { /* Optional storage. */ }
+  try { const saved = demoAllowedModule(resolveModuleId(localStorage.getItem('metallixa.workspace.module'))); if (saved) return saved; } catch { /* Optional storage. */ }
   return '3d-distortion-lab';
 }
 
@@ -113,7 +113,7 @@ export default function App() {
   const materialTransfer = useMaterialContextBridgeStore();
   const activeModule = MODULES.find(m => m.id === activeTab)!;
   const activeWorkspace = WORKSPACES.find(w => w.id === activeModule.workspace)!;
-  const filtered = MODULES.filter(m => `${m.label} ${m.description} ${m.workspace}`.toLowerCase().includes(moduleSearch.toLowerCase()));
+  const filtered = demoVisibleModules(MODULES).filter(m => `${m.label} ${m.description} ${m.workspace}`.toLowerCase().includes(moduleSearch.toLowerCase()));
   // Hash routing owns location.hash, so the skip link moves focus itself instead of following "#main-content".
   function skipToMain(event: React.MouseEvent) {
     event.preventDefault();
@@ -121,13 +121,13 @@ export default function App() {
   }
 
   function activate(id: ModuleId) {
-    setActiveTab(id);
+    setActiveTab(id); demoHiddenNoticePending = false;
     setHome(false);
     setVisited(current => current.includes(id) ? current : [...current, id]);
     setNavigationOpen(false);
   }
   function navigate(id: string) {
-    if (!isModuleId(id)) return;
+    if (!isModuleId(id) || !demoAllowedModule(id)) return;
     activate(id);
     if (window.location.hash !== moduleHash(id)) window.location.hash = moduleHash(id);
   }
@@ -145,7 +145,7 @@ export default function App() {
   useEffect(() => {
     void refreshStatus(false);
     const onHash = () => {
-      if (isHome(window.location.hash)) { showHome(); return; }
+      demoRedirectHidden(); if (isHome(window.location.hash)) { showHome(); return; }
       // Legacy id: rewrite the hash first, then re-announce it so a mounted module (its tab) follows; activate runs twice on purpose (idempotent).
       if (legacyRedirectHash(window.location.hash)) {
         rewriteLegacyHash();
@@ -206,20 +206,22 @@ export default function App() {
     <div className="mk-grid-overlay" aria-hidden="true" />
     <div className="mk-scanline" aria-hidden="true" />
     <AirgapBanner />
+    {IS_STATIC_DEMO && <DemoBanner />}
     <header className="mk-header sticky top-0 z-40 border-b px-4 lg:px-6 py-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3"><button aria-label="Toggle workspace navigation" aria-expanded={navigationOpen} onClick={() => setNavigationOpen(v => !v)} className="lg:hidden mk-status px-3 py-2 text-xs">Modules</button><div className="contents"><div className="mk-brand-mark" role="img" aria-label="Metalliksa logo"><span className="mk-brand-laser" aria-hidden="true" /></div></div><div><h1 className="mk-brand-title">METALLIKSA</h1><p className="mk-brand-tag hidden lg:block">Research engineering workstation</p></div></div>
-        <div className="flex items-center gap-2 sm:gap-3"><button type="button" aria-haspopup="dialog" aria-keyshortcuts={SHORTCUT_KEYS} onClick={openPalette} className="mk-status inline-flex items-center gap-2 px-3 py-2 text-xs"><Search className="h-3.5 w-3.5" aria-hidden="true"/><span className="sr-only sm:not-sr-only">Search modules</span><kbd aria-hidden="true" className="hidden sm:inline font-mono text-[10px]">{SHORTCUT_LABEL}</kbd></button><button type="button" onClick={() => void useGuidedDemoStore.getState().start()} className="mk-status hidden px-3 py-2 text-xs lg:inline-block">Guided tour</button><span className="mk-hud-chip hidden xl:inline">Local control plane</span><button onClick={() => { setPaletteOpen(false); setShowStatus(true); }} className="mk-status px-3 py-2 text-xs"><span className={`mr-2 inline-block h-1.5 w-1.5 rounded-full ${checking ? 'bg-amber-500 animate-pulse' : status?.online ? 'bg-emerald-500' : 'bg-amber-500'}`}/>{checking ? 'Checking…' : status?.online ? 'Python daemon ready' : 'Python daemon unavailable'}</button></div>
+        <div className="flex items-center gap-2 sm:gap-3"><button type="button" aria-haspopup="dialog" aria-keyshortcuts={SHORTCUT_KEYS} onClick={openPalette} className="mk-status inline-flex items-center gap-2 px-3 py-2 text-xs"><Search className="h-3.5 w-3.5" aria-hidden="true"/><span className="sr-only sm:not-sr-only">Search modules</span><kbd aria-hidden="true" className="hidden sm:inline font-mono text-[10px]">{SHORTCUT_LABEL}</kbd></button><button type="button" onClick={() => void useGuidedDemoStore.getState().start()} className="mk-status hidden px-3 py-2 text-xs lg:inline-block">Guided tour</button><span className="mk-hud-chip hidden xl:inline">Local control plane</span><button onClick={() => { setPaletteOpen(false); setShowStatus(true); }} className="mk-status px-3 py-2 text-xs"><span className={`mr-2 inline-block h-1.5 w-1.5 rounded-full ${checking ? 'bg-amber-500 animate-pulse' : status?.online ? 'bg-emerald-500' : 'bg-amber-500'}`}/>{IS_STATIC_DEMO ? 'Static snapshot, no engine' : checking ? 'Checking…' : status?.online ? 'Python daemon ready' : 'Python daemon unavailable'}</button></div>
       </div>
     </header>
     <div className="flex flex-col lg:flex-row">
       <aside className={`${navigationOpen ? 'block' : 'hidden'}${home ? ' is-home' : ''} mk-sidebar lg:block lg:w-60 xl:w-64 shrink-0 border-b lg:border-b-0 lg:border-r p-4 lg:sticky lg:top-[var(--mk-header-h)] lg:h-[calc(100vh_-_var(--mk-header-h))] overflow-y-auto`}>
-        <div className="mb-5 flex items-center justify-between"><div><p className="mk-side-kicker">Navigation</p><p className="mt-1 text-sm text-slate-200">Engineering surfaces</p></div><span className="mk-count-badge font-mono text-[10px]">{String(MODULES.length).padStart(2, '0')}</span></div><label htmlFor="module-search" className="mb-2 block text-xs text-slate-400">Find a module</label><div className="relative mb-6"><Search className="absolute left-3 top-3 w-4 h-4 text-slate-500"/><input id="module-search" type="search" value={moduleSearch} onChange={e => setModuleSearch(e.target.value)} placeholder="Materials, evidence…" className="aero-input w-full rounded-xl border pl-9 pr-2 py-2.5 text-sm"/></div>
+        <div className="mb-5 flex items-center justify-between"><div><p className="mk-side-kicker">Navigation</p><p className="mt-1 text-sm text-slate-200">Engineering surfaces</p></div><span className="mk-count-badge font-mono text-[10px]">{String(demoVisibleModules(MODULES).length).padStart(2, '0')}</span></div><label htmlFor="module-search" className="mb-2 block text-xs text-slate-400">Find a module</label><div className="relative mb-6"><Search className="absolute left-3 top-3 w-4 h-4 text-slate-500"/><input id="module-search" type="search" value={moduleSearch} onChange={e => setModuleSearch(e.target.value)} placeholder="Materials, evidence…" className="aero-input w-full rounded-xl border pl-9 pr-2 py-2.5 text-sm"/></div>
         <button type="button" onClick={goHome} aria-current={home ? 'page' : undefined} className={`mk-nav-item mk-nav-home mb-5${home ? ' is-active' : ''}`}>Overview</button>
         <ModuleNav home={home} modules={filtered} activeTab={activeTab} activeWorkspace={activeWorkspace.id} onNavigate={navigate} />
       </aside>
       <main id="main-content" tabIndex={-1} className="flex-1 min-w-0 p-4 sm:p-6 xl:p-8">
         <SilentBoundary><Suspense fallback={null}><GuidedDemo home={home} engine={status} engineChecking={checking || (status === null && statusError === null)} /></Suspense></SilentBoundary>
+        {home && <DemoHiddenNote />}
         {home ? <ModuleBoundary label="Overview"><Suspense fallback={<div role="status" className="mk-loading">Loading overview…</div>}><Atrium continueId={activeTab} engine={status} engineChecking={checking || (status === null && statusError === null)} shortcutLabel={SHORTCUT_LABEL} onNavigate={navigate} onSearch={openPalette} /></Suspense></ModuleBoundary> : <>
         {/* Laser wipe on entering a module (ornament, transform only, once per navigation). */}
         <div key={'wipe-' + activeTab} className="mk-wipe" aria-hidden="true" />
@@ -234,16 +236,17 @@ export default function App() {
         {visited.map(id => <div key={id} hidden={home || id !== activeTab} data-module={id}><WorkspaceVisibility visible={!home && id === activeTab}>
           <ModuleBoundary label={MODULES.find(m => m.id === id)!.label}>
             <Suspense fallback={<div role="status" className="mk-loading">Loading engineering module…</div>}>
-              {(id === 'database' || id === '3d-distortion-lab') && <ResearchIntegrationPanel targetModule={id === 'database' ? 'materials-db' : 'lpbf-solver'} />}
+              {(id === 'database' || (id === '3d-distortion-lab' && !IS_STATIC_DEMO)) && <ResearchIntegrationPanel targetModule={id === 'database' ? 'materials-db' : 'lpbf-solver'} />}
               {renderModule(id)}
             </Suspense>
           </ModuleBoundary>
         </WorkspaceVisibility></div>)}
-        {!home && <div className="mt-8 border-t border-slate-800 pt-4 flex flex-wrap justify-between items-center gap-3"><p className="text-xs text-slate-500">Review inputs, source applicability and evidence before making an engineering decision.</p><button onClick={() => navigate(activeModule.next)} className="inline-flex gap-2 items-center text-sm text-sky-300 hover:text-sky-100">Next: {MODULES.find(m => m.id === activeModule.next)?.label}<ArrowRight className="h-4 w-4"/></button></div>}
+        {!home && demoAllowedModule(activeModule.next) && <div className="mt-8 border-t border-slate-800 pt-4 flex flex-wrap justify-between items-center gap-3"><p className="text-xs text-slate-500">Review inputs, source applicability and evidence before making an engineering decision.</p><button onClick={() => navigate(activeModule.next)} className="inline-flex gap-2 items-center text-sm text-sky-300 hover:text-sky-100">Next: {MODULES.find(m => m.id === activeModule.next)?.label}<ArrowRight className="h-4 w-4"/></button></div>}
       </main>
     </div>
-    <SilentBoundary><Suspense fallback={null}><TelemetryStrip engine={status} engineChecking={checking || (status === null && statusError === null)} moduleCount={MODULES.length} /></Suspense></SilentBoundary>
-    {showStatus && <SilentBoundary key={dialogLoad} fallback={<div role="alert" className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md rounded-lg border border-amber-500/30 bg-slate-950 p-4 text-sm text-amber-200">Engine availability details could not be loaded. <button onClick={retryDialog} className="ml-2 underline">Retry</button> <button onClick={() => window.location.reload()} className="ml-2 underline">Reload application</button> <button onClick={closeDialog} className="ml-2 underline">Close</button></div>}><Suspense fallback={null}><EngineStatusDialog status={status} statusError={statusError} checking={checking} onClose={() => setShowStatus(false)} onRefresh={() => void refreshStatus()} /></Suspense></SilentBoundary>}
+    <SilentBoundary><Suspense fallback={null}><TelemetryStrip engine={status} engineChecking={checking || (status === null && statusError === null)} moduleCount={demoVisibleModules(MODULES).length} /></Suspense></SilentBoundary>
+    {showStatus && IS_STATIC_DEMO && <DemoEngineNote onClose={() => setShowStatus(false)} />}
+    {showStatus && !IS_STATIC_DEMO && <SilentBoundary key={dialogLoad} fallback={<div role="alert" className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md rounded-lg border border-amber-500/30 bg-slate-950 p-4 text-sm text-amber-200">Engine availability details could not be loaded. <button onClick={retryDialog} className="ml-2 underline">Retry</button> <button onClick={() => window.location.reload()} className="ml-2 underline">Reload application</button> <button onClick={closeDialog} className="ml-2 underline">Close</button></div>}><Suspense fallback={null}><EngineStatusDialog status={status} statusError={statusError} checking={checking} onClose={() => setShowStatus(false)} onRefresh={() => void refreshStatus()} /></Suspense></SilentBoundary>}
     {paletteOpen && <SilentBoundary key={paletteLoad} fallback={<div role="alert" className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md rounded-lg border border-amber-500/30 bg-slate-950 p-4 text-sm text-amber-200">Module search could not be loaded. <button onClick={retryPalette} className="ml-2 underline">Retry</button> <button onClick={() => window.location.reload()} className="ml-2 underline">Reload application</button> <button onClick={() => { setPaletteOpen(false); retryPalette(); }} className="ml-2 underline">Close</button></div>}><Suspense fallback={null}><CommandPalette activeTab={activeTab} onNavigate={navigate} onClose={() => setPaletteOpen(false)} /></Suspense></SilentBoundary>}
   </div></>;
 }
@@ -253,3 +256,31 @@ export default function App() {
 // Own chunk (below the module-contract refs in renderModule so their line numbers stay put): first-run card and tour panel.
 const GuidedDemo = lazy(() => import('./components/GuidedDemo').then(m => ({ default: m.GuidedDemo })));
 import { useGuidedDemoStore } from './store/useGuidedDemoStore';
+
+// Static demo gates (docs/DEMO_STATIC_DESIGN.md section 5). Every call is guarded by the compile-time IS_STATIC_DEMO
+// constant, so a normal build drops them. They sit below renderModule so the module-contract line anchors stay put.
+import { IS_STATIC_DEMO } from './demo/flag.ts';
+import { hiddenModuleRedirect, visibleModules as visibleDemoModules } from './demo/demoGate.ts';
+import { DemoRedirectNote } from './demo/demoNotes.tsx';
+import { DemoBanner } from './demo/demoBanner.tsx';
+import { DemoEngineNote } from './demo/demoNotes.tsx';
+import { isDemoModule } from './demo/demoModules.ts';
+
+let demoHiddenNoticePending = false;
+/** A link to a module outside the demo allowlist is rewritten to the start page, before unknown hashes map to LPBF. */
+function demoRedirectHidden(): void {
+  if (!IS_STATIC_DEMO) return;
+  const target = hiddenModuleRedirect(window.location.hash, isModuleId);
+  if (!target) return;
+  demoHiddenNoticePending = true;
+  try { window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}${target}`); } catch { /* The hash check below still resolves home. */ }
+}
+function demoAllowedModule<T extends string | null>(id: T): T | null {
+  return IS_STATIC_DEMO && id !== null && !isDemoModule(id) ? null : id;
+}
+function demoVisibleModules<T extends { readonly id: string }>(modules: readonly T[]): readonly T[] {
+  return IS_STATIC_DEMO ? visibleDemoModules(modules) : modules;
+}
+function DemoHiddenNote() {
+  return IS_STATIC_DEMO && demoHiddenNoticePending ? <DemoRedirectNote /> : null;
+}

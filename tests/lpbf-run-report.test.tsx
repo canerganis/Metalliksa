@@ -11,6 +11,7 @@ import { createLpbfQualificationReport, sharedSimulationInput } from "../src/uti
 import { buildLpbfRunReportHtml, runReportFileName, serializeLpbfRunReportDossier, sha256Hex } from "../src/utils/lpbfRunReport";
 import type { SimulationJob, SimulationResult } from "../src/services/lpbfSimulationService";
 import type { PythonLpbfBuildJobResult } from "../src/services/pythonComputationService";
+import { demoBannerText } from "../src/demo/demoGate.ts";
 
 // Synthetic presentation fixtures, never physical evidence.
 const CREATED = "2026-01-02T03:04:05.000Z";
@@ -186,6 +187,14 @@ test("the embedded digest equals the node:crypto sha256 of the embedded JSON", a
   assert.match(build(report,buildJob,null),/<dd>not computed<\/dd>/);
 });
 
+test("the static demo line is placed in the report header only when given", () => {
+  const report = reportWith({job:true});
+  const line = demoBannerText({appVersion:"0.1.0",gitCommit:"d0f9795"});
+  const withLine = buildLpbfRunReportHtml(report,{buildJob},{createdAt:CREATED,dossierSha256:null,staticDemoLine:line});
+  assert.ok(withLine.includes(`<p class="banner" role="note">${line}</p>`));
+  assert.ok(withLine.indexOf(line) < withLine.indexOf("</header>"), "the line sits in the header");
+  assert.ok(!build(report,buildJob,null).includes("Static snapshot of version"));
+});
 test("the file name is sanitized, else the date", () => {
   assert.equal(runReportFileName("B-17",CREATED),"metalliksa-lpbf-run-report-B-17.html");
   assert.equal(runReportFileName("../../etc/pass wd<>:\"|?*",CREATED),"metalliksa-lpbf-run-report-etc-pass-wd.html");

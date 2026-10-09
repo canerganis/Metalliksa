@@ -12,6 +12,8 @@ import { summarizeScorecard, SUMMARY_LEGEND, SUMMARY_METRIC_DEFINITION } from ".
 import { COMMITTED_CALIBRATION_SCORECARD } from "../data/lpbfCalibrationScorecardRecord";
 import { LpbfLeaderboardPanel } from "./LpbfLeaderboardPanel";
 import { LpbfKeyholeBenchmarkPanel } from "./LpbfKeyholeBenchmarkPanel";
+import { IS_STATIC_DEMO } from "../demo/flag.ts";
+import { DemoFingerprintGate } from "../demo/demoFingerprint.tsx";
 
 // Read-only view of the Python-generated record docs/LPBF_CALIBRATION_SCORECARD_<date>.view.json.
 // Every number below is read from that JSON: no physics and no statistics are computed here.
@@ -347,7 +349,7 @@ function PlainLanguageCard({ doc }: { doc: LpbfCalibrationScorecardDocument }) {
   );
 }
 
-export function LpbfCalibrationScorecardLab({ document: doc = COMMITTED_CALIBRATION_SCORECARD }: { document?: LpbfCalibrationScorecardDocument | null } = {}) {
+function ScorecardView({ document: doc = COMMITTED_CALIBRATION_SCORECARD }: { document?: LpbfCalibrationScorecardDocument | null } = {}) {
   if (!doc) {
     return (
       <div className="space-y-4">
@@ -485,4 +487,10 @@ export function LpbfCalibrationScorecardLab({ document: doc = COMMITTED_CALIBRAT
       <LpbfLeaderboardPanel />
     </div>
   );
+}
+
+/** The scorecard module. In the static demo a snapshot/error-bands fingerprint mismatch hides the cards (docs/DEMO_STATIC_DESIGN.md section 4). */
+export function LpbfCalibrationScorecardLab(props: { document?: LpbfCalibrationScorecardDocument | null } = {}) {
+  const view = <ScorecardView {...props} />;
+  return IS_STATIC_DEMO ? <DemoFingerprintGate>{view}</DemoFingerprintGate> : view;
 }

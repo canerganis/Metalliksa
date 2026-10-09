@@ -17,6 +17,7 @@ import {
   type BootStep,
 } from "../utils/bootSequence";
 import { subsystemCount, subsystemQualifier } from "../utils/engineStatusText";
+import { IS_STATIC_DEMO } from "../demo/flag.ts";
 
 export interface BootStepDeps {
   loadConfig: () => Promise<RuntimeConfig>;
@@ -28,6 +29,7 @@ export interface BootStepDeps {
 export { subsystemCount, subsystemQualifier };
 
 export function describeEngine(status: PythonEngineStatus): BootOutcome {
+  if (IS_STATIC_DEMO) return { state: "limited", detail: "Static snapshot (no engine)" };
   if (!status.online) {
     const reason = status.status === "client_fallback" ? "status request failed" : `status: ${status.status}`;
     return { state: "unavailable", detail: `Engine unavailable (${reason}); continuing in limited mode` };
@@ -51,7 +53,7 @@ export function buildBootSteps(deps: BootStepDeps): BootStep[] {
         const cfg = await deps.loadConfig();
         if (!deps.probe().loaded) return { state: "limited", detail: `Config unavailable (${failure()}); using defaults` };
         config = cfg;
-        return { state: "ok", detail: "Loaded from the local server" };
+        return { state: "ok", detail: IS_STATIC_DEMO ? "Static snapshot (no engine)" : "Loaded from the local server" };
       },
     },
     {
@@ -61,7 +63,7 @@ export function buildBootSteps(deps: BootStepDeps): BootStep[] {
         const probe = deps.probe();
         if (probe.accessRequired) return { state: "blocked", detail: "Sign-in required" };
         if (!probe.loaded) return { state: "unavailable", detail: `Not confirmed (${failure()})` };
-        return { state: "ok", detail: "Local server accepted the request" };
+        return { state: "ok", detail: IS_STATIC_DEMO ? "Static snapshot (no engine)" : "Local server accepted the request" };
       },
     },
     {

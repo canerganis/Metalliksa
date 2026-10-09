@@ -6,6 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
+    "build:demo": "node scripts/demo/build-demo.mjs",
+    "demo:snapshots": "tsx scripts/demo/generate-demo-snapshots.mjs",
+    "demo:snapshots:determinism": "tsx scripts/demo/generate-demo-snapshots.mjs --determinism",
     "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "start": "node dist/server.cjs",
     "preview": "vite preview",

@@ -19,6 +19,9 @@ import {
   Legend
 } from "recharts";
 import { LpbfProcessWindowMap } from "./LpbfProcessWindowMap";
+import { IS_STATIC_DEMO } from "../demo/flag.ts";
+import { DemoUnavailable } from "../demo/demoNotes.tsx";
+import { DemoFingerprintGate } from "../demo/demoFingerprint.tsx";
 import { LpbfExperimentPlanPanel } from "./LpbfExperimentPlanPanel";
 import { pythonComputationService, PythonBayesianOptimizationResult, PythonBayesianIterationDiagnostics } from "../services/pythonComputationService";
 import { useMaterialSpecimenStore } from "../store/useMaterialSpecimenStore";
@@ -419,13 +422,13 @@ export const LpbfBayesianOptimizerLab: React.FC = () => {
         ))}
       </div>
       <div role="tabpanel" id="pps-panel-window" aria-labelledby="pps-tab-window" hidden={tab !== "window"}>
-        {visited.has("window") && <LpbfProcessWindowMap />}
+        {visited.has("window") && (IS_STATIC_DEMO ? <DemoFingerprintGate><LpbfProcessWindowMap /></DemoFingerprintGate> : <LpbfProcessWindowMap />)}
       </div>
       <div role="tabpanel" id="pps-panel-search" aria-labelledby="pps-tab-search" hidden={tab !== "search"}>
-        {visited.has("search") && <LpbfOptimizerSearchPanel />}
+        {visited.has("search") && (IS_STATIC_DEMO ? <DemoUnavailable what="Parameter search (Bayesian)" /> : <LpbfOptimizerSearchPanel />)}
       </div>
       <div role="tabpanel" id="pps-panel-plan" aria-labelledby="pps-tab-plan" hidden={tab !== "plan"}>
-        {visited.has("plan") && <LpbfExperimentPlanPanel />}
+        {visited.has("plan") && (IS_STATIC_DEMO ? <DemoUnavailable what="Plan experiments" /> : <LpbfExperimentPlanPanel />)}
       </div>
     </div>
   );

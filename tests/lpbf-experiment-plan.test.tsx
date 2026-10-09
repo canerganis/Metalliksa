@@ -131,7 +131,7 @@ test('the lab has a third, keyboard-reachable tab wired with the existing tablis
   const src = readFileSync('src/components/LpbfBayesianOptimizerLab.tsx', 'utf8');
   assert.match(src, /\{ id: "plan", label: "Plan experiments" \}/);
   assert.match(src, /event\.key === "ArrowRight"[\s\S]*event\.key === "ArrowLeft"[\s\S]*event\.key === "Home"[\s\S]*event\.key === "End"/);
-  assert.match(src, /visited\.has\("plan"\) && <LpbfExperimentPlanPanel \/>/);
+  assert.match(src, /visited\.has\("plan"\) && \(IS_STATIC_DEMO \? <DemoUnavailable what="Plan experiments" \/> : <LpbfExperimentPlanPanel \/>\)/);
 });
 
 test('the panel loads the file in the browser only: no network, worker or solver service', () => {

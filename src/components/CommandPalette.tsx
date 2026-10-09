@@ -3,6 +3,10 @@ import { Search } from 'lucide-react';
 import { AccessibleModal } from './AccessibleModal';
 import { EvidenceBadge } from './sdk/EvidenceBadge';
 import { MATURITY_BADGE_TITLE, MODULES, WORKSPACES, type ModuleId } from '../data/workspaces';
+import { IS_STATIC_DEMO } from '../demo/flag.ts';
+import { visibleModules } from '../demo/demoGate.ts';
+// Static demo: the palette lists only the allowlisted modules (compile-time constant).
+const LISTED = IS_STATIC_DEMO ? visibleModules(MODULES) : MODULES;
 import { SUBVIEW_KEYWORDS } from '../data/paletteKeywords';
 import {
   PALETTE_QUERY_MAX_LENGTH, commitPaletteChoice, handlePaletteInputKey, isComposingKey, rankPaletteEntries, type PaletteEffects,
@@ -13,7 +17,7 @@ import {
 // same navigate() the sidebar uses. Each entry shows the module's maturity and its contract
 // evidence ceiling through the shared EvidenceBadge, unchanged.
 
-const ENTRIES = MODULES.map(module => ({
+const ENTRIES = LISTED.map(module => ({
   ...module,
   keywords: SUBVIEW_KEYWORDS[module.id] ?? '',
   workspaceLabel: WORKSPACES.find(workspace => workspace.id === module.workspace)?.label ?? module.workspace,
@@ -98,7 +102,7 @@ export function CommandPalette({ activeTab, onNavigate, onClose }: {
         ))}
       </ul>
       <p role="status" className="mk-palette-count">
-        {results.length ? `${results.length} of ${MODULES.length} modules` : 'No matching modules. Try a material, method or workflow name.'}
+        {results.length ? `${results.length} of ${LISTED.length} modules` : 'No matching modules. Try a material, method or workflow name.'}
       </p>
     </AccessibleModal>
   );

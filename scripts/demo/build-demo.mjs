@@ -1,0 +1,40 @@
+// Builds the static GitHub Pages demo into dist-demo/ (docs/DEMO_STATIC_DESIGN.md sections 2 and 8).
+// Snapshots live in demo/snapshots/ (outside public/, so a normal build never copies them) and are
+// copied into dist-demo/demo-snapshots/ here and nowhere else.
+import { spawnSync } from 'node:child_process';
+import { cpSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const viteBin = path.join(root, 'node_modules', 'vite', 'bin', 'vite.js');
+const outDir = path.join(root, 'dist-demo');
+const snapshots = path.join(root, 'demo', 'snapshots');
+
+const result = spawnSync(process.execPath, [viteBin, 'build', '--mode', 'demo'], {
+  cwd: root,
+  stdio: 'inherit',
+  env: { ...process.env, VITE_STATIC_DEMO: '1', VITE_BASE_PATH: process.env.VITE_BASE_PATH || '/metalliksa/' },
+});
+if (result.status !== 0) process.exit(result.status ?? 1);
+
+const target = path.join(outDir, 'demo-snapshots');
+rmSync(target, { recursive: true, force: true });
+if (existsSync(snapshots)) {
+  cpSync(snapshots, target, { recursive: true });
+  console.log('Copied demo/snapshots to dist-demo/demo-snapshots');
+} else {
+  console.warn('demo/snapshots does not exist: dist-demo has no snapshots (every API call will report "Not available in the static demo.").');
+}
+
+// public/manifest.json has root-absolute start_url and icon paths. Under a project Pages base they would point at the
+// user site root, so the demo copy is rewritten to the base path (dist-demo only; public/ is untouched).
+const manifestPath = path.join(outDir, 'manifest.json');
+if (existsSync(manifestPath)) {
+  const base = process.env.VITE_BASE_PATH || '/metalliksa/';
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  manifest.start_url = base;
+  manifest.scope = base;
+  for (const icon of manifest.icons ?? []) if (typeof icon.src === 'string' && icon.src.startsWith('/')) icon.src = base + icon.src.slice(1);
+  writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+}

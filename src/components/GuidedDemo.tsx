@@ -9,6 +9,7 @@ import type { SimulationJob } from "../services/lpbfSimulationService";
 import { compareToMeasurement, demoCase, scorecardStatementFor, type DemoCase } from "../utils/guidedDemo";
 import { visibleModalOpen } from "../hooks/useCommandPaletteShortcut";
 import { formatExactNumber } from "../utils/numberFormat";
+import { IS_STATIC_DEMO } from "../demo/flag.ts";
 
 const button = "mk-status px-3 py-2 text-xs";
 const STEP_TITLES: Record<GuidedDemoStep, string> = { 1: "Material", 2: "Run", 3: "Compare", 4: "Scorecard" };
@@ -123,7 +124,7 @@ function RunStep({ engine, engineChecking }: { engine: PythonEngineStatus | null
   const job = useLpbfEngineeringStore(s => s.job);
   const [mode, setMode] = useEngineeringField("mode");
   const error = useLpbfEngineeringStore(s => s.error);
-  const engineText = engineChecking ? "Checking the Python engine…" : engine?.online ? "Python engine: available." : "Python engine: unavailable. A run cannot start until it is reachable; no result is faked.";
+  const engineText = IS_STATIC_DEMO ? "Engine: static snapshot (no engine)." : engineChecking ? "Checking the Python engine…" : engine?.online ? "Python engine: available." : "Python engine: unavailable. A run cannot start until it is reachable; no result is faked.";
   return <>
     <p>Choose <strong className="text-slate-100">Quick Screening</strong> on the Thermal Simulation stage and press Run yourself. The tour never submits a run.</p>
     <p>Selected mode: <span className="font-mono text-slate-100">{mode}</span>. <button type="button" className="underline" disabled={mode === "screening"} onClick={() => setMode("screening")}>Preselect Screening</button></p>
