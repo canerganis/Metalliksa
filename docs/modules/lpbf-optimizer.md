@@ -24,7 +24,7 @@ All keys are optional at the authority, which applies the listed default when a 
 
 Undeclared input keys (read by the authority, not describable by the Field schema): `alloyId`, `paramBounds`, `nIterations`, `nWarmup`, `seed`, `beamDiameter_um`, `preheatTemp_C`.
 
-Output fields (no status key, so the output carries no evidence status): `success`, `error`, `errorKind`, `alloyId`, `bestParams`, `bestVerdict`, `noPositiveScore`, `bestScore`, `verdictCounts`, `nInconclusive`, `iterations`, `converged`, `elapsedMs`, `nIterations`, `nWarmup`, `surrogateSteps`, `beamDiameter_um`, `preheatTemp_C`, `objective`.
+Output fields (no status key, so the output carries no evidence status): `success`, `error`, `errorKind`, `alloyId`, `bestParams`, `bestVerdict`, `noPositiveScore`, `bestScore`, `verdictCounts`, `nInconclusive`, `iterations`, `converged`, `elapsedMs`, `nIterations`, `nWarmup`, `surrogateSteps`, `beamDiameter_um`, `preheatTemp_C`, `objective`, `gateSummary`, `keyholeGateNote`.
 
 ### `process-window`: `POST /api/python/lpbf-process-window`
 

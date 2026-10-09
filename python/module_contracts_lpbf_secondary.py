@@ -77,7 +77,7 @@ def build_lpbf_optimizer_contract(seed: Mapping[str, str]) -> ModuleContract:
         output=OutputSchema(
             fields=("success", "error", "errorKind", "alloyId", "bestParams", "bestVerdict", "noPositiveScore", "bestScore",
                     "verdictCounts", "nInconclusive", "iterations", "converged", "elapsedMs", "nIterations", "nWarmup",
-                    "surrogateSteps", "beamDiameter_um", "preheatTemp_C", "objective"),
+                    "surrogateSteps", "beamDiameter_um", "preheatTemp_C", "objective", "gateSummary", "keyholeGateNote"),
             status_key=None,
         ),
     )

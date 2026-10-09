@@ -35,6 +35,8 @@ class LpbfOptimizerRegistryContractTests(unittest.TestCase):
                              ("POST", route, "python-ipc", script, timeout, False))
             self.assertIsNone(op.output.status_key)
             self.assertNotIn("evidence", op.output.fields)  # reserved by the SDK; named in the notes
+        # Fields the view reads (LpbfBayesianOptimizerLab.tsx gateSummary, keyholeGateNote).
+        self.assertLessEqual({"gateSummary", "keyholeGateNote"}, set(ops["bayesian-optimize"].output.fields))
 
     def test_screening_ceiling_and_no_emitted_status(self):
         self.assertEqual(self.contract.evidence.ceiling, "screening-only")

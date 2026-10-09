@@ -444,7 +444,9 @@ export const MODULE_REGISTRY = {
               "surrogateSteps",
               "beamDiameter_um",
               "preheatTemp_C",
-              "objective"
+              "objective",
+              "gateSummary",
+              "keyholeGateNote"
             ],
             "statusKey": null,
             "transportValues": {},
