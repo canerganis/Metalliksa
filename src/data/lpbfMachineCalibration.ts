@@ -60,6 +60,23 @@ type Obj = Record<string, unknown>;
 const isObj = (v: unknown): v is Obj => typeof v === "object" && v !== null && !Array.isArray(v);
 const strArray = (v: unknown): string[] => Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
 
+const METHOD_FIELD_ORDER = ["depthDatum", "beamDiameterDefinition", "measuredPowerW", "crossSectionLocation", "replicates"];
+
+/**
+ * Backend shape: a list of {trackIds, fields} objects (plain strings are also accepted). Returns the de-duplicated union
+ * of field names, declared fields first in their declared order, then any unknown names in first-seen order.
+ */
+export function parseMissingMethodFields(v: unknown): string[] {
+  if (!Array.isArray(v)) return [];
+  const seen = new Set<string>();
+  for (const item of v) {
+    if (typeof item === "string") seen.add(item);
+    else if (isObj(item)) for (const f of strArray(item.fields)) seen.add(f);
+  }
+  const known = METHOD_FIELD_ORDER.filter(f => seen.has(f));
+  return [...known, ...[...seen].filter(f => !METHOD_FIELD_ORDER.includes(f))];
+}
+
 function summarizeCell(raw: unknown): MachineCellSummary | null {
   if (!isObj(raw)) return null;
   if (typeof raw.kernel !== "string" || typeof raw.quantity !== "string") return null;
@@ -69,7 +86,7 @@ function summarizeCell(raw: unknown): MachineCellSummary | null {
     evidenceKind: typeof raw.evidenceKind === "string" ? raw.evidenceKind : MACHINE_EVIDENCE_SCREENING,
     evidenceScope: typeof raw.evidenceScope === "string" ? raw.evidenceScope : null,
     evidenceLabel: typeof raw.evidenceLabel === "string" ? raw.evidenceLabel : "",
-    missingMethodFields: strArray(raw.missingMethodFields),
+    missingMethodFields: parseMissingMethodFields(raw.missingMethodFields),
     reasonText: strArray(raw.reasonText),
   };
 }
@@ -143,7 +160,7 @@ export function parseMachineCalibratedResult(raw: unknown): MachineCalibratedRes
     depthBand_um: band,
     evidenceKind: typeof b.evidenceKind === "string" ? b.evidenceKind : MACHINE_EVIDENCE_SCREENING,
     evidenceScope: typeof b.evidenceScope === "string" ? b.evidenceScope : null,
-    missingMethodFields: strArray(b.missingMethodFields),
+    missingMethodFields: parseMissingMethodFields(b.missingMethodFields),
     reasonText: strArray(b.reasonText),
   };
   return { screening: isObj(raw.screening) ? (raw.screening as MachineCalibratedResult["screening"]) : null, machineCalibrated: block, experimentalValidation: false };

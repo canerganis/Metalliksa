@@ -18,6 +18,7 @@ import {
   machineReportLines,
   machineTileLine,
   parseMachineCalibratedResult,
+  parseMissingMethodFields,
   parseMachineCalibrationStatus,
   type MachineArtefactSummary,
   type MachineCalibratedBlock,
@@ -96,7 +97,7 @@ test('served cell: value, factor, 80 % band "not a tolerance", calibrated badge,
 });
 
 test('served cell with missing method fields is screening only and lists the fields', () => {
-  const block = servedBlock({ evidenceKind: 'screening-only', evidenceScope: null, missingMethodFields: ['depthDatum', 'replicates'] });
+  const block = servedBlock({ evidenceKind: 'screening-only', evidenceScope: null, missingMethodFields: parseMissingMethodFields([{ trackIds: ['t1'], fields: ['depthDatum', 'replicates'] }]) });
   const out = renderToStaticMarkup(<MachineResultView artefact={artefact()} kernel="rosenthal" block={block} screeningDepth={120} />);
   assert.ok(out.includes(MACHINE_BADGE_SCREENING));
   assert.ok(!out.includes(MACHINE_BADGE_CALIBRATED));
@@ -110,7 +111,7 @@ test('label rule: calibrated badge only for a served, complete, scoped block; ne
   assert.equal(machineEvidenceBadge({ ...ok, available: false }), MACHINE_BADGE_SCREENING);
   assert.equal(machineEvidenceBadge({ ...ok, evidenceScope: 'global' }), MACHINE_BADGE_SCREENING);
   assert.equal(machineEvidenceBadge({ ...ok, evidenceScope: null }), MACHINE_BADGE_SCREENING);
-  assert.equal(machineEvidenceBadge({ ...ok, missingMethodFields: ['depthDatum'] }), MACHINE_BADGE_SCREENING);
+  assert.equal(machineEvidenceBadge({ ...ok, missingMethodFields: parseMissingMethodFields([{ trackIds: ['t1'], fields: ['depthDatum'] }]) }), MACHINE_BADGE_SCREENING);
   assert.equal(machineEvidenceBadge({ ...ok, evidenceKind: 'screening-only' }), MACHINE_BADGE_SCREENING);
   assert.equal(machineEvidenceBadge({ ...ok, experimentalValidation: true }), MACHINE_BADGE_SCREENING);
   assert.equal(machineEvidenceBadge({ ...ok, evidenceKind: 'validated' }), MACHINE_BADGE_SCREENING);
@@ -204,7 +205,7 @@ test('run report prints a Machine calibration (user data) block only when one is
   const without = buildLpbfRunReportHtml(report, { buildJob: null }, { createdAt: CREATED, dossierSha256: null });
   assert.doesNotMatch(without, /Machine calibration \(user data\)/);
   assert.equal(without, buildLpbfRunReportHtml(report, { buildJob: null, machineCalibration: null }, { createdAt: CREATED, dossierSha256: null }));
-  const input = { artefact: artefact(), kernel: 'rosenthal', block: servedBlock({ missingMethodFields: ['depthDatum'], evidenceKind: 'screening-only', evidenceScope: null }), screeningDepth_um: 120 };
+  const input = { artefact: artefact(), kernel: 'rosenthal', block: servedBlock({ missingMethodFields: parseMissingMethodFields([{ trackIds: ['t1'], fields: ['depthDatum'] }]), evidenceKind: 'screening-only', evidenceScope: null }), screeningDepth_um: 120 };
   const html = buildLpbfRunReportHtml(report, { buildJob: null, machineCalibration: input }, { createdAt: CREATED, dossierSha256: null });
   assert.match(html, /Machine calibration \(user data\)/);
   assert.ok(html.includes('mc-0123456789ab') && html.includes(SHA));
@@ -252,4 +253,14 @@ test('plan view gains the fit command, warnings and method columns only for purp
   assert.equal(header(measurementTemplateCsv(plan(false))), 'track_id,power_W,speed_mm_s,spot_um,width_um,depth_um,notes');
   assert.equal(header(measurementTemplateCsv(plan(true))), 'track_id,power_W,speed_mm_s,spot_um,width_um,depth_um,notes,depthDatum,beamDiameterDefinition,measuredPowerW,crossSectionLocation,replicates');
   assert.throws(() => checkedExperimentPlan({ ...JSON.parse(JSON.stringify(plan(true))), purpose: 'other' }), /purpose/);
+});
+
+test('Python-shaped missingMethodFields survive parsing and the panel lists them', () => {
+  const raw = { screening: {}, machineCalibrated: { ...servedBlock(), evidenceKind: 'screening-only', evidenceScope: null,
+    missingMethodFields: [{ trackIds: ['t2'], fields: ['replicates', 'depthDatum'] }, { trackIds: ['t1', 't3'], fields: ['depthDatum', 'measuredPowerW'] }] } };
+  const parsed = parseMachineCalibratedResult(raw);
+  assert.deepEqual(parsed?.machineCalibrated.missingMethodFields, ['depthDatum', 'measuredPowerW', 'replicates']);
+  const out = renderToStaticMarkup(<MachineResultView artefact={artefact()} kernel="rosenthal" block={parsed!.machineCalibrated} screeningDepth={120} />);
+  assert.ok(out.includes(MACHINE_BADGE_SCREENING));
+  assert.match(out, /data-testid="machine-missing-fields"[^>]*>[^<]*depth datum[^<]*replicates/);
 });
