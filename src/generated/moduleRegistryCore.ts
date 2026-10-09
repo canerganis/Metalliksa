@@ -83,7 +83,7 @@ export const MODULE_REGISTRY_CORE = {
     },
     {
       "id": "lpbf-optimizer",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "workspace": "lpbf",
       "label": "Process Parameter Search",
       "description": "Gaussian-process search over power, speed, hatch and layer, scored by the screening build verdict times scan rate; a suggestion, not a qualified window.",
@@ -95,7 +95,7 @@ export const MODULE_REGISTRY_CORE = {
         "component": "src/components/LpbfBayesianOptimizerLab.tsx",
         "export": "LpbfBayesianOptimizerLab"
       },
-      "migrationState": "legacy",
+      "migrationState": "contracted",
       "evidence": {
         "ceiling": "screening-only"
       },
