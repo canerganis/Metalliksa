@@ -58,7 +58,9 @@ class LpbfOptimizerRegistryContractTests(unittest.TestCase):
         for needle in ("`bayesian-optimize`", "`process-window`", "paramBounds", "noPositiveScore",
                        "225 cells", "suggestion, not a qualified window", "Ceiling: screening-only"):
             self.assertIn(needle, text)
-        self.assertNotIn("\u2014 ", text.split("## Operations")[0].split("\n", 6)[-1][:0])
+        # The em dash may appear only as the generated "not established" legend, never in prose.
+        stray = [ln for ln in text.splitlines() if "\u2014" in ln and not ln.startswith("\u2014 = ")]
+        self.assertEqual(stray, [])
 
 
 if __name__ == "__main__":
