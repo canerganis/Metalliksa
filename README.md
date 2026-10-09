@@ -136,6 +136,8 @@ For the segregation lane, the paper-derived constituent fraction and the local C
 
 ## Static demo
 
+Live: **https://canerganis.github.io/metalliksa/** (static snapshot, no solver behind it).
+
 `npm run build:demo` builds a read-only viewer into `dist-demo/`. It needs no Python, Node server or solver at run time. Every number shown is a snapshot recorded offline from this app's own engine at a fixed commit, and the banner on each screen names that version and commit.
 
 The demo shows the process window map, the guided NIST IN718 case (285 W, 960 mm/s), the calibration scorecard, the dataset comparison and the keyhole benchmark. Inside 3D distortion lab, the setup, material, thermal, melt pool and qualification stages render recorded output. Defects, build, comparison and the melt pool specialist panels show "Not available in the static demo." Inside the LPBF optimizer, only the process window panel is recorded. Other inputs are locked to the recorded values. The full scope and limits are in [docs/STATIC_DEMO.md](docs/STATIC_DEMO.md).
