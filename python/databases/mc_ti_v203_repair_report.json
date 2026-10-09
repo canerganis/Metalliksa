@@ -1,0 +1,153 @@
+{
+ "source": "mc_ti_v203.tdb",
+ "sourceSha256": "7bec5404071fa3cbdaf340bdb431af98f5a00a6d5526b84ff31834b5ff5841cb",
+ "output": "mc_ti_v203_repaired.tdb",
+ "origin": "MatCalc special databases, https://www.matcalc.at/index.php/databases/special-databases",
+ "parametersRetained": 508,
+ "ruleCounts": {
+  "drop-directive": 2,
+  "drop-matcalc-parameter": 7,
+  "function-ref-join": 22,
+  "comment-out-bibliography": 1
+ },
+ "droppedMatcalcParameterTypes": [
+  "HMVA"
+ ],
+ "repairs": [
+  {
+   "rule": "drop-directive",
+   "detail": "REFERENCE_ELEMENT TI"
+  },
+  {
+   "rule": "drop-directive",
+   "detail": "ATTACH_CONTRIBUTION BCC_B2 BCC_A2 ORDER_DISORDER"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(BCC_A2,*;0) 273.00 +130000; 6000.00 N REF:pov13"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(BCC_A2,CR:*;0) 273.00 +203000; 6000.00 N REF:pov10"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(BCC_A2,MO:*;0) 273.00 +286000; 6000.00 N REF:pov10"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(BCC_A2,NB:*;0) 273.00 +290000; 6000.00 N REF:pov10"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(BCC_A2,V:*;0) 273.00 +204000; 6000.00 N REF:pov10"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(HCP_A3,*;0) 273.00 +130000; 6000.00 N REF:pov13"
+  },
+  {
+   "rule": "drop-matcalc-parameter",
+   "ptype": "HMVA",
+   "detail": "PARAMETER HMVA(HCP_A3,TI:*;0) 273.00 +130000; 6000.00 N REF:pov13"
+  },
+  {
+   "rule": "function-ref-join",
+   "detail": "joined trailing REF tag onto the FUNCTION line and removed the blank after REF: (REF:0) in: FUNCTION GHSERAL 273.00 -7976.15+137.093038*T-24.3"
+  },
+  {
+   "rule": "function-ref-join",
+   "detail": "joined trailing REF tag onto the FUNCTION line and removed the blank after REF: (REF:0) in: FUNCTION GHSERBB 273.00 -7735.284+107.111864*T-15."
+  },
+  {
+   "rule": "function-ref-join",
+   "detail": "joined trailing REF tag onto the FUNCTION line and removed the blank after REF: (REF:0) in: FUNCTION GHSERCR 273.00 -8856.94+157.48*T-26.908*T"
+  },
+  {
+   "rule": "function-ref-join",
+   "detail": "joined trailing REF tag onto the FUNCTION line and removed the blank after REF: (REF:0) in: FUNCTION GHSERMO 273.00 -7746.302+131.9197*T-23.56"
+  },
+  {
+   "rule": "function-ref-join",
+   "detail": "joined trailing REF tag onto the FUNCTION line and removed the blank after REF: (REF:0) in: FUNCTION GHSERNB 273.00 -8519.353+142.045475*T-26."
+  },
+  {
+   "rule": "function-ref-join",
+   "detail": "joined trailing REF tag onto the FUNCTION line and removed the blank after REF: (REF:0) in: FUNCTION GHSERTI 273.00 -8059.921+133.615208*T-23."
+  },
+  {
+   "rule": "function-ref-join",
+   "detail": "joined trailing REF tag onto the FUNCTION line and removed the blank after REF: (REF:0) in: FUNCTION GHSERVV 273.00 -7930.43+133.346053*T-24.1"
+  },
+  {
+   "rule": "function-ref-join",
+   "detail": "joined trailing REF tag onto the FUNCTION line and removed the blank after REF: (REF:0) in: FUNCTION GALBCC 273.00 +10083-4.813*T+GHSERAL#; 60"
+  },
+  {
+   "rule": "function-ref-join",
+   "detail": "joined trailing REF tag onto the FUNCTION line and removed the blank after REF: (REF:0) in: FUNCTION GBBCC 273.00 +35778.716+94.894864*T-15.66"
+  },
+  {
+   "rule": "function-ref-join",
+   "detail": "joined trailing REF tag onto the FUNCTION line and removed the blank after REF: (REF:0) in: FUNCTION GTIBCC 273.00 +6787.856+1.098972*T-1.5835"
+  },
+  {
+   "rule": "function-ref-join",
+   "detail": "joined trailing REF tag onto the FUNCTION line and removed the blank after REF: (REF:0) in: FUNCTION GCRFCC 273.00 +7284+0.163*T+GHSERCR#; 600"
+  },
+  {
+   "rule": "function-ref-join",
+   "detail": "joined trailing REF tag onto the FUNCTION line and removed the blank after REF: (REF:63) in: FUNCTION GMOFCC 273.00 +15200+0.63*T+GHSERMO#; 600"
+  },
+  {
+   "rule": "function-ref-join",
+   "detail": "joined trailing REF tag onto the FUNCTION line and removed the blank after REF: (REF:0) in: FUNCTION GNBFCC 273.00 +4980.647+143.745475*T-26.4"
+  },
+  {
+   "rule": "function-ref-join",
+   "detail": "joined trailing REF tag onto the FUNCTION line and removed the blank after REF: (REF:0) in: FUNCTION GTIFCC 273.00 +6000-0.1*T+GHSERTI#; 6000."
+  },
+  {
+   "rule": "function-ref-join",
+   "detail": "joined trailing REF tag onto the FUNCTION line and removed the blank after REF: (REF:0) in: FUNCTION GALHCP 273.00 +5481-1.8*T+GHSERAL#; 6000."
+  },
+  {
+   "rule": "function-ref-join",
+   "detail": "joined trailing REF tag onto the FUNCTION line and removed the blank after REF: (REF:0) in: FUNCTION GCRHCP 273.00 +4438+GHSERCR#; 6000.00 N R"
+  },
+  {
+   "rule": "function-ref-join",
+   "detail": "joined trailing REF tag onto the FUNCTION line and removed the blank after REF: (REF:92) in: FUNCTION GMOHCP 273.00 +3803.698+131.9197*T-23.564"
+  },
+  {
+   "rule": "function-ref-join",
+   "detail": "joined trailing REF tag onto the FUNCTION line and removed the blank after REF: (REF:0) in: FUNCTION GNBHCP 273.00 +1480.647+144.445475*T-26.4"
+  },
+  {
+   "rule": "function-ref-join",
+   "detail": "joined trailing REF tag onto the FUNCTION line and removed the blank after REF: (REF:0) in: FUNCTION GVHCP 273.00 +4000+2.4*T+GHSERVV#; 6000.0"
+  },
+  {
+   "rule": "function-ref-join",
+   "detail": "joined trailing REF tag onto the FUNCTION line and removed the blank after REF: (REF:19) in: FUNCTION GHEXTNB 273.00 -8519.35+142.048*T-26.4711"
+  },
+  {
+   "rule": "function-ref-join",
+   "detail": "joined trailing REF tag onto the FUNCTION line and removed the blank after REF: (REF:160) in: FUNCTION ALNBB2 273.00 -15164+6.694*T; 6000.00 N R"
+  },
+  {
+   "rule": "function-ref-join",
+   "detail": "joined trailing REF tag onto the FUNCTION line and removed the blank after REF: (REF:170) in: FUNCTION GOMEGATI 273.00 GHSERTI#-1401.86+4.439080"
+  },
+  {
+   "rule": "comment-out-bibliography",
+   "detail": "108 lines of free text (references)"
+  }
+ ]
+}

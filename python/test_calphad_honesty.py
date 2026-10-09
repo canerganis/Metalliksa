@@ -36,7 +36,7 @@ import calphad_solver as cs  # noqa: E402
 import calphad_test_lane  # noqa: E402
 
 FIXTURE_IDS = {"alcocrni", "mc_fecocrnbti", "cr_fe_ni"}
-ASSESSMENT_IDS = {"cost507", "alni_dupin_2001", "crtiv_ghosh", "mc_ni", "mc_fe"}
+ASSESSMENT_IDS = {"cost507", "alni_dupin_2001", "crtiv_ghosh", "mc_ni", "mc_fe", "mc_ti"}
 TI64 = {"Ti": 90.0, "Al": 6.0, "V": 4.0}
 IN718 = {"Ni": 53.0, "Cr": 19.0, "Fe": 18.0, "Nb": 5.0, "Mo": 3.0, "Ti": 1.0, "Al": 1.0}
 REAL_ELEMENTS = {  # ELEMENT commands of the files as pycalphad 0.11.2 reads them
@@ -48,6 +48,7 @@ REAL_ELEMENTS = {  # ELEMENT commands of the files as pycalphad 0.11.2 reads the
                           "O", "P", "PD", "S", "SI", "TI", "V", "W", "Y"},
     "Cr-Fe-Ni_shallow_bcc.tdb": {"CR", "FE", "NI"},
     "crtiv_ghosh.tdb": {"CR", "TI", "V"},
+    "mc_ti_v203_repaired.tdb": {"AL", "B", "CR", "MO", "NB", "TI", "V"},
     "mc_ni_v2036_repaired.tdb": {"AL", "B", "C", "CO", "CR", "CU", "FE", "HF", "LA", "MN", "MO", "N", "NB", "NI", "O",
                                  "S", "SI", "TI", "V", "W", "Y", "ZR"},
     "mc_fe_v2062_repaired.tdb": {"AL", "B", "C", "CO", "CR", "CU", "FE", "H", "HF", "LA", "MN", "MO", "N", "NB", "NI",

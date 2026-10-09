@@ -14,6 +14,8 @@ export interface MultiComponentAlloyComposition {
   name: string;
   elements: { [elementSymbol: string]: number }; // wt% or at%
   unit: "wt_pct" | "at_pct";
+  /** Preset only: the CALPHAD database id the studio selects with this preset (otherwise auto-detect). */
+  preferredDatabaseId?: string;
 }
 
 export interface PhaseEquilibriumPoint {
@@ -112,14 +114,15 @@ export const STANDARD_MULTI_COMPONENT_ALLOYS: MultiComponentAlloyComposition[] =
     },
   },
   {
-    name: "Ti-6Al-4V Grade 5 (AMS 4911)",
+    // Ti-Al-V only (no Fe, O): the preset uses the MatCalc mc_ti database, which holds neither element and is
+    // valid here for beta transus, liquidus/solidus and single-phase beta. COST 507 did not converge with Fe, O.
+    name: "Ti-6Al-4V Grade 5 (AMS 4911), Ti-Al-V only",
     unit: "wt_pct",
+    preferredDatabaseId: "mc_ti",
     elements: {
-      Ti: 89.6,
-      Al: 6.2,
+      Ti: 90.0,
+      Al: 6.0,
       V: 4.0,
-      Fe: 0.15,
-      O: 0.05,
     },
   },
   {

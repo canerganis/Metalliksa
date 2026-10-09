@@ -127,6 +127,26 @@ class TdbRepairTest(unittest.TestCase):
         self.assertNotEqual(tr.canon_param(orig), tr.canon_param(orig.replace("+GA#", "+GB#")))
         self.assertEqual(tr.canon_param(orig), tr.canon_param(orig.replace("(PHB;", "(PHB,")))
 
+    def test_function_ref_tag_on_next_line_is_joined_and_normalised(self):
+        src = self.tmp / "fn.tdb"
+        src.write_text(
+            "ELEMENT A BCC_A2 10.0 1000.0 20.0 !\n"
+            "FUNCTION GX 273.00 -1000+2*T; 6000.00  N \n"
+            "REF: 170 !\n"
+            "FUNCTION GY 273.00 -2000+3*T; 6000.00  N\n"
+            "REF:171 !\n"
+            "FUNCTION GZ 273.00 -3000+4*T; 6000.00  N !\n",
+            encoding="utf-8", newline="\n")
+        dst = self.tmp / "fn_repaired.tdb"
+        rep = tr.repair_file(src, dst, "synthetic test")
+        out = dst.read_text(encoding="utf-8")
+        self.assertIn("FUNCTION GX 273.00 -1000+2*T; 6000.00  N REF:170!", out)
+        self.assertIn("FUNCTION GY 273.00 -2000+3*T; 6000.00  N REF:171!", out)
+        self.assertIn("FUNCTION GZ 273.00 -3000+4*T; 6000.00  N !", out)
+        self.assertEqual(rep["ruleCounts"].get("function-ref-join"), 2)
+        # the expression and limits are untouched
+        self.assertIn("-1000+2*T; 6000.00", out)
+
     def test_pycalphad_loads_repaired_fragment_when_available(self):
         try:
             from pycalphad import Database
