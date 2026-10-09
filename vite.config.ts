@@ -3,8 +3,11 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
 
-export default defineConfig(() => {
+export default defineConfig(({mode}) => {
+  // Static GitHub Pages demo (docs/DEMO_STATIC_DESIGN.md): only `vite build --mode demo` changes base and outDir.
+  const demo = mode === 'demo';
   return {
+    ...(demo ? {base: process.env.VITE_BASE_PATH || '/metalliksa/'} : {}),
     plugins: [react(), tailwindcss()],
     optimizeDeps: {
       // Only the SPA is an entry point; bundled scientific docs are not apps.
@@ -16,6 +19,7 @@ export default defineConfig(() => {
       },
     },
     build: {
+      ...(demo ? {outDir: 'dist-demo'} : {}),
       chunkSizeWarningLimit: 600,
       rollupOptions: {
         output: {

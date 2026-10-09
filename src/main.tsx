@@ -27,11 +27,21 @@ import App from './App.tsx';
 import './index.css';
 import './styles/boot.css';
 import { installApiUnauthorizedWatcher } from './components/AirgapBanner.tsx';
+import { IS_STATIC_DEMO } from './demo/flag.ts';
 
-installApiUnauthorizedWatcher();
+function mount() {
+  installApiUnauthorizedWatcher();
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  );
+}
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+if (IS_STATIC_DEMO) {
+  // Static demo only: answer /api calls from recorded snapshots before anything wraps or calls fetch.
+  // IS_STATIC_DEMO is a build-time constant, so this branch and the demo chunk are absent from normal builds.
+  void import('./demo/staticDemo.ts').then(demo => { demo.installDemoFetch(); mount(); });
+} else {
+  mount();
+}

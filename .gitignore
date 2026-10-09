@@ -60,3 +60,6 @@ docs/**/worker.lock
 .agents/
 .cursor/
 .gemini/
+
+# Static demo build output
+dist-demo/
