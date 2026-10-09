@@ -553,11 +553,12 @@ class PythonComputationService {
     databaseId?: string,
     customTdbText?: string,
     adaptiveGrid = true,
-    boundaryRefinement = true,
+    boundaryRefinement = false,
     minRefineStep = 0.5,
     /** signal: aborts a superseded request; supersedeKey: lets the server drop this client's queued,
-     * not yet started request when a newer one arrives (slider drags). */
-    options: { signal?: AbortSignal; supersedeKey?: string } = {}
+     * not yet started request when a newer one arrives (slider drags); scheil: also compute the
+     * Scheil-Gulliver path (about 1.5 to 2 minutes, so off unless asked for). */
+    options: { signal?: AbortSignal; supersedeKey?: string; scheil?: boolean } = {}
   ): Promise<PythonCalphadSolveResult> {
     let pythonUnavailable: CalphadUnavailable | null = null;
     let literatureSolidification: unknown;
@@ -582,6 +583,7 @@ class PythonComputationService {
             adaptiveGrid,
             boundaryRefinement,
             minRefineStep,
+            scheil: options.scheil ?? false,
           }),
         });
 

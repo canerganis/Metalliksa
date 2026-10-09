@@ -69,7 +69,7 @@ class CalphadContractTests(unittest.TestCase):
     def test_dynamic_payloads_and_temperature_window_is_not_a_backend_bound(self):
         op = self.operations["calphad-minimize"]
         self.assertEqual({field.key for field in op.input}, {
-            "tMin", "tMax", "tStep", "unit", "adaptiveGrid", "boundaryRefinement", "minRefineStep",
+            "tMin", "tMax", "tStep", "unit", "adaptiveGrid", "boundaryRefinement", "minRefineStep", "scheil",
         })
         self.assertEqual(set(op.undeclared_input), {"name", "elements", "databaseId", "customTdbText", "supersedeKey"})
         fields = {field.key: field for field in op.input}
@@ -87,7 +87,7 @@ class CalphadContractTests(unittest.TestCase):
         # element-selected windows and tolerance dropdown options.
         self.assertEqual(op.input_problems({
             "tMin": 200.0, "tMax": 1800.0, "tStep": 5.0, "unit": "wt_pct",
-            "adaptiveGrid": False, "boundaryRefinement": True, "minRefineStep": 0.1,
+            "adaptiveGrid": False, "boundaryRefinement": True, "minRefineStep": 0.1, "scheil": False,
         }), [])
         self.assertIn("not restricted to those options", fields["minRefineStep"].note)
         self.assertIn("max(0.05 degC, requested value)", fields["minRefineStep"].note)

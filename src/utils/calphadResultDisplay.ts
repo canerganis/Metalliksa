@@ -208,3 +208,35 @@ export function clampProbeToRange(t: number, tMin: number, tMax: number, step: n
   if (!(step > 0)) return clamped;
   return Math.min(tMax, tMin + Math.round((clamped - tMin) / step) * step);
 }
+
+// ---- request identity (storm control) ----
+
+/** Composition as a stable string: symbols sorted, so key order and object identity do not matter. */
+export function compositionKey(elements: Record<string, number>): string {
+  return JSON.stringify(Object.entries(elements).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
+}
+
+/** Identity of the shared specimen: name plus sorted composition (not its lastModified stamp). */
+export function specimenKey(name: string, elements: Record<string, number>): string {
+  return JSON.stringify([name, compositionKey(elements)]);
+}
+
+/** Identity of one CALPHAD request. Equal keys mean an identical request body, so it is never sent twice. */
+export function calphadRequestKey(
+  elements: Record<string, number>,
+  unit: string,
+  window: { tMin: number; tMax: number; tStep: number },
+  usePython: boolean,
+  databaseId: string,
+  refinement: boolean,
+  tolerance: number,
+  scheil: boolean,
+): string {
+  return JSON.stringify([compositionKey(elements), unit, window.tMin, window.tMax, window.tStep, usePython, databaseId, refinement, tolerance, scheil]);
+}
+
+/** A chemical potential in kJ/mol as text, or "Unavailable" when missing or not finite (never 0). */
+export function formatChemicalPotentialKJ(muJ_per_mol: number | null | undefined): string {
+  return typeof muJ_per_mol === "number" && Number.isFinite(muJ_per_mol)
+    ? `${(muJ_per_mol / 1000).toFixed(2)} kJ/mol` : "Unavailable";
+}

@@ -67,7 +67,9 @@ def build_calphad_contract(seed) -> ModuleContract:
             _boolean("adaptiveGrid", "Adaptive grid", False,
                      "The UI sends false; the engine has a uniform grid, not an adaptive grid."),
             _boolean("boundaryRefinement", "Boundary refinement", True,
-                     "UI toggle; when enabled, repeated equilibrium calculations refine liquidus/solidus."),
+                     "UI default false; when enabled, repeated equilibrium calculations refine liquidus/solidus."),
+            _boolean("scheil", "Scheil path", True,
+                     "UI sends false by default; the Scheil tab requests it on demand."),
             _number("minRefineStep", "Boundary tolerance", "degC", "temperature-tolerance", 0.5,
                     "The UI selector offers the discrete values 0.2, 0.5, 1.0, and 2.0 degC. Direct Python "
                     "requests are not restricted to those options; the solver uses max(0.05 degC, requested "
@@ -155,8 +157,9 @@ def build_calphad_contract(seed) -> ModuleContract:
             "CALPHADMultiComponentStudio directly. On mount the studio "
             "requests /api/python/status as an infrastructure health check and /api/python/calphad-databases, "
             "then schedules a minimization after "
-            "an 80 ms debounce; edits/supersession abort stale client requests, clear the timeout and guard "
-            "result/error writes with isMounted. The initial status/inventory requests have no cleanup guard. "
+            "an 80 ms debounce, keyed on the request content and visibility (an identical request that is in flight "
+            "or answered is not sent again, nothing starts while the studio is hidden); a changed request aborts "
+            "the stale client request and only the current request writes results. The initial status/inventory requests have no cleanup guard. "
             "The 250 ms interval has clearInterval cleanup and only updates "
             "elapsed-time display while solving. No scientific deadline/progress estimate is exposed by that timer.",
             "The Python minimizer has no fallback calculation: missing pycalphad, missing/unassessed database "
@@ -167,7 +170,7 @@ def build_calphad_contract(seed) -> ModuleContract:
             "The minimization request's elements map, custom TDB text, and alloy name are dynamic values and are "
             "undeclared inputs. UI temperature window/step is derived from the largest element: Al 400–750/10 degC, "
             "Mg 350–700/10 degC, Ti 600–1750/25 degC, otherwise 500–1550/25 degC. Direct Python defaults are "
-            "500/1450/20 degC. The UI sends adaptiveGrid=false, boundaryRefinement=true by default and a selectable "
+            "500/1450/20 degC. The UI sends adaptiveGrid=false, boundaryRefinement=false and scheil=false by default and a selectable "
             "0.2/0.5/1/2 degC tolerance; no blanket hard temperature applicability limits are asserted.",
             "The SDK output fields are conditional inventories. Database coverage entries can say covered or "
             "unavailable, but coverage is an element/base-assessment check, not experimental agreement. Solver "

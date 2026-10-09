@@ -1,5 +1,6 @@
 import { ResponsiveContainer } from './VisibleResponsiveContainer';
 import React, { useState, useMemo, useEffect, useRef } from "react";
+import { useWorkspaceVisible } from "./WorkspaceVisibility";
 import { LiteratureSolidificationCard } from "./LiteratureSolidificationCard";
 import {
   Atom,
@@ -84,6 +85,10 @@ import {
   calphadTemperatureWindow,
   clampProbeToRange,
   withOrderingNote,
+  calphadRequestKey,
+  compositionKey,
+  specimenKey,
+  formatChemicalPotentialKJ,
   type CalphadSystemCoverage,
 } from "../utils/calphadResultDisplay";
 
@@ -98,6 +103,8 @@ export interface CALPHADMultiComponentStudioProps {
   initialSolving?: boolean;
   /** Test seam: start with the Python engine off (client screening model, explicitly chosen). */
   initialUsePython?: boolean;
+  /** Test seam: the studio's own composition on first paint (Live Sync is then paused, as after a preset click). */
+  initialAlloy?: MultiComponentAlloyComposition;
 }
 
 export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioProps> = ({
@@ -106,11 +113,14 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
   initialCoverage,
   initialSolving,
   initialUsePython,
+  initialAlloy,
 }) => {
   const activeSpecimen = useMaterialSpecimenStore((s) => s.activeSpecimen);
-  const [isLiveSyncedWithUniversalSpecimen, setIsLiveSyncedWithUniversalSpecimen] = useState<boolean>(true);
+  const visible = useWorkspaceVisible();
+  const [isLiveSyncedWithUniversalSpecimen, setIsLiveSyncedWithUniversalSpecimen] = useState<boolean>(!initialAlloy);
   const [selectedAlloyIndex, setSelectedAlloyIndex] = useState<number>(-1); // -1 = Live Universal Specimen
   const [customAlloy, setCustomAlloy] = useState<MultiComponentAlloyComposition>(() => {
+    if (initialAlloy) return JSON.parse(JSON.stringify(initialAlloy));
     const spec = useMaterialSpecimenStore.getState().activeSpecimen;
     return {
       name: spec.name,
@@ -132,16 +142,18 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
   const [activeGibbsMetric, setActiveGibbsMetric] = useState<"gibbs_free_energy" | "activities" | "potentials">("gibbs_free_energy");
 
   // Reactively synchronize whenever Active Specimen is modified in Tab 1 (Alloy Formulator)
+  // Keyed on the specimen's name and composition, not lastModified: LPBF process edits bump lastModified
+  // but do not change the alloy, and must not trigger a new CALPHAD request.
+  const sharedSpecimenKey = specimenKey(activeSpecimen.name, activeSpecimen.composition);
   useEffect(() => {
     if (isLiveSyncedWithUniversalSpecimen && activeSpecimen) {
       setSelectedAlloyIndex(-1);
-      setCustomAlloy({
-        name: activeSpecimen.name,
-        elements: { ...activeSpecimen.composition },
-        unit: "wt_pct",
-      });
+      setCustomAlloy((prev) =>
+        specimenKey(prev.name, prev.elements) === sharedSpecimenKey
+          ? prev
+          : { name: activeSpecimen.name, elements: { ...activeSpecimen.composition }, unit: "wt_pct" });
     }
-  }, [activeSpecimen.lastModified, isLiveSyncedWithUniversalSpecimen, activeSpecimen.name]);
+  }, [sharedSpecimenKey, isLiveSyncedWithUniversalSpecimen]);
 
   // Python Engine Integration State
   const [usePythonEngine, setUsePythonEngine] = useState<boolean>(initialUsePython ?? true);
@@ -159,7 +171,10 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
   const [pythonValidationMessage, setPythonValidationMessage] = useState<string | null>(null);
 
   // Liquidus / solidus boundary refinement (multi-section equilibrium calculations; the grid is uniform)
-  const [boundaryRefinement, setBoundaryRefinement] = useState<boolean>(true);
+  const [boundaryRefinement, setBoundaryRefinement] = useState<boolean>(false);
+  // Scheil path on demand: remembers for which composition and database it was requested, so a new input
+  // returns to the cheap default request.
+  const [scheilRequestedFor, setScheilRequestedFor] = useState<string | null>(null);
   const [minRefineStep, setMinRefineStep] = useState<number>(0.5);
 
   // Temperature Probe
@@ -187,16 +202,53 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
     return () => clearInterval(id);
   }, [isSolving, solveStartedAt]);
 
-  // Solve via the Python pycalphad service (Python ON) or the client screening model (Python OFF, explicit)
+  // Identity of the request this input state asks for. Equal keys are identical request bodies, so the
+  // same request is never sent twice (a new customAlloy object with the same content sends nothing).
+  const scheilScopeKey = `${compositionKey(customAlloy.elements)}|${selectedDatabaseId}`;
+  const scheilOn = usePythonEngine && scheilRequestedFor === scheilScopeKey;
+  const requestWindow = calphadTemperatureWindow(customAlloy.elements);
+  const requestKey = calphadRequestKey(
+    customAlloy.elements, customAlloy.unit || "wt_pct", requestWindow, usePythonEngine,
+    selectedDatabaseId, boundaryRefinement, minRefineStep, scheilOn,
+  );
+  const inflightRef = useRef<{ key: string; controller: AbortController } | null>(null);
+  const answeredKeyRef = useRef<string | null>(null);
+
+  // Solve via the Python pycalphad service (Python ON) or the client screening model (Python OFF, explicit).
+  // Depends on the request key and visibility only. Nothing starts while the studio is hidden, and a key
+  // that is already in flight or answered is not sent again.
   useEffect(() => {
-    let isMounted = true;
+    const running = inflightRef.current;
+    if (running && running.key !== requestKey) {
+      running.controller.abort(); // the input moved on: this answer would be stale
+      inflightRef.current = null;
+    }
+    if (!visible) return;
+    if (answeredKeyRef.current === requestKey) {
+      setIsSolving(false);
+      return;
+    }
+    if (inflightRef.current?.key === requestKey) {
+      setIsSolving(true);
+      return;
+    }
+
     setIsSolving(true);
     setSolveStartedAt(performance.now());
     setSolveElapsedMs(0);
 
-    const win = calphadTemperatureWindow(customAlloy.elements);
+    const win = requestWindow;
     const controller = new AbortController();
+    inflightRef.current = { key: requestKey, controller };
+    const finish = (answered: boolean) => {
+      if (inflightRef.current?.controller !== controller) return false; // superseded
+      inflightRef.current = null;
+      if (answered) answeredKeyRef.current = requestKey;
+      return true;
+    };
+    let fired = false;
     const timer = setTimeout(() => {
+      fired = true;
       pythonComputationService
         .solveCalphadEquilibrium(
           customAlloy,
@@ -209,37 +261,43 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
           false, // no adaptive grid exists in the engine
           boundaryRefinement,
           minRefineStep,
-          { signal: controller.signal, supersedeKey: supersedeKey.current }
+          { signal: controller.signal, supersedeKey: supersedeKey.current, scheil: scheilOn }
         )
         .then((res) => {
-          if (isMounted) {
-            setPythonValidationMessage(null);
-            setAsyncSolveResult(res);
-            setIsSolving(false);
-          }
+          if (!finish(true)) return;
+          setPythonValidationMessage(null);
+          setAsyncSolveResult(res);
+          setIsSolving(false);
         })
         .catch((err) => {
-          if (isAbortError(err)) return; // superseded by newer input
+          if (isAbortError(err)) {
+            finish(false);
+            return; // superseded by newer input
+          }
           if (isPythonValidationError(err)) {
             // Python refused the input (HTTP 422): say so; no result is shown (no client substitute).
-            if (isMounted) {
-              setPythonValidationMessage(err.message);
-              setAsyncSolveResult(null);
-              setIsSolving(false);
-            }
+            if (!finish(true)) return;
+            setPythonValidationMessage(err.message);
+            setAsyncSolveResult(null);
+            setIsSolving(false);
             return;
           }
           console.warn("Async solve error:", err);
-          if (isMounted) setIsSolving(false);
+          if (finish(false)) setIsSolving(false);
         });
     }, 80); // Debounce slider changes
 
     return () => {
-      isMounted = false;
-      clearTimeout(timer);
-      controller.abort();
+      if (!fired) {
+        // Not sent yet (re-render with another key, or the studio was hidden during the debounce).
+        clearTimeout(timer);
+        if (inflightRef.current?.controller === controller) inflightRef.current = null;
+      }
     };
-  }, [customAlloy, usePythonEngine, selectedDatabaseId, boundaryRefinement, minRefineStep]);
+  }, [requestKey, visible]);
+
+  // Unmount: stop the request still waiting on this studio's behalf.
+  useEffect(() => () => inflightRef.current?.controller.abort(), []);
 
   // Switch preloaded alloy
   const handleSelectPreload = (idx: number) => {
@@ -313,6 +371,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
   const phaseNotes = solveResult.phaseNameNotes ?? {};
   const timingText = formatTimings(solveResult.timingsMs);
   const scheilBlock = solveResult.scheilSolidification;
+  const gibbsNumbers = showNumbers && provenanceLabels.isPycalphad;
   const scheilComputed = provenanceLabels.isPycalphad && scheilBlock?.status !== undefined && scheilBlock.status !== "unavailable";
 
   // Active components list for activities and chemical potentials
@@ -351,8 +410,8 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
       }
       if (point.chemicalPotentials_J_mol) {
         Object.entries(point.chemicalPotentials_J_mol).forEach(([el, val]) => {
-          const numVal = Number(val) || 0;
-          entry[`mu_${el}`] = +(numVal / 1000.0).toFixed(2);
+          // a missing or non-finite potential is null (no point drawn), never 0
+          entry[`mu_${el}`] = typeof val === "number" && Number.isFinite(val) ? +(val / 1000.0).toFixed(2) : null;
         });
       }
       return entry;
@@ -656,7 +715,11 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
           <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
-              onClick={() => setBoundaryRefinement(!boundaryRefinement)}
+              onClick={() => {
+                // Scheil needs a bisected liquidus: switching refinement off also withdraws the Scheil request.
+                if (boundaryRefinement) setScheilRequestedFor(null);
+                setBoundaryRefinement(!boundaryRefinement);
+              }}
               className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition border flex items-center gap-1.5 ${
                 boundaryRefinement
                   ? "bg-violet-500/20 text-violet-300 border-violet-500/40 shadow-sm"
@@ -691,6 +754,13 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
           </div>
         )}
       </div>
+
+      {specimenKey(customAlloy.name, customAlloy.elements) !== sharedSpecimenKey && (
+        <div role="status" data-testid="calphad-composition-mismatch"
+          className="px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-200 text-xs">
+          This studio is calculating {customAlloy.name}, not the shared material {activeSpecimen.name}. Re-Sync to calculate the shared material.
+        </div>
+      )}
 
       {/* Universal Specimen Reactive Thread Status Banner */}
       <div className="p-3.5 rounded-xl bg-gradient-to-r from-sky-950/30 via-indigo-950/20 to-purple-950/30 border border-sky-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs font-mono">
@@ -1128,14 +1198,17 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
                 <div>
                   <span className="font-bold text-white flex items-center gap-2">
                     <Zap className="w-4 h-4 text-amber-400" />
-                    <span>{provenanceLabels.isPycalphad ? "CALPHAD Gibbs Free Energy & Solute Activities" : "Screening-model Gibbs energy & activities (not CALPHAD)"}</span>
+                    <span>{gibbsNumbers ? "CALPHAD Gibbs Free Energy & Solute Activities" : "Gibbs energy, chemical potentials & activities (pycalphad only)"}</span>
                   </span>
-                  <p className="text-[11px] text-slate-400 mt-0.5 font-mono">
-                    Model: <strong className="text-violet-300">{provenanceLabels.model}</strong>
-                  </p>
+                  {gibbsNumbers && (
+                    <p className="text-[11px] text-slate-400 mt-0.5 font-mono">
+                      Model: <strong className="text-violet-300">{provenanceLabels.model}</strong>
+                    </p>
+                  )}
                 </div>
 
                 {/* Metric Selector Buttons */}
+                {gibbsNumbers && (
                 <div className="flex p-0.5 bg-[#050810] rounded-lg border border-[#162032] text-xs">
                   <button
                     type="button"
@@ -1171,8 +1244,22 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
                     Chemical Potentials μ_i
                   </button>
                 </div>
+                )}
               </div>
 
+              {!gibbsNumbers && (
+                <div role="status" data-testid="gibbs-pycalphad-only" className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-200 text-xs space-y-1">
+                  {usePythonEngine && (
+                    <div>{pythonUnavailable ? "No equilibrium result: the pycalphad calculation is unavailable for this input."
+                      : pythonRefused ? "No equilibrium result: the Python solver refused the input."
+                      : "No equilibrium result yet for this input."}</div>
+                  )}
+                  {!usePythonEngine && <div>Python HPC is switched off, so no pycalphad calculation was requested.</div>}
+                  <div>Gibbs energy, chemical potentials and activities come only from pycalphad; the client screening model computes none.</div>
+                </div>
+              )}
+
+              {gibbsNumbers && (<>
               {/* Chart Display Area */}
               <div className="h-[340px] w-full pt-1">
                 <ResponsiveContainer width="100%" height="100%">
@@ -1328,8 +1415,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
                   {activeComponentsList.map((elem) => {
                     const act = currentEquilibriumPoint.thermodynamicActivities?.[elem] ?? null;
                     const refState = solveResult.activityReferenceStates?.[elem];
-                    const muJ = currentEquilibriumPoint.chemicalPotentials_J_mol?.[elem] ?? 0;
-                    const muKJ = (muJ / 1000.0).toFixed(2);
+                    const muText = formatChemicalPotentialKJ(currentEquilibriumPoint.chemicalPotentials_J_mol?.[elem]);
                     return (
                       <div
                         key={elem}
@@ -1338,35 +1424,41 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-white text-xs">{elem}</span>
                           <span className="text-[10px] text-slate-500" title={refState?.definition ?? ""}>
-                            Ref: pure {elem}{refState?.phase ? ` (${refState.phase}, same T)` : ""}
+                            Ref: pure {elem}{refState?.phase ? `, ${refState.phase}, same T` : ", no reference phase"}
                           </span>
                         </div>
                         <div className="text-slate-400">
                           a_{elem} = <strong className="text-sky-300" title={act === null ? (refState?.reason ?? "") : ""}>{act === null ? "Unavailable" : act > 0 ? (act < 0.001 ? act.toExponential(2) : act.toFixed(4)) : "0.0000"}</strong>
                         </div>
                         <div className="text-slate-400">
-                          μ_{elem} = <strong className="text-purple-300">{muKJ} kJ/mol</strong>
+                          μ_{elem} = <strong className="text-purple-300">{muText}</strong>
                         </div>
                       </div>
                     );
                   })}
                 </div>
 
+                {Object.values(solveResult.activityReferenceStates ?? {}).find((r) => r?.definition) && (
+                  <p className="text-[11px] text-slate-400" data-testid="gibbs-reference-definition">
+                    Activity reference: {Object.values(solveResult.activityReferenceStates ?? {}).find((r) => r?.definition)?.definition}{" "}
+                    Chemical potentials μ_i are on the database SER scale.
+                  </p>
+                )}
+
                 {/* Computational Rigor Callout */}
                 <div className="p-3 rounded-xl bg-violet-950/20 border border-violet-500/30 flex items-start gap-2.5 text-xs">
                   <ShieldCheck className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
                   <div className="space-y-1 text-slate-300">
                     <p className="font-bold text-white">
-                      {provenanceLabels.isPycalphad ? "Provenance of these numbers:" : "These numbers are not CALPHAD results:"}
+                      Provenance of these numbers:
                     </p>
                     <p className="text-[11px] text-slate-400 leading-relaxed">
-                      {provenanceLabels.isPycalphad
-                        ? "Phase constitution, Gibbs energy, chemical potentials and activities come from a pycalphad Gibbs energy minimisation with the database named above (assessments only; test-fixture databases are refused). Liquidus and solidus are read off the temperature grid and are null when the grid cannot support them; the gamma-prime solvus is not stated because the L1_2 phase name does not prove ordering. The partition matrix and the Scheil-style curve are screening aids, flagged where they use default values."
-                        : "The Python CALPHAD engine did not return a result (it has no fallback model). The curves shown come from a simplified client-side screening model with hard-coded relations; they are not a Gibbs energy minimisation and carry no CALPHAD validity."}
+                      Phase constitution, Gibbs energy, chemical potentials and activities come from a pycalphad Gibbs energy minimisation with the database named above (assessments only; test-fixture databases are refused). Liquidus and solidus are read off the temperature grid and are null when the grid cannot support them; the gamma-prime solvus is not stated because the L1_2 phase name does not prove ordering. The partition matrix and the Scheil-style curve are screening aids, flagged where they use default values.
                     </p>
                   </div>
                 </div>
               </div>
+              </>)}
             </div>
           )}
 
@@ -1478,6 +1570,22 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
                     </div>
                   )}
                   <div className="text-amber-300">Evidence: {scheilBlock.evidence ?? "unvalidated"} (calculated path, no experimental comparison here)</div>
+                </div>
+              )}
+              {provenanceLabels.isPycalphad && showNumbers && scheilBlock?.status === "unavailable" && scheilBlock.reason === "not requested" && (
+                <div className="p-3 rounded-xl bg-[#050810] border border-[#162032] text-xs space-y-2" data-testid="scheil-compute">
+                  <div className="text-slate-300">The Scheil-Gulliver path was not requested for this input; it is the slowest part of the calculation and is computed on demand. It also switches liquidus/solidus refinement on, because the path needs a bisected liquidus.</div>
+                  <button
+                    type="button"
+                    disabled={isSolving}
+                    onClick={() => {
+                      setBoundaryRefinement(true);
+                      setScheilRequestedFor(scheilScopeKey);
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-200 font-semibold transition disabled:opacity-50"
+                  >
+                    Compute Scheil path (about 1.5 to 2 min)
+                  </button>
                 </div>
               )}
               {!provenanceLabels.isPycalphad && solveResult.multiElementScheil.every((pt) => pt.temperatureC == null) && (

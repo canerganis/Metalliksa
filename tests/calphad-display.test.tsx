@@ -21,6 +21,7 @@ import {
   calphadTemperatureWindow,
   clampProbeToRange,
   withOrderingNote,
+  calphadRequestKey,
 } from "../src/utils/calphadResultDisplay";
 import { CALPHADMultiComponentStudio } from "../src/components/CALPHADMultiComponentStudio";
 import type { PythonCalphadSolveResult } from "../src/services/pythonComputationService";
@@ -559,4 +560,101 @@ test("Studio: IN718 CALPHAD result shows the labelled literature card with the n
   assert.doesNotMatch(
     renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={pycalphadResult({ literatureSolidification: lit })} initialUsePython={false} />),
     /calphad-literature-solidification/);
+});
+
+// ---- calphad-studio-python-result: request identity, on-demand Scheil, pycalphad-only Gibbs tab ----
+
+const WINDOW = { tMin: 500, tMax: 1550, tStep: 25 };
+
+test("calphadRequestKey ignores key order and object identity, and changes with any request field", () => {
+  const base = calphadRequestKey({ Ni: 53, Cr: 19, Fe: 18 }, "wt_pct", WINDOW, true, "auto", false, 0.5, false);
+  assert.equal(base, calphadRequestKey({ Fe: 18, Ni: 53, Cr: 19 }, "wt_pct", { ...WINDOW }, true, "auto", false, 0.5, false));
+  assert.notEqual(base, calphadRequestKey({ Ni: 53.1, Cr: 19, Fe: 18 }, "wt_pct", WINDOW, true, "auto", false, 0.5, false));
+  assert.notEqual(base, calphadRequestKey({ Ni: 53, Cr: 19, Fe: 18 }, "wt_pct", WINDOW, true, "cost507", false, 0.5, false));
+  assert.notEqual(base, calphadRequestKey({ Ni: 53, Cr: 19, Fe: 18 }, "wt_pct", WINDOW, true, "auto", true, 0.5, false));
+  assert.notEqual(base, calphadRequestKey({ Ni: 53, Cr: 19, Fe: 18 }, "wt_pct", WINDOW, true, "auto", false, 0.5, true));
+});
+
+test("the service body carries scheil false by default, true when asked, and still the supersede key", async () => {
+  const bodies: any[] = [];
+  globalThis.fetch = (async (_url: string, init: any) => {
+    bodies.push(JSON.parse(init.body));
+    return new Response(JSON.stringify(UNAVAILABLE), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as any;
+  await pythonComputationService.solveCalphadEquilibrium(ALLOY, 600, 1750, 25, true, undefined, undefined, false, false, 0.5,
+    { supersedeKey: "studio-1" });
+  await pythonComputationService.solveCalphadEquilibrium(ALLOY, 600, 1750, 25, true, undefined, undefined, false, true, 0.5,
+    { supersedeKey: "studio-1", scheil: true });
+  assert.equal(bodies[0].scheil, false);
+  assert.equal(bodies[0].boundaryRefinement, false);
+  assert.equal(bodies[1].scheil, true);
+  assert.equal(bodies[1].boundaryRefinement, true);
+  assert.equal(bodies[0].supersedeKey, "studio-1");
+  assert.equal(bodies[1].supersedeKey, "studio-1");
+});
+
+function resultWithPotentials(): PythonCalphadSolveResult {
+  const base = pycalphadResult();
+  return {
+    ...base,
+    activeComponents: ["TI", "AL", "V"],
+    activityReferenceStates: {
+      TI: { phase: "HCP_A3", temperature: "same T", pressurePa: 101325, status: "available", reason: null, definition: "Pure-element SER phase at the same temperature and pressure." },
+      AL: { phase: "FCC_A1", temperature: "same T", pressurePa: 101325, status: "available", reason: null, definition: "Pure-element SER phase at the same temperature and pressure." },
+      V: { phase: null, temperature: "same T", pressurePa: 101325, status: "unavailable", reason: "no reference phase", definition: "Pure-element SER phase at the same temperature and pressure." },
+    },
+    equilibriumProfile: base.equilibriumProfile.map((pt) => ({
+      ...pt,
+      totalGibbsEnergy_kJ_mol: -50,
+      thermodynamicActivities: { TI: 0.5, AL: 0.1, V: null },
+      chemicalPotentials_J_mol: { TI: -60000, AL: -70000 },
+    })) as any,
+  };
+}
+
+test("Gibbs tab with Python ON and no result shows no numbers", () => {
+  const text = textOf(renderToStaticMarkup(<CALPHADMultiComponentStudio initialSubTab="gibbs_energy" />));
+  assert.doesNotMatch(text, /G_min/);
+  assert.doesNotMatch(text, /kJ\/mol/);
+  assert.match(text, /No equilibrium result/);
+});
+
+test("Gibbs tab with a client result and Python OFF shows no mu or a cards and no 0.00 kJ/mol", () => {
+  const text = textOf(renderToStaticMarkup(
+    <CALPHADMultiComponentStudio initialResult={clientBase()} initialSubTab="gibbs_energy" initialUsePython={false} />));
+  assert.doesNotMatch(text, /0\.00 kJ\/mol/);
+  assert.doesNotMatch(text, /μ_[A-Z]+ =/);
+  assert.doesNotMatch(text, /a_[A-Z]+ =/);
+  assert.match(text, /come only from pycalphad/);
+  assert.doesNotMatch(text, /The Python CALPHAD engine did not return a result/);
+});
+
+test("Gibbs tab with a pycalphad result shows Unavailable for a missing mu, the reference phase and the definition", () => {
+  const text = textOf(renderToStaticMarkup(
+    <CALPHADMultiComponentStudio initialResult={resultWithPotentials()} initialSubTab="gibbs_energy" />));
+  assert.match(text, /μ_V = Unavailable/);
+  assert.match(text, /μ_TI = -60\.00 kJ\/mol/);
+  assert.match(text, /Ref: pure TI, HCP_A3, same T/);
+  assert.match(text, /Pure-element SER phase at the same temperature and pressure\./);
+  assert.match(text, /database SER scale/);
+});
+
+test("Scheil tab offers the compute button when the path was not requested, and draws no chart", () => {
+  const result = pycalphadResult({
+    scheilSolidification: { status: "unavailable", reason: "not requested" },
+  } as Partial<PythonCalphadSolveResult>);
+  const markup = renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={result} initialSubTab="multi_scheil" />);
+  const text = textOf(markup);
+  assert.match(text, /Compute Scheil path \(about 1\.5 to 2 min\)/);
+  assert.match(text, /Scheil-Gulliver path unavailable: not requested/);
+  assert.doesNotMatch(markup, /recharts-wrapper/);
+});
+
+test("a studio composition that differs from the shared specimen shows the mismatch banner with both names", () => {
+  const markup = renderToStaticMarkup(<CALPHADMultiComponentStudio initialAlloy={ALLOY} />);
+  assert.match(markup, /role="status"[^>]*data-testid="calphad-composition-mismatch"|data-testid="calphad-composition-mismatch"[^>]*role="status"/);
+  const text = textOf(markup);
+  assert.ok(text.includes("This studio is calculating Ti-6Al-4V, not the shared material Inconel 718 (AMS 5662 / UNS N07718). Re-Sync to calculate the shared material."));
+  // the default (shared) composition shows no banner
+  assert.doesNotMatch(renderToStaticMarkup(<CALPHADMultiComponentStudio />), /calphad-composition-mismatch/);
 });

@@ -2569,7 +2569,24 @@ export const MODULE_REGISTRY = {
               "default": true,
               "required": true,
               "enum": [],
-              "note": "UI toggle; when enabled, repeated equilibrium calculations refine liquidus/solidus.",
+              "note": "UI default false; when enabled, repeated equilibrium calculations refine liquidus/solidus.",
+              "unitSelector": null,
+              "unitOptions": {}
+            },
+            {
+              "key": "scheil",
+              "label": "Scheil path",
+              "valueType": "boolean",
+              "unit": null,
+              "displayUnits": [],
+              "quantityKind": "configuration",
+              "min": null,
+              "max": null,
+              "step": null,
+              "default": true,
+              "required": true,
+              "enum": [],
+              "note": "UI sends false by default; the Scheil tab requests it on demand.",
               "unitSelector": null,
               "unitOptions": {}
             },
@@ -2866,9 +2883,9 @@ export const MODULE_REGISTRY = {
       },
       "migrationState": "contracted",
       "legacyNotes": [
-        "The registered phase-diagram view is src/components/PhaseDiagramViewer.tsx, which renders CALPHADMultiComponentStudio directly. On mount the studio requests /api/python/status as an infrastructure health check and /api/python/calphad-databases, then schedules a minimization after an 80 ms debounce; edits/supersession abort stale client requests, clear the timeout and guard result/error writes with isMounted. The initial status/inventory requests have no cleanup guard. The 250 ms interval has clearInterval cleanup and only updates elapsed-time display while solving. No scientific deadline/progress estimate is exposed by that timer.",
+        "The registered phase-diagram view is src/components/PhaseDiagramViewer.tsx, which renders CALPHADMultiComponentStudio directly. On mount the studio requests /api/python/status as an infrastructure health check and /api/python/calphad-databases, then schedules a minimization after an 80 ms debounce, keyed on the request content and visibility (an identical request that is in flight or answered is not sent again, nothing starts while the studio is hidden); a changed request aborts the stale client request and only the current request writes results. The initial status/inventory requests have no cleanup guard. The 250 ms interval has clearInterval cleanup and only updates elapsed-time display while solving. No scientific deadline/progress estimate is exposed by that timer.",
         "The Python minimizer has no fallback calculation: missing pycalphad, missing/unassessed database coverage, missing elements, refused test-fixture TDBs, or equilibrium failure yields an unavailable envelope without equilibrium/critical-temperature numbers. HTTP 422 validation refusal is displayed without a client substitute. The visible client solver is reached only after the user explicitly turns the Python engine off; it is marked empirical/screening and is not the fallback for failure.",
-        "The minimization request's elements map, custom TDB text, and alloy name are dynamic values and are undeclared inputs. UI temperature window/step is derived from the largest element: Al 400–750/10 degC, Mg 350–700/10 degC, Ti 600–1750/25 degC, otherwise 500–1550/25 degC. Direct Python defaults are 500/1450/20 degC. The UI sends adaptiveGrid=false, boundaryRefinement=true by default and a selectable 0.2/0.5/1/2 degC tolerance; no blanket hard temperature applicability limits are asserted.",
+        "The minimization request's elements map, custom TDB text, and alloy name are dynamic values and are undeclared inputs. UI temperature window/step is derived from the largest element: Al 400–750/10 degC, Mg 350–700/10 degC, Ti 600–1750/25 degC, otherwise 500–1550/25 degC. Direct Python defaults are 500/1450/20 degC. The UI sends adaptiveGrid=false, boundaryRefinement=false and scheil=false by default and a selectable 0.2/0.5/1/2 degC tolerance; no blanket hard temperature applicability limits are asserted.",
         "The SDK output fields are conditional inventories. Database coverage entries can say covered or unavailable, but coverage is an element/base-assessment check, not experimental agreement. Solver 'status=unavailable' is transport state only; no evidence status is emitted. databaseStatus is database provenance classification (assessment/test-fixture/user-supplied), not validation; multiElementScheilStatus is computed-path/incomplete/unavailable transport state. criticalTemperatureStatus is a top-level per-temperature object map; transportObjects declares each member's nested status leaf and its closed computed-path/availability vocabulary. Reason text and numerical bracket/refinement metadata are not fully typed by this status inventory. Output numbers depend on the selected assessed database and conditions; no numerical oracle or physical domain is claimed.",
         "The studio computes a local clientSolveResult synchronously from parsed editable TDB and a fixed 500/1450/20 degC grid even when Python is on; showNumbers gates its display. With Python off, the debounced service path uses PRELOADED_MULTI_COMPONENT_TDB[0], not the editor selection, with the element-selected window, and replaces the initial local result. These two screening paths are not identical database/window authorities. Output inventory includes the service wrapper fields."
       ],
