@@ -1299,6 +1299,54 @@ ACTIVITY_REFERENCE_DEFINITION = (
     "Method, 2007, reference states; the Thermo-Calc 'SET-REFERENCE-STATE <el> <phase> * 1E5' convention)")
 
 
+def _ghser_function_gm(dbf: Any, element: str, temps_k: List[float]) -> Dict[str, Any]:
+    """Pure-element SER Gibbs energy from the database's own FUNCTION GHSER<EL> (J/mol), or gm None.
+
+    Used only when the ELEMENT record's reference phase is not modelled in the database (e.g. HEX_A9 for C):
+    GHSER<EL> is the SGTE unary expression for the SER phase (Dinsdale 1991, CALPHAD 15:317). It is read from
+    the same database, never from another one. A temperature outside every stated range of the piecewise
+    function is refused (a bare Piecewise would return 0 there).
+    """
+    el = str(element).upper()
+    # SGTE naming: GHSERNI, GHSERFE; single-letter symbols are doubled (GHSERCC, GHSERNN, GHSEROO)
+    symbols = getattr(dbf, "symbols", None) or {}
+    name = next((n for n in (f"GHSER{el}", f"GHSER{el}{el}") if n in symbols), f"GHSER{el}")
+    out: Dict[str, Any] = {"gm": None, "function": name}
+    expr = symbols.get(name)
+    if expr is None:
+        return out
+    try:
+        from pycalphad import variables as v
+        from symengine import Piecewise as SePiecewise, true as se_true
+        for _ in range(20):  # inline nested FUNCTION references
+            free = [sym for sym in expr.free_symbols if str(sym) in dbf.symbols and str(sym) != "T"]
+            if not free:
+                break
+            expr = expr.subs({sym: dbf.symbols[str(sym)] for sym in free})
+        gm: List[float] = []
+        for t in temps_k:
+            t = float(t)
+            if isinstance(expr, SePiecewise):
+                args = list(expr.args)
+                covered = False
+                for k in range(0, len(args) - 1, 2):
+                    cond = args[k + 1]
+                    if cond == se_true:
+                        continue
+                    if bool(cond.subs({v.T: t})):
+                        covered = True
+                        break
+                if not covered:
+                    return out
+            gm.append(float(expr.subs({v.T: t})))
+    except Exception:
+        return out
+    if not all(math.isfinite(g) for g in gm):
+        return out
+    out["gm"] = gm
+    return out
+
+
 def _pure_element_reference_gm(dbf: Any, element: str, temps_k: List[float]) -> Dict[str, Any]:
     """Molar Gibbs energy of pure ``element`` in its SER reference phase at each temperature (audit TK-1).
 
@@ -1310,6 +1358,14 @@ def _pure_element_reference_gm(dbf: Any, element: str, temps_k: List[float]) -> 
     phase = ref.get("phase")
     out: Dict[str, Any] = {"phase": phase, "gm": None, "reason": None}
     if not phase or phase not in dbf.phases:
+        unary = _ghser_function_gm(dbf, element, temps_k)
+        if unary["gm"] is not None:
+            out["gm"] = unary["gm"]
+            label = ("graphite, " if str(element).upper() == "C" and phase == "HEX_A9" else "") + f"{phase}; " if phase else ""
+            out["basis"] = (f'SER unary function {unary["function"]} ({label}'
+                            "reference phase not modelled in this database)")
+            out["function"] = unary["function"]
+            return out
         out["reason"] = (f"the database gives no modelled reference phase for {element} "
                          f"(ELEMENT record phase {phase!r} is not a phase of the database)")
         return out
@@ -2010,6 +2066,10 @@ def _solve_with_runner(runner, conditions, dep_comp, indep_comps, alloy_name, wt
         "activityReferenceStates": {
             c: {"phase": ref["phase"], "temperature": "same as the equilibrium", "pressurePa": 101325.0,
                 "status": "available" if ref["gm"] is not None else "unavailable", "reason": ref["reason"],
+                **({"basis": ref["basis"], "referenceFunction": ref["function"],
+                    "referenceSource": ("SGTE unary data, Dinsdale (1991) CALPHAD 15:317, "
+                                        "DOI 10.1016/0364-5916(91)90030-N; as carried by this database's FUNCTION")}
+                   if ref.get("basis") else {}),
                 "definition": ACTIVITY_REFERENCE_DEFINITION}
             for c, ref in reference_gm.items()},
         "solutePartitioning": partitioning_table,
