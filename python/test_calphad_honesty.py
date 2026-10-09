@@ -32,7 +32,7 @@ import numpy as np
 HERE = Path(__file__).parent
 sys.path.insert(0, str(HERE))
 
-import calphad_solver as cs  # noqa: E402
+import calphad_solver as cs  # noqa: E402
 import calphad_test_lane  # noqa: E402
 
 FIXTURE_IDS = {"alcocrni", "mc_fecocrnbti", "cr_fe_ni"}

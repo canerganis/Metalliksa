@@ -73,7 +73,7 @@ all phases except the excluded ones); see the catalogue entries `mc_ni` and `mc_
 
 ## mc_ti (Ti alloys and Ti aluminides, release 2.03)
 
-`mc_ti_v203_repaired.tdb` is a **derivative database** of the MatCalc titanium database `mc_ti_v2.03.tdb`
+`mc_ti_v203_repaired.tdb` is a **derivative database** of the MatCalc titanium database `mc_ti_v203.tdb`
 (release of January 2025 by MatCalc Engineering GmbH). It is a special database on the MatCalc site, not one of
 the three on the "open databases" page; its file header states the same terms:
 
