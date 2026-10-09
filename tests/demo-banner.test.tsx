@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import { test } from 'node:test';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { DEMO_REPO_URL, demoBannerText, fingerprintPrefix } from '../src/demo/demoGate.ts';
+import { DEMO_REPO_URL, FINGERPRINT_MISMATCH_TEXT, demoBannerText, fingerprintPrefix } from '../src/demo/demoGate.ts';
 import { DemoBanner } from '../src/demo/demoBanner.tsx';
 
 const read = (path: string) => fs.readFileSync(new URL(`../${path}`, import.meta.url), 'utf8').replace(/\r\n/g, '\n');
@@ -36,6 +36,18 @@ test('the rendered banner carries the exact sentence, the repository link and th
   assert.ok(html.includes(`href="${DEMO_REPO_URL}"`), 'repository link');
   assert.ok(html.includes('title="Recorded fingerprint ec7e1f7a"'), 'fingerprint hover');
   assert.ok(html.includes('data-testid="demo-banner"'));
+});
+
+test('a fingerprint mismatch puts the banner in a warning state and keeps the exact sentence', () => {
+  const html = renderToStaticMarkup(<DemoBanner info={INDEX} fingerprint="mismatch" />);
+  assert.ok(html.includes(EXACT), 'exact sentence unchanged');
+  assert.ok(html.includes('demo-banner-warning'), 'warning class');
+  assert.ok(html.includes('data-testid="demo-banner-warning"'));
+  assert.ok(html.includes(FINGERPRINT_MISMATCH_TEXT), 'mismatch text');
+  for (const status of ['match', 'unknown'] as const) {
+    const ok = renderToStaticMarkup(<DemoBanner info={INDEX} fingerprint={status} />);
+    assert.ok(!ok.includes('demo-banner-warning') && !ok.includes(FINGERPRINT_MISMATCH_TEXT), `${status} is not a warning`);
+  }
 });
 
 test('the banner has no dismiss control', () => {

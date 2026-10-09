@@ -89,7 +89,7 @@ test("App engine status modal keeps backdrop close, its label id and no ad-hoc E
   assert.match(tag, /\bcloseOnBackdrop\b/);
   assert.match(tag, /labelledBy="engine-title"/);
   const app = read("src/App.tsx");
-  assert.match(app, /\{showStatus && <SilentBoundary key=\{dialogLoad\} fallback=\{[\s\S]*?\}><Suspense fallback=\{null\}><EngineStatusDialog [^>]*onClose=\{\(\) => setShowStatus\(false\)\}/, "App renders the lazy dialog only while open");
+  assert.match(app, /\{showStatus && (?:!IS_STATIC_DEMO && )?<SilentBoundary key=\{dialogLoad\} fallback=\{[\s\S]*?\}><Suspense fallback=\{null\}><EngineStatusDialog [^>]*onClose=\{\(\) => setShowStatus\(false\)\}/, "App renders the lazy dialog only while open");
   for (const text of [app, dialog]) {
     assert.ok(!/addEventListener\(\s*["']keydown["']/.test(text), "no own keydown/Escape listener");
     assert.ok(!/event\.key === ['"]Escape['"]/.test(text), "Escape is handled by AccessibleModal only");
