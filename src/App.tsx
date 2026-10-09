@@ -235,7 +235,7 @@ export default function App() {
         {visited.map(id => <div key={id} hidden={home || id !== activeTab} data-module={id}><WorkspaceVisibility visible={!home && id === activeTab}>
           <ModuleBoundary label={MODULES.find(m => m.id === id)!.label}>
             <Suspense fallback={<div role="status" className="mk-loading">Loading engineering module…</div>}>
-              {(id === 'database' || id === '3d-distortion-lab') && <ResearchIntegrationPanel targetModule={id === 'database' ? 'materials-db' : 'lpbf-solver'} />}
+              {(id === 'database' || (id === '3d-distortion-lab' && !IS_STATIC_DEMO)) && <ResearchIntegrationPanel targetModule={id === 'database' ? 'materials-db' : 'lpbf-solver'} />}
               {renderModule(id)}
             </Suspense>
           </ModuleBoundary>

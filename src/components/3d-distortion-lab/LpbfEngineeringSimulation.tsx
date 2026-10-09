@@ -681,7 +681,7 @@ export function LpbfEngineeringSimulation({input:providedInput}:{input:Simulatio
       </details>
       {r.artifacts&&<details className="border-t border-slate-700 pt-3"><summary className="cursor-pointer">Artifacts and reproducibility · {r.artifacts.length} files</summary><p className="text-sm text-slate-400 my-2">{r.retentionPolicy}</p><div className="max-h-64 overflow-auto text-xs font-mono space-y-3">{r.artifacts.map(a=><div key={a.path}><p>{a.path} · {fmt(a.size_bytes)} bytes</p><p className="text-slate-500 break-all">SHA-256 {a.sha256}</p></div>)}</div></details>}
       
-      {job?.id && <div className="mt-6"><LpbfJobArchiver jobId={job.id} /></div>}
+      {job?.id && !IS_STATIC_DEMO && <div className="mt-6"><LpbfJobArchiver jobId={job.id} /></div>}
     </>}
     <Lock>
     <section aria-label="Advanced engineering controls" className={surface}><div className="flex flex-wrap justify-between gap-3"><h4 className="font-medium">Engineering controls</h4><button className="text-xs underline underline-offset-4" onClick={()=>setSettings({...defaults})}>Reset advanced settings</button></div>

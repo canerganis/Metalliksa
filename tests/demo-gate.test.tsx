@@ -143,3 +143,8 @@ test('thermal simulation panel: recorded Quick Screening only, unrecorded sectio
   assert.ok(src.includes('{IS_STATIC_DEMO ? <DemoUnavailable what="Bare-plate IN625 comparison" />'));
   assert.ok(src.includes('const Lock: React.ElementType = IS_STATIC_DEMO ? DemoLock : React.Fragment;'), 'a normal build renders a plain fragment');
 });
+
+test('registry and archive writers are not mounted in the demo', () => {
+  assert.ok(read('src/App.tsx').includes("(id === '3d-distortion-lab' && !IS_STATIC_DEMO)) && <ResearchIntegrationPanel"));
+  assert.ok(read('src/components/3d-distortion-lab/LpbfEngineeringSimulation.tsx').includes('{job?.id && !IS_STATIC_DEMO && <div className="mt-6"><LpbfJobArchiver'));
+});
