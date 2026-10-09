@@ -9,6 +9,7 @@ import {
   formatCalphadUnavailable,
   formatCriticalTemperature,
   formatFreezingRange,
+  isMcTiResult,
   parseCalphadUnavailable,
   partitionSourceNote,
 } from "../src/utils/calphadDisplay";
@@ -711,6 +712,24 @@ test("a scoped database result shows its scope flag; other results do not", () =
   assert.equal(calphadProvenanceLabels({ isPythonEngine: true, isEmpirical: false, databaseUsed: "mc_ti", databaseScopeFlag: MC_TI_FLAG }).scopeFlag, MC_TI_FLAG);
   const plain = renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={pycalphadResult()} />);
   assert.ok(!plain.includes("calphad-database-scope-flag"));
+});
+
+test("mc_ti phase-fraction view flags alpha/beta fractions below 900 C as not valid; other databases show no note", () => {
+  const NOTE = "Not valid below about 900 C with mc_ti (see scope)";
+  const scoped = textOf(renderToStaticMarkup(
+    <CALPHADMultiComponentStudio initialResult={pycalphadResult({ databaseId: "mc_ti", databaseScopeFlag: MC_TI_FLAG })} initialSubTab="phase_fractions" />));
+  assert.ok(scoped.includes(NOTE));
+  assert.equal(isMcTiResult({ databaseId: "mc_ti" }), true);
+  assert.equal(isMcTiResult({ databaseId: "cost507", databaseUsed: "COST 507" }), false);
+  // probe (950 C) is above the limit: its fractions are still listed
+  assert.ok(!scoped.includes("fraction-probe-clipped"));
+  const base = pycalphadResult({ databaseId: "mc_ti", databaseScopeFlag: MC_TI_FLAG });
+  const low = { ...base, equilibriumProfile: base.equilibriumProfile.filter((p) => p.temperatureC < 900) } as PythonCalphadSolveResult;
+  const lowMarkup = renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={low} initialSubTab="phase_fractions" />);
+  assert.match(lowMarkup, /data-testid="phase-fraction-probe-clipped"/);
+  const other = renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={pycalphadResult()} initialSubTab="phase_fractions" />);
+  assert.ok(!other.includes("phase-fraction-scope-note"));
+  assert.ok(!textOf(other).includes(NOTE));
 });
 
 test("the Ti-6Al-4V preset is Ti-Al-V only and names mc_ti, not COST 507", () => {

@@ -39,6 +39,7 @@ import {
   Tooltip,
   Legend,
   ReferenceLine,
+  ReferenceArea,
   AreaChart,
   Area,
 } from "recharts";
@@ -72,6 +73,9 @@ import {
   formatCriticalTemperature,
   formatFreezingRange,
   formatNullable,
+  isMcTiResult,
+  MC_TI_PHASE_FRACTION_MIN_C,
+  MC_TI_PHASE_FRACTION_NOTE,
   partitionSourceNote,
 } from "../utils/calphadDisplay";
 import {
@@ -385,17 +389,23 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
   }, [solveResult, customAlloy]);
 
   // Chart Data for Phase Fractions vs Temperature
+  // mc_ti is not valid for alpha/beta fractions below about 900 C: those grid points are not plotted (null, no area).
+  const phaseFractionsClipped = isMcTiResult(solveResult);
   const phaseChartData = useMemo(() => {
     return solveResult.equilibriumProfile.map((point) => {
       const entry: any = {
         temperatureC: point.temperatureC,
       };
+      const clipped = phaseFractionsClipped && point.temperatureC < MC_TI_PHASE_FRACTION_MIN_C;
       point.phases.forEach((ph) => {
-        entry[ph.phaseId] = +(ph.fraction * 100).toFixed(1);
+        entry[ph.phaseId] = clipped ? null : +(ph.fraction * 100).toFixed(1);
       });
       return entry;
     });
-  }, [solveResult]);
+  }, [solveResult, phaseFractionsClipped]);
+  const clippedGridTemps = phaseFractionsClipped
+    ? solveResult.equilibriumProfile.map((p) => p.temperatureC).filter((t) => t < MC_TI_PHASE_FRACTION_MIN_C).sort((a, b) => a - b)
+    : [];
 
   // Chart Data for Gibbs Free Energy, Activities, and Chemical Potentials
   const gibbsChartData = useMemo(() => {
@@ -1135,6 +1145,9 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
                       }}
                     />
                     <Legend />
+                    {clippedGridTemps.length > 0 && (
+                      <ReferenceArea x1={clippedGridTemps[0]} x2={clippedGridTemps[clippedGridTemps.length - 1]} fill="#64748b" fillOpacity={0.25} stroke="none" />
+                    )}
                     <ReferenceLine x={probeTemperatureC} stroke="#ec4899" strokeDasharray="4 4" label={{ value: `${probeTemperatureC}°C`, fill: "#ec4899", fontSize: 11 }} />
                     {solveResult.criticalTemperatures?.liquidusC && (
                       <ReferenceLine
@@ -1181,6 +1194,12 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
                 </ResponsiveContainer>
               </div>
 
+              {phaseFractionsClipped && (
+                <p role="note" className="text-[11px] text-amber-200" data-testid="phase-fraction-scope-note">
+                  {MC_TI_PHASE_FRACTION_NOTE}
+                </p>
+              )}
+
               {Object.keys(phaseNotes).length > 0 && (
                 <p className="text-[10px] text-amber-200/90" data-testid="phase-name-notes">
                   {Object.keys(phaseNotes).join(", ")}: {Object.values(phaseNotes)[0]}.
@@ -1191,7 +1210,9 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
               <div className="pt-2 border-t border-[#162032] flex flex-wrap items-center justify-between gap-3 text-xs">
                 <div className="flex items-center gap-2">
                   <span className="text-slate-400">At {currentEquilibriumPoint.temperatureC}°C (nearest grid point):</span>
-                  {currentEquilibriumPoint.phases.map((p) => (
+                  {phaseFractionsClipped && currentEquilibriumPoint.temperatureC < MC_TI_PHASE_FRACTION_MIN_C ? (
+                    <span className="text-[10px] text-amber-200" data-testid="phase-fraction-probe-clipped">{MC_TI_PHASE_FRACTION_NOTE}</span>
+                  ) : currentEquilibriumPoint.phases.map((p) => (
                     <span key={p.phaseId} className="px-2 py-0.5 rounded bg-violet-500/10 text-violet-300 font-bold border border-violet-500/20 text-[10px]">
                       {p.phaseName.split("(")[0]}: {(p.fraction * 100).toFixed(1)}%
                     </span>

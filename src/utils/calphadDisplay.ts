@@ -135,3 +135,11 @@ export const SOLUTE_DEFAULT_K_SOURCE = "default-table-not-thermodynamic";
 export function partitionSourceNote(source: string | undefined): string | null {
   return source === SOLUTE_DEFAULT_K_SOURCE ? "default screening value, not CALPHAD" : null;
 }
+
+/** mc_ti is assessed for the beta transus and single-phase beta only: alpha/beta fractions below this are not valid. */
+export const MC_TI_PHASE_FRACTION_MIN_C = 900;
+export const MC_TI_PHASE_FRACTION_NOTE = "Not valid below about 900 C with mc_ti (see scope)";
+
+export function isMcTiResult(result: { databaseId?: string; databaseUsed?: string }): boolean {
+  return result.databaseId === "mc_ti" || /\bmc_ti\b/i.test(result.databaseUsed ?? "");
+}
