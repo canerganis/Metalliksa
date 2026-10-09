@@ -211,11 +211,11 @@ def build_solidification_microstructure_contract(seed: Mapping[str, str]) -> Mod
         notes=(
             "Compute is user-triggered; each setting change clears the displayed result. The view sends a nested "
             "params object with Python-authority materialName and power_W (W), speed_mm_s (mm/s), hatch_um (µm), "
-            "layerThickness_um (µm), beamDiameter_um (µm), preheat_C (°C), heatSource. Visible presets are "
+            "layerThickness_um (µm), beamDiameter_um (µm), preheat_C (degC), heatSource. Visible presets are "
             "Inconel 718, Ti-6Al-4V, AlSi10Mg and 316L SS; defaults are 285 W, 960 mm/s, 110 µm hatch, "
-            "40 µm layer, 80 µm beam, 80 °C and Rosenthal. Visible input min/max/step are UI controls; backend "
-            "requires finite values, positive power/speed/beam/layer/hatch, and preheat_C strictly above -273.15 °C "
-            "and, when liquidus_C is known, strictly below that value in °C. Missing/invalid material or inputs and "
+            "40 µm layer, 80 µm beam, 80 degC and Rosenthal. Visible input min/max/step are UI controls; backend "
+            "requires finite values, positive power/speed/beam/layer/hatch, and preheat_C strictly above -273.15 degC "
+            "and, when liquidus_C is known, strictly below that value in degC. Missing/invalid material or inputs and "
             "unsupported physics return a worker result with status=unavailable, a reason, and null numeric fields "
             "(normally HTTP 200); no substitute alloy or numeric fallback is used.",
             "The current view does not send cfdResult or material properties. Worker RPC therefore invokes "
