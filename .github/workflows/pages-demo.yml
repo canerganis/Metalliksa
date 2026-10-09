@@ -12,6 +12,8 @@ on:
       - 'src/**'
       - 'demo/snapshots/**'
       - 'scripts/demo/**'
+      - 'public/**'
+      - 'index.html'
       - 'package*.json'
       - 'vite.config.ts'
       - '.github/workflows/pages-demo.yml'

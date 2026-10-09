@@ -9,7 +9,7 @@ export default defineConfig(({mode}) => {
   return {
     ...(demo ? {base: process.env.VITE_BASE_PATH || '/metalliksa/'} : {}),
     // Compile-time constant behind src/demo/flag.ts: false everywhere except the demo build, so Vite folds the demo branches away.
-    define: {__STATIC_DEMO__: JSON.stringify(demo || process.env.VITE_STATIC_DEMO === '1')},
+    define: {__STATIC_DEMO__: JSON.stringify(demo)},
     plugins: [react(), tailwindcss()],
     optimizeDeps: {
       // Only the SPA is an entry point; bundled scientific docs are not apps.

@@ -440,7 +440,8 @@ export const ProcessWindowResultStatus: React.FC<{ result: LpbfProcessWindowResp
         Reused from this browser session: the inputs are identical to an earlier Compute, so no request was sent.
       </p>
     )}
-    {source === "computed" && <p className="text-xs text-slate-400" data-testid="pw-computed">Computed in {result.computeMs} ms ({result.grid.nCells} cells).</p>}
+    {source === "computed" && IS_STATIC_DEMO && <p className="text-xs text-slate-400" data-testid="pw-computed">Recorded snapshot ({result.grid.nCells} cells); compute time not recorded.</p>}
+    {source === "computed" && !IS_STATIC_DEMO && <p className="text-xs text-slate-400" data-testid="pw-computed">Computed in {result.computeMs} ms ({result.grid.nCells} cells).</p>}
   </div>
 );
 
