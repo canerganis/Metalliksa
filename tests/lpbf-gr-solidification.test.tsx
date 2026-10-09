@@ -2,7 +2,7 @@ import React from "react";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
-import { GrSolidificationMapCard, GrHeatmap } from "../src/components/GrSolidificationMapCard";
+import { GrSolidificationMapCard, GrHeatmap, GrCellDetail } from "../src/components/GrSolidificationMapCard";
 import {
   NO_VALUE_STYLE,
   checkedGrSolidification,
@@ -47,7 +47,7 @@ function body(status: GrCell["status"], opts: { keyhole?: boolean; g?: number } 
       bands: { bottom: computed ? HUNT_COLUMNAR : null, median: computed ? HUNT_COLUMNAR : null, tail: computed ? HUNT_COLUMNAR : null },
       label: "Hunt G/R screening band (uncalibrated), not a CET prediction",
     },
-    cet: { status: "unavailable" as const, reason: CET_REASON, locations: { bottom: null, median: null, tail: null } },
+    cet: { status: "unavailable" as const, reason: CET_REASON, locations: { bottom: null, median: null, tail: null }, sets: {} },
     laves: computed
       ? {
         status: "available" as const, reason: null, equilibriumKBound: 0.0647,
@@ -77,7 +77,7 @@ function fixture(): GrSolidificationResponse {
     cet: {
       modelId: "SYNTHETIC", equation: "G^n/V = a*[...]^n", equationVerified: false, equationLocator: null, phiColumnar: 0.0066,
       phiEquiaxed: 0.49, note: "SYNTHETIC",
-      constantsStatus: { status: "unavailable", reason: CET_REASON, candidateSources: [] },
+      constantsStatus: { status: "unavailable", reason: CET_REASON, sets: [], candidateSources: [] },
     },
     laves: { modelId: "SYNTHETIC", k_e: 0.45, C_e_wt: 23.1, Nb_nominal_wt: 5.125, V_D_m_s: [0.23, 0.31], equilibriumKBound: 0.0647, basis: "SYNTHETIC" },
     materialEvidence: null,
@@ -99,6 +99,17 @@ test("checkedGrSolidification rejects dishonest or malformed responses", () => {
   const cases: Array<[string, (r: any) => void]> = [
     ["evidence kind", r => { r.evidence.kind = "validated"; }],
     ["experimentalValidation", r => { r.evidence.experimentalValidation = true; }],
+    ["cet sets missing", r => { delete r.cells[0].cet.sets; }],
+    ["unavailable cet that lists sets", r => { r.cells[0].cet.sets = { x: { label: "x", transferLabel: "t", locations: {} } }; }],
+    ["cet set without transfer label", r => {
+      r.cells[0].cet.status = "available"; r.cells[0].cet.reason = null;
+      r.cells[0].cet.sets = { x: { label: "x", transferLabel: "", locations: {} } };
+    }],
+    ["constants status without sets", r => { delete r.cet.constantsStatus.sets; }],
+    ["constants set without transfer label", r => {
+      r.cet.constantsStatus.status = "available";
+      r.cet.constantsStatus.sets = [{ id: "x", transferLabel: "", citation: "c", equationVerified: false, constants: {} }];
+    }],
     ["cet status outside the set", r => { r.cells[0].cet.status = "estimated"; }],
     ["unknown cell status", r => { r.cells[0].status = "great"; }],
     ["cell count", r => { r.cells.pop(); }],
@@ -173,4 +184,68 @@ test("the card starts empty: no result and IN718 prefilled with the default 7 x 
   assert.match(html, /value="60"/);
   assert.match(html, /value="450"/);
   assert.match(html, /Nothing runs until you click Compute/);
+});
+
+function in718CetFixture(): GrSolidificationResponse {
+  const r = clone();
+  const bands = (g: number) => ({
+    bottom: { band: "columnar", G_columnar_K_m: g, G_equiaxed_K_m: g / 5 },
+    median: { band: "columnar", G_columnar_K_m: g * 2, G_equiaxed_K_m: g / 2 },
+    tail: null,
+  });
+  const constant = (value: number, unit: string, locator: string) => ({ value, unit, source: "SYNTHETIC", locator, verified: true });
+  const set = (id: string, label: string, verified: boolean) => ({
+    id, label, transferLabel: "EBM-calibrated, transferred to LPBF", caveat: "SYNTHETIC caveat about the transfer", citation: "SYNTHETIC citation",
+    equationVerified: verified, equationLocator: "SYNTHETIC locator", note: "SYNTHETIC note",
+    constants: { a: constant(4.5, "K^n s/m", "SYNTHETIC loc"), n: constant(2, "-", "SYNTHETIC loc"), N0: constant(2.65e14, "m^-3", "SYNTHETIC loc") },
+  });
+  for (const cell of r.cells) {
+    if (cell.status !== "available") continue;
+    cell.cet = {
+      status: "available", reason: null, locations: { bottom: null, median: null, tail: null },
+      sets: {
+        setA: { label: "SYNTHETIC set A", transferLabel: "EBM-calibrated, transferred to LPBF", locations: bands(1e5) },
+        setB: { label: "SYNTHETIC set B", transferLabel: "EBM-calibrated, transferred to LPBF", locations: bands(7e5) },
+      },
+    };
+  }
+  r.cet.equationVerified = false;
+  r.cet.constantsStatus = {
+    status: "available", reason: null, candidateSources: [],
+    sets: [set("setA", "SYNTHETIC set A", true), set("setB", "SYNTHETIC set B", false)],
+    referenceOnly: { label: "SYNTHETIC reference only", source: "S", locator: "SYNTHETIC ref locator", constants: set("r", "r", false).constants },
+  };
+  return r;
+}
+
+test("IN718 sets validate and the card shows both sets with source, transfer caveat and the boundary", () => {
+  const r = in718CetFixture();
+  checkedGrSolidification(r);
+  const html = renderToStaticMarkup(<GrSolidificationMapCard initialResult={r} />);
+  assert.match(html, /data-testid="gr-cet-source-setA"/);
+  assert.match(html, /data-testid="gr-cet-source-setB"/);
+  assert.match(html, /EBM-calibrated, transferred to LPBF/);
+  assert.match(html, /SYNTHETIC caveat about the transfer/);
+  assert.match(html, /SYNTHETIC citation/);
+  assert.match(html, /Checked against printed limits: yes/);
+  assert.match(html, /Checked against printed limits: no/);
+  assert.match(html, /SYNTHETIC reference only/);
+  assert.match(html, /Gäumann 2001 PDF read: no/);
+  assert.match(html, /not a CET prediction/);
+  const detail = renderToStaticMarkup(<GrCellDetail body={r.cells![0]} result={r} />);
+  assert.match(detail, /data-testid="gr-cet-set-setA"/);
+  assert.match(detail, /data-testid="gr-cet-set-setB"/);
+  assert.match(detail, /columnar above G/);
+  assert.match(detail, /EBM-calibrated, transferred to LPBF/);
+});
+
+test("without sets (IN625) the card shows no CET boundary and the unavailable reason", () => {
+  const html = renderToStaticMarkup(<GrSolidificationMapCard initialResult={fixture()} />);
+  assert.doesNotMatch(html, /columnar above G/);
+  assert.doesNotMatch(html, /data-testid="gr-cet-sets"/);
+  const f = fixture();
+  const detail = renderToStaticMarkup(<GrCellDetail body={f.cells![0]} result={f} />);
+  assert.doesNotMatch(detail, /columnar above G/);
+  assert.match(detail, /CET: unavailable/);
+  assert.match(html, /CET: unavailable/);
 });

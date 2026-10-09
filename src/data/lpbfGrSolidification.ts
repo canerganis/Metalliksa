@@ -232,6 +232,13 @@ function checkBody(where: string, body: unknown): void {
     return fail(`${where}.cet.status must be "available" or "unavailable"`);
   }
   if (cet.status === "unavailable" && (typeof cet.reason !== "string" || !cet.reason)) return fail(`${where}.cet is unavailable without a reason`);
+  if (!isObject(cet.sets)) return fail(`${where}.cet.sets missing`);
+  if (cet.status === "unavailable" && Object.keys(cet.sets).length > 0) return fail(`${where}.cet is unavailable but lists sets`);
+  for (const [id, set] of Object.entries(cet.sets)) {
+    if (!isObject(set) || typeof set.label !== "string" || typeof set.transferLabel !== "string" || !set.transferLabel || !isObject(set.locations)) {
+      return fail(`${where}.cet.sets.${id} invalid`);
+    }
+  }
   const laves = body.laves;
   if (!isObject(laves) || (laves.status !== "available" && laves.status !== "unavailable")) return fail(`${where}.laves.status invalid`);
   if (laves.status === "available") {
@@ -271,6 +278,14 @@ export function checkedGrSolidification(raw: unknown): GrSolidificationResponse 
   if (!isObject(cet) || typeof cet.equation !== "string" || typeof cet.equationVerified !== "boolean") return fail("cet criterion view missing");
   const constants = cet.constantsStatus;
   if (!isObject(constants) || (constants.status !== "available" && constants.status !== "unavailable")) return fail("cet.constantsStatus invalid");
+  if (!Array.isArray(constants.sets)) return fail("cet.constantsStatus.sets missing");
+  if (constants.status === "unavailable" && constants.sets.length > 0) return fail("cet.constantsStatus is unavailable but lists sets");
+  for (const set of constants.sets as unknown[]) {
+    if (!isObject(set) || typeof set.id !== "string" || typeof set.transferLabel !== "string" || !set.transferLabel || typeof set.citation !== "string"
+      || typeof set.equationVerified !== "boolean" || !isObject(set.constants)) {
+      return fail("cet.constantsStatus.sets entry invalid");
+    }
+  }
   const laves = raw.laves;
   if (!isObject(laves) || !isFiniteNumber(laves.equilibriumKBound) || !Array.isArray(laves.V_D_m_s)) return fail("laves summary missing");
   if (!isFiniteNumber(raw.computeMs)) return fail("computeMs missing");

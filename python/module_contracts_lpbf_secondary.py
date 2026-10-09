@@ -240,8 +240,8 @@ def build_solidification_microstructure_contract(seed: Mapping[str, str]) -> Mod
             "mode, or powers and speeds (2-15 strictly increasing values each, at most 225 cells) for map mode. IN718 map "
             "axes default to the 11 x 11 literature-box range of the process window; IN625 has no box and its omission is "
             "refused. G and R are copied from the frozen Rosenthal solver through project_build_job_microstructure; "
-            "status per cell is available, screening-fallback, degenerate-floor, unavailable or error. CET constants for "
-            "IN718 and IN625 are unavailable (cet.status 'unavailable' with a reason); the Laves numbers are a binary "
+            "status per cell is available, screening-fallback, degenerate-floor, unavailable or error. CET constants: two sourced IN718 sets (EBM-calibrated, transferred to LPBF) "
+            "and none for IN625 (cet.status unavailable with a reason); the Laves numbers are a binary "
             "Aziz-trapped Scheil upper bound over the sampled rear arc. The response carries an evidence object (not "
             "listed in the output fields: the SDK reserves that name) with kind 'screening-only' and "
             "experimentalValidation false.",
