@@ -6,7 +6,12 @@
  */
 import React, { useEffect, useState } from 'react';
 import { ArrowRight, Pause, Play, Search } from 'lucide-react';
-import { CORE_FLOW, CORE_MODULE_IDS, LAB_MODULES, MATURITY_BADGE_TITLE, MODULES, WORKSPACES, type ModuleId, type ModuleScope } from '../data/workspaces';
+import { CORE_FLOW, CORE_MODULE_IDS, LAB_MODULES as ALL_LAB_MODULES, MATURITY_BADGE_TITLE, MODULES as ALL_MODULES, WORKSPACES, type ModuleId, type ModuleScope } from '../data/workspaces';
+import { IS_STATIC_DEMO } from '../demo/flag.ts';
+import { visibleModules } from '../demo/demoGate.ts';
+// Static demo: only the allowlisted modules are listed (compile-time constant, a normal build keeps the full registry).
+const MODULES = IS_STATIC_DEMO ? visibleModules(ALL_MODULES) : ALL_MODULES;
+const LAB_MODULES = IS_STATIC_DEMO ? visibleModules(ALL_LAB_MODULES) : ALL_LAB_MODULES;
 import type { PythonEngineStatus } from '../services/pythonComputationService';
 import { FoundryStage } from './FoundryStage';
 import '../styles/foundry.css';

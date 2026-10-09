@@ -14,3 +14,22 @@ export const DEMO_MODULES: readonly string[] = [
 export function isDemoModule(id: string): boolean {
   return DEMO_MODULES.includes(id);
 }
+
+/**
+ * Panel boundaries inside the shown modules (docs/DEMO_STATIC_DESIGN.md section 5). `shown` panels render
+ * recorded output; `unavailable` panels render the "Not available in the static demo." note instead.
+ * 3d-distortion-lab ids are workflow stage ids plus "specialists" (the Melt pool 3D specialist lab);
+ * lpbf-optimizer ids are its tab ids.
+ */
+export const DEMO_PANELS: Readonly<Record<string, { readonly shown: readonly string[]; readonly unavailable: readonly string[] }>> = {
+  '3d-distortion-lab': {
+    shown: ['setup', 'material', 'thermal', 'melt-pool', 'qualification'],
+    unavailable: ['defects', 'build', 'comparison', 'specialists'],
+  },
+  'lpbf-optimizer': { shown: ['window'], unavailable: ['search', 'plan'] },
+};
+
+/** True when the panel is rendered in the demo. Unknown modules and panels are not shown. */
+export function isDemoPanelShown(moduleId: string, panelId: string): boolean {
+  return DEMO_PANELS[moduleId]?.shown.includes(panelId) ?? false;
+}

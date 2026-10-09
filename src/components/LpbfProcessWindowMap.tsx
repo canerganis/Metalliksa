@@ -12,6 +12,11 @@ import { LITERATURE_PV_WINDOWS } from "../utils/lpbfFourAlloySchema";
 import { resolveOptimizerAlloy } from "../utils/lpbfOptimizerAlloy";
 import { COMMITTED_ERROR_BANDS, bandSubjectFromProcessWindowCell, type ErrorBandsSummary } from "../data/lpbfErrorBands";
 import { PublishedTrackBands } from "./PublishedTrackBands";
+import { IS_STATIC_DEMO } from "../demo/flag.ts";
+import { DEMO_LOCK } from "../demo/demoGate.ts";
+
+// Static demo: the grid feeds a recorded snapshot, so its axes are locked to the recorded values (compile-time constant).
+const lock: { disabled?: boolean; title?: string } = IS_STATIC_DEMO ? DEMO_LOCK : {};
 import {
   HATCH_PATTERN_ID,
   PROCESS_WINDOW_BEAM_TOLERANCE_PCT,
@@ -674,17 +679,17 @@ export const LpbfProcessWindowMap: React.FC = () => {
             <fieldset className="space-y-1">
               <legend className="mb-1 text-slate-400">Laser power (W)</legend>
               <div className="flex gap-2">
-                <input aria-label="Power minimum (W)" type="number" inputMode="decimal" value={pMin} onChange={e => setPMin(e.target.value)} className={input} />
-                <input aria-label="Power maximum (W)" type="number" inputMode="decimal" value={pMax} onChange={e => setPMax(e.target.value)} className={input} />
-                <input aria-label="Power points" type="number" min={2} max={15} value={pN} onChange={e => setPN(e.target.value)} className="aero-input w-20" />
+                <input {...lock} aria-label="Power minimum (W)" type="number" inputMode="decimal" value={pMin} onChange={e => setPMin(e.target.value)} className={input} />
+                <input {...lock} aria-label="Power maximum (W)" type="number" inputMode="decimal" value={pMax} onChange={e => setPMax(e.target.value)} className={input} />
+                <input {...lock} aria-label="Power points" type="number" min={2} max={15} value={pN} onChange={e => setPN(e.target.value)} className="aero-input w-20" />
               </div>
             </fieldset>
             <fieldset className="space-y-1">
               <legend className="mb-1 text-slate-400">Scan speed (mm/s)</legend>
               <div className="flex gap-2">
-                <input aria-label="Speed minimum (mm/s)" type="number" inputMode="decimal" value={vMin} onChange={e => setVMin(e.target.value)} className={input} />
-                <input aria-label="Speed maximum (mm/s)" type="number" inputMode="decimal" value={vMax} onChange={e => setVMax(e.target.value)} className={input} />
-                <input aria-label="Speed points" type="number" min={2} max={15} value={vN} onChange={e => setVN(e.target.value)} className="aero-input w-20" />
+                <input {...lock} aria-label="Speed minimum (mm/s)" type="number" inputMode="decimal" value={vMin} onChange={e => setVMin(e.target.value)} className={input} />
+                <input {...lock} aria-label="Speed maximum (mm/s)" type="number" inputMode="decimal" value={vMax} onChange={e => setVMax(e.target.value)} className={input} />
+                <input {...lock} aria-label="Speed points" type="number" min={2} max={15} value={vN} onChange={e => setVN(e.target.value)} className="aero-input w-20" />
               </div>
             </fieldset>
           </div>

@@ -10,7 +10,10 @@ import { AccessibleModal } from "./AccessibleModal";
 import { FoundryStage } from "./FoundryStage";
 import { fetchRuntimeConfig, runtimeConfigProbe } from "./AirgapBanner";
 import { pythonComputationService } from "../services/pythonComputationService";
-import { MODULES } from "../data/workspaces";
+import { MODULES as ALL_MODULES } from "../data/workspaces";
+import { IS_STATIC_DEMO } from '../demo/flag.ts';
+import { visibleModules } from '../demo/demoGate.ts';
+const MODULES = IS_STATIC_DEMO ? visibleModules(ALL_MODULES) : ALL_MODULES;
 import { getBootController } from "../services/bootSteps";
 import { setBootOverlayOpen } from "../utils/bootOverlay";
 import {
