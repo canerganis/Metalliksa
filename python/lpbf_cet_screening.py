@@ -96,6 +96,7 @@ CET_SETS: Dict[str, Dict[str, Dict[str, Any]]] = {
             "verifiedBy": "Printed G^2R limits reproduced: 1.52e11 at phi 0.0066 and 6.98e9 at phi 0.49 (p. 515).",
             "phiColumnar": 0.0066,
             "phiEquiaxed": 0.49,
+            "phiSource": "Hunt 1984 critical values as used in Knapp 2019 p. 514; limits printed p. 515",
             "constants": {
                 "a": _c(4.5, "K^n s/m", "KN19", "p. 515, constants (top of left column)", verified=True),
                 "n": _c(2.0, "-", "KN19", "p. 515, constants (top of left column)", verified=True),
@@ -115,6 +116,7 @@ CET_SETS: Dict[str, Dict[str, Dict[str, Any]]] = {
             "verifiedBy": None,
             "phiColumnar": 0.0066,
             "phiEquiaxed": 0.49,
+            "phiSource": "Hunt 1984 via Knapp 2019 p. 514; not stated by Polonsky 2020",
             "constants": {
                 "a": _c(1.23e5, "K^n s/m", "PO20", "Sec 3.3, Eq. 5, Table 2 (paper prints the unit as m s/K^n, a typo; "
                         "Eq. 5 needs K^n s/m)", verified=True),

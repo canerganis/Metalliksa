@@ -59,6 +59,7 @@ export interface GrCetSet {
   osti?: string;
   equationVerified: boolean;
   equationLocator: string | null;
+  phiSource: string;
   note: string;
   constants: Record<"a" | "n" | "N0", GrCetConstant>;
 }

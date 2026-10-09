@@ -121,6 +121,15 @@ class CetTests(unittest.TestCase):
         self.assertEqual(po["a"]["unit"], "K^n s/m")
         self.assertIn("lower", po["N0"]["locator"])
 
+    def test_phi_source_on_every_set(self):
+        sets = {x["id"]: x for x in cet.cet_constants("in718")["sets"]}
+        for entry in sets.values():
+            self.assertTrue(entry["phiSource"])
+            self.assertIn("Hunt 1984", entry["phiSource"])
+        self.assertEqual(sets["polonsky2020"]["phiSource"],
+                         "Hunt 1984 via Knapp 2019 p. 514; not stated by Polonsky 2020")
+        self.assertIn("Knapp 2019 p. 514", sets["knapp2019"]["phiSource"])
+
     def test_equation_verified_only_for_knapp(self):
         sets = cet.CET_SETS["in718"]
         self.assertIs(sets["knapp2019"]["equationVerified"], True)

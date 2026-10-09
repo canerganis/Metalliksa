@@ -281,7 +281,7 @@ export function checkedGrSolidification(raw: unknown): GrSolidificationResponse 
   if (!Array.isArray(constants.sets)) return fail("cet.constantsStatus.sets missing");
   if (constants.status === "unavailable" && constants.sets.length > 0) return fail("cet.constantsStatus is unavailable but lists sets");
   for (const set of constants.sets as unknown[]) {
-    if (!isObject(set) || typeof set.id !== "string" || typeof set.transferLabel !== "string" || !set.transferLabel || typeof set.citation !== "string"
+    if (!isObject(set) || typeof set.id !== "string" || typeof set.transferLabel !== "string" || !set.transferLabel || typeof set.citation !== "string" || typeof set.phiSource !== "string" || !set.phiSource
       || typeof set.equationVerified !== "boolean" || !isObject(set.constants)) {
       return fail("cet.constantsStatus.sets entry invalid");
     }

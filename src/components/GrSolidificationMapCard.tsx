@@ -453,6 +453,7 @@ export const GrSolidificationMapCard: React.FC<Props> = ({ initialResult = null 
                     <p>{set.citation}{set.doi ? `, DOI ${set.doi}` : ""}{set.osti ? `, OSTI ${set.osti}` : ""}.</p>
                     <p>Constants: {set.constants.n.locator}.</p>
                     <p>Equation form {set.equationLocator ?? "locator not set"}. Checked against printed limits: {set.equationVerified ? "yes" : "no"}.</p>
+                    <p data-testid={`gr-cet-phi-source-${set.id}`}>Critical phi source: {set.phiSource}.</p>
                     <p>{set.note}</p>
                     <p className="text-amber-200/80">{set.caveat}</p>
                   </li>

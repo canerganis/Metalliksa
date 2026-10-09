@@ -110,6 +110,10 @@ test("checkedGrSolidification rejects dishonest or malformed responses", () => {
       r.cet.constantsStatus.status = "available";
       r.cet.constantsStatus.sets = [{ id: "x", transferLabel: "", citation: "c", equationVerified: false, constants: {} }];
     }],
+    ["constants set without phiSource", r => {
+      r.cet.constantsStatus.status = "available";
+      r.cet.constantsStatus.sets = [{ id: "x", transferLabel: "t", citation: "c", equationVerified: false, constants: {} }];
+    }],
     ["cet status outside the set", r => { r.cells[0].cet.status = "estimated"; }],
     ["unknown cell status", r => { r.cells[0].status = "great"; }],
     ["cell count", r => { r.cells.pop(); }],
@@ -196,7 +200,7 @@ function in718CetFixture(): GrSolidificationResponse {
   const constant = (value: number, unit: string, locator: string) => ({ value, unit, source: "SYNTHETIC", locator, verified: true });
   const set = (id: string, label: string, verified: boolean) => ({
     id, label, transferLabel: "EBM-calibrated, transferred to LPBF", caveat: "SYNTHETIC caveat about the transfer", citation: "SYNTHETIC citation",
-    equationVerified: verified, equationLocator: "SYNTHETIC locator", note: "SYNTHETIC note",
+    equationVerified: verified, equationLocator: "SYNTHETIC locator", phiSource: "SYNTHETIC phi source", note: "SYNTHETIC note",
     constants: { a: constant(4.5, "K^n s/m", "SYNTHETIC loc"), n: constant(2, "-", "SYNTHETIC loc"), N0: constant(2.65e14, "m^-3", "SYNTHETIC loc") },
   });
   for (const cell of r.cells) {
@@ -227,6 +231,7 @@ test("IN718 sets validate and the card shows both sets with source, transfer cav
   assert.match(html, /EBM-calibrated, transferred to LPBF/);
   assert.match(html, /SYNTHETIC caveat about the transfer/);
   assert.match(html, /SYNTHETIC citation/);
+  assert.match(html, /Critical phi source: SYNTHETIC phi source/);
   assert.match(html, /Checked against printed limits: yes/);
   assert.match(html, /Checked against printed limits: no/);
   assert.match(html, /SYNTHETIC reference only/);
