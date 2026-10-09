@@ -58,7 +58,7 @@ Needs Node >= 22.13 and Python 3.11 or 3.12. Details are in [Quick start](#quick
 
 - **Keyhole benchmark:** screening compared with published X-ray measurements shows substantial regime and depth mismatches. It is a comparison, not a validation. [Benchmark and methods](docs/LPBF_KEYHOLE_BENCHMARK_2026-10-07.md).
 - **Calibration v2 scorecard:** pre-registered; no cell is enabled. [Scorecard](docs/LPBF_CALIBRATION_SCORECARD_v2_2026-10-07.md) and [pre-registration](docs/LPBF_CALIBRATION_V2_PREREGISTRATION_2026-10-07.md).
-- **Depth transfer between labs could not be shown on the datasets examined:** held-out depth errors are large and differ by source and alloy, so the app shows typical published-data error instead of a calibrated band. See the [held-out evaluation](docs/LPBF_CALIBRATION_HELDOUT_2026-10-06.md) and [PROOF.md](PROOF.md).
+- **Depth transfer between labs could not be shown on the datasets examined:** held-out depth errors are large and differ by source and alloy, so the app shows typical published-data error instead of a calibrated band. See the [held-out evaluation](docs/LPBF_CALIBRATION_HELDOUT_2026-10-06.md) and [PROOF.md](PROOF.md). The pre-declared depth experiments (Fabbro piston model, FV evaporation) and their gate results are on the research/depth branch: https://github.com/canerganis/metalliksa/tree/research/depth
 - `experimentalValidation=false`. More in [Evidence and limits](#evidence-and-limits).
 
 ---

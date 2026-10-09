@@ -77,7 +77,7 @@ def build_lpbf_optimizer_contract(seed: Mapping[str, str]) -> ModuleContract:
         output=OutputSchema(
             fields=("success", "error", "errorKind", "alloyId", "bestParams", "bestVerdict", "noPositiveScore", "bestScore",
                     "verdictCounts", "nInconclusive", "iterations", "converged", "elapsedMs", "nIterations", "nWarmup",
-                    "surrogateSteps", "beamDiameter_um", "preheatTemp_C", "objective"),
+                    "surrogateSteps", "beamDiameter_um", "preheatTemp_C", "objective", "gateSummary", "keyholeGateNote"),
             status_key=None,
         ),
     )
@@ -107,7 +107,7 @@ def build_lpbf_optimizer_contract(seed: Mapping[str, str]) -> ModuleContract:
             "The view submits only on Run Optimization. Its body is alloyId (a solver alloy key derived from the "
             "active material name by src/utils/lpbfOptimizerAlloy.ts), nested paramBounds for laserPower_W (W), "
             "scanSpeed_mms (mm/s), hatch_um (µm), layer_um (µm), nIterations, nWarmup, beamDiameter_um (default 80 µm), "
-            "preheatTemp_C (default 80 °C) and seed=42. Initial UI intervals are [100,500], [200,2000], [60,200] "
+            "preheatTemp_C (default 80 degC) and seed=42. Initial UI intervals are [100,500], [200,2000], [60,200] "
             "and [20,80]. These inputs remain undeclared rather than inventing a nested schema.",
             "alloyId is required and must resolve through four_alloy_materials; a missing or unknown alloy is refused "
             "with errorKind 'validation' (HTTP 422 via server/pythonDispatchStatus.ts) and no fallback alloy is used. "
@@ -120,7 +120,9 @@ def build_lpbf_optimizer_contract(seed: Mapping[str, str]) -> ModuleContract:
             "(printable 1, risky 0.5, do-not-print 0, inconclusive/geometry-unresolved 0) times normalised v*h. When no "
             "candidate scores above 0 the result has bestParams=null and noPositiveScore=true. bestScore and the UI's "
             "best candidate are heuristic software outputs, not a qualified process recommendation, experimental result "
-            "or validated optimum.",
+            "or validated optimum. "
+            "The optimizer output is a suggestion, not a qualified window: a printable verdict from the screening "
+            "model is not a qualified or validated parameter set.",
             "process-window (first tab of the lab, nothing runs until Compute): POST /api/python/lpbf-process-window "
             "evaluates the same calculate_meltpool_physics -> compose_verdict pair as the optimizer objective on a "
             "power x speed grid (default 11 x 11 over 0.5 x literature-box minimum to 1.5 x maximum; 2-15 values per "

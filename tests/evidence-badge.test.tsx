@@ -14,7 +14,7 @@ const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.ur
 
 test('the badge shows exactly the contract ceiling and no stronger evidence class', () => {
   const contracted = MODULE_CONTRACTS.filter(contract => contract.migrationState === 'contracted');
-  assert.deepEqual(contracted.map(contract => contract.id), ['keyhole-raytracing', 'lpbf-dataset-comparison', 'lpbf-calibration-scorecard', 'database', 'phase-diagram', 'experimental-data', 'traceability']);
+  assert.deepEqual(contracted.map(contract => contract.id), ['lpbf-optimizer', 'keyhole-raytracing', 'lpbf-dataset-comparison', 'lpbf-calibration-scorecard', 'database', 'phase-diagram', 'experimental-data', 'traceability']);
   for (const contract of contracted) {
     const html = renderToStaticMarkup(<EvidenceBadge moduleId={contract.id} />);
     const ceiling = contract.evidence.ceiling;
