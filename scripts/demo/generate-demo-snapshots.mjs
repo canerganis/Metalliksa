@@ -58,7 +58,8 @@ export function normaliseResponse(kind, response) {
   }
   if (kind === 'job') {
     const oldId = copy.id;
-    const newId = `demo-${String(copy.cache_key).slice(0, 16)}`;
+    // The app only accepts job ids of 32 lower case hex characters (parseSimulationJob), so the id is the cache key prefix.
+    const newId = String(copy.cache_key).slice(0, 32);
     copy.created = 0; touched.add('created=0');
     copy.cacheHit = false; touched.add('cacheHit=false');
     if (copy.result?.provenance) {
@@ -70,7 +71,7 @@ export function normaliseResponse(kind, response) {
         if ('platform' in rt) { rt.platform = 'redacted-local-host'; touched.add('executionRuntime.platform redacted'); }
       }
     }
-    touched.add('id=demo-<cache_key prefix>');
+    touched.add('id=cache_key[0:32]');
     const text = JSON.stringify(copy).split(oldId).join(newId);
     return { response: JSON.parse(text), normalised: [...touched].sort(), jobId: newId };
   }

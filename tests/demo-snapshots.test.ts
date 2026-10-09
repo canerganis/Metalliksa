@@ -104,13 +104,14 @@ test('normaliseResponse removes only the run-specific fields and lists them', ()
     },
   };
   const out = normaliseResponse('job', job);
-  assert.equal(out.jobId, 'demo-ffffffffffffffff');
+  assert.equal(out.jobId, 'f'.repeat(32));
+  assert.match(out.jobId, /^[a-f0-9]{32}$/, 'the job id passes the app job id check');
   assert.equal(out.response.id, out.jobId);
   assert.equal(out.response.created, 0);
   assert.equal(out.response.result.metrics.width_um, 100.5, 'result numbers are never touched');
   assert.equal(out.response.result.provenance.executionRuntime.python, '3.12.10');
   assert.equal(out.response.result.provenance.executionRuntime.executable, 'redacted-local-path');
-  assert.match(out.response.result.artifacts[0].path, /demo-ffffffffffffffff/);
+  assert.match(out.response.result.artifacts[0].path, /\/api\/lpbf\/jobs\/f{32}\/artifacts/);
 });
 
 test('sortKeys gives stable output and drops undefined', () => {
