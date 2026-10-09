@@ -646,13 +646,13 @@ test("activity card shows the SER basis and the literature source when the engin
     activityReferenceStates: {
       ...base.activityReferenceStates,
       TI: { ...base.activityReferenceStates!.TI, basis: "SER unary function GHSERTI", referenceFunction: "GHSERTI",
-        referenceSource: "SGTE unary data, Dinsdale (1991) CALPHAD 15:317" },
+        referenceSource: "SYNTHETIC source string, carried by this database FUNCTION" },
     },
   } as PythonCalphadSolveResult;
   const text = textOf(renderToStaticMarkup(
     <CALPHADMultiComponentStudio initialResult={withBasis} initialSubTab="gibbs_energy" />));
   assert.match(text, /Basis: SER unary function GHSERTI/);
-  assert.match(text, /Reference: Dinsdale 1991, CALPHAD 15:317, doi:10\.1016\/0364-5916\(91\)90030-N/);
+  assert.match(text, /Reference: SYNTHETIC source string, carried by this database FUNCTION/);
 });
 
 test("activity card shows no basis or source line when the engine reports none", () => {

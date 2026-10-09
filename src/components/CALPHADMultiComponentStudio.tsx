@@ -1450,7 +1450,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
                         )}
                         {refState?.referenceSource && (
                           <div className="text-[10px] text-slate-500" data-testid={`activity-source-${elem}`}>
-                            Reference: Dinsdale 1991, CALPHAD 15:317, doi:10.1016/0364-5916(91)90030-N
+                            Reference: {refState.referenceSource}
                           </div>
                         )}
                         <div className="text-slate-400">
