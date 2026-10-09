@@ -12,7 +12,10 @@
  */
 import React from 'react';
 
-export const FOUNDRY_ART = '/images/metalliksa-melt-pool.svg';
+export const FOUNDRY_ART = 'images/metalliksa-melt-pool.svg';
+// Under a base path (static demo: /metalliksa/) the art path is relative to the base (BASE_URL ends with a slash). Tests (tsx) have no import.meta.env.
+const BASE_URL = (import.meta as {env?: {BASE_URL?: string}}).env?.BASE_URL ?? '/';
+const foundryArtSrc = BASE_URL + FOUNDRY_ART;
 const SPARKS = 14;
 
 export function FoundryStage({ className = '', caption, paused = false, sparks = false, children }: {
@@ -25,7 +28,7 @@ export function FoundryStage({ className = '', caption, paused = false, sparks =
     <div className={`mk-foundry-host ${className}`}>
       <div className={`mk-foundry${paused ? ' is-paused' : ''}`}>
         <div className="f-frame">
-          <img className="f-art" src={FOUNDRY_ART} alt="" aria-hidden="true" decoding="async" draggable={false} />
+          <img className="f-art" src={foundryArtSrc} alt="" aria-hidden="true" decoding="async" draggable={false} />
           <span className="f-sheen" aria-hidden="true" />
           <span className="f-beam" aria-hidden="true" />
           <span className="f-rings" aria-hidden="true"><i /><i /><i /></span>

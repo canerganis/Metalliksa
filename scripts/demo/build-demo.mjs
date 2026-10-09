@@ -2,7 +2,7 @@
 // Snapshots live in demo/snapshots/ (outside public/, so a normal build never copies them) and are
 // copied into dist-demo/demo-snapshots/ here and nowhere else.
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -25,4 +25,16 @@ if (existsSync(snapshots)) {
   console.log('Copied demo/snapshots to dist-demo/demo-snapshots');
 } else {
   console.warn('demo/snapshots does not exist: dist-demo has no snapshots (every API call will report "Not available in the static demo.").');
+}
+
+// public/manifest.json has root-absolute start_url and icon paths. Under a project Pages base they would point at the
+// user site root, so the demo copy is rewritten to the base path (dist-demo only; public/ is untouched).
+const manifestPath = path.join(outDir, 'manifest.json');
+if (existsSync(manifestPath)) {
+  const base = process.env.VITE_BASE_PATH || '/metalliksa/';
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  manifest.start_url = base;
+  manifest.scope = base;
+  for (const icon of manifest.icons ?? []) if (typeof icon.src === 'string' && icon.src.startsWith('/')) icon.src = base + icon.src.slice(1);
+  writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 }
