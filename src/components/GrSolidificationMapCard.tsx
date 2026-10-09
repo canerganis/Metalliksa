@@ -41,7 +41,7 @@ const panelClass = "rounded-2xl border border-white/10 bg-[#111b25] shadow-[0_18
 const inputClass = "w-full rounded-lg border border-white/10 bg-[#0b141d] px-2.5 py-2 font-mono text-sm text-slate-100 outline-none transition focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/10";
 
 export const GR_BANNER_TEXT =
-  "Screening only. Conduction-field G/R from the frozen Rosenthal model; Hunt bands are uncalibrated; CET constants unavailable for this alloy; not a grain-structure prediction.";
+  "Screening only. Conduction-field G/R from the frozen Rosenthal model; Hunt bands are uncalibrated; CET boundaries exist for IN718 only (EBM-calibrated, transferred to LPBF) and no CET constants are sourced for IN625; not a grain-structure prediction.";
 
 interface FormState {
   alloyId: GrAlloyId;
@@ -261,7 +261,29 @@ export const GrCellDetail: React.FC<{ body: (GrCellBody & { power_W: number; spe
       <div data-testid="gr-detail-cet" className="text-xs">
         <p className="font-semibold text-slate-400">CET: {body.cet.status}</p>
         {body.cet.status === "unavailable" ? <p>{body.cet.reason}</p> : (
-          <ul className="list-disc pl-5">{(["bottom", "median", "tail"] as const).map(k => <li key={k}>{k}: {body.cet.locations[k]?.band ?? "n/a"}</li>)}</ul>
+          Object.keys(body.cet.sets).length === 0 ? (
+            <ul className="list-disc pl-5">{(["bottom", "median", "tail"] as const).map(k => <li key={k}>{k}: {body.cet.locations[k]?.band ?? "n/a"}</li>)}</ul>
+          ) : (
+            <div className="space-y-2">
+              {Object.entries(body.cet.sets).map(([id, set]) => (
+                <div key={id} data-testid={`gr-cet-set-${id}`}>
+                  <p className="text-slate-300">{set.label}</p>
+                  <p className="text-slate-500">{set.transferLabel}</p>
+                  <ul className="list-disc pl-5">
+                    {(["bottom", "median", "tail"] as const).map(k => {
+                      const loc = set.locations[k];
+                      return (
+                        <li key={k}>
+                          {k}: {loc?.band ?? "n/a"}
+                          {loc ? <span className="font-mono"> (columnar above G {fmtNum(loc.G_columnar_K_m)} K/m, equiaxed below G {fmtNum(loc.G_equiaxed_K_m)} K/m)</span> : null}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )
         )}
       </div>
       <div data-testid="gr-detail-laves" className="text-xs">
@@ -419,9 +441,29 @@ export const GrSolidificationMapCard: React.FC<Props> = ({ initialResult = null 
           </div>
           <div className="border-t border-white/[.07] pt-3 text-xs text-slate-400" data-testid="gr-cet-status">
             <p className="font-semibold">Columnar-to-equiaxed transition</p>
-            <p>{result.cet.constantsStatus.status === "unavailable" ? `CET: unavailable. ${result.cet.constantsStatus.reason ?? ""}` : "CET constants are available."}</p>
-            <p className="mt-1">Morphology labels on this map are the Hunt G/R screening band (uncalibrated), not a CET prediction.</p>
-            <p className="mt-1">Equation {result.cet.equation}. Verified against the source PDF: {result.cet.equationVerified ? "yes" : "no"}.</p>
+            <p>{result.cet.constantsStatus.status === "unavailable" ? `CET: unavailable. ${result.cet.constantsStatus.reason ?? ""}` : "CET: sourced constant sets are available for this alloy."}</p>
+            {result.cet.constantsStatus.sets.length > 0 ? (
+              <ul className="mt-1 space-y-2" data-testid="gr-cet-sets">
+                {result.cet.constantsStatus.sets.map(set => (
+                  <li key={set.id} data-testid={`gr-cet-source-${set.id}`}>
+                    <p className="text-slate-300">{set.label}. {set.transferLabel}.</p>
+                    <p className="font-mono">
+                      n {set.constants.n.value}, a {fmtNum(set.constants.a.value)} {set.constants.a.unit}, N0 {fmtNum(set.constants.N0.value)} {set.constants.N0.unit}
+                    </p>
+                    <p>{set.citation}{set.doi ? `, DOI ${set.doi}` : ""}{set.osti ? `, OSTI ${set.osti}` : ""}.</p>
+                    <p>Constants: {set.constants.n.locator}.</p>
+                    <p>Equation form {set.equationLocator ?? "locator not set"}. Checked against printed limits: {set.equationVerified ? "yes" : "no"}.</p>
+                    <p>{set.note}</p>
+                    <p className="text-amber-200/80">{set.caveat}</p>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {result.cet.constantsStatus.referenceOnly ? (
+              <p className="mt-1" data-testid="gr-cet-reference">{result.cet.constantsStatus.referenceOnly.label}: n {result.cet.constantsStatus.referenceOnly.constants.n.value}, a {fmtNum(result.cet.constantsStatus.referenceOnly.constants.a.value)}, N0 {fmtNum(result.cet.constantsStatus.referenceOnly.constants.N0.value)} ({result.cet.constantsStatus.referenceOnly.locator}).</p>
+            ) : null}
+            <p className="mt-1">Morphology labels on this map are the Hunt G/R screening band (uncalibrated), not a CET prediction. CET boundaries are shown in the cell detail beside it.</p>
+            <p className="mt-1">Equation {result.cet.equation}. Gäumann 2001 PDF read: {result.cet.equationVerified ? "yes" : "no"}.</p>
           </div>
           <details className="text-xs text-slate-400">
             <summary className="cursor-pointer font-semibold text-slate-300">Limits</summary>
