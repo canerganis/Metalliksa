@@ -25,6 +25,8 @@ export interface LpbfRunReportOptions {
   createdAt: string;
   /** SHA-256 hex of the exact embedded dossier bytes (see serializeLpbfRunReportDossier), or null when not computed. */
   dossierSha256: string | null;
+  /** Static demo only: the banner sentence (demoBannerText) placed in the header. Omitted in normal reports. */
+  staticDemoLine?: string | null;
 }
 
 const NOT_RECORDED = "Not recorded";
@@ -127,7 +129,7 @@ export function buildLpbfRunReportHtml(report: LpbfQualificationReport, extras: 
   const noScreening = "no build-job screening for the current inputs";
   const noResult = "no completed thermal simulation is attached";
 
-  const header = `<header><p class="muted">Metalliksa · ${escapeHtml(report.scope)} · schema version ${escapeHtml(report.schemaVersion)}</p><h1>LPBF run report</h1><p class="muted">${escapeHtml(report.reportType)} · created ${escapeHtml(options.createdAt)}</p>`
+  const header = `<header><p class="muted">Metalliksa · ${escapeHtml(report.scope)} · schema version ${escapeHtml(report.schemaVersion)}</p><h1>LPBF run report</h1><p class="muted">${escapeHtml(report.reportType)} · created ${escapeHtml(options.createdAt)}</p>${options.staticDemoLine ? `<p class="banner" role="note">${escapeHtml(options.staticDemoLine)}</p>` : ""}`
     + `<p class="banner" role="note">Evidence label: <span class="evidence-label">${escapeHtml(report.resultType)}</span> · Qualification status: <span class="qualification-status">${escapeHtml(report.qualificationStatus)}</span> · not experimental validation, not a production release or standards certificate.</p>`
     + `<p>${escapeHtml(report.resultDescription)}${stale ? ` <span class="badge">Stale</span>` : ""}</p></header>`;
 

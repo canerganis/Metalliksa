@@ -206,6 +206,7 @@ export default function App() {
     <div className="mk-grid-overlay" aria-hidden="true" />
     <div className="mk-scanline" aria-hidden="true" />
     <AirgapBanner />
+    {IS_STATIC_DEMO && <DemoBanner />}
     <header className="mk-header sticky top-0 z-40 border-b px-4 lg:px-6 py-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3"><button aria-label="Toggle workspace navigation" aria-expanded={navigationOpen} onClick={() => setNavigationOpen(v => !v)} className="lg:hidden mk-status px-3 py-2 text-xs">Modules</button><div className="contents"><div className="mk-brand-mark" role="img" aria-label="Metalliksa logo"><span className="mk-brand-laser" aria-hidden="true" /></div></div><div><h1 className="mk-brand-title">METALLIKSA</h1><p className="mk-brand-tag hidden lg:block">Research engineering workstation</p></div></div>
@@ -260,6 +261,7 @@ import { useGuidedDemoStore } from './store/useGuidedDemoStore';
 import { IS_STATIC_DEMO } from './demo/flag.ts';
 import { hiddenModuleRedirect, visibleModules as visibleDemoModules } from './demo/demoGate.ts';
 import { DemoRedirectNote } from './demo/demoNotes.tsx';
+import { DemoBanner } from './demo/demoBanner.tsx';
 import { isDemoModule } from './demo/demoModules.ts';
 
 let demoHiddenNoticePending = false;

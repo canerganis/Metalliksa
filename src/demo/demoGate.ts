@@ -46,3 +46,30 @@ export function fingerprintStatus(indexFingerprint: unknown, bundledHash: unknow
 export function hidesCalibrationViews(status: FingerprintStatus): boolean {
   return status === 'mismatch';
 }
+
+/** Repository link in the demo banner. The banner sentence itself is fixed (docs/DEMO_STATIC_DESIGN.md section 6). */
+export const DEMO_REPO_URL = 'https://github.com/canerganis/metalliksa';
+
+/** The index.json fields the banner and the report header read. Anything else in the index is ignored. */
+export interface SnapshotIndexInfo {
+  readonly appVersion?: unknown;
+  readonly gitCommit?: unknown;
+  readonly fingerprint?: unknown;
+}
+
+/**
+ * The exact banner sentence (section 6): "Static snapshot of version X, computed offline. Not live solver output."
+ * X is appVersion plus the short commit from index.json, for example "0.1.0 (d0f9795)". A missing or malformed
+ * field gives "unknown" for that part, never a made up value.
+ */
+export function demoBannerText(info: SnapshotIndexInfo | null | undefined): string {
+  const version = typeof info?.appVersion === 'string' && info.appVersion.trim() ? info.appVersion.trim() : 'unknown';
+  const commit = typeof info?.gitCommit === 'string' && info.gitCommit.trim() ? info.gitCommit.trim() : '';
+  const label = commit ? `${version} (${commit})` : version;
+  return `Static snapshot of version ${label}, computed offline. Not live solver output.`;
+}
+
+/** First eight characters of the recorded fingerprint, shown on hover in the banner. */
+export function fingerprintPrefix(info: SnapshotIndexInfo | null | undefined): string {
+  return typeof info?.fingerprint === 'string' && info.fingerprint.length >= 8 ? info.fingerprint.slice(0, 8) : 'unknown';
+}
