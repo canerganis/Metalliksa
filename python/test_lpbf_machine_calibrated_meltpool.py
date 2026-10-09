@@ -83,6 +83,28 @@ class Run(unittest.TestCase):
         self.assertIn("stay on this computer", out["privacy"])
         self.assertIn("empirical machine offset", blk["note"])
 
+    def test_green_wavelength_refused_and_ir_served_via_cli(self):
+        green = self.run_(self.req(laserWavelength="Green_515nm"))["machineCalibrated"]
+        self.assertFalse(green["available"])
+        self.assertIsNone(green["depth_um"])
+        self.assertEqual(green["evidenceKind"], "screening-only")
+        self.assertIn("not applied to Green_515nm", green["reasonText"][0])
+        ir = self.run_(self.req(laserWavelength="IR_1064nm"))["machineCalibrated"]
+        self.assertTrue(ir["available"])
+        self.assertEqual(ir["evidenceKind"], "calibrated-simulation")
+
+    def test_build_job_block_wavelength_basis(self):
+        with tempfile.TemporaryDirectory() as d:
+            write_root(d, self.art)
+            kw = dict(root=Path(d), solver=T.apply_solver(), expected_impl_hash=T.IMPL, screening_depth_um=1.0)
+            mid = self.art["machineCalibrationId"]
+            green = cli.build_job_block(mid, T.MAT, {**T.INPUTS, "laserWavelength": "Green_515nm"}, **kw)
+            ir = cli.build_job_block(mid, T.MAT, {**T.INPUTS, "laserWavelength": "IR_1064nm"}, **kw)
+        self.assertFalse(green["available"])
+        self.assertIn("not applied to Green_515nm", green["reasonText"][0])
+        self.assertTrue(ir["available"])
+        self.assertFalse(green["usedForBuildJobVerdict"])
+
     def test_missing_method_fields_downgrade_to_screening_only_and_list_them(self):
         art = make_art(method=None)
         out = self.run_(self.req(machineCalibration=art["machineCalibrationId"]), arts=[art])

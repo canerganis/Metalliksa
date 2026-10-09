@@ -300,6 +300,34 @@ class ArtefactRoundTrip(unittest.TestCase):
             c["missingMethodFields"] = [{"trackIds": ["t0"], "fields": ["depthDatum"]}]
         self.refuse(strip, rehash=True)
 
+    def test_served_cell_integrity_refused(self):
+        def served(a):
+            return next(c for c in a["cells"] if c["status"] == "served")
+
+        def other_material(a):
+            a["material"] = "Ti-6Al-4V"
+
+        def eagar_served(a):
+            c = next(c for c in a["cells"] if c["kernel"] == "eagar-tsai" and c["quantity"] == "depth")
+            c.update({"status": "served", "evidenceKind": "calibrated-simulation",
+                      "evidenceScope": "this machine, user data", "methodComplete": True, "missingMethodFields": []})
+
+        def refused_flipped(a):
+            c = served(a)
+            c["gate"] = dict(c["gate"], passed=False)
+
+        def reasons_left(a):
+            served(a)["reasons"] = ["looSkill"]
+
+        def eligible_not_eligible(a):
+            c = served(a)
+            c.update({"status": "not-eligible", "evidenceKind": "screening-only", "evidenceScope": None,
+                      "methodComplete": False})
+
+        for m in (other_material, eagar_served, refused_flipped, reasons_left, eligible_not_eligible):
+            with self.subTest(m.__name__):
+                self.refuse(m, rehash=True)
+
     def test_missing_file_and_bad_json(self):
         with tempfile.TemporaryDirectory() as d:
             with self.assertRaises(mc.MachineCalibrationError):
@@ -371,6 +399,27 @@ class Apply(unittest.TestCase):
         extra = solver.calls[1]
         self.assertEqual(extra["absorption_model"], "flat-plate")
         self.assertNotIn("prop_overrides", extra)
+
+    def test_wavelength_other_than_fit_basis_refused(self):
+        solver = apply_solver()
+        green = mc.apply_machine_calibration(dict(INPUTS, laserWavelength="Green_515nm"), "rosenthal", self.art,
+                                             solver=solver)["machineCalibrated"]
+        self.assertFalse(green["available"])
+        self.assertIsNone(green["depth_um"])
+        self.assertEqual(green["evidenceKind"], "screening-only")
+        self.assertIn("fitted on the IR_1064nm default; not applied to Green_515nm", green["reasonText"][0])
+        self.assertEqual(len(solver.calls), 1)  # only the screening call ran
+
+    def test_ir_served_at_basis_wavelength_and_cpu_backend_default(self):
+        seen = []
+
+        def solver(*a, **kw):
+            seen.append((a[7], kw.get("thermal_slice_backend")))
+            return apply_solver()(*a, **kw)
+        blk = mc.apply_machine_calibration(dict(INPUTS, laserWavelength="IR_1064nm", thermalSliceBackend="gpu"),
+                                           "rosenthal", self.art, solver=solver)["machineCalibrated"]
+        self.assertTrue(blk["available"])
+        self.assertEqual(seen[1], ("IR_1064nm", None))
 
     def test_not_served_kernel_returns_screening_only_with_reasons(self):
         out = mc.apply_machine_calibration(INPUTS, "eagar-tsai", self.art, solver=apply_solver())

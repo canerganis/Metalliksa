@@ -479,6 +479,15 @@ def _check_evidence(art: Dict[str, Any], cfg: Dict[str, Any]) -> None:
             raise MachineCalibrationError(f"unexpected cell keys {sorted(set(c) ^ CELL_KEYS)}")
         if c["status"] not in ("served", "refused", "not-eligible"):
             raise MachineCalibrationError(f"unknown cell status {c['status']!r}")
+        eligible = mcfg.is_eligible(c["kernel"], art.get("material"), c["quantity"], cfg)
+        if c["status"] == "served":
+            gate = c["gate"]
+            if not eligible:
+                raise MachineCalibrationError("a served cell must be an eligible cell for the artefact material")
+            if not (isinstance(gate, dict) and gate.get("passed") is True and c["reasons"] == []):
+                raise MachineCalibrationError("a served cell needs a passed gate and no refusal reasons")
+        elif c["status"] == "not-eligible" and eligible:
+            raise MachineCalibrationError("an eligible cell must not be marked not-eligible")
         full = c["status"] == "served" and c["methodComplete"] is True and not c["missingMethodFields"]
         if c["evidenceKind"] == ev["calibrated"]:
             if not full or c["evidenceScope"] != ev["scope"]:
@@ -593,8 +602,16 @@ def apply_machine_calibration(inputs: Dict[str, Any], kernel: str, art: Optional
                                           "perRegimeMedianLoo": cell["perRegimeMedianLoo"]}})
     if cell["status"] != "served":
         return out
-    res = solver(*spec["args"], heat_source=kernel, sulfur_ppm=spec["kwargs"]["sulfur_ppm"],
-                 absorption_model="flat-plate", thermal_slice_backend=spec["kwargs"]["thermal_slice_backend"])
+    basis = MACHINE_CALIBRATION_CONFIG["fit"]["basis"]
+    wl = spec["args"][-1]
+    if wl != basis["laserWavelength"]:
+        block.update({"available": False, "evidenceKind": ev["screening"], "evidenceScope": None,
+                      "evidenceLabel": ev["labelScreening"]})
+        block["reasonText"] = [f"fitted on the {basis['laserWavelength']} default; not applied to {wl}"]
+        return out
+    # the served base call runs at the fit basis (default wavelength, default thermal backend), as the fit did
+    res = solver(*spec["args"][:-1], basis["laserWavelength"], heat_source=kernel,
+                 sulfur_ppm=spec["kwargs"]["sulfur_ppm"], absorption_model="flat-plate", thermal_slice_backend=None)
     base = float(res["meltPoolGeometry"]["depth_um"])
     f = cell["factor"]
     block["available"] = True

@@ -32,6 +32,7 @@ MACHINE_CALIBRATION_CONFIG: Dict[str, Any] = {
         "lambda": 0.05,
         "cGrid": {"lo": -1.5, "hi": 1.5, "step": 0.002},
         "tieRule": "smaller |c|",
+        "basis": {"laserWavelength": "IR_1064nm", "thermalSliceBackend": "cpu"},
         "bootstrapReplicates": 200,
         "bootstrapSeed": 0,
         "bootstrapLevel": 0.9,
