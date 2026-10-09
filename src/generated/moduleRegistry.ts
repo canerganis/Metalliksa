@@ -503,6 +503,23 @@ export const MODULE_REGISTRY = {
           "input": [],
           "undeclaredInput": [],
           "output": null
+        },
+        {
+          "id": "gr-solidification",
+          "method": "POST",
+          "route": "/api/python/lpbf-gr-solidification",
+          "authority": {
+            "kind": "python-ipc",
+            "script": "python/lpbf_gr_solidification.py",
+            "workerMethod": null,
+            "timeoutMs": 60000,
+            "gpu": "none",
+            "warm": false,
+            "exceptionReason": null
+          },
+          "input": [],
+          "undeclaredInput": [],
+          "output": null
         }
       ],
       "validityDomain": null,

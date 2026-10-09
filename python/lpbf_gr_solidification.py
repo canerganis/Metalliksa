@@ -1,0 +1,483 @@
+#!/usr/bin/env python3
+"""
+LPBF melt-pool G/R coupled to solidification: Hunt G/R bands, a CET band slot and a trapping-adjusted Laves bound
+(screening only, not validation).
+
+Nothing here re-solves the melt pool. The frozen Rosenthal screening solver (`lpbf_thermal_solver.
+calculate_meltpool_physics`, heat source default) supplies G and R along the rear liquidus arc through the frozen
+`solidification_front` mapper. This module copies those numbers, couples them to the existing Aziz k(V) and binary
+Scheil functions of `lpbf_solidification_segregation`, and exposes a CET criterion whose constants are unavailable
+for IN718 and IN625 (see `lpbf_cet_screening`).
+
+Equations
+  E1  Front G and R are copied, not recomputed: G = |grad T| at liquidus samples, R = v n_x cos(theta) for n_x > 0,
+      Tdot = G R (Hunt 1984, DOI 10.1016/0025-5416(84)90201-5). `median.coolingRate_K_s` is the solver's median of the
+      per-sample G R, not G_med R_med (coolingBasis).
+  E2  Analytic Rosenthal trailing-centreline reference (Rosenthal 1946, as cited in
+      lpbf_thermal_solver.rosenthal_temperature_C). On the trailing surface axis (x < 0, y = z = 0) r + x = 0, so
+      T - T0 = P / (2 pi k |x|), x_tail = P / (2 pi k dT) and G = P / (2 pi k x_tail^2) = 2 pi k dT^2 / P, independent
+      of alpha and v. n_x = 1, so R = v cos(theta) and Tdot = G R.
+  E3  CET criterion, Gäumann form of Hunt 1984 (lpbf_cet_screening; Gäumann et al., Acta Mater. 49 (2001) 1051,
+      DOI 10.1016/S1359-6454(00)00367-0; equation not verified against the PDF).
+  E4  Aziz trapping k(V) = (k_e + V/V_D) / (1 + V/V_D) (Ghosh et al. 2017, Eq. 12) and binary Scheil
+      f_e = (C_e/C_0)^(1/(k-1)) (Dupont 1996 Eq. 5 / Dupont 1998), both reused from the segregation module.
+"""
+from __future__ import annotations
+
+import contextlib
+import json
+import math
+import sys
+import time
+from typing import Any, Dict, List, Mapping, Optional, Tuple
+
+import lpbf_cet_screening as cet_mod
+from lpbf_job_cache import BUILD_JOB_SOLVER_REVISION
+
+SCHEMA = "lpbf-gr-solidification-1"
+ENGINE = "lpbf_gr_solidification"
+SUPPORTED: Dict[str, str] = {"in718": "in718", "in625": "Inconel 625"}
+MATERIAL_NAMES: Dict[str, str] = {"in718": "Inconel 718", "in625": "Inconel 625"}
+STATUSES = ("available", "screening-fallback", "degenerate-floor", "unavailable", "error")
+LOCATIONS = ("bottom", "median", "tail")
+MIN_AXIS_DEFAULT_N = 11
+
+EVIDENCE_STATEMENT = (
+    "Screening only. G and R are copied from the frozen Rosenthal conduction-field melt-pool model; Hunt G/R bands are "
+    "uncalibrated, CET constants are unavailable for IN718 and IN625, and the Laves numbers are a binary upper bound "
+    "from weld-calibrated formulas. This is not an experimental validation and not a grain-structure prediction."
+)
+LIMITS: List[str] = [
+    "The conduction field has no Marangoni flow.",
+    "Keyhole cells are outside the regime of the conduction model; the default IN718 window is mostly keyhole in this model.",
+    "Only three rear-arc points (bottom, median, tail) are reported; the sampler skips the ends of the arc.",
+    "R tends to 0 at the pool bottom, so the trapping bound holds only for the sampled arc; over the whole boundary the "
+    "bound is the equilibrium-k value.",
+    "Values are copied after the solver's rounding.",
+    "The Rosenthal reference sits at a different location (surface centreline) from the solver's tail sample (at depth "
+    "on the rear arc).",
+    "Remelting by later tracks and layers and epitaxial columnar growth are not modelled; in LPBF they usually dominate "
+    "over CET.",
+    "Nucleation undercooling is neglected in the Gäumann form; N0 depends on the process.",
+    "IN625 thermal properties are a legacy estimate (unvalidated).",
+    "The Laves numbers extrapolate weld-calibrated formulas.",
+    "No experimental comparison.",
+]
+COUPLING_NOTE = "Copied by lpbf_gr_solidification from the thermal block; no second G/R estimate is made."
+COOLING_BASIS = "median of the solver's per-sample G*R (coolingRate_K_s), not G_median * R_median"
+ROSENTHAL_LABEL = (
+    "Pure point-source surface-centreline reference at the trailing liquidus; a different location from the solver's "
+    "tail sample (which sits at depth on the rear arc); not regularised"
+)
+HUNT_LABEL = "Hunt G/R screening band (uncalibrated), not a CET prediction"
+CET_LABEL = "CET band (Gäumann 2001 form of Hunt 1984), screening only"
+LAVES_BASIS = (
+    "Binary C = 0 gamma/Laves eutectic-type constituent, fraction of the liquid, nominal Nb; Aziz-trapped k(R) at the "
+    "sampled rear-arc R and V_D 0.23-0.31 m/s"
+)
+LAVES_NOTE = (
+    "Binary C = 0 gamma/Laves eutectic-type constituent, fraction of the liquid, nominal Nb; upper bound with respect to "
+    "back-diffusion, tip undercooling and carbon, and over the V_D range and the sampled rear arc only. At the deepest "
+    "liquidus point n_x = 0 so R -> 0 and k(R) -> k_e: over the whole boundary the bound is equilibriumKBound."
+)
+IN625_PHASE_NOTE = " Phase identity (Laves or NbC) not established (C88, D96)."
+
+
+def _refuse(message: str, kind: str = "validation") -> Dict[str, Any]:
+    return {"success": False, "errorKind": kind, "error": message}
+
+
+def _finite(value: Any) -> Any:
+    if isinstance(value, float) and not math.isfinite(value):
+        return None
+    return value
+
+
+def _clean(obj: Any) -> Any:
+    """Recursively replace non-finite floats with None so allow_nan=False output is always valid."""
+    if isinstance(obj, float):
+        return _finite(obj)
+    if isinstance(obj, dict):
+        return {k: _clean(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_clean(v) for v in obj]
+    return obj
+
+
+def _is_num(x: Any) -> bool:
+    return isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x)
+
+
+def resolve_gr_alloy(raw: Any) -> Optional[str]:
+    from four_alloy_materials import resolve_alloy_id
+    if raw is None:
+        return None
+    resolved = resolve_alloy_id(raw)
+    if resolved == "in718":
+        return "in718"
+    if resolved is not None:
+        return None
+    key = "".join(str(raw).strip().lower().replace("_", "").replace("-", "").split())
+    if key in ("in625", "inconel625"):
+        return "in625"
+    return None
+
+
+def _liquidus_C(alloy_id: str) -> float:
+    from four_alloy_materials import thermal_props
+    from lpbf_thermal_solver import SECONDARY_THERMOPHYSICAL_DB
+    material = SUPPORTED[alloy_id]
+    props = thermal_props(material) or SECONDARY_THERMOPHYSICAL_DB[material]
+    return float(props["liquidus_C"])
+
+
+def _solidus_C(alloy_id: str) -> float:
+    from four_alloy_materials import thermal_props
+    from lpbf_thermal_solver import SECONDARY_THERMOPHYSICAL_DB
+    material = SUPPORTED[alloy_id]
+    props = thermal_props(material) or SECONDARY_THERMOPHYSICAL_DB[material]
+    return float(props["solidus_C"])
+
+
+def rosenthal_centerline_tail(power_W: float, conductivity_W_mK: float, liquidus_C: float, preheat_C: float,
+                              speed_m_s: float, cos_theta: float = 1.0) -> Dict[str, float]:
+    """E2: pure point-source trailing surface-centreline reference at the liquidus (see module docstring)."""
+    for name, value in (("power_W", power_W), ("conductivity_W_mK", conductivity_W_mK), ("speed_m_s", speed_m_s)):
+        if not _is_num(value) or not value > 0:
+            raise ValueError(f"{name} must be a finite number > 0 (got {value!r})")
+    for name, value in (("liquidus_C", liquidus_C), ("preheat_C", preheat_C), ("cos_theta", cos_theta)):
+        if not _is_num(value):
+            raise ValueError(f"{name} must be a finite number (got {value!r})")
+    d_t = float(liquidus_C) - float(preheat_C)
+    if not d_t > 0:
+        raise ValueError("liquidus_C must be above preheat_C")
+    p, k, v = float(power_W), float(conductivity_W_mK), float(speed_m_s)
+    x_tail_m = p / (2.0 * math.pi * k * d_t)
+    g = 2.0 * math.pi * k * d_t * d_t / p
+    r = v * float(cos_theta)
+    return {
+        "xTail_um": x_tail_m * 1.0e6,
+        "G_K_m": g,
+        "R_m_s": r,
+        "GoverR_K_s_m2": g / max(1.0e-6, r),
+        "GtimesR_K_s": g * r,
+    }
+
+
+def laves_trapping(alloy_id: str, r_points: Mapping[str, Optional[float]]) -> Dict[str, Any]:
+    """Aziz-trapped binary Scheil bound on the gamma/Laves constituent at the present, positive R values."""
+    from lpbf_solidification_segregation import (
+        V_D_VALUES, aziz_partition_coefficient, binary_laves_inputs, scheil_eutectic_fraction)
+    inp = binary_laves_inputs(alloy_id)
+    k_e, c_e, nb = inp["k_e"], inp["C_e_wt"], inp["Nb_nominal_wt"]
+    v_ds = sorted(float(v["value"]) for v in V_D_VALUES)
+    present = {name: float(r) for name, r in r_points.items() if _is_num(r) and r > 0}
+    if not present:
+        return {"status": "unavailable", "reason": "no positive solidification rate at any sampled location"}
+
+    def at(r: float, v_d: float) -> Tuple[float, float]:
+        k = aziz_partition_coefficient(k_e, r, v_d)
+        return k, scheil_eutectic_fraction(nb, c_e, k)
+
+    name_min = min(present, key=lambda n: present[n])
+    r_min = present[name_min]
+    k_ub, f_ub = at(r_min, max(v_ds))
+    note = LAVES_NOTE + (IN625_PHASE_NOTE if alloy_id == "in625" else "")
+
+    def band(name: str) -> Optional[Dict[str, Any]]:
+        if name not in present:
+            return None
+        pairs = [at(present[name], vd) for vd in v_ds]
+        ks = [p[0] for p in pairs]
+        fs = [p[1] for p in pairs]
+        return {"R_m_s": present[name], "kEff": {"min": round(min(ks), 6), "max": round(max(ks), 6)},
+                "f": {"min": round(min(fs), 4), "max": round(max(fs), 4)}}
+
+    return {
+        "status": "available",
+        "reason": None,
+        "equilibriumKBound": round(scheil_eutectic_fraction(nb, c_e, k_e), 4),
+        "sampledArcUpperBound": {"R_m_s": r_min, "V_D_m_s": max(v_ds), "kEff": round(k_ub, 6), "f": round(f_ub, 4),
+                                 "location": name_min},
+        "atMedian": band("median"),
+        "atTail": band("tail"),
+        "note": note,
+    }
+
+
+def _unavailable_body(status: str, reason: str) -> Dict[str, Any]:
+    return {
+        "status": status,
+        "reason": reason,
+        "regime": None,
+        "regimeNote": None,
+        "normalizedEnthalpy": None,
+        "extentStatus": None,
+        "front": {"median": None, "bottom": None, "tail": None, "R_range_m_s": None, "frontPointCount": None,
+                  "gradientSource": None, "usedFieldMap": None, "coolingBasis": COOLING_BASIS},
+        "rosenthalCenterline": {"status": "unavailable", "reason": reason},
+        "morphology": {"basis": "hunt-g-over-r-screening", "bands": {"bottom": None, "median": None, "tail": None},
+                       "label": HUNT_LABEL},
+        "cet": {"status": "unavailable", "reason": reason, "locations": {k: None for k in LOCATIONS}},
+        "laves": {"status": "unavailable", "reason": reason},
+    }
+
+
+def _loc_entry(g: Any, r: Any, *, derive: bool, cooling: Any = None, x_um: Any = None, z_um: Any = None) -> Dict[str, Any]:
+    from solidification_front import hunt_morphology
+    entry: Dict[str, Any] = {"G_K_m": g, "R_m_s": r, "GoverR_K_s_m2": None, "GtimesR_K_s": None, "huntBand": None}
+    if x_um is not None:
+        entry["x_um"] = x_um
+        entry["z_um"] = z_um
+    if cooling is not None:
+        entry["coolingRate_K_s"] = cooling
+    if derive and _is_num(g) and _is_num(r):
+        g_over_r = g / max(1.0e-6, r)
+        entry["GoverR_K_s_m2"] = g_over_r
+        entry["GtimesR_K_s"] = cooling if cooling is not None else g * r
+        entry["huntBand"] = hunt_morphology(max(1.0, g_over_r))
+    return entry
+
+
+def couple_thermal_block(thermal: Mapping[str, Any], alloy_id: str, *, preheat_C: float, speed_mm_s: float,
+                         cet_constants_override: Optional[Mapping[str, float]] = None) -> Dict[str, Any]:
+    """Pure: thermal dict -> cell body (no iP/iV)."""
+    from lpbf_solidification_microstructure import project_build_job_microstructure
+    proj = project_build_job_microstructure(dict(thermal), note=COUPLING_NOTE)
+    status = proj["status"]
+    if status == "unavailable":
+        return _unavailable_body("unavailable", proj.get("reason") or "thermal.solidificationKinetics unavailable")
+    kin = thermal.get("solidificationKinetics") or {}
+    derive = status in ("available", "screening-fallback")
+    median = _loc_entry(proj["G_K_m"], proj["R_m_s"], derive=derive, cooling=proj["coolingRate_K_s"])
+    bottom: Optional[Dict[str, Any]] = None
+    tail: Optional[Dict[str, Any]] = None
+    if status in ("available", "degenerate-floor"):
+        for name in ("bottom", "tail"):
+            raw = kin.get(name)
+            if isinstance(raw, dict) and _is_num(raw.get("G_K_m")) and _is_num(raw.get("R_m_s")):
+                e = _loc_entry(raw["G_K_m"], raw["R_m_s"], derive=derive, x_um=raw.get("x_um"), z_um=raw.get("z_um"))
+                if name == "bottom":
+                    bottom = e
+                else:
+                    tail = e
+    locs = {"bottom": bottom, "median": median, "tail": tail}
+    r_vals = [e["R_m_s"] for e in locs.values() if e is not None and _is_num(e["R_m_s"])]
+    r_range = [min(r_vals), max(r_vals)] if (derive and r_vals) else None
+    params = thermal.get("processParameters") if isinstance(thermal.get("processParameters"), dict) else {}
+    geometry = thermal.get("meltPoolGeometry") if isinstance(thermal.get("meltPoolGeometry"), dict) else {}
+
+    p_field = params.get("fieldPower_W")
+    k_eff = params.get("effectiveConductivity_W_mK")
+    if _is_num(p_field) and _is_num(k_eff):
+        try:
+            cl = rosenthal_centerline_tail(p_field, k_eff, _liquidus_C(alloy_id), preheat_C, speed_mm_s / 1.0e3)
+            cl.update(status="available", reason=None, label=ROSENTHAL_LABEL, inputs={
+                "fieldPower_W": p_field, "effectiveConductivity_W_mK": k_eff, "liquidus_C": _liquidus_C(alloy_id),
+                "preheat_C": preheat_C, "theta_deg": 0.0})
+        except ValueError as e:
+            cl = {"status": "unavailable", "reason": str(e)}
+    else:
+        cl = {"status": "unavailable", "reason": "processParameters.fieldPower_W or effectiveConductivity_W_mK missing"}
+
+    if derive:
+        cet = cet_mod.cet_block(
+            alloy_id, {k: ((e["G_K_m"], e["R_m_s"]) if e is not None else None) for k, e in locs.items()},
+            constants_override=cet_constants_override)
+        laves = laves_trapping(alloy_id, {k: (e["R_m_s"] if e is not None else None) for k, e in locs.items()})
+    else:
+        reason = proj.get("reason") or "degenerate solver floor"
+        cet = {"status": "unavailable", "reason": reason, "locations": {k: None for k in LOCATIONS}}
+        laves = {"status": "unavailable", "reason": reason}
+    basis = "cet-gaumann2001" if cet["status"] == "available" else "hunt-g-over-r-screening"
+    morphology = {
+        "basis": basis,
+        "bands": {k: (e["huntBand"] if e is not None else None) for k, e in locs.items()},
+        "label": HUNT_LABEL if basis == "hunt-g-over-r-screening" else CET_LABEL,
+    }
+    body = {
+        "status": status,
+        "reason": proj.get("reason"),
+        "regime": proj.get("regime"),
+        "regimeNote": proj.get("regimeNote"),
+        "normalizedEnthalpy": proj.get("normalizedEnthalpy"),
+        "extentStatus": geometry.get("extentStatus"),
+        "front": {"median": median, "bottom": bottom, "tail": tail, "R_range_m_s": r_range,
+                  "frontPointCount": kin.get("frontPointCount"), "gradientSource": proj.get("gradientSource"),
+                  "usedFieldMap": proj.get("usedFieldMap"), "coolingBasis": COOLING_BASIS},
+        "rosenthalCenterline": cl,
+        "morphology": morphology,
+        "cet": cet,
+        "laves": laves,
+    }
+    return body
+
+
+def _thermal(alloy_id: str, power_W: float, speed_mm_s: float, s: Mapping[str, Any]) -> Dict[str, Any]:
+    from lpbf_thermal_solver import calculate_meltpool_physics
+    return calculate_meltpool_physics(
+        SUPPORTED[alloy_id], float(power_W), float(speed_mm_s), float(s["beamDiameter_um"]), float(s["preheatTemp_C"]),
+        float(s["layer_um"]), float(s["hatch_um"]), "IR_1064nm")
+
+
+def _eval(alloy_id: str, power_W: float, speed_mm_s: float, s: Mapping[str, Any]) -> Tuple[Dict[str, Any], Any]:
+    try:
+        thermal = _thermal(alloy_id, power_W, speed_mm_s, s)
+        body = couple_thermal_block(thermal, alloy_id, preheat_C=float(s["preheatTemp_C"]), speed_mm_s=float(speed_mm_s))
+        return body, thermal.get("materialEvidence")
+    except Exception as e:  # a failed cell is an error, never coloured as a result
+        return _unavailable_body("error", f"{type(e).__name__}: {e}"), None
+
+
+def evaluate_point(alloy_id: str, power_W: float, speed_mm_s: float, settings: Mapping[str, Any]) -> Dict[str, Any]:
+    return _eval(alloy_id, power_W, speed_mm_s, settings)[0]
+
+
+def validate_request(data: Any) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
+    from four_alloy_materials import LITERATURE_PV_WINDOWS
+    from lpbf_process_window import (
+        MAX_CELLS, MAX_POWER_W, MAX_SPEED_MM_S, _axis_from_request, _linspace, _num,
+        DEFAULT_RANGE_LOW_FACTOR, DEFAULT_RANGE_HIGH_FACTOR)
+    if not isinstance(data, dict):
+        return None, _refuse("Request body must be a JSON object.")
+    mode = data.get("mode")
+    if mode not in ("point", "map"):
+        return None, _refuse("mode must be 'point' or 'map'.")
+    alloy = resolve_gr_alloy(data.get("alloyId"))
+    if alloy is None:
+        return None, _refuse("G/R solidification coupling is defined for IN718 and IN625 only; no fallback alloy.")
+    try:
+        beam = _num(data.get("beamDiameter_um"), "beamDiameter_um")
+        layer = _num(data.get("layer_um"), "layer_um")
+        hatch = _num(data.get("hatch_um"), "hatch_um")
+        preheat = _num(data.get("preheatTemp_C"), "preheatTemp_C")
+    except ValueError as e:
+        return None, _refuse(str(e))
+    for name, value in (("beamDiameter_um", beam), ("layer_um", layer), ("hatch_um", hatch)):
+        if not value > 0:
+            return None, _refuse(f"{name} must be > 0 (got {value:g}).")
+    solidus = _solidus_C(alloy)
+    if not (0 <= preheat < solidus):
+        return None, _refuse(f"preheatTemp_C must be >= 0 and below the {alloy} solidus ({solidus:g} C).")
+    norm: Dict[str, Any] = {"mode": mode, "alloyId": alloy, "beamDiameter_um": beam, "layer_um": layer,
+                            "hatch_um": hatch, "preheatTemp_C": preheat}
+    try:
+        if mode == "point":
+            power = _num(data.get("power_W"), "power_W")
+            speed = _num(data.get("speed_mm_s"), "speed_mm_s")
+            if not (0 < power <= MAX_POWER_W):
+                return None, _refuse(f"power_W must be > 0 and <= {MAX_POWER_W:g} W (got {power:g}).")
+            if not (0 < speed <= MAX_SPEED_MM_S):
+                return None, _refuse(f"speed_mm_s must be > 0 and <= {MAX_SPEED_MM_S:g} mm/s (got {speed:g}).")
+            norm.update(power_W=power, speed_mm_s=speed)
+            return norm, None
+        box = LITERATURE_PV_WINDOWS.get(alloy)
+        basis = {"power": "request", "speed": "request"}
+        if data.get("powers") is None or data.get("speeds") is None:
+            if box is None:
+                return None, _refuse("No literature P-v box for IN625 in four_alloy_materials; give powers and speeds.")
+        if data.get("powers") is None:
+            powers = _linspace(DEFAULT_RANGE_LOW_FACTOR * box["powerMin_W"], DEFAULT_RANGE_HIGH_FACTOR * box["powerMax_W"],
+                               MIN_AXIS_DEFAULT_N)
+            basis["power"] = "default"
+        else:
+            powers = _axis_from_request(data["powers"], "powers", MAX_POWER_W, "W")
+        if data.get("speeds") is None:
+            speeds = _linspace(DEFAULT_RANGE_LOW_FACTOR * box["speedMin_mm_s"], DEFAULT_RANGE_HIGH_FACTOR * box["speedMax_mm_s"],
+                               MIN_AXIS_DEFAULT_N)
+            basis["speed"] = "default"
+        else:
+            speeds = _axis_from_request(data["speeds"], "speeds", MAX_SPEED_MM_S, "mm/s")
+    except ValueError as e:
+        return None, _refuse(str(e))
+    if len(powers) * len(speeds) > MAX_CELLS:
+        return None, _refuse(f"At most {MAX_CELLS} cells are allowed (got {len(powers) * len(speeds)}).")
+    norm.update(powers=powers, speeds=speeds, _rangeBasis=basis)
+    return norm, None
+
+
+def _counts(bodies: List[Dict[str, Any]]) -> Dict[str, int]:
+    counts = {k: 0 for k in STATUSES}
+    for b in bodies:
+        counts[b["status"]] += 1
+    return counts
+
+
+def run_gr_solidification(data: Any) -> Dict[str, Any]:
+    from lpbf_solidification_segregation import RAPID_MODEL_ID, V_D_VALUES, binary_laves_inputs, scheil_eutectic_fraction
+    from solidification_front import MODEL_ID as SOLIDIFICATION_MODEL_ID
+    t0 = time.time()
+    norm, refusal = validate_request(data)
+    if refusal is not None:
+        return refusal
+    alloy = norm["alloyId"]
+    settings = {k: norm[k] for k in ("beamDiameter_um", "layer_um", "hatch_um", "preheatTemp_C")}
+    request: Dict[str, Any] = {"alloyId": alloy, **settings}
+    response: Dict[str, Any] = {"success": True, "engine": ENGINE, "schema": SCHEMA, "mode": norm["mode"],
+                                "alloyId": alloy, "materialName": MATERIAL_NAMES[alloy]}
+    evidence = None
+    if norm["mode"] == "point":
+        request.update(power_W=norm["power_W"], speed_mm_s=norm["speed_mm_s"])
+        body, evidence = _eval(alloy, norm["power_W"], norm["speed_mm_s"], settings)
+        bodies = [body]
+        response["request"] = request
+        response["point"] = {"power_W": norm["power_W"], "speed_mm_s": norm["speed_mm_s"], **body}
+    else:
+        cells = []
+        for i, p in enumerate(norm["powers"]):
+            for j, v in enumerate(norm["speeds"]):
+                body, ev = _eval(alloy, p, v, settings)
+                evidence = evidence or ev
+                cells.append({"iP": i, "iV": j, "power_W": p, "speed_mm_s": v, **body})
+        bodies = cells
+        basis = norm["_rangeBasis"]
+        response["request"] = request
+        response["grid"] = {"powers_W": norm["powers"], "speeds_mm_s": norm["speeds"], "nP": len(norm["powers"]),
+                            "nV": len(norm["speeds"]), "nCells": len(cells),
+                            "rangeBasis": {
+                                "power": {"basis": basis["power"], "min_W": norm["powers"][0], "max_W": norm["powers"][-1],
+                                          "n": len(norm["powers"])},
+                                "speed": {"basis": basis["speed"], "min_mm_s": norm["speeds"][0],
+                                          "max_mm_s": norm["speeds"][-1], "n": len(norm["speeds"])}}}
+        response["cells"] = cells
+    response["counts"] = _counts(bodies)
+    cet_view = cet_mod.criterion_view()
+    cet_view["constantsStatus"] = cet_mod.cet_constants(alloy)
+    response["cet"] = cet_view
+    inp = binary_laves_inputs(alloy)
+    response["laves"] = {
+        "modelId": RAPID_MODEL_ID, "k_e": inp["k_e"], "C_e_wt": inp["C_e_wt"], "Nb_nominal_wt": inp["Nb_nominal_wt"],
+        "V_D_m_s": sorted(float(v["value"]) for v in V_D_VALUES),
+        "equilibriumKBound": round(scheil_eutectic_fraction(inp["Nb_nominal_wt"], inp["C_e_wt"], inp["k_e"]), 4),
+        "basis": LAVES_BASIS,
+    }
+    response["materialEvidence"] = evidence
+    response["evidence"] = {"kind": "screening-only", "experimentalValidation": False, "statement": EVIDENCE_STATEMENT}
+    response["limits"] = list(LIMITS)
+    response["provenance"] = {"heatSource": "rosenthal", "solidificationModelId": SOLIDIFICATION_MODEL_ID,
+                              "buildJobSolverRevision": BUILD_JOB_SOLVER_REVISION, "frozenFilesModified": False}
+    response["computeMs"] = round((time.time() - t0) * 1000.0, 1)
+    return _clean(response)
+
+
+def main() -> None:
+    raw = sys.stdin.read().strip()
+    if not raw:
+        print(json.dumps(_refuse("Empty payload.")))
+        return
+    try:
+        data = json.loads(raw)
+    except Exception as e:
+        print(json.dumps(_refuse(f"Invalid JSON: {e}")))
+        return
+    # Solver imports (e.g. NVIDIA Warp) print banners to stdout; keep stdout for the one JSON document only.
+    with contextlib.redirect_stdout(sys.stderr):
+        try:
+            result = run_gr_solidification(data)
+        except Exception as e:  # unexpected engine failure still yields exactly one JSON document
+            result = _refuse(f"{type(e).__name__}: {e}", "engine")
+    print(json.dumps(result, allow_nan=False))
+
+
+if __name__ == "__main__":
+    main()

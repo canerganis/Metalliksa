@@ -1166,3 +1166,16 @@ def build_job_segregation(alloy_id: str, microstructure: Optional[Mapping[str, A
 if __name__ == "__main__":  # pragma: no cover - manual inspection
     import json
     print(json.dumps(segregation_estimate("in718", None), indent=1))
+
+
+def binary_laves_inputs(alloy_id: str) -> Dict[str, float]:
+    """Equilibrium k_Nb, C_e and nominal Nb of the binary C = 0 upper bound (read-only view of existing constants)."""
+    if alloy_id == "in718":
+        cset = CONSTANTS["ni-base"]
+        nominal = _spec_band("in718")[0]["nominal"]
+    elif alloy_id == "in625":
+        cset = CONSTANTS[IN625_SET]
+        nominal = _in625_band()[0]["nominal"]
+    else:
+        raise SegregationModelError(f"no binary Laves inputs for alloy '{alloy_id}'")
+    return {"k_e": _value(cset, "k_gamma_Nb"), "C_e_wt": _value(cset, "C_Nb_laves"), "Nb_nominal_wt": float(nominal)}

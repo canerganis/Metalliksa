@@ -180,7 +180,11 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
         _op("process-window", "POST", "/api/python/lpbf-process-window",
             _py("lpbf_process_window", 60000, warm=False)),
     ),
-    "solidification-microstructure": (_worker_op("solidification-microstructure"),),
+    "solidification-microstructure": (
+        _worker_op("solidification-microstructure"),
+        _op("gr-solidification", "POST", "/api/python/lpbf-gr-solidification",
+            _py("lpbf_gr_solidification", 60000, warm=False)),
+    ),
     "experimental-validation": (
         _op("lpbf-source-measurements", "GET", "/api/lpbf/sources/:datasetId/measurements", _NODE),
     ),

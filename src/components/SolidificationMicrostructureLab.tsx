@@ -16,6 +16,7 @@ import {
 } from 'recharts';
 import { pythonComputationService } from '../services/pythonComputationService';
 import type { SolidificationMicrostructureAvailable } from '../services/pythonComputationService';
+import { GrSolidificationMapCard } from './GrSolidificationMapCard';
 import { solidificationOutcome } from '../utils/solidificationOutcome';
 import { createLatestRequestGate, settleLatestRequest } from '../utils/solidificationRequest';
 import {
@@ -476,6 +477,7 @@ export const SolidificationMicrostructureLab: React.FC<Props> = () => {
           <p className="px-1 pb-2 text-[10px] leading-5 text-slate-600">Results are model-derived screening estimates. Use the status, diagnostic notes and calculation source when interpreting comparisons; this view is not in-situ tracking and does not replace experimental validation.</p>
         </>
       )}
+      <GrSolidificationMapCard />
     </div>
   );
 };

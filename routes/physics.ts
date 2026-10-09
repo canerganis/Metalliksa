@@ -86,3 +86,9 @@ physicsRouter.post("/api/python/lpbf-calibrated-meltpool", (req: Request, res: R
 physicsRouter.post("/api/python/lpbf-process-window", (req: Request, res: Response) => {
   return handlePythonDispatch("python/lpbf_process_window.py", req.body, res, 60000);
 });
+
+// LPBF melt-pool G/R coupled to solidification (screening only, not validation): Hunt G/R bands, a CET slot whose
+// constants are unavailable for IN718/IN625, and a trapping-adjusted Laves bound. A NEW route appended at the end.
+physicsRouter.post("/api/python/lpbf-gr-solidification", (req: Request, res: Response) => {
+  return handlePythonDispatch("python/lpbf_gr_solidification.py", req.body, res, 60000);
+});

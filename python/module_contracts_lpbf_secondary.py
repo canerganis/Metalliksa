@@ -183,9 +183,29 @@ def build_solidification_microstructure_contract(seed: Mapping[str, str]) -> Mod
             transport_values=(("status", ("available", "unavailable", "screening-fallback", "degenerate-floor")),),
         ),
     )
+    gr_operation = Operation(
+        id="gr-solidification",
+        method="POST",
+        route="/api/python/lpbf-gr-solidification",
+        authority=Authority(
+            kind="python-ipc",
+            script="python/lpbf_gr_solidification.py",
+            timeout_ms=60000,
+            warm=False,
+        ),
+        # Axis arrays (powers, speeds) and the string mode/alloyId are outside InputField's scalar vocabulary.
+        undeclared_input=("mode", "alloyId", "beamDiameter_um", "layer_um", "hatch_um", "preheatTemp_C", "power_W",
+                          "speed_mm_s", "powers", "speeds"),
+        output=OutputSchema(
+            fields=("success", "error", "errorKind", "engine", "schema", "mode", "alloyId", "materialName", "request",
+                    "grid", "point", "cells", "counts", "cet", "laves", "materialEvidence", "limits", "provenance",
+                    "computeMs"),
+            status_key=None,
+        ),
+    )
     return _contract(
         seed,
-        operation,
+        (operation, gr_operation),
         notes=(
             "Compute is user-triggered; each setting change clears the displayed result. The view sends a nested "
             "params object with Python-authority materialName and power_W (W), speed_mm_s (mm/s), hatch_um (µm), "
@@ -210,6 +230,19 @@ def build_solidification_microstructure_contract(seed: Mapping[str, str]) -> Mod
             "HTTP 503 with Retry-After; an explicit worker validation envelope maps to 422 and other route errors "
             "to 400. This handler reports ordinary bad/missing inputs as status=unavailable in its HTTP 200 result. "
             "The contract records model availability labels as transport values only and emits no evidence status.",
+            "gr-solidification (separate section of the lab below the result block, always visible, independent of "
+            "Compute, nothing runs until its own Compute): POST /api/python/lpbf-gr-solidification, a Python-IPC "
+            "operation (60000 ms, not warm). Body: mode 'point' or 'map', alloyId (IN718 or IN625 only; anything else is "
+            "refused with errorKind 'validation', HTTP 422, no fallback alloy), beamDiameter_um, layer_um, hatch_um (all "
+            "> 0), preheatTemp_C (>= 0 and below the solidus), and power_W (<= 1500) and speed_mm_s (<= 10000) for point "
+            "mode, or powers and speeds (2-15 strictly increasing values each, at most 225 cells) for map mode. IN718 map "
+            "axes default to the 11 x 11 literature-box range of the process window; IN625 has no box and its omission is "
+            "refused. G and R are copied from the frozen Rosenthal solver through project_build_job_microstructure; "
+            "status per cell is available, screening-fallback, degenerate-floor, unavailable or error. CET constants for "
+            "IN718 and IN625 are unavailable (cet.status 'unavailable' with a reason); the Laves numbers are a binary "
+            "Aziz-trapped Scheil upper bound over the sampled rear arc. The response carries an evidence object (not "
+            "listed in the output fields: the SDK reserves that name) with kind 'screening-only' and "
+            "experimentalValidation false.",
         ),
         sources=(
             "src/components/SolidificationMicrostructureLab.tsx::SolidificationMicrostructureLab",
@@ -221,5 +254,8 @@ def build_solidification_microstructure_contract(seed: Mapping[str, str]) -> Mod
             "python/lpbf_solidification_microstructure.py::compute_screening_field_microstructure",
             "python/lpbf_solidification_microstructure.py:202-219#regime",
             "python/lpbf_solidification_microstructure.py:267-284#status",
+            "python/lpbf_gr_solidification.py::run_gr_solidification",
+            "src/components/GrSolidificationMapCard.tsx::GrSolidificationMapCard",
+            "routes/physics.ts:93-93#60000",
         ),
     )
