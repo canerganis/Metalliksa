@@ -157,6 +157,12 @@ export interface PythonCalphadSolveResult
     status: "available" | "unavailable";
     reason: string | null;
     definition: string;
+    /** Optional: SER reference basis of the pure element, present only when the engine reports it. */
+    basis?: string;
+    /** Optional: reference function used for the pure element (e.g. GHSERCC). */
+    referenceFunction?: string;
+    /** Optional: literature source of the reference data as carried by the database. */
+    referenceSource?: string;
   }>;
   /** pycalphad only: the grid actually computed and every clamp that acted on the requested one. */
   effectiveTemperatureRangeC?: [number, number];

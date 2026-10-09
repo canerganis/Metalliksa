@@ -1443,6 +1443,16 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
                             Ref: pure {elem}{refState?.phase ? `, ${refState.phase}, same T` : ", no reference phase"}
                           </span>
                         </div>
+                        {refState?.basis && (
+                          <div className="text-[10px] text-slate-500" data-testid={`activity-basis-${elem}`}>
+                            Basis: {refState.basis}
+                          </div>
+                        )}
+                        {refState?.referenceSource && (
+                          <div className="text-[10px] text-slate-500" data-testid={`activity-source-${elem}`}>
+                            Reference: Dinsdale 1991, CALPHAD 15:317, doi:10.1016/0364-5916(91)90030-N
+                          </div>
+                        )}
                         <div className="text-slate-400">
                           a_{elem} = <strong className="text-sky-300" title={act === null ? (refState?.reason ?? "") : ""}>{act === null ? "Unavailable" : act > 0 ? (act < 0.001 ? act.toExponential(2) : act.toFixed(4)) : "0.0000"}</strong>
                         </div>
