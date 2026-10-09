@@ -147,12 +147,12 @@ def build_lpbf_optimizer_contract(seed: Mapping[str, str]) -> ModuleContract:
         ),
         sources=(
             "src/components/LpbfBayesianOptimizerLab.tsx::LpbfBayesianOptimizerLab",
-            "src/services/pythonComputationService.ts:383-395#lpbf-bayesian-optimize",
+            "src/services/pythonComputationService.ts:395-407#lpbf-bayesian-optimize",
             "routes/physics.ts:73-74#120000",
             "python/lpbf_bayesian_optimizer.py::run_bayesian_optimization",
             "python/lpbf_bayesian_optimizer.py:307-334#nIterations",
             "src/components/LpbfProcessWindowMap.tsx::LpbfProcessWindowMap",
-            "src/services/pythonComputationService.ts:839-843#lpbf-process-window",
+            "src/services/pythonComputationService.ts:851-855#lpbf-process-window",
             "routes/physics.ts:87-87#60000",
             "python/lpbf_process_window.py::run_process_window",
             "python/lpbf_process_window.py:35-35#MAX_CELLS = 225",
@@ -211,11 +211,11 @@ def build_solidification_microstructure_contract(seed: Mapping[str, str]) -> Mod
         notes=(
             "Compute is user-triggered; each setting change clears the displayed result. The view sends a nested "
             "params object with Python-authority materialName and power_W (W), speed_mm_s (mm/s), hatch_um (µm), "
-            "layerThickness_um (µm), beamDiameter_um (µm), preheat_C (°C), heatSource. Visible presets are "
+            "layerThickness_um (µm), beamDiameter_um (µm), preheat_C (degC), heatSource. Visible presets are "
             "Inconel 718, Ti-6Al-4V, AlSi10Mg and 316L SS; defaults are 285 W, 960 mm/s, 110 µm hatch, "
-            "40 µm layer, 80 µm beam, 80 °C and Rosenthal. Visible input min/max/step are UI controls; backend "
-            "requires finite values, positive power/speed/beam/layer/hatch, and preheat_C strictly above -273.15 °C "
-            "and, when liquidus_C is known, strictly below that value in °C. Missing/invalid material or inputs and "
+            "40 µm layer, 80 µm beam, 80 degC and Rosenthal. Visible input min/max/step are UI controls; backend "
+            "requires finite values, positive power/speed/beam/layer/hatch, and preheat_C strictly above -273.15 degC "
+            "and, when liquidus_C is known, strictly below that value in degC. Missing/invalid material or inputs and "
             "unsupported physics return a worker result with status=unavailable, a reason, and null numeric fields "
             "(normally HTTP 200); no substitute alloy or numeric fallback is used.",
             "The current view does not send cfdResult or material properties. Worker RPC therefore invokes "
@@ -240,8 +240,8 @@ def build_solidification_microstructure_contract(seed: Mapping[str, str]) -> Mod
             "mode, or powers and speeds (2-15 strictly increasing values each, at most 225 cells) for map mode. IN718 map "
             "axes default to the 11 x 11 literature-box range of the process window; IN625 has no box and its omission is "
             "refused. G and R are copied from the frozen Rosenthal solver through project_build_job_microstructure; "
-            "status per cell is available, screening-fallback, degenerate-floor, unavailable or error. CET constants for "
-            "IN718 and IN625 are unavailable (cet.status 'unavailable' with a reason); the Laves numbers are a binary "
+            "status per cell is available, screening-fallback, degenerate-floor, unavailable or error. CET constants: two sourced IN718 sets (EBM-calibrated, transferred to LPBF) "
+            "and none for IN625 (cet.status unavailable with a reason); the Laves numbers are a binary "
             "Aziz-trapped Scheil upper bound over the sampled rear arc. The response carries an evidence object (not "
             "listed in the output fields: the SDK reserves that name) with kind 'screening-only' and "
             "experimentalValidation false.",
@@ -249,7 +249,7 @@ def build_solidification_microstructure_contract(seed: Mapping[str, str]) -> Mod
         sources=(
             "src/components/SolidificationMicrostructureLab.tsx::SolidificationMicrostructureLab",
             "src/components/SolidificationMicrostructureLab.tsx::solidificationRequest",
-            "src/services/pythonComputationService.ts:404-411#lpbf-solidification-microstructure",
+            "src/services/pythonComputationService.ts:416-423#lpbf-solidification-microstructure",
             "routes/lpbfSimulation.ts:22-36#solidification-microstructure",
             "server/lpbfWorkerBridge.ts:58#requestTimeoutMs ?? 20000",
             "python/lpbf_worker_rpc.py::_rpc_solidification_microstructure",

@@ -81,6 +81,10 @@ export interface PythonCalphadDatabaseEntry {
   statusReason?: string | null;
   /** Machine-readable scope: the base elements this database is assessed for. */
   assessedBaseElements?: string[];
+  /** Scoped databases only (mc_ti): what the database may and may not be used for. */
+  scopeFlag?: string;
+  /** False when the database is only used if named by id (never picked by auto-detect). */
+  autoSelect?: boolean;
 }
 
 export interface PythonCalphadSolveResult
@@ -121,6 +125,8 @@ export interface PythonCalphadSolveResult
   activeComponents?: string[];
   unsupportedElements?: string[];
   databaseSuitability?: string;
+  /** Scoped database only (mc_ti): valid and invalid uses, shown next to the numbers. */
+  databaseScopeFlag?: string;
   /** Grid temperatures (degC) whose equilibrium did not converge; their profile entries are null. */
   nonConvergedPoints?: number[];
   boundaryRefinement?: { enabled: boolean; toleranceC: number; equilibriumCalls: number; note: string };
@@ -152,6 +158,12 @@ export interface PythonCalphadSolveResult
     status: "available" | "unavailable";
     reason: string | null;
     definition: string;
+    /** Optional: SER reference basis of the pure element, present only when the engine reports it. */
+    basis?: string;
+    /** Optional: reference function used for the pure element (e.g. GHSERCC). */
+    referenceFunction?: string;
+    /** Optional: literature source of the reference data as carried by the database. */
+    referenceSource?: string;
   }>;
   /** pycalphad only: the grid actually computed and every clamp that acted on the requested one. */
   effectiveTemperatureRangeC?: [number, number];

@@ -11,7 +11,7 @@ Files: `python/lpbf_gr_solidification.py` (coupling, point and map entry points)
 | G, R, G*R along the rear liquidus arc (bottom, median, tail) | Copied from the frozen Rosenthal screening solver (`calculate_meltpool_physics` -> `solidification_front`), through `project_build_job_microstructure`. No second estimate. |
 | Hunt G/R band | `solidification_front.hunt_morphology(max(1, G / max(1e-6, R)))`, the same guard as the frozen code. Thresholds 1e10, 5e8, 1e7 K s/m^2 are uncalibrated. |
 | Rosenthal trailing-centreline reference | Computed in the new module from copied inputs (E2). |
-| CET band | E3, constants unavailable for IN718 and IN625 (section 3). |
+| CET boundary | E3, two sourced IN718 sets (EBM-calibrated, transferred to LPBF), none for IN625 (section 3). |
 | Trapping-adjusted Laves bound | E4, reusing `aziz_partition_coefficient` and `scheil_eutectic_fraction` from `lpbf_solidification_segregation`. |
 
 Equations:
@@ -48,14 +48,35 @@ These pins move only with a frozen-solver bump.
 
 ## 3. CET status
 
-The equation form comes from Gäumann 2001. The DOI was confirmed against a Crossref-cited record; the paper was not read for this design. `EQUATION_VERIFIED` is `False` and `EQUATION_LOCATOR` is `None` until the maintainer reads the PDF and fills in the equation number.
+The equation form is the Gäumann 2001 form of Hunt 1984. The Gäumann PDF itself has not been read: module-level `EQUATION_VERIFIED` is `False` and `EQUATION_LOCATOR` is `None`. The Knapp form is verified separately, set by set (see below).
 
-No CET constants (a, n, N0) are shipped for IN718 or IN625. Their registry status is `unavailable`, with a reason: Gäumann 2001 gives constants for CMSX-4 only, and no published constants are known for IN625. Every cell therefore reports `cet.status == "unavailable"`, and the morphology basis stays `hunt-g-over-r-screening`. The functions `critical_gradient_K_m`, `cet_band` and `cet_block(constants_override=...)` are tested with SYNTHETIC constants only; they are test values, not alloy data.
+IN718 has two sourced constant sets in `CET_SETS`. Both are labelled "EBM-calibrated, transferred to LPBF": they were calibrated for electron-beam melting and no LPBF fit exists, so the bands are an indication only.
 
-Candidate IN718 sources for the maintainer, both electron-beam melting and neither read yet. Their N0 is process-specific.
+| Set | n | a (K^n s/m) | N0 (m^-3) | Source and locator | Equation verified |
+|---|---|---|---|---|---|
+| `knapp2019`, EB-PBF IN718, calibrated to a casting map | 2 | 4.5 | 2.65e14 | A. Knapp et al., Additive Manufacturing 25 (2019) 511-521, DOI 10.1016/j.addma.2018.12.001. Eq. 12 and the Hunt phi limits 0.0066 and 0.49 on p. 514, constants on p. 515. | True |
+| `polonsky2020`, EBM IN718, IMS-fitted | 3.13 | 1.23e5 | 5.4e12 (lower bound) | M. Polonsky et al. 2020, OSTI 1659558, Sec 3.3, Eq. 4 and 5, Table 2. N0 comes from 206 grains in 38.4 nL and the paper calls it a lower bound. | False |
+
+Only the Knapp form is marked verified, because its printed G^2R limits are reproduced: with n=2, a=4.5 and N0=2.65e14 the model gives 1.52e11 at phi 0.0066 and 6.98e9 at phi 0.49 (test `test_knapp_constants_reproduce_printed_limits`, relative tolerance 1%). The Polonsky set uses the same form, but nothing printed was reproduced for it, so its flag stays `False`.
+
+Polonsky prints the unit of a as m s/K^n. That is a typo; Eq. 5 needs K^n s/m, and the registry stores K^n s/m.
+
+CMSX-4 (n 3.4, a 1.25e6, N0 2.0e15, Polonsky Sec 3.3 and Table 2, quoting Gäumann) is kept as `CMSX4_REFERENCE`, reference only. It is not an IN718 set and never feeds a band.
+
+IN625 has no sourced CET constants. Its registry status is `unavailable` with a reason, `cet.sets` is empty, and no boundary is shown.
+
+Behaviour in the response. For IN718 each cell has `cet.status == "available"` and `cet.sets.<id>.locations.<bottom|median|tail>` with the band and the two boundary gradients `G_columnar_K_m` and `G_equiaxed_K_m`. The two sets are reported side by side and are not merged or ranked. The morphology basis stays `hunt-g-over-r-screening`, so the map colours remain the uncalibrated Hunt band; the CET boundaries appear in the cell detail and the source block of the card. Only the test-only `constants_override` switches the basis. `cet_block(constants_override=...)` and the other functions are also tested with SYNTHETIC constants.
+
+At LPBF gradients (about 1e6 to 1e7 K/m) both sets mostly return "columnar", since their critical gradients are about 1e4 to 1e6 K/m. This is not a validated result.
+
+Candidate IN718 sources not yet read, electron-beam melting, with process-specific N0:
 
 * M. Haines, A. Plotkowski, C.L. Frederick, E.J. Schwalbach, S.S. Babu, Comput. Mater. Sci. (2018), CET sensitivity analysis for Ni superalloys in EBM. OSTI 1474534.
 * N. Raghavan et al., Acta Mater. (2016), IN718 EBM grain morphology. OSTI 1252143.
+
+Raghavan 2021 (OSTI 1824998) is cited only as evidence that CMSX-4 constants are used for IN718. Its a and n are the CMSX-4 values and its N0 is assumed, so it is not a set.
+
+Still to download for a full check: Knapp Supplement B (derivation from the Nastac map) and the publisher PDF, the published Polonsky version, and the Gäumann 2001 paper.
 
 ## 4. Limits
 
@@ -67,10 +88,11 @@ Candidate IN718 sources for the maintainer, both electron-beam melting and neith
 * The Rosenthal reference sits at a different location from the solver's tail sample.
 * Remelting by later tracks and layers and epitaxial columnar growth are not modelled; in LPBF they usually dominate over CET.
 * Nucleation undercooling is neglected in the Gäumann form; N0 depends on the process.
+* The IN718 CET constants are EBM-calibrated and transferred to LPBF without an LPBF fit. No CET constants are sourced for IN625.
 * IN625 thermal properties are a legacy estimate (`legacy-estimated-secondary`, unvalidated). The Laves versus NbC identity is not established (C88, D96).
 * The Laves numbers extrapolate weld-calibrated formulas.
 * No experimental comparison.
 
 ## 5. Frozen files untouched
 
-No file in `lpbf_simulation.IMPLEMENTATION_SOURCE_FILES`, `python/lpbf_implementation_fingerprint.expected` or `python/golden/lpbf_parity/` was changed, and the new modules are not in that list. `BUILD_JOB_SOLVER_REVISION` is unchanged and no build-job output changes. The only edit to an existing physics-adjacent module is `binary_laves_inputs`, appended at the end of `lpbf_solidification_segregation.py` without touching existing lines. LPBF fingerprint, fingerprint-pin and melt-pool consumer-pin tests: 22 OK (locked interpreter); segregation sha256 pins green; BUILD_JOB_SOLVER_REVISION unchanged; test_lpbf_gr_solidification 27 OK; npm run test:unit 1183 pass, 1 skipped, 0 fail.
+No file in `lpbf_simulation.IMPLEMENTATION_SOURCE_FILES`, `python/lpbf_implementation_fingerprint.expected` or `python/golden/lpbf_parity/` was changed, and the new modules are not in that list. `BUILD_JOB_SOLVER_REVISION` is unchanged and no build-job output changes. The only edit to an existing physics-adjacent module is `binary_laves_inputs`, appended at the end of `lpbf_solidification_segregation.py` without touching existing lines. LPBF fingerprint, fingerprint-pin and melt-pool consumer-pin tests: 22 OK (locked interpreter); segregation sha256 pins green; BUILD_JOB_SOLVER_REVISION unchanged; test_lpbf_gr_solidification 32 OK; npm run test:unit 1183 pass, 1 skipped, 0 fail.

@@ -100,6 +100,8 @@ export interface CalphadProvenanceInput {
   thermodynamicModel?: string;
   databaseUsed?: string;
   databaseSuitability?: string;
+  /** Short scope flag of a scoped database (what it may and may not be used for); absent for other databases. */
+  databaseScopeFlag?: string;
 }
 
 export const CLIENT_MODEL_LABEL = "Client-side simplified screening model (not CALPHAD, not pycalphad)";
@@ -111,6 +113,8 @@ export function calphadProvenanceLabels(result: CalphadProvenanceInput): {
   database: string;
   /** Scope of the database (which base elements it is assessed for); null for a client result. */
   scope: string | null;
+  /** Scope flag of a scoped database (for example mc_ti); null when the database carries none. */
+  scopeFlag: string | null;
   isPycalphad: boolean;
 } {
   const isPycalphad = result.isPythonEngine === true && result.isEmpirical !== true;
@@ -119,10 +123,11 @@ export function calphadProvenanceLabels(result: CalphadProvenanceInput): {
       model: result.thermodynamicModel || "pycalphad CEF Gibbs minimisation",
       database: result.databaseUsed || "Unnamed database",
       scope: result.databaseSuitability || null,
+      scopeFlag: result.databaseScopeFlag || null,
       isPycalphad: true,
     };
   }
-  return { model: CLIENT_MODEL_LABEL, database: CLIENT_DATABASE_LABEL, scope: null, isPycalphad: false };
+  return { model: CLIENT_MODEL_LABEL, database: CLIENT_DATABASE_LABEL, scope: null, scopeFlag: null, isPycalphad: false };
 }
 
 export const SOLUTE_DEFAULT_K_SOURCE = "default-table-not-thermodynamic";

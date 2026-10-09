@@ -42,7 +42,7 @@ from module_contracts_calibration_scorecard import build_calibration_scorecard_c
 from module_contracts_database import build_database_contract
 from module_contracts_calphad import build_calphad_contract
 from module_contracts_evidence import build_experimental_data_contract, build_traceability_contract
-from module_contracts_lpbf_secondary import build_lpbf_optimizer_contract
+from module_contracts_lpbf_secondary import build_lpbf_optimizer_contract, build_solidification_microstructure_contract
 
 PYTHON_DIR = Path(__file__).resolve().parent
 REPO_ROOT = PYTHON_DIR.parent
@@ -178,11 +178,6 @@ LEGACY_OPERATIONS: Dict[str, Tuple[Operation, ...]] = {
             _py("stl_slicer_build_time_solver", _PHYSICS_TIMEOUT_MS, warm=True)),
         _op("lpbf-source-catalog", "GET", "/api/lpbf/sources", _NODE),
         _op("lpbf-run-archive", "GET", "/api/lpbf/runs", _NODE),
-    ),
-    "solidification-microstructure": (
-        _worker_op("solidification-microstructure"),
-        _op("gr-solidification", "POST", "/api/python/lpbf-gr-solidification",
-            _py("lpbf_gr_solidification", 60000, warm=False)),
     ),
     "experimental-validation": (
         _op("lpbf-source-measurements", "GET", "/api/lpbf/sources/:datasetId/measurements", _NODE),
@@ -408,6 +403,7 @@ CONTRACTED_BUILDERS = {
     "lpbf-calibration-scorecard": build_calibration_scorecard_contract,
     "keyhole-raytracing": _keyhole_contract,
     "lpbf-optimizer": build_lpbf_optimizer_contract,
+    "solidification-microstructure": build_solidification_microstructure_contract,
 }
 
 

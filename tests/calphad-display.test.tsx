@@ -25,7 +25,7 @@ import {
 } from "../src/utils/calphadResultDisplay";
 import { CALPHADMultiComponentStudio } from "../src/components/CALPHADMultiComponentStudio";
 import type { PythonCalphadSolveResult } from "../src/services/pythonComputationService";
-import { solveMultiComponentEquilibrium } from "../src/physics/calphadMultiComponentSolver";
+import { solveMultiComponentEquilibrium, STANDARD_MULTI_COMPONENT_ALLOYS } from "../src/physics/calphadMultiComponentSolver";
 import { parseTDBFile, PRELOADED_MULTI_COMPONENT_TDB } from "../src/physics/tdbParser";
 
 const originalFetch = globalThis.fetch;
@@ -639,6 +639,30 @@ test("Gibbs tab with a pycalphad result shows Unavailable for a missing mu, the 
   assert.match(text, /database SER scale/);
 });
 
+test("activity card shows the SER basis and the literature source when the engine reports them", () => {
+  const base = resultWithPotentials();
+  const withBasis = {
+    ...base,
+    activityReferenceStates: {
+      ...base.activityReferenceStates,
+      TI: { ...base.activityReferenceStates!.TI, basis: "SER unary function GHSERTI", referenceFunction: "GHSERTI",
+        referenceSource: "SGTE unary data, Dinsdale (1991) CALPHAD 15:317" },
+    },
+  } as PythonCalphadSolveResult;
+  const text = textOf(renderToStaticMarkup(
+    <CALPHADMultiComponentStudio initialResult={withBasis} initialSubTab="gibbs_energy" />));
+  assert.match(text, /Basis: SER unary function GHSERTI/);
+  assert.match(text, /Reference: Dinsdale 1991, CALPHAD 15:317, doi:10\.1016\/0364-5916\(91\)90030-N/);
+});
+
+test("activity card shows no basis or source line when the engine reports none", () => {
+  const text = textOf(renderToStaticMarkup(
+    <CALPHADMultiComponentStudio initialResult={resultWithPotentials()} initialSubTab="gibbs_energy" />));
+  assert.match(text, /Ref: pure TI, HCP_A3, same T/);
+  assert.doesNotMatch(text, /Basis:/);
+  assert.doesNotMatch(text, /Reference: Dinsdale/);
+});
+
 test("Gibbs tab metric buttons and sub-tab buttons expose their selection with aria-pressed", () => {
   const markup = renderToStaticMarkup(
     <CALPHADMultiComponentStudio initialResult={resultWithPotentials()} initialSubTab="gibbs_energy" />);
@@ -674,4 +698,25 @@ test("a studio composition that differs from the shared specimen shows the misma
   assert.ok(text.includes("This studio is calculating Ti-6Al-4V, not the shared material Inconel 718 (AMS 5662 / UNS N07718). Re-Sync to calculate the shared material."));
   // the default (shared) composition shows no banner
   assert.doesNotMatch(renderToStaticMarkup(<CALPHADMultiComponentStudio />), /calphad-composition-mismatch/);
+});
+
+// ---- mc_ti scope flag and the Ti-6Al-4V preset ----
+
+const MC_TI_FLAG = "Valid for beta transus, liquidus/solidus and single-phase beta. Not for alpha/beta fractions below about 900 C. No Fe or O in this database.";
+
+test("a scoped database result shows its scope flag; other results do not", () => {
+  const flagged = textOf(renderToStaticMarkup(
+    <CALPHADMultiComponentStudio initialResult={pycalphadResult({ databaseId: "mc_ti", databaseScopeFlag: MC_TI_FLAG })} />));
+  assert.ok(flagged.includes(MC_TI_FLAG));
+  assert.equal(calphadProvenanceLabels({ isPythonEngine: true, isEmpirical: false, databaseUsed: "mc_ti", databaseScopeFlag: MC_TI_FLAG }).scopeFlag, MC_TI_FLAG);
+  const plain = renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={pycalphadResult()} />);
+  assert.ok(!plain.includes("calphad-database-scope-flag"));
+});
+
+test("the Ti-6Al-4V preset is Ti-Al-V only and names mc_ti, not COST 507", () => {
+  const ti64 = STANDARD_MULTI_COMPONENT_ALLOYS.find((a) => a.name.startsWith("Ti-6Al-4V"));
+  assert.ok(ti64);
+  assert.equal(ti64!.preferredDatabaseId, "mc_ti");
+  assert.deepEqual(Object.keys(ti64!.elements).sort(), ["Al", "Ti", "V"]);
+  assert.equal(STANDARD_MULTI_COMPONENT_ALLOYS.filter((a) => a.preferredDatabaseId).length, 1);
 });

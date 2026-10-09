@@ -21,7 +21,7 @@
   },
   {
    "id": "matcalc",
-   "title": "MatCalc open thermodynamic databases (mc_fe, mc_ni, mc_al)",
+   "title": "MatCalc open thermodynamic databases (mc_fe, mc_ni, mc_al, mc_ti)",
    "landing": "https://www.matcalc.at/index.php/databases/open-databases",
    "licence": "ODbL 1.0 (database) + DbCL 1.0 (contents); share-alike for derivative databases",
    "files": [
@@ -48,6 +48,14 @@
      "sha256": "87ec595f2caae189227ed11d5598c899b436b866ccfefea91304ca57188817c4",
      "status": "downloaded",
      "retrieved": "2026-10-05"
+    },
+    {
+     "name": "mc_ti_v203.tdb",
+     "url": "https://www.matcalc.at/images/stories/Download/Database/mc_ti_v203.tdb",
+     "sizeBytes": 78191,
+     "sha256": "7bec5404071fa3cbdaf340bdb431af98f5a00a6d5526b84ff31834b5ff5841cb",
+     "status": "downloaded",
+     "retrieved": "2026-10-09"
     }
    ]
   },

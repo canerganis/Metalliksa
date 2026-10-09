@@ -6,8 +6,8 @@ LPBF melt-pool G/R coupled to solidification: Hunt G/R bands, a CET band slot an
 Nothing here re-solves the melt pool. The frozen Rosenthal screening solver (`lpbf_thermal_solver.
 calculate_meltpool_physics`, heat source default) supplies G and R along the rear liquidus arc through the frozen
 `solidification_front` mapper. This module copies those numbers, couples them to the existing Aziz k(V) and binary
-Scheil functions of `lpbf_solidification_segregation`, and exposes a CET criterion whose constants are unavailable
-for IN718 and IN625 (see `lpbf_cet_screening`).
+Scheil functions of `lpbf_solidification_segregation`, and exposes a CET criterion with two sourced IN718 constant
+sets (EBM-calibrated, transferred to LPBF) and no sourced constants for IN625 (see `lpbf_cet_screening`).
 
 Equations
   E1  Front G and R are copied, not recomputed: G = |grad T| at liquidus samples, R = v n_x cos(theta) for n_x > 0,
@@ -44,7 +44,8 @@ MIN_AXIS_DEFAULT_N = 11
 
 EVIDENCE_STATEMENT = (
     "Screening only. G and R are copied from the frozen Rosenthal conduction-field melt-pool model; Hunt G/R bands are "
-    "uncalibrated, CET constants are unavailable for IN718 and IN625, and the Laves numbers are a binary upper bound "
+    "uncalibrated, CET constants exist for IN718 only (EBM-calibrated, transferred to LPBF) and none are sourced for "
+    "IN625, and the Laves numbers are a binary upper bound "
     "from weld-calibrated formulas. This is not an experimental validation and not a grain-structure prediction."
 )
 LIMITS: List[str] = [
@@ -59,6 +60,8 @@ LIMITS: List[str] = [
     "Remelting by later tracks and layers and epitaxial columnar growth are not modelled; in LPBF they usually dominate "
     "over CET.",
     "Nucleation undercooling is neglected in the Gäumann form; N0 depends on the process.",
+    "The IN718 CET constants are EBM-calibrated and transferred to LPBF without an LPBF fit; no CET constants are "
+    "sourced for IN625.",
     "IN625 thermal properties are a legacy estimate (unvalidated).",
     "The Laves numbers extrapolate weld-calibrated formulas.",
     "No experimental comparison.",
@@ -218,7 +221,7 @@ def _unavailable_body(status: str, reason: str) -> Dict[str, Any]:
         "rosenthalCenterline": {"status": "unavailable", "reason": reason},
         "morphology": {"basis": "hunt-g-over-r-screening", "bands": {"bottom": None, "median": None, "tail": None},
                        "label": HUNT_LABEL},
-        "cet": {"status": "unavailable", "reason": reason, "locations": {k: None for k in LOCATIONS}},
+        "cet": {"status": "unavailable", "reason": reason, "locations": {k: None for k in LOCATIONS}, "sets": {}},
         "laves": {"status": "unavailable", "reason": reason},
     }
 
@@ -287,9 +290,12 @@ def couple_thermal_block(thermal: Mapping[str, Any], alloy_id: str, *, preheat_C
         laves = laves_trapping(alloy_id, {k: (e["R_m_s"] if e is not None else None) for k, e in locs.items()})
     else:
         reason = proj.get("reason") or "degenerate solver floor"
-        cet = {"status": "unavailable", "reason": reason, "locations": {k: None for k in LOCATIONS}}
+        cet = {"status": "unavailable", "reason": reason, "locations": {k: None for k in LOCATIONS}, "sets": {}}
         laves = {"status": "unavailable", "reason": reason}
-    basis = "cet-gaumann2001" if cet["status"] == "available" else "hunt-g-over-r-screening"
+    # The registry CET sets are EBM-calibrated and transferred, so they are shown beside the Hunt band and never
+    # replace it. Only the test-only constants override switches the morphology basis.
+    basis = ("cet-gaumann2001" if (cet["status"] == "available" and cet_constants_override is not None)
+             else "hunt-g-over-r-screening")
     morphology = {
         "basis": basis,
         "bands": {k: (e["huntBand"] if e is not None else None) for k, e in locs.items()},

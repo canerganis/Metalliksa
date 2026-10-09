@@ -1,0 +1,1118 @@
+[
+ {
+  "source": "hofmann-316l-2026",
+  "kernel": "eagar-tsai",
+  "m": 12,
+  "nSets": 377,
+  "hdDefault": 35.40050823039921,
+  "hdCalAll": 36.62115752546043,
+  "worseAll": 0.61,
+  "gates": {
+   "G5": {
+    "passRate": 0.025,
+    "falsePass": 0.8,
+    "falsePassBy5": 0.8,
+    "hdCal": 42.32946000471644,
+    "hdDef": 35.62651579644855,
+    "gainMedian": -6.961761087418964,
+    "cov80": 0.6871232876712329,
+    "halfPct": 46.65798609916712,
+    "etaMedian": 0.475
+   },
+   "G6": {
+    "passRate": 0.02,
+    "falsePass": 1.0,
+    "falsePassBy5": 1.0,
+    "hdCal": 43.33103867797193,
+    "hdDef": 35.68948344575764,
+    "gainMedian": -7.833931321098923,
+    "cov80": 0.6095890410958904,
+    "halfPct": 37.49573423763948,
+    "etaMedian": 0.48
+   },
+   "G7": {
+    "passRate": 0.02,
+    "falsePass": 1.0,
+    "falsePassBy5": 1.0,
+    "hdCal": 43.33103867797193,
+    "hdDef": 35.68948344575764,
+    "gainMedian": -7.833931321098923,
+    "cov80": 0.6095890410958904,
+    "halfPct": 37.49573423763948,
+    "etaMedian": 0.48
+   }
+  }
+ },
+ {
+  "source": "hofmann-316l-2026",
+  "kernel": "eagar-tsai",
+  "m": 16,
+  "nSets": 377,
+  "hdDefault": 35.42931353790395,
+  "hdCalAll": 36.897645373896594,
+  "worseAll": 0.67,
+  "gates": {
+   "G5": {
+    "passRate": 0.005,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 31.53841877546139,
+    "hdDef": 32.4589586317501,
+    "gainMedian": 0.920539856288709,
+    "cov80": 0.8836565096952909,
+    "halfPct": 131.7595344033112,
+    "etaMedian": 0.385
+   },
+   "G6": {
+    "passRate": 0.005,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 31.53841877546139,
+    "hdDef": 32.4589586317501,
+    "gainMedian": 0.920539856288709,
+    "cov80": 0.8836565096952909,
+    "halfPct": 131.7595344033112,
+    "etaMedian": 0.385
+   },
+   "G7": {
+    "passRate": 0.005,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 31.53841877546139,
+    "hdDef": 32.4589586317501,
+    "gainMedian": 0.920539856288709,
+    "cov80": 0.8836565096952909,
+    "halfPct": 131.7595344033112,
+    "etaMedian": 0.385
+   }
+  }
+ },
+ {
+  "source": "hofmann-316l-2026",
+  "kernel": "eagar-tsai",
+  "m": 24,
+  "nSets": 377,
+  "hdDefault": 35.51105614116045,
+  "hdCalAll": 36.41818657565439,
+  "worseAll": 0.655,
+  "gates": {
+   "G5": {
+    "passRate": 0.0
+   },
+   "G6": {
+    "passRate": 0.0
+   },
+   "G7": {
+    "passRate": 0.0
+   }
+  }
+ },
+ {
+  "source": "hofmann-316l-2026",
+  "kernel": "goldak",
+  "m": 12,
+  "nSets": 350,
+  "hdDefault": 38.57599994772026,
+  "hdCalAll": 39.11122042633336,
+  "worseAll": 0.54,
+  "gates": {
+   "G5": {
+    "passRate": 0.02,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 37.25804306542957,
+    "hdDef": 38.382457210494564,
+    "gainMedian": 1.1106101718074477,
+    "cov80": 0.7063609467455622,
+    "halfPct": 64.7742924343103,
+    "etaMedian": 0.3675
+   },
+   "G6": {
+    "passRate": 0.01,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 36.764021245173815,
+    "hdDef": 38.510232470912456,
+    "gainMedian": 1.7462112257386408,
+    "cov80": 0.636094674556213,
+    "halfPct": 54.4725103235736,
+    "etaMedian": 0.3675
+   },
+   "G7": {
+    "passRate": 0.01,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 36.764021245173815,
+    "hdDef": 38.510232470912456,
+    "gainMedian": 1.7462112257386408,
+    "cov80": 0.636094674556213,
+    "halfPct": 54.4725103235736,
+    "etaMedian": 0.3675
+   }
+  }
+ },
+ {
+  "source": "hofmann-316l-2026",
+  "kernel": "goldak",
+  "m": 16,
+  "nSets": 350,
+  "hdDefault": 38.504290747325115,
+  "hdCalAll": 39.56209654883556,
+  "worseAll": 0.58,
+  "gates": {
+   "G5": {
+    "passRate": 0.005,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 36.813515745387235,
+    "hdDef": 38.539888474915486,
+    "gainMedian": 1.7263727295282507,
+    "cov80": 0.7724550898203593,
+    "halfPct": 66.361532801206,
+    "etaMedian": 0.37
+   },
+   "G6": {
+    "passRate": 0.005,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 36.813515745387235,
+    "hdDef": 38.539888474915486,
+    "gainMedian": 1.7263727295282507,
+    "cov80": 0.7724550898203593,
+    "halfPct": 66.361532801206,
+    "etaMedian": 0.37
+   },
+   "G7": {
+    "passRate": 0.005,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 36.813515745387235,
+    "hdDef": 38.539888474915486,
+    "gainMedian": 1.7263727295282507,
+    "cov80": 0.7724550898203593,
+    "halfPct": 66.361532801206,
+    "etaMedian": 0.37
+   }
+  }
+ },
+ {
+  "source": "hofmann-316l-2026",
+  "kernel": "goldak",
+  "m": 24,
+  "nSets": 350,
+  "hdDefault": 38.48443599281003,
+  "hdCalAll": 39.5339999186463,
+  "worseAll": 0.61,
+  "gates": {
+   "G5": {
+    "passRate": 0.0
+   },
+   "G6": {
+    "passRate": 0.0
+   },
+   "G7": {
+    "passRate": 0.0
+   }
+  }
+ },
+ {
+  "source": "hofmann-316l-2026",
+  "kernel": "rosenthal",
+  "m": 12,
+  "nSets": 349,
+  "hdDefault": 50.87687421070049,
+  "hdCalAll": 34.56051832664366,
+  "worseAll": 0.01,
+  "gates": {
+   "G5": {
+    "passRate": 0.545,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 33.61916288527625,
+    "hdDef": 50.657883341928525,
+    "gainMedian": 16.873306875477667,
+    "cov80": 0.834590150545831,
+    "halfPct": 68.55795398503474,
+    "etaMedian": 0.335
+   },
+   "G6": {
+    "passRate": 0.505,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 33.616806128423384,
+    "hdDef": 50.68423836542796,
+    "gainMedian": 16.897818015219727,
+    "cov80": 0.8280988336222347,
+    "halfPct": 65.59042643479988,
+    "etaMedian": 0.335
+   },
+   "G7": {
+    "passRate": 0.505,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 33.616806128423384,
+    "hdDef": 50.68423836542796,
+    "gainMedian": 16.897818015219727,
+    "cov80": 0.8280988336222347,
+    "halfPct": 65.59042643479988,
+    "etaMedian": 0.335
+   }
+  }
+ },
+ {
+  "source": "hofmann-316l-2026",
+  "kernel": "rosenthal",
+  "m": 16,
+  "nSets": 349,
+  "hdDefault": 50.90181060432563,
+  "hdCalAll": 34.23897838013218,
+  "worseAll": 0.0,
+  "gates": {
+   "G5": {
+    "passRate": 0.63,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 33.78416170193542,
+    "hdDef": 50.755765731272795,
+    "gainMedian": 16.9679912525753,
+    "cov80": 0.8301873301873302,
+    "halfPct": 65.69356855390669,
+    "etaMedian": 0.335
+   },
+   "G6": {
+    "passRate": 0.615,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 33.74239363581582,
+    "hdDef": 50.7511935540062,
+    "gainMedian": 17.025067069729992,
+    "cov80": 0.8289264874630728,
+    "halfPct": 65.64625616674226,
+    "etaMedian": 0.335
+   },
+   "G7": {
+    "passRate": 0.615,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 33.74239363581582,
+    "hdDef": 50.7511935540062,
+    "gainMedian": 17.025067069729992,
+    "cov80": 0.8289264874630728,
+    "halfPct": 65.64625616674226,
+    "etaMedian": 0.335
+   }
+  }
+ },
+ {
+  "source": "hofmann-316l-2026",
+  "kernel": "rosenthal",
+  "m": 24,
+  "nSets": 349,
+  "hdDefault": 50.943071428033676,
+  "hdCalAll": 34.222144977383614,
+  "worseAll": 0.0,
+  "gates": {
+   "G5": {
+    "passRate": 0.505,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 33.60714576418774,
+    "hdDef": 50.578964482279076,
+    "gainMedian": 16.882705911992275,
+    "cov80": 0.8435948210205638,
+    "halfPct": 65.20728216813299,
+    "etaMedian": 0.335
+   },
+   "G6": {
+    "passRate": 0.5,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 33.605345394102685,
+    "hdDef": 50.61442516432391,
+    "gainMedian": 16.883531362352173,
+    "cov80": 0.8428923076923078,
+    "halfPct": 65.1105090397326,
+    "etaMedian": 0.335
+   },
+   "G7": {
+    "passRate": 0.5,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 33.605345394102685,
+    "hdDef": 50.61442516432391,
+    "gainMedian": 16.883531362352173,
+    "cov80": 0.8428923076923078,
+    "halfPct": 65.1105090397326,
+    "etaMedian": 0.335
+   }
+  }
+ },
+ {
+  "source": "ku-leuven-316l-2021",
+  "kernel": "eagar-tsai",
+  "m": 12,
+  "nSets": 44,
+  "hdDefault": 28.907434844289405,
+  "hdCalAll": 33.08374501137115,
+  "worseAll": 0.95,
+  "gates": {
+   "G5": {
+    "passRate": 0.33,
+    "falsePass": 1.0,
+    "falsePassBy5": 0.8181818181818182,
+    "hdCal": 37.279151021935945,
+    "hdDef": 29.169563464732178,
+    "gainMedian": -7.842039011019766,
+    "cov80": 0.775094696969697,
+    "halfPct": 47.76134332538315,
+    "etaMedian": 0.59
+   },
+   "G6": {
+    "passRate": 0.325,
+    "falsePass": 1.0,
+    "falsePassBy5": 0.8307692307692308,
+    "hdCal": 37.28086926169863,
+    "hdDef": 29.169427978625826,
+    "gainMedian": -7.844896236941565,
+    "cov80": 0.7740384615384616,
+    "halfPct": 47.15376872009094,
+    "etaMedian": 0.59
+   },
+   "G7": {
+    "passRate": 0.325,
+    "falsePass": 1.0,
+    "falsePassBy5": 0.8307692307692308,
+    "hdCal": 37.28086926169863,
+    "hdDef": 29.169427978625826,
+    "gainMedian": -7.844896236941565,
+    "cov80": 0.7740384615384616,
+    "halfPct": 47.15376872009094,
+    "etaMedian": 0.59
+   }
+  }
+ },
+ {
+  "source": "ku-leuven-316l-2021",
+  "kernel": "eagar-tsai",
+  "m": 16,
+  "nSets": 44,
+  "hdDefault": 28.86056250958186,
+  "hdCalAll": 32.50308085005218,
+  "worseAll": 0.83,
+  "gates": {
+   "G5": {
+    "passRate": 0.345,
+    "falsePass": 1.0,
+    "falsePassBy5": 0.9130434782608695,
+    "hdCal": 38.26489345874006,
+    "hdDef": 28.993327719379653,
+    "gainMedian": -9.217667616818613,
+    "cov80": 0.7587991718426501,
+    "halfPct": 48.08348729852345,
+    "etaMedian": 0.59
+   },
+   "G6": {
+    "passRate": 0.34,
+    "falsePass": 1.0,
+    "falsePassBy5": 0.9264705882352942,
+    "hdCal": 38.32374846733575,
+    "hdDef": 28.95508626972213,
+    "gainMedian": -9.221459719018421,
+    "cov80": 0.7584033613445378,
+    "halfPct": 47.803449660150505,
+    "etaMedian": 0.59
+   },
+   "G7": {
+    "passRate": 0.34,
+    "falsePass": 1.0,
+    "falsePassBy5": 0.9264705882352942,
+    "hdCal": 38.32374846733575,
+    "hdDef": 28.95508626972213,
+    "gainMedian": -9.221459719018421,
+    "cov80": 0.7584033613445378,
+    "halfPct": 47.803449660150505,
+    "etaMedian": 0.59
+   }
+  }
+ },
+ {
+  "source": "ku-leuven-316l-2021",
+  "kernel": "eagar-tsai",
+  "m": 24,
+  "nSets": 44,
+  "hdDefault": 28.656590553528687,
+  "hdCalAll": 32.47492981868041,
+  "worseAll": 0.715,
+  "gates": {
+   "G5": {
+    "passRate": 0.115,
+    "falsePass": 1.0,
+    "falsePassBy5": 1.0,
+    "hdCal": 43.82235226005968,
+    "hdDef": 28.57459205851737,
+    "gainMedian": -15.741410863433899,
+    "cov80": 0.7130434782608696,
+    "halfPct": 46.7973006043767,
+    "etaMedian": 0.59
+   },
+   "G6": {
+    "passRate": 0.115,
+    "falsePass": 1.0,
+    "falsePassBy5": 1.0,
+    "hdCal": 43.82235226005968,
+    "hdDef": 28.57459205851737,
+    "gainMedian": -15.741410863433899,
+    "cov80": 0.7130434782608696,
+    "halfPct": 46.7973006043767,
+    "etaMedian": 0.59
+   },
+   "G7": {
+    "passRate": 0.115,
+    "falsePass": 1.0,
+    "falsePassBy5": 1.0,
+    "hdCal": 43.82235226005968,
+    "hdDef": 28.57459205851737,
+    "gainMedian": -15.741410863433899,
+    "cov80": 0.7130434782608696,
+    "halfPct": 46.7973006043767,
+    "etaMedian": 0.59
+   }
+  }
+ },
+ {
+  "source": "ku-leuven-316l-2021",
+  "kernel": "goldak",
+  "m": 12,
+  "nSets": 44,
+  "hdDefault": 28.907434844289405,
+  "hdCalAll": 33.08374501137115,
+  "worseAll": 0.95,
+  "gates": {
+   "G5": {
+    "passRate": 0.33,
+    "falsePass": 1.0,
+    "falsePassBy5": 0.8181818181818182,
+    "hdCal": 37.279151021935945,
+    "hdDef": 29.169563464732178,
+    "gainMedian": -7.842039011019766,
+    "cov80": 0.775094696969697,
+    "halfPct": 47.76134332538315,
+    "etaMedian": 0.59
+   },
+   "G6": {
+    "passRate": 0.325,
+    "falsePass": 1.0,
+    "falsePassBy5": 0.8307692307692308,
+    "hdCal": 37.28086926169863,
+    "hdDef": 29.169427978625826,
+    "gainMedian": -7.844896236941565,
+    "cov80": 0.7740384615384616,
+    "halfPct": 47.15376872009094,
+    "etaMedian": 0.59
+   },
+   "G7": {
+    "passRate": 0.325,
+    "falsePass": 1.0,
+    "falsePassBy5": 0.8307692307692308,
+    "hdCal": 37.28086926169863,
+    "hdDef": 29.169427978625826,
+    "gainMedian": -7.844896236941565,
+    "cov80": 0.7740384615384616,
+    "halfPct": 47.15376872009094,
+    "etaMedian": 0.59
+   }
+  }
+ },
+ {
+  "source": "ku-leuven-316l-2021",
+  "kernel": "goldak",
+  "m": 16,
+  "nSets": 44,
+  "hdDefault": 28.86056250958186,
+  "hdCalAll": 32.50308085005218,
+  "worseAll": 0.83,
+  "gates": {
+   "G5": {
+    "passRate": 0.345,
+    "falsePass": 1.0,
+    "falsePassBy5": 0.9130434782608695,
+    "hdCal": 38.26489345874006,
+    "hdDef": 28.993327719379653,
+    "gainMedian": -9.217667616818613,
+    "cov80": 0.7587991718426501,
+    "halfPct": 48.08348729852345,
+    "etaMedian": 0.59
+   },
+   "G6": {
+    "passRate": 0.34,
+    "falsePass": 1.0,
+    "falsePassBy5": 0.9264705882352942,
+    "hdCal": 38.32374846733575,
+    "hdDef": 28.95508626972213,
+    "gainMedian": -9.221459719018421,
+    "cov80": 0.7584033613445378,
+    "halfPct": 47.803449660150505,
+    "etaMedian": 0.59
+   },
+   "G7": {
+    "passRate": 0.34,
+    "falsePass": 1.0,
+    "falsePassBy5": 0.9264705882352942,
+    "hdCal": 38.32374846733575,
+    "hdDef": 28.95508626972213,
+    "gainMedian": -9.221459719018421,
+    "cov80": 0.7584033613445378,
+    "halfPct": 47.803449660150505,
+    "etaMedian": 0.59
+   }
+  }
+ },
+ {
+  "source": "ku-leuven-316l-2021",
+  "kernel": "goldak",
+  "m": 24,
+  "nSets": 44,
+  "hdDefault": 28.656590553528687,
+  "hdCalAll": 32.47492981868041,
+  "worseAll": 0.715,
+  "gates": {
+   "G5": {
+    "passRate": 0.115,
+    "falsePass": 1.0,
+    "falsePassBy5": 1.0,
+    "hdCal": 43.82235226005968,
+    "hdDef": 28.57459205851737,
+    "gainMedian": -15.741410863433899,
+    "cov80": 0.7130434782608696,
+    "halfPct": 46.7973006043767,
+    "etaMedian": 0.59
+   },
+   "G6": {
+    "passRate": 0.115,
+    "falsePass": 1.0,
+    "falsePassBy5": 1.0,
+    "hdCal": 43.82235226005968,
+    "hdDef": 28.57459205851737,
+    "gainMedian": -15.741410863433899,
+    "cov80": 0.7130434782608696,
+    "halfPct": 46.7973006043767,
+    "etaMedian": 0.59
+   },
+   "G7": {
+    "passRate": 0.115,
+    "falsePass": 1.0,
+    "falsePassBy5": 1.0,
+    "hdCal": 43.82235226005968,
+    "hdDef": 28.57459205851737,
+    "gainMedian": -15.741410863433899,
+    "cov80": 0.7130434782608696,
+    "halfPct": 46.7973006043767,
+    "etaMedian": 0.59
+   }
+  }
+ },
+ {
+  "source": "ku-leuven-316l-2021",
+  "kernel": "rosenthal",
+  "m": 12,
+  "nSets": 44,
+  "hdDefault": 43.78892399844189,
+  "hdCalAll": 36.12949607591388,
+  "worseAll": 0.215,
+  "gates": {
+   "G5": {
+    "passRate": 0.255,
+    "falsePass": 0.7058823529411765,
+    "falsePassBy5": 0.6862745098039216,
+    "hdCal": 55.20752768343156,
+    "hdDef": 45.67744010785567,
+    "gainMedian": -9.806142132763789,
+    "cov80": 0.7928921568627451,
+    "halfPct": 86.89427460342611,
+    "etaMedian": 0.645
+   },
+   "G6": {
+    "passRate": 0.095,
+    "falsePass": 1.0,
+    "falsePassBy5": 1.0,
+    "hdCal": 56.71086375017475,
+    "hdDef": 46.33294217381143,
+    "gainMedian": -10.45799441508776,
+    "cov80": 0.7072368421052632,
+    "halfPct": 74.74383972028858,
+    "etaMedian": 0.695
+   },
+   "G7": {
+    "passRate": 0.095,
+    "falsePass": 1.0,
+    "falsePassBy5": 1.0,
+    "hdCal": 56.71086375017475,
+    "hdDef": 46.33294217381143,
+    "gainMedian": -10.45799441508776,
+    "cov80": 0.7072368421052632,
+    "halfPct": 74.74383972028858,
+    "etaMedian": 0.695
+   }
+  }
+ },
+ {
+  "source": "ku-leuven-316l-2021",
+  "kernel": "rosenthal",
+  "m": 16,
+  "nSets": 44,
+  "hdDefault": 43.7753578050534,
+  "hdCalAll": 36.18905496389188,
+  "worseAll": 0.18,
+  "gates": {
+   "G5": {
+    "passRate": 0.265,
+    "falsePass": 0.5849056603773585,
+    "falsePassBy5": 0.5849056603773585,
+    "hdCal": 54.698196650790976,
+    "hdDef": 45.938713915633485,
+    "gainMedian": -9.20750741204774,
+    "cov80": 0.8133423180592992,
+    "halfPct": 92.40505224362789,
+    "etaMedian": 0.595
+   },
+   "G6": {
+    "passRate": 0.105,
+    "falsePass": 1.0,
+    "falsePassBy5": 1.0,
+    "hdCal": 58.35242408847455,
+    "hdDef": 46.822947611990436,
+    "gainMedian": -11.524744067206377,
+    "cov80": 0.7074829931972788,
+    "halfPct": 76.81339866198213,
+    "etaMedian": 0.655
+   },
+   "G7": {
+    "passRate": 0.105,
+    "falsePass": 1.0,
+    "falsePassBy5": 1.0,
+    "hdCal": 58.35242408847455,
+    "hdDef": 46.822947611990436,
+    "gainMedian": -11.524744067206377,
+    "cov80": 0.7074829931972788,
+    "halfPct": 76.81339866198213,
+    "etaMedian": 0.655
+   }
+  }
+ },
+ {
+  "source": "ku-leuven-316l-2021",
+  "kernel": "rosenthal",
+  "m": 24,
+  "nSets": 44,
+  "hdDefault": 44.07359338213029,
+  "hdCalAll": 36.25876156713825,
+  "worseAll": 0.135,
+  "gates": {
+   "G5": {
+    "passRate": 0.055,
+    "falsePass": 0.8181818181818182,
+    "falsePassBy5": 0.8181818181818182,
+    "hdCal": 60.91374042743398,
+    "hdDef": 48.76353534651929,
+    "gainMedian": -11.871343706011416,
+    "cov80": 0.7000000000000001,
+    "halfPct": 87.12329700800797,
+    "etaMedian": 0.68
+   },
+   "G6": {
+    "passRate": 0.03,
+    "falsePass": 1.0,
+    "falsePassBy5": 1.0,
+    "hdCal": 64.68353208733782,
+    "hdDef": 49.64890613160675,
+    "gainMedian": -14.41268471891052,
+    "cov80": 0.6416666666666667,
+    "halfPct": 80.95128929167021,
+    "etaMedian": 0.7024999999999999
+   },
+   "G7": {
+    "passRate": 0.03,
+    "falsePass": 1.0,
+    "falsePassBy5": 1.0,
+    "hdCal": 64.68353208733782,
+    "hdDef": 49.64890613160675,
+    "gainMedian": -14.41268471891052,
+    "cov80": 0.6416666666666667,
+    "halfPct": 80.95128929167021,
+    "etaMedian": 0.7024999999999999
+   }
+  }
+ },
+ {
+  "source": "totis-ti64-2021",
+  "kernel": "eagar-tsai",
+  "m": 12,
+  "nSets": 80,
+  "hdDefault": 37.02829353833424,
+  "hdCalAll": 36.66088137956208,
+  "worseAll": 0.43,
+  "gates": {
+   "G5": {
+    "passRate": 0.41,
+    "falsePass": 0.6829268292682927,
+    "falsePassBy5": 0.24390243902439024,
+    "hdCal": 39.86076566484823,
+    "hdDef": 37.48881264272532,
+    "gainMedian": -2.9020492308315795,
+    "cov80": 0.8005738880918221,
+    "halfPct": 65.87712295921561,
+    "etaMedian": 0.465
+   },
+   "G6": {
+    "passRate": 0.375,
+    "falsePass": 0.7066666666666667,
+    "falsePassBy5": 0.26666666666666666,
+    "hdCal": 40.353917927222334,
+    "hdDef": 37.46879015064295,
+    "gainMedian": -3.2641352087183293,
+    "cov80": 0.793529411764706,
+    "halfPct": 59.90445209815509,
+    "etaMedian": 0.465
+   },
+   "G7": {
+    "passRate": 0.375,
+    "falsePass": 0.7066666666666667,
+    "falsePassBy5": 0.26666666666666666,
+    "hdCal": 40.353917927222334,
+    "hdDef": 37.46879015064295,
+    "gainMedian": -3.2641352087183293,
+    "cov80": 0.793529411764706,
+    "halfPct": 59.90445209815509,
+    "etaMedian": 0.465
+   }
+  }
+ },
+ {
+  "source": "totis-ti64-2021",
+  "kernel": "eagar-tsai",
+  "m": 16,
+  "nSets": 80,
+  "hdDefault": 36.89653485647749,
+  "hdCalAll": 36.7151696306176,
+  "worseAll": 0.42,
+  "gates": {
+   "G5": {
+    "passRate": 0.44,
+    "falsePass": 0.6477272727272727,
+    "falsePassBy5": 0.2159090909090909,
+    "hdCal": 39.348791407260194,
+    "hdDef": 37.65838177579289,
+    "gainMedian": -2.597882213486976,
+    "cov80": 0.8062855113636364,
+    "halfPct": 62.20154885283738,
+    "etaMedian": 0.4625
+   },
+   "G6": {
+    "passRate": 0.435,
+    "falsePass": 0.6551724137931034,
+    "falsePassBy5": 0.21839080459770116,
+    "hdCal": 39.648432747850556,
+    "hdDef": 37.65530408983422,
+    "gainMedian": -2.806241718230048,
+    "cov80": 0.8067528735632183,
+    "halfPct": 62.2768408472941,
+    "etaMedian": 0.465
+   },
+   "G7": {
+    "passRate": 0.435,
+    "falsePass": 0.6551724137931034,
+    "falsePassBy5": 0.21839080459770116,
+    "hdCal": 39.648432747850556,
+    "hdDef": 37.65530408983422,
+    "gainMedian": -2.806241718230048,
+    "cov80": 0.8067528735632183,
+    "halfPct": 62.2768408472941,
+    "etaMedian": 0.465
+   }
+  }
+ },
+ {
+  "source": "totis-ti64-2021",
+  "kernel": "eagar-tsai",
+  "m": 24,
+  "nSets": 80,
+  "hdDefault": 36.75919437012057,
+  "hdCalAll": 36.26544951316214,
+  "worseAll": 0.415,
+  "gates": {
+   "G5": {
+    "passRate": 0.295,
+    "falsePass": 0.6610169491525424,
+    "falsePassBy5": 0.3220338983050847,
+    "hdCal": 40.84562174143911,
+    "hdDef": 38.642955929188005,
+    "gainMedian": -2.5983640574136757,
+    "cov80": 0.8099273607748183,
+    "halfPct": 63.10631305209953,
+    "etaMedian": 0.44
+   },
+   "G6": {
+    "passRate": 0.295,
+    "falsePass": 0.6610169491525424,
+    "falsePassBy5": 0.3220338983050847,
+    "hdCal": 40.84562174143911,
+    "hdDef": 38.642955929188005,
+    "gainMedian": -2.5983640574136757,
+    "cov80": 0.8099273607748183,
+    "halfPct": 63.10631305209953,
+    "etaMedian": 0.44
+   },
+   "G7": {
+    "passRate": 0.295,
+    "falsePass": 0.6610169491525424,
+    "falsePassBy5": 0.3220338983050847,
+    "hdCal": 40.84562174143911,
+    "hdDef": 38.642955929188005,
+    "gainMedian": -2.5983640574136757,
+    "cov80": 0.8099273607748183,
+    "halfPct": 63.10631305209953,
+    "etaMedian": 0.44
+   }
+  }
+ },
+ {
+  "source": "totis-ti64-2021",
+  "kernel": "goldak",
+  "m": 12,
+  "nSets": 78,
+  "hdDefault": 33.67763423221268,
+  "hdCalAll": 32.64504888324684,
+  "worseAll": 0.385,
+  "gates": {
+   "G5": {
+    "passRate": 0.555,
+    "falsePass": 0.5675675675675675,
+    "falsePassBy5": 0.08108108108108109,
+    "hdCal": 34.252470555306836,
+    "hdDef": 34.100964183264935,
+    "gainMedian": -0.8558042413862665,
+    "cov80": 0.7833742833742834,
+    "halfPct": 53.794629467480235,
+    "etaMedian": 0.455
+   },
+   "G6": {
+    "passRate": 0.53,
+    "falsePass": 0.5849056603773585,
+    "falsePassBy5": 0.08490566037735849,
+    "hdCal": 34.36077824979245,
+    "hdDef": 34.104988333388626,
+    "gainMedian": -1.000363628512126,
+    "cov80": 0.7784448256146368,
+    "halfPct": 50.565048958815574,
+    "etaMedian": 0.455
+   },
+   "G7": {
+    "passRate": 0.53,
+    "falsePass": 0.5849056603773585,
+    "falsePassBy5": 0.08490566037735849,
+    "hdCal": 34.36077824979245,
+    "hdDef": 34.104988333388626,
+    "gainMedian": -1.000363628512126,
+    "cov80": 0.7784448256146368,
+    "halfPct": 50.565048958815574,
+    "etaMedian": 0.455
+   }
+  }
+ },
+ {
+  "source": "totis-ti64-2021",
+  "kernel": "goldak",
+  "m": 16,
+  "nSets": 78,
+  "hdDefault": 33.76333362179945,
+  "hdCalAll": 32.45472384737343,
+  "worseAll": 0.39,
+  "gates": {
+   "G5": {
+    "passRate": 0.58,
+    "falsePass": 0.5775862068965517,
+    "falsePassBy5": 0.07758620689655173,
+    "hdCal": 34.61362391791049,
+    "hdDef": 34.401184121555616,
+    "gainMedian": -0.8468352264988965,
+    "cov80": 0.8047830923248054,
+    "halfPct": 55.34131031532692,
+    "etaMedian": 0.46
+   },
+   "G6": {
+    "passRate": 0.555,
+    "falsePass": 0.5945945945945946,
+    "falsePassBy5": 0.08108108108108109,
+    "hdCal": 34.80627568956467,
+    "hdDef": 34.426484568451116,
+    "gainMedian": -1.1245005731838411,
+    "cov80": 0.8000581226387679,
+    "halfPct": 53.74855352551358,
+    "etaMedian": 0.46
+   },
+   "G7": {
+    "passRate": 0.555,
+    "falsePass": 0.5945945945945946,
+    "falsePassBy5": 0.08108108108108109,
+    "hdCal": 34.80627568956467,
+    "hdDef": 34.426484568451116,
+    "gainMedian": -1.1245005731838411,
+    "cov80": 0.8000581226387679,
+    "halfPct": 53.74855352551358,
+    "etaMedian": 0.46
+   }
+  }
+ },
+ {
+  "source": "totis-ti64-2021",
+  "kernel": "goldak",
+  "m": 24,
+  "nSets": 78,
+  "hdDefault": 33.33243178221675,
+  "hdCalAll": 32.066712721442144,
+  "worseAll": 0.36,
+  "gates": {
+   "G5": {
+    "passRate": 0.435,
+    "falsePass": 0.6206896551724138,
+    "falsePassBy5": 0.13793103448275862,
+    "hdCal": 35.507898520950086,
+    "hdDef": 34.42712389729396,
+    "gainMedian": -1.2929447671501748,
+    "cov80": 0.8177948063005531,
+    "halfPct": 58.357619130191665,
+    "etaMedian": 0.445
+   },
+   "G6": {
+    "passRate": 0.42,
+    "falsePass": 0.6428571428571429,
+    "falsePassBy5": 0.14285714285714285,
+    "hdCal": 35.777431348719475,
+    "hdDef": 34.434246191309846,
+    "gainMedian": -1.3614125674678732,
+    "cov80": 0.8150352733686065,
+    "halfPct": 58.05447306391736,
+    "etaMedian": 0.4475
+   },
+   "G7": {
+    "passRate": 0.42,
+    "falsePass": 0.6428571428571429,
+    "falsePassBy5": 0.14285714285714285,
+    "hdCal": 35.777431348719475,
+    "hdDef": 34.434246191309846,
+    "gainMedian": -1.3614125674678732,
+    "cov80": 0.8150352733686065,
+    "halfPct": 58.05447306391736,
+    "etaMedian": 0.4475
+   }
+  }
+ },
+ {
+  "source": "totis-ti64-2021",
+  "kernel": "rosenthal",
+  "m": 12,
+  "nSets": 78,
+  "hdDefault": 41.71341095669814,
+  "hdCalAll": 37.310557556320504,
+  "worseAll": 0.12,
+  "gates": {
+   "G5": {
+    "passRate": 0.055,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 35.88407762866214,
+    "hdDef": 40.566824374896434,
+    "gainMedian": 5.0010410018323626,
+    "cov80": 0.7506887052341598,
+    "halfPct": 71.5086063817006,
+    "etaMedian": 0.29
+   },
+   "G6": {
+    "passRate": 0.015,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 37.104134746817266,
+    "hdDef": 40.99332402231229,
+    "gainMedian": 5.010234135015601,
+    "cov80": 0.6969696969696969,
+    "halfPct": 64.56642015011079,
+    "etaMedian": 0.295
+   },
+   "G7": {
+    "passRate": 0.015,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 37.104134746817266,
+    "hdDef": 40.99332402231229,
+    "gainMedian": 5.010234135015601,
+    "cov80": 0.6969696969696969,
+    "halfPct": 64.56642015011079,
+    "etaMedian": 0.295
+   }
+  }
+ },
+ {
+  "source": "totis-ti64-2021",
+  "kernel": "rosenthal",
+  "m": 16,
+  "nSets": 78,
+  "hdDefault": 41.727183518263175,
+  "hdCalAll": 36.84071040232892,
+  "worseAll": 0.06,
+  "gates": {
+   "G5": {
+    "passRate": 0.03,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 34.2889434174244,
+    "hdDef": 38.618451841172856,
+    "gainMedian": 4.544787974435998,
+    "cov80": 0.8467741935483871,
+    "halfPct": 83.25120521186646,
+    "etaMedian": 0.28
+   },
+   "G6": {
+    "passRate": 0.02,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 34.68839038434835,
+    "hdDef": 39.23317835878435,
+    "gainMedian": 4.544787974435998,
+    "cov80": 0.8346774193548387,
+    "halfPct": 83.25120521186646,
+    "etaMedian": 0.295
+   },
+   "G7": {
+    "passRate": 0.02,
+    "falsePass": 0.0,
+    "falsePassBy5": 0.0,
+    "hdCal": 34.68839038434835,
+    "hdDef": 39.23317835878435,
+    "gainMedian": 4.544787974435998,
+    "cov80": 0.8346774193548387,
+    "halfPct": 83.25120521186646,
+    "etaMedian": 0.295
+   }
+  }
+ },
+ {
+  "source": "totis-ti64-2021",
+  "kernel": "rosenthal",
+  "m": 24,
+  "nSets": 78,
+  "hdDefault": 41.4594199989906,
+  "hdCalAll": 37.45757413608968,
+  "worseAll": 0.04,
+  "gates": {
+   "G5": {
+    "passRate": 0.0
+   },
+   "G6": {
+    "passRate": 0.0
+   },
+   "G7": {
+    "passRate": 0.0
+   }
+  }
+ }
+]

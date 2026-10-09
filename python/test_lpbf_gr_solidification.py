@@ -95,25 +95,75 @@ class CetTests(unittest.TestCase):
         self.assertEqual(blk["locations"]["median"]["band"], "columnar")
         self.assertEqual(blk["locations"]["tail"]["band"], "equiaxed")
 
-    def test_registry_honesty(self):
-        for alloy in ("in718", "in625"):
+    def test_knapp_constants_reproduce_printed_limits(self):
+        """Knapp 2019 p. 515 prints G^2 R limits of 1.52e11 (phi 0.0066) and 6.98e9 (phi 0.49) for these constants."""
+        kw = {"a": 4.5, "n": 2.0, "n0_m3": 2.65e14}
+        for phi, printed in ((0.0066, 1.52e11), (0.49, 6.98e9)):
+            # G^n / V = const in the model, so G_crit^2 / V is independent of V.
+            for v in (0.05, 0.4):
+                g = cet.critical_gradient_K_m(v, phi, **kw)
+                self.assertAlmostEqual(g * g / v / printed, 1.0, delta=0.01)
+        s = cet.CET_SETS["in718"]["knapp2019"]["constants"]
+        self.assertEqual((s["a"]["value"], s["n"]["value"], s["N0"]["value"]), (4.5, 2.0, 2.65e14))
+
+    def test_in718_sets_sourced_and_labelled(self):
+        st = cet.cet_constants("in718")
+        self.assertEqual(st["status"], "available")
+        self.assertEqual([x["id"] for x in st["sets"]], ["knapp2019", "polonsky2020"])
+        for entry in st["sets"]:
+            self.assertEqual(entry["transferLabel"], "EBM-calibrated, transferred to LPBF")
+            self.assertIn("without an LPBF fit", entry["caveat"])
+            for key in ("a", "n", "N0"):
+                c = entry["constants"][key]
+                self.assertTrue(c["verified"] and c["source"] and c["locator"], entry["id"] + "." + key)
+        po = {x["id"]: x for x in st["sets"]}["polonsky2020"]["constants"]
+        self.assertEqual((po["a"]["value"], po["n"]["value"], po["N0"]["value"]), (1.23e5, 3.13, 5.4e12))
+        self.assertEqual(po["a"]["unit"], "K^n s/m")
+        self.assertIn("lower", po["N0"]["locator"])
+
+    def test_equation_verified_only_for_knapp(self):
+        sets = cet.CET_SETS["in718"]
+        self.assertIs(sets["knapp2019"]["equationVerified"], True)
+        self.assertIs(sets["polonsky2020"]["equationVerified"], False)
+        self.assertIs(cet.EQUATION_VERIFIED, False)  # Gaumann 2001 itself was not read
+        self.assertIsNone(cet.EQUATION_LOCATOR)
+
+    def test_cmsx4_is_reference_only(self):
+        ref = cet.cet_constants("in718")["referenceOnly"]
+        self.assertEqual((ref["constants"]["n"]["value"], ref["constants"]["a"]["value"]), (3.4, 1.25e6))
+        self.assertIn("reference only", ref["label"])
+        for entry in cet.cet_constants("in718")["sets"]:
+            self.assertNotEqual(entry["constants"]["a"]["value"], 1.25e6)
+
+    def test_registry_honesty_in625_and_unknown(self):
+        for alloy in ("in625", "unknown-alloy"):
             st = cet.cet_constants(alloy)
             self.assertEqual(st["status"], "unavailable")
             self.assertTrue(st["reason"])
-            self.assertEqual(cet.cet_block(alloy, {"median": (1e6, 0.1)})["status"], "unavailable")
-        for alloy, entries in cet.CET_CONSTANTS.items():
-            for key, entry in entries.items():
-                if entry["verified"] is False:
-                    self.assertIsNone(entry["value"], f"{alloy}.{key}")
-        self.assertIs(cet.EQUATION_VERIFIED, False)
-        self.assertIsNone(cet.EQUATION_LOCATOR)
-        self.assertIn("CMSX-4", cet.cet_constants("in718")["reason"])
+            self.assertEqual(st["sets"], [])
+            blk = cet.cet_block(alloy, {"median": (1e6, 0.1)})
+            self.assertEqual(blk["status"], "unavailable")
+            self.assertEqual(blk["sets"], {})
+        self.assertIn("IN625", cet.cet_constants("in625")["reason"])
+        self.assertEqual(cet.CET_SETS["in625"], {})
         self.assertEqual(len(cet.cet_constants("in718")["candidateSources"]), 2)
 
-    def test_incomplete_registry_stays_unavailable(self):
-        partial = {"in718": {k: dict(v) for k, v in cet.CET_CONSTANTS["in718"].items()}}
-        partial["in718"]["a"].update(value=1.0, source="X", locator="Y", verified=True)
-        with mock.patch.object(cet, "CET_CONSTANTS", partial):
+    def test_cet_block_registry_has_both_sets(self):
+        blk = cet.cet_block("in718", {"bottom": None, "median": (3e6, 0.1), "tail": (5e4, 0.1)})
+        self.assertEqual(blk["status"], "available")
+        self.assertEqual(set(blk["sets"]), {"knapp2019", "polonsky2020"})
+        self.assertEqual(blk["locations"], {"bottom": None, "median": None, "tail": None})
+        for entry in blk["sets"].values():
+            self.assertIsNone(entry["locations"]["bottom"])
+            self.assertEqual(entry["locations"]["median"]["band"], "columnar")
+            self.assertEqual(entry["transferLabel"], "EBM-calibrated, transferred to LPBF")
+
+    def test_incomplete_set_stays_out(self):
+        partial = {"in718": {"x": {"label": "x", "constants": {
+            "a": {"value": 1.0, "unit": "", "source": "X", "locator": "Y", "verified": True},
+            "n": {"value": None, "unit": "", "source": None, "locator": None, "verified": False},
+            "N0": {"value": 1.0, "unit": "", "source": "X", "locator": "Y", "verified": True}}}}}
+        with mock.patch.object(cet, "CET_SETS", partial):
             self.assertEqual(cet.cet_constants("in718")["status"], "unavailable")
 
 
@@ -214,9 +264,12 @@ class PointIntegrationTests(unittest.TestCase):
         self.assertIs(r["evidence"]["experimentalValidation"], False)
         self.assertEqual(r["counts"], {"available": 1, "screening-fallback": 0, "degenerate-floor": 0,
                                        "unavailable": 0, "error": 0})
-        self.assertEqual(r["cet"]["constantsStatus"]["status"], "unavailable")
+        self.assertEqual(r["cet"]["constantsStatus"]["status"], "available")
+        self.assertEqual(len(r["cet"]["constantsStatus"]["sets"]), 2)
         self.assertIs(r["cet"]["equationVerified"], False)
-        self.assertEqual(r["point"]["cet"]["status"], "unavailable")
+        self.assertEqual(r["point"]["cet"]["status"], "available")
+        self.assertEqual(set(r["point"]["cet"]["sets"]), {"knapp2019", "polonsky2020"})
+        self.assertEqual(r["point"]["morphology"]["basis"], "hunt-g-over-r-screening")
         self.assertIs(r["provenance"]["frozenFilesModified"], False)
         self.assertEqual(r["laves"]["V_D_m_s"], [0.23, 0.31])
         self.assertEqual(r["limits"], gr.LIMITS)
@@ -246,6 +299,8 @@ class PointIntegrationTests(unittest.TestCase):
         self.assertEqual(r["materialEvidence"]["provenanceClass"], "legacy-estimated-secondary")
         self.assertIn("not established", r["point"]["laves"]["note"])
         self.assertEqual(r["point"]["cet"]["status"], "unavailable")
+        self.assertEqual(r["point"]["cet"]["sets"], {})
+        self.assertEqual(r["cet"]["constantsStatus"]["status"], "unavailable")
         self.assertIn("IN625", r["point"]["cet"]["reason"])
 
 

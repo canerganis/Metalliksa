@@ -46,6 +46,26 @@ export interface GrRosenthalCenterline {
 
 export interface GrCetLocation { band: "columnar" | "mixed" | "equiaxed"; G_columnar_K_m: number; G_equiaxed_K_m: number }
 
+export interface GrCetConstant { value: number | null; unit: string; source: string | null; locator: string | null; verified: boolean }
+
+/** One sourced CET constant set of the registry (python/lpbf_cet_screening.py). */
+export interface GrCetSet {
+  id: string;
+  label: string;
+  transferLabel: string;
+  caveat: string;
+  citation: string;
+  doi?: string;
+  osti?: string;
+  equationVerified: boolean;
+  equationLocator: string | null;
+  note: string;
+  constants: Record<"a" | "n" | "N0", GrCetConstant>;
+}
+
+/** Per-cell bands of one registry set. */
+export interface GrCetSetBands { label: string; transferLabel: string; locations: Record<GrLocation, GrCetLocation | null> }
+
 export interface GrLavesBand {
   R_m_s: number;
   kEff: { min: number; max: number };
@@ -81,7 +101,12 @@ export interface GrCellBody {
   };
   rosenthalCenterline: GrRosenthalCenterline;
   morphology: { basis: string; bands: Record<GrLocation, string | null>; label: string };
-  cet: { status: "available" | "unavailable"; reason: string | null; locations: Record<GrLocation, GrCetLocation | null> };
+  cet: {
+    status: "available" | "unavailable";
+    reason: string | null;
+    locations: Record<GrLocation, GrCetLocation | null>;
+    sets: Record<string, GrCetSetBands>;
+  };
   laves: GrLavesCell;
 }
 
@@ -115,7 +140,14 @@ export interface GrSolidificationResponse {
     phiColumnar: number;
     phiEquiaxed: number;
     note: string;
-    constantsStatus: { status: "available" | "unavailable"; reason: string | null; candidateSources: Array<{ citation: string; osti?: string; read: boolean }> };
+    transferLabel?: string;
+    constantsStatus: {
+      status: "available" | "unavailable";
+      reason: string | null;
+      sets: GrCetSet[];
+      candidateSources: Array<{ citation: string; osti?: string; read: boolean }>;
+      referenceOnly?: { label: string; source: string; locator: string; constants: Record<"a" | "n" | "N0", GrCetConstant> };
+    };
   };
   laves: {
     modelId: string;

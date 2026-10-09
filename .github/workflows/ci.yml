@@ -93,7 +93,7 @@ jobs:
           test_module_contract_selected_units
           test_module_contract_dataset_view
           test_module_contract_database test_module_contract_calphad test_module_contract_evidence
-          test_module_contract_lpbf_secondary
+          test_module_contract_lpbf_secondary test_module_contract_lpbf_optimizer test_module_contract_solidification_microstructure
           test_module_contract_research
           test_module_contract_experimental_validation
           test_contract_keyhole_raytracing
@@ -101,7 +101,7 @@ jobs:
           test_phase6b_vector_parity
           test_persistent_ipc_security
           test_murakami_constants test_xrd_formulas
-          test_kinetics_fx test_kinetics_li1998 test_calphad_honesty test_calphad_model_cache
+          test_kinetics_fx test_kinetics_li1998 test_calphad_honesty test_calphad_model_cache test_calphad_carbon_reference test_calphad_mc_ti test_tdb_repair
           test_lpbf_validity_envelope test_phase8_microstructure_contract
           test_lpbf_solidification_microstructure_rpc
           test_lpbf_process_map test_lpbf_powder_layer_analysis test_lpbf_additional_datasets

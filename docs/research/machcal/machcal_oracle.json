@@ -1,0 +1,668 @@
+[
+ {
+  "source": "hofmann-316l-2026",
+  "kernel": "eagar-tsai",
+  "n": 676,
+  "depth": {
+   "mapeDefault": 36.58412983873209,
+   "biasDefault": 20.37638407548371,
+   "etaOnly": {
+    "eta": 0.36,
+    "mape": 32.565936313059524
+   },
+   "offsetOnly": {
+    "c": -0.06319832687244853,
+    "factor": 0.938757274431359,
+    "mape": 33.76379232096293
+   },
+   "etaPlusOffset": {
+    "eta": 0.68,
+    "factor": 0.5227713428238723,
+    "mape": 32.029741789912016
+   },
+   "byRegime": {
+    "conduction": {
+     "n": 163,
+     "biasDefault": 38.28647949583291,
+     "mapeDefault": 40.929193693305805,
+     "biasAtOracleEta": 24.02736891782233
+    },
+    "transition": {
+     "n": 288,
+     "biasDefault": 2.232543699220206,
+     "mapeDefault": 27.057683083200274,
+     "biasAtOracleEta": -15.250409647889246
+    },
+    "keyhole": {
+     "n": 225,
+     "biasDefault": 30.62563063035912,
+     "mapeDefault": 45.630224315610505,
+     "biasAtOracleEta": 6.401054044225073
+    }
+   }
+  },
+  "width": {
+   "mapeDefault": 10.75164355202257,
+   "mapeAtDepthOracleEta": 13.41798463111758,
+   "mapeAtEtaPlusOffsetEta": 21.01786559808028
+  }
+ },
+ {
+  "source": "hofmann-316l-2026",
+  "kernel": "goldak",
+  "n": 638,
+  "depth": {
+   "mapeDefault": 40.69736235518009,
+   "biasDefault": 25.687418100601437,
+   "etaOnly": {
+    "eta": 0.335,
+    "mape": 35.00586265192442
+   },
+   "offsetOnly": {
+    "c": -0.12199960658997444,
+    "factor": 0.8851487167289379,
+    "mape": 34.62331385407065
+   },
+   "etaPlusOffset": {
+    "eta": 0.67,
+    "factor": 0.5186549952221531,
+    "mape": 31.587502157182417
+   },
+   "byRegime": {
+    "conduction": {
+     "n": 125,
+     "biasDefault": 57.035654542058836,
+     "mapeDefault": 58.81949237115573,
+     "biasAtOracleEta": 37.84717990654238
+    },
+    "transition": {
+     "n": 288,
+     "biasDefault": 8.223434161790138,
+     "mapeDefault": 28.978056129159974,
+     "biasAtOracleEta": -12.237520897813583
+    },
+    "keyhole": {
+     "n": 225,
+     "biasDefault": 30.62563063035912,
+     "mapeDefault": 45.630224315610505,
+     "biasAtOracleEta": -5.390941339683708
+    }
+   }
+  },
+  "width": {
+   "mapeDefault": 14.497810634978443,
+   "mapeAtDepthOracleEta": 21.721123760786345,
+   "mapeAtEtaPlusOffsetEta": 18.526722473747782
+  }
+ },
+ {
+  "source": "hofmann-316l-2026",
+  "kernel": "rosenthal",
+  "n": 637,
+  "depth": {
+   "mapeDefault": 58.54545306256742,
+   "biasDefault": 54.87394655181256,
+   "etaOnly": {
+    "eta": 0.285,
+    "mape": 32.6374641913658
+   },
+   "offsetOnly": {
+    "c": -0.32421599269123824,
+    "factor": 0.7230940424831773,
+    "mape": 33.0365068890214
+   },
+   "etaPlusOffset": {
+    "eta": 0.44,
+    "factor": 0.6841238939298876,
+    "mape": 32.99130915175817
+   },
+   "byRegime": {
+    "conduction": {
+     "n": 124,
+     "biasDefault": 38.92620772884817,
+     "mapeDefault": 42.08962206816679,
+     "biasAtOracleEta": 8.519018924970352
+    },
+    "transition": {
+     "n": 288,
+     "biasDefault": 55.630430881004386,
+     "mapeDefault": 57.883995526167084,
+     "biasAtOracleEta": -16.012580965947468
+    },
+    "keyhole": {
+     "n": 225,
+     "biasDefault": 62.69462267288072,
+     "mapeDefault": 68.46111001274065,
+     "biasAtOracleEta": 15.718154771907583
+    }
+   }
+  },
+  "width": {
+   "mapeDefault": 26.045489205095812,
+   "mapeAtDepthOracleEta": 30.04295920623534,
+   "mapeAtEtaPlusOffsetEta": 26.37733144412967
+  }
+ },
+ {
+  "source": "ku-leuven-316l-2021",
+  "kernel": "eagar-tsai",
+  "n": 44,
+  "depth": {
+   "mapeDefault": 28.74697710262276,
+   "biasDefault": -13.136106558853037,
+   "etaOnly": {
+    "eta": 0.415,
+    "mape": 28.71228648908889
+   },
+   "offsetOnly": {
+    "c": 0.32744484142489627,
+    "factor": 1.3874185211586454,
+    "mape": 28.278727630625845
+   },
+   "etaPlusOffset": {
+    "eta": 0.28,
+    "factor": 2.0807922358257875,
+    "mape": 18.880172609711995
+   },
+   "byRegime": {
+    "transition": {
+     "n": 4,
+     "biasDefault": 31.430501227222017,
+     "mapeDefault": 31.430501227222017,
+     "biasAtOracleEta": 26.748994396365454
+    },
+    "keyhole": {
+     "n": 40,
+     "biasDefault": -17.59276733746054,
+     "mapeDefault": 28.478624690162835,
+     "biasAtOracleEta": -18.578642847234146
+    }
+   }
+  },
+  "width": {
+   "mapeDefault": 16.691335922275286,
+   "mapeAtDepthOracleEta": 16.24071229952784,
+   "mapeAtEtaPlusOffsetEta": 12.892181707716485
+  }
+ },
+ {
+  "source": "ku-leuven-316l-2021",
+  "kernel": "goldak",
+  "n": 44,
+  "depth": {
+   "mapeDefault": 28.74697710262276,
+   "biasDefault": -13.136106558853037,
+   "etaOnly": {
+    "eta": 0.415,
+    "mape": 28.71228648908889
+   },
+   "offsetOnly": {
+    "c": 0.32744484142489627,
+    "factor": 1.3874185211586454,
+    "mape": 28.278727630625845
+   },
+   "etaPlusOffset": {
+    "eta": 0.275,
+    "factor": 2.1186095443659974,
+    "mape": 19.960941176748733
+   },
+   "byRegime": {
+    "transition": {
+     "n": 4,
+     "biasDefault": 31.430501227222017,
+     "mapeDefault": 31.430501227222017,
+     "biasAtOracleEta": 26.748994396365454
+    },
+    "keyhole": {
+     "n": 40,
+     "biasDefault": -17.59276733746054,
+     "mapeDefault": 28.478624690162835,
+     "biasAtOracleEta": -18.578642847234146
+    }
+   }
+  },
+  "width": {
+   "mapeDefault": 16.115219861497994,
+   "mapeAtDepthOracleEta": 15.750867983865376,
+   "mapeAtEtaPlusOffsetEta": 14.450094087253945
+  }
+ },
+ {
+  "source": "ku-leuven-316l-2021",
+  "kernel": "rosenthal",
+  "n": 44,
+  "depth": {
+   "mapeDefault": 43.79906967126594,
+   "biasDefault": -8.662191455995128,
+   "etaOnly": {
+    "eta": 0.29,
+    "mape": 34.28380785481158
+   },
+   "offsetOnly": {
+    "c": 0.3855096277195944,
+    "factor": 1.4703634685133067,
+    "mape": 52.758223947418045
+   },
+   "etaPlusOffset": {
+    "eta": 0.25,
+    "factor": 1.656017609269282,
+    "mape": 25.631733855907115
+   },
+   "byRegime": {
+    "transition": {
+     "n": 4,
+     "biasDefault": 89.73747678000696,
+     "mapeDefault": 89.73747678000696,
+     "biasAtOracleEta": 7.400900300235319
+    },
+    "keyhole": {
+     "n": 40,
+     "biasDefault": -18.50215827959534,
+     "mapeDefault": 39.20522896039184,
+     "biasAtOracleEta": -30.18236324436335
+    }
+   }
+  },
+  "width": {
+   "mapeDefault": 57.57475630956809,
+   "mapeAtDepthOracleEta": 48.207135192548094,
+   "mapeAtEtaPlusOffsetEta": 46.51596735299812
+  }
+ },
+ {
+  "source": "totis-ti64-2021",
+  "kernel": "eagar-tsai",
+  "n": 80,
+  "depth": {
+   "mapeDefault": 36.526853483686715,
+   "biasDefault": -7.08323782023467,
+   "etaOnly": {
+    "eta": 0.385,
+    "mape": 34.046290999460204
+   },
+   "offsetOnly": {
+    "c": 0.27606223360009485,
+    "factor": 1.3179298809963382,
+    "mape": 38.624637482218695
+   },
+   "etaPlusOffset": {
+    "eta": 0.75,
+    "factor": 0.5404142096056322,
+    "mape": 30.900174346514053
+   },
+   "byRegime": {
+    "conduction": {
+     "n": 8,
+     "biasDefault": 80.01951090134155,
+     "mapeDefault": 112.87327137806855,
+     "biasAtOracleEta": 92.70680470917662
+    },
+    "transition": {
+     "n": 15,
+     "biasDefault": -35.1532409930403,
+     "mapeDefault": 35.1532409930403,
+     "biasAtOracleEta": -22.65514032730818
+    },
+    "keyhole": {
+     "n": 57,
+     "biasDefault": -11.921342069015815,
+     "mapeDefault": 26.173043732890953,
+     "biasAtOracleEta": -3.11328172246366
+    }
+   }
+  },
+  "width": {
+   "mapeDefault": 18.71121642915156,
+   "mapeAtDepthOracleEta": 19.979691566226304,
+   "mapeAtEtaPlusOffsetEta": 43.10888262961707
+  }
+ },
+ {
+  "source": "totis-ti64-2021",
+  "kernel": "goldak",
+  "n": 78,
+  "depth": {
+   "mapeDefault": 33.16188545919299,
+   "biasDefault": -9.833328856981106,
+   "etaOnly": {
+    "eta": 0.4,
+    "mape": 30.175379075502878
+   },
+   "offsetOnly": {
+    "c": 0.26281672391609723,
+    "factor": 1.3005883303709687,
+    "mape": 33.33839191709252
+   },
+   "etaPlusOffset": {
+    "eta": 0.72,
+    "factor": 0.5728339460440979,
+    "mape": 28.423503137600026
+   },
+   "byRegime": {
+    "conduction": {
+     "n": 6,
+     "biasDefault": 63.440653090165796,
+     "mapeDefault": 104.43941693177476,
+     "biasAtOracleEta": 77.74803060684624
+    },
+    "transition": {
+     "n": 15,
+     "biasDefault": -31.20847143010798,
+     "mapeDefault": 31.20847143010798,
+     "biasAtOracleEta": -13.964400383053935
+    },
+    "keyhole": {
+     "n": 57,
+     "biasDefault": -11.921342069015815,
+     "mapeDefault": 26.173043732890953,
+     "biasAtOracleEta": 0.6616092707549606
+    }
+   }
+  },
+  "width": {
+   "mapeDefault": 20.051489025971726,
+   "mapeAtDepthOracleEta": 21.368687928626834,
+   "mapeAtEtaPlusOffsetEta": 40.46114328099969
+  }
+ },
+ {
+  "source": "totis-ti64-2021",
+  "kernel": "rosenthal",
+  "n": 78,
+  "depth": {
+   "mapeDefault": 41.44228213236441,
+   "biasDefault": 17.837459464219883,
+   "etaOnly": {
+    "eta": 0.25,
+    "mape": 33.42219446958041
+   },
+   "offsetOnly": {
+    "c": -0.08889203985803285,
+    "factor": 0.914944345764087,
+    "mape": 36.84678986130029
+   },
+   "etaPlusOffset": {
+    "eta": 0.385,
+    "factor": 0.8309564362709748,
+    "mape": 35.373497402134454
+   },
+   "byRegime": {
+    "conduction": {
+     "n": 6,
+     "biasDefault": 44.93673721017543,
+     "mapeDefault": 88.93510676827981,
+     "biasAtOracleEta": 15.234413527018228
+    },
+    "transition": {
+     "n": 15,
+     "biasDefault": 7.616897015808063,
+     "mapeDefault": 19.800098689505198,
+     "biasAtOracleEta": -39.25745377890259
+    },
+    "keyhole": {
+     "n": 57,
+     "biasDefault": 17.674525608964515,
+     "mapeDefault": 42.13834886617837,
+     "biasAtOracleEta": -3.937171219744752
+    }
+   }
+  },
+  "width": {
+   "mapeDefault": 52.29867273889892,
+   "mapeAtDepthOracleEta": 51.045568863256406,
+   "mapeAtEtaPlusOffsetEta": 52.2549529850186
+  }
+ },
+ {
+  "source": "ku-leuven-ti64-2021",
+  "kernel": "eagar-tsai",
+  "n": 14,
+  "depth": {
+   "mapeDefault": 28.64913866897726,
+   "biasDefault": 21.233956324799117,
+   "etaOnly": {
+    "eta": 0.295,
+    "mape": 17.556594445428583
+   },
+   "offsetOnly": {
+    "c": -0.10012797030336129,
+    "factor": 0.9047216331257539,
+    "mape": 25.530200501383675
+   },
+   "etaPlusOffset": {
+    "eta": 0.255,
+    "factor": 1.4050368753680897,
+    "mape": 11.579690923002206
+   },
+   "byRegime": {
+    "transition": {
+     "n": 3,
+     "biasDefault": 50.590622760622075,
+     "mapeDefault": 50.590622760622075,
+     "biasAtOracleEta": -8.708990151437412
+    },
+    "keyhole": {
+     "n": 11,
+     "biasDefault": 13.227592751392859,
+     "mapeDefault": 22.665097553074133,
+     "biasAtOracleEta": -8.095215831408952
+    }
+   }
+  },
+  "width": {
+   "mapeDefault": 8.410573593193863,
+   "mapeAtDepthOracleEta": 15.222414098508509,
+   "mapeAtEtaPlusOffsetEta": 20.94615950479993
+  }
+ },
+ {
+  "source": "ku-leuven-ti64-2021",
+  "kernel": "goldak",
+  "n": 14,
+  "depth": {
+   "mapeDefault": 28.64913866897726,
+   "biasDefault": 21.233956324799117,
+   "etaOnly": {
+    "eta": 0.295,
+    "mape": 17.273571097238875
+   },
+   "offsetOnly": {
+    "c": -0.10012797030336129,
+    "factor": 0.9047216331257539,
+    "mape": 25.530200501383675
+   },
+   "etaPlusOffset": {
+    "eta": 0.26,
+    "factor": 1.3476380852943992,
+    "mape": 13.133108872984806
+   },
+   "byRegime": {
+    "transition": {
+     "n": 3,
+     "biasDefault": 50.590622760622075,
+     "mapeDefault": 50.590622760622075,
+     "biasAtOracleEta": -4.471788159544973
+    },
+    "keyhole": {
+     "n": 11,
+     "biasDefault": 13.227592751392859,
+     "mapeDefault": 22.665097553074133,
+     "biasAtOracleEta": -8.03449460529959
+    }
+   }
+  },
+  "width": {
+   "mapeDefault": 10.990452549169405,
+   "mapeAtDepthOracleEta": 18.251959840400094,
+   "mapeAtEtaPlusOffsetEta": 23.535781989844555
+  }
+ },
+ {
+  "source": "ku-leuven-ti64-2021",
+  "kernel": "rosenthal",
+  "n": 14,
+  "depth": {
+   "mapeDefault": 68.98538743638647,
+   "biasDefault": 66.75611715632012,
+   "etaOnly": {
+    "eta": 0.25,
+    "mape": 26.618073340523235
+   },
+   "offsetOnly": {
+    "c": -0.5208045461111863,
+    "factor": 0.5940424211386368,
+    "mape": 30.13489764993098
+   },
+   "etaPlusOffset": {
+    "eta": 0.25,
+    "factor": 0.8232838287353554,
+    "mape": 16.977136924226574
+   },
+   "byRegime": {
+    "transition": {
+     "n": 3,
+     "biasDefault": 128.25751167167968,
+     "mapeDefault": 128.25751167167968,
+     "biasAtOracleEta": 38.73521284041716
+    },
+    "keyhole": {
+     "n": 11,
+     "biasDefault": 49.98300956122206,
+     "mapeDefault": 52.820262644942886,
+     "biasAtOracleEta": 16.543524252748725
+    }
+   }
+  },
+  "width": {
+   "mapeDefault": 36.97354882459767,
+   "mapeAtDepthOracleEta": 22.357026963250433,
+   "mapeAtEtaPlusOffsetEta": 22.357026963250433
+  }
+ },
+ {
+  "source": "lane-in625-2020",
+  "kernel": "eagar-tsai",
+  "n": 23,
+  "depth": {
+   "mapeDefault": 25.149691000325124,
+   "biasDefault": -14.241101004106769,
+   "etaOnly": {
+    "eta": 0.375,
+    "mape": 24.961926806629087
+   },
+   "offsetOnly": {
+    "c": 0.02343189633218845,
+    "factor": 1.0237085800634667,
+    "mape": 25.642873680093135
+   },
+   "etaPlusOffset": {
+    "eta": 0.8,
+    "factor": 0.5747126436781609,
+    "mape": 8.576919581593073
+   },
+   "byRegime": {
+    "conduction": {
+     "n": 17,
+     "biasDefault": -1.0320725817263106,
+     "mapeDefault": 15.790753164845253,
+     "biasAtOracleEta": -2.0984112703403017
+    },
+    "transition": {
+     "n": 6,
+     "biasDefault": -51.66668153418473,
+     "mapeDefault": 51.66668153418473,
+     "biasAtOracleEta": -52.06066756540309
+    }
+   }
+  },
+  "width": {
+   "mapeDefault": 20.00251653169265,
+   "mapeAtDepthOracleEta": 19.701659570554853,
+   "mapeAtEtaPlusOffsetEta": 47.99725953049835
+  }
+ },
+ {
+  "source": "lane-in625-2020",
+  "kernel": "goldak",
+  "n": 10,
+  "depth": {
+   "mapeDefault": 37.02873383456273,
+   "biasDefault": -37.02873383456273,
+   "etaOnly": {
+    "eta": 0.605,
+    "mape": 4.319387543021451
+   },
+   "offsetOnly": {
+    "c": 0.4695586069034996,
+    "factor": 1.5992881226648306,
+    "mape": 17.8345276999758
+   },
+   "etaPlusOffset": {
+    "eta": 0.595,
+    "factor": 1.0318437211665357,
+    "mape": 3.543032880627185
+   },
+   "byRegime": {
+    "conduction": {
+     "n": 4,
+     "biasDefault": -23.12015014585373,
+     "mapeDefault": 23.12015014585373,
+     "biasAtOracleEta": -2.048498537100496
+    },
+    "transition": {
+     "n": 6,
+     "biasDefault": -46.30112296036873,
+     "mapeDefault": 46.30112296036873,
+     "biasAtOracleEta": 2.732631300396482
+    }
+   }
+  },
+  "width": {
+   "mapeDefault": 14.002961300855446,
+   "mapeAtDepthOracleEta": 9.961470407468568,
+   "mapeAtEtaPlusOffsetEta": 8.994736010665939
+  }
+ },
+ {
+  "source": "lane-in625-2020",
+  "kernel": "rosenthal",
+  "n": 10,
+  "depth": {
+   "mapeDefault": 31.25441313842647,
+   "biasDefault": -31.25441313842647,
+   "etaOnly": {
+    "eta": 0.455,
+    "mape": 6.09563946933655
+   },
+   "offsetOnly": {
+    "c": 0.39594947997162055,
+    "factor": 1.485794253287439,
+    "mape": 7.737137852571821
+   },
+   "etaPlusOffset": {
+    "eta": 0.355,
+    "factor": 1.5454629493930472,
+    "mape": 5.041054842229233
+   },
+   "byRegime": {
+    "conduction": {
+     "n": 4,
+     "biasDefault": -33.095750134900115,
+     "mapeDefault": 33.095750134900115,
+     "biasAtOracleEta": 0.43594448226356997
+    },
+    "transition": {
+     "n": 6,
+     "biasDefault": -30.026855140777375,
+     "mapeDefault": 30.026855140777375,
+     "biasAtOracleEta": -6.058102706631418
+    }
+   }
+  },
+  "width": {
+   "mapeDefault": 13.368988888528133,
+   "mapeAtDepthOracleEta": 5.91201088381458,
+   "mapeAtEtaPlusOffsetEta": 19.42341076157266
+  }
+ }
+]
