@@ -15,6 +15,7 @@ import { formatExactNumber } from './utils/numberFormat';
 import { LpbfDefaultsNote } from './components/LpbfDefaultsNote';
 import { canOpenPalette, isApplePlatform, paletteShortcutKeys, paletteShortcutLabel, useCommandPaletteShortcut, visibleModalOpen, type PaletteGate } from './hooks/useCommandPaletteShortcut';
 import { isBootOverlayOpen, setBootOverlayOpen } from './utils/bootOverlay';
+import { startEngineReadyPoll } from './utils/engineStatusPoll';
 // Boot screen in its own chunk (keeps the index chunk in budget). The request starts as soon as this
 // module evaluates, in parallel with React start-up; until it arrives an opaque cover hides the shell.
 const bootChunk = import('./components/BootSequence');
@@ -162,6 +163,20 @@ export default function App() {
     window.addEventListener('metallix-navigate-tab', onNavigate);
     return () => { window.removeEventListener('hashchange', onHash); window.removeEventListener('metallix-navigate-tab', onNavigate); };
   }, []);
+  // The daemon can finish starting after the first status check: keep asking (bounded, paused while the tab is hidden) until it is online.
+  const engineOnline = status?.online === true;
+  const firstCheckDone = status !== null || statusError !== null;
+  useEffect(() => {
+    if (engineOnline || checking || !firstCheckDone) return;
+    return startEngineReadyPoll({
+      check: () => pythonComputationService.checkEngineStatus(true),
+      onStatus: (next) => { setStatus(next); setStatusError(null); },
+      setTimer: (fn, ms) => window.setTimeout(fn, ms),
+      clearTimer: (handle) => window.clearTimeout(handle as number),
+      isHidden: () => document.hidden,
+      onVisibilityChange: (cb) => { document.addEventListener('visibilitychange', cb); return () => document.removeEventListener('visibilitychange', cb); },
+    });
+  }, [engineOnline, checking, firstCheckDone]);
   useEffect(() => startMaterialContextBridge(), []);
   useEffect(() => startEngineeringJobPersistence(), []);
   useEffect(() => {
