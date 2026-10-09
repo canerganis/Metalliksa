@@ -191,6 +191,83 @@ class ImportTests(unittest.TestCase):
 # ---------------------------------------------------------------------------------------------
 # scorecard hook (additive; every threshold, rung and interval rule is the production one)
 # ---------------------------------------------------------------------------------------------
+class MethodColumnTests(unittest.TestCase):
+    """Optional method columns of a machine-calibration template are accepted; blank means not stated."""
+
+    COLS = ["depthDatum", "beamDiameterDefinition", "measuredPowerW", "crossSectionLocation", "replicates"]
+    FULL = {"depthDatum": "plate surface", "beamDiameterDefinition": "D4sigma", "measuredPowerW": "198.5",
+            "crossSectionLocation": "mid-length", "replicates": "3"}
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.plan = ne.plan_experiment(
+            {"material": MATERIAL, "power_W": [100.0, 400.0], "speed_mm_s": [400.0, 1600.0], "spots_um": [100.0],
+             "layer_um": 40.0, "preheat_C": 80.0, "n": 6, "seed": 1, "plate": {"x_mm": 150.0, "y_mm": 100.0},
+             "grid": 5, "purpose": ne.PURPOSE_MACHINE_CALIBRATION},
+            calibration=None, solver_call=stub_solver, training_loader=lambda m: [], regime_fn=lambda *a: "conduction")
+        ne.write_outputs(self.plan, self.tmp)
+        self.root = self.tmp / "uc"
+        self.n = 0
+
+    def filled(self, per_row):
+        rows = list(csv.DictReader(io.StringIO((self.tmp / "measurement_template.csv").read_text(encoding="utf-8"))))
+        for i, r in enumerate(rows):
+            r["width_um"], r["depth_um"] = repr(100.0 + i), repr(50.0 + i)
+            r.update(per_row(i))
+        out = self.tmp / "filled.csv"
+        with open(out, "w", newline="", encoding="utf-8") as f:
+            w = csv.DictWriter(f, fieldnames=list(rows[0]), lineterminator="\n")
+            w.writeheader()
+            w.writerows(rows)
+        return out
+
+    def imp(self, path):
+        self.n += 1
+        return um.import_measurements(self.tmp / "plan.json", path, f"user-method-test-{self.n}", out_root=self.root)
+
+    def test_template_carries_the_five_columns(self):
+        head = (self.tmp / "measurement_template.csv").read_text(encoding="utf-8").splitlines()[0].split(",")
+        self.assertEqual(head[-5:], self.COLS)
+        self.assertEqual(list(um.METHOD_COLUMNS), self.COLS)
+
+    def test_filled_columns_land_in_row_method(self):
+        import lpbf_machine_calibration as mc
+        doc = self.imp(self.filled(lambda i: dict(self.FULL)))
+        for r in doc["rows"]:
+            self.assertEqual(r["method"], {"depthDatum": "plate surface", "beamDiameterDefinition": "D4sigma",
+                                           "measuredPowerW": 198.5, "crossSectionLocation": "mid-length",
+                                           "replicates": 3})
+        um.load_user_rows(self.root / "user-method-test-1" / "rows.json")  # re-validates
+        self.assertEqual([mc.row_missing_method_fields(r) for r in doc["rows"]], [[]] * 6)
+
+    def test_blank_columns_add_no_method_key_and_partial_rows_list_the_gaps(self):
+        import lpbf_machine_calibration as mc
+
+        def per_row(i):
+            return dict(self.FULL) if i == 0 else ({"depthDatum": "powder top"} if i == 1 else {})
+        doc = self.imp(self.filled(per_row))
+        self.assertEqual(sum("method" in r for r in doc["rows"]), 2)
+        partial = next(r for r in doc["rows"] if "method" in r and set(r["method"]) == {"depthDatum"})
+        self.assertEqual(mc.row_missing_method_fields(partial),
+                         ["beamDiameterDefinition", "measuredPowerW", "crossSectionLocation", "replicates"])
+
+    def test_bad_method_values_are_refused(self):
+        for col, bad in (("measuredPowerW", "abc"), ("measuredPowerW", "-5"), ("replicates", "2.5"),
+                         ("replicates", "0"), ("replicates", "x")):
+            with self.subTest(col=col, bad=bad):
+                path = self.filled(lambda i: dict(self.FULL, **{col: bad}) if i == 0 else {})
+                with self.assertRaises(um.UserMeasurementError):
+                    self.imp(path)
+
+    def test_plain_template_without_method_columns_still_imports(self):
+        p = make_plan()
+        d = Path(tempfile.mkdtemp())
+        ne.write_outputs(p, d)
+        path, _ = fill_template(d)
+        doc = um.import_measurements(d / "plan.json", path, "user-plain-test", out_root=d / "uc")
+        self.assertTrue(all("method" not in r for r in doc["rows"]))
+
+
 def user_doc(source_id="user-synth-a", n_sets=22, material=MATERIAL, seed=11):
     rows = sy.synth_rows(source_id, material, n_sets, 0.55, 0.50, 0.42, offset_w=0.03, seed=seed)
     return {"sourceId": source_id, "label": um.ROW_LABEL, "material": material, "nRows": len(rows), "nExcluded": 0,

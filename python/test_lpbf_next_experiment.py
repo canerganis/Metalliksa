@@ -224,5 +224,111 @@ class NextExperimentTests(unittest.TestCase):
         self.assertNotIn("lpbf_user_measurements.py", IMPLEMENTATION_SOURCE_FILES)
 
 
+MC = ne.PURPOSE_MACHINE_CALIBRATION
+
+
+def mixed_regime(material, P, v, spot, preheat):
+    return ("conduction", "transition", "keyhole")[int(P // 100) % 3]
+
+
+def points_with(*classes):
+    return [{"regimeClass": c} for c in classes]
+
+
+class MachineCalibrationPlanTests(unittest.TestCase):
+    def test_default_plan_has_no_purpose_and_the_plain_template(self):
+        p = plan(n=6)
+        self.assertNotIn("purpose", p)
+        self.assertNotIn("warnings", p)
+        self.assertEqual(len(p["commands"]), 2)
+        d = Path(tempfile.mkdtemp())
+        ne.write_outputs(p, d)
+        head = (d / "measurement_template.csv").read_text(encoding="utf-8").splitlines()[0]
+        self.assertEqual(head, "track_id,power_W,speed_mm_s,spot_um,width_um,depth_um,notes")
+
+    def test_fewer_than_six_tracks_refused(self):
+        with self.assertRaises(ne.PlanError) as cm:
+            plan(n=5, purpose=MC)
+        self.assertIn("n >= 6", str(cm.exception))
+        plan(n=6, purpose=MC)
+
+    def test_unknown_purpose_refused(self):
+        with self.assertRaises(ne.PlanError):
+            plan(n=6, purpose="something-else")
+
+    def test_purpose_commands_and_template_columns(self):
+        p = plan(n=8, purpose=MC, regime_fn=mixed_regime)
+        self.assertEqual(p["purpose"], MC)
+        self.assertEqual(p["methodColumns"], ["depthDatum", "beamDiameterDefinition", "measuredPowerW",
+                                              "crossSectionLocation", "replicates"])
+        fit_cmds = [c for c in p["commands"] if "lpbf_machine_calibration.py fit" in c]
+        self.assertEqual(len(fit_cmds), 1)
+        self.assertIn("--user-source .runtime/user-calibration/user-<your-id>/rows.json", fit_cmds[0])
+        self.assertIn("--out-dir .runtime/machine-calibration/", fit_cmds[0])
+        self.assertEqual(len(p["commands"]), 3)
+        d = Path(tempfile.mkdtemp())
+        ne.write_outputs(p, d)
+        lines = (d / "measurement_template.csv").read_text(encoding="utf-8").splitlines()
+        self.assertEqual(lines[0], "track_id,power_W,speed_mm_s,spot_um,width_um,depth_um,notes,depthDatum,"
+                                   "beamDiameterDefinition,measuredPowerW,crossSectionLocation,replicates")
+        self.assertEqual(len(lines), 9)
+        self.assertTrue(all(r.endswith(",,,,,,,,") for r in lines[1:]))
+
+    def test_soft_regime_warning_does_not_block_the_plan(self):
+        p = plan(n=6, purpose=MC)  # the stub puts every candidate in one class
+        self.assertEqual(len(p["points"]), 6)
+        self.assertTrue(any("soft target" in w for w in p["warnings"]), p["warnings"])
+        for w in p["warnings"]:
+            self.assertNotIn("—", w)
+            self.assertNotIn("–", w)
+
+    def test_warning_helper_thresholds(self):
+        ok = points_with("conduction", "conduction", "conduction", "keyhole", "keyhole", "keyhole")
+        self.assertEqual(ne.machine_calibration_warnings(ok, MATERIAL), [])
+        bad = points_with("conduction", "conduction", "conduction", "keyhole", "keyhole", "transition")
+        self.assertEqual(len(ne.machine_calibration_warnings(bad, MATERIAL)), 1)
+
+    def test_ineligible_material_is_warned(self):
+        ok = points_with("conduction", "conduction", "conduction", "keyhole", "keyhole", "keyhole")
+        w = ne.machine_calibration_warnings(ok, "Ti-6Al-4V")
+        self.assertEqual(len(w), 1)
+        self.assertIn("not eligible", w[0])
+
+    def test_selection_is_unchanged_by_the_purpose(self):
+        a = plan(n=6)
+        b = plan(n=6, purpose=MC)
+        self.assertEqual([(q["power_W"], q["speed_mm_s"]) for q in a["points"]],
+                         [(q["power_W"], q["speed_mm_s"]) for q in b["points"]])
+
+    def test_cli_flag_sets_the_purpose(self):
+        import importlib.util
+        spec_ = importlib.util.spec_from_file_location("ne_cli", Path(__file__).resolve().parent / "tools"
+                                                       / "lpbf_next_experiment.py")
+        cli = importlib.util.module_from_spec(spec_)
+        spec_.loader.exec_module(cli)
+        seen = {}
+
+        def fake_plan(s_, **kw):
+            seen.clear()
+            seen.update(s_)
+            return orig(spec(n=s_["n"], purpose=s_.get("purpose")), calibration=None, solver_call=stub_solver(),
+                        training_loader=no_training, regime_fn=regime_stub)
+        base = Path(tempfile.mkdtemp())
+        orig = ne.plan_experiment
+        argv = ["plan", "--material", MATERIAL, "--power", "100", "400", "--speed", "400", "1600", "--spots", "100",
+                "--layer-um", "40", "--preheat-c", "80", "--n", "6", "--seed", "3", "--plate-x-mm", "150",
+                "--plate-y-mm", "100"]
+        ne.plan_experiment = fake_plan
+        try:
+            self.assertEqual(cli.main(argv + ["--out-dir", str(base / "a")]), 0)
+            self.assertIsNone(seen["purpose"])
+            self.assertEqual(cli.main(argv + ["--for-machine-calibration", "--out-dir", str(base / "b")]), 0)
+            self.assertEqual(seen["purpose"], MC)
+            doc = json.loads((base / "b" / "plan.json").read_text(encoding="utf-8"))
+            self.assertEqual(doc["purpose"], MC)
+        finally:
+            ne.plan_experiment = orig
+
+
 if __name__ == "__main__":
     unittest.main()

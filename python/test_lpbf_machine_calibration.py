@@ -2,7 +2,10 @@
 run, no GPU). SCREENING ONLY, NOT VALIDATION."""
 
 import ast
+import contextlib
 import copy
+import importlib.util
+import io
 import json
 import math
 import subprocess
@@ -421,6 +424,100 @@ class InputValidation(unittest.TestCase):
         cell = depth_cell(doc)
         self.assertEqual(cell["gate"]["nUnresolved"], 1)
         self.assertIn("tooFewTracks", cell["reasons"])
+
+
+class CliTests(unittest.TestCase):
+    """SPEC case 6: out-dir refusals and check reproduces (synthetic solver; the CLI is loaded under an alias because
+    python/tools/lpbf_machine_calibration.py shares its module name with the core module)."""
+
+    @classmethod
+    def setUpClass(cls):
+        spec = importlib.util.spec_from_file_location("lpbf_machine_calibration_cli",
+                                                      PYTHON_DIR / "tools" / "lpbf_machine_calibration.py")
+        cls.cli = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cls.cli)
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.rows = self.tmp / "rows.json"
+        self.rows.write_text(json.dumps(user_doc(UNIFORM, noise=NOISE)), encoding="utf-8")
+        self.out = self.tmp / "out"
+
+    def run_cli(self, argv, solver=fake_solver):
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err), contextlib.redirect_stdout(io.StringIO()):
+            code = self.cli.main(argv, solver_call=solver)
+        return code, err.getvalue()
+
+    def fit(self):
+        return self.run_cli(["fit", "--user-source", str(self.rows), "--out-dir", str(self.out)])
+
+    def test_fit_writes_artefact_and_report_with_the_scoped_label(self):
+        code, err = self.fit()
+        self.assertEqual(code, 0, err)
+        art = mc.load_machine_calibration(self.out / "machine-calibration.json")
+        cell = next(c for c in art["cells"] if c["kernel"] == "rosenthal" and c["quantity"] == "depth")
+        self.assertEqual(cell["status"], "served")
+        self.assertEqual(cell["evidenceKind"], "calibrated-simulation")
+        self.assertEqual(cell["evidenceScope"], "this machine, user data")
+        self.assertIs(art["experimentalValidation"], False)
+        report = (self.out / "report.md").read_text(encoding="utf-8")
+        self.assertIn("empirical machine offset", report)
+        self.assertIn("Your measurements stay on this computer", report)
+        for ch in ("—", "–"):
+            self.assertNotIn(ch, report)
+
+    def test_out_dir_refusals(self):
+        for sub in ("docs", "data/calibration", "data/calibration/x", "docs/y", ""):
+            target = REPO_ROOT / sub if sub else REPO_ROOT
+            with self.assertRaises(SystemExit, msg=sub):
+                self.run_cli(["fit", "--user-source", str(self.rows), "--out-dir", str(target)])
+        self.assertFalse((REPO_ROOT / "docs" / "machine-calibration.json").exists())
+        self.assertFalse((REPO_ROOT / "machine-calibration.json").exists())
+
+    def test_check_reproduces_and_detects_drift(self):
+        self.assertEqual(self.fit()[0], 0)
+        art_path = self.out / "machine-calibration.json"
+        code, err = self.run_cli(["check", "--artefact", str(art_path), "--user-source", str(self.rows)])
+        self.assertEqual(code, 0, err)
+        self.assertIn("reproduces", err)
+        doc = json.loads(self.rows.read_text(encoding="utf-8"))
+        doc["rows"][0]["depth_um"] *= 1.5
+        other = self.tmp / "rows2.json"
+        other.write_text(json.dumps(doc), encoding="utf-8")
+        code, err = self.run_cli(["check", "--artefact", str(art_path), "--user-source", str(other)])
+        self.assertEqual(code, 1)
+        self.assertIn("userRowsSha256", err)
+        art = json.loads(art_path.read_text(encoding="utf-8"))
+        art["nTracks"] += 1
+        art_path.write_text(json.dumps(art), encoding="utf-8")
+        code, err = self.run_cli(["check", "--artefact", str(art_path), "--user-source", str(self.rows)])
+        self.assertEqual(code, 2)
+
+    def test_check_fails_when_the_solver_changes(self):
+        self.assertEqual(self.fit()[0], 0)
+
+        def shifted(args, kernel):
+            w, d, status, h = fake_solver(args, kernel)
+            return w, d * 1.3, status, h
+        code, err = self.run_cli(["check", "--artefact", str(self.out / "machine-calibration.json"),
+                                  "--user-source", str(self.rows)], solver=shifted)
+        self.assertEqual(code, 1)
+        self.assertIn("differs", err)
+
+    def test_eligibility_prints_the_committed_list(self):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(self.cli.main(["eligibility"]), 0)
+        text = out.getvalue()
+        self.assertIn("rosenthal | 316L Stainless Steel | depth", text)
+        self.assertIn(mcfg.config_sha256(), text)
+
+    def test_unusable_user_rows_exit_2(self):
+        bad = self.tmp / "bad.json"
+        bad.write_text("{}", encoding="utf-8")
+        code, _ = self.run_cli(["fit", "--user-source", str(bad), "--out-dir", str(self.out)])
+        self.assertEqual(code, 2)
 
 
 class FrozenGuard(unittest.TestCase):
