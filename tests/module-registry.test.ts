@@ -13,7 +13,7 @@ const registry = JSON.parse(readFileSync(new URL('../src/generated/moduleRegistr
 // Ratchet: Phase 7 step 0 generated one legacy contract per listed module. Migration may only
 // lower this number. Raising it needs an explicit edit here and maintainer review.
 // Dataset comparison now has a source-bound read-only display contract.
-const LEGACY_CEILING = 9;
+const LEGACY_CEILING = 3;
 
 test('contracts cover exactly the modules listed in workspaces.ts and legacy never grows', () => {
   const legacy = registry.contracts.filter(contract => contract.migrationState === 'legacy');
@@ -54,7 +54,7 @@ test('legacy contracts keep the pending-oracle cap and forbid every claim key', 
 
 test('contracted modules (wave 1 pilots and wave 2) stay bounded: no emitted status, screening-only ceiling, every claim forbidden', () => {
   const contracted = registry.contracts.filter(contract => contract.migrationState === 'contracted');
-  assert.deepEqual(contracted.map(contract => contract.id), ['lpbf-optimizer', 'keyhole-raytracing', 'lpbf-dataset-comparison', 'lpbf-calibration-scorecard', 'database', 'phase-diagram', 'experimental-data', 'traceability']);
+  assert.deepEqual(contracted.map(contract => contract.id), ['lpbf-optimizer', 'solidification-microstructure', 'keyhole-raytracing', 'lpbf-dataset-comparison', 'lpbf-calibration-scorecard', 'database', 'phase-diagram', 'experimental-data', 'traceability']);
   for (const contract of contracted) {
     assert.deepEqual(contract.evidence.emits, [], contract.id);
     assert.equal(contract.evidence.ceiling, 'screening-only', contract.id);

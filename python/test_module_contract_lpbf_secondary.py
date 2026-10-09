@@ -111,9 +111,9 @@ class LpbfSecondaryContractTests(unittest.TestCase):
         notes = " ".join(contract.legacy_notes)
         self.assertIn("does not send cfdResult", notes)
         self.assertIn("no substitute alloy or numeric fallback", notes)
-        self.assertIn("-273.15 °C", notes)
+        self.assertIn("-273.15 degC", notes)
         self.assertIn("liquidus_C is known", notes)
-        self.assertIn("that value in °C", notes)
+        self.assertIn("that value in degC", notes)
         self.assertIn("HTTP 200", notes)
         self.assertIn("422", notes)
 

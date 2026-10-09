@@ -109,7 +109,7 @@ export const MODULE_REGISTRY_CORE = {
     },
     {
       "id": "solidification-microstructure",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "workspace": "lpbf",
       "label": "Solidification Map (G/R)",
       "description": "Screening G/R, cooling rate, dendrite arm spacing (Hunt–Lu, Kirkwood) and morphology tendency from the Python conduction field; not validated.",
@@ -121,7 +121,7 @@ export const MODULE_REGISTRY_CORE = {
         "component": "src/components/SolidificationMicrostructureLab.tsx",
         "export": "SolidificationMicrostructureLab"
       },
-      "migrationState": "legacy",
+      "migrationState": "contracted",
       "evidence": {
         "ceiling": "screening-only"
       },
