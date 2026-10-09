@@ -1269,6 +1269,10 @@ def run_stage3(stage1: Dict[str, Any], stage2: Dict[str, Any], jobs: int,
 # ---------------------------------------------------------------------------------------------
 # report
 # ---------------------------------------------------------------------------------------------
+def _ci(ci: Any) -> str:
+    return "n/a" if not ci else f"[{ci[0]:.3f}, {ci[1]:.3f}]"
+
+
 def _p(x: Any, d: int = 3) -> str:
     return "n/a" if x is None else (f"{x:.{d}f}" if isinstance(x, (int, float)) else str(x))
 
@@ -1317,7 +1321,7 @@ def render_markdown(doc: Dict[str, Any]) -> str:
     L += ["", "## Pooled significance endpoints (C2 depth, C3 width), arm A0, primary reading", ""]
     for k in KERNELS:
         p2, p3 = res[k]["C2"]["pooled"], res[k]["C3"]["pooled"]
-        L.append(f"- {k}: pooled depth skill {_p(p2.get('skill'))} CI95 {p2.get('ci95')}; pooled width skill {_p(p3.get('skill'))} CI95 {p3.get('ci95')}")
+        L.append(f"- {k}: pooled depth skill {_p(p2.get('skill'))} CI95 {_ci(p2.get('ci95'))}; pooled width skill {_p(p3.get('skill'))} CI95 {_ci(p3.get('ci95'))}")
     L += ["", "## Arms against the same rule (reported; only A0 can produce PASS)", "",
           "| arm | " + " | ".join(KERNELS) + " |", "|---|" + "---|" * len(KERNELS)]
     for arm, d in doc["armRule"].items():
@@ -1373,7 +1377,7 @@ def current_fingerprint() -> str:
 
 def main(argv: Optional[List[str]] = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--stage", choices=("inputs", "baseline", "run"), required=True)
+    ap.add_argument("--stage", choices=("inputs", "baseline", "run", "render"), required=True)
     ap.add_argument("--date", default="2026-10-09")
     ap.add_argument("--jobs", type=int, default=1)
     ap.add_argument("--out-dir", default=str(REPO_ROOT / "docs" / "research"))
@@ -1386,6 +1390,11 @@ def main(argv: Optional[List[str]] = None) -> int:
         P["stage1"].write_text(dump_json(s1), encoding="utf-8", newline="\n")
         print(f"stage 1 written: {P['stage1']} rows={len(s1['rows'])} laneAxisActive={s1['laneAxisActive']} "
               f"grid={len(s1['grid'])}")
+        return 0
+    if args.stage == "render":  # re-render the markdown from the written JSON record (no recomputation)
+        doc = json.loads(P["json"].read_bytes())
+        P["md"].write_text(render_markdown(doc), encoding="utf-8", newline="\n")
+        print(f"markdown re-rendered: {P['md']}")
         return 0
     fp = current_fingerprint()
     if fp != C.FROZEN_FINGERPRINT:
