@@ -8,7 +8,6 @@ export const DEMO_MODULES: readonly string[] = [
   'lpbf-optimizer',
   'lpbf-dataset-comparison',
   'lpbf-calibration-scorecard',
-  'keyhole-raytracing',
 ];
 
 export function isDemoModule(id: string): boolean {

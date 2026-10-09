@@ -40,10 +40,10 @@ test('the palette entry list built from the filtered list has no hidden module',
 });
 
 test('a hash to a hidden module goes home; shown, home and unknown hashes are left alone', () => {
-  for (const hidden of ['#/solidification-microstructure', '#/phase-diagram?tab=x', '#/research-hub/sub', '#database', '#/experimental-validation']) {
+  for (const hidden of ['#/solidification-microstructure', '#/phase-diagram?tab=x', '#/research-hub/sub', '#database', '#/experimental-validation', '#/keyhole-raytracing']) {
     assert.equal(hiddenModuleRedirect(hidden, isModuleId), '#/home', hidden);
   }
-  for (const ok of ['#/lpbf-optimizer', '#/3d-distortion-lab?tab=x', '#/keyhole-raytracing', '', '#', '#/', '#/home', '#/not-a-module']) {
+  for (const ok of ['#/lpbf-optimizer', '#/3d-distortion-lab?tab=x', '', '#', '#/', '#/home', '#/not-a-module']) {
     assert.equal(hiddenModuleRedirect(ok, isModuleId), null, ok);
   }
   assert.equal(hashModuleId('#/lpbf-optimizer?tab=window'), 'lpbf-optimizer');

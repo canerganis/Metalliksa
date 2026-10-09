@@ -15,6 +15,14 @@ export function DemoRedirectNote() {
   return <p role="status" data-testid="demo-hidden-note" className="mb-4 rounded-lg border border-cyan-500/20 px-4 py-3 text-xs text-cyan-200">{HIDDEN_MODULE_NOTE}</p>;
 }
 
+/** Static note that replaces the engine status dialog: there is no engine in the demo. */
+export function DemoEngineNote({ onClose }: { onClose: () => void }) {
+  return <div role="dialog" aria-label="Engine status" data-testid="demo-engine-note" className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md rounded-lg border border-slate-700 bg-slate-950 p-4 text-sm text-slate-300">
+    <p>Static snapshot, no engine. Every value shown was computed offline and recorded.</p>
+    <button type="button" onClick={onClose} className="mt-3 underline">Close</button>
+  </div>;
+}
+
 /**
  * Locks every control inside to the recorded values: a disabled fieldset (display: contents, so layout is unchanged)
  * plus the "Recorded values only in the static demo." title on each control. Use for sections whose inputs would feed

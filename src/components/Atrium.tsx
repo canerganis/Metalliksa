@@ -56,7 +56,7 @@ export function Atrium({ continueId, engine, engineChecking, shortcutLabel, onNa
   const motion = motionAllowed && !paused;
   const resume = MODULES.find((m) => m.id === continueId) ?? MODULES[0];
   const maturity = SCOPES.map((scope) => [scope, MODULES.filter((m) => m.scope === scope).length] as const).filter(([, n]) => n > 0);
-  const engineText = engineChecking && !engine ? 'checking' : engine?.online ? 'online' : 'unavailable';
+  const engineText = IS_STATIC_DEMO ? 'static snapshot' : engineChecking && !engine ? 'checking' : engine?.online ? 'online' : 'unavailable';
   // Pointer tilt for the workspace plates (motion allowed only); a pure visual transform.
   const tilt = (event: React.PointerEvent<HTMLElement>) => {
     if (!motion || event.pointerType !== 'mouse') return;
@@ -112,7 +112,7 @@ export function Atrium({ continueId, engine, engineChecking, shortcutLabel, onNa
             </button>
           </div>
           <dl className="mk-at-readout">
-            <div><dt>Engine</dt><dd data-tone={engine?.online ? 'ok' : engineText === 'checking' ? 'neutral' : 'fail'}>{engineText}</dd></div>
+            <div><dt>Engine</dt><dd data-tone={IS_STATIC_DEMO ? 'neutral' : engine?.online ? 'ok' : engineText === 'checking' ? 'neutral' : 'fail'}>{engineText}</dd></div>
             <div><dt>Modules</dt><dd>{MODULES.length} registered</dd></div>
             <div title={MATURITY_BADGE_TITLE}><dt>Maturity</dt><dd>{maturity.map(([scope, n]) => `${n} ${scope.toLowerCase()}`).join(' · ')}</dd></div>
           </dl>

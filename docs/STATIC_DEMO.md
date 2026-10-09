@@ -22,7 +22,8 @@ The static demo is a read-only viewer built with `npm run build:demo` into `dist
 | 3D distortion lab | setup, material, thermal, melt pool, qualification | defects, build, comparison, specialists |
 | LPBF optimizer | process window map | search, plan |
 | LPBF dataset comparison | bundled views | none |
-| LPBF calibration scorecard | bundled record | none |
-| Keyhole raytracing | bundled benchmark view | none |
+| LPBF calibration scorecard | bundled record, including the keyhole benchmark view | none |
+
+The keyhole raytracing lab is not in the demo. It computes live on mount and has no recorded request, so its benchmark lives in the calibration scorecard instead.
 
 The module and panel allowlist is in `src/demo/demoModules.ts`.
