@@ -110,3 +110,4 @@
 /python/databases/mc_ni_v2036_repaired.tdb -text
 /python/databases/mc_fe_v2062_repaired.tdb -text
 /python/databases/mc_ti_v203_repaired.tdb -text
+/demo/snapshots/** -text
