@@ -69,6 +69,9 @@ PREHEAT_C = float(CFG["rows"]["preheat_C"])
 ENVELOPE = tuple(CFG["law"]["envelope"])
 Q_LIST = ("depth", "width")
 PRIMARY = CFG["nuisance"]["primary"]
+SOURCE_MATERIAL = {"hofmann-316l-2026": "316L Stainless Steel", "ku-leuven-316l-2021": "316L Stainless Steel",
+                   "totis-ti64-2021": "Ti-6Al-4V", "ku-leuven-ti64-2021": "Ti-6Al-4V",
+                   "lane-in625-2020": "Inconel 625", "ghosh-in625-2018": "Inconel 625"}
 STAGE1_SCHEMA = "lpbf-regime-absorptivity-stage1-1"
 STAGE2_SCHEMA = "lpbf-regime-absorptivity-stage2-1"
 RESULT_SCHEMA = "lpbf-regime-absorptivity-result-1"
@@ -109,6 +112,11 @@ def sha256_bytes(b: bytes) -> str:
 
 def sha256_file(p: Path) -> str:
     return sha256_bytes(Path(p).read_bytes())
+
+
+def lf_sha(b: bytes) -> str:
+    """Record hash over LF-normalised bytes, so a CRLF checkout (core.autocrlf) does not change it."""
+    return sha256_bytes(b.replace(bytes([13, 10]), bytes([10])))
 
 
 def git(*args: str) -> str:
@@ -1144,13 +1152,14 @@ def diagnostics(ev: Evaluator, g0: Dict[str, Any], a0_all: Dict[str, Dict[Tuple,
 # ---------------------------------------------------------------------------------------------
 # stage 3
 # ---------------------------------------------------------------------------------------------
-def candidate_task_sets(stage1: Dict[str, Any]) -> Dict[str, List[Tuple]]:
+def candidate_task_sets(stage1: Dict[str, Any], arms: Sequence[str] = ARMS) -> Dict[str, List[Tuple]]:
     rows = stage1["rows"]
     verdict = [r for r in rows if r["role"] == "verdict"]
     sets: Dict[str, List[Tuple]] = {}
     sets["A0"] = unique_tasks(rows, ARM_LAW["A0"])  # every row, to verify D4
     for arm in ("S1", "S2", "S3", "S4", "K"):
-        sets[arm] = unique_tasks(verdict, ARM_LAW[arm], only_affected=True)
+        if arm in arms:
+            sets[arm] = unique_tasks(verdict, ARM_LAW[arm], only_affected=True)
     gan = []
     seen = set()
     for r in verdict:
@@ -1163,7 +1172,8 @@ def candidate_task_sets(stage1: Dict[str, Any]) -> Dict[str, List[Tuple]]:
                 if key not in seen:
                     seen.add(key)
                     gan.append(key)
-    sets["G"] = gan
+    if "G" in arms:
+        sets["G"] = gan
     f = []
     seenf = set()
     for hs in F_GRID:
@@ -1174,12 +1184,13 @@ def candidate_task_sets(stage1: Dict[str, Any]) -> Dict[str, List[Tuple]]:
             if (t[0], t[1], t[2]) not in seenf:
                 seenf.add((t[0], t[1], t[2]))
                 f.append(t)
-    sets["F"] = f
+    if "F" in arms:
+        sets["F"] = f
     return sets
 
 
-def run_candidates(stage1: Dict[str, Any], jobs: int) -> Dict[str, Dict[Tuple, Tuple]]:
-    sets = candidate_task_sets(stage1)
+def run_candidates(stage1: Dict[str, Any], jobs: int, arms: Sequence[str] = ARMS) -> Dict[str, Dict[Tuple, Tuple]]:
+    sets = candidate_task_sets(stage1, arms)
     cache: Dict[str, Dict[Tuple, Tuple]] = {}
     for name, tasks in sets.items():
         res = pmap(_solve, tasks, jobs)
@@ -1193,8 +1204,7 @@ def make_policy_of(arm: str, ev: Evaluator, k: str, g: Dict[str, Any], fits: Dic
         p = ARM_LAW[arm]
         return lambda s: p
     if arm == "G":
-        mats = {r["source"]: r["material"] for r in ev.s1["rows"] if r["role"] == "verdict"}
-        return lambda s: gan_policy(mats[s])
+        return lambda s: gan_policy(SOURCE_MATERIAL[s])
     if arm == "F":
         def pol(s: str) -> Optional[Tuple]:
             key = (k, grid_key(g), s)
@@ -1208,7 +1218,7 @@ def make_policy_of(arm: str, ev: Evaluator, k: str, g: Dict[str, Any], fits: Dic
 def run_stage3(stage1: Dict[str, Any], stage2: Dict[str, Any], jobs: int,
                cand: Optional[Dict[str, Dict[Tuple, Tuple]]] = None, arms: Sequence[str] = ARMS) -> Dict[str, Any]:
     if cand is None:
-        cand = run_candidates(stage1, jobs)
+        cand = run_candidates(stage1, jobs, arms)
     ev = Evaluator(stage1, stage2, cand)
     grid = stage1["grid"]
     a0_all = cand[pkey(ARM_LAW["A0"])]
@@ -1231,7 +1241,7 @@ def run_stage3(stage1: Dict[str, Any], stage2: Dict[str, Any], jobs: int,
     robustness = None
     if decision["result"] == "PASS":
         failing = []
-        for arm in CFG["robustnessArms"]:
+        for arm in [a for a in CFG["robustnessArms"] if a in results]:
             for g in grid:
                 for k in KERNELS:
                     r = results[arm][grid_key(g)][k]
@@ -1387,7 +1397,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         if not committed(P["stage1"]):
             print("STOP: the stage-1 record must be committed before stage 2", file=sys.stderr)
             return 2
-        s2 = build_stage2(s1, sha256_bytes(s1_bytes), args.jobs, args.date, fp)
+        s2 = build_stage2(s1, lf_sha(s1_bytes), args.jobs, args.date, fp)
         P["stage2"].write_text(dump_json(s2), encoding="utf-8", newline="\n")
         print(f"stage 2 written: {P['stage2']} parity ok={s2['parity']['ok']} checked={s2['parity']['nChecked']} "
               f"maxRel={s2['parity']['maxRelErr']:.2e}")
@@ -1399,7 +1409,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             return 2
     s2_bytes = P["stage2"].read_bytes()
     s2 = json.loads(s2_bytes)
-    if s2["stage1Sha256"] != sha256_bytes(s1_bytes):
+    if s2["stage1Sha256"] != lf_sha(s1_bytes):
         print("STOP: stage-2 record does not match the stage-1 record hash", file=sys.stderr)
         return 2
     if s2["configSha256"] != C.config_sha256() or s1["configSha256"] != C.config_sha256():
@@ -1410,7 +1420,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     doc = {"schema": RESULT_SCHEMA, "date": args.date, "evidence": EVIDENCE, "labels": CFG["labels"],
            "configSha256": C.config_sha256(), "preregistrationCommit": CFG["preregistration"]["commit"],
            "preregistrationSha256Lf": CFG["preregistration"]["sha256Lf"], "repoCommit": git("rev-parse", "HEAD"),
-           "fingerprint": fp, "stage1Sha256": sha256_bytes(s1_bytes), "stage2Sha256": sha256_bytes(s2_bytes),
+           "fingerprint": fp, "stage1Sha256": lf_sha(s1_bytes), "stage2Sha256": lf_sha(s2_bytes),
            "tableProvenance": s1["tableProvenance"], "bootstrap": {"B": BOOT_B, "seed": BOOT_SEED},
            "laneAxisActive": s1["laneAxisActive"], "gridKeys": gks, "primaryGridKey": gks[0],
            "parity": s2["parity"], **out}
