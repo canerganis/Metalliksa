@@ -325,6 +325,35 @@ OPEN_TDB_CATALOG = [
         "startingPointSeeding": True,
         "scheilTimeBudgetS": 90.0,
     },
+    {
+        "id": "mc_ti",
+        "fileName": "mc_ti_v203_repaired.tdb",
+        "name": "MatCalc mc_ti 2.03 open titanium database (syntactically repaired for pycalphad)",
+        "description": "MatCalc open thermodynamic database for Ti alloys and Ti aluminides, release 2.03 (January "
+                       "2025), E. Povoden-Karadeniz, TU Wien / MatCalc Engineering GmbH; ODbL 1.0 / DbCL 1.0. The "
+                       "committed file is a syntactic repair of the original (python/tools/tdb_repair.py; no "
+                       "G/L/TC/BMAGN value changed; MatCalc-only directives and HMVA parameters commented out; "
+                       "FUNCTION citation tags joined). Licence, source and change log: "
+                       "python/databases/MATCALC_OPEN_DATABASES_LICENSE.md.",
+        "elements": ["AL", "B", "CR", "MO", "NB", "TI", "V"],
+        "primaryPhases": ["LIQUID", "BCC_A2", "HCP_A3", "FCC_A1", "TI3AL", "TIAL", "OMEGA"],
+        "source": "MatCalc special databases, https://www.matcalc.at/index.php/databases/special-databases "
+                  "(mc_ti_v203.tdb, sha256 7bec5404071fa3cbdaf340bdb431af98f5a00a6d5526b84ff31834b5ff5841cb)",
+        "suitability": "Ti-base alloys, scoped use: valid for beta transus, liquidus/solidus and single-phase beta. "
+                       "Not for alpha/beta fractions below about 900 degC. No Fe or O in this database. The file "
+                       "header states it was optimised for 773-2000 K inside Al<30, B<1, Cr<2, Mo<3, Nb<10, V<5 wt%. "
+                       "Not validated against experiment in this application.",
+        "scopeFlag": "Valid for beta transus, liquidus/solidus and single-phase beta. Not for alpha/beta fractions "
+                     "below about 900 C. No Fe or O in this database.",
+        "assessedBaseElements": ["TI"],
+        "status": DB_STATUS_ASSESSMENT,
+        "usable": True,
+        "statusReason": None,
+        # Chosen by databaseId only: the studio Ti-6Al-4V preset names it. Automatic selection keeps the
+        # established choice (COST 507) until the scope of mc_ti is decided; see the report of this change.
+        "autoSelect": False,
+        "testedLimitsWtPct": {"AL": 30.0, "B": 1.0, "CR": 2.0, "MO": 3.0, "NB": 10.0, "V": 5.0},
+    },
 ]
 
 
@@ -763,7 +792,8 @@ def resolve_database(
                     "extra": {"databaseId": preferred_id}}
         candidates = [entry]
     else:
-        candidates = sorted((e for e in OPEN_TDB_CATALOG if e["usable"]), key=lambda e: len(e["elements"]))
+        candidates = sorted((e for e in OPEN_TDB_CATALOG if e["usable"] and e.get("autoSelect", True)),
+                            key=lambda e: len(e["elements"]))
 
     base_up = base.upper() if base else None
     considered: List[Dict[str, Any]] = []
@@ -2301,6 +2331,9 @@ def compute_multi_component_equilibrium(
         result["evidenceLabel"] = (f"CALPHAD calculation with {resolved['name']} (pycalphad); "
                                    "not validated against experiment")
         catalog_entry = _entry_by_id(resolved["id"]) if resolved["id"] != "custom" else None
+        scope_flag = (catalog_entry or {}).get("scopeFlag")
+        if scope_flag:
+            result["databaseScopeFlag"] = scope_flag
         limits = (catalog_entry or {}).get("testedLimitsWtPct")
         if limits:
             result["compositionOutsideTestedLimits"] = outside_tested_limits(wt_pct, limits)

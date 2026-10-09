@@ -305,6 +305,8 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
     const standard = STANDARD_MULTI_COMPONENT_ALLOYS[idx];
     if (standard) {
       setCustomAlloy(JSON.parse(JSON.stringify(standard)));
+      // A preset that names a database selects it; every other preset returns to auto-detect.
+      setSelectedDatabaseId(standard.preferredDatabaseId ?? "auto");
     }
     if (PRELOADED_MULTI_COMPONENT_TDB[idx]) {
       setSelectedTdbIndex(idx);
@@ -667,6 +669,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
             {availableDatabases.length === 0 && (
               <>
                 <option value="cost507">COST 507 Light Alloys (29 Elements Al-Mg-Ti...)</option>
+                <option value="mc_ti">MatCalc mc_ti 2.03 Ti alloys (Ti-Al-V, scoped)</option>
                 <option value="alni_dupin_2001">Al-Ni Dupin 2001 NIST Benchmark</option>
                 <option value="crtiv_ghosh">Cr-Ti-V Assessment (Ghosh), no Al</option>
               </>
@@ -678,6 +681,11 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
       {provenanceLabels.scope && (
         <div className="px-4 py-1.5 rounded-xl bg-[#060a14] border border-[#1a273e] text-[11px] text-amber-200/90" data-testid="calphad-database-scope">
           Database scope: {provenanceLabels.scope}
+        </div>
+      )}
+      {showNumbers && provenanceLabels.scopeFlag && (
+        <div role="note" className="px-4 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/40 text-[11px] text-amber-200" data-testid="calphad-database-scope-flag">
+          Scope flag: {provenanceLabels.scopeFlag}
         </div>
       )}
       {showNumbers && solveResult.nonConvergedPoints && solveResult.nonConvergedPoints.length > 0 && (

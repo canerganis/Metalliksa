@@ -80,6 +80,10 @@ export interface PythonCalphadDatabaseEntry {
   statusReason?: string | null;
   /** Machine-readable scope: the base elements this database is assessed for. */
   assessedBaseElements?: string[];
+  /** Scoped databases only (mc_ti): what the database may and may not be used for. */
+  scopeFlag?: string;
+  /** False when the database is only used if named by id (never picked by auto-detect). */
+  autoSelect?: boolean;
 }
 
 export interface PythonCalphadSolveResult
@@ -120,6 +124,8 @@ export interface PythonCalphadSolveResult
   activeComponents?: string[];
   unsupportedElements?: string[];
   databaseSuitability?: string;
+  /** Scoped database only (mc_ti): valid and invalid uses, shown next to the numbers. */
+  databaseScopeFlag?: string;
   /** Grid temperatures (degC) whose equilibrium did not converge; their profile entries are null. */
   nonConvergedPoints?: number[];
   boundaryRefinement?: { enabled: boolean; toleranceC: number; equilibriumCalls: number; note: string };
