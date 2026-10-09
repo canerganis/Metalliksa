@@ -8,6 +8,7 @@ import {
   calphadUnavailableDetails,
   formatCalphadUnavailable,
   formatCriticalTemperature,
+  buildEquilibriumCSV,
   formatFreezingRange,
   isMcTiResult,
   parseCalphadUnavailable,
@@ -730,6 +731,23 @@ test("mc_ti phase-fraction view flags alpha/beta fractions below 900 C as not va
   const other = renderToStaticMarkup(<CALPHADMultiComponentStudio initialResult={pycalphadResult()} initialSubTab="phase_fractions" />);
   assert.ok(!other.includes("phase-fraction-scope-note"));
   assert.ok(!textOf(other).includes(NOTE));
+});
+
+test("equilibrium CSV blanks mc_ti phase fractions below 900 C and leads with a scope comment; other databases unchanged", () => {
+  const profile = [
+    { temperatureC: 800, phases: [{ phaseId: "HCP_A3", phaseName: "HCP_A3 (alpha)", fraction: 0.6, majorElements: ["TI", "AL"] }] },
+    { temperatureC: 950, phases: [{ phaseId: "BCC_A2", phaseName: "BCC_A2 (beta)", fraction: 0.5, majorElements: ["TI"] }] },
+  ];
+  const mc = buildEquilibriumCSV({ databaseId: "mc_ti", equilibriumProfile: profile });
+  const lines = mc.trimEnd().split("\n");
+  assert.equal(lines[0], "# mc_ti scope: phase fractions below about 900 C are not valid and are left blank");
+  assert.equal(lines[1], "Temperature (C),Phase ID,Phase Name,Phase Fraction (%),Major Elements");
+  assert.equal(lines[2], '800,"HCP_A3","HCP_A3 (alpha)",,"TI-AL"');
+  assert.equal(lines[3], '950,"BCC_A2","BCC_A2 (beta)",50.0,"TI"');
+  const other = buildEquilibriumCSV({ databaseId: "cost507", databaseUsed: "COST 507", equilibriumProfile: profile });
+  assert.equal(other.split("\n")[0], "Temperature (C),Phase ID,Phase Name,Phase Fraction (%),Major Elements");
+  assert.equal(other.split("\n")[1], '800,"HCP_A3","HCP_A3 (alpha)",60.0,"TI-AL"');
+  assert.ok(!other.includes("# mc_ti"));
 });
 
 test("the Ti-6Al-4V preset is Ti-Al-V only and names mc_ti, not COST 507", () => {

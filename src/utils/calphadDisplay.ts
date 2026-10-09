@@ -143,3 +143,27 @@ export const MC_TI_PHASE_FRACTION_NOTE = "Not valid below about 900 C with mc_ti
 export function isMcTiResult(result: { databaseId?: string; databaseUsed?: string }): boolean {
   return result.databaseId === "mc_ti" || /\bmc_ti\b/i.test(result.databaseUsed ?? "");
 }
+
+export const MC_TI_EXPORT_SCOPE_COMMENT = `# mc_ti scope: phase fractions below about ${MC_TI_PHASE_FRACTION_MIN_C} C are not valid and are left blank`;
+
+/** Equilibrium CSV export. For mc_ti results, fractions below the scope limit are blank (as in the chart) and a comment line leads the file. */
+export function buildEquilibriumCSV(result: {
+  databaseId?: string;
+  databaseUsed?: string;
+  equilibriumProfile: ReadonlyArray<{
+    temperatureC: number;
+    phases: ReadonlyArray<{ phaseId: string; phaseName: string; fraction: number; majorElements: ReadonlyArray<string> }>;
+  }>;
+}): string {
+  const mcTi = isMcTiResult(result);
+  let csv = mcTi ? `${MC_TI_EXPORT_SCOPE_COMMENT}\n` : "";
+  csv += "Temperature (C),Phase ID,Phase Name,Phase Fraction (%),Major Elements\n";
+  result.equilibriumProfile.forEach((pt) => {
+    const clipped = mcTi && pt.temperatureC < MC_TI_PHASE_FRACTION_MIN_C;
+    pt.phases.forEach((ph) => {
+      const fraction = clipped ? "" : (ph.fraction * 100).toFixed(1);
+      csv += `${pt.temperatureC},"${ph.phaseId}","${ph.phaseName}",${fraction},"${ph.majorElements.join("-")}"\n`;
+    });
+  });
+  return csv;
+}

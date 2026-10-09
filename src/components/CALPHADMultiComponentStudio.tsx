@@ -72,6 +72,7 @@ import {
   formatComputeTime,
   formatCriticalTemperature,
   formatFreezingRange,
+  buildEquilibriumCSV,
   formatNullable,
   isMcTiResult,
   MC_TI_PHASE_FRACTION_MIN_C,
@@ -480,12 +481,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
 
   // Export solved thermodynamic equilibrium report
   const handleExportEquilibriumCSV = () => {
-    let csv = "Temperature (C),Phase ID,Phase Name,Phase Fraction (%),Major Elements\n";
-    solveResult.equilibriumProfile.forEach((pt) => {
-      pt.phases.forEach((ph) => {
-        csv += `${pt.temperatureC},"${ph.phaseId}","${ph.phaseName}",${(ph.fraction * 100).toFixed(1)},"${ph.majorElements.join("-")}"\n`;
-      });
-    });
+    const csv = buildEquilibriumCSV(solveResult);
 
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
