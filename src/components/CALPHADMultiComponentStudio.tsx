@@ -1005,6 +1005,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
               <button
                 type="button"
                 onClick={() => setViewSubTab("phase_fractions")}
+                aria-pressed={viewSubTab === "phase_fractions"}
                 className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 ${
                   viewSubTab === "phase_fractions"
                     ? "bg-violet-500/20 text-violet-300 border border-violet-500/40 shadow-sm"
@@ -1017,6 +1018,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
               <button
                 type="button"
                 onClick={() => setViewSubTab("gibbs_energy")}
+                aria-pressed={viewSubTab === "gibbs_energy"}
                 className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 ${
                   viewSubTab === "gibbs_energy"
                     ? "bg-violet-500/20 text-violet-300 border border-violet-500/40 shadow-sm"
@@ -1029,6 +1031,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
               <button
                 type="button"
                 onClick={() => setViewSubTab("solute_partitioning")}
+                aria-pressed={viewSubTab === "solute_partitioning"}
                 className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 ${
                   viewSubTab === "solute_partitioning"
                     ? "bg-violet-500/20 text-violet-300 border border-violet-500/40 shadow-sm"
@@ -1041,6 +1044,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
               <button
                 type="button"
                 onClick={() => setViewSubTab("multi_scheil")}
+                aria-pressed={viewSubTab === "multi_scheil"}
                 className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 ${
                   viewSubTab === "multi_scheil"
                     ? "bg-violet-500/20 text-violet-300 border border-violet-500/40 shadow-sm"
@@ -1053,6 +1057,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
               <button
                 type="button"
                 onClick={() => setViewSubTab("tdb_editor")}
+                aria-pressed={viewSubTab === "tdb_editor"}
                 className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 ${
                   viewSubTab === "tdb_editor"
                     ? "bg-violet-500/20 text-violet-300 border border-violet-500/40 shadow-sm"
@@ -1213,6 +1218,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
                   <button
                     type="button"
                     onClick={() => setActiveGibbsMetric("gibbs_free_energy")}
+                    aria-pressed={activeGibbsMetric === "gibbs_free_energy"}
                     className={`px-2.5 py-1 rounded text-[11px] font-bold transition ${
                       activeGibbsMetric === "gibbs_free_energy"
                         ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
@@ -1224,6 +1230,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
                   <button
                     type="button"
                     onClick={() => setActiveGibbsMetric("activities")}
+                    aria-pressed={activeGibbsMetric === "activities"}
                     className={`px-2.5 py-1 rounded text-[11px] font-bold transition ${
                       activeGibbsMetric === "activities"
                         ? "bg-sky-500/20 text-sky-300 border border-sky-500/40"
@@ -1235,6 +1242,7 @@ export const CALPHADMultiComponentStudio: React.FC<CALPHADMultiComponentStudioPr
                   <button
                     type="button"
                     onClick={() => setActiveGibbsMetric("potentials")}
+                    aria-pressed={activeGibbsMetric === "potentials"}
                     className={`px-2.5 py-1 rounded text-[11px] font-bold transition ${
                       activeGibbsMetric === "potentials"
                         ? "bg-purple-500/20 text-purple-300 border border-purple-500/40"

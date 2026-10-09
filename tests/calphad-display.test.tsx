@@ -639,6 +639,23 @@ test("Gibbs tab with a pycalphad result shows Unavailable for a missing mu, the 
   assert.match(text, /database SER scale/);
 });
 
+test("Gibbs tab metric buttons and sub-tab buttons expose their selection with aria-pressed", () => {
+  const markup = renderToStaticMarkup(
+    <CALPHADMultiComponentStudio initialResult={resultWithPotentials()} initialSubTab="gibbs_energy" />);
+  const pressed = (label: RegExp) => {
+    const m = [...markup.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/g)].find((b) => label.test(textOf(b[2]).trim()));
+    assert.ok(m, `button ${label} is rendered`);
+    return /aria-pressed="(true|false)"/.exec(m[1])?.[1];
+  };
+  // default metric is G_m: exactly one metric button is pressed
+  assert.equal(pressed(/^G_m \(kJ\/mol\)$/), "true");
+  assert.equal(pressed(/^Activities a_i$/), "false");
+  assert.equal(pressed(/^Chemical Potentials μ_i$/), "false");
+  // the same pattern for the view switcher
+  assert.equal(pressed(/Gibbs Energy & Activities/), "true");
+  assert.equal(pressed(/Phase Fraction vs T/), "false");
+});
+
 test("Scheil tab offers the compute button when the path was not requested, and draws no chart", () => {
   const result = pycalphadResult({
     scheilSolidification: { status: "unavailable", reason: "not requested" },
